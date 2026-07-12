@@ -3251,6 +3251,62 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             rpg_gdunit_validation = rpgGdUnitValidation?.ToEvidence(),
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
+        var newChainGuard = _contractFreezeService.EvaluateNewChainGuard(project);
+        var contractStatus = newChainGuard.ContractStatus;
+        var verifiedSceneIds = ReadConfirmedSceneIds(project);
+        var verifiedRequirementIds = ReadSkeletonVerifiedRequirementIds(project, verifiedSceneIds);
+        _routeStateWriter.WritePrototypeSkeletonState(project, new
+        {
+            schema_version = "prototype-skeleton-readback.v1",
+            route = "prototype-skeleton",
+            status,
+            source_boundary_enforced = true,
+            recovery_source_order_ref = "hosted-route-recovery-order.v1",
+            source_boundary = new
+            {
+                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                authority_sources = new[]
+                {
+                    "game-type-route-profile",
+                    PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
+                    "routes/prototype-contract/latest.json",
+                    "meta/routes/gdd-requirements/latest.json",
+                    "meta/routes/prototype/latest.json"
+                },
+                source_hashes = new
+                {
+                    source_gdd_hash = contractStatus.SourceGddHash,
+                    source_scene_route_hash = contractStatus.SourceSceneRouteHash,
+                    source_requirement_map_hash = contractStatus.SourceRequirementMapHash,
+                    source_contract_hash = contractStatus.ContractHash,
+                    source_contract_snapshot_hash = contractStatus.SourceContractSnapshotHash,
+                    source_godot_ui_contract_hash = contractStatus.SourceGodotUiContractHash,
+                    source_ui_style_contract_hash = contractStatus.SourceUiStyleContractHash,
+                    ui_style_snapshot_hash = contractStatus.UiStyleSnapshotHash
+                }
+            },
+            freshness = newChainGuard.NewChainActive && newChainGuard.Allowed && string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase)
+                ? "fresh"
+                : "stale",
+            legacy_compatibility_reason = newChainGuard.NewChainActive ? "" : "legacy_chain_without_frozen_contract",
+            source_gdd_hash = contractStatus.SourceGddHash,
+            source_scene_route_hash = contractStatus.SourceSceneRouteHash,
+            source_requirement_map_hash = contractStatus.SourceRequirementMapHash,
+            source_contract_hash = contractStatus.ContractHash,
+            source_contract_snapshot_hash = contractStatus.SourceContractSnapshotHash,
+            source_godot_ui_contract_hash = contractStatus.SourceGodotUiContractHash,
+            source_ui_style_contract_hash = contractStatus.SourceUiStyleContractHash,
+            ui_style_snapshot_hash = contractStatus.UiStyleSnapshotHash,
+            verified_scene_ids = verifiedSceneIds,
+            verified_requirement_ids = verifiedRequirementIds,
+            evidence_refs = new[]
+            {
+                "meta/routes/prototype/latest.json",
+                "routes/prototype-contract/latest.json",
+                "meta/routes/gdd-requirements/latest.json"
+            },
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        });
         _routeStateWriter.WriteProjectExecutionGuide(
             project,
             _contractService.Read(project),
@@ -3262,6 +3318,112 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             localEntry.DefaultScene,
             localEntry.PlayableScene,
             localEntry.SmokeScene);
+    }
+
+    private static IReadOnlyList<string> ReadConfirmedSceneIds(ProjectSnapshot project)
+    {
+        return ReadStringArrayFromRouteState(
+            Path.Combine(project.RepoPath, "meta", "routes", "scene-route", "latest.json"),
+            "scenes",
+            "scene_id");
+    }
+
+    private static IReadOnlyList<string> ReadSkeletonVerifiedRequirementIds(
+        ProjectSnapshot project,
+        IReadOnlyList<string> verifiedSceneIds)
+    {
+        if (verifiedSceneIds.Count == 0)
+        {
+            return [];
+        }
+
+        var path = Path.Combine(project.RepoPath, "meta", "routes", "gdd-requirements", "latest.json");
+        if (!File.Exists(path))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(path, Encoding.UTF8));
+            if (!document.RootElement.TryGetProperty("requirements", out var requirements) ||
+                requirements.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            var sceneSet = verifiedSceneIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return requirements.EnumerateArray()
+                .Where(static row => row.ValueKind == JsonValueKind.Object)
+                .Where(row => ReadString(row, "status") == "mapped")
+                .Where(row => ReadStringArray(row, "mapped_scene_ids").Any(sceneSet.Contains))
+                .Select(row => ReadString(row, "requirement_id"))
+                .Where(static id => !string.IsNullOrWhiteSpace(id))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(static id => id, StringComparer.Ordinal)
+                .ToArray();
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static IReadOnlyList<string> ReadStringArrayFromRouteState(
+        string path,
+        string arrayProperty,
+        string valueProperty)
+    {
+        if (!File.Exists(path))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(path, Encoding.UTF8));
+            if (!document.RootElement.TryGetProperty(arrayProperty, out var values) ||
+                values.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            return values.EnumerateArray()
+                .Select(item => ReadString(item, valueProperty))
+                .Where(static value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(static value => value, StringComparer.Ordinal)
+                .ToArray();
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static string ReadString(JsonElement root, string propertyName)
+    {
+        return root.ValueKind == JsonValueKind.Object &&
+               root.TryGetProperty(propertyName, out var value) &&
+               value.ValueKind == JsonValueKind.String
+            ? value.GetString()?.Trim() ?? ""
+            : "";
+    }
+
+    private static IReadOnlyList<string> ReadStringArray(JsonElement root, string propertyName)
+    {
+        if (root.ValueKind != JsonValueKind.Object ||
+            !root.TryGetProperty(propertyName, out var value) ||
+            value.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        return value.EnumerateArray()
+            .Where(static item => item.ValueKind == JsonValueKind.String)
+            .Select(static item => item.GetString()?.Trim() ?? "")
+            .Where(static item => item.Length > 0)
+            .ToArray();
     }
 
     private static PrototypeLocalEntryContract BuildLocalEntryContract(

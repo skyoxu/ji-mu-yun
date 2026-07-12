@@ -22,7 +22,7 @@ public static class RouteActionDescriptors
         new("inspect_first", "user_visible", "active", "", "workflowRouteReadback", "workflow.inspect_first", "non_action", "", "1"),
         new("delete_project", "user_visible", "active", "/api/projects/{projectId}", "deleteProject", "workflow.delete_project", "project", "", "1"),
         new("create_prototype", "user_visible", "not_active", "/api/projects/{projectId}/prototype-7day-playable/from-gdd", "prototypeWorkflowPanel", "workflow.create_prototype", "run", "", "2"),
-        new("create_iteration_plan", "user_visible", "not_active", "/api/projects/{projectId}/iteration-plan", "v2IterationPanel", "workflow.create_iteration_plan", "run", "", "2"),
+        new("create_iteration_plan", "user_visible", "active", "/api/projects/{projectId}/iteration-plan", "v2IterationPanel", "workflow.create_iteration_plan", "run", "/api/projects/{projectId}/iteration-plan/latest", "2"),
         new("execute_next_goal", "user_visible", "not_active", "/api/projects/{projectId}/iteration-plan/execute-next", "v2IterationPanel", "workflow.execute_next_goal", "run", "", "2"),
         new("run_needs_fix", "user_visible", "not_active", "/api/projects/{projectId}/prototype-feedback-iterations", "v2RepairPanel", "workflow.run_needs_fix", "run", "", "2"),
         new("run_ui_closure", "user_visible", "not_active", "/api/projects/{projectId}/ui-optimization", "v2UiOptimizationPanel", "workflow.run_ui_closure", "run", "", "2"),

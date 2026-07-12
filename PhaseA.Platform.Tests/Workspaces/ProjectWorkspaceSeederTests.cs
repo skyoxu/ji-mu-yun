@@ -165,6 +165,50 @@ public sealed class ProjectWorkspaceSeederTests
     }
 
     [Fact]
+    public void EnsureSeeded_ResumesIncompleteBootstrapWhenBaselineFilesAlreadyExist()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        var baselineFiles = new[]
+        {
+            "AGENTS.md",
+            "README.md",
+            "Game.sln",
+            "project.godot",
+            "Game.Core.Tests/Game.Core.Tests.csproj"
+        };
+        foreach (var relativePath in baselineFiles)
+        {
+            var sourcePath = Path.Combine(source.Path, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(sourcePath)!);
+            File.WriteAllText(sourcePath, $"source:{relativePath}\n");
+        }
+        var ordinarySourcePath = Path.Combine(source.Path, "Game.Core", "OrdinarySource.cs");
+        Directory.CreateDirectory(Path.GetDirectoryName(ordinarySourcePath)!);
+        File.WriteAllText(ordinarySourcePath, "// ordinary source\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = source.Path
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        foreach (var relativePath in baselineFiles)
+        {
+            var targetPath = Path.Combine(targetRepo, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            File.WriteAllText(targetPath, $"existing:{relativePath}\n");
+        }
+
+        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+
+        File.ReadAllText(Path.Combine(targetRepo, "Game.Core", "OrdinarySource.cs"))
+            .Should().Be("// ordinary source\n");
+        File.Exists(Path.Combine(targetRepo, ".phasea-seed-complete")).Should().BeTrue();
+    }
+
+    [Fact]
     public void EnsureSeeded_CreatesLogsGdignoreForFreshWorkspace()
     {
         using var source = TempDirectory.Create("phase-a-source");
@@ -398,6 +442,123 @@ public sealed class ProjectWorkspaceSeederTests
 
         File.ReadAllText(lockedPath).Should().Be("old suite\n");
         File.ReadAllText(Path.Combine(targetRepo, "docs", "prototype-type-kits", "rpg.md")).Should().Be("new manifest\n");
+    }
+
+    [Fact]
+    public async Task EnsureSeeded_SerializesConcurrentInitializationOfSameWorkspace()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        Directory.CreateDirectory(Path.Combine(source.Path, "Game.Core"));
+        for (var index = 0; index < 200; index++)
+        {
+            File.WriteAllText(
+                Path.Combine(source.Path, "Game.Core", $"Seed-{index:000}.cs"),
+                $"// seed {index}\n");
+        }
+        File.WriteAllText(Path.Combine(source.Path, "AGENTS.md"), "agents\n");
+        File.WriteAllText(Path.Combine(source.Path, "README.md"), "readme\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = source.Path
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        using var start = new ManualResetEventSlim(false);
+        var tasks = Enumerable.Range(0, 8)
+            .Select(_ => Task.Run(() =>
+            {
+                start.Wait();
+                new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+            }))
+            .ToArray();
+
+        start.Set();
+        await Task.WhenAll(tasks);
+
+        File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("readme\n");
+        Directory.EnumerateFiles(Path.Combine(targetRepo, "Game.Core"), "Seed-*.cs").Should().HaveCount(200);
+    }
+
+    [Fact]
+    public async Task EnsureSeeded_AtomicallyReplacesManagedFilesWhileWorkspaceIsBeingRead()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        var sourceScripts = Path.Combine(source.Path, "scripts");
+        Directory.CreateDirectory(sourceScripts);
+        var sourcePath = Path.Combine(sourceScripts, "atomic-read.bin");
+        var oldContent = Enumerable.Repeat((byte)'A', 2 * 1024 * 1024).ToArray();
+        var newContent = Enumerable.Repeat((byte)'B', 2 * 1024 * 1024).ToArray();
+        File.WriteAllBytes(sourcePath, newContent);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = source.Path
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        var targetPath = Path.Combine(targetRepo, "scripts", "atomic-read.bin");
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        File.WriteAllBytes(targetPath, oldContent);
+        var invalidReadObserved = 0;
+        using var stop = new CancellationTokenSource();
+        var reader = Task.Run(() =>
+        {
+            while (!stop.IsCancellationRequested)
+            {
+                using var stream = new FileStream(
+                    targetPath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite | FileShare.Delete);
+                using var buffer = new MemoryStream();
+                stream.CopyTo(buffer);
+                var observed = buffer.ToArray();
+                if (!observed.AsSpan().SequenceEqual(oldContent) && !observed.AsSpan().SequenceEqual(newContent))
+                {
+                    Interlocked.Exchange(ref invalidReadObserved, 1);
+                    return;
+                }
+            }
+        });
+
+        await Task.WhenAll(Enumerable.Range(0, 12).Select(_ => Task.Run(() =>
+            new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo))));
+        stop.Cancel();
+        await reader;
+
+        invalidReadObserved.Should().Be(0);
+        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+        File.ReadAllBytes(targetPath).Should().Equal(newContent);
+    }
+
+    [Fact]
+    public void EnsureSeeded_DoesNotMarkWorkspaceCompleteWhenCriticalManagedFileIsLocked()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        File.WriteAllText(Path.Combine(source.Path, "Directory.Build.props"), "new props\n");
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = source.Path
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        Directory.CreateDirectory(targetRepo);
+        var targetPath = Path.Combine(targetRepo, "Directory.Build.props");
+        File.WriteAllText(targetPath, "old props\n");
+        using var locked = new FileStream(targetPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+        var act = () => new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+
+        act.Should().Throw<IOException>();
+        File.Exists(Path.Combine(targetRepo, ".phasea-seed-complete")).Should().BeFalse();
+        File.ReadAllText(targetPath).Should().Be("old props\n");
     }
 
     private static bool TryCreateJunction(string junctionPath, string targetPath)

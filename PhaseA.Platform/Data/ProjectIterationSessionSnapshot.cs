@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace PhaseA.Platform.Data;
 
 public sealed record ProjectIterationSessionSnapshot(
@@ -13,7 +15,10 @@ public sealed record ProjectIterationSessionSnapshot(
     string? LatestEvaluationJson,
     string CreatedUtc,
     string UpdatedUtc,
-    string? CompletedUtc);
+    string? CompletedUtc,
+    [property: JsonIgnore] string? TraceabilityAnchorJson = null,
+    [property: JsonIgnore] string? RequestIdentityHash = null,
+    [property: JsonIgnore] string? RouteStateJson = null);
 
 public sealed record ProjectIterationGoalSnapshot(
     string GoalId,
@@ -41,3 +46,11 @@ public sealed record ProjectIterationSessionDetails(
     IReadOnlyList<ProjectIterationGoalSnapshot> Goals,
     IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,
     Runs.PrototypeIterationPlanEvaluationResult? LatestEvaluation = null);
+
+public sealed class ProjectIterationRequestIdentityConflictException : Exception
+{
+    public ProjectIterationRequestIdentityConflictException()
+        : base("An iteration plan with the same request identity already exists.")
+    {
+    }
+}

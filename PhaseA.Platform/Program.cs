@@ -8,6 +8,7 @@ using PhaseA.Platform.Readback;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Skills;
+using PhaseA.Platform.Workflow;
 using PhaseA.Platform.Workspaces;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 var builder = WebApplication.CreateBuilder(args);
 var options = PhaseAPlatformOptionsLoader.FromEnvironment();
@@ -689,10 +691,17 @@ app.MapPost("/api/projects/{projectId}/packages", async (
     [FromServices] ProjectPackageService packages,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "preview_package") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     try
     {
         var result = await packages.CreatePackageAsync(CurrentAccountId(context), projectId, cancellationToken);
-        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status == "succeeded"
+            ? Results.Ok(result)
+            : IterationPlanRejected(context, "preview_package_rejected", result.FailureCode ?? "Package creation was rejected.", result.FailureCode ?? result.Status, StatusCodes.Status400BadRequest, result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
     {
@@ -2178,15 +2187,29 @@ app.MapPost("/api/projects/{projectId}/iteration-plan", async (
     [FromServices] PrototypeIterationPlanService iterationPlans,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     try
     {
         var accountId = CurrentAccountId(context);
         var result = await iterationPlans.CreateAsync(accountId, projectId, request, cancellationToken);
-        return result.Status is "ready" or "llm_failed" or "custom_route_required" or "prototype_recreation_required" or "iteration_plan_update_blocked" ? Results.Ok(result) : Results.BadRequest(result);
+        if (result.Status == "ready")
+        {
+            return Results.Ok(result);
+        }
+
+        var statusCode = result.Status switch
+        {
+            "blocked" or "requirement_map_missing" or "contract_stale" or "iteration_plan_update_blocked" or "prototype_recreation_required" => StatusCodes.Status409Conflict,
+            "custom_route_required" => StatusCodes.Status422UnprocessableEntity,
+            "llm_failed" => StatusCodes.Status503ServiceUnavailable,
+            _ => StatusCodes.Status400BadRequest
+        };
+        var domainCode = result.Blockers?.FirstOrDefault()?.DomainCode ?? result.Status;
+        return IterationPlanRejected(context, "iteration_plan_rejected", result.Summary, domainCode, statusCode, result);
     }
-    catch (InvalidOperationException ex)
+    catch (InvalidOperationException)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
     }
 });
 
@@ -2196,8 +2219,29 @@ app.MapGet("/api/projects/{projectId}/iteration-plan/latest", async (
     [FromServices] PrototypeIterationPlanService iterationPlans,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     var result = await iterationPlans.GetLatestAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "iteration_plan_not_found" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/iteration-plan/confirm", async (
+    string projectId,
+    PrototypeIterationPlanConfirmationRequest request,
+    HttpContext context,
+    [FromServices] PrototypeIterationPlanService iterationPlans,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    var result = await iterationPlans.ConfirmAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    if (result.Status == "confirmed")
+    {
+        return Results.Ok(result);
+    }
+
+    var statusCode = result.Status == "project_not_found"
+        ? StatusCodes.Status404NotFound
+        : StatusCodes.Status409Conflict;
+    return IterationPlanRejected(context, "iteration_plan_confirmation_rejected", result.Summary, result.DomainCode, statusCode, result);
 });
 
 app.MapGet("/api/projects/{projectId}/iteration-plans", async (
@@ -2206,6 +2250,7 @@ app.MapGet("/api/projects/{projectId}/iteration-plans", async (
     [FromServices] PrototypeIterationPlanService iterationPlans,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     var result = await iterationPlans.ListAsync(CurrentAccountId(context), projectId, cancellationToken);
     return Results.Ok(new { rounds = result });
 });
@@ -2216,18 +2261,21 @@ app.MapDelete("/api/projects/{projectId}/iteration-plan", async (
     [FromServices] PrototypeIterationPlanService iterationPlans,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     try
     {
         var result = await iterationPlans.DeleteAsync(CurrentAccountId(context), projectId, cancellationToken);
-        return result.Status == "blocked" ? Results.BadRequest(result) : Results.Ok(result);
+        return result.Status == "blocked"
+            ? IterationPlanRejected(context, "iteration_plan_delete_rejected", result.Summary, "iteration_plan_delete_blocked", StatusCodes.Status409Conflict)
+            : Results.Ok(result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
     {
         return CancelledRunResult();
     }
-    catch (InvalidOperationException ex)
+    catch (InvalidOperationException)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
     }
 });
 
@@ -2238,18 +2286,21 @@ app.MapDelete("/api/projects/{projectId}/iteration-plans/{sessionId}", async (
     [FromServices] PrototypeIterationPlanService iterationPlans,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     try
     {
         var result = await iterationPlans.DeleteSessionAsync(CurrentAccountId(context), projectId, sessionId, cancellationToken);
-        return result.Status == "blocked" ? Results.BadRequest(result) : Results.Ok(result);
+        return result.Status == "blocked"
+            ? IterationPlanRejected(context, "iteration_plan_delete_rejected", result.Summary, "iteration_plan_delete_blocked", StatusCodes.Status409Conflict)
+            : Results.Ok(result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
     {
         return CancelledRunResult();
     }
-    catch (InvalidOperationException ex)
+    catch (InvalidOperationException)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
     }
 });
 
@@ -2259,6 +2310,7 @@ app.MapGet("/api/projects/{projectId}/gdd-milestone-steps/latest", async (
     [FromServices] GddMilestoneStepService milestoneSteps,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     var result = await milestoneSteps.GetOrCreateLatestAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null
         ? Results.NotFound(new { error = "project_not_found" })
@@ -2267,7 +2319,7 @@ app.MapGet("/api/projects/{projectId}/gdd-milestone-steps/latest", async (
             : Results.Ok(result);
 });
 
-// Legacy compatibility: the browser now uses /current/execute, but older clients may still call this route.
+// Route-name compatibility only: older clients may call this alias, but execution keeps the current strict traceability gate.
 app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/current/iteration-plan", async (
     string projectId,
     JsonElement request,
@@ -2275,19 +2327,23 @@ app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/current/iteration-pla
     [FromServices] GddMilestoneStepService milestoneSteps,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "execute_next_goal") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     _ = request;
-    var result = await milestoneSteps.ExecuteCurrentStepAsync(CurrentAccountId(context), projectId, cancellationToken);
+    var result = await milestoneSteps.ExecuteCurrentStepStrictAsync(CurrentAccountId(context), projectId, cancellationToken);
     if (result is null)
     {
-        return Results.NotFound(new { error = "project_not_found" });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
     }
 
-    return result.Status is "ready" or "llm_failed" or "custom_route_required" or "prototype_recreation_required" or "iteration_plan_update_blocked"
-        or "completed" or "succeeded" or "needs_fix" or "failed" or "project_busy" or "prototype_required"
+    return result.Status is "completed" or "succeeded"
         ? Results.Ok(result)
         : result.Status == "gdd_not_found"
-            ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
-            : Results.BadRequest(result);
+            ? IterationPlanRejected(context, "gdd_not_found", result.Summary, "gdd_not_found", StatusCodes.Status404NotFound, result)
+            : IterationPlanRejected(context, "iteration_plan_execute_rejected", result.Summary, result.FailureCode ?? result.Status, StatusCodes.Status400BadRequest, result);
 });
 
 app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/current/execute", async (
@@ -2297,18 +2353,23 @@ app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/current/execute", asy
     [FromServices] GddMilestoneStepService milestoneSteps,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "execute_next_goal") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     _ = request;
-    var result = await milestoneSteps.ExecuteCurrentStepAsync(CurrentAccountId(context), projectId, cancellationToken);
+    var result = await milestoneSteps.ExecuteCurrentStepStrictAsync(CurrentAccountId(context), projectId, cancellationToken);
     if (result is null)
     {
-        return Results.NotFound(new { error = "project_not_found" });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
     }
 
-    return result.Status is "completed" or "succeeded" or "needs_fix" or "failed" or "project_busy" or "prototype_required"
+    return result.Status is "completed" or "succeeded"
         ? Results.Ok(result)
         : result.Status == "gdd_not_found"
-            ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
-            : Results.BadRequest(result);
+            ? IterationPlanRejected(context, "gdd_not_found", result.Summary, "gdd_not_found", StatusCodes.Status404NotFound, result)
+            : IterationPlanRejected(context, "iteration_plan_execute_rejected", result.Summary, result.FailureCode ?? result.Status, StatusCodes.Status400BadRequest, result);
 });
 
 app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/new-round", async (
@@ -2318,6 +2379,7 @@ app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/new-round", async (
     [FromServices] GddMilestoneStepService milestoneSteps,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     var result = await milestoneSteps.CreateNewRoundStepAsync(CurrentAccountId(context), projectId, request, cancellationToken);
     if (result is null)
     {
@@ -2339,6 +2401,7 @@ app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/{stepId}/confirm", as
     [FromServices] GddMilestoneStepService milestoneSteps,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     var result = await milestoneSteps.ConfirmAsync(CurrentAccountId(context), projectId, stepId, request, cancellationToken);
     if (result is null)
     {
@@ -2360,19 +2423,24 @@ app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/{stepId}/feedback-run
     [FromServices] GddMilestoneStepService milestoneSteps,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "run_needs_fix") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     try
     {
-        var result = await milestoneSteps.SubmitFeedbackAsync(CurrentAccountId(context), projectId, stepId, request, cancellationToken);
+        var result = await milestoneSteps.SubmitFeedbackStrictAsync(CurrentAccountId(context), projectId, stepId, request, cancellationToken);
         if (result is null)
         {
-            return Results.NotFound(new { error = "project_not_found" });
+            return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
         }
 
-        return result.Status is "completed" or "succeeded" or "needs_fix" or "failed" or "missing_feedback" or "prototype_not_ready" or "prototype_required"
+        return result.Status is "completed" or "succeeded"
             ? Results.Ok(result)
             : result.Status == "gdd_not_found"
-                ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
-                : Results.BadRequest(result);
+                ? IterationPlanRejected(context, "gdd_not_found", result.Summary, "gdd_not_found", StatusCodes.Status404NotFound, result)
+                : IterationPlanRejected(context, "iteration_plan_repair_rejected", result.Summary, result.FailureCode ?? result.Status, StatusCodes.Status400BadRequest, result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
     {
@@ -2388,6 +2456,7 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
     [FromServices] PrototypeWorkflowService prototypeWorkflow,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     try
     {
         var accountId = CurrentAccountId(context);
@@ -2395,9 +2464,9 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
         var result = await iterationPlans.EvaluateWithRunAsync(accountId, projectId, progress, request.Model, cancellationToken);
         return Results.Ok(result);
     }
-    catch (InvalidOperationException ex)
+    catch (InvalidOperationException)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
     }
 });
 
@@ -2407,19 +2476,26 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/execute-next", async (
     [FromServices] PrototypeIterationGoalService iterationGoals,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "execute_next_goal") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     try
     {
         var accountId = CurrentAccountId(context);
         var result = await iterationGoals.ExecuteNextAsync(accountId, projectId, cancellationToken);
-        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status == "completed"
+            ? Results.Ok(result)
+            : IterationPlanRejected(context, "iteration_plan_execute_rejected", result.Summary, result.Status, StatusCodes.Status400BadRequest, result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
     {
         return CancelledRunResult();
     }
-    catch (InvalidOperationException ex)
+    catch (InvalidOperationException)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
     }
 });
 
@@ -2430,6 +2506,11 @@ app.MapPost("/api/projects/{projectId}/ui-optimization", async (
     [FromServices] PrototypeUiOptimizationService uiOptimization,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "run_ui_closure") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     try
     {
         var result = await uiOptimization.RunAsync(CurrentAccountId(context), projectId, request, cancellationToken);
@@ -2451,23 +2532,40 @@ app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
     string projectId,
     PrototypeFeedbackRequest request,
     HttpContext context,
-    [FromServices] PrototypeFeedbackIterationService feedbackIterations,
+    [FromServices] PrototypeNeedsFixRouteService needsFixRoute,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "run_needs_fix") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     try
     {
         var accountId = CurrentAccountId(context);
-        var result = await feedbackIterations.SubmitAsync(accountId, projectId, request, cancellationToken);
+        var result = await needsFixRoute.RunStrictAsync(
+            accountId,
+            projectId,
+            new PrototypeNeedsFixRouteRequest(
+                request.Feedback,
+                request.Model,
+                request.SkillActionId,
+                request.GoalRepair?.GoalId,
+                request.GoalRepair?.GoalIndex,
+                request.SourceKind),
+            cancellationToken);
 
-        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status is "completed" or "succeeded"
+            ? Results.Ok(result)
+            : IterationPlanRejected(context, "iteration_plan_repair_rejected", result.Summary, result.Status, StatusCodes.Status400BadRequest, result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
     {
         return CancelledRunResult();
     }
-    catch (InvalidOperationException ex)
+    catch (InvalidOperationException)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
     }
 });
 
@@ -2486,22 +2584,27 @@ app.MapPost("/api/projects/{projectId}/needs-fix-route", async (
     [FromServices] PrototypeNeedsFixRouteService needsFixRoute,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "run_needs_fix") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     try
     {
         var accountId = CurrentAccountId(context);
-        var result = await needsFixRoute.RunAsync(accountId, projectId, request, cancellationToken);
+        var result = await needsFixRoute.RunStrictAsync(accountId, projectId, request, cancellationToken);
 
-        return result.Status is "completed" or "succeeded" or "needs_fix"
+        return result.Status is "completed" or "succeeded"
             ? Results.Ok(result)
-            : Results.BadRequest(result);
+            : IterationPlanRejected(context, "iteration_plan_repair_rejected", result.Summary, result.Status, StatusCodes.Status400BadRequest, result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
     {
         return CancelledRunResult();
     }
-    catch (InvalidOperationException ex)
+    catch (InvalidOperationException)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "project_not_found", StatusCodes.Status404NotFound);
     }
 });
 
@@ -2511,16 +2614,23 @@ app.MapPost("/api/projects/{projectId}/repair-plan", async (
     [FromServices] PrototypeRepairPlanService repairPlans,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "run_needs_fix") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     try
     {
         var accountId = CurrentAccountId(context);
         var result = await repairPlans.CreateAsync(accountId, projectId, cancellationToken);
 
-        return result.Status == "ready" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status == "ready"
+            ? Results.Ok(result)
+            : IterationPlanRejected(context, result.Status, result.Summary, "rejected", StatusCodes.Status409Conflict, result);
     }
-    catch (InvalidOperationException ex)
+    catch (InvalidOperationException)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "rejected", StatusCodes.Status404NotFound);
     }
 });
 
@@ -2541,20 +2651,27 @@ app.MapPost("/api/projects/{projectId}/repair-plan/execute-next", async (
     [FromServices] PrototypeRepairPlanService repairPlans,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
+    if (RejectInactiveRouteAction(context, "run_needs_fix") is { } phaseGate)
+    {
+        return phaseGate;
+    }
     try
     {
         var accountId = CurrentAccountId(context);
         var result = await repairPlans.ExecuteNextAsync(accountId, projectId, request, cancellationToken);
 
-        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status == "completed"
+            ? Results.Ok(result)
+            : IterationPlanRejected(context, result.Status, result.Summary, "rejected", StatusCodes.Status409Conflict, result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
     {
         return CancelledRunResult();
     }
-    catch (InvalidOperationException ex)
+    catch (InvalidOperationException)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return IterationPlanRejected(context, "project_not_found", "Project not found.", "rejected", StatusCodes.Status404NotFound);
     }
 });
 
@@ -3216,6 +3333,32 @@ static void ApplyNoStore(HttpContext context)
     context.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate";
     context.Response.Headers.Pragma = "no-cache";
     context.Response.Headers.Expires = "0";
+}
+
+static IResult? RejectInactiveRouteAction(HttpContext context, string actionId)
+{
+    var descriptor = RouteActionDescriptors.Get(actionId);
+    return string.Equals(descriptor.DefaultPhaseEligibility, "active", StringComparison.Ordinal)
+        ? null
+        : IterationPlanRejected(
+            context,
+            "route_action_rejected",
+            "The route action is not active in the current implementation phase.",
+            "phase_gate_blocked",
+            StatusCodes.Status409Conflict);
+}
+
+static IResult IterationPlanRejected(HttpContext context, string code, string message, string domainCode, int statusCode, object? result = null)
+{
+    var payload = result is null
+        ? new JsonObject()
+        : JsonSerializer.SerializeToNode(result, new JsonSerializerOptions(JsonSerializerDefaults.Web)) as JsonObject ?? new JsonObject();
+    payload["operationStatus"] = "rejected";
+    payload["code"] = code;
+    payload["message"] = message;
+    payload["details"] = new JsonObject { ["domainCode"] = domainCode };
+    payload["requestId"] = context.TraceIdentifier;
+    return Results.Json(payload, statusCode: statusCode);
 }
 
 static void ApplyWebPreviewCachePolicy(HttpContext context, ProjectWebPreviewReadResult? result)

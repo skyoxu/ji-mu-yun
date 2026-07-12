@@ -1,9 +1,12 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Prototypes;
+using PhaseA.Platform.Workflow;
 
 namespace PhaseA.Platform.Runs;
 
@@ -44,6 +47,7 @@ public sealed class PrototypeIterationPlanService
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly PrototypeContractService _contractService;
     private readonly PrototypeContractFreezeService _contractFreezeService;
+    private readonly GameDesignRequirementMapService _requirementMapService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly GameTypeTemplateCatalog? _templateCatalog;
 
@@ -59,12 +63,14 @@ public sealed class PrototypeIterationPlanService
         ICodexChatClient? codexChatClient = null,
         ILlmRouteEngine? llmRouteEngine = null,
         GameTypeTemplateCatalog? templateCatalog = null,
-        PrototypeContractFreezeService? contractFreezeService = null)
+        PrototypeContractFreezeService? contractFreezeService = null,
+        GameDesignRequirementMapService? requirementMapService = null)
     {
         _metadataStore = metadataStore;
         _routeStateWriter = routeStateWriter;
         _contractService = contractService ?? new PrototypeContractService();
         _contractFreezeService = contractFreezeService ?? new PrototypeContractFreezeService(metadataStore);
+        _requirementMapService = requirementMapService ?? new GameDesignRequirementMapService(metadataStore);
         _llmRouteEngine = llmRouteEngine ?? (codexChatClient is null ? null : new LlmRouteEngine(codexChatClient));
         _templateCatalog = templateCatalog;
     }
@@ -79,6 +85,8 @@ public sealed class PrototypeIterationPlanService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
+        await using var mutationLease = await ProjectMutationLockRegistry.Shared.AcquireAsync(accountId, projectId, cancellationToken);
+
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
@@ -88,12 +96,14 @@ public sealed class PrototypeIterationPlanService
         var newChainGuard = _contractFreezeService.EvaluateNewChainGuard(project);
         if (newChainGuard.NewChainActive && !newChainGuard.Allowed)
         {
-            return new PrototypeIterationPlanResult(
-                "",
-                newChainGuard.Status is "contract_missing" ? "requirement_map_missing" : "contract_stale",
+            var domainCode = newChainGuard.Status is "contract_missing" ? "requirement_map_missing" : "contract_stale";
+            return await RejectPlanBeforeLlmAsync(
+                project,
+                ToIterationPlanSourceHashes(newChainGuard.ContractStatus),
+                domainCode,
                 newChainGuard.Summary,
-                [],
-                null);
+                cancellationToken,
+                ["meta/routes/gdd-requirements/latest.json", "routes/prototype-contract/latest.json"]);
         }
 
         var rawMessage = request.Message?.Trim();
@@ -101,12 +111,12 @@ public sealed class PrototypeIterationPlanService
         var model = PrototypeModelPolicy.Normalize(request.Model);
         if (string.IsNullOrWhiteSpace(message))
         {
-            return new PrototypeIterationPlanResult("", "missing_message", "请输入要拆解的优化目标。", [], null);
+            return new PrototypeIterationPlanResult("", "missing_message", "请输入要拆解的优化目标。", [], null, OperationStatus: "rejected");
         }
 
         if ((request.Attachments?.Count ?? 0) > MaxTextAttachments)
         {
-            return new PrototypeIterationPlanResult("", "too_many_attachments", "最多只能导入 5 个 TXT 参考文件。", [], null);
+            return new PrototypeIterationPlanResult("", "too_many_attachments", "最多只能导入 5 个 TXT 参考文件。", [], null, OperationStatus: "rejected");
         }
 
         var attachmentContext = BuildAttachmentPromptBlock(request.Attachments);
@@ -121,7 +131,67 @@ public sealed class PrototypeIterationPlanService
                 "suggestion_needs_fix",
                 "当前这条建议更像内部执行或环境修复信息，不适合直接拆成游戏模块任务。请先处理需修复项，或重新生成更明确的产品向优化建议。",
                 [],
-                null);
+                null,
+                OperationStatus: "rejected");
+        }
+        var sourceHashes = newChainGuard.NewChainActive ? ToIterationPlanSourceHashes(newChainGuard.ContractStatus) : null;
+        var styleApplicability = sourceHashes is null ? null : ToIterationStyleApplicability(newChainGuard.ContractStatus);
+        GameDesignRequirementMapResult? preflightRequirementMap = null;
+        IReadOnlyDictionary<string, string> approvedRequirementDecisions = new Dictionary<string, string>();
+        IReadOnlySet<string> verifiedSkeletonRequirementIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (sourceHashes is not null)
+        {
+            preflightRequirementMap = await _requirementMapService.GetLatestAsync(accountId, projectId, cancellationToken);
+            var governance = await ReadLiveGovernanceAsync(project, preflightRequirementMap, cancellationToken);
+            if (governance.Blocker is not null)
+            {
+                return await RejectPlanBeforeLlmAsync(
+                    project,
+                    sourceHashes,
+                    governance.Blocker.DomainCode,
+                    governance.Blocker.Summary,
+                    cancellationToken,
+                    governance.Blocker.EvidenceRefs,
+                    governance.Blocker.RequirementIds);
+            }
+            approvedRequirementDecisions = governance.ApprovedRequirementDecisions;
+            if (!IsCurrentRequirementMap(preflightRequirementMap, newChainGuard.ContractStatus, approvedRequirementDecisions))
+            {
+                return await RejectPlanBeforeLlmAsync(project, sourceHashes, "source_stale", "The frozen Requirement Map does not match the current Prototype Contract authority hashes.", cancellationToken);
+            }
+
+            var skeletonAuthority = PrototypeSkeletonAuthorityGate.Evaluate(project, _routeStateWriter, sourceHashes);
+            if (!skeletonAuthority.Allowed)
+            {
+                return await RejectPlanBeforeLlmAsync(
+                    project,
+                    sourceHashes,
+                    skeletonAuthority.DomainCode,
+                    skeletonAuthority.Summary,
+                    cancellationToken,
+                    skeletonAuthority.EvidenceRefs);
+            }
+            verifiedSkeletonRequirementIds = skeletonAuthority.VerifiedRequirementIds;
+        }
+        var requestIdentityHash = sourceHashes is null
+            ? ""
+            : ComputeHash(JsonSerializer.Serialize(new
+            {
+                account_scope = accountId,
+                project_scope = projectId,
+                source_hashes = sourceHashes,
+                style_applicability = styleApplicability,
+                source_kind = sourceKind,
+                message = promptMessage,
+                model
+            }));
+        if (sourceHashes is not null)
+        {
+            var reused = await TryReuseCurrentPlanAsync(project, requestIdentityHash, sourceHashes, cancellationToken);
+            if (reused is not null)
+            {
+                return reused;
+            }
         }
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var routeStrategy = GameTypeRouteStrategies.Resolve(project, routeProfile);
@@ -138,12 +208,35 @@ public sealed class PrototypeIterationPlanService
                 "\u5f53\u524d\u8fed\u4ee3\u8ba1\u5212\u5df2\u7ecf\u5f00\u59cb\u6267\u884c\uff0c\u4e0d\u5141\u8bb8\u66f4\u65b0\u8fed\u4ee3\u8ba1\u5212\u3002",
                 [],
                 null,
-                previousIterationPlan.LatestEvaluation);
+                previousIterationPlan.LatestEvaluation,
+                OperationStatus: "rejected");
         }
 
         var regenerationGuidance = BuildPlanRegenerationGuidance(previousIterationPlan, promptMessage, sourceKind);
         var prototypeContract = _contractService.Read(project);
         var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
+        if (sourceHashes is not null)
+        {
+            _routeStateWriter.WriteIterationPlanPromptEvidenceState(project, new
+            {
+                schema_version = "iteration-plan-prompt-evidence.v1",
+                route = "iteration-plan",
+                source_boundary_enforced = true,
+                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                source_hashes = sourceHashes,
+                authority_sources = new[]
+                {
+                    "game-type-route-profile",
+                    PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
+                    "routes/prototype-contract/latest.json",
+                    "meta/routes/gdd-requirements/latest.json"
+                },
+                request_identity_hash = requestIdentityHash,
+                prompt_transport = "stdin-first-shared-route-engine",
+                raw_prompt_persisted = false,
+                updated_utc = DateTimeOffset.UtcNow.ToString("O")
+            });
+        }
         IterationPlanningContext planningContext;
         try
         {
@@ -157,7 +250,8 @@ public sealed class PrototypeIterationPlanService
                 $"游戏模块生成需要 LLM 成功参与，但当前调用失败：{ex.Message}",
                 [],
                 null,
-                null);
+                null,
+                OperationStatus: "rejected");
         }
 
         var genericCoreLoopGate = routeStrategy.UsesSpecializedIterationPlanning
@@ -171,7 +265,8 @@ public sealed class PrototypeIterationPlanService
                 "当前表单识别出的最小循环已经超过通用游戏模块能力范围，请联系管理员创建定制游戏类型路线后再继续。",
                 [],
                 ToPlanningAnalysisResult(planningContext),
-                null);
+                null,
+                OperationStatus: "rejected");
         }
 
         IterationGoalBuildResult goalBuild;
@@ -187,10 +282,11 @@ public sealed class PrototypeIterationPlanService
                 $"游戏模块生成需要 LLM 成功细化目标，但当前调用失败：{ex.Message}",
                 [],
                 ToPlanningAnalysisResult(planningContext),
-                null);
+                null,
+                OperationStatus: "rejected");
         }
 
-        var goals = goalBuild.Goals;
+        IReadOnlyList<PrototypeIterationPlanGoalResult> goals = goalBuild.Goals;
         if (routeStrategy.RequiresNonEmptyIterationGoals && goals.Count == 0)
         {
             return new PrototypeIterationPlanResult(
@@ -199,7 +295,94 @@ public sealed class PrototypeIterationPlanService
                 "游戏模块生成需要 LLM 成功细化目标，但当前没有得到可用目标。",
                 [],
                 ToPlanningAnalysisResult(planningContext),
-                null);
+                null,
+                OperationStatus: "rejected");
+        }
+
+        IReadOnlyList<PrototypeIterationPlanRequiredModuleResult> requiredModules = BuildRequiredModulesForProject(project, routeStrategy, prototypeContract);
+        IterationPlanTraceabilityBuildResult? traceability = null;
+        if (newChainGuard.NewChainActive)
+        {
+            var activeSourceHashes = sourceHashes!;
+            var requirementMap = await _requirementMapService.GetLatestAsync(accountId, projectId, cancellationToken);
+            if (!IsCurrentRequirementMap(requirementMap, newChainGuard.ContractStatus, approvedRequirementDecisions))
+            {
+                return await RejectPlanBeforeLlmAsync(
+                    project,
+                    activeSourceHashes,
+                    "source_stale",
+                    "The frozen Requirement Map changed while the iteration plan was being generated.",
+                    cancellationToken);
+            }
+
+            traceability = IterationPlanTraceabilityBuilder.Build(
+                requirementMap ?? preflightRequirementMap!,
+                goals,
+                requiredModules,
+                activeSourceHashes,
+                approvedRequirementDecisions,
+                BuildStyleAuthority(newChainGuard.ContractStatus),
+                styleApplicability,
+                verifiedSkeletonRequirementIds);
+            goals = traceability.Goals;
+            requiredModules = traceability.RequiredModules;
+            var interactionScope = IterationPlanIntegrity.Compute(
+                traceability.SourceHashRef,
+                goals.Select(ToGoalState).ToArray(),
+                requiredModules.Select(ToRequiredModuleState).ToArray(),
+                traceability.Blockers.Select(ToBlockerState).ToArray(),
+                ToCoverageState(traceability.Coverage));
+            goals = goals.Select(goal =>
+            {
+                if (goal.InteractionRegion is null)
+                {
+                    return goal;
+                }
+
+                var owners = BuildInteractionOwners(goal, requiredModules);
+                var geometry = BuildInteractionGeometry(goal, owners);
+                return goal with
+                {
+                    InteractionRegion = goal.InteractionRegion with
+                    {
+                        ArtifactRef = $"meta/routes/iteration-plan/interaction-regions/{interactionScope}/goal-{goal.GoalIndex:00}.json",
+                        OwnerRefs = owners,
+                        PlannedGeometry = geometry,
+                        ValidRegions = geometry.Select(item => $"geometry:{item.GeometryId}").ToArray()
+                    }
+                };
+            }).ToArray();
+            traceability = traceability with
+            {
+                Goals = goals,
+                PlanHash = IterationPlanIntegrity.Compute(
+                    traceability.SourceHashRef,
+                    goals.Select(ToGoalState).ToArray(),
+                    requiredModules.Select(ToRequiredModuleState).ToArray(),
+                    traceability.Blockers.Select(ToBlockerState).ToArray(),
+                    ToCoverageState(traceability.Coverage))
+            };
+            if (traceability.Blockers.Count > 0)
+            {
+                WriteBlockedTraceabilityAttemptState(project, activeSourceHashes, goals, requiredModules, traceability.Blockers, traceability.Coverage, traceability.PlanHash, traceability.SourceHashRef);
+                foreach (var blocker in traceability.Blockers)
+                {
+                    await RecordPlanDiagnosticAsync(project, blocker, traceability.SourceHashRef, cancellationToken);
+                }
+                return new PrototypeIterationPlanResult(
+                    "",
+                    "blocked",
+                    traceability.Blockers[0].Summary,
+                    goals,
+                    ToPlanningAnalysisResult(planningContext),
+                    null,
+                    requiredModules,
+                    "rejected",
+                    traceability.PlanHash,
+                    activeSourceHashes,
+                    traceability.Coverage,
+                    traceability.Blockers);
+            }
         }
 
         var skeletonGuard = await EvaluatePrototypeSkeletonRegenerationNeedAsync(
@@ -226,27 +409,201 @@ public sealed class PrototypeIterationPlanService
                 recreationMessage,
                 [],
                 ToPlanningAnalysisResult(planningContext),
-                null);
+                null,
+                OperationStatus: "rejected");
         }
 
-        var overallGoal = BuildOverallGoal(project.GameName, message);
-        var created = await _metadataStore.CreateProjectIterationSessionAsync(
-            accountId,
-            projectId,
-            sourceKind,
-            message,
-            overallGoal,
-            goals.Select(goal => new ProjectIterationGoalCreateCommand(
+        foreach (var goal in goals.Where(item => item.InteractionRegion is not null))
+        {
+            var owners = goal.InteractionRegion!.OwnerRefs;
+            var candidate = new
+            {
+                schema_version = "godot-interaction-region.v1",
+                route = "iteration-plan",
+                goal_index = goal.GoalIndex,
+                requirement_ids = goal.RequirementIds ?? [],
+                scene_node_owners = owners,
+                artifact_form = "planned-godot-node-map",
+                evidence_kind = "pre-execution-design-contract",
+                validation_status = "pending",
+                validation_method = "",
+                runtime_validation_required = true,
+                coordinate_semantics = goal.EngineSemantics?.CoordinateSemantics ?? "project-profile-coordinate-semantics",
+                devices = goal.InteractionRegion!.Devices,
+                valid_regions = goal.InteractionRegion.ValidRegions,
+                invalid_regions = goal.InteractionRegion.InvalidRegions,
+                state_transitions = goal.InteractionRegion.StateTransitions,
+                validation_refs = goal.InteractionRegion.ValidationRefs,
+                owner_refs = goal.InteractionRegion.OwnerRefs,
+                planned_geometry = goal.InteractionRegion.PlannedGeometry.Select(ToInteractionGeometryState).ToArray(),
+                region_map = IterationPlanInteractionArtifactValidator.BuildRegionMap(
+                    owners,
+                    goal.InteractionRegion.ValidRegions,
+                    goal.InteractionRegion.InvalidRegions,
+                    goal.InteractionRegion.StateTransitions),
+                source_hash_ref = goal.SourceHashRef,
+                updated_utc = DateTimeOffset.UtcNow.ToString("O")
+            };
+            _routeStateWriter.WriteIterationPlanInteractionRegionState(project, goal.GoalIndex, candidate, goal.InteractionRegion!.ArtifactRef);
+            var validation = IterationPlanInteractionArtifactValidator.ValidateCandidate(
+                project.RepoPath,
+                goal.InteractionRegion.ArtifactRef,
                 goal.GoalIndex,
-                goal.Title,
-                goal.Description,
-                    goal.AcceptanceHint)).ToArray(),
-            cancellationToken);
+                goal.RequirementIds ?? [],
+                goal.SourceHashRef,
+                owners,
+                goal.InteractionRegion.PlannedGeometry,
+                goal.EngineSemantics?.CoordinateSemantics ?? "project-profile-coordinate-semantics");
+            if (!validation.Allowed || validation.ValidatedPayload is null)
+            {
+                var blocker = new PrototypeIterationPlanBlockerResult(
+                    "interaction_region_validation_failed",
+                    "P1",
+                    validation.Summary,
+                    goal.RequirementIds ?? [],
+                    [goal.InteractionRegion.ArtifactRef]);
+                await RecordPlanDiagnosticAsync(project, blocker, traceability?.SourceHashRef ?? goal.SourceHashRef, cancellationToken);
+                WriteBlockedTraceabilityAttemptState(
+                    project,
+                    sourceHashes!,
+                    goals,
+                    requiredModules,
+                    [blocker],
+                    traceability?.Coverage,
+                    traceability?.PlanHash ?? "",
+                    traceability?.SourceHashRef ?? goal.SourceHashRef);
+                return new PrototypeIterationPlanResult(
+                    "",
+                    "blocked",
+                    validation.Summary,
+                    goals,
+                    ToPlanningAnalysisResult(planningContext),
+                    null,
+                    requiredModules,
+                    "rejected",
+                    traceability?.PlanHash ?? "",
+                    sourceHashes,
+                    traceability?.Coverage,
+                    [blocker]);
+            }
+
+            _routeStateWriter.WriteIterationPlanInteractionRegionState(
+                project,
+                goal.GoalIndex,
+                validation.ValidatedPayload,
+                goal.InteractionRegion.ArtifactRef);
+        }
 
         var summary = BuildPlanSummary(goals.Count, planningContext, goalBuild.UsedScaffoldFallback);
-        await _metadataStore.UpdateProjectIterationSessionStatusAsync(created.SessionId, "ready", 0, summary, null, null, cancellationToken);
         var planningAnalysis = ToPlanningAnalysisResult(planningContext, goalBuild.StageTelemetry);
         var llmObservability = BuildIterationPlanObservability(planningContext, goalBuild);
+        var sessionId = Guid.NewGuid().ToString("N");
+        var routeState = new
+        {
+            route = "iteration-plan",
+            traceability_contract = sourceHashes is null ? null : "iteration-plan-traceability.v2",
+            game_type_profile = routeProfile,
+            source_boundary = new
+            {
+                contract_id = "hosted-route-recovery-order.v1",
+                enforced = true,
+                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                authority_sources = new[]
+                {
+                    "game-type-route-profile",
+                    PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
+                    "routes/prototype-contract/latest.json",
+                    "meta/routes/gdd-requirements/latest.json",
+                    "meta/routes/iteration-plan/latest.json"
+                },
+                forbidden_source_patterns = new[]
+                {
+                    "docs/game-type-guides/** raw excerpts",
+                    "mutable broad style guide after contract freeze",
+                    "assistant summary as acceptance authority"
+                },
+                prompt_evidence_refs = new[]
+                {
+                    "meta/routes/iteration-plan/prompt-evidence.json",
+                    "meta/routes/iteration-plan/planning-analysis.json",
+                    "routes/prototype-contract/latest.json"
+                },
+                source_hashes = sourceHashes
+            },
+            source_boundary_enforced = true,
+            recovery_source_order_ref = "hosted-route-recovery-order.v1",
+            project_execution_guide_present = !string.IsNullOrWhiteSpace(projectExecutionGuide),
+            project_execution_guide_path = PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
+            prototype_contract = prototypeContract.RelativePath,
+            prototype_contract_present = !string.IsNullOrWhiteSpace(prototypeContract.Json),
+            session_id = sessionId,
+            status = "ready",
+            source_kind = sourceKind,
+            request_identity_hash = requestIdentityHash,
+            summary,
+            model_plan_degraded = goalBuild.UsedScaffoldFallback ? "scaffold_fallback" : null,
+            planning_analysis = planningAnalysis,
+            llm_observability = llmObservability,
+            selected_capabilities = BuildSelectedCapabilitiesForRoute(routeStrategy, promptMessage, planningContext, prototypeContract, regenerationGuidance),
+            source_gdd_hash = sourceHashes?.SourceGddHash,
+            source_scene_route_hash = sourceHashes?.SourceSceneRouteHash,
+            source_requirement_map_hash = sourceHashes?.SourceRequirementMapHash,
+            source_contract_hash = sourceHashes?.SourceContractHash,
+            source_contract_snapshot_hash = sourceHashes?.SourceContractSnapshotHash,
+            source_godot_ui_contract_hash = sourceHashes?.SourceGodotUiContractHash,
+            source_ui_style_contract_hash = sourceHashes?.SourceUiStyleContractHash,
+            ui_style_snapshot_hash = sourceHashes?.UiStyleSnapshotHash,
+            style_applicability = styleApplicability is null ? null : ToStyleApplicabilityState(styleApplicability),
+            source_hash_ref = traceability?.SourceHashRef,
+            plan_hash = traceability?.PlanHash,
+            coverage = traceability is null ? null : ToCoverageState(traceability.Coverage),
+            blockers = traceability?.Blockers.Select(ToBlockerState).ToArray() ?? [],
+            required_modules = requiredModules.Select(ToRequiredModuleState).ToArray(),
+            goals = goals.Select(ToGoalState).ToArray(),
+            confirmation = new { status = "unconfirmed", session_id = sessionId, plan_hash = traceability?.PlanHash ?? "", source_hash_ref = traceability?.SourceHashRef ?? "" },
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        };
+        var canonicalRouteStateJson = JsonSerializer.Serialize(
+            routeState,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true });
+        var overallGoal = BuildOverallGoal(project.GameName, message);
+        ProjectIterationSessionSnapshot created;
+        try
+        {
+            created = await _metadataStore.CreateProjectIterationSessionAsync(
+                accountId,
+                projectId,
+                sourceKind,
+                message,
+                overallGoal,
+                goals.Select(goal => new ProjectIterationGoalCreateCommand(
+                    goal.GoalIndex,
+                    goal.Title,
+                    goal.Description,
+                    goal.AcceptanceHint)).ToArray(),
+                cancellationToken,
+                sessionId: sessionId,
+                requestIdentityHash: string.IsNullOrWhiteSpace(requestIdentityHash) ? null : requestIdentityHash,
+                routeStateJson: canonicalRouteStateJson,
+                initialStatus: "ready",
+                initialSummary: summary);
+        }
+        catch (ProjectIterationRequestIdentityConflictException) when (sourceHashes is not null)
+        {
+            var reused = await TryReuseCurrentPlanAsync(
+                project,
+                requestIdentityHash,
+                sourceHashes,
+                cancellationToken,
+                requireLatestSession: false);
+            if (reused is not null)
+            {
+                return reused;
+            }
+
+            throw;
+        }
+
         _routeStateWriter.WriteIterationPlanAnalysisState(project, new
         {
             route = "iteration-plan",
@@ -256,34 +613,8 @@ public sealed class PrototypeIterationPlanService
             model_plan_degraded = goalBuild.UsedScaffoldFallback ? "scaffold_fallback" : null,
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
-        _routeStateWriter.WriteIterationPlanState(project, new
-        {
-            route = "iteration-plan",
-            game_type_profile = routeProfile,
-            source_boundary = "gdd_derived_contract_only_after_gdd_generation",
-            project_execution_guide_present = !string.IsNullOrWhiteSpace(projectExecutionGuide),
-            project_execution_guide_path = PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
-            prototype_contract = prototypeContract.RelativePath,
-            prototype_contract_present = !string.IsNullOrWhiteSpace(prototypeContract.Json),
-            session_id = created.SessionId,
-            status = "ready",
-            source_kind = sourceKind,
-            summary,
-            model_plan_degraded = goalBuild.UsedScaffoldFallback ? "scaffold_fallback" : null,
-            planning_analysis = planningAnalysis,
-            llm_observability = llmObservability,
-            selected_capabilities = BuildSelectedCapabilitiesForRoute(routeStrategy, promptMessage, planningContext, prototypeContract, regenerationGuidance),
-            required_modules = BuildRequiredModulesForProject(project, routeStrategy, prototypeContract),
-            goals = goals.Select(goal => new
-            {
-                goal.GoalIndex,
-                goal.Title,
-                goal.Description,
-                goal.AcceptanceHint,
-                goal.Status
-            }).ToArray(),
-            updated_utc = DateTimeOffset.UtcNow.ToString("O")
-        });
+        _routeStateWriter.WriteIterationPlanState(project, routeState);
+        _routeStateWriter.WriteIterationPlanSessionState(project, created.SessionId, routeState);
 
         var evaluation = await EvaluateAsync(accountId, projectId, ToPrototypeProgress(planningContext), model, cancellationToken);
         return new PrototypeIterationPlanResult(
@@ -293,7 +624,607 @@ public sealed class PrototypeIterationPlanService
             goals,
             planningAnalysis,
             evaluation,
-            BuildRequiredModulesForProject(project, routeStrategy, prototypeContract));
+            requiredModules,
+            OperationStatus: "created_run",
+            PlanHash: traceability?.PlanHash ?? "",
+            SourceHashes: sourceHashes,
+            Coverage: traceability?.Coverage,
+            Blockers: traceability?.Blockers ?? [],
+            Confirmation: new PrototypeIterationPlanConfirmationResult("unconfirmed", created.SessionId, traceability?.PlanHash ?? "", traceability?.SourceHashRef ?? "", "", ""),
+            StyleApplicability: styleApplicability);
+    }
+
+    public async Task<PrototypeIterationPlanConfirmationOperationResult> ConfirmAsync(
+        string accountId,
+        string projectId,
+        PrototypeIterationPlanConfirmationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentNullException.ThrowIfNull(request);
+
+        await using var mutationLease = await ProjectMutationLockRegistry.Shared.AcquireAsync(accountId, projectId, cancellationToken);
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
+            return new PrototypeIterationPlanConfirmationOperationResult("project_not_found", "project_not_found", "Project not found.", "rejected");
+        }
+
+        var guard = _contractFreezeService.EvaluateNewChainGuard(project);
+        if (!guard.NewChainActive || !guard.Allowed)
+        {
+            var code = guard.NewChainActive ? "source_stale" : "legacy_plan_source_unknown";
+            return await RejectConfirmationAsync(
+                project,
+                code,
+                "Only a current hash-bound new-chain plan can be confirmed.",
+                IterationPlanTraceabilityBuilder.ComputeSourceHashRef(
+                    ToIterationPlanSourceHashes(guard.ContractStatus),
+                    ToIterationStyleApplicability(guard.ContractStatus)),
+                cancellationToken);
+        }
+
+        var sessionDetails = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        if (sessionDetails is null)
+        {
+            return await RejectConfirmationAsync(
+                project,
+                "iteration_plan_state_missing",
+                "The current database-backed iteration plan is missing.",
+                IterationPlanTraceabilityBuilder.ComputeSourceHashRef(
+                    ToIterationPlanSourceHashes(guard.ContractStatus),
+                    ToIterationStyleApplicability(guard.ContractStatus)),
+                cancellationToken);
+        }
+
+        var stateText = RestoreCurrentPlanState(
+            project,
+            sessionDetails,
+            _routeStateWriter,
+            _routeStateWriter.ReadLatestIterationPlanState(project));
+        JsonObject state;
+        try
+        {
+            state = JsonNode.Parse(stateText)?.AsObject() ?? throw new JsonException();
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+        {
+            return await RejectConfirmationAsync(
+                project,
+                "iteration_plan_state_invalid",
+                "The current iteration plan state is invalid.",
+                IterationPlanTraceabilityBuilder.ComputeSourceHashRef(
+                    ToIterationPlanSourceHashes(guard.ContractStatus),
+                    ToIterationStyleApplicability(guard.ContractStatus)),
+                cancellationToken);
+        }
+
+        var sessionId = ReadNodeString(state, "session_id");
+        var planHash = ReadNodeString(state, "plan_hash");
+        var sourceHashRef = ReadNodeString(state, "source_hash_ref");
+        if (string.IsNullOrWhiteSpace(sessionId) || string.IsNullOrWhiteSpace(planHash) || string.IsNullOrWhiteSpace(sourceHashRef))
+        {
+            return await RejectConfirmationAsync(project, "legacy_plan_source_unknown", "The current plan does not contain hash-bound confirmation fields.", sourceHashRef, cancellationToken);
+        }
+
+        if (!string.Equals(request.SessionId, sessionId, StringComparison.Ordinal))
+        {
+            return await RejectConfirmationAsync(project, "plan_session_conflict", "The requested session is not the current iteration plan.", sourceHashRef, cancellationToken, "conflict");
+        }
+
+        if (!string.Equals(request.PlanHash, planHash, StringComparison.Ordinal))
+        {
+            return await RejectConfirmationAsync(project, "plan_hash_conflict", "The requested plan hash is not current.", sourceHashRef, cancellationToken, "conflict");
+        }
+
+        if (!string.Equals(sessionDetails.Session.SessionId, sessionId, StringComparison.Ordinal))
+        {
+            return await RejectConfirmationAsync(project, "plan_session_conflict", "The requested session is not the current database-backed iteration plan.", sourceHashRef, cancellationToken, "conflict");
+        }
+
+        var confirmationPreflight = IterationPlanExecutionPreflight.EvaluateForConfirmation(
+            stateText,
+            sessionId,
+            ToIterationPlanSourceHashes(guard.ContractStatus),
+            ToIterationStyleApplicability(guard.ContractStatus));
+        if (!confirmationPreflight.Allowed)
+        {
+            return await RejectConfirmationAsync(project, confirmationPreflight.DomainCode, confirmationPreflight.Summary, sourceHashRef, cancellationToken);
+        }
+
+        var trustedConfirmation = TryReadTraceabilityAnchor(sessionDetails.Session.TraceabilityAnchorJson);
+        if (trustedConfirmation is not null)
+        {
+            if (!string.Equals(trustedConfirmation.SessionId, sessionId, StringComparison.Ordinal) ||
+                !string.Equals(trustedConfirmation.PlanHash, planHash, StringComparison.Ordinal) ||
+                !string.Equals(trustedConfirmation.SourceHashRef, sourceHashRef, StringComparison.Ordinal))
+            {
+                return await RejectConfirmationAsync(
+                    project,
+                    "plan_hash_conflict",
+                    "The database-backed confirmation anchor already binds this session to a different plan identity.",
+                    sourceHashRef,
+                    cancellationToken,
+                    "conflict");
+            }
+
+            state["confirmation"] = ToConfirmationNode(trustedConfirmation);
+            _routeStateWriter.WriteIterationPlanSessionState(project, sessionId, state);
+            _routeStateWriter.WriteIterationPlanState(project, state);
+            return new PrototypeIterationPlanConfirmationOperationResult(
+                "confirmed",
+                "",
+                "The current hash-bound iteration plan was already confirmed.",
+                "returned_existing",
+                trustedConfirmation);
+        }
+
+        var existing = state["confirmation"] as JsonObject;
+        if (existing is not null &&
+            string.Equals(ReadNodeString(existing, "status"), "confirmed", StringComparison.Ordinal) &&
+            string.Equals(ReadNodeString(existing, "session_id"), sessionId, StringComparison.Ordinal) &&
+            string.Equals(ReadNodeString(existing, "plan_hash"), planHash, StringComparison.Ordinal) &&
+            string.Equals(ReadNodeString(existing, "source_hash_ref"), sourceHashRef, StringComparison.Ordinal))
+        {
+            await _metadataStore.SetProjectIterationTraceabilityAnchorAsync(
+                sessionId,
+                BuildTraceabilityAnchorJson(sessionId, planHash, sourceHashRef, ReadNodeString(existing, "confirmed_by"), ReadNodeString(existing, "confirmed_utc")),
+                cancellationToken);
+            _routeStateWriter.WriteIterationPlanSessionState(project, sessionId, state);
+            return new PrototypeIterationPlanConfirmationOperationResult(
+                "confirmed",
+                "",
+                "The current plan was already confirmed.",
+                "returned_existing",
+                ReadConfirmation(existing));
+        }
+
+        var confirmedUtc = DateTimeOffset.UtcNow.ToString("O");
+        var scopeMarker = $"scope-{ComputeHash($"{accountId}|{projectId}")[..16]}";
+        var confirmationNode = new JsonObject
+        {
+            ["status"] = "confirmed",
+            ["session_id"] = sessionId,
+            ["plan_hash"] = planHash,
+            ["source_hash_ref"] = sourceHashRef,
+            ["confirmed_by"] = scopeMarker,
+            ["confirmed_utc"] = confirmedUtc
+        };
+        state["confirmation"] = confirmationNode;
+        state["updated_utc"] = confirmedUtc;
+        await _metadataStore.SetProjectIterationTraceabilityAnchorAsync(
+            sessionId,
+            BuildTraceabilityAnchorJson(sessionId, planHash, sourceHashRef, scopeMarker, confirmedUtc),
+            cancellationToken);
+        _routeStateWriter.WriteIterationPlanSessionState(project, sessionId, state);
+        _routeStateWriter.WriteIterationPlanState(project, state);
+        return new PrototypeIterationPlanConfirmationOperationResult(
+            "confirmed",
+            "",
+            "The current hash-bound plan is confirmed.",
+            "created_run",
+            ReadConfirmation(confirmationNode));
+    }
+
+    private static PrototypeIterationPlanConfirmationResult ReadConfirmation(JsonObject node)
+    {
+        return new PrototypeIterationPlanConfirmationResult(
+            ReadNodeString(node, "status", "unknown"),
+            ReadNodeString(node, "session_id"),
+            ReadNodeString(node, "plan_hash"),
+            ReadNodeString(node, "source_hash_ref"),
+            ReadNodeString(node, "confirmed_by"),
+            ReadNodeString(node, "confirmed_utc"));
+    }
+
+    private static string BuildTraceabilityAnchorJson(
+        string sessionId,
+        string planHash,
+        string sourceHashRef,
+        string confirmedBy,
+        string confirmedUtc)
+    {
+        return JsonSerializer.Serialize(new
+        {
+            status = "confirmed",
+            session_id = sessionId,
+            plan_hash = planHash,
+            source_hash_ref = sourceHashRef,
+            confirmed_by = confirmedBy,
+            confirmed_utc = confirmedUtc
+        });
+    }
+
+    private static PrototypeIterationPlanConfirmationResult? TryReadTraceabilityAnchor(string? anchorJson)
+    {
+        if (string.IsNullOrWhiteSpace(anchorJson))
+        {
+            return null;
+        }
+        try
+        {
+            using var document = JsonDocument.Parse(anchorJson);
+            var root = document.RootElement;
+            if (!string.Equals(ReadRouteString(root, "status"), "confirmed", StringComparison.Ordinal))
+            {
+                return null;
+            }
+            var result = new PrototypeIterationPlanConfirmationResult(
+                "confirmed",
+                ReadRouteString(root, "session_id"),
+                ReadRouteString(root, "plan_hash"),
+                ReadRouteString(root, "source_hash_ref"),
+                ReadRouteString(root, "confirmed_by"),
+                ReadRouteString(root, "confirmed_utc"));
+            return new[] { result.SessionId, result.PlanHash, result.SourceHashRef, result.ConfirmedBy, result.ConfirmedUtc }
+                .All(value => !string.IsNullOrWhiteSpace(value))
+                ? result
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static JsonObject ToConfirmationNode(PrototypeIterationPlanConfirmationResult confirmation)
+    {
+        return new JsonObject
+        {
+            ["status"] = confirmation.Status,
+            ["session_id"] = confirmation.SessionId,
+            ["plan_hash"] = confirmation.PlanHash,
+            ["source_hash_ref"] = confirmation.SourceHashRef,
+            ["confirmed_by"] = confirmation.ConfirmedBy,
+            ["confirmed_utc"] = confirmation.ConfirmedUtc
+        };
+    }
+
+    private static PrototypeIterationPlanConfirmationResult? ProjectConfirmationFromTrustedAnchor(
+        PrototypeIterationPlanConfirmationResult? routeConfirmation,
+        string? anchorJson)
+    {
+        if (routeConfirmation is null)
+        {
+            return routeConfirmation;
+        }
+        var trusted = TryReadTraceabilityAnchor(anchorJson);
+        if (trusted is not null &&
+            string.Equals(trusted.SessionId, routeConfirmation.SessionId, StringComparison.Ordinal) &&
+            string.Equals(trusted.PlanHash, routeConfirmation.PlanHash, StringComparison.Ordinal) &&
+            string.Equals(trusted.SourceHashRef, routeConfirmation.SourceHashRef, StringComparison.Ordinal))
+        {
+            return trusted;
+        }
+        if (!string.Equals(routeConfirmation.Status, "confirmed", StringComparison.Ordinal))
+        {
+            return routeConfirmation;
+        }
+        return routeConfirmation with
+        {
+            Status = "reconfirm_required",
+            ConfirmedBy = "",
+            ConfirmedUtc = ""
+        };
+    }
+
+    internal static string ProjectStateFromTrustedAnchor(string stateText, string? anchorJson)
+    {
+        if (string.IsNullOrWhiteSpace(stateText) || string.IsNullOrWhiteSpace(anchorJson))
+        {
+            return stateText;
+        }
+        try
+        {
+            var state = JsonNode.Parse(stateText)?.AsObject();
+            if (state is null)
+            {
+                return stateText;
+            }
+            var sessionId = ReadNodeString(state, "session_id");
+            var routeConfirmation = state["confirmation"] is JsonObject confirmationNode
+                ? ReadConfirmation(confirmationNode)
+                : new PrototypeIterationPlanConfirmationResult(
+                    "unconfirmed",
+                    sessionId,
+                    ReadNodeString(state, "plan_hash"),
+                    ReadNodeString(state, "source_hash_ref"),
+                    "",
+                    "");
+            var projected = ProjectConfirmationFromTrustedAnchor(routeConfirmation, anchorJson);
+            if (projected is null || !string.Equals(projected.Status, "confirmed", StringComparison.Ordinal))
+            {
+                return stateText;
+            }
+            state["confirmation"] = ToConfirmationNode(projected);
+            return state.ToJsonString(new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true });
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+        {
+            return stateText;
+        }
+    }
+
+    internal static string RestoreCurrentPlanState(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails details,
+        PrototypeRouteStateWriter routeStateWriter,
+        string stateText)
+    {
+        var current = TryReadStateForSession(stateText, details.Session.SessionId);
+        var databaseState = TryReadStateForSession(details.Session.RouteStateJson ?? "", details.Session.SessionId);
+        var restoredFromDatabase = false;
+        if (current is null)
+        {
+            current = databaseState;
+            restoredFromDatabase = current is not null;
+        }
+
+        if (current is null)
+        {
+            return stateText;
+        }
+
+        var canonical = current.ToJsonString(new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true });
+        if (restoredFromDatabase)
+        {
+            routeStateWriter.WriteIterationPlanSessionState(project, details.Session.SessionId, current);
+            routeStateWriter.WriteIterationPlanState(project, current);
+        }
+        if (databaseState is not null)
+        {
+            RestoreInteractionArtifacts(project, databaseState, routeStateWriter);
+        }
+        return canonical;
+    }
+
+    private static JsonObject? TryReadStateForSession(string stateText, string sessionId)
+    {
+        if (string.IsNullOrWhiteSpace(stateText))
+        {
+            return null;
+        }
+
+        try
+        {
+            var state = JsonNode.Parse(stateText)?.AsObject();
+            return state is not null &&
+                   string.Equals(ReadNodeString(state, "session_id"), sessionId, StringComparison.Ordinal)
+                ? state
+                : null;
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    private static void RestoreInteractionArtifacts(
+        ProjectSnapshot project,
+        JsonObject state,
+        PrototypeRouteStateWriter routeStateWriter)
+    {
+        var goals = DeserializeRouteValue<IReadOnlyList<PrototypeIterationPlanGoalResult>>(state["goals"]) ?? [];
+        foreach (var goal in goals.Where(static item => item.InteractionRegion is not null))
+        {
+            var interaction = goal.InteractionRegion!;
+            var artifactPath = Path.Combine(project.RepoPath, interaction.ArtifactRef.Replace('/', Path.DirectorySeparatorChar));
+            var owners = interaction.OwnerRefs;
+            if (File.Exists(artifactPath))
+            {
+                try
+                {
+                    using var existing = JsonDocument.Parse(File.ReadAllText(artifactPath, Encoding.UTF8));
+                    if (IterationPlanInteractionArtifactValidator.IsValidatedArtifact(
+                            existing.RootElement,
+                            goal.GoalIndex,
+                            goal.RequirementIds ?? [],
+                            goal.SourceHashRef,
+                            owners,
+                            interaction.Devices,
+                            interaction.ValidRegions,
+                            interaction.InvalidRegions,
+                            interaction.StateTransitions,
+                            interaction.ValidationRefs,
+                            interaction.PlannedGeometry,
+                            goal.EngineSemantics?.CoordinateSemantics ?? "project-profile-coordinate-semantics"))
+                    {
+                        continue;
+                    }
+                }
+                catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+                {
+                }
+            }
+
+            var candidate = new
+            {
+                schema_version = "godot-interaction-region.v1",
+                route = "iteration-plan",
+                goal_index = goal.GoalIndex,
+                requirement_ids = goal.RequirementIds ?? [],
+                scene_node_owners = owners,
+                artifact_form = "planned-godot-node-map",
+                evidence_kind = "pre-execution-design-contract",
+                validation_status = "pending",
+                validation_method = "",
+                runtime_validation_required = true,
+                coordinate_semantics = goal.EngineSemantics?.CoordinateSemantics ?? "project-profile-coordinate-semantics",
+                devices = interaction.Devices,
+                valid_regions = interaction.ValidRegions,
+                invalid_regions = interaction.InvalidRegions,
+                state_transitions = interaction.StateTransitions,
+                validation_refs = interaction.ValidationRefs,
+                owner_refs = owners,
+                planned_geometry = interaction.PlannedGeometry.Select(ToInteractionGeometryState).ToArray(),
+                region_map = IterationPlanInteractionArtifactValidator.BuildRegionMap(
+                    owners,
+                    interaction.ValidRegions,
+                    interaction.InvalidRegions,
+                    interaction.StateTransitions),
+                source_hash_ref = goal.SourceHashRef,
+                updated_utc = DateTimeOffset.UtcNow.ToString("O")
+            };
+            routeStateWriter.WriteIterationPlanInteractionRegionState(project, goal.GoalIndex, candidate, interaction.ArtifactRef);
+            var validation = IterationPlanInteractionArtifactValidator.ValidateCandidate(
+                project.RepoPath,
+                interaction.ArtifactRef,
+                goal.GoalIndex,
+                goal.RequirementIds ?? [],
+                goal.SourceHashRef,
+                owners,
+                interaction.PlannedGeometry,
+                goal.EngineSemantics?.CoordinateSemantics ?? "project-profile-coordinate-semantics");
+            if (validation.Allowed && validation.ValidatedPayload is not null)
+            {
+                routeStateWriter.WriteIterationPlanInteractionRegionState(
+                    project,
+                    goal.GoalIndex,
+                    validation.ValidatedPayload,
+                    interaction.ArtifactRef);
+            }
+        }
+    }
+
+    private static string ReadNodeString(JsonObject node, string propertyName, string fallback = "")
+    {
+        return node[propertyName] is JsonValue value && value.TryGetValue<string>(out var text)
+            ? text ?? fallback
+            : fallback;
+    }
+
+    private static string ComputeHash(string value)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+    }
+
+    private async Task<PrototypeIterationPlanResult?> TryReuseCurrentPlanAsync(
+        ProjectSnapshot project,
+        string requestIdentityHash,
+        PrototypeIterationPlanSourceHashes sourceHashes,
+        CancellationToken cancellationToken,
+        bool requireLatestSession = true)
+    {
+        var stateText = _routeStateWriter.ReadLatestIterationPlanState(project);
+        JsonObject? state = null;
+        var recoveredFromDatabase = false;
+        try
+        {
+            state = JsonNode.Parse(stateText)?.AsObject();
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+        {
+            state = null;
+        }
+
+        if (state is null ||
+            !string.Equals(ReadNodeString(state, "request_identity_hash"), requestIdentityHash, StringComparison.Ordinal) ||
+            !string.Equals(ReadNodeString(state, "status"), "ready", StringComparison.Ordinal))
+        {
+            var persisted = await _metadataStore.GetProjectIterationSessionByRequestIdentityAsync(
+                project.AccountId,
+                project.ProjectId,
+                requestIdentityHash,
+                cancellationToken);
+            if (persisted is null || string.IsNullOrWhiteSpace(persisted.Session.RouteStateJson))
+            {
+                return null;
+            }
+
+            stateText = persisted.Session.RouteStateJson;
+            try
+            {
+                state = JsonNode.Parse(stateText)?.AsObject();
+            }
+            catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+            {
+                return null;
+            }
+            if (state is null ||
+                !string.Equals(ReadNodeString(state, "request_identity_hash"), requestIdentityHash, StringComparison.Ordinal) ||
+                !string.Equals(ReadNodeString(state, "session_id"), persisted.Session.SessionId, StringComparison.Ordinal) ||
+                !string.Equals(ReadNodeString(state, "status"), "ready", StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            recoveredFromDatabase = true;
+        }
+
+        var sessionId = ReadNodeString(state, "session_id");
+        var details = await _metadataStore.GetProjectIterationSessionAsync(project.ProjectId, sessionId, cancellationToken);
+        if (details is null ||
+            !string.Equals(details.Session.AccountId, project.AccountId, StringComparison.Ordinal) ||
+            !string.Equals(details.Session.RequestIdentityHash, requestIdentityHash, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var latest = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, cancellationToken);
+        var isLatestSession = latest is not null &&
+            string.Equals(latest.Session.SessionId, sessionId, StringComparison.Ordinal);
+        if (requireLatestSession && !isLatestSession)
+        {
+            return null;
+        }
+        if (isLatestSession)
+        {
+            stateText = RestoreCurrentPlanState(project, details, _routeStateWriter, stateText);
+            state = JsonNode.Parse(stateText)?.AsObject() ?? state;
+        }
+
+        var routeContext = TryReadCurrentIterationRouteContext(stateText, sessionId);
+        var confirmation = state["confirmation"] is JsonObject confirmationNode
+            ? ReadConfirmation(confirmationNode)
+            : new PrototypeIterationPlanConfirmationResult("unconfirmed", sessionId, ReadNodeString(state, "plan_hash"), ReadNodeString(state, "source_hash_ref"), "", "");
+        var projectedConfirmation = ProjectConfirmationFromTrustedAnchor(confirmation, details.Session.TraceabilityAnchorJson);
+        if (recoveredFromDatabase && isLatestSession && projectedConfirmation is not null)
+        {
+            state["confirmation"] = ToConfirmationNode(projectedConfirmation);
+            stateText = state.ToJsonString(new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true });
+            _routeStateWriter.WriteIterationPlanState(project, state);
+            _routeStateWriter.WriteIterationPlanSessionState(project, details.Session.SessionId, state);
+        }
+        var enrichedGoals = DeserializeRouteValue<IReadOnlyList<PrototypeIterationPlanGoalResult>>(state["goals"]) ?? [];
+        var coverage = DeserializeRouteValue<PrototypeIterationPlanCoverageResult>(state["coverage"]);
+        var blockers = DeserializeRouteValue<IReadOnlyList<PrototypeIterationPlanBlockerResult>>(state["blockers"]) ?? [];
+        var styleApplicability = DeserializeRouteValue<PrototypeIterationStyleApplicability>(state["style_applicability"]);
+        return new PrototypeIterationPlanResult(
+            sessionId,
+            "ready",
+            details.Session.LatestSummary ?? "Existing iteration plan returned.",
+            enrichedGoals,
+            routeContext.PlanningAnalysis,
+            details.LatestEvaluation,
+            routeContext.RequiredModules,
+            "returned_existing",
+            ReadNodeString(state, "plan_hash"),
+            sourceHashes,
+            coverage,
+            blockers,
+            projectedConfirmation,
+            styleApplicability);
+    }
+
+    private static T? DeserializeRouteValue<T>(JsonNode? node)
+    {
+        if (node is null)
+        {
+            return default;
+        }
+        try
+        {
+            return JsonSerializer.Deserialize<T>(node.ToJsonString(), new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                PropertyNameCaseInsensitive = true
+            });
+        }
+        catch (JsonException)
+        {
+            return default;
+        }
     }
 
     private async Task<IterationGoalBuildResult> BuildGoalsForProjectAsync(
@@ -1222,7 +2153,7 @@ public sealed class PrototypeIterationPlanService
     {
         if (string.IsNullOrWhiteSpace(stateText))
         {
-            return new PrototypeIterationRouteContext(null, null, null);
+            return new PrototypeIterationRouteContext(null, null, null, "", null, null, null, null, null);
         }
 
         try
@@ -1230,19 +2161,160 @@ public sealed class PrototypeIterationPlanService
             using var document = JsonDocument.Parse(stateText);
             if (!IsCurrentOrLegacyRouteState(document.RootElement, expectedSessionId))
             {
-                return new PrototypeIterationRouteContext(null, null, null);
+                return new PrototypeIterationRouteContext(null, null, null, "", null, null, null, null, null);
             }
 
             var requiredModules = TryReadRequiredModules(document.RootElement);
             return new PrototypeIterationRouteContext(
                 TryReadPlanningAnalysis(document.RootElement),
                 TryReadSelectedCapabilities(document.RootElement),
-                requiredModules);
+                requiredModules,
+                ReadRouteString(document.RootElement, "plan_hash"),
+                TryReadSourceHashes(document.RootElement),
+                TryReadConfirmation(document.RootElement),
+                TryReadTraceabilityGoals(document.RootElement),
+                TryReadBlockers(document.RootElement),
+                TryReadStyleApplicability(document.RootElement));
         }
         catch (JsonException)
         {
-            return new PrototypeIterationRouteContext(null, null, null);
+            return new PrototypeIterationRouteContext(null, null, null, "", null, null, null, null, null);
         }
+    }
+
+    private static IReadOnlyList<PrototypeIterationPlanTraceabilityGoalResult>? TryReadTraceabilityGoals(JsonElement root)
+    {
+        if (!root.TryGetProperty("goals", out var goals) || goals.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        var results = goals.EnumerateArray()
+            .Where(goal => goal.ValueKind == JsonValueKind.Object)
+            .Select(goal =>
+            {
+                var uiSurface = goal.TryGetProperty("ui_surface", out var ui) && ui.ValueKind == JsonValueKind.Object
+                    ? string.Join(" | ", new[]
+                    {
+                        ReadRouteString(ui, "scene_owner"),
+                        ReadRouteString(ui, "node_owner"),
+                        ReadRouteString(ui, "surface_type"),
+                        ReadRouteString(ui, "layout"),
+                        ReadRouteString(ui, "input_ownership"),
+                        ReadRouteString(ui, "focus_policy")
+                    }.Where(value => !string.IsNullOrWhiteSpace(value)))
+                    : "";
+                var style = goal.TryGetProperty("style", out var styleElement) && styleElement.ValueKind == JsonValueKind.Object
+                    ? string.Join(" | ", ReadStringArrayAny(styleElement, "style_token_refs", "component_families", "design_dna")
+                        .Concat(new[] { ReadRouteString(styleElement, "composition"), ReadRouteString(styleElement, "motion") })
+                        .Where(value => !string.IsNullOrWhiteSpace(value)))
+                    : "";
+                var engineRefs = goal.TryGetProperty("engine_semantics", out var engine) && engine.ValueKind == JsonValueKind.Object
+                    ? ReadStringArray(engine, "reading_evidence_refs")
+                    : [];
+                var interactionArtifact = goal.TryGetProperty("interaction_region", out var interaction) && interaction.ValueKind == JsonValueKind.Object
+                    ? ReadRouteString(interaction, "artifact_ref")
+                    : "";
+                return new PrototypeIterationPlanTraceabilityGoalResult(
+                    goal.TryGetProperty("goal_index", out var index) && index.TryGetInt32(out var parsedIndex) ? parsedIndex : 0,
+                    ReadStringArray(goal, "requirement_ids"),
+                    ReadRouteString(goal, "source_hash_ref"),
+                    uiSurface,
+                    style,
+                    engineRefs,
+                    interactionArtifact);
+            })
+            .Where(goal => goal.GoalIndex > 0)
+            .ToArray();
+        return results.Length == 0 ? null : results;
+    }
+
+    private static IReadOnlyList<PrototypeIterationPlanBlockerResult>? TryReadBlockers(JsonElement root)
+    {
+        if (!root.TryGetProperty("blockers", out var blockers) || blockers.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        return blockers.EnumerateArray()
+            .Where(item => item.ValueKind == JsonValueKind.Object)
+            .Select(item => new PrototypeIterationPlanBlockerResult(
+                ReadRouteString(item, "domain_code"),
+                ReadRouteString(item, "severity"),
+                ReadRouteString(item, "summary"),
+                ReadStringArray(item, "requirement_ids"),
+                ReadStringArray(item, "evidence_refs")))
+            .Where(item => !string.IsNullOrWhiteSpace(item.DomainCode))
+            .ToArray();
+    }
+
+    private static PrototypeIterationPlanSourceHashes? TryReadSourceHashes(JsonElement root)
+    {
+        var hashes = new PrototypeIterationPlanSourceHashes(
+            ReadRouteString(root, "source_gdd_hash"),
+            ReadRouteString(root, "source_scene_route_hash"),
+            ReadRouteString(root, "source_requirement_map_hash"),
+            ReadRouteString(root, "source_contract_hash"),
+            ReadRouteString(root, "source_contract_snapshot_hash"),
+            ReadRouteString(root, "source_godot_ui_contract_hash"),
+            ReadRouteString(root, "source_ui_style_contract_hash"),
+            ReadRouteString(root, "ui_style_snapshot_hash"));
+        var requiredHashesPresent = new[]
+        {
+            hashes.SourceGddHash,
+            hashes.SourceSceneRouteHash,
+            hashes.SourceRequirementMapHash,
+            hashes.SourceContractHash,
+            hashes.SourceContractSnapshotHash,
+            hashes.SourceGodotUiContractHash,
+            hashes.SourceUiStyleContractHash
+        }.All(value => !string.IsNullOrWhiteSpace(value));
+        var applicability = TryReadStyleApplicability(root);
+        var styleIdentityPresent = !string.IsNullOrWhiteSpace(hashes.UiStyleSnapshotHash) ||
+                                   string.Equals(applicability?.Status, "reviewed_not_applicable", StringComparison.Ordinal);
+        return requiredHashesPresent && styleIdentityPresent ? hashes : null;
+    }
+
+    private static PrototypeIterationStyleApplicability? TryReadStyleApplicability(JsonElement root)
+    {
+        if (!root.TryGetProperty("style_applicability", out var applicability) || applicability.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var result = new PrototypeIterationStyleApplicability(
+            ReadRouteString(applicability, "status"),
+            ReadRouteString(applicability, "reason"),
+            ReadRouteString(applicability, "reviewed_by"),
+            ReadRouteString(applicability, "recheck_trigger"),
+            ReadRouteString(applicability, "evidence_hash"));
+        return new[] { result.Status, result.Reason, result.ReviewedBy, result.RecheckTrigger, result.EvidenceHash }
+            .All(value => !string.IsNullOrWhiteSpace(value))
+            ? result
+            : null;
+    }
+
+    private static PrototypeIterationPlanConfirmationResult? TryReadConfirmation(JsonElement root)
+    {
+        if (!root.TryGetProperty("confirmation", out var confirmation) || confirmation.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        return new PrototypeIterationPlanConfirmationResult(
+            ReadRouteString(confirmation, "status"),
+            ReadRouteString(confirmation, "session_id"),
+            ReadRouteString(confirmation, "plan_hash"),
+            ReadRouteString(confirmation, "source_hash_ref"),
+            ReadRouteString(confirmation, "confirmed_by"),
+            ReadRouteString(confirmation, "confirmed_utc"));
+    }
+
+    private static string ReadRouteString(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString() ?? ""
+            : "";
     }
 
     private static bool IsCurrentOrLegacyRouteState(JsonElement root, string? expectedSessionId)
@@ -1386,9 +2458,15 @@ public sealed class PrototypeIterationPlanService
                 id,
                 ReadOptionalString(moduleElement, "source"),
                 ReadOptionalString(moduleElement, "status"),
-                ReadOptionalString(moduleElement, "appliesUnless"),
-                ReadStringArray(moduleElement, "acceptanceMarkers"),
-                ReadOptionalNullableString(moduleElement, "coveredByGoalCapability"));
+                ReadOptionalStringAny(moduleElement, "applies_unless", "appliesUnless"),
+                ReadStringArrayAny(moduleElement, "acceptance_markers", "acceptanceMarkers"),
+                ReadOptionalNullableStringAny(moduleElement, "covered_by_goal_capability", "coveredByGoalCapability"),
+                ReadStringArrayAny(moduleElement, "requirement_ids", "requirementIds"),
+                ReadOptionalStringAny(moduleElement, "source_reason", "sourceReason"),
+                ReadStringArrayAny(moduleElement, "source_refs", "sourceRefs"),
+                ReadOptionalString(moduleElement, "priority"),
+                ReadOptionalStringAny(moduleElement, "coverage_status", "coverageStatus"),
+                ReadStringArrayAny(moduleElement, "validation_refs", "validationRefs"));
         }
 
         return null;
@@ -1406,6 +2484,30 @@ public sealed class PrototypeIterationPlanService
         return element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
             ? property.GetString()
             : null;
+    }
+
+    private static string ReadOptionalStringAny(JsonElement element, params string[] propertyNames)
+    {
+        return propertyNames.Select(name => ReadOptionalString(element, name)).FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? "";
+    }
+
+    private static string? ReadOptionalNullableStringAny(JsonElement element, params string[] propertyNames)
+    {
+        return propertyNames.Select(name => ReadOptionalNullableString(element, name)).FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+    }
+
+    private static IReadOnlyList<string> ReadStringArrayAny(JsonElement element, params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            var values = ReadStringArray(element, propertyName);
+            if (values.Count > 0)
+            {
+                return values;
+            }
+        }
+
+        return [];
     }
 
     private static IReadOnlyList<string> ReadStringArray(JsonElement element, string propertyName)
@@ -1533,7 +2635,15 @@ public sealed class PrototypeIterationPlanService
             return null;
         }
 
-        var stateText = _routeStateWriter.ReadLatestIterationPlanState(project);
+        var stateText = _routeStateWriter.ReadIterationPlanSessionState(project, details.Session.SessionId);
+        if (string.IsNullOrWhiteSpace(stateText))
+        {
+            stateText = details.Session.RouteStateJson ?? "";
+        }
+        if (string.IsNullOrWhiteSpace(stateText))
+        {
+            stateText = _routeStateWriter.ReadLatestIterationPlanState(project);
+        }
         var routeContext = TryReadCurrentIterationRouteContext(stateText, details.Session.SessionId);
         return new PrototypeIterationPlanDetails(
             details.Session,
@@ -1541,7 +2651,13 @@ public sealed class PrototypeIterationPlanService
             details.GoalRuns,
             details.LatestEvaluation,
             routeContext.PlanningAnalysis,
-            routeContext.RequiredModules);
+            routeContext.RequiredModules,
+            routeContext.PlanHash,
+            routeContext.SourceHashes,
+            ProjectConfirmationFromTrustedAnchor(routeContext.Confirmation, details.Session.TraceabilityAnchorJson),
+            routeContext.TraceabilityGoals,
+            routeContext.Blockers,
+            routeContext.StyleApplicability);
     }
 
     public async Task<IReadOnlyList<PrototypeIterationPlanRoundDetails>> ListAsync(
@@ -1559,10 +2675,18 @@ public sealed class PrototypeIterationPlanService
         }
 
         var sessions = FilterDisplayIterationRounds(await _metadataStore.ListProjectIterationSessionsAsync(projectId, cancellationToken));
-        var stateText = _routeStateWriter.ReadLatestIterationPlanState(project);
         return sessions
             .Select((details, index) =>
             {
+                var stateText = _routeStateWriter.ReadIterationPlanSessionState(project, details.Session.SessionId);
+                if (string.IsNullOrWhiteSpace(stateText))
+                {
+                    stateText = details.Session.RouteStateJson ?? "";
+                }
+                if (string.IsNullOrWhiteSpace(stateText))
+                {
+                    stateText = _routeStateWriter.ReadLatestIterationPlanState(project);
+                }
                 var routeContext = TryReadCurrentIterationRouteContext(stateText, details.Session.SessionId);
                 return new PrototypeIterationPlanRoundDetails(
                     index + 1,
@@ -1571,7 +2695,13 @@ public sealed class PrototypeIterationPlanService
                     details.GoalRuns,
                     details.LatestEvaluation,
                     routeContext.PlanningAnalysis,
-                    routeContext.RequiredModules);
+                    routeContext.RequiredModules,
+                    routeContext.PlanHash,
+                    routeContext.SourceHashes,
+                    ProjectConfirmationFromTrustedAnchor(routeContext.Confirmation, details.Session.TraceabilityAnchorJson),
+                    routeContext.TraceabilityGoals,
+                    routeContext.Blockers,
+                    routeContext.StyleApplicability);
             })
             .ToArray();
     }
@@ -1637,6 +2767,8 @@ public sealed class PrototypeIterationPlanService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
 
+        await using var mutationLease = await ProjectMutationLockRegistry.Shared.AcquireAsync(accountId, projectId, cancellationToken);
+
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
@@ -1657,6 +2789,7 @@ public sealed class PrototypeIterationPlanService
         var latest = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
         var wasLatest = latest is not null && string.Equals(latest.Session.SessionId, sessionId, StringComparison.Ordinal);
         var deleted = await _metadataStore.DeleteProjectIterationSessionAsync(projectId, accountId, sessionId, cancellationToken);
+        _routeStateWriter.DeleteIterationPlanSessionState(project, sessionId);
         if (wasLatest)
         {
             _routeStateWriter.ClearIterationPlanState(project);
@@ -2406,6 +3539,598 @@ public sealed class PrototypeIterationPlanService
         }
 
         return modules.Values.OrderBy(module => module.Id, StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
+    private static IReadOnlyList<string> BuildInteractionOwners(
+        PrototypeIterationPlanGoalResult goal,
+        IReadOnlyList<PrototypeIterationPlanRequiredModuleResult> requiredModules)
+    {
+        var owners = new HashSet<string>(StringComparer.Ordinal);
+        if (goal.UiSurface is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(goal.UiSurface.SceneOwner))
+            {
+                owners.Add($"scene:{goal.UiSurface.SceneOwner}");
+            }
+            if (!string.IsNullOrWhiteSpace(goal.UiSurface.NodeOwner))
+            {
+                owners.Add($"node:{goal.UiSurface.NodeOwner}");
+            }
+        }
+
+        if (goal.GodotThirdPersonCameraProfile is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(goal.GodotThirdPersonCameraProfile.RigRef))
+            {
+                owners.Add($"rig:{goal.GodotThirdPersonCameraProfile.RigRef}");
+            }
+            if (!string.IsNullOrWhiteSpace(goal.GodotThirdPersonCameraProfile.TargetOwner))
+            {
+                owners.Add($"target:{goal.GodotThirdPersonCameraProfile.TargetOwner}");
+            }
+        }
+
+        var requirementIds = goal.RequirementIds ?? [];
+        foreach (var module in requiredModules.Where(module =>
+                     (module.Status is "required" or "covered" or "verified") &&
+                     (module.RequirementIds ?? []).Any(requirementId => requirementIds.Contains(requirementId, StringComparer.OrdinalIgnoreCase))))
+        {
+            owners.Add($"module:{module.Id}:interaction-owner");
+            owners.Add($"scene:module:{module.Id}");
+            owners.Add($"node:module:{module.Id}:interaction-root");
+        }
+
+        return owners.OrderBy(value => value, StringComparer.Ordinal).ToArray();
+    }
+
+    private static IReadOnlyList<PrototypeIterationInteractionGeometryResult> BuildInteractionGeometry(
+        PrototypeIterationPlanGoalResult goal,
+        IReadOnlyList<string> owners)
+    {
+        var coordinateSpace = goal.EngineSemantics?.CoordinateSemantics ?? "project-profile-coordinate-semantics";
+        var geometry = new List<PrototypeIterationInteractionGeometryResult>();
+        foreach (var owner in owners.Where(value => value.StartsWith("node:", StringComparison.Ordinal)))
+        {
+            geometry.Add(new PrototypeIterationInteractionGeometryResult(
+                $"goal-{goal.GoalIndex:00}-control-{geometry.Count + 1:00}",
+                owner,
+                "control_rect",
+                coordinateSpace,
+                null,
+                "rect",
+                "interaction_target",
+                owner["node:".Length..],
+                "control_get_global_rect",
+                "runtime_resolved"));
+        }
+
+        foreach (var owner in owners.Where(value =>
+                     value.StartsWith("module:", StringComparison.Ordinal) &&
+                     value.EndsWith(":interaction-owner", StringComparison.Ordinal)))
+        {
+            var moduleId = owner["module:".Length..(owner.Length - ":interaction-owner".Length)];
+            if (string.Equals(moduleId, "hand_card_dragging", StringComparison.OrdinalIgnoreCase))
+            {
+                geometry.Add(RuntimeControlGeometry(goal.GoalIndex, geometry.Count + 1, owner, coordinateSpace, "drag_source", $"module:{moduleId}:drag-source-node"));
+                geometry.Add(RuntimeControlGeometry(goal.GoalIndex, geometry.Count + 1, owner, coordinateSpace, "drop_target", $"module:{moduleId}:drop-target-node"));
+            }
+            else if (string.Equals(moduleId, "route_map_path_selection", StringComparison.OrdinalIgnoreCase))
+            {
+                geometry.Add(RuntimeControlGeometry(goal.GoalIndex, geometry.Count + 1, owner, coordinateSpace, "selection_target", $"module:{moduleId}:selectable-node"));
+            }
+            else
+            {
+                geometry.Add(new PrototypeIterationInteractionGeometryResult(
+                    $"goal-{goal.GoalIndex:00}-collision-{geometry.Count + 1:00}",
+                    owner,
+                    "collision_shape",
+                    coordinateSpace,
+                    null,
+                    "runtime_shape",
+                    "collision_target",
+                    $"module:{moduleId}:collision-shape-node",
+                    "collision_shape_runtime_bounds",
+                    "runtime_resolved"));
+            }
+        }
+
+        if (geometry.Count == 0)
+        {
+            if (owners.Count == 0)
+            {
+                return [];
+            }
+            var owner = owners.First();
+            geometry.Add(new PrototypeIterationInteractionGeometryResult(
+                $"goal-{goal.GoalIndex:00}-collision-01",
+                owner,
+                "collision_shape",
+                coordinateSpace,
+                null,
+                "runtime_shape",
+                "interaction_target",
+                owner,
+                "owner_runtime_bounds",
+                "runtime_resolved"));
+        }
+
+        return geometry;
+    }
+
+    private static PrototypeIterationInteractionGeometryResult RuntimeControlGeometry(
+        int goalIndex,
+        int geometryIndex,
+        string owner,
+        string coordinateSpace,
+        string interactionRole,
+        string locatorRef)
+    {
+        return new PrototypeIterationInteractionGeometryResult(
+            $"goal-{goalIndex:00}-control-{geometryIndex:00}",
+            owner,
+            "control_rect",
+            coordinateSpace,
+            null,
+            "rect",
+            interactionRole,
+            locatorRef,
+            "control_get_global_rect",
+            "runtime_resolved");
+    }
+
+    private static PrototypeIterationPlanSourceHashes ToIterationPlanSourceHashes(PrototypeContractStatusResult status)
+    {
+        return new PrototypeIterationPlanSourceHashes(
+            status.SourceGddHash,
+            status.SourceSceneRouteHash,
+            status.SourceRequirementMapHash,
+            status.ContractHash,
+            status.SourceContractSnapshotHash,
+            status.SourceGodotUiContractHash,
+            status.SourceUiStyleContractHash,
+            status.UiStyleSnapshotHash);
+    }
+
+    internal static PrototypeIterationStyleApplicability ToIterationStyleApplicability(PrototypeContractStatusResult status)
+    {
+        var applicability = status.UiStyleApplicability;
+        var evidenceHash = ComputeHash(JsonSerializer.Serialize(new
+        {
+            source_ui_style_contract_hash = status.SourceUiStyleContractHash,
+            status = applicability.Status,
+            reason = applicability.Reason,
+            reviewed_by = applicability.ReviewedBy,
+            recheck_trigger = applicability.RecheckTrigger
+        }));
+        return new PrototypeIterationStyleApplicability(
+            applicability.Status,
+            applicability.Reason,
+            applicability.ReviewedBy,
+            applicability.RecheckTrigger,
+            evidenceHash);
+    }
+
+    private static object ToStyleApplicabilityState(PrototypeIterationStyleApplicability applicability)
+    {
+        return new
+        {
+            status = applicability.Status,
+            reason = applicability.Reason,
+            reviewed_by = applicability.ReviewedBy,
+            recheck_trigger = applicability.RecheckTrigger,
+            evidence_hash = applicability.EvidenceHash
+        };
+    }
+
+    private static PrototypeIterationStyleAuthority? BuildStyleAuthority(PrototypeContractStatusResult status)
+    {
+        if (!string.Equals(status.UiStyleApplicability.Status, "applicable", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var definition = GodotUiStyleCatalog.Styles.FirstOrDefault(style =>
+            string.Equals(style.StyleId, status.UiStyleId, StringComparison.Ordinal) &&
+            string.Equals(style.Version, status.UiStyleVersion, StringComparison.Ordinal));
+        if (definition is null || string.IsNullOrWhiteSpace(status.UiStyleSnapshotHash))
+        {
+            return null;
+        }
+        var snapshotPayload = JsonSerializer.Serialize(new
+        {
+            schema_profile_hash = GodotUiStyleSnapshotSchema.SchemaProfileHash,
+            source_ui_style_contract_hash = GodotUiStyleCatalog.CatalogHash,
+            definition.StyleId,
+            definition.Version,
+            definition.GuidePath,
+            definition.TriggerTags,
+            definition.DesignDna,
+            definition.GodotControls,
+            definition.GameCompositionTemplates
+        }, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true });
+        return !string.Equals(ComputeHash(snapshotPayload), status.UiStyleSnapshotHash, StringComparison.Ordinal)
+            ? null
+            : new PrototypeIterationStyleAuthority(
+                definition.StyleId,
+                definition.Version,
+                status.UiStyleSnapshotHash,
+                definition.GuidePath,
+                definition.TriggerTags,
+                definition.DesignDna,
+                definition.GodotControls,
+                definition.GameCompositionTemplates);
+    }
+
+    private async Task<IterationPlanLiveGovernanceResult> ReadLiveGovernanceAsync(
+        ProjectSnapshot project,
+        GameDesignRequirementMapResult? requirementMap,
+        CancellationToken cancellationToken)
+    {
+        var adminRows = await _metadataStore.ListProjectAdminReviewQueueForProjectAsync(
+            project.AccountId,
+            project.ProjectId,
+            "",
+            500,
+            cancellationToken);
+        var unresolvedAdmin = adminRows.FirstOrDefault(row =>
+            row.Severity is "P0" or "P1" &&
+            !string.Equals(row.Status, "approved", StringComparison.Ordinal));
+        if (unresolvedAdmin is not null)
+        {
+            return new IterationPlanLiveGovernanceResult(
+                new PrototypeIterationPlanBlockerResult(
+                    "admin_review_blocked",
+                    unresolvedAdmin.Severity,
+                    "Iteration planning is blocked by unresolved admin review.",
+                    [unresolvedAdmin.RequirementId],
+                    ["admin-review:required"]),
+                new Dictionary<string, string>());
+        }
+
+        var approved = adminRows
+            .Where(row => row.Severity is "P0" or "P1" && string.Equals(row.Status, "approved", StringComparison.Ordinal))
+            .Where(row => !string.IsNullOrWhiteSpace(row.RequirementId))
+            .GroupBy(row => row.RequirementId, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                {
+                    var row = group.OrderByDescending(item => item.DecisionVersion).First();
+                    return $"admin-decision:{row.RequirementId}:v{row.DecisionVersion}";
+                },
+                StringComparer.OrdinalIgnoreCase);
+        var allReviewRowsApproved = requirementMap is not null && requirementMap.Requirements
+            .Where(row => row.Priority is "P0" or "P1" && row.Status is "needs_review" or "conflict" or "explicitly_deferred")
+            .All(row => approved.ContainsKey(row.RequirementId));
+
+        var diagnostics = await _metadataStore.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", project.AccountId, project.ProjectId, null, null, null, 500),
+            cancellationToken);
+        var unresolvedDiagnostic = diagnostics.FirstOrDefault(row =>
+            row.Severity is "P0" or "P1" &&
+            IsPlanningBlockingDiagnostic(row.FailureFamily) &&
+            !(allReviewRowsApproved && string.Equals(row.FailureFamily, "requirement_map_invalid", StringComparison.Ordinal)));
+        if (unresolvedDiagnostic is not null)
+        {
+            return new IterationPlanLiveGovernanceResult(
+                new PrototypeIterationPlanBlockerResult(
+                    "diagnostic_blocked",
+                    unresolvedDiagnostic.Severity,
+                    "Iteration planning is blocked by an unresolved project diagnostic.",
+                    [],
+                    ["diagnostic:unresolved"]),
+                new Dictionary<string, string>());
+        }
+
+        return new IterationPlanLiveGovernanceResult(null, approved);
+    }
+
+    private static bool IsPlanningBlockingDiagnostic(string failureFamily)
+    {
+        return failureFamily is not (
+            "plan_hash_conflict" or
+            "plan_session_conflict" or
+            "plan_confirmation_required" or
+            "legacy_plan_source_unknown");
+    }
+
+    private async Task<PrototypeIterationPlanResult> RejectPlanBeforeLlmAsync(
+        ProjectSnapshot project,
+        PrototypeIterationPlanSourceHashes sourceHashes,
+        string domainCode,
+        string summary,
+        CancellationToken cancellationToken,
+        IReadOnlyList<string>? evidenceRefs = null,
+        IReadOnlyList<string>? requirementIds = null)
+    {
+        var sourceHashRef = ComputeHash(JsonSerializer.Serialize(sourceHashes));
+        var blocker = new PrototypeIterationPlanBlockerResult(
+            domainCode,
+            "P1",
+            summary,
+            requirementIds ?? [],
+            evidenceRefs ?? ["meta/routes/gdd-requirements/latest.json", "routes/prototype-contract/latest.json"]);
+        await RecordPlanDiagnosticAsync(project, blocker, sourceHashRef, cancellationToken);
+        return new PrototypeIterationPlanResult(
+            "",
+            "blocked",
+            summary,
+            [],
+            null,
+            null,
+            [],
+            "rejected",
+            "",
+            sourceHashes,
+            new PrototypeIterationPlanCoverageResult(0, 0, 0, 0, 0, []),
+            [blocker]);
+    }
+
+    private async Task RecordPlanDiagnosticAsync(
+        ProjectSnapshot project,
+        PrototypeIterationPlanBlockerResult blocker,
+        string sourceHashRef,
+        CancellationToken cancellationToken)
+    {
+        var stableSourceHashRef = string.IsNullOrWhiteSpace(sourceHashRef) ? "no-source" : sourceHashRef;
+        var existing = await _metadataStore.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", project.AccountId, project.ProjectId, "iteration-plan", blocker.DomainCode, blocker.Severity, 100),
+            cancellationToken);
+        if (existing.Any(row => PrototypeIterationGoalService.HasDiagnosticScope(row.SourceRefsJson, stableSourceHashRef, "no-plan")))
+        {
+            return;
+        }
+
+        var sourceRefsJson = JsonSerializer.Serialize(new[]
+        {
+            new { kind = "source_hash_ref", @ref = stableSourceHashRef },
+            new { kind = "plan_hash", @ref = "no-plan" },
+            new { kind = "sidecar", @ref = "meta/routes/iteration-plan/latest.json" }
+        });
+        await _metadataStore.RecordProjectDiagnosticSpoolEntryAsync(
+            new ProjectDiagnosticSpoolCommand(
+                project.AccountId,
+                project.ProjectId,
+                "iteration-plan",
+                blocker.DomainCode,
+                blocker.Severity,
+                blocker.Summary,
+                JsonSerializer.Serialize(blocker.EvidenceRefs),
+                "meta/routes/iteration-plan/latest.json",
+                ProjectNameSnapshot: project.Name,
+                SourceRefsJson: sourceRefsJson,
+                RetentionClass: "unresolved_blocker",
+                RemediationHintId: blocker.DomainCode,
+                DedupeScopeKey: ProjectDiagnosticScopeKey.Compute(stableSourceHashRef)),
+            cancellationToken);
+    }
+
+    private async Task<PrototypeIterationPlanConfirmationOperationResult> RejectConfirmationAsync(
+        ProjectSnapshot project,
+        string domainCode,
+        string summary,
+        string sourceHashRef,
+        CancellationToken cancellationToken,
+        string status = "blocked")
+    {
+        var blocker = new PrototypeIterationPlanBlockerResult(domainCode, "P1", summary, [], ["meta/routes/iteration-plan/latest.json"]);
+        await RecordPlanDiagnosticAsync(project, blocker, sourceHashRef, cancellationToken);
+        return new PrototypeIterationPlanConfirmationOperationResult(status, domainCode, summary, "rejected");
+    }
+
+    private static bool IsCurrentRequirementMap(
+        GameDesignRequirementMapResult? requirementMap,
+        PrototypeContractStatusResult contractStatus,
+        IReadOnlyDictionary<string, string>? approvedRequirementDecisions = null)
+    {
+        approvedRequirementDecisions ??= new Dictionary<string, string>();
+        var acceptableStatus = requirementMap is not null &&
+            (requirementMap.Status == "ready" || requirementMap.Requirements
+                .Where(row => row.Priority is "P0" or "P1" && row.Status is "needs_review" or "conflict" or "explicitly_deferred")
+                .All(row => approvedRequirementDecisions.ContainsKey(row.RequirementId)));
+        return requirementMap is not null &&
+               acceptableStatus &&
+               string.Equals(requirementMap.SourceGddHash, contractStatus.SourceGddHash, StringComparison.Ordinal) &&
+               string.Equals(requirementMap.SourceSceneRouteHash, contractStatus.SourceSceneRouteHash, StringComparison.Ordinal) &&
+               string.Equals(requirementMap.SourceRequirementMapHash, contractStatus.SourceRequirementMapHash, StringComparison.Ordinal) &&
+               string.Equals(requirementMap.SourceContractSnapshotHash, contractStatus.SourceContractSnapshotHash, StringComparison.Ordinal) &&
+               string.Equals(requirementMap.SourceGodotUiContractHash, contractStatus.SourceGodotUiContractHash, StringComparison.Ordinal);
+    }
+
+    private void WriteBlockedTraceabilityAttemptState(
+        ProjectSnapshot project,
+        PrototypeIterationPlanSourceHashes sourceHashes,
+        IReadOnlyList<PrototypeIterationPlanGoalResult> goals,
+        IReadOnlyList<PrototypeIterationPlanRequiredModuleResult> requiredModules,
+        IReadOnlyList<PrototypeIterationPlanBlockerResult> blockers,
+        PrototypeIterationPlanCoverageResult? coverage = null,
+        string planHash = "",
+        string sourceHashRef = "")
+    {
+        var attemptId = $"{DateTimeOffset.UtcNow:yyyyMMddTHHmmssfffZ}-{Guid.NewGuid():N}";
+        _routeStateWriter.WriteIterationPlanAttemptState(project, attemptId, new
+        {
+            route = "iteration-plan",
+            attempt_id = attemptId,
+            status = "blocked",
+            source_gdd_hash = sourceHashes.SourceGddHash,
+            source_scene_route_hash = sourceHashes.SourceSceneRouteHash,
+            source_requirement_map_hash = sourceHashes.SourceRequirementMapHash,
+            source_contract_hash = sourceHashes.SourceContractHash,
+            source_contract_snapshot_hash = sourceHashes.SourceContractSnapshotHash,
+            source_godot_ui_contract_hash = sourceHashes.SourceGodotUiContractHash,
+            source_ui_style_contract_hash = sourceHashes.SourceUiStyleContractHash,
+            ui_style_snapshot_hash = sourceHashes.UiStyleSnapshotHash,
+            source_hash_ref = sourceHashRef,
+            plan_hash = planHash,
+            coverage = coverage is null ? null : ToCoverageState(coverage),
+            blockers = blockers.Select(ToBlockerState).ToArray(),
+            required_modules = requiredModules.Select(ToRequiredModuleState).ToArray(),
+            goals = goals.Select(ToGoalState).ToArray(),
+            confirmation = new { status = "blocked", session_id = "", plan_hash = planHash, source_hash_ref = sourceHashRef },
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        });
+    }
+
+    private static object ToCoverageState(PrototypeIterationPlanCoverageResult coverage)
+    {
+        return new
+        {
+            p0_p1_requirement_count = coverage.P0P1RequirementCount,
+            goal_covered_count = coverage.GoalCoveredCount,
+            module_covered_count = coverage.ModuleCoveredCount,
+            skeleton_covered_count = coverage.SkeletonCoveredCount,
+            explicit_blocker_count = coverage.ExplicitBlockerCount,
+            uncovered_requirement_ids = coverage.UncoveredRequirementIds
+        };
+    }
+
+    private static object ToBlockerState(PrototypeIterationPlanBlockerResult blocker)
+    {
+        return new
+        {
+            domain_code = blocker.DomainCode,
+            severity = blocker.Severity,
+            summary = blocker.Summary,
+            requirement_ids = blocker.RequirementIds,
+            evidence_refs = blocker.EvidenceRefs
+        };
+    }
+
+    private static object ToRequiredModuleState(PrototypeIterationPlanRequiredModuleResult module)
+    {
+        return new
+        {
+            id = module.Id,
+            source = module.Source,
+            status = module.Status,
+            applies_unless = module.AppliesUnless,
+            acceptance_markers = module.AcceptanceMarkers,
+            covered_by_goal_capability = module.CoveredByGoalCapability,
+            requirement_ids = module.RequirementIds ?? [],
+            source_reason = module.SourceReason,
+            source_refs = module.SourceRefs ?? [],
+            priority = module.Priority,
+            coverage_status = module.CoverageStatus,
+            validation_refs = module.ValidationRefs ?? []
+        };
+    }
+
+    private static object ToInteractionGeometryState(PrototypeIterationInteractionGeometryResult geometry)
+    {
+        return new
+        {
+            geometry_id = geometry.GeometryId,
+            owner_ref = geometry.OwnerRef,
+            geometry_kind = geometry.GeometryKind,
+            coordinate_space = geometry.CoordinateSpace,
+            bounds = geometry.Bounds is null ? null : new
+            {
+                x = geometry.Bounds.X,
+                y = geometry.Bounds.Y,
+                width = geometry.Bounds.Width,
+                height = geometry.Bounds.Height
+            },
+            shape = geometry.Shape,
+            interaction_role = geometry.InteractionRole,
+            locator_ref = geometry.LocatorRef,
+            resolution_source = geometry.ResolutionSource,
+            bounds_policy = geometry.BoundsPolicy
+        };
+    }
+
+    private static object ToGoalState(PrototypeIterationPlanGoalResult goal)
+    {
+        return new
+        {
+            goal_index = goal.GoalIndex,
+            title = goal.Title,
+            description = goal.Description,
+            acceptance_hint = goal.AcceptanceHint,
+            status = goal.Status,
+            requirement_ids = goal.RequirementIds ?? [],
+            infrastructure_reason = goal.InfrastructureReason is null ? null : new
+            {
+                code = goal.InfrastructureReason.Code,
+                summary = goal.InfrastructureReason.Summary,
+                source_refs = goal.InfrastructureReason.SourceRefs
+            },
+            source_hash_ref = goal.SourceHashRef,
+            capability_requirements = goal.CapabilityRequirements is null ? null : new
+            {
+                dynamic_ui_required = goal.CapabilityRequirements.DynamicUiRequired,
+                third_person_camera_required = goal.CapabilityRequirements.ThirdPersonCameraRequired,
+                feature_family_reading_required = goal.CapabilityRequirements.FeatureFamilyReadingRequired,
+                interaction_region_required = goal.CapabilityRequirements.InteractionRegionRequired
+            },
+            ui_surface = goal.UiSurface is null ? null : new
+            {
+                scene_owner = goal.UiSurface.SceneOwner,
+                node_owner = goal.UiSurface.NodeOwner,
+                surface_type = goal.UiSurface.SurfaceType,
+                layout = goal.UiSurface.Layout,
+                viewport_mode = goal.UiSurface.ViewportMode,
+                canvas_layer = goal.UiSurface.CanvasLayer,
+                input_ownership = goal.UiSurface.InputOwnership,
+                focus_policy = goal.UiSurface.FocusPolicy,
+                feedback_states = goal.UiSurface.FeedbackStates,
+                state_boundary = goal.UiSurface.StateBoundary,
+                validation_refs = goal.UiSurface.ValidationRefs,
+                no_ui_needed_decision_ref = goal.UiSurface.NoUiNeededDecisionRef
+            },
+            style = goal.Style is null ? null : new
+            {
+                style_token_refs = goal.Style.StyleTokenRefs,
+                component_families = goal.Style.ComponentFamilies,
+                design_dna = goal.Style.DesignDna,
+                composition = goal.Style.Composition,
+                motion = goal.Style.Motion,
+                ui_tree_readback = goal.Style.UiTreeReadback,
+                visual_evidence_expectations = goal.Style.VisualEvidenceExpectations,
+                style_not_applicable_decision_ref = goal.Style.StyleNotApplicableDecisionRef
+            },
+            engine_semantics = goal.EngineSemantics is null ? null : new
+            {
+                viewport_semantics = goal.EngineSemantics.ViewportSemantics,
+                coordinate_semantics = goal.EngineSemantics.CoordinateSemantics,
+                input_semantics = goal.EngineSemantics.InputSemantics,
+                layer_semantics = goal.EngineSemantics.LayerSemantics,
+                profile_refs = goal.EngineSemantics.ProfileRefs,
+                reading_evidence_refs = goal.EngineSemantics.ReadingEvidenceRefs
+            },
+            interaction_region = goal.InteractionRegion is null ? null : new
+            {
+                artifact_ref = goal.InteractionRegion.ArtifactRef,
+                devices = goal.InteractionRegion.Devices,
+                valid_regions = goal.InteractionRegion.ValidRegions,
+                invalid_regions = goal.InteractionRegion.InvalidRegions,
+                state_transitions = goal.InteractionRegion.StateTransitions,
+                validation_refs = goal.InteractionRegion.ValidationRefs,
+                owner_refs = goal.InteractionRegion.OwnerRefs,
+                planned_geometry = goal.InteractionRegion.PlannedGeometry.Select(ToInteractionGeometryState).ToArray(),
+                no_interaction_region_needed_decision_ref = goal.InteractionRegion.NoInteractionRegionNeededDecisionRef
+            },
+            godot_ui_update_ownership = goal.GodotUiUpdateOwnership is null ? null : new
+            {
+                construction_owner = goal.GodotUiUpdateOwnership.ConstructionOwner,
+                update_mode = goal.GodotUiUpdateOwnership.UpdateMode,
+                state_owner = goal.GodotUiUpdateOwnership.StateOwner,
+                cleanup_policy = goal.GodotUiUpdateOwnership.CleanupPolicy,
+                signal_ownership = goal.GodotUiUpdateOwnership.SignalOwnership,
+                stable_item_identity = goal.GodotUiUpdateOwnership.StableItemIdentity
+            },
+            godot_third_person_camera_profile = goal.GodotThirdPersonCameraProfile is null ? null : new
+            {
+                rig_ref = goal.GodotThirdPersonCameraProfile.RigRef,
+                target_owner = goal.GodotThirdPersonCameraProfile.TargetOwner,
+                input_owner = goal.GodotThirdPersonCameraProfile.InputOwner,
+                collision_owner = goal.GodotThirdPersonCameraProfile.CollisionOwner,
+                validation_method = goal.GodotThirdPersonCameraProfile.ValidationMethod,
+                yaw_pitch_ownership = goal.GodotThirdPersonCameraProfile.YawPitchOwnership,
+                camera_relative_movement_boundary = goal.GodotThirdPersonCameraProfile.CameraRelativeMovementBoundary,
+                camera_state_validation = goal.GodotThirdPersonCameraProfile.CameraStateValidation
+            }
+        };
     }
 
     private static IReadOnlyList<PrototypeIterationPlanRequiredModuleResult> BuildRequiredModulesForRoute(
@@ -4393,7 +6118,17 @@ public sealed class PrototypeIterationPlanService
     private sealed record PrototypeIterationRouteContext(
         PrototypeIterationPlanningAnalysisResult? PlanningAnalysis,
         HashSet<string>? SelectedCapabilities,
-        IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules);
+        IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules,
+        string PlanHash,
+        PrototypeIterationPlanSourceHashes? SourceHashes,
+        PrototypeIterationPlanConfirmationResult? Confirmation,
+        IReadOnlyList<PrototypeIterationPlanTraceabilityGoalResult>? TraceabilityGoals,
+        IReadOnlyList<PrototypeIterationPlanBlockerResult>? Blockers,
+        PrototypeIterationStyleApplicability? StyleApplicability);
+
+    private sealed record IterationPlanLiveGovernanceResult(
+        PrototypeIterationPlanBlockerResult? Blocker,
+        IReadOnlyDictionary<string, string> ApprovedRequirementDecisions);
 
     private sealed record IterationPlanningContext(
         string AnalysisSource,
@@ -4543,7 +6278,13 @@ public sealed record PrototypeIterationPlanDetails(
     IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,
     PrototypeIterationPlanEvaluationResult? LatestEvaluation = null,
     PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null,
-    IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules = null);
+    IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules = null,
+    string PlanHash = "",
+    PrototypeIterationPlanSourceHashes? SourceHashes = null,
+    PrototypeIterationPlanConfirmationResult? Confirmation = null,
+    IReadOnlyList<PrototypeIterationPlanTraceabilityGoalResult>? TraceabilityGoals = null,
+    IReadOnlyList<PrototypeIterationPlanBlockerResult>? Blockers = null,
+    PrototypeIterationStyleApplicability? StyleApplicability = null);
 
 public sealed record PrototypeIterationPlanRoundDetails(
     int RoundIndex,
@@ -4552,7 +6293,22 @@ public sealed record PrototypeIterationPlanRoundDetails(
     IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,
     PrototypeIterationPlanEvaluationResult? LatestEvaluation = null,
     PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null,
-    IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules = null);
+    IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules = null,
+    string PlanHash = "",
+    PrototypeIterationPlanSourceHashes? SourceHashes = null,
+    PrototypeIterationPlanConfirmationResult? Confirmation = null,
+    IReadOnlyList<PrototypeIterationPlanTraceabilityGoalResult>? TraceabilityGoals = null,
+    IReadOnlyList<PrototypeIterationPlanBlockerResult>? Blockers = null,
+    PrototypeIterationStyleApplicability? StyleApplicability = null);
+
+public sealed record PrototypeIterationPlanTraceabilityGoalResult(
+    int GoalIndex,
+    IReadOnlyList<string> RequirementIds,
+    string SourceHashRef,
+    string UiSurfaceSummary,
+    string StyleSummary,
+    IReadOnlyList<string> EngineReadingRefs,
+    string InteractionArtifactRef);
 
 internal sealed class PrototypeIterationPlanLlmException : Exception
 {

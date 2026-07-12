@@ -19,10 +19,12 @@ from typing import Any
 
 
 DEFAULT_ADMIN_TOKEN = "phase-a-iteration-plan-e2e-admin-token"
+DEFAULT_DOTNET = shutil.which("dotnet") or str(Path(r"C:\Program Files\dotnet\dotnet.exe"))
 EXCLUDED_COPY_DIRS = {
     ".git",
     ".vs",
     ".godot",
+    ".dotnet",
     "logs",
     ".pytest_cache",
     "__pycache__",
@@ -38,7 +40,7 @@ DOTNET_BUILD_OUTPUT_PARENTS = {
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run Phase A iteration-plan flow E2E checks against an isolated temporary instance.")
     parser.add_argument("--repository-root", default=str(Path.cwd()))
-    parser.add_argument("--dotnet", default=str(Path(r"C:\Program Files\dotnet\dotnet.exe")))
+    parser.add_argument("--dotnet", default=DEFAULT_DOTNET)
     parser.add_argument("--admin-token", default=DEFAULT_ADMIN_TOKEN)
     parser.add_argument("--timeout-seconds", type=int, default=600)
     args = parser.parse_args()
@@ -100,8 +102,46 @@ def main() -> int:
             events.append({"event": "project_created", "project_id": project_id})
             project_state = wait_for_project_ready(base_url, headers, project_id, timeout_seconds=args.timeout_seconds)
             events.append({"event": "project_ready", "bootstrap_status": project_state.get("bootstrapStatus")})
-            seed_prototype_route_state(project)
-            events.append({"event": "prototype_route_state_seeded"})
+            seed_phase2_gdd_sources(project)
+            events.append({"event": "phase2_gdd_sources_seeded"})
+
+            requirement_map = post_json(
+                base_url,
+                f"/api/projects/{project_id}/gdd/requirements-map",
+                headers,
+                {"refresh": True},
+                timeout=60,
+            )
+            events.append(
+                {
+                    "event": "requirement_map_created",
+                    "status": requirement_map.get("status"),
+                    "source_requirement_map_hash": requirement_map.get("sourceRequirementMapHash"),
+                    "requirement_count": len(requirement_map.get("requirements", [])),
+                }
+            )
+            if requirement_map.get("status") != "ready":
+                raise AssertionError(f"requirement map was not ready: {requirement_map}")
+
+            contract = post_json(
+                base_url,
+                f"/api/projects/{project_id}/prototype-contract/freeze",
+                headers,
+                {},
+                timeout=60,
+            )
+            events.append(
+                {
+                    "event": "prototype_contract_frozen",
+                    "status": contract.get("status"),
+                    "contract_hash": contract.get("contractHash"),
+                    "source_requirement_map_hash": contract.get("sourceRequirementMapHash"),
+                }
+            )
+            if contract.get("status") != "fresh":
+                raise AssertionError(f"prototype contract was not fresh: {contract}")
+            seed_phase2_prototype_skeleton(project, contract)
+            events.append({"event": "prototype_skeleton_seeded"})
 
             plan = post_json(
                 base_url,
@@ -120,8 +160,36 @@ def main() -> int:
                     "status": plan.get("status"),
                     "goal_count": len(plan.get("goals", [])),
                     "goal_titles": [goal.get("title") for goal in plan.get("goals", [])],
+                    "plan_hash": plan.get("planHash"),
+                    "confirmation_status": (plan.get("confirmation") or {}).get("status"),
                 }
             )
+            if plan.get("status") != "ready" or not plan.get("planHash"):
+                raise AssertionError(f"iteration plan was not traceability-ready: {plan}")
+            if (plan.get("confirmation") or {}).get("status") != "unconfirmed":
+                raise AssertionError(f"new plan did not start unconfirmed: {plan}")
+
+            confirmation = post_json(
+                base_url,
+                f"/api/projects/{project_id}/iteration-plan/confirm",
+                headers,
+                {
+                    "sessionId": plan.get("sessionId"),
+                    "planHash": plan.get("planHash"),
+                },
+                timeout=60,
+            )
+            events.append(
+                {
+                    "event": "plan_confirmed",
+                    "status": confirmation.get("status"),
+                    "operation_status": confirmation.get("operationStatus"),
+                    "session_id": (confirmation.get("confirmation") or {}).get("sessionId"),
+                    "plan_hash": (confirmation.get("confirmation") or {}).get("planHash"),
+                }
+            )
+            if confirmation.get("status") != "confirmed":
+                raise AssertionError(f"iteration plan confirmation failed: {confirmation}")
 
             latest = get_json(base_url, f"/api/projects/{project_id}/iteration-plan/latest", headers, timeout=60)
             latest_goals = latest.get("goals", [])
@@ -131,61 +199,15 @@ def main() -> int:
                     "session_status": latest.get("session", {}).get("status"),
                     "current_goal_index": latest.get("session", {}).get("currentGoalIndex"),
                     "goal_statuses": [goal.get("status") for goal in latest_goals],
+                    "confirmation_status": (latest.get("confirmation") or {}).get("status"),
                 }
             )
             if latest.get("session", {}).get("status") != "ready":
                 raise AssertionError(f"iteration plan was not ready: {latest}")
             if len(latest_goals) < 3:
                 raise AssertionError(f"expected at least 3 goals: {latest}")
-
-            evaluation = post_json(
-                base_url,
-                f"/api/projects/{project_id}/iteration-plan/evaluate",
-                headers,
-                {},
-                timeout=60,
-            )
-            events.append(
-                {
-                    "event": "plan_evaluated",
-                    "decision": evaluation.get("decision"),
-                    "summary": evaluation.get("summary"),
-                    "suggested_prompt": evaluation.get("suggestedPromptForRegeneration"),
-                }
-            )
-
-            latest_after_evaluation = get_json(base_url, f"/api/projects/{project_id}/iteration-plan/latest", headers, timeout=60)
-            events.append(
-                {
-                    "event": "plan_reloaded_after_evaluation",
-                    "latest_evaluation_decision": latest_after_evaluation.get("latestEvaluation", {}).get("decision"),
-                }
-            )
-            if latest_after_evaluation.get("latestEvaluation", {}).get("decision") != evaluation.get("decision"):
-                raise AssertionError("latest iteration plan did not persist evaluation result")
-
-            suggested_prompt = str(evaluation.get("suggestedPromptForRegeneration") or "").strip()
-            if suggested_prompt:
-                refined = post_json(
-                    base_url,
-                    f"/api/projects/{project_id}/iteration-plan",
-                    headers,
-                    {
-                        "message": suggested_prompt,
-                        "sourceKind": "completion_suggestion",
-                    },
-                    timeout=60,
-                )
-                first_goal_title = str((refined.get("goals") or [{}])[0].get("title") or "")
-                events.append(
-                    {
-                        "event": "plan_refined",
-                        "goal_count": len(refined.get("goals", [])),
-                        "first_goal_title": first_goal_title,
-                    }
-                )
-                if "重拆成 4 个更小" in first_goal_title or "不要把多个连续实现点塞进同一个目标里" in first_goal_title:
-                    raise AssertionError(f"refined plan still leaked regeneration wrapper into first goal: {first_goal_title}")
+            if (latest.get("confirmation") or {}).get("status") != "confirmed":
+                raise AssertionError(f"latest plan did not preserve confirmation: {latest}")
 
             execute_status, execute_payload = request_json(
                 "POST",
@@ -196,71 +218,19 @@ def main() -> int:
             )
             events.append(
                 {
-                    "event": "execute_next_finished",
+                    "event": "execute_next_phase_gate_checked",
                     "http_status": execute_status,
-                    "result_status": execute_payload.get("status"),
-                    "session_status": execute_payload.get("sessionStatus"),
-                    "goal_index": execute_payload.get("goalIndex"),
-                    "has_more_goals": execute_payload.get("hasMoreGoals"),
-                    "summary": execute_payload.get("summary"),
+                    "operation_status": execute_payload.get("operationStatus"),
+                    "code": execute_payload.get("code"),
+                    "domain_code": (execute_payload.get("details") or {}).get("domainCode"),
                 }
             )
-            if execute_payload.get("status") != "needs_fix":
-                raise AssertionError(f"expected execute-next to produce needs_fix with fake codex: {execute_payload}")
-
-            latest_after = get_json(base_url, f"/api/projects/{project_id}/iteration-plan/latest", headers, timeout=60)
-            events.append(
-                {
-                    "event": "plan_reloaded_after_execute",
-                    "session_status": latest_after.get("session", {}).get("status"),
-                    "current_goal_index": latest_after.get("session", {}).get("currentGoalIndex"),
-                    "goal_statuses": [goal.get("status") for goal in latest_after.get("goals", [])],
-                    "goal_run_count": len(latest_after.get("goalRuns", [])),
-                }
-            )
-            needs_fix_goal = next((goal for goal in latest_after.get("goals", []) if goal.get("status") == "needs_fix"), None)
-            if needs_fix_goal is None:
-                raise AssertionError(f"expected a needs_fix goal after execute-next: {latest_after}")
-
-            needs_fix = post_json(
-                base_url,
-                f"/api/projects/{project_id}/needs-fix-route",
-                headers,
-                {
-                    "feedback": "Repair the current step using the route recovery artifacts.",
-                    "goalId": needs_fix_goal.get("goalId"),
-                    "goalIndex": needs_fix_goal.get("goalIndex"),
-                    "model": "gpt-5.4",
-                },
-                timeout=args.timeout_seconds,
-            )
-            events.append(
-                {
-                    "event": "needs_fix_route_finished",
-                    "status": needs_fix.get("status"),
-                    "goal_index": needs_fix.get("goalIndex"),
-                    "iteration_goal_status": needs_fix.get("iterationGoalStatus"),
-                    "iteration_session_status": needs_fix.get("iterationSessionStatus"),
-                }
-            )
-            if needs_fix.get("status") != "completed":
-                raise AssertionError(f"needs-fix route did not complete: {needs_fix}")
-            if needs_fix.get("iterationGoalStatus") != "succeeded":
-                raise AssertionError(f"needs-fix route did not complete the goal: {needs_fix}")
-
-            latest_after_needs_fix = get_json(base_url, f"/api/projects/{project_id}/iteration-plan/latest", headers, timeout=60)
-            events.append(
-                {
-                    "event": "plan_reloaded_after_needs_fix",
-                    "session_status": latest_after_needs_fix.get("session", {}).get("status"),
-                    "goal_statuses": [goal.get("status") for goal in latest_after_needs_fix.get("goals", [])],
-                    "goal_run_count": len(latest_after_needs_fix.get("goalRuns", [])),
-                }
-            )
-            if "succeeded" not in [goal.get("status") for goal in latest_after_needs_fix.get("goals", [])]:
-                raise AssertionError(f"expected a succeeded goal after needs-fix route: {latest_after_needs_fix}")
-            assert_needs_fix_state_written(project, int(needs_fix_goal.get("goalIndex") or 0))
-            events.append({"event": "needs_fix_route_state_written"})
+            if (
+                execute_status != 409
+                or execute_payload.get("code") != "route_action_rejected"
+                or (execute_payload.get("details") or {}).get("domainCode") != "phase_gate_blocked"
+            ):
+                raise AssertionError(f"execute-next was not phase-gated in Phase 2: {execute_payload}")
 
             status = "ok"
             return 0
@@ -348,6 +318,7 @@ def create_fake_codex(run_dir: Path) -> Path:
         """
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -355,39 +326,97 @@ from pathlib import Path
 
 def main() -> int:
     output_path = None
+    output_schema = None
     args = sys.argv[1:]
     for index, value in enumerate(args):
         if value == "-o" and index + 1 < len(args):
             output_path = Path(args[index + 1])
-            break
+        if value == "--output-schema" and index + 1 < len(args):
+            output_schema = Path(args[index + 1])
     if output_path is None:
         print("missing -o output path", file=sys.stderr)
         return 2
 
-    counter_path = Path(os.environ.get("PHASEA_FAKE_CODEX_COUNTER", str(output_path) + ".counter"))
-    try:
-        current = int(counter_path.read_text(encoding="utf-8").strip() or "0")
-    except FileNotFoundError:
-        current = 0
-    next_value = current + 1
-    counter_path.write_text(str(next_value), encoding="utf-8", newline="\\n")
+    prompt = sys.stdin.buffer.read().decode("utf-8", errors="replace")
 
-    if next_value == 1:
-        content = (
-            "STATUS: needs_fix\\n"
-            "SUMMARY: The current goal needs a focused route repair before continuing.\\n"
-            "CHANGED: No durable project change was made in this fake execution.\\n"
-            "VERIFY: Platform E2E confirms the goal is marked needs_fix.\\n"
-            "REMAINING: Run needs-fix route for this step.\\n"
-        )
+    schema_name = output_schema.name if output_schema is not None else ""
+    if schema_name == "prototype-iteration-planning-analysis.schema.json":
+        content = json.dumps({
+            "analysisSummary": "The isolated E2E project is ready for a small ordered iteration plan.",
+            "fieldCoverage": [],
+        })
+    elif schema_name == "prototype-iteration-goal-plan.schema.json":
+        marker = "Goal scaffold that must be preserved:"
+        scaffold = json.loads(prompt.split(marker, 1)[1].strip())
+        content = json.dumps({
+            "goals": [
+                {
+                    "title": goal["Title"],
+                    "description": goal["Description"],
+                    "acceptanceHint": goal["AcceptanceHint"],
+                }
+                for goal in scaffold
+            ]
+        })
+    elif schema_name == "prototype-iteration-evaluation.schema.json":
+        content = json.dumps({
+            "decision": "ready_to_execute",
+            "summary": "The isolated plan is ready.",
+            "reason": "Goals are ordered and independently verifiable.",
+            "suggestedAction": "execute_next_goal",
+            "suggestedPromptForRegeneration": None,
+        })
+    elif "Phase A GDD requirement map" in prompt:
+        content = json.dumps({
+            "requirements": [
+                {
+                    "requirement_id": "REQ-001",
+                    "normalized_requirement": "Player must move on the field map and trigger one visible encounter.",
+                    "priority": "P0",
+                    "kind": "scene",
+                    "mapped_scene_ids": ["field_map"],
+                    "mapped_required_module_ids": ["field_map"],
+                    "status": "mapped",
+                    "capability_domain_ids": [],
+                    "acceptance_markers": ["Field movement and one visible encounter are observable."],
+                },
+                {
+                    "requirement_id": "REQ-002",
+                    "normalized_requirement": "HUD feedback must show HP, reward, and return-to-map state.",
+                    "priority": "P1",
+                    "kind": "ui",
+                    "mapped_scene_ids": ["field_map"],
+                    "mapped_required_module_ids": ["combat_hud"],
+                    "status": "mapped",
+                    "capability_domain_ids": ["ui_component_system", "ui_overlays_feedback"],
+                    "acceptance_markers": ["HUD shows HP, reward, and return-to-map feedback."],
+                },
+            ]
+        })
     else:
-        content = (
-            "STATUS: completed\\n"
-            "SUMMARY: The current step was repaired through the needs-fix route.\\n"
-            "CHANGED: The fake execution completed the isolated step.\\n"
-            "VERIFY: Platform E2E confirms route state and goal status.\\n"
-            "REMAINING: none\\n"
-        )
+        counter_path = Path(os.environ.get("PHASEA_FAKE_CODEX_COUNTER", str(output_path) + ".counter"))
+        try:
+            current = int(counter_path.read_text(encoding="utf-8").strip() or "0")
+        except FileNotFoundError:
+            current = 0
+        next_value = current + 1
+        counter_path.write_text(str(next_value), encoding="utf-8", newline="\\n")
+        if next_value == 1:
+            content = (
+                "STATUS: needs_fix\\n"
+                "SUMMARY: The current goal needs a focused route repair before continuing.\\n"
+                "CHANGED: No durable project change was made in this fake execution.\\n"
+                "VERIFY: Platform E2E confirms the goal is marked needs_fix.\\n"
+                "REMAINING: Run needs-fix route for this step.\\n"
+            )
+        else:
+            content = (
+                "STATUS: completed\\n"
+                "SUMMARY: The current step was repaired through the needs-fix route.\\n"
+                "CHANGED: The fake execution completed the isolated step.\\n"
+                "VERIFY: Platform E2E confirms route state and goal status.\\n"
+                "REMAINING: none\\n"
+            )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(content, encoding="utf-8", newline="\\n")
@@ -409,37 +438,112 @@ if __name__ == "__main__":
     return fake_cmd
 
 
-def seed_prototype_route_state(project: dict[str, Any]) -> None:
+def seed_phase2_gdd_sources(project: dict[str, Any]) -> None:
     workspace_root = Path(str(project["workspaceRootPath"]))
-    state_path = workspace_root / "meta" / "routes" / "prototype" / "latest.json"
-    state_path.parent.mkdir(parents=True, exist_ok=True)
-    state_path.write_text(
-        json.dumps(
-            {
-                "route": "prototype-7day-playable",
-                "run_id": "phase-a-e2e-seeded-prototype",
-                "status": "succeeded",
-                "exit_code": 0,
-                "slug": "phase-a-iteration-e2e",
-                "prototype_completion": {"status": "ok"},
-                "godot_smoke": {"status": "skipped"},
-                "updated_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
-            },
-            indent=2,
-        ),
-        encoding="utf-8",
-        newline="\n",
+    repo_root = workspace_root / "repo"
+    gdd_text = (
+        "# Phase A Iteration E2E\n\n"
+        "- Player must move on the field map and trigger one visible encounter.\n"
+        "- HUD feedback must show HP, reward, and return-to-map state.\n"
+    )
+    gdd_path = repo_root / "docs" / "gdd" / "GDD.md"
+    gdd_path.parent.mkdir(parents=True, exist_ok=True)
+    gdd_path.write_text(gdd_text, encoding="utf-8", newline="\n")
+    gdd_hash = hashlib.sha256(gdd_text.strip().encode("utf-8")).hexdigest()
+    scene_route_hash = "phase2-e2e-scene-route-hash-v1"
+    write_project_route_state(
+        workspace_root,
+        "scene-route/latest.json",
+        {
+            "schema_version": "scene-route.v1",
+            "route": "scene-route-confirmation",
+            "status": "confirmed",
+            "source_gdd_form_hash": "phase2-e2e-gdd-form-hash-v1",
+            "source_generated_gdd_hash": gdd_hash,
+            "source_contract_snapshot_hash": "phase2-e2e-contract-snapshot-hash-v1",
+            "confirmed_scene_route_hash": scene_route_hash,
+            "scenes": [{"scene_id": "field_map"}],
+        },
+    )
+    write_project_route_state(
+        workspace_root,
+        "gdd-document/latest.json",
+        {
+            "schema_version": "gdd-document-generation.v1",
+            "route": "gdd-document-generation",
+            "status": "ready",
+            "generated_gdd_hash": gdd_hash,
+            "source_scene_route_hash": scene_route_hash,
+        },
+    )
+    write_project_route_state(
+        workspace_root,
+        "prototype/latest.json",
+        {
+            "route": "prototype-7day-playable",
+            "run_id": "phase2-e2e-seeded-prototype",
+            "status": "succeeded",
+            "exit_code": 0,
+            "slug": "phase-a-iteration-e2e",
+            "prototype_completion": {"status": "ok"},
+            "godot_smoke": {"status": "skipped"},
+            "updated_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        },
     )
 
 
-def assert_needs_fix_state_written(project: dict[str, Any], goal_index: int) -> None:
+def seed_phase2_prototype_skeleton(project: dict[str, Any], contract: dict[str, Any]) -> None:
     workspace_root = Path(str(project["workspaceRootPath"]))
-    state_path = workspace_root / "meta" / "routes" / "needs-fix" / f"step-{goal_index:02d}" / "latest.json"
-    if not state_path.is_file():
-        raise AssertionError(f"needs-fix route state was not written: {state_path}")
-    state = json.loads(state_path.read_text(encoding="utf-8"))
-    if state.get("status") != "completed":
-        raise AssertionError(f"needs-fix route state did not record completion: {state}")
+    write_project_route_state(
+        workspace_root,
+        "prototype-skeleton/latest.json",
+        {
+            "schema_version": "prototype-skeleton-readback.v1",
+            "route": "prototype-skeleton",
+            "status": "succeeded",
+            "source_boundary_enforced": True,
+            "recovery_source_order_ref": "hosted-route-recovery-order.v1",
+            "source_boundary": {
+                "recovery_source_order_ref": "hosted-route-recovery-order.v1",
+                "authority_sources": [
+                    "game-type-route-profile",
+                    "meta/project-execution-guide.md",
+                    "routes/prototype-contract/latest.json",
+                    "meta/routes/gdd-requirements/latest.json",
+                    "meta/routes/prototype/latest.json",
+                ],
+                "source_hashes": {
+                    "source_gdd_hash": contract.get("sourceGddHash"),
+                    "source_scene_route_hash": contract.get("sourceSceneRouteHash"),
+                    "source_requirement_map_hash": contract.get("sourceRequirementMapHash"),
+                    "source_contract_hash": contract.get("contractHash"),
+                    "source_contract_snapshot_hash": contract.get("sourceContractSnapshotHash"),
+                    "source_godot_ui_contract_hash": contract.get("sourceGodotUiContractHash"),
+                    "source_ui_style_contract_hash": contract.get("sourceUiStyleContractHash"),
+                    "ui_style_snapshot_hash": contract.get("uiStyleSnapshotHash"),
+                },
+            },
+            "freshness": "fresh",
+            "source_gdd_hash": contract.get("sourceGddHash"),
+            "source_scene_route_hash": contract.get("sourceSceneRouteHash"),
+            "source_requirement_map_hash": contract.get("sourceRequirementMapHash"),
+            "source_contract_hash": contract.get("contractHash"),
+            "source_contract_snapshot_hash": contract.get("sourceContractSnapshotHash"),
+            "source_godot_ui_contract_hash": contract.get("sourceGodotUiContractHash"),
+            "source_ui_style_contract_hash": contract.get("sourceUiStyleContractHash"),
+            "ui_style_snapshot_hash": contract.get("uiStyleSnapshotHash"),
+            "evidence_refs": ["meta/routes/prototype/latest.json"],
+            "updated_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        },
+    )
+
+
+def write_project_route_state(workspace_root: Path, relative_path: str, payload: dict[str, Any]) -> None:
+    serialized = json.dumps(payload, indent=2)
+    for root in (workspace_root / "meta" / "routes", workspace_root / "repo" / "meta" / "routes"):
+        path = root / Path(relative_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(serialized, encoding="utf-8", newline="\n")
 
 
 def token_hash(token: str) -> str:

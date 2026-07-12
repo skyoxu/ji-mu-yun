@@ -10,6 +10,17 @@ namespace PhaseA.Platform.Tests.Workflow;
 public sealed class RouteActionDescriptorsTests
 {
     [Fact]
+    public void Phase2_ShouldActivateOnlyIterationPlanCreation()
+    {
+        RouteActionDescriptors.Get("create_iteration_plan").DefaultPhaseEligibility.Should().Be("active");
+        RouteActionDescriptors.Get("create_prototype").DefaultPhaseEligibility.Should().Be("not_active");
+        RouteActionDescriptors.Get("execute_next_goal").DefaultPhaseEligibility.Should().Be("not_active");
+        RouteActionDescriptors.Get("run_needs_fix").DefaultPhaseEligibility.Should().Be("not_active");
+        RouteActionDescriptors.Get("run_ui_closure").DefaultPhaseEligibility.Should().Be("not_active");
+        RouteActionDescriptors.Get("preview_package").DefaultPhaseEligibility.Should().Be("not_active");
+    }
+
+    [Fact]
     public void Fixture_ShouldMatchRuntimeDescriptors()
     {
         using var document = ReadFixture("route-action-descriptors.v1.json");

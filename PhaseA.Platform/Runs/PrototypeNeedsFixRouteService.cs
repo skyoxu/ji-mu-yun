@@ -9,6 +9,7 @@ public sealed class PrototypeNeedsFixRouteService
     private readonly PrototypeQuickFixService _quickFixService;
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly PrototypeContractService _contractService;
+    private readonly PrototypeContractFreezeService _contractFreezeService;
 
     public PrototypeNeedsFixRouteService(
         PhaseAMetadataStore metadataStore,
@@ -20,6 +21,7 @@ public sealed class PrototypeNeedsFixRouteService
         _quickFixService = quickFixService;
         _stateWriter = stateWriter;
         _contractService = contractService ?? new PrototypeContractService();
+        _contractFreezeService = new PrototypeContractFreezeService(metadataStore);
     }
 
     public async Task<PrototypeNeedsFixRouteResult> RunAsync(
@@ -28,9 +30,39 @@ public sealed class PrototypeNeedsFixRouteService
         PrototypeNeedsFixRouteRequest request,
         CancellationToken cancellationToken = default)
     {
+        return await RunCoreAsync(accountId, projectId, request, requireTraceability: false, cancellationToken);
+    }
+
+    public async Task<PrototypeNeedsFixRouteResult> RunStrictAsync(
+        string accountId,
+        string projectId,
+        PrototypeNeedsFixRouteRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await RunCoreAsync(accountId, projectId, request, requireTraceability: true, cancellationToken);
+    }
+
+    internal async Task<PrototypeNeedsFixRouteResult> RunLegacyCompatibleAsync(
+        string accountId,
+        string projectId,
+        PrototypeNeedsFixRouteRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return await RunCoreAsync(accountId, projectId, request, requireTraceability: false, cancellationToken);
+    }
+
+    private async Task<PrototypeNeedsFixRouteResult> RunCoreAsync(
+        string accountId,
+        string projectId,
+        PrototypeNeedsFixRouteRequest request,
+        bool requireTraceability,
+        CancellationToken cancellationToken)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
+
+        await using var mutationLease = await ProjectMutationLockRegistry.Shared.AcquireAsync(accountId, projectId, cancellationToken);
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
@@ -42,6 +74,79 @@ public sealed class PrototypeNeedsFixRouteService
         if (details is null)
         {
             return new PrototypeNeedsFixRouteResult("", "missing_plan", "当前项目还没有游戏模块。请先使用固定的“生成游戏模块”按钮创建计划；提交反馈不会自动生成计划。", 0, null, null, []);
+        }
+
+        if (requireTraceability)
+        {
+            var guard = _contractFreezeService.EvaluateNewChainGuard(project);
+            var state = _stateWriter.ReadLatestIterationPlanState(project);
+            if (!guard.NewChainActive || !guard.Allowed)
+            {
+                return new PrototypeNeedsFixRouteResult("", "legacy_plan_source_unknown", "Needs-fix requires a current hash-bound iteration plan.", 0, details.Session.Status, null, []);
+            }
+            var candidateGoal = ResolveGoal(details, request);
+            if (candidateGoal is null)
+            {
+                return new PrototypeNeedsFixRouteResult(
+                    "",
+                    "iteration_goal_not_found",
+                    "Strict needs-fix requires a current goal from the confirmed iteration plan.",
+                    request.GoalIndex ?? 0,
+                    details.Session.Status,
+                    null,
+                    []);
+            }
+
+            if (candidateGoal.Status is not ("needs_fix" or "failed"))
+            {
+                return new PrototypeNeedsFixRouteResult(
+                    "",
+                    "iteration_goal_not_repairable",
+                    "Strict needs-fix only accepts the current failed or needs-fix goal.",
+                    candidateGoal.GoalIndex,
+                    details.Session.Status,
+                    candidateGoal.Status,
+                    []);
+            }
+
+            var currentRepairGoal = details.Goals.FirstOrDefault(goal => goal.Status is "needs_fix" or "failed");
+            if (currentRepairGoal is null || !string.Equals(currentRepairGoal.GoalId, candidateGoal.GoalId, StringComparison.Ordinal))
+            {
+                return new PrototypeNeedsFixRouteResult(
+                    "",
+                    "iteration_repair_goal_not_current",
+                    "Strict needs-fix must repair the current blocking goal in sequence.",
+                    candidateGoal.GoalIndex,
+                    details.Session.Status,
+                    candidateGoal.Status,
+                    []);
+            }
+
+            if (candidateGoal is not null)
+            {
+                var preflight = IterationPlanExecutionPreflight.Evaluate(
+                    state,
+                    details.Session.SessionId,
+                    candidateGoal.GoalIndex,
+                    new PrototypeIterationPlanSourceHashes(
+                        guard.ContractStatus.SourceGddHash,
+                        guard.ContractStatus.SourceSceneRouteHash,
+                        guard.ContractStatus.SourceRequirementMapHash,
+                        guard.ContractStatus.ContractHash,
+                        guard.ContractStatus.SourceContractSnapshotHash,
+                        guard.ContractStatus.SourceGodotUiContractHash,
+                        guard.ContractStatus.SourceUiStyleContractHash,
+                        guard.ContractStatus.UiStyleSnapshotHash),
+                    project.RepoPath,
+                    details.Session.TraceabilityAnchorJson ?? "",
+                    requireTrustedAnchor: true,
+                    currentStyleApplicability: PrototypeIterationPlanService.ToIterationStyleApplicability(guard.ContractStatus));
+                if (!preflight.Allowed)
+                {
+                    await RecordTraceabilityPreflightDiagnosticAsync(project, preflight, state, cancellationToken);
+                    return new PrototypeNeedsFixRouteResult("", preflight.DomainCode, preflight.Summary, candidateGoal.GoalIndex, details.Session.Status, candidateGoal.Status, []);
+                }
+            }
         }
 
         var goal = ResolveGoal(details, request);
@@ -605,6 +710,56 @@ public sealed class PrototypeNeedsFixRouteService
         {
             return TrimForPrompt(BuildCompactSummary(value));
         }
+    }
+
+    private async Task RecordTraceabilityPreflightDiagnosticAsync(
+        ProjectSnapshot project,
+        IterationPlanExecutionPreflightResult preflight,
+        string iterationPlanState,
+        CancellationToken cancellationToken)
+    {
+        var sourceHashRef = "no-source";
+        var planHash = "no-plan";
+        try
+        {
+            using var document = JsonDocument.Parse(iterationPlanState);
+            sourceHashRef = ReadString(document.RootElement, "source_hash_ref") ?? sourceHashRef;
+            planHash = ReadString(document.RootElement, "plan_hash") ?? planHash;
+        }
+        catch (JsonException)
+        {
+        }
+
+        var existing = await _metadataStore.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", project.AccountId, project.ProjectId, "needs-fix", preflight.DomainCode, "P1", 100),
+            cancellationToken);
+        if (existing.Any(row => PrototypeIterationGoalService.HasDiagnosticScope(row.SourceRefsJson, sourceHashRef, planHash)))
+        {
+            return;
+        }
+
+        var sourceRefsJson = JsonSerializer.Serialize(new[]
+        {
+            new { kind = "sidecar", @ref = "meta/routes/iteration-plan/latest.json" },
+            new { kind = "source_hash_ref", @ref = sourceHashRef },
+            new { kind = "plan_hash", @ref = planHash }
+        });
+        await _metadataStore.RecordProjectDiagnosticSpoolEntryAsync(
+            new ProjectDiagnosticSpoolCommand(
+                project.AccountId,
+                project.ProjectId,
+                "needs-fix",
+                preflight.DomainCode,
+                "P1",
+                preflight.Summary,
+                JsonSerializer.Serialize(new[] { "meta/routes/iteration-plan/latest.json" }),
+                "meta/routes/iteration-plan/latest.json",
+                ProjectNameSnapshot: project.Name,
+                SourceRefsJson: sourceRefsJson,
+                RetentionClass: "unresolved_blocker",
+                RemediationHintId: preflight.DomainCode,
+                DedupeScopeKey: ProjectDiagnosticScopeKey.Compute(sourceHashRef, planHash)),
+            cancellationToken);
     }
 
     private static string? ReadString(JsonElement root, string propertyName)

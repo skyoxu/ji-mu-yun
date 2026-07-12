@@ -47,6 +47,11 @@ public sealed class PrototypeRouteStateWriter
         WriteState(project, Path.Combine("routes", "prototype", "latest.json"), payload);
     }
 
+    public void WritePrototypeSkeletonState(ProjectSnapshot project, object payload)
+    {
+        WriteState(project, Path.Combine("routes", "prototype-skeleton", "latest.json"), payload);
+    }
+
     public void WritePrototypeRepairState(ProjectSnapshot project, object payload)
     {
         WriteState(project, Path.Combine("routes", "prototype-repair", "latest.json"), payload);
@@ -67,10 +72,47 @@ public sealed class PrototypeRouteStateWriter
         WriteState(project, Path.Combine("routes", "iteration-plan", "planning-analysis.json"), payload);
     }
 
+    public void WriteIterationPlanPromptEvidenceState(ProjectSnapshot project, object payload)
+    {
+        WriteState(project, Path.Combine("routes", "iteration-plan", "prompt-evidence.json"), payload);
+    }
+
+    public void WriteIterationPlanInteractionRegionState(ProjectSnapshot project, int goalIndex, object payload, string artifactRef = "")
+    {
+        var goal = goalIndex <= 0 ? "goal-unknown" : $"goal-{goalIndex:00}";
+        var relativePath = string.IsNullOrWhiteSpace(artifactRef)
+            ? Path.Combine("routes", "iteration-plan", "interaction-regions", $"{goal}.json")
+            : artifactRef.Replace('/', Path.DirectorySeparatorChar).StartsWith($"meta{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                ? artifactRef.Replace('/', Path.DirectorySeparatorChar)[5..]
+                : artifactRef.Replace('/', Path.DirectorySeparatorChar);
+        EnsureInteractionArtifactPath(project, relativePath);
+        WriteState(project, relativePath, payload);
+    }
+
+    public void WriteIterationPlanSessionState(ProjectSnapshot project, string sessionId, object payload)
+    {
+        WriteState(project, Path.Combine("routes", "iteration-plan", "sessions", $"{sessionId}.json"), payload);
+    }
+
+    public void WriteIterationPlanAttemptState(ProjectSnapshot project, string attemptId, object payload)
+    {
+        WriteState(project, Path.Combine("routes", "iteration-plan", "attempts", $"{attemptId}.json"), payload);
+    }
+
+    public string ReadIterationPlanSessionState(ProjectSnapshot project, string sessionId)
+    {
+        return ReadState(project, Path.Combine("routes", "iteration-plan", "sessions", $"{sessionId}.json"));
+    }
+
     public void ClearIterationPlanState(ProjectSnapshot project)
     {
         DeleteState(project, Path.Combine("routes", "iteration-plan", "latest.json"));
         DeleteState(project, Path.Combine("routes", "iteration-plan", "planning-analysis.json"));
+    }
+
+    public void DeleteIterationPlanSessionState(ProjectSnapshot project, string sessionId)
+    {
+        DeleteState(project, Path.Combine("routes", "iteration-plan", "sessions", $"{sessionId}.json"));
     }
 
     public void WriteRepairPlanState(ProjectSnapshot project, object payload)
@@ -204,6 +246,19 @@ public sealed class PrototypeRouteStateWriter
         return ReadState(project, Path.Combine("routes", "prototype", "latest.json"));
     }
 
+    public string ReadLatestPrototypeSkeletonState(ProjectSnapshot project)
+    {
+        return ReadState(project, Path.Combine("routes", "prototype-skeleton", "latest.json"));
+    }
+
+    public (string MetadataState, string ProjectMirrorState) ReadPrototypeSkeletonStateCopies(ProjectSnapshot project)
+    {
+        var relativePath = Path.Combine("routes", "prototype-skeleton", "latest.json");
+        return (
+            ReadStateFile(Path.Combine(project.MetaPath, relativePath)),
+            ReadStateFile(Path.Combine(project.RepoPath, "meta", relativePath)));
+    }
+
     private static void WriteState(ProjectSnapshot project, string relativePath, object payload)
     {
         var serialized = JsonSerializer.Serialize(payload, JsonOptions);
@@ -214,13 +269,19 @@ public sealed class PrototypeRouteStateWriter
     private static string ReadState(ProjectSnapshot project, string relativePath)
     {
         var path = Path.Combine(project.MetaPath, relativePath);
-        if (File.Exists(path))
+        var primary = ReadValidJsonStateFile(path);
+        if (!string.IsNullOrWhiteSpace(primary))
         {
-            return File.ReadAllText(path, Encoding.UTF8);
+            return primary;
         }
 
         var mirroredPath = Path.Combine(project.RepoPath, "meta", relativePath);
-        return File.Exists(mirroredPath) ? File.ReadAllText(mirroredPath, Encoding.UTF8) : "";
+        return ReadValidJsonStateFile(mirroredPath);
+    }
+
+    private static string ReadStateFile(string path)
+    {
+        return File.Exists(path) ? File.ReadAllText(path, Encoding.UTF8) : "";
     }
 
     private static void DeleteState(ProjectSnapshot project, string relativePath)
@@ -238,10 +299,72 @@ public sealed class PrototypeRouteStateWriter
         }
     }
 
+    private static void DeleteStateDirectory(ProjectSnapshot project, string relativePath)
+    {
+        foreach (var root in new[] { project.MetaPath, Path.Combine(project.RepoPath, "meta") })
+        {
+            var path = Path.GetFullPath(Path.Combine(root, relativePath));
+            var boundary = Path.GetFullPath(root) + Path.DirectorySeparatorChar;
+            if (path.StartsWith(boundary, StringComparison.OrdinalIgnoreCase) && Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive: true);
+            }
+        }
+    }
+
     private static void WriteStateFile(string path, string serialized)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, serialized, Utf8NoBom);
+        var tempPath = Path.Combine(
+            Path.GetDirectoryName(path)!,
+            $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            File.WriteAllText(tempPath, serialized, Utf8NoBom);
+            File.Move(tempPath, path, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath);
+            }
+        }
+    }
+
+    private static string ReadValidJsonStateFile(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return "";
+        }
+
+        var state = File.ReadAllText(path, Encoding.UTF8);
+        try
+        {
+            using var _ = JsonDocument.Parse(state);
+            return state;
+        }
+        catch (JsonException)
+        {
+            return "";
+        }
+    }
+
+    private static void EnsureInteractionArtifactPath(ProjectSnapshot project, string relativePath)
+    {
+        var allowedRoot = Path.GetFullPath(Path.Combine(
+            project.MetaPath,
+            "routes",
+            "iteration-plan",
+            "interaction-regions"));
+        var candidate = Path.GetFullPath(Path.Combine(project.MetaPath, relativePath));
+        var boundary = allowedRoot + Path.DirectorySeparatorChar;
+        if (!candidate.StartsWith(boundary, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(Path.GetExtension(candidate), ".json", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Iteration-plan interaction artifact path escaped its canonical directory.");
+        }
     }
 
     private static string ToSlash(string value)

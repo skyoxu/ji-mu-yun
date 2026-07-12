@@ -227,6 +227,71 @@ public static class SqliteMetadataSchema
         await AddColumnIfMissingAsync(
             connection,
             transaction,
+            "project_iteration_sessions",
+            "traceability_anchor_json",
+            "ALTER TABLE project_iteration_sessions ADD COLUMN traceability_anchor_json TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_iteration_sessions",
+            "request_identity_hash",
+            "ALTER TABLE project_iteration_sessions ADD COLUMN request_identity_hash TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_iteration_sessions",
+            "route_state_json",
+            "ALTER TABLE project_iteration_sessions ADD COLUMN route_state_json TEXT NULL;",
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            WITH ranked AS (
+                SELECT id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY account_id, project_id, request_identity_hash
+                           ORDER BY created_utc DESC, id DESC
+                       ) AS row_number
+                FROM project_iteration_sessions
+                WHERE request_identity_hash IS NOT NULL
+                  AND request_identity_hash <> ''
+            )
+            UPDATE project_iteration_sessions
+            SET request_identity_hash = NULL
+            WHERE id IN (SELECT id FROM ranked WHERE row_number > 1);
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS ix_project_iteration_sessions_request_identity
+            ON project_iteration_sessions(account_id, project_id, request_identity_hash)
+            WHERE request_identity_hash IS NOT NULL AND request_identity_hash <> '';
+            """,
+            transaction,
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "dedupe_scope_key",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN dedupe_scope_key TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS ix_project_diagnostic_spool_unresolved_scope
+            ON project_diagnostic_spool(account_id, project_id, route_id, failure_family, severity, dedupe_scope_key)
+            WHERE triage_status = 'unresolved' AND dedupe_scope_key <> '';
+            """,
+            transaction,
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
             "project_prototype_drafts",
             "draft_text",
             "ALTER TABLE project_prototype_drafts ADD COLUMN draft_text TEXT NULL;",
@@ -977,6 +1042,9 @@ public static class SqliteMetadataSchema
             current_goal_index INTEGER NOT NULL DEFAULT 0,
             latest_summary TEXT NULL,
             latest_evaluation_json TEXT NULL,
+            traceability_anchor_json TEXT NULL,
+            request_identity_hash TEXT NULL,
+            route_state_json TEXT NULL,
             created_utc TEXT NOT NULL,
             updated_utc TEXT NOT NULL,
             completed_utc TEXT NULL,
@@ -1088,6 +1156,7 @@ public static class SqliteMetadataSchema
             replacement_evidence_refs_json TEXT NOT NULL DEFAULT '[]',
             admin_summary TEXT NOT NULL DEFAULT '',
             remediation_hint_id TEXT NOT NULL DEFAULT '',
+            dedupe_scope_key TEXT NOT NULL DEFAULT '',
             created_utc TEXT NOT NULL,
             updated_utc TEXT NOT NULL,
             resolved_utc TEXT NULL,

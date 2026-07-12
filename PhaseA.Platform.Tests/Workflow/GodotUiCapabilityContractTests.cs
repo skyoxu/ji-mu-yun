@@ -81,7 +81,7 @@ public sealed class GodotUiCapabilityContractTests
             "rendering_profile_missing",
             "animation_state_profile_missing",
             "third_person_camera_profile_missing",
-            "ui_update_owner_missing"
+            "ui_update_ownership_missing"
         ]);
     }
 

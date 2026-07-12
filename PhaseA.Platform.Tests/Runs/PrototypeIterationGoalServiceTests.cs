@@ -141,7 +141,7 @@ public sealed record DemoPrototypeState;
         var targetGoal = FindGoal((await store.GetLatestProjectIterationSessionAsync(projectId))!, "field navigation and stable control");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
@@ -248,7 +248,7 @@ public sealed record DemoPrototypeState;
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("plan_needs_refinement");
@@ -289,7 +289,7 @@ public sealed record DemoPrototypeState;
         var targetGoal = FindGoal((await store.GetLatestProjectIterationSessionAsync(projectId))!, "field navigation and stable control");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
         var goal = refreshed!.Goals.Single(item => item.GoalId == result.GoalId);
 
@@ -2595,7 +2595,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
         result.Status.Should().Be("completed");
@@ -2645,7 +2645,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new StepFiveSmokeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
@@ -2684,7 +2684,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
         result.Status.Should().Be("completed");
@@ -2732,7 +2732,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new StepFiveSmokeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("completed");
@@ -2798,7 +2798,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new StepFiveSmokeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
@@ -2836,7 +2836,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new NoopGoalHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");
@@ -2878,7 +2878,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new StepFiveSmokeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var detailsAfter = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");
@@ -2905,7 +2905,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new NeedsFixHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");
@@ -2936,7 +2936,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var stateWriter = new PrototypeRouteStateWriter();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var project = await store.GetProjectSnapshotAsync(projectId);
 
@@ -2963,7 +2963,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new ExitCodeFailureHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");
@@ -2992,7 +2992,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var runner = new BlockedVerificationHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");

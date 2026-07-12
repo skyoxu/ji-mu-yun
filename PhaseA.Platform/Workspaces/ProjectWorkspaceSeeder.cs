@@ -12,8 +12,12 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
     private const FileAttributes ReparsePointAttribute = (FileAttributes)0x400;
     private const string TestsProjectDirectoryName = "Tests.Godot";
     private const string RuntimeDirectoryName = "Game.Godot";
+    private const string SeedCompletionMarkerName = ".phasea-seed-complete";
     private const int LockedFileRetryCount = 3;
     private static readonly TimeSpan LockedFileRetryDelay = TimeSpan.FromMilliseconds(250);
+    private static readonly object WorkspaceSeedLocksGate = new();
+    private static readonly Dictionary<string, WorkspaceSeedLockEntry> WorkspaceSeedLocks =
+        new(StringComparer.OrdinalIgnoreCase);
 
     private static readonly string[] ExcludedDirectoryNames =
     [
@@ -93,19 +97,43 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         ArgumentException.ThrowIfNullOrWhiteSpace(projectRepoPath);
 
         var sourceRoot = Path.GetFullPath(_options.RepositoryRoot);
-        var targetRoot = Path.GetFullPath(projectRepoPath);
+        var targetRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(projectRepoPath));
         if (!WorkspacePathPolicy.IsUnderRoot(_options.HostedWorkspaceRoot, targetRoot))
         {
             throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
         }
 
+        var seedLock = AcquireWorkspaceSeedLock(targetRoot);
+        try
+        {
+            lock (seedLock.SyncRoot)
+            {
+                EnsureSeededCore(sourceRoot, targetRoot);
+            }
+        }
+        finally
+        {
+            ReleaseWorkspaceSeedLock(targetRoot, seedLock);
+        }
+    }
+
+    private static void EnsureSeededCore(string sourceRoot, string targetRoot)
+    {
         if (Directory.Exists(targetRoot) && Directory.EnumerateFileSystemEntries(targetRoot).Any())
         {
-            EnsureBootstrapBaseline(sourceRoot, targetRoot);
+            if (!File.Exists(Path.Combine(targetRoot, SeedCompletionMarkerName)))
+            {
+                CopyDirectory(sourceRoot, sourceRoot, targetRoot, overwriteFiles: false);
+            }
+            else
+            {
+                EnsureBootstrapBaseline(sourceRoot, targetRoot);
+            }
             SyncManagedFiles(sourceRoot, targetRoot);
             SyncManagedDirectories(sourceRoot, targetRoot);
             RestoreWorkspaceJunctions(sourceRoot, targetRoot);
             EnsureRuntimeLogsAreGodotIgnored(targetRoot);
+            WriteSeedCompletionMarker(targetRoot);
             return;
         }
 
@@ -113,6 +141,7 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         CopyDirectory(sourceRoot, sourceRoot, targetRoot, overwriteFiles: false);
         RestoreWorkspaceJunctions(sourceRoot, targetRoot);
         EnsureRuntimeLogsAreGodotIgnored(targetRoot);
+        WriteSeedCompletionMarker(targetRoot);
     }
 
     private static void EnsureBootstrapBaseline(string sourceRoot, string targetRoot)
@@ -157,7 +186,10 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
             var destinationPath = Path.Combine(targetRoot, relativeFile.Replace('/', Path.DirectorySeparatorChar));
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-            File.Copy(sourcePath, destinationPath, overwrite: true);
+            if (!TryCopyFileWithLockTolerance(sourceRoot, sourcePath, destinationPath, overwriteFiles: true))
+            {
+                throw new IOException($"Managed workspace file could not be synchronized: {relativeFile}");
+            }
         }
 
         foreach (var relativeFile in ManagedIfMissingRelativeFiles)
@@ -170,7 +202,36 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-            File.Copy(sourcePath, destinationPath, overwrite: false);
+            if (!TryCopyFileWithLockTolerance(sourceRoot, sourcePath, destinationPath, overwriteFiles: false))
+            {
+                throw new IOException($"Required workspace file could not be seeded: {relativeFile}");
+            }
+        }
+    }
+
+    private static WorkspaceSeedLockEntry AcquireWorkspaceSeedLock(string targetRoot)
+    {
+        lock (WorkspaceSeedLocksGate)
+        {
+            if (!WorkspaceSeedLocks.TryGetValue(targetRoot, out var entry))
+            {
+                entry = new WorkspaceSeedLockEntry();
+                WorkspaceSeedLocks.Add(targetRoot, entry);
+            }
+            entry.ReferenceCount++;
+            return entry;
+        }
+    }
+
+    private static void ReleaseWorkspaceSeedLock(string targetRoot, WorkspaceSeedLockEntry entry)
+    {
+        lock (WorkspaceSeedLocksGate)
+        {
+            entry.ReferenceCount--;
+            if (entry.ReferenceCount == 0)
+            {
+                WorkspaceSeedLocks.Remove(targetRoot);
+            }
         }
     }
 
@@ -257,26 +318,44 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         var tolerateLockedFile = IsLockTolerantManagedPath(relativePath);
         for (var attempt = 1; attempt <= LockedFileRetryCount; attempt++)
         {
+            string? temporaryPath = null;
             try
             {
-                File.Copy(sourcePath, destinationPath, overwrite: overwriteFiles);
+                if (overwriteFiles)
+                {
+                    temporaryPath = $"{destinationPath}.phasea-seed-{Guid.NewGuid():N}.tmp";
+                    File.Copy(sourcePath, temporaryPath, overwrite: false);
+                    File.Move(temporaryPath, destinationPath, overwrite: true);
+                    temporaryPath = null;
+                }
+                else
+                {
+                    File.Copy(sourcePath, destinationPath, overwrite: false);
+                }
                 return true;
             }
-            catch (IOException) when (tolerateLockedFile && attempt < LockedFileRetryCount)
+            catch (IOException) when ((tolerateLockedFile || overwriteFiles) && attempt < LockedFileRetryCount)
             {
                 Thread.Sleep(LockedFileRetryDelay);
             }
-            catch (UnauthorizedAccessException) when (tolerateLockedFile && attempt < LockedFileRetryCount)
+            catch (UnauthorizedAccessException) when ((tolerateLockedFile || overwriteFiles) && attempt < LockedFileRetryCount)
             {
                 Thread.Sleep(LockedFileRetryDelay);
             }
-            catch (IOException) when (tolerateLockedFile)
+            catch (IOException) when (tolerateLockedFile || overwriteFiles)
             {
                 return false;
             }
-            catch (UnauthorizedAccessException) when (tolerateLockedFile)
+            catch (UnauthorizedAccessException) when (tolerateLockedFile || overwriteFiles)
             {
                 return false;
+            }
+            finally
+            {
+                if (!string.IsNullOrWhiteSpace(temporaryPath) && File.Exists(temporaryPath))
+                {
+                    File.Delete(temporaryPath);
+                }
             }
         }
 
@@ -299,6 +378,13 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         {
             File.WriteAllText(gdignorePath, string.Empty);
         }
+    }
+
+    private static void WriteSeedCompletionMarker(string targetRoot)
+    {
+        File.WriteAllText(
+            Path.Combine(targetRoot, SeedCompletionMarkerName),
+            "phase-a-workspace-seed.v1\n");
     }
 
     private static void RestoreWorkspaceJunctions(string sourceRoot, string targetRoot)
@@ -529,5 +615,12 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         var ok = process is not null && process.ExitCode == 0 && Directory.Exists(junctionPath) && IsReparsePoint(junctionPath);
         details = $"{details}; mode=mklink-junction; rc={process?.ExitCode ?? -1}; parent={parent}; junction={junctionPath}; target={targetPath}; relative={relativeTarget}; stdout={stdout}; stderr={stderr}";
         return ok;
+    }
+
+    private sealed class WorkspaceSeedLockEntry
+    {
+        public object SyncRoot { get; } = new();
+
+        public int ReferenceCount { get; set; }
     }
 }

@@ -55,7 +55,8 @@ public sealed record ProjectDiagnosticSpoolCommand(
     string CleanupStatus = "preserved",
     string ReplacementEvidenceRefsJson = "[]",
     string AdminSummary = "",
-    string RemediationHintId = "");
+    string RemediationHintId = "",
+    string DedupeScopeKey = "");
 
 public sealed record ProjectDiagnosticSpoolEntry(
     string Id,

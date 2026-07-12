@@ -22,6 +22,38 @@ public sealed class PrototypeIterationPlanServiceTests : IDisposable
     }
 
     [Fact]
+    public void ResultContracts_ShouldExposePhase2TraceabilityAndConfirmationFields()
+    {
+        typeof(PrototypeIterationPlanResult).GetProperties().Select(property => property.Name).Should().Contain([
+            "OperationStatus",
+            "PlanHash",
+            "SourceHashes",
+            "Coverage",
+            "Blockers",
+            "Confirmation"
+        ]);
+        typeof(PrototypeIterationPlanGoalResult).GetProperties().Select(property => property.Name).Should().Contain([
+            "RequirementIds",
+            "InfrastructureReason",
+            "SourceHashRef",
+            "UiSurface",
+            "Style",
+            "EngineSemantics",
+            "InteractionRegion",
+            "GodotUiUpdateOwnership",
+            "GodotThirdPersonCameraProfile"
+        ]);
+        typeof(PrototypeIterationPlanRequiredModuleResult).GetProperties().Select(property => property.Name).Should().Contain([
+            "RequirementIds",
+            "SourceReason",
+            "SourceRefs",
+            "Priority",
+            "CoverageStatus",
+            "ValidationRefs"
+        ]);
+    }
+
+    [Fact]
     public async Task EvaluateAsync_ShouldSuggestRefine_WhenFirstGoalIsTooBroad()
     {
         using var database = TempSqliteDatabase.Create();
@@ -88,6 +120,7 @@ public sealed class PrototypeIterationPlanServiceTests : IDisposable
                 "completion_suggestion"));
 
         result.Status.Should().Be("ready");
+        result.OperationStatus.Should().Be("created_run");
         result.LatestEvaluation.Should().NotBeNull();
         result.LatestEvaluation!.Decision.Should().NotBeNullOrWhiteSpace();
         codex.LastGoalPlanPrompt.Should().Contain("default to Chinese");

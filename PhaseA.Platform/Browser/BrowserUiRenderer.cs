@@ -1168,6 +1168,7 @@ public sealed class BrowserUiRenderer
                   mainActions.className = "v2-action-row legacy-iteration-plan-ui";
                   const createPlan = $("createIterationPlan");
                   const evaluatePlan = $("evaluateIterationPlan");
+                  const confirmPlan = $("confirmIterationPlan");
                   const executeGoal = $("executeIterationGoal");
                   const deletePlan = $("deleteIterationPlan");
                   createPlan?.insertAdjacentElement("beforebegin", mainActions);
@@ -1175,7 +1176,7 @@ public sealed class BrowserUiRenderer
                   roundTabs.id = "v2IterationRoundTabs";
                   roundTabs.className = "v2-round-tabs hidden legacy-iteration-plan-ui";
                   mainActions.insertAdjacentElement("beforebegin", roundTabs);
-                  [createPlan, evaluatePlan, executeGoal, deletePlan].filter(Boolean).forEach(button => mainActions.appendChild(button));
+                  [createPlan, evaluatePlan, confirmPlan, executeGoal, deletePlan].filter(Boolean).forEach(button => mainActions.appendChild(button));
                   [
                     "v2IterationSummary",
                     "iterationAutoRefreshHint",
@@ -1624,7 +1625,7 @@ public sealed class BrowserUiRenderer
                       <div class="v2-workflow-module-plan" data-module-plan-confirmation="true">
                         <strong>Module plan traceability</strong>
                         <p>Required modules appear separately from goal rows. New projects must confirm hash-bound requirement map and contract before execution.</p>
-                        <ul>${moduleRows.length ? moduleRows.map(goal => `<li>${escapeHtml(goal.index)} ${escapeHtml(goal.title)} <code>${escapeHtml(goal.requirementIds.join(", ") || "requirement_ids_pending")}</code></li>`).join("") : "<li>No hash-bound module plan is active.</li>"}</ul>
+                        <ul>${moduleRows.length ? moduleRows.map(goal => `<li>${escapeHtml(goal.index)} ${escapeHtml(goal.title)} <code>${escapeHtml(goal.requirementIds.join(", ") || "infrastructure_or_unmapped")}</code></li>`).join("") : "<li>No hash-bound module plan is active.</li>"}</ul>
                       </div>
                       <div class="v2-workflow-ui-closure" data-ui-wiring-closure-panel="true">
                         <strong>UI wiring closure</strong>
@@ -2599,6 +2600,7 @@ public sealed class BrowserUiRenderer
                     <button id="createIterationPlan" class="ghost" data-global-action="true">生成游戏模块</button>
                     <button id="evaluateIterationPlan" class="ghost" data-global-action="true">评估当前游戏模块</button>
                     <button id="deleteIterationPlan" class="ghost" data-global-action="true">删除当前轮游戏模块</button>
+                    <button id="confirmIterationPlan" class="ghost" data-global-action="true">确认当前模块计划</button>
                     <button id="executeIterationGoal" class="secondary" data-global-action="true">执行下一任务</button>
                     <p id="iterationAutoRefreshHint" class="muted">执行中会自动刷新进度，你可以停留在当前页面直接查看状态变化。</p>
                     <div id="iterationPlanStatus" class="card muted">尚未生成游戏模块。</div>
@@ -3411,6 +3413,8 @@ public sealed class BrowserUiRenderer
                     $("evaluateIterationPlan").textContent = "请先生成游戏模块";
                     $("evaluateIterationPlanFromChat").disabled = true;
                     $("evaluateIterationPlanFromChat").textContent = "请先生成游戏模块";
+                    $("confirmIterationPlan").disabled = true;
+                    $("confirmIterationPlan").textContent = "请先生成游戏模块";
                     $("executeIterationGoal").disabled = true;
                     $("executeIterationGoal").textContent = "请先生成游戏模块";
                     return;
@@ -3427,6 +3431,21 @@ public sealed class BrowserUiRenderer
                   const planStarted = isIterationPlanStarted();
                   const isLatestPlan = isDisplayingLatestIterationPlan();
                   const canUpdatePlan = !planStarted;
+                  const confirmation = plan.confirmation;
+                  const sourceHashes = plan.sourceHashes || null;
+                  const styleApplicability = plan.styleApplicability || null;
+                  const reviewedStyleNotApplicable = styleApplicability?.status === "reviewed_not_applicable"
+                    && Boolean(styleApplicability?.reviewedBy)
+                    && Boolean(styleApplicability?.reason)
+                    && Boolean(styleApplicability?.recheckTrigger)
+                    && Boolean(styleApplicability?.evidenceHash);
+                  const traceabilityGoals = Array.isArray(plan.traceabilityGoals) ? plan.traceabilityGoals : [];
+                  const expectedSourceHashRef = traceabilityGoals.length && traceabilityGoals.every(item => item.sourceHashRef === traceabilityGoals[0].sourceHashRef) ? traceabilityGoals[0].sourceHashRef : "";
+                  const styleIdentityBound = Boolean(sourceHashes?.sourceUiStyleContractHash && (sourceHashes?.uiStyleSnapshotHash || reviewedStyleNotApplicable));
+                  const planHashBound = Boolean(plan.planHash && sourceHashes?.sourceGddHash && sourceHashes?.sourceSceneRouteHash && sourceHashes?.sourceRequirementMapHash && sourceHashes?.sourceContractHash && sourceHashes?.sourceContractSnapshotHash && sourceHashes?.sourceGodotUiContractHash && styleIdentityBound);
+                  const planConfirmed = confirmation?.status === "confirmed" && confirmation?.sessionId === session.sessionId && confirmation?.planHash === plan.planHash && Boolean(expectedSourceHashRef) && confirmation?.sourceHashRef === expectedSourceHashRef;
+                  const planBlockers = Array.isArray(plan.blockers) ? plan.blockers : [];
+                  const traceabilityByGoal = new Map(traceabilityGoals.map(item => [Number(item.goalIndex || 0), item]));
                   $("v2IterationSummary").className = "card";
                   $("v2IterationSummary").innerHTML = `
                     <strong>游戏模块摘要</strong>
@@ -3434,6 +3453,10 @@ public sealed class BrowserUiRenderer
                     <p>${escapeHtml(session.overallGoal || "")}</p>
                     ${session.latestSummary ? `<p class="muted">${escapeHtml(session.latestSummary)}</p>` : ""}
                     ${planningAnalysis ? `<p class="muted">生成依据：${escapeHtml(planningAnalysis.analysisSummary || "")}</p>` : ""}
+                    <p class="muted">计划哈希：${escapeHtml(plan.planHash || "legacy / unknown")}</p>
+                    <p class="muted">样式适用性：${escapeHtml(styleApplicability?.status || "unknown")}${reviewedStyleNotApplicable ? ` · ${escapeHtml(styleApplicability.reason)} · ${escapeHtml(styleApplicability.reviewedBy)}` : ""}</p>
+                    <p class="muted">确认状态：${escapeHtml(planConfirmed ? "已确认" : planHashBound ? "待确认" : "旧计划或来源未知")}</p>
+                    ${planBlockers.length ? `<p class="danger">阻断：${escapeHtml(planBlockers.map(item => item.domainCode || item.summary || "blocked").join(" · "))}</p>` : ""}
                   `;
                   $("iterationPlanStatus").className = "card";
                   $("iterationPlanStatus").innerHTML = `
@@ -3457,14 +3480,18 @@ public sealed class BrowserUiRenderer
                   $("evaluateIterationPlan").textContent = state.iterationPlanEvaluationRunning ? "评估中..." : "评估当前游戏模块";
                   $("evaluateIterationPlanFromChat").disabled = !isLatestPlan || isGlobalBusy() || state.iterationPlanEvaluationRunning;
                   $("evaluateIterationPlanFromChat").textContent = state.iterationPlanEvaluationRunning ? "评估中..." : "评估当前计划是否值得继续";
+                  $("confirmIterationPlan").disabled = !isLatestPlan || !planHashBound || planBlockers.length > 0 || planConfirmed || isGlobalBusy();
+                  $("confirmIterationPlan").textContent = planConfirmed ? "当前模块计划已确认" : planHashBound ? "确认当前模块计划" : "旧计划需重新生成";
                   $("executeIterationGoal").disabled = hasNeedsFix
-                    ? (!isLatestPlan || isGlobalBusy())
-                    : (!isLatestPlan || !hasPending || shouldRefinePlan || blockedByCurrentGoal || isGlobalBusy());
+                    ? (!isLatestPlan || !planConfirmed || planBlockers.length > 0 || isGlobalBusy())
+                    : (!isLatestPlan || !hasPending || !planConfirmed || planBlockers.length > 0 || shouldRefinePlan || blockedByCurrentGoal || isGlobalBusy());
                   $("executeIterationGoal").textContent = hasNeedsFix
                     ? "运行需要修复路由"
                     : shouldRefinePlan
                       ? "建议先重拆游戏模块"
-                      : hasPending
+                      : hasPending && !planConfirmed
+                        ? "请先确认当前模块计划"
+                        : hasPending
                         ? "执行下一任务"
                         : "当前没有待执行任务";
                   renderIterationPlanEvaluation();
@@ -3473,7 +3500,7 @@ public sealed class BrowserUiRenderer
                     ? "当前有任务需要修复。点击对应任务卡片里的“运行需要修复路由”会直接提交后台 run。"
                     : "当前没有需要修复的任务。";
                   renderChatHistory();
-                  const needsFixDisabled = !isLatestPlan || isGlobalBusy();
+                  const needsFixDisabled = !isLatestPlan || !planConfirmed || planBlockers.length > 0 || isGlobalBusy();
                   const needsFixTitle = !isLatestPlan
                     ? "只能修复最新一轮游戏模块。请切回最新轮次后再运行需要修复路由。"
                     : isGlobalBusy()
@@ -3487,20 +3514,32 @@ public sealed class BrowserUiRenderer
                         ${requiredModules.map(module => `
                           <p>${escapeHtml(module.id || "")}</p>
                           <p class="muted">${escapeHtml(module.status || "")}${module.appliesUnless ? ` · unless: ${escapeHtml(module.appliesUnless)}` : ""}${module.coveredByGoalCapability ? ` · goal: ${escapeHtml(module.coveredByGoalCapability)}` : ""}</p>
+                          <p class="muted">Requirement IDs: ${escapeHtml((module.requirementIds || []).join(", ") || "infrastructure")}</p>
+                          <p class="muted">Source reason: ${escapeHtml(module.sourceReason || module.source || "")}</p>
+                          ${Array.isArray(module.validationRefs) && module.validationRefs.length ? `<p class="muted">Validation: ${escapeHtml(module.validationRefs.join(" · "))}</p>` : ""}
                         `).join("")}
                       </div>`
                     : "";
-                  $("iterationPlanGoals").innerHTML = requiredModulesHtml + goals.map(goal => `
-                    <div class="card">
-                      <strong>任务 ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(publicGoalStatusLabel(goal.status))}</strong>
-                      ${v2IsRepairGoalStatus(goal.status)
-                        ? `<div class="v2-action-row"><button type="button" class="secondary" data-needs-fix-goal="${escapeHtml(String(goal.goalIndex || ""))}" onclick="event.stopPropagation(); runNeedsFixIterationGoal('${escapeHtml(String(goal.goalIndex || ""))}'); return false;"${needsFixDisabledAttrs}>运行需要修复路由</button></div>`
-                        : ""}
-                      <p>${escapeHtml(goal.title || "")}</p>
-                      <p class="muted">${escapeHtml(goal.description || "")}</p>
-                      ${goal.acceptanceHint ? `<p class="muted">完成判断：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
-                      ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(publicIterationGoalResultSummary(goal))}</p>` : ""}
-                    </div>`).join("");
+                  $("iterationPlanGoals").innerHTML = requiredModulesHtml + goals.map(goal => {
+                    const trace = traceabilityByGoal.get(Number(goal.goalIndex || 0)) || {};
+                    return `
+                      <div class="card">
+                        <strong>任务 ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(publicGoalStatusLabel(goal.status))}</strong>
+                        ${v2IsRepairGoalStatus(goal.status)
+                          ? `<div class="v2-action-row"><button type="button" class="secondary" data-needs-fix-goal="${escapeHtml(String(goal.goalIndex || ""))}" onclick="event.stopPropagation(); runNeedsFixIterationGoal('${escapeHtml(String(goal.goalIndex || ""))}'); return false;"${needsFixDisabledAttrs}>运行需要修复路由</button></div>`
+                          : ""}
+                        <p>${escapeHtml(goal.title || "")}</p>
+                        <p class="muted">${escapeHtml(goal.description || "")}</p>
+                        <p class="muted">Requirement IDs: ${escapeHtml((trace.requirementIds || []).join(", ") || "infrastructure")}</p>
+                        ${trace.sourceHashRef ? `<p class="muted">Source hash: ${escapeHtml(trace.sourceHashRef)}</p>` : ""}
+                        ${trace.uiSurfaceSummary ? `<p class="muted">UI: ${escapeHtml(trace.uiSurfaceSummary)}</p>` : ""}
+                        ${trace.styleSummary ? `<p class="muted">Style: ${escapeHtml(trace.styleSummary)}</p>` : ""}
+                        ${trace.interactionArtifactRef ? `<p class="muted">Interaction: ${escapeHtml(trace.interactionArtifactRef)}</p>` : ""}
+                        ${Array.isArray(trace.engineReadingRefs) && trace.engineReadingRefs.length ? `<p class="muted">Reading: ${escapeHtml(trace.engineReadingRefs.join(" · "))}</p>` : ""}
+                        ${goal.acceptanceHint ? `<p class="muted">完成判断：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
+                        ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(publicIterationGoalResultSummary(goal))}</p>` : ""}
+                      </div>`;
+                  }).join("");
                 }
 
                 function publicIterationGoalResultSummary(goal) {
@@ -3877,7 +3916,12 @@ public sealed class BrowserUiRenderer
                       goals: result.goals || [],
                       goalRuns: [],
                       latestEvaluation: result.latestEvaluation || null,
-                      requiredModules: result.requiredModules || []
+                      requiredModules: result.requiredModules || [],
+                      planHash: result.planHash || "",
+                      sourceHashes: result.sourceHashes || null,
+                      confirmation: result.confirmation || null,
+                      traceabilityGoals: result.goals || [],
+                      blockers: result.blockers || []
                     };
                     state.iterationPlans = [...(Array.isArray(state.iterationPlans) ? state.iterationPlans.filter(plan => plan?.session?.sessionId !== result.sessionId) : []), state.iterationPlan];
                     state.selectedIterationSessionId = result.sessionId;
@@ -3953,6 +3997,12 @@ public sealed class BrowserUiRenderer
                   const projectId = context.projectId;
                   const actionPlan = selectLatestIterationPlanForAction();
                   if (!actionPlan?.session) return out("请先生成游戏模块。");
+                  const confirmation = actionPlan.confirmation;
+                  const actionTraceabilityGoals = Array.isArray(actionPlan.traceabilityGoals) ? actionPlan.traceabilityGoals : [];
+                  const actionSourceHashRef = actionTraceabilityGoals.length && actionTraceabilityGoals.every(item => item.sourceHashRef === actionTraceabilityGoals[0].sourceHashRef) ? actionTraceabilityGoals[0].sourceHashRef : "";
+                  if (!(confirmation?.status === "confirmed" && confirmation?.sessionId === actionPlan.session.sessionId && confirmation?.planHash === actionPlan.planHash && actionSourceHashRef && confirmation?.sourceHashRef === actionSourceHashRef)) {
+                    return out("请先确认当前 hash-bound 模块计划。");
+                  }
                   const needsFixGoal = currentNeedsFixRouteGoal(actionPlan);
                   if (needsFixGoal) {
                     await runNeedsFixIterationGoal(needsFixGoal.goalIndex);
@@ -3986,6 +4036,32 @@ public sealed class BrowserUiRenderer
                     } finally {
                       setLocalBusy(false);
                     }
+                  }
+                }
+
+                async function confirmIterationPlan() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
+                  const actionPlan = selectLatestIterationPlanForAction();
+                  if (!actionPlan?.session || !actionPlan.planHash) return out("当前计划缺少 hash 绑定，请重新生成游戏模块。");
+                  if (Array.isArray(actionPlan.blockers) && actionPlan.blockers.length) return out("当前计划存在阻断项，不能确认。");
+                  setLocalBusy(true, "正在确认当前模块计划...");
+                  try {
+                    const result = await api(`/api/projects/${projectId}/iteration-plan/confirm`, {
+                      method: "POST",
+                      body: JSON.stringify({ sessionId: actionPlan.session.sessionId, planHash: actionPlan.planHash })
+                    });
+                    if (!isCurrentProjectContext(context)) return;
+                    out(result);
+                    await loadIterationPlan();
+                  } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
+                    showError(error);
+                  } finally {
+                    if (!isCurrentProjectContext(context)) return;
+                    setLocalBusy(false);
                   }
                 }
 
@@ -6149,7 +6225,7 @@ public sealed class BrowserUiRenderer
                   $("submitFormalFeedback").textContent = busyText || "\u6b63\u5f0f\u63d0\u4ea4\u4e2d...";
                   try {
                     $("chatMessage").value = "";
-                    const result = await api(`/api/projects/${projectId}/prototype-feedback-iterations`, {
+                    const result = await api(`/api/projects/${projectId}/needs-fix-route`, {
                       method: "POST",
                       body: JSON.stringify({ feedback, model: $("globalModel").value, skillActionId: $("chatSkillMode").value || "normal" })
                     });
@@ -6157,10 +6233,10 @@ public sealed class BrowserUiRenderer
                     out(result);
                     await trackProjectRunFromResult(result, projectId, context.authEpoch);
                     await loadRuns();
-                    updateContinueSuggestionFromText(result.assistantMessage);
+                    updateContinueSuggestionFromText(result.summary || result.assistantMessage);
                   } catch (error) {
                     if (!isCurrentProjectContext(context)) return;
-                    const message = sanitizePublicChatContent(error?.payload?.assistantMessage || error?.payload?.error || "本轮正式反馈处理失败。");
+                    const message = sanitizePublicChatContent(error?.payload?.summary || error?.payload?.assistantMessage || error?.payload?.error || "本轮正式反馈处理失败。");
                     out(message);
                     showError(error);
                   }
@@ -9555,9 +9631,10 @@ public sealed class BrowserUiRenderer
                 $("evaluateIterationPlanFromChat").onclick = () => evaluateIterationPlan(true);
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("createIterationPlan").onclick = createIterationPlan;
-                $("deleteIterationPlan").onclick = deleteIterationPlan;
-                $("evaluateIterationPlan").onclick = () => evaluateIterationPlan(false);
-                $("executeIterationGoal").onclick = executeIterationGoal;
+                 $("deleteIterationPlan").onclick = deleteIterationPlan;
+                 $("evaluateIterationPlan").onclick = () => evaluateIterationPlan(false);
+                 $("confirmIterationPlan").onclick = confirmIterationPlan;
+                 $("executeIterationGoal").onclick = executeIterationGoal;
                 $("confirmIterationPlanUpdate").onclick = confirmIterationPlanUpdate;
                 $("closeIterationPlanUpdateModal").onclick = () => setModalVisible("iterationPlanUpdateModal", false);
                 $("iterationPlanUpdateInput").addEventListener("input", event => autoGrowTextarea(event.target));

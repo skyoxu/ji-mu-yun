@@ -35,4 +35,21 @@ public sealed class RouteFreshnessPolicyTests
             }
         }
     }
+
+    [Fact]
+    public void IterationPlan_ShouldNameEveryFrozenAuthorityFreshnessEdge()
+    {
+        var edges = RouteFreshnessPolicy.ForTarget("meta/routes/iteration-plan/latest.json");
+
+        edges.Select(edge => edge.HashField).Should().BeEquivalentTo([
+            "source_gdd_hash",
+            "source_scene_route_hash",
+            "source_requirement_map_hash",
+            "source_contract_hash",
+            "source_contract_snapshot_hash",
+            "source_godot_ui_contract_hash",
+            "source_ui_style_contract_hash",
+            "ui_style_snapshot_hash"
+        ]);
+    }
 }

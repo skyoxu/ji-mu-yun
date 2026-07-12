@@ -65,10 +65,152 @@ public sealed class SqliteMetadataSchemaTests
             "ix_project_diagnostic_spool_deleted_lookup",
             "ix_project_diagnostic_spool_route_family_created",
             "ix_project_diagnostic_spool_retention_cleanup",
+            "ix_project_diagnostic_spool_unresolved_scope",
             "ix_project_delete_tombstones_deleted",
             "ix_project_delete_tombstones_tombstone_event",
             "ix_game_type_maintenance_records_status_created"
         ]);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_ClearsOlderDuplicateRequestIdentitiesBeforeCreatingUniqueIndex()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "identity-project", "Identity Game"));
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            project.ProjectId!,
+            "manual_feedback",
+            "First request.",
+            "First plan",
+            [],
+            sessionId: "session-old",
+            requestIdentityHash: "duplicate-identity");
+        await using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText =
+                """
+                DROP INDEX ix_project_iteration_sessions_request_identity;
+                INSERT INTO project_iteration_sessions (
+                    id, project_id, account_id, source_kind, source_message, overall_goal, status,
+                    current_goal_index, request_identity_hash, created_utc, updated_utc)
+                VALUES (
+                    'session-new', $project_id, $account_id, 'manual_feedback', 'New request.', 'New plan', 'ready',
+                    0, 'duplicate-identity', '2099-01-02T00:00:00Z', '2099-01-02T00:00:00Z');
+                """;
+            command.Parameters.AddWithValue("$project_id", project.ProjectId!);
+            command.Parameters.AddWithValue("$account_id", accountId);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+
+        await using var verify = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString);
+        await verify.OpenAsync();
+        (await ScalarLongAsync(verify, "SELECT COUNT(*) FROM project_iteration_sessions WHERE request_identity_hash = 'duplicate-identity';"))
+            .Should().Be(1);
+        (await ScalarStringAsync(verify, "SELECT id FROM project_iteration_sessions WHERE request_identity_hash = 'duplicate-identity';"))
+            .Should().Be("session-new");
+    }
+
+    [Fact]
+    public async Task DiagnosticSpool_DedupeScopeIsAtomicAcrossStoreInstances()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var firstStore = new PhaseAMetadataStore(database.ConnectionString, options);
+        var secondStore = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await firstStore.EnsureSingleAdminAsync();
+        var project = await firstStore.CreateProjectAsync(CreateCommand(accountId, "diagnostic-dedupe", "Diagnostic Game"));
+        var command = new ProjectDiagnosticSpoolCommand(
+            accountId,
+            project.ProjectId!,
+            "execute-next-goal",
+            "plan_hash_mismatch",
+            "P1",
+            "Plan hash mismatch.",
+            "[]",
+            DedupeScopeKey: "stable-scope-key");
+
+        var results = await Task.WhenAll(
+            firstStore.RecordProjectDiagnosticSpoolEntryAsync(command),
+            secondStore.RecordProjectDiagnosticSpoolEntryAsync(command));
+        var rows = await firstStore.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", accountId, project.ProjectId, "execute-next-goal", "plan_hash_mismatch", "P1", 10));
+
+        results.Select(static row => row.Id).Distinct(StringComparer.Ordinal).Should().ContainSingle();
+        rows.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task DiagnosticSpool_DedupeRetryRepairsMissingEvidenceForClaimedScope()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "phase-a-diagnostic-repair", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "data"));
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(root, "data", "phase-a-platform.sqlite3")
+        });
+        var connectionString = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+        {
+            DataSource = options.MetadataDatabasePath,
+            Pooling = false
+        }.ToString();
+        try
+        {
+            await SqliteMetadataSchema.InitializeAsync(connectionString);
+            var store = new PhaseAMetadataStore(connectionString, options);
+            var accountId = await store.EnsureSingleAdminAsync();
+            var project = await store.CreateProjectAsync(CreateCommand(accountId, "diagnostic-repair", "Diagnostic Repair"));
+            var command = new ProjectDiagnosticSpoolCommand(
+                accountId,
+                project.ProjectId!,
+                "execute-next-goal",
+                "source_stale",
+                "P1",
+                "Source is stale.",
+                "[]",
+                DedupeScopeKey: "repair-scope-key");
+            var first = await store.RecordProjectDiagnosticSpoolEntryAsync(command);
+            var fileName = Path.GetFileName(first.SpoolRef.Replace('/', Path.DirectorySeparatorChar));
+            var evidencePath = Path.Combine(root, "diagnostics", "projects", accountId, project.ProjectId!, fileName);
+            File.Delete(evidencePath);
+            await using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                await using var update = connection.CreateCommand();
+                update.CommandText = "UPDATE project_diagnostic_spool SET spool_ref = '' WHERE id = $id;";
+                update.Parameters.AddWithValue("$id", first.Id);
+                await update.ExecuteNonQueryAsync();
+            }
+
+            var repaired = await store.RecordProjectDiagnosticSpoolEntryAsync(command with
+            {
+                SafeSummary = "Conflicting retry summary must not replace canonical evidence.",
+                EvidenceRefsJson = "[\"conflicting-retry\"]"
+            });
+
+            repaired.Id.Should().Be(first.Id);
+            repaired.SpoolRef.Should().NotBeNullOrWhiteSpace();
+            File.Exists(evidencePath).Should().BeTrue();
+            using var evidence = System.Text.Json.JsonDocument.Parse(File.ReadAllText(evidencePath));
+            evidence.RootElement.GetProperty("user_safe_summary").GetString().Should().Be("Source is stale.");
+            evidence.RootElement.GetProperty("evidence_refs").ToString().Should().NotContain("conflicting-retry");
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
     }
 
     [Fact]

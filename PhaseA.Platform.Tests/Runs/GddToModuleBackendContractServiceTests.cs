@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using FluentAssertions;
+using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -160,6 +161,9 @@ public sealed class GddToModuleBackendContractServiceTests
         result.Requirements.Should().Contain(item => item.Kind == "ui");
         result.Requirements.Should().OnlyContain(item => item.AcceptanceMarkers.Contains("structured_llm_fallback:llm_unavailable"));
         var sidecar = fixture.ReadJson("meta/routes/gdd-requirements/latest.json");
+        File.ReadAllBytes(fixture.PathForTest("meta/routes/gdd-requirements/latest.json"))
+            .Take(3)
+            .Should().NotEqual([0xEF, 0xBB, 0xBF]);
         sidecar.RootElement.GetProperty("schema_version").GetString().Should().Be("gdd-requirements.v1");
         sidecar.RootElement.GetProperty("source_boundary_enforced").GetBoolean().Should().BeTrue();
         sidecar.RootElement.GetProperty("requirements")[0].GetProperty("requirement_id").GetString().Should().Be("REQ-001");
@@ -187,7 +191,10 @@ public sealed class GddToModuleBackendContractServiceTests
                 "target_owner": "player",
                 "input_owner": "camera_input",
                 "collision_owner": "camera_rig",
-                "validation_method": "camera state test"
+                "validation_method": "camera state test",
+                "yaw_pitch_ownership": "camera_rig",
+                "camera_relative_movement_boundary": "player_motor",
+                "camera_state_validation": "camera state smoke"
               },
               "acceptance_markers": ["route node selection is visible"]
             },
@@ -205,6 +212,7 @@ public sealed class GddToModuleBackendContractServiceTests
                 "update_mode": "signal_driven",
                 "state_owner": "combat_state",
                 "cleanup_policy": "disconnect_signals_on_exit",
+                "signal_ownership": "combat_state",
                 "stable_item_identity": "reward_id"
               },
               "acceptance_markers": ["HP feedback is visible", "reward selection is actionable"]
@@ -683,6 +691,1073 @@ public sealed class GddToModuleBackendContractServiceTests
         guard.Status.Should().Be("contract_missing");
     }
 
+    [Fact]
+    public async Task IterationPlan_CreateAsync_PersistsFrozenHashesAndClosedRequirementTraceability()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        var contract = await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        contract.Status.Should().Be("fresh");
+        await fixture.SeedPrototypeSkeletonAsync(contract);
+        var service = new PrototypeIterationPlanService(fixture.Store);
+
+        var result = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest(
+                "Complete field movement, visible encounter feedback, combat HUD, reward feedback, and return to the map.",
+                "manual_feedback"));
+
+        result.Status.Should().Be("ready", result.Summary);
+        result.SourceHashes.Should().NotBeNull();
+        result.SourceHashes!.SourceGddHash.Should().Be(contract.SourceGddHash);
+        result.SourceHashes.SourceRequirementMapHash.Should().Be(contract.SourceRequirementMapHash);
+        result.SourceHashes.SourceContractHash.Should().Be(contract.ContractHash);
+        result.Coverage!.UncoveredRequirementIds.Should().BeEmpty();
+        result.Blockers.Should().BeEmpty();
+        result.Goals.Should().OnlyContain(goal => goal.RequirementIds!.Count > 0 || goal.InfrastructureReason != null);
+        result.RequiredModules.Should().Contain(module => module.RequirementIds!.Count > 0);
+
+        using var sidecar = fixture.ReadJson("meta/routes/iteration-plan/latest.json");
+        sidecar.RootElement.GetProperty("source_gdd_hash").GetString().Should().Be(contract.SourceGddHash);
+        sidecar.RootElement.GetProperty("source_contract_hash").GetString().Should().Be(contract.ContractHash);
+        sidecar.RootElement.GetProperty("source_godot_ui_contract_hash").GetString().Should().Be(contract.SourceGodotUiContractHash);
+        sidecar.RootElement.GetProperty("goals")[0].TryGetProperty("requirement_ids", out _).Should().BeTrue();
+        sidecar.RootElement.GetProperty("required_modules").EnumerateArray()
+            .Any(module => module.TryGetProperty("source_reason", out _))
+            .Should().BeTrue();
+        foreach (var goal in result.Goals.Where(goal => goal.InteractionRegion is not null))
+        {
+            var artifactPath = fixture.PathForTest(goal.InteractionRegion!.ArtifactRef);
+            File.Exists(artifactPath).Should().BeTrue(goal.InteractionRegion.ArtifactRef);
+            using var artifact = JsonDocument.Parse(File.ReadAllText(artifactPath, Encoding.UTF8));
+            artifact.RootElement.GetProperty("validation_status").GetString().Should().Be("contract_validated");
+            artifact.RootElement.GetProperty("validation_method").GetString().Should().Be(IterationPlanInteractionArtifactValidator.ValidationMethod);
+            artifact.RootElement.GetProperty("validated_utc").GetString().Should().NotBeNullOrWhiteSpace();
+            artifact.RootElement.GetProperty("artifact_form").GetString().Should().Be("planned-godot-node-map");
+            artifact.RootElement.GetProperty("runtime_validation_required").GetBoolean().Should().BeTrue();
+            artifact.RootElement.GetProperty("planned_geometry").EnumerateArray().Should().NotBeEmpty();
+            artifact.RootElement.GetProperty("planned_geometry").EnumerateArray().Should().OnlyContain(item =>
+                !string.IsNullOrWhiteSpace(item.GetProperty("owner_ref").GetString()) &&
+                new[] { "control_rect", "collision_shape" }.Contains(item.GetProperty("geometry_kind").GetString()) &&
+                !string.IsNullOrWhiteSpace(item.GetProperty("coordinate_space").GetString()) &&
+                item.GetProperty("bounds").ValueKind == JsonValueKind.Null &&
+                item.GetProperty("bounds_policy").GetString() == "runtime_resolved" &&
+                !string.IsNullOrWhiteSpace(item.GetProperty("locator_ref").GetString()) &&
+                !string.IsNullOrWhiteSpace(item.GetProperty("resolution_source").GetString()) &&
+                !string.IsNullOrWhiteSpace(item.GetProperty("interaction_role").GetString()));
+            artifact.RootElement.GetProperty("region_map").GetString().Should().Contain("OWNERS:");
+            artifact.RootElement.GetProperty("scene_node_owners").EnumerateArray()
+                .Select(owner => owner.GetString())
+                .Should().OnlyContain(owner => owner != null && !owner.StartsWith("owner:", StringComparison.Ordinal));
+        }
+    }
+
+    [Theory]
+    [InlineData(false, "blocked", 0)]
+    [InlineData(true, "ready", 1)]
+    public async Task IterationPlan_SkeletonCoverageRequiresExplicitVerifiedRequirementBinding(
+        bool verified,
+        string expectedStatus,
+        int expectedSkeletonCoverage)
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync("""
+        {
+          "requirements": [
+            { "requirement_id": "REQ-001", "normalized_requirement": "Player moves on the field map.", "priority": "P0", "kind": "scene", "mapped_scene_ids": ["field_map"], "mapped_required_module_ids": [], "mapped_iteration_goal_ids": [], "status": "mapped" },
+            { "requirement_id": "REQ-002", "normalized_requirement": "HUD shows HP and reward feedback.", "priority": "P1", "kind": "ui", "mapped_scene_ids": ["field_map"], "mapped_required_module_ids": ["combat_hud"], "status": "mapped", "capability_domain_ids": ["ui_component_system", "ui_overlays_feedback"] }
+          ]
+        }
+        """);
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync(verifiedRequirementIds: verified ? ["REQ-001"] : []);
+
+        var result = await new PrototypeIterationPlanService(fixture.Store).CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Create the next iteration plan.", "manual_feedback"));
+
+        result.Status.Should().Be(expectedStatus, result.Summary);
+        result.Coverage!.SkeletonCoveredCount.Should().Be(expectedSkeletonCoverage);
+        (result.Blockers ?? []).Any(blocker => blocker.DomainCode == "coverage_gap").Should().Be(!verified);
+    }
+
+    [Fact]
+    public async Task IterationPlan_CreateAsync_RecordsAndDeduplicatesNewChainGuardFailure()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        fixture.SeedConfirmedSceneRouteAndGdd();
+        var service = new PrototypeIterationPlanService(fixture.Store);
+
+        var first = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement.", "manual_feedback"));
+        var second = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement.", "manual_feedback"));
+        var diagnostics = await fixture.Store.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", fixture.AccountId, fixture.ProjectId, "iteration-plan", "requirement_map_missing", "P1", 10));
+
+        first.Status.Should().Be("blocked");
+        second.Status.Should().Be("blocked");
+        diagnostics.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_RecordsAndDeduplicatesLegacySourceFailureBeforeRunnerUse()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var project = await fixture.GetProjectAsync();
+        new PrototypeRouteStateWriter().WriteIterationPlanState(project, new
+        {
+            route = "iteration-plan",
+            traceability_contract = "iteration-plan-traceability.v2",
+            plan_hash = "legacy-plan-hash"
+        });
+        var runner = new CountingHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+
+        var first = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+        var second = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+        var diagnostics = await fixture.Store.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", fixture.AccountId, fixture.ProjectId, "execute-next-goal", "legacy_plan_source_unknown", "P1", 10));
+
+        first.Status.Should().Be("legacy_plan_source_unknown");
+        second.Status.Should().Be("legacy_plan_source_unknown");
+        diagnostics.Should().ContainSingle();
+        runner.CallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_RecordsAndDeduplicatesMissingContractFailureBeforeRunnerUse()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        fixture.SeedConfirmedSceneRouteAndGdd();
+        var runner = new CountingHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+
+        var first = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+        var second = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+        var diagnostics = await fixture.Store.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", fixture.AccountId, fixture.ProjectId, "execute-next-goal", "requirement_map_missing", "P1", 10));
+
+        first.Status.Should().Be("requirement_map_missing");
+        second.Status.Should().Be("requirement_map_missing");
+        diagnostics.Should().ContainSingle();
+        runner.CallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task IterationPlan_CreateAsync_RedactsAdminReviewRowIdentityAndRawEvidence()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            fixture.AccountId,
+            fixture.ProjectId,
+            "gdd-requirements",
+            "REQ-001",
+            "P1",
+            "Private admin review reason.",
+            @"C:\host\private\admin-review.json",
+            "[\"raw-admin-evidence\"]"));
+        var adminRows = await fixture.Store.ListProjectAdminReviewQueueForProjectAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            "open");
+
+        var result = await new PrototypeIterationPlanService(fixture.Store).CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement.", "manual_feedback"));
+        var serialized = JsonSerializer.Serialize(result);
+
+        result.Blockers.Should().ContainSingle(item => item.DomainCode == "admin_review_blocked");
+        result.Blockers!.SelectMany(item => item.EvidenceRefs).Should().Equal("admin-review:required");
+        serialized.Should().NotContain(adminRows.Single().Id);
+        serialized.Should().NotContain(@"C:\host\private");
+        serialized.Should().NotContain("raw-admin-evidence");
+    }
+
+    [Fact]
+    public async Task IterationPlan_CreateAsync_RedactsDiagnosticIdentityAndRawEvidence()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var diagnostic = await fixture.Store.RecordProjectDiagnosticSpoolEntryAsync(new ProjectDiagnosticSpoolCommand(
+            fixture.AccountId,
+            fixture.ProjectId,
+            "prototype",
+            "source_stale",
+            "P1",
+            "Safe summary.",
+            "[\"raw-diagnostic-evidence\"]",
+            @"C:\host\private\diagnostic.json",
+            SourceRefsJson: "[\"C:\\\\host\\\\private\\\\source.json\"]"));
+
+        var result = await new PrototypeIterationPlanService(fixture.Store).CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement.", "manual_feedback"));
+        var serialized = JsonSerializer.Serialize(result);
+
+        result.Blockers.Should().ContainSingle(item => item.DomainCode == "diagnostic_blocked");
+        result.Blockers!.SelectMany(item => item.EvidenceRefs).Should().Equal("diagnostic:unresolved");
+        serialized.Should().NotContain(diagnostic.Id);
+        serialized.Should().NotContain(diagnostic.DiagnosticId);
+        serialized.Should().NotContain(@"C:\host\private");
+        serialized.Should().NotContain("raw-diagnostic-evidence");
+    }
+
+    [Theory]
+    [InlineData(false, "prototype_skeleton_missing")]
+    [InlineData(true, "prototype_skeleton_stale")]
+    public async Task IterationPlan_CreateAsync_BlocksMissingOrStaleSkeletonBeforeLlm(
+        bool writeStaleSkeleton,
+        string expectedDomainCode)
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        var contract = await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        if (writeStaleSkeleton)
+        {
+            await fixture.SeedPrototypeSkeletonAsync(contract, sourceContractHash: "stale-contract-hash");
+        }
+        var llm = new CountingLlmRouteEngine();
+        var service = new PrototypeIterationPlanService(fixture.Store, new PrototypeRouteStateWriter(), llmRouteEngine: llm);
+
+        var first = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        var second = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        var diagnostics = await fixture.Store.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", fixture.AccountId, fixture.ProjectId, "iteration-plan", expectedDomainCode, "P1", 10));
+
+        first.Status.Should().Be("blocked");
+        first.Blockers.Should().ContainSingle(item => item.DomainCode == expectedDomainCode);
+        second.Status.Should().Be("blocked");
+        llm.Requests.Should().BeEmpty();
+        diagnostics.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task IterationPlan_CreateAsync_BlocksSkeletonSnapshotOrMirrorDriftBeforeLlm()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        var contract = await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync(contract, sourceContractSnapshotHash: "stale-snapshot-hash");
+        var llm = new CountingLlmRouteEngine();
+        var service = new PrototypeIterationPlanService(fixture.Store, new PrototypeRouteStateWriter(), llmRouteEngine: llm);
+
+        var snapshotDrift = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement.", "manual_feedback"));
+
+        snapshotDrift.Blockers.Should().ContainSingle(item => item.DomainCode == "prototype_skeleton_stale");
+        llm.Requests.Should().BeEmpty();
+
+        await using (var connection = new SqliteConnection(fixture.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "UPDATE project_diagnostic_spool SET triage_status = 'resolved' WHERE project_id = $project_id";
+            command.Parameters.AddWithValue("$project_id", fixture.ProjectId);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        var currentProject = await fixture.GetProjectAsync();
+        var externalMetaPath = currentProject.MetaPath + "-external";
+        Directory.CreateDirectory(externalMetaPath);
+        await using (var connection = new SqliteConnection(fixture.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "UPDATE workspaces SET meta_path = $meta_path WHERE project_id = $project_id";
+            command.Parameters.AddWithValue("$meta_path", externalMetaPath);
+            command.Parameters.AddWithValue("$project_id", fixture.ProjectId);
+            await command.ExecuteNonQueryAsync();
+        }
+        await fixture.SeedPrototypeSkeletonAsync(contract);
+        var project = await fixture.GetProjectAsync();
+        var mirrorPath = Path.Combine(project.RepoPath, "meta", "routes", "prototype-skeleton", "latest.json");
+        var mirror = JsonNode.Parse(File.ReadAllText(mirrorPath, Encoding.UTF8))!.AsObject();
+        mirror["status"] = "failed";
+        File.WriteAllText(mirrorPath, mirror.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
+
+        var mirrorDrift = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement.", "manual_feedback"));
+
+        mirrorDrift.Status.Should().Be("blocked", mirrorDrift.Summary);
+        mirrorDrift.Blockers.Should().ContainSingle(
+            item => item.DomainCode == "prototype_skeleton_stale",
+            string.Join(",", mirrorDrift.Blockers?.Select(item => item.DomainCode) ?? []));
+        llm.Requests.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("missing_boundary")]
+    [InlineData("invalid_top_level_recovery_order")]
+    [InlineData("invalid_nested_recovery_order")]
+    [InlineData("missing_authority_source")]
+    [InlineData("reordered_authority_sources")]
+    [InlineData("nested_hash_mismatch")]
+    public async Task IterationPlan_CreateAsync_BlocksIncompleteSkeletonSourceBoundaryBeforeLlm(string scenario)
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        var contract = await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync(contract);
+        await fixture.ApplyPrototypeSkeletonBoundaryScenarioAsync(scenario);
+        var llm = new CountingLlmRouteEngine();
+        var service = new PrototypeIterationPlanService(fixture.Store, new PrototypeRouteStateWriter(), llmRouteEngine: llm);
+
+        var result = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement.", "manual_feedback"));
+
+        result.Status.Should().Be("blocked");
+        result.Blockers.Should().ContainSingle(item => item.DomainCode == "prototype_skeleton_stale");
+        llm.Requests.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_BlocksCapabilityFailureBeforeRunAndDeduplicatesDiagnostic()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var plan = await new PrototypeIterationPlanService(fixture.Store).CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest(
+                "Please complete the first full playable loop: stable movement, visible encounter trigger, one battle, reward 3 choices, then return to the map.",
+                "manual_feedback"));
+        plan.Status.Should().Be("ready", plan.Summary);
+        var confirmation = await new PrototypeIterationPlanService(fixture.Store).ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash));
+        confirmation.Status.Should().Be("confirmed");
+        var details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+        var readyEvaluation = JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
+            "ready_to_execute",
+            "Ready for preflight.",
+            "Test fixture isolates capability preflight.",
+            "execute_next_goal"));
+        await fixture.Store.UpdateProjectIterationSessionStatusAsync(
+            details!.Session.SessionId,
+            "ready",
+            0,
+            details.Session.LatestSummary,
+            readyEvaluation,
+            null);
+        var sidecarPath = fixture.PathForTest("meta/routes/iteration-plan/latest.json");
+        var sidecar = JsonNode.Parse(File.ReadAllText(sidecarPath, Encoding.UTF8))!.AsObject();
+        var firstGoal = sidecar["goals"]![0]!.AsObject();
+        firstGoal["capability_requirements"]!["dynamic_ui_required"] = true;
+        firstGoal["godot_ui_update_ownership"] = JsonNode.Parse("""
+        {
+          "construction_owner": "HudPanel",
+          "update_mode": "signal_driven",
+          "state_owner": "GameState",
+          "cleanup_policy": "disconnect_on_exit",
+          "stable_item_identity": "hud_row_id"
+        }
+        """);
+        new PrototypeRouteStateWriter().WriteIterationPlanState(await fixture.GetProjectAsync(), sidecar);
+        var runner = new CountingHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+
+        var first = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+        var second = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+        var diagnostics = await fixture.Store.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", fixture.AccountId, fixture.ProjectId, "execute-next-goal", "plan_hash_mismatch", "P1", 10));
+
+        first.Status.Should().Be("plan_hash_mismatch");
+        second.Status.Should().Be("plan_hash_mismatch");
+        runner.CallCount.Should().Be(0);
+        diagnostics.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldRepairInteractionOwnerTamperingFromDatabaseCanonicalState()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var planService = new PrototypeIterationPlanService(fixture.Store);
+        var plan = await planService.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        plan.Status.Should().Be("ready", plan.Summary);
+        (await planService.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash))).Status.Should().Be("confirmed");
+        var details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+        var interactionGoal = plan.Goals.First(goal => goal.InteractionRegion is not null);
+        foreach (var earlierGoal in details!.Goals.Where(goal => goal.GoalIndex < interactionGoal.GoalIndex))
+        {
+            await fixture.Store.UpdateProjectIterationGoalStatusAsync(earlierGoal.GoalId, "succeeded", "Completed before tamper target.", DateTimeOffset.UtcNow.ToString("O"));
+        }
+        details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+        await fixture.Store.UpdateProjectIterationSessionStatusAsync(
+            details!.Session.SessionId,
+            "ready",
+            interactionGoal.GoalIndex - 1,
+            details.Session.LatestSummary,
+            JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
+                "ready_to_execute",
+                "Ready for interaction tamper test.",
+                "The test changes only the validated artifact owner set.",
+                "execute_next_goal")),
+            null);
+        var artifactPath = fixture.PathForTest(interactionGoal.InteractionRegion!.ArtifactRef);
+        var artifact = JsonNode.Parse(File.ReadAllText(artifactPath, Encoding.UTF8))!.AsObject();
+        artifact["scene_node_owners"] = new JsonArray("module:tampered:interaction-owner");
+        File.WriteAllText(artifactPath, artifact.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
+        var runner = new CountingHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+
+        var result = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+
+        result.Status.Should().NotBe("interaction_region_missing");
+        runner.CallCount.Should().Be(0);
+        using var repaired = JsonDocument.Parse(File.ReadAllText(artifactPath, Encoding.UTF8));
+        repaired.RootElement.GetProperty("scene_node_owners").EnumerateArray()
+            .Select(static item => item.GetString())
+            .Should().NotContain("module:tampered:interaction-owner");
+    }
+
+    [Fact]
+    public async Task IterationPlan_ConfirmationIsHashBoundIdempotentAndRegenerationInvalidatesIt()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var service = new PrototypeIterationPlanService(fixture.Store);
+        var firstPlan = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+
+        var confirmed = await service.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(firstPlan.SessionId, firstPlan.PlanHash));
+        var retry = await service.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(firstPlan.SessionId, firstPlan.PlanHash));
+        var conflict = await service.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(firstPlan.SessionId, "other-plan-hash"));
+        var regenerated = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Create a new iteration plan for field movement, HUD feedback, and reward state.", "new_iteration_plan"));
+
+        confirmed.Status.Should().Be("confirmed");
+        confirmed.OperationStatus.Should().Be("created_run");
+        retry.OperationStatus.Should().Be("returned_existing");
+        conflict.Status.Should().Be("conflict");
+        conflict.DomainCode.Should().Be("plan_hash_conflict");
+        regenerated.SessionId.Should().NotBe(firstPlan.SessionId);
+        regenerated.Confirmation!.Status.Should().Be("unconfirmed");
+        var rounds = await service.ListAsync(fixture.AccountId, fixture.ProjectId);
+        rounds.Should().HaveCount(2);
+        rounds[0].RequiredModules.Should().NotBeNullOrEmpty();
+        rounds[0].RequiredModules.Should().Contain(module => module.RequirementIds != null && module.RequirementIds.Count > 0);
+        rounds[0].TraceabilityGoals.Should().NotBeNullOrEmpty();
+        rounds[0].Confirmation!.Status.Should().Be("confirmed");
+        rounds[1].Confirmation!.Status.Should().Be("unconfirmed");
+    }
+
+    [Fact]
+    public async Task IterationPlan_ConfirmedDbAnchorCannotBeReplacedByRecomputedWorkspacePlan()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var service = new PrototypeIterationPlanService(fixture.Store);
+        var plan = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        (await service.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash))).Status.Should().Be("confirmed");
+        var project = await fixture.GetProjectAsync();
+        var state = JsonNode.Parse(new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project))!.AsObject();
+        state["goals"]![0]!["description"] = "Tampered but rehashed plan.";
+        using (var document = JsonDocument.Parse(state.ToJsonString()))
+        {
+            state["plan_hash"] = IterationPlanIntegrity.Compute(document.RootElement);
+        }
+        state["confirmation"] = new JsonObject
+        {
+            ["status"] = "unconfirmed",
+            ["session_id"] = plan.SessionId,
+            ["plan_hash"] = state["plan_hash"]!.GetValue<string>(),
+            ["source_hash_ref"] = state["source_hash_ref"]!.GetValue<string>()
+        };
+        new PrototypeRouteStateWriter().WriteIterationPlanState(project, state);
+
+        var result = await service.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, state["plan_hash"]!.GetValue<string>()));
+        var details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+
+        result.Status.Should().Be("conflict");
+        result.DomainCode.Should().Be("plan_hash_conflict");
+        details!.Session.TraceabilityAnchorJson.Should().Contain(plan.PlanHash);
+    }
+
+    [Fact]
+    public async Task IterationPlan_ReadbackRequiresReconfirmationWhenDbAnchorIsMissing()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var service = new PrototypeIterationPlanService(fixture.Store);
+        var plan = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        (await service.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash))).Status.Should().Be("confirmed");
+        await using (var connection = new SqliteConnection(fixture.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "UPDATE project_iteration_sessions SET traceability_anchor_json = NULL WHERE id = $session_id";
+            command.Parameters.AddWithValue("$session_id", plan.SessionId);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        var readback = await service.GetLatestAsync(fixture.AccountId, fixture.ProjectId);
+
+        readback!.Confirmation!.Status.Should().Be("reconfirm_required");
+    }
+
+    [Fact]
+    public async Task ConfirmAsync_RestoresCanonicalStateFromDatabaseWhenBothSidecarsAreMissing()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var service = new PrototypeIterationPlanService(fixture.Store);
+        var plan = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        var project = await fixture.GetProjectAsync();
+        new PrototypeRouteStateWriter().ClearIterationPlanState(project);
+        new PrototypeRouteStateWriter().DeleteIterationPlanSessionState(project, plan.SessionId);
+
+        var confirmation = await service.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash));
+
+        confirmation.Status.Should().Be("confirmed");
+        new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project).Should().Contain(plan.SessionId);
+        new PrototypeRouteStateWriter().ReadIterationPlanSessionState(project, plan.SessionId).Should().Contain(plan.PlanHash);
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_RestoresConfirmedSidecarFromTrustedDatabaseAnchor()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var planService = new PrototypeIterationPlanService(fixture.Store);
+        var plan = await planService.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        (await planService.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash))).Status.Should().Be("confirmed");
+        var details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+        foreach (var goal in details!.Goals)
+        {
+            await fixture.Store.UpdateProjectIterationGoalStatusAsync(
+                goal.GoalId,
+                "succeeded",
+                "Completed for sidecar recovery test.",
+                DateTimeOffset.UtcNow.ToString("O"));
+        }
+        var project = await fixture.GetProjectAsync();
+        var state = JsonNode.Parse(new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project))!.AsObject();
+        state["confirmation"]!["status"] = "unconfirmed";
+        new PrototypeRouteStateWriter().WriteIterationPlanState(project, state);
+
+        var result = await new PrototypeIterationGoalService(fixture.Store, fixture.Options, new CountingHostedProcessRunner())
+            .ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+        var repaired = JsonNode.Parse(new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project))!.AsObject();
+
+        result.Status.Should().NotBe("plan_confirmation_required");
+        repaired["confirmation"]!["status"]!.GetValue<string>().Should().Be("confirmed");
+        repaired["confirmation"]!["plan_hash"]!.GetValue<string>().Should().Be(plan.PlanHash);
+    }
+
+    [Fact]
+    public async Task IterationPlan_ConcurrentSameRequestReusesSingleSession()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var service = new PrototypeIterationPlanService(fixture.Store);
+        var request = new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback");
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ =>
+            service.CreateAsync(fixture.AccountId, fixture.ProjectId, request)));
+
+        results.Select(result => result.SessionId).Distinct(StringComparer.Ordinal).Should().ContainSingle();
+        results.Count(result => result.OperationStatus == "created_run").Should().Be(1);
+        results.Count(result => result.OperationStatus is "returned_existing" or "active_run_reused").Should().Be(3);
+    }
+
+    [Fact]
+    public async Task IterationPlan_DatabaseIdentityConstraintRejectsSecondStoreDuplicate()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var secondStore = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options);
+        const string identity = "shared-request-identity";
+        var goals = new[] { new ProjectIterationGoalCreateCommand(1, "Goal", "Goal", "Acceptance") };
+
+        var attempts = await Task.WhenAll(
+            TryCreate(fixture.Store, "session-a"),
+            TryCreate(secondStore, "session-b"));
+        var persisted = await fixture.Store.GetProjectIterationSessionByRequestIdentityAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            identity);
+
+        attempts.Count(static created => created).Should().Be(1);
+        persisted.Should().NotBeNull();
+
+        async Task<bool> TryCreate(PhaseAMetadataStore store, string sessionId)
+        {
+            try
+            {
+                await store.CreateProjectIterationSessionAsync(
+                    fixture.AccountId,
+                    fixture.ProjectId,
+                    "manual_feedback",
+                    "Same request.",
+                    "Plan",
+                    goals,
+                    sessionId: sessionId,
+                    requestIdentityHash: identity,
+                    routeStateJson: $"{{\"session_id\":\"{sessionId}\",\"request_identity_hash\":\"{identity}\",\"status\":\"ready\"}}",
+                    initialStatus: "ready");
+                return true;
+            }
+            catch (ProjectIterationRequestIdentityConflictException)
+            {
+                return false;
+            }
+        }
+    }
+
+    [Fact]
+    public async Task IterationPlan_RetryRecoversCanonicalPlanFromDatabaseWhenSidecarsAreMissing()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var service = new PrototypeIterationPlanService(fixture.Store);
+        var request = new PrototypeIterationPlanRequest(
+            "Complete field movement and HUD feedback.",
+            "manual_feedback");
+        var first = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, request);
+        (await service.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(first.SessionId, first.PlanHash))).Status.Should().Be("confirmed");
+        var project = await fixture.GetProjectAsync();
+        var latestPath = Path.Combine(project.MetaPath, "routes", "iteration-plan", "latest.json");
+        var sessionPath = Path.Combine(project.MetaPath, "routes", "iteration-plan", "sessions", $"{first.SessionId}.json");
+        var latestMirrorPath = Path.Combine(project.RepoPath, "meta", "routes", "iteration-plan", "latest.json");
+        var sessionMirrorPath = Path.Combine(project.RepoPath, "meta", "routes", "iteration-plan", "sessions", $"{first.SessionId}.json");
+        File.Delete(latestPath);
+        File.Delete(sessionPath);
+        File.Delete(latestMirrorPath);
+        File.Delete(sessionMirrorPath);
+        foreach (var goal in first.Goals.Where(static goal => goal.InteractionRegion is not null))
+        {
+            File.WriteAllText(fixture.PathForTest(goal.InteractionRegion!.ArtifactRef), "{ invalid", Encoding.UTF8);
+        }
+
+        var latestWithoutSidecars = await service.GetLatestAsync(fixture.AccountId, fixture.ProjectId);
+        var roundsWithoutSidecars = await service.ListAsync(fixture.AccountId, fixture.ProjectId);
+
+        latestWithoutSidecars!.PlanHash.Should().Be(first.PlanHash);
+        latestWithoutSidecars.RequiredModules.Should().NotBeNullOrEmpty();
+        latestWithoutSidecars.Confirmation!.Status.Should().Be("confirmed");
+        roundsWithoutSidecars.Should().ContainSingle();
+        roundsWithoutSidecars[0].PlanHash.Should().Be(first.PlanHash);
+        roundsWithoutSidecars[0].RequiredModules.Should().NotBeNullOrEmpty();
+        roundsWithoutSidecars[0].Confirmation!.Status.Should().Be("confirmed");
+
+        var retry = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, request);
+        var rounds = await service.ListAsync(fixture.AccountId, fixture.ProjectId);
+
+        retry.SessionId.Should().Be(first.SessionId);
+        retry.OperationStatus.Should().Be("returned_existing");
+        retry.Confirmation!.Status.Should().Be("confirmed");
+        rounds.Should().ContainSingle();
+        File.Exists(latestPath).Should().BeTrue();
+        File.Exists(sessionPath).Should().BeTrue();
+        File.Exists(latestMirrorPath).Should().BeTrue();
+        File.Exists(sessionMirrorPath).Should().BeTrue();
+        JsonNode.Parse(File.ReadAllText(latestPath, Encoding.UTF8))!["confirmation"]!["status"]!
+            .GetValue<string>().Should().Be("confirmed");
+        first.Goals.Where(static goal => goal.InteractionRegion is not null)
+            .Should().OnlyContain(goal => File.Exists(fixture.PathForTest(goal.InteractionRegion!.ArtifactRef)));
+    }
+
+    [Fact]
+    public async Task IterationPlan_RetryDoesNotResurrectOlderDatabasePlanOverNewerSession()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var service = new PrototypeIterationPlanService(fixture.Store);
+        var request = new PrototypeIterationPlanRequest(
+            "Complete field movement and HUD feedback.",
+            "manual_feedback");
+        var first = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, request);
+        var project = await fixture.GetProjectAsync();
+        new PrototypeRouteStateWriter().ClearIterationPlanState(project);
+        new PrototypeRouteStateWriter().DeleteIterationPlanSessionState(project, first.SessionId);
+        var newer = await fixture.Store.CreateProjectIterationSessionAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            "new_iteration_plan",
+            "A newer plan already exists.",
+            "Newer plan",
+            [new ProjectIterationGoalCreateCommand(1, "Newer goal", "Newer goal", "Newer acceptance")]);
+        await fixture.Store.UpdateProjectIterationSessionStatusAsync(
+            newer.SessionId,
+            "ready",
+            0,
+            "Newer plan is ready.");
+
+        var retry = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, request);
+        var latest = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+        var latestState = new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project);
+
+        retry.SessionId.Should().Be(first.SessionId);
+        retry.OperationStatus.Should().Be("returned_existing");
+        latest!.Session.SessionId.Should().Be(newer.SessionId);
+        latestState.Should().BeEmpty("a historical idempotent retry must not restore itself as the latest route state");
+    }
+
+    [Fact]
+    public async Task IterationPlanSessionSnapshot_SerializationHidesCanonicalDatabaseFields()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var session = await fixture.Store.CreateProjectIterationSessionAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            "manual_feedback",
+            "Create a plan.",
+            "Plan",
+            [new ProjectIterationGoalCreateCommand(1, "Goal", "Goal", "Acceptance")],
+            requestIdentityHash: "private-request-hash",
+            routeStateJson: "{\"private\":true}");
+        var serialized = JsonSerializer.Serialize(session);
+
+        serialized.Should().NotContain("traceabilityAnchorJson");
+        serialized.Should().NotContain("requestIdentityHash");
+        serialized.Should().NotContain("routeStateJson");
+        serialized.Should().NotContain("private-request-hash");
+    }
+
+    [Fact]
+    public async Task NeedsFixStrict_ShouldRejectUnknownGoalWithoutRunningProjectLevelRepair()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var planService = new PrototypeIterationPlanService(fixture.Store);
+        var plan = await planService.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        plan.Status.Should().Be("ready", plan.Summary);
+        (await planService.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash))).Status.Should().Be("confirmed");
+        var runner = new CountingHostedProcessRunner();
+        var service = new PrototypeNeedsFixRouteService(
+            fixture.Store,
+            new PrototypeQuickFixService(fixture.Store, fixture.Options, runner),
+            new PrototypeRouteStateWriter());
+
+        var result = await service.RunStrictAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeNeedsFixRouteRequest("repair", GoalId: "missing-goal", GoalIndex: 999));
+
+        result.Status.Should().Be("iteration_goal_not_found");
+        runner.CallCount.Should().Be(0);
+
+        var details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+        var pendingGoal = details!.Goals.First(goal => goal.Status == "pending");
+        var pendingResult = await service.RunStrictAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeNeedsFixRouteRequest("repair pending", GoalId: pendingGoal.GoalId, GoalIndex: pendingGoal.GoalIndex));
+
+        pendingResult.Status.Should().Be("iteration_goal_not_repairable");
+        runner.CallCount.Should().Be(0);
+
+        await fixture.Store.UpdateProjectIterationGoalStatusAsync(
+            pendingGoal.GoalId,
+            "needs_fix",
+            "Needs repair for diagnostic coverage.",
+            DateTimeOffset.UtcNow.ToString("O"));
+        await fixture.Store.UpdateProjectIterationSessionStatusAsync(
+            details.Session.SessionId,
+            "needs_fix",
+            pendingGoal.GoalIndex,
+            "Needs repair for diagnostic coverage.",
+            details.Session.LatestEvaluationJson,
+            null);
+        var project = await fixture.GetProjectAsync();
+        var state = JsonNode.Parse(new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project))!.AsObject();
+        state["source_contract_hash"] = "tampered-contract-hash";
+        new PrototypeRouteStateWriter().WriteIterationPlanState(project, state);
+
+        var firstPreflightFailure = await service.RunStrictAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeNeedsFixRouteRequest("repair", GoalId: pendingGoal.GoalId, GoalIndex: pendingGoal.GoalIndex));
+        var secondPreflightFailure = await service.RunStrictAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeNeedsFixRouteRequest("repair", GoalId: pendingGoal.GoalId, GoalIndex: pendingGoal.GoalIndex));
+        var diagnostics = await fixture.Store.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", fixture.AccountId, fixture.ProjectId, "needs-fix", "source_stale", "P1", 10));
+
+        firstPreflightFailure.Status.Should().Be("source_stale");
+        secondPreflightFailure.Status.Should().Be("source_stale");
+        diagnostics.Should().ContainSingle();
+        runner.CallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldReleaseRunnerLock_WhenGoalRunClaimFails()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var planService = new PrototypeIterationPlanService(fixture.Store);
+        var plan = await planService.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        plan.Status.Should().Be("ready", plan.Summary);
+        (await planService.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash))).Status.Should().Be("confirmed");
+        var details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+        await fixture.Store.UpdateProjectIterationSessionStatusAsync(
+            details!.Session.SessionId,
+            "ready",
+            0,
+            details.Session.LatestSummary,
+            JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
+                "ready_to_execute",
+                "Ready for claim failure test.",
+                "The test forces the goal-run link to fail.",
+                "execute_next_goal")),
+            null);
+        await using (var connection = new SqliteConnection(fixture.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                CREATE TRIGGER fail_iteration_goal_run_claim
+                BEFORE INSERT ON project_iteration_goal_runs
+                BEGIN
+                    SELECT RAISE(ABORT, 'forced goal-run claim failure');
+                END;
+                """;
+            await command.ExecuteNonQueryAsync();
+        }
+        var runner = new CountingHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+
+        var result = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+        var project = await fixture.GetProjectAsync();
+        var probeRunId = await fixture.Store.CreateRunAsync(fixture.ProjectId, project.WorkspaceId, "runner-lock-probe");
+        var reacquired = await fixture.Store.TryAcquireRunnerLockAsync(fixture.ProjectId, probeRunId);
+
+        result.Status.Should().Be("failed");
+        reacquired.Should().BeTrue();
+        runner.CallCount.Should().Be(0);
+        await fixture.Store.ReleaseRunnerLockAsync(fixture.ProjectId, probeRunId);
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldHoldProjectMutationLeaseUntilExecutionFinishes()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var planService = new PrototypeIterationPlanService(fixture.Store);
+        var plan = await planService.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        (await planService.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash))).Status.Should().Be("confirmed");
+        var details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+        await fixture.Store.UpdateProjectIterationSessionStatusAsync(
+            details!.Session.SessionId,
+            "ready",
+            0,
+            details.Session.LatestSummary,
+            JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
+                "ready_to_execute",
+                "Ready for mutation lease test.",
+                "The runner blocks while confirmation attempts to acquire the same lease.",
+                "execute_next_goal")),
+            null);
+        var project = await fixture.GetProjectAsync();
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            route = "prototype-7day-playable",
+            status = "succeeded",
+            prototype_completion = new { succeeded = true }
+        });
+        var runner = new BlockingHostedProcessRunner();
+        var executionService = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+
+        var executionTask = executionService.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+        await runner.Started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        var confirmationTask = planService.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash));
+        await Task.Delay(150);
+
+        confirmationTask.IsCompleted.Should().BeFalse();
+        runner.Release.TrySetResult();
+        await executionTask.WaitAsync(TimeSpan.FromSeconds(20));
+        (await confirmationTask.WaitAsync(TimeSpan.FromSeconds(20))).Status.Should().Be("confirmed");
+    }
+
+    [Fact]
+    public async Task ConfirmAsync_ShouldRestoreDatabaseCanonicalState_WhenLatestPlanStateIsMalformed()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        await fixture.SeedPrototypeSkeletonAsync();
+        var service = new PrototypeIterationPlanService(fixture.Store);
+        var plan = await service.CreateAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+        var project = await fixture.GetProjectAsync();
+        File.WriteAllText(fixture.PathForTest("meta/routes/iteration-plan/latest.json"), "{", Encoding.UTF8);
+        File.WriteAllText(Path.Combine(project.MetaPath, "routes", "iteration-plan", "latest.json"), "{", Encoding.UTF8);
+
+        var result = await service.ConfirmAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash));
+        var diagnostics = await fixture.Store.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", fixture.AccountId, fixture.ProjectId, "iteration-plan", "iteration_plan_state_invalid", "P1", 10));
+
+        result.Status.Should().Be("confirmed");
+        diagnostics.Should().BeEmpty();
+        new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project).Should().Contain(plan.PlanHash);
+    }
+
     private sealed class BackendContractFixture : IDisposable
     {
         private readonly TempSqliteDatabase _database;
@@ -694,6 +1769,7 @@ public sealed class GddToModuleBackendContractServiceTests
             TempDirectory workspaceRoot,
             TempDirectory repoRoot,
             PhaseAMetadataStore store,
+            PhaseAPlatformOptions options,
             string accountId,
             string projectId)
         {
@@ -701,15 +1777,20 @@ public sealed class GddToModuleBackendContractServiceTests
             _workspaceRoot = workspaceRoot;
             _repoRoot = repoRoot;
             Store = store;
+            Options = options;
             AccountId = accountId;
             ProjectId = projectId;
         }
 
         public PhaseAMetadataStore Store { get; }
 
+        public PhaseAPlatformOptions Options { get; }
+
         public string AccountId { get; }
 
         public string ProjectId { get; }
+
+        public string ConnectionString => _database.ConnectionString;
 
         public string GddHash { get; private set; } = "";
 
@@ -737,7 +1818,7 @@ public sealed class GddToModuleBackendContractServiceTests
                 gameTypeMatchService: new FixedGameTypeMatchService());
             var result = await creation.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo RPG", "RPG", null, null, null, null));
             await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
-            return new BackendContractFixture(database, workspaceRoot, repoRoot, store, accountId, result.ProjectId!);
+            return new BackendContractFixture(database, workspaceRoot, repoRoot, store, options, accountId, result.ProjectId!);
         }
 
         public async Task<ProjectSnapshot> GetProjectAsync()
@@ -793,10 +1874,10 @@ public sealed class GddToModuleBackendContractServiceTests
             return PathFor(relativePath);
         }
 
-        public async Task SeedRequirementMapAsync()
+        public async Task SeedRequirementMapAsync(string? requirementMapJson = null)
         {
             SeedConfirmedSceneRouteAndGdd();
-            var result = await new GameDesignRequirementMapService(Store, new FixedRequirementMapLlmEngine("""
+            var result = await new GameDesignRequirementMapService(Store, new FixedRequirementMapLlmEngine(requirementMapJson ?? """
             {
               "requirements": [
                 { "requirement_id": "REQ-001", "normalized_requirement": "Player moves on the field map.", "priority": "P0", "kind": "scene", "mapped_scene_ids": ["field_map"], "mapped_required_module_ids": ["field_map"], "status": "mapped" },
@@ -805,6 +1886,96 @@ public sealed class GddToModuleBackendContractServiceTests
             }
             """)).CreateAsync(AccountId, ProjectId, new GameDesignRequirementMapRequest());
             result.Status.Should().Be("ready");
+        }
+
+        public async Task SeedPrototypeSkeletonAsync(
+            PrototypeContractStatusResult? contract = null,
+            string? sourceContractHash = null,
+            string? sourceContractSnapshotHash = null,
+            IReadOnlyList<string>? verifiedRequirementIds = null)
+        {
+            contract ??= new PrototypeContractFreezeService(Store).EvaluateNewChainGuard(await GetProjectAsync()).ContractStatus;
+            var project = await GetProjectAsync();
+            new PrototypeRouteStateWriter().WritePrototypeSkeletonState(project, new
+            {
+                schema_version = "prototype-skeleton-readback.v1",
+                route = "prototype-skeleton",
+                status = "succeeded",
+                source_boundary_enforced = true,
+                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                source_boundary = new
+                {
+                    recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                    authority_sources = new[]
+                    {
+                        "game-type-route-profile",
+                        PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
+                        "routes/prototype-contract/latest.json",
+                        "meta/routes/gdd-requirements/latest.json",
+                        "meta/routes/prototype/latest.json"
+                    },
+                    source_hashes = new
+                    {
+                        source_gdd_hash = contract.SourceGddHash,
+                        source_scene_route_hash = contract.SourceSceneRouteHash,
+                        source_requirement_map_hash = contract.SourceRequirementMapHash,
+                        source_contract_hash = sourceContractHash ?? contract.ContractHash,
+                        source_contract_snapshot_hash = sourceContractSnapshotHash ?? contract.SourceContractSnapshotHash,
+                        source_godot_ui_contract_hash = contract.SourceGodotUiContractHash,
+                        source_ui_style_contract_hash = contract.SourceUiStyleContractHash,
+                        ui_style_snapshot_hash = contract.UiStyleSnapshotHash
+                    }
+                },
+                freshness = "fresh",
+                source_gdd_hash = contract.SourceGddHash,
+                source_scene_route_hash = contract.SourceSceneRouteHash,
+                source_requirement_map_hash = contract.SourceRequirementMapHash,
+                source_contract_hash = sourceContractHash ?? contract.ContractHash,
+                source_contract_snapshot_hash = sourceContractSnapshotHash ?? contract.SourceContractSnapshotHash,
+                source_godot_ui_contract_hash = contract.SourceGodotUiContractHash,
+                source_ui_style_contract_hash = contract.SourceUiStyleContractHash,
+                ui_style_snapshot_hash = contract.UiStyleSnapshotHash,
+                verified_scene_ids = new[] { "field_map" },
+                verified_requirement_ids = verifiedRequirementIds ?? ["REQ-001", "REQ-002"],
+                evidence_refs = new[] { "meta/routes/prototype/latest.json" },
+                updated_utc = DateTimeOffset.UtcNow.ToString("O")
+            });
+        }
+
+        public async Task ApplyPrototypeSkeletonBoundaryScenarioAsync(string scenario)
+        {
+            var project = await GetProjectAsync();
+            var copies = new PrototypeRouteStateWriter().ReadPrototypeSkeletonStateCopies(project);
+            var root = JsonNode.Parse(copies.MetadataState)!.AsObject();
+            var boundary = root["source_boundary"]!.AsObject();
+            switch (scenario)
+            {
+                case "missing_boundary":
+                    root.Remove("source_boundary");
+                    break;
+                case "invalid_top_level_recovery_order":
+                    root["recovery_source_order_ref"] = "legacy-order.v0";
+                    break;
+                case "invalid_nested_recovery_order":
+                    boundary["recovery_source_order_ref"] = "legacy-order.v0";
+                    break;
+                case "missing_authority_source":
+                    boundary["authority_sources"]!.AsArray().RemoveAt(0);
+                    break;
+                case "reordered_authority_sources":
+                    var sources = boundary["authority_sources"]!.AsArray();
+                    var first = sources[0]!.DeepClone();
+                    sources[0] = sources[1]!.DeepClone();
+                    sources[1] = first;
+                    break;
+                case "nested_hash_mismatch":
+                    boundary["source_hashes"]!["source_contract_hash"] = "stale-contract-hash";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(scenario), scenario, "Unknown skeleton boundary scenario.");
+            }
+
+            new PrototypeRouteStateWriter().WritePrototypeSkeletonState(project, root);
         }
 
         public void ApplyRequirementMapScenario(string scenario)
@@ -928,6 +2099,31 @@ public sealed class GddToModuleBackendContractServiceTests
         }
     }
 
+    private sealed class CountingHostedProcessRunner : IHostedProcessRunner
+    {
+        public int CallCount { get; private set; }
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            throw new InvalidOperationException("Runner must not be called before capability preflight passes.");
+        }
+    }
+
+    private sealed class BlockingHostedProcessRunner : IHostedProcessRunner
+    {
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Started.TrySetResult();
+            await Release.Task.WaitAsync(cancellationToken);
+            throw new InvalidOperationException("forced runner completion for mutation lease test");
+        }
+    }
+
     private sealed class FixedGameTypeMatchService : IProjectGameTypeMatchService
     {
         public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
@@ -986,6 +2182,17 @@ public sealed class GddToModuleBackendContractServiceTests
                 request.Prompt.Length,
                 Encoding.UTF8.GetByteCount(request.Prompt),
                 1));
+        }
+    }
+
+    private sealed class CountingLlmRouteEngine : ILlmRouteEngine
+    {
+        public List<LlmRouteRequest> Requests { get; } = [];
+
+        public Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
+        {
+            Requests.Add(request);
+            throw new InvalidOperationException("The planning LLM must not run before the skeleton authority gate passes.");
         }
     }
 

@@ -255,7 +255,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
               "feedback_states": ["hover", "selected"],
               "camera_layer_boundary": "CanvasLayer:ui",
               "viewport_mode": "responsive_control_layout",
-              "ui_update_ownership_mode": "state_apply_pass",
+              "ui_update_ownership_mode": "invented",
               "state_boundary": "RewardScreenState",
               "material_profile": "PBRNoTexture",
               "rendering_profile": "invented",
@@ -269,6 +269,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
 
         readback.BlockingIssues.Select(issue => issue.IssueId).Should().Contain([
             "ui-wiring:reward_screen:technology_stack_leakage",
+            "ui-wiring:reward_screen:ui_update_ownership_missing",
             "ui-wiring:reward_screen:material_profile_missing",
             "ui-wiring:reward_screen:rendering_profile_missing",
             "ui-wiring:reward_screen:animation_state_profile_missing"

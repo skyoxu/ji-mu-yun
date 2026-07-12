@@ -1,7 +1,7 @@
 {
   "contractId": "godot-ui-capability",
   "contractVersion": "1",
-  "contractHash": "230d96ef12c1b83002394117197389d50c63b6adc7153772e10704f1ec02afbe",
+  "contractHash": "42556a9b38de0dc189a2adf354cbb7bcbc9991636ffd5162434c3bcfd57f2873",
   "standardPath": "docs/standards/godot-ui-capability-contract.md",
   "forbiddenTechnologyTerms": [
     "UrhoX",
@@ -31,7 +31,7 @@
     "rendering_profile_missing",
     "animation_state_profile_missing",
     "third_person_camera_profile_missing",
-    "ui_update_owner_missing",
+    "ui_update_ownership_missing",
     "technology_stack_leakage"
   ],
   "capabilityDomains": [

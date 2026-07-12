@@ -2,7 +2,7 @@
   "schemaVersion": "route-action-descriptors.v1",
   "descriptorId": "phasea-workflow-actions",
   "descriptorVersion": "1",
-  "descriptorHash": "c74147b72b450e507105afe8c8489ee22cd906803ffd153c57fce84b5dcb5399",
+  "descriptorHash": "3d04e9c06d9939855cd468b618949a3ba1278540a615d612f197d514dd47e0ca",
   "disabledDomainCodes": [
     "route_contract_not_active",
     "phase_gate_blocked",
@@ -148,12 +148,12 @@
     {
       "actionId": "create_iteration_plan",
       "exposureClass": "user_visible",
-      "defaultPhaseEligibility": "not_active",
+      "defaultPhaseEligibility": "active",
       "apiRouteTemplate": "/api/projects/{projectId}/iteration-plan",
       "browserActionId": "v2IterationPanel",
       "displayLabelKey": "workflow.create_iteration_plan",
       "operationScope": "run",
-      "readbackUrlTemplate": "",
+      "readbackUrlTemplate": "/api/projects/{projectId}/iteration-plan/latest",
       "requiredPhase": "2"
     },
     {

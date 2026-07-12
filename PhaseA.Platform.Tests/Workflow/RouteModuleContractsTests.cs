@@ -101,6 +101,48 @@ public sealed class RouteModuleContractsTests
     }
 
     [Fact]
+    public void IterationPlanContract_ShouldDeclareCompletePhase2AuthorityBoundary()
+    {
+        var contract = RouteModuleContracts.Find("iteration-plan");
+
+        contract.Should().NotBeNull();
+        contract!.PhaseEligibility.Should().Be("active");
+        contract.ApiRoutes.Should().Contain([
+            "/api/projects/{projectId}/iteration-plan",
+            "/api/projects/{projectId}/iteration-plan/latest",
+            "/api/projects/{projectId}/iteration-plan/confirm",
+            "/api/projects/{projectId}/iteration-plans",
+            "/api/projects/{projectId}/iteration-plan/evaluate"
+        ]);
+        contract.RequiredSourceArtifacts.Should().Contain([
+            "docs/gdd/GDD.md",
+            "meta/routes/scene-route/latest.json",
+            "meta/routes/gdd-requirements/latest.json",
+            "routes/prototype-contract/latest.json",
+            "meta/routes/prototype-skeleton/latest.json",
+            "meta/routes/godot-ui-contract/latest.json",
+            "meta/routes/ui-style-contract/latest.json",
+            "meta/routes/ui-style-snapshot/latest.json"
+        ]);
+        contract.SourceHashFields.Should().BeEquivalentTo([
+            "source_gdd_hash",
+            "source_scene_route_hash",
+            "source_requirement_map_hash",
+            "source_contract_hash",
+            "source_contract_snapshot_hash",
+            "source_godot_ui_contract_hash",
+            "source_ui_style_contract_hash",
+            "ui_style_snapshot_hash"
+        ]);
+        contract.AdminReadbackSurfaces.Should().Contain(["admin review queue", "diagnostic spool"]);
+        contract.DeterministicTestOwners.Should().Contain([
+            "PhaseA.Platform.Tests/Runs",
+            "PhaseA.Platform.Tests/Workflow",
+            "PhaseA.Platform.Tests/Browser"
+        ]);
+    }
+
+    [Fact]
     public void PromptProducingContracts_ShouldInheritHostedRecoverySourceOrder()
     {
         RouteModuleContracts.All

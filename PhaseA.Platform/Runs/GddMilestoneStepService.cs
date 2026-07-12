@@ -163,11 +163,32 @@ public sealed class GddMilestoneStepService
         return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "confirmed", state.Summary, ToResult(project.ProjectId, state));
     }
 
-    public async Task<GddMilestoneStepActionResult?> SubmitFeedbackAsync(
+    public Task<GddMilestoneStepActionResult?> SubmitFeedbackAsync(
         string accountId,
         string projectId,
         string stepId,
         GddMilestoneStepFeedbackRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return SubmitFeedbackCoreAsync(accountId, projectId, stepId, request, requireTraceability: false, cancellationToken);
+    }
+
+    public Task<GddMilestoneStepActionResult?> SubmitFeedbackStrictAsync(
+        string accountId,
+        string projectId,
+        string stepId,
+        GddMilestoneStepFeedbackRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return SubmitFeedbackCoreAsync(accountId, projectId, stepId, request, requireTraceability: true, cancellationToken);
+    }
+
+    private async Task<GddMilestoneStepActionResult?> SubmitFeedbackCoreAsync(
+        string accountId,
+        string projectId,
+        string stepId,
+        GddMilestoneStepFeedbackRequest request,
+        bool requireTraceability,
         CancellationToken cancellationToken = default)
     {
         var project = await GetProjectAsync(accountId, projectId, cancellationToken);
@@ -230,11 +251,10 @@ public sealed class GddMilestoneStepService
             Player feedback:
             {feedback}
             """;
-        var result = await _needsFixRouteService.RunAsync(
-            accountId,
-            projectId,
-            new PrototypeNeedsFixRouteRequest(scopedFeedback, request.Model, null, goal.GoalId, goal.GoalIndex, request.SourceKind),
-            cancellationToken);
+        var needsFixRequest = new PrototypeNeedsFixRouteRequest(scopedFeedback, request.Model, null, goal.GoalId, goal.GoalIndex, request.SourceKind);
+        var result = requireTraceability
+            ? await _needsFixRouteService.RunStrictAsync(accountId, projectId, needsFixRequest, cancellationToken)
+            : await _needsFixRouteService.RunLegacyCompatibleAsync(accountId, projectId, needsFixRequest, cancellationToken);
 
         var completed = result.Status is "completed" or "succeeded";
         var needsFix = string.Equals(result.Status, "needs_fix", StringComparison.OrdinalIgnoreCase);
@@ -246,7 +266,7 @@ public sealed class GddMilestoneStepService
             null);
         if (completed)
         {
-            var validation = await ValidateAndAutoRepairStepAsync(accountId, project, step, session, request.Model, cancellationToken);
+            var validation = await ValidateAndAutoRepairStepAsync(accountId, project, step, session, request.Model, requireTraceability, cancellationToken);
             outcome = BuildStepValidationOutcome("feedback_submitted", feedback, validation);
         }
 
@@ -339,9 +359,26 @@ public sealed class GddMilestoneStepService
         return ExecuteCurrentStepAsync(accountId, projectId, cancellationToken);
     }
 
-    public async Task<GddMilestoneStepActionResult?> ExecuteCurrentStepAsync(
+    public Task<GddMilestoneStepActionResult?> ExecuteCurrentStepAsync(
         string accountId,
         string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        return ExecuteCurrentStepCoreAsync(accountId, projectId, requireTraceability: false, cancellationToken);
+    }
+
+    public Task<GddMilestoneStepActionResult?> ExecuteCurrentStepStrictAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        return ExecuteCurrentStepCoreAsync(accountId, projectId, requireTraceability: true, cancellationToken);
+    }
+
+    private async Task<GddMilestoneStepActionResult?> ExecuteCurrentStepCoreAsync(
+        string accountId,
+        string projectId,
+        bool requireTraceability,
         CancellationToken cancellationToken = default)
     {
         var project = await GetProjectAsync(accountId, projectId, cancellationToken);
@@ -427,7 +464,9 @@ public sealed class GddMilestoneStepService
                 FailureCode: m1Queued ? null : prototypeResult.Status);
         }
 
-        var execution = await _iterationGoalService.ExecuteNextAsync(accountId, project.ProjectId, cancellationToken);
+        var execution = requireTraceability
+            ? await _iterationGoalService.ExecuteNextAsync(accountId, project.ProjectId, cancellationToken)
+            : await _iterationGoalService.ExecuteNextLegacyCompatibleAsync(accountId, project.ProjectId, cancellationToken);
         var succeeded = await IsMilestoneStepExecutionCompleteAsync(project, execution, cancellationToken);
         if (succeeded)
         {
@@ -444,7 +483,7 @@ public sealed class GddMilestoneStepService
         {
             if (succeeded)
             {
-                var validation = await ValidateAndAutoRepairStepAsync(accountId, project, step, session, requestModel: null, cancellationToken);
+                var validation = await ValidateAndAutoRepairStepAsync(accountId, project, step, session, requestModel: null, requireTraceability, cancellationToken);
                 outcome = BuildStepValidationOutcome("executed", execution.Summary, validation);
             }
 
@@ -717,6 +756,7 @@ public sealed class GddMilestoneStepService
         GddMilestoneStepState step,
         ProjectIterationSessionDetails session,
         string? requestModel,
+        bool requireTraceability,
         CancellationToken cancellationToken)
     {
         if (_lightweightValidationService is null)
@@ -755,11 +795,10 @@ public sealed class GddMilestoneStepService
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "needs_fix", feedback, null, loopToken);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(session.Session.SessionId, "needs_fix", goal.GoalIndex, feedback, session.Session.LatestEvaluationJson, null, loopToken);
 
-                lastRepair = await _needsFixRouteService.RunAsync(
-                    accountId,
-                    project.ProjectId,
-                    new PrototypeNeedsFixRouteRequest(feedback, requestModel, null, goal.GoalId, goal.GoalIndex, "automatic_validation_repair"),
-                    loopToken);
+                var needsFixRequest = new PrototypeNeedsFixRouteRequest(feedback, requestModel, null, goal.GoalId, goal.GoalIndex, "automatic_validation_repair");
+                lastRepair = requireTraceability
+                    ? await _needsFixRouteService.RunStrictAsync(accountId, project.ProjectId, needsFixRequest, loopToken)
+                    : await _needsFixRouteService.RunLegacyCompatibleAsync(accountId, project.ProjectId, needsFixRequest, loopToken);
 
                 if (stopwatch.Elapsed >= TimeSpan.FromMinutes(20))
                 {

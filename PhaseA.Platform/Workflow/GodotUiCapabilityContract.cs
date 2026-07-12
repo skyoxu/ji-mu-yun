@@ -42,7 +42,7 @@ public static class GodotUiCapabilityContract
         "rendering_profile_missing",
         "animation_state_profile_missing",
         "third_person_camera_profile_missing",
-        "ui_update_owner_missing",
+        "ui_update_ownership_missing",
         "technology_stack_leakage"
     ];
 

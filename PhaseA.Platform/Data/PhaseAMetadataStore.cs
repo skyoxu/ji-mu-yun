@@ -1713,30 +1713,29 @@ public sealed class PhaseAMetadataStore
         var adminSummary = string.IsNullOrWhiteSpace(entry.AdminSummary)
             ? userSafeSummary
             : RedactDiagnosticText(entry.AdminSummary);
-        var spoolRef = await WriteDiagnosticSpoolFileAsync(
-            diagnosticId,
-            entry with
-            {
-                SafeSummary = userSafeSummary,
-                AdminSummary = adminSummary,
-                RetentionClass = retentionClass
-            },
-            now,
-            cancellationToken);
+        var normalizedEntry = entry with
+        {
+            SafeSummary = userSafeSummary,
+            AdminSummary = adminSummary,
+            RetentionClass = retentionClass
+        };
+        var spoolRef = "";
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
+        command.Transaction = (SqliteTransaction)transaction;
         command.CommandText =
             """
-            INSERT INTO project_diagnostic_spool (
+            INSERT OR IGNORE INTO project_diagnostic_spool (
                 id, diagnostic_id, account_id, project_id, project_name_snapshot, run_id, route_id, failure_family, severity, triage_status,
                 retention_class, redaction_status, spool_ref, safe_summary, user_safe_summary, source_refs_json,
                 evidence_refs_json, source_artifact_path, cleanup_status, replacement_evidence_refs_json, admin_summary, remediation_hint_id,
-                created_utc, updated_utc)
+                dedupe_scope_key, created_utc, updated_utc)
             VALUES (
                 $id, $diagnostic_id, $account_id, $project_id, $project_name_snapshot, $run_id, $route_id, $failure_family, $severity, $triage_status,
                 $retention_class, $redaction_status, $spool_ref, $safe_summary, $user_safe_summary, $source_refs_json,
                 $evidence_refs_json, $source_artifact_path, $cleanup_status, $replacement_evidence_refs_json, $admin_summary, $remediation_hint_id,
-                $created_utc, $updated_utc);
+                $dedupe_scope_key, $created_utc, $updated_utc);
             """;
         command.Parameters.AddWithValue("$id", id);
         command.Parameters.AddWithValue("$diagnostic_id", diagnosticId);
@@ -1760,11 +1759,113 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$replacement_evidence_refs_json", entry.ReplacementEvidenceRefsJson);
         command.Parameters.AddWithValue("$admin_summary", adminSummary);
         command.Parameters.AddWithValue("$remediation_hint_id", entry.RemediationHintId);
+        command.Parameters.AddWithValue("$dedupe_scope_key", entry.DedupeScopeKey);
         command.Parameters.AddWithValue("$created_utc", now);
         command.Parameters.AddWithValue("$updated_utc", now);
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        var inserted = await command.ExecuteNonQueryAsync(cancellationToken);
+
+        if (inserted == 0 && !string.IsNullOrWhiteSpace(entry.DedupeScopeKey))
+        {
+            await using var existingCommand = connection.CreateCommand();
+            existingCommand.Transaction = (SqliteTransaction)transaction;
+            existingCommand.CommandText =
+                """
+                SELECT id
+                FROM project_diagnostic_spool
+                WHERE account_id = $account_id
+                  AND project_id = $project_id
+                  AND route_id = $route_id
+                  AND failure_family = $failure_family
+                  AND severity = $severity
+                  AND triage_status = 'unresolved'
+                  AND dedupe_scope_key = $dedupe_scope_key
+                ORDER BY created_utc DESC, id DESC
+                LIMIT 1;
+                """;
+            existingCommand.Parameters.AddWithValue("$account_id", entry.AccountId);
+            existingCommand.Parameters.AddWithValue("$project_id", entry.ProjectId);
+            existingCommand.Parameters.AddWithValue("$route_id", entry.RouteId);
+            existingCommand.Parameters.AddWithValue("$failure_family", entry.FailureFamily);
+            existingCommand.Parameters.AddWithValue("$severity", entry.Severity);
+            existingCommand.Parameters.AddWithValue("$dedupe_scope_key", entry.DedupeScopeKey);
+            var existingId = await existingCommand.ExecuteScalarAsync(cancellationToken) as string;
+            if (!string.IsNullOrWhiteSpace(existingId))
+            {
+                await transaction.CommitAsync(cancellationToken);
+                var existing = (await GetProjectDiagnosticSpoolEntryByIdAsync(existingId, cancellationToken))!;
+                return await EnsureDiagnosticSpoolEvidenceAsync(existing, cancellationToken);
+            }
+        }
+
+        try
+        {
+            spoolRef = await WriteDiagnosticSpoolFileAsync(
+                diagnosticId,
+                normalizedEntry,
+                now,
+                cancellationToken);
+            await using var updateSpoolRef = connection.CreateCommand();
+            updateSpoolRef.Transaction = (SqliteTransaction)transaction;
+            updateSpoolRef.CommandText =
+                "UPDATE project_diagnostic_spool SET spool_ref = $spool_ref WHERE id = $id;";
+            updateSpoolRef.Parameters.AddWithValue("$spool_ref", spoolRef);
+            updateSpoolRef.Parameters.AddWithValue("$id", id);
+            await updateSpoolRef.ExecuteNonQueryAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            if (!string.IsNullOrWhiteSpace(spoolRef))
+            {
+                DeleteDiagnosticSpoolFile(spoolRef, normalizedEntry);
+            }
+            throw;
+        }
 
         return (await GetProjectDiagnosticSpoolEntryByIdAsync(id, cancellationToken))!;
+    }
+
+    private async Task<ProjectDiagnosticSpoolEntry> EnsureDiagnosticSpoolEvidenceAsync(
+        ProjectDiagnosticSpoolEntry existing,
+        CancellationToken cancellationToken)
+    {
+        var entry = new ProjectDiagnosticSpoolCommand(
+            existing.AccountId,
+            existing.ProjectId,
+            existing.RouteId,
+            existing.FailureFamily,
+            existing.Severity,
+            existing.SafeSummary,
+            existing.EvidenceRefsJson,
+            existing.SourceArtifactPath,
+            existing.TriageStatus,
+            existing.ProjectNameSnapshot,
+            existing.RunId,
+            existing.SourceRefsJson,
+            existing.RedactionStatus,
+            existing.RetentionClass,
+            existing.CleanupStatus,
+            existing.ReplacementEvidenceRefsJson,
+            existing.AdminSummary,
+            existing.RemediationHintId);
+        if (!string.IsNullOrWhiteSpace(existing.SpoolRef) && DiagnosticSpoolFileExists(existing.SpoolRef, entry))
+        {
+            return existing;
+        }
+
+        var spoolRef = await WriteDiagnosticSpoolFileAsync(
+            existing.DiagnosticId,
+            entry,
+            existing.CreatedUtc,
+            cancellationToken);
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var update = connection.CreateCommand();
+        update.CommandText = "UPDATE project_diagnostic_spool SET spool_ref = $spool_ref WHERE id = $id;";
+        update.Parameters.AddWithValue("$spool_ref", spoolRef);
+        update.Parameters.AddWithValue("$id", existing.Id);
+        await update.ExecuteNonQueryAsync(cancellationToken);
+        return (await GetProjectDiagnosticSpoolEntryByIdAsync(existing.Id, cancellationToken))!;
     }
 
     public async Task<IReadOnlyList<ProjectDiagnosticSpoolEntry>> ListProjectDiagnosticSpoolForAdminAsync(
@@ -3672,16 +3773,22 @@ public sealed class PhaseAMetadataStore
         string sourceMessage,
         string overallGoal,
         IReadOnlyList<ProjectIterationGoalCreateCommand> goals,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? sessionId = null,
+        string? requestIdentityHash = null,
+        string? routeStateJson = null,
+        string initialStatus = "planning",
+        string? initialSummary = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceKind);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceMessage);
         ArgumentException.ThrowIfNullOrWhiteSpace(overallGoal);
+        ArgumentException.ThrowIfNullOrWhiteSpace(initialStatus);
         ArgumentNullException.ThrowIfNull(goals);
 
-        var sessionId = NewId();
+        sessionId = string.IsNullOrWhiteSpace(sessionId) ? NewId() : sessionId.Trim();
         var now = DateTimeOffset.UtcNow.ToString("O");
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -3691,7 +3798,7 @@ public sealed class PhaseAMetadataStore
             command.Transaction = (SqliteTransaction)transaction;
             command.CommandText =
                 """
-                INSERT INTO project_iteration_sessions (
+                INSERT OR IGNORE INTO project_iteration_sessions (
                     id,
                     project_id,
                     account_id,
@@ -3702,6 +3809,8 @@ public sealed class PhaseAMetadataStore
                     current_goal_index,
                     latest_summary,
                     latest_evaluation_json,
+                    request_identity_hash,
+                    route_state_json,
                     created_utc,
                     updated_utc,
                     completed_utc)
@@ -3712,10 +3821,12 @@ public sealed class PhaseAMetadataStore
                     $source_kind,
                     $source_message,
                     $overall_goal,
-                    'planning',
+                    $status,
                     0,
+                    $latest_summary,
                     NULL,
-                    NULL,
+                    $request_identity_hash,
+                    $route_state_json,
                     $created_utc,
                     $updated_utc,
                     NULL);
@@ -3726,9 +3837,17 @@ public sealed class PhaseAMetadataStore
             command.Parameters.AddWithValue("$source_kind", sourceKind);
             command.Parameters.AddWithValue("$source_message", sourceMessage);
             command.Parameters.AddWithValue("$overall_goal", overallGoal);
+            command.Parameters.AddWithValue("$status", initialStatus);
+            command.Parameters.AddWithValue("$latest_summary", (object?)initialSummary ?? DBNull.Value);
+            command.Parameters.AddWithValue("$request_identity_hash", (object?)requestIdentityHash ?? DBNull.Value);
+            command.Parameters.AddWithValue("$route_state_json", (object?)routeStateJson ?? DBNull.Value);
             command.Parameters.AddWithValue("$created_utc", now);
             command.Parameters.AddWithValue("$updated_utc", now);
-            await command.ExecuteNonQueryAsync(cancellationToken);
+            if (await command.ExecuteNonQueryAsync(cancellationToken) != 1)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw new ProjectIterationRequestIdentityConflictException();
+            }
         }
 
         foreach (var goal in goals.OrderBy(goal => goal.GoalIndex))
@@ -3781,13 +3900,16 @@ public sealed class PhaseAMetadataStore
             sourceKind,
             sourceMessage,
             overallGoal,
-            "planning",
+            initialStatus,
             0,
-            null,
+            initialSummary,
             null,
             now,
             now,
-            null);
+            null,
+            null,
+            requestIdentityHash,
+            routeStateJson);
     }
 
     public async Task UpdateProjectIterationSessionStatusAsync(
@@ -3832,6 +3954,32 @@ public sealed class PhaseAMetadataStore
         return await GetLatestProjectIterationSessionAsync(projectId, null, cancellationToken);
     }
 
+    public async Task SetProjectIterationTraceabilityAnchorAsync(
+        string sessionId,
+        string traceabilityAnchorJson,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(traceabilityAnchorJson);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE project_iteration_sessions
+            SET traceability_anchor_json = $traceability_anchor_json,
+                updated_utc = $updated_utc
+            WHERE id = $id;
+            """;
+        command.Parameters.AddWithValue("$id", sessionId);
+        command.Parameters.AddWithValue("$traceability_anchor_json", traceabilityAnchorJson);
+        command.Parameters.AddWithValue("$updated_utc", DateTimeOffset.UtcNow.ToString("O"));
+        if (await command.ExecuteNonQueryAsync(cancellationToken) != 1)
+        {
+            throw new InvalidOperationException("Iteration session not found.");
+        }
+    }
+
     public async Task<ProjectIterationSessionDetails?> GetLatestProjectIterationSessionAsync(
         string projectId,
         string? sourceKind = null,
@@ -3846,7 +3994,8 @@ public sealed class PhaseAMetadataStore
             command.CommandText =
                 """
                 SELECT id, project_id, account_id, source_kind, source_message, overall_goal, status,
-                       current_goal_index, latest_summary, latest_evaluation_json, created_utc, updated_utc, completed_utc
+                       current_goal_index, latest_summary, latest_evaluation_json, traceability_anchor_json, created_utc, updated_utc, completed_utc,
+                       request_identity_hash, route_state_json
                 FROM project_iteration_sessions
                 WHERE project_id = $project_id
                   AND (
@@ -3872,9 +4021,12 @@ public sealed class PhaseAMetadataStore
                     reader.GetInt32(7),
                     reader.IsDBNull(8) ? null : reader.GetString(8),
                     reader.IsDBNull(9) ? null : reader.GetString(9),
-                    reader.GetString(10),
                     reader.GetString(11),
-                    reader.IsDBNull(12) ? null : reader.GetString(12));
+                    reader.GetString(12),
+                    reader.IsDBNull(13) ? null : reader.GetString(13),
+                    reader.IsDBNull(10) ? null : reader.GetString(10),
+                    reader.IsDBNull(14) ? null : reader.GetString(14),
+                    reader.IsDBNull(15) ? null : reader.GetString(15));
             }
         }
 
@@ -3966,7 +4118,8 @@ public sealed class PhaseAMetadataStore
             command.CommandText =
                 """
                 SELECT id, project_id, account_id, source_kind, source_message, overall_goal, status,
-                       current_goal_index, latest_summary, latest_evaluation_json, created_utc, updated_utc, completed_utc
+                       current_goal_index, latest_summary, latest_evaluation_json, traceability_anchor_json, created_utc, updated_utc, completed_utc,
+                       request_identity_hash, route_state_json
                 FROM project_iteration_sessions
                 WHERE project_id = $project_id
                   AND source_kind <> 'repair_plan'
@@ -3987,9 +4140,12 @@ public sealed class PhaseAMetadataStore
                     reader.GetInt32(7),
                     reader.IsDBNull(8) ? null : reader.GetString(8),
                     reader.IsDBNull(9) ? null : reader.GetString(9),
-                    reader.GetString(10),
                     reader.GetString(11),
-                    reader.IsDBNull(12) ? null : reader.GetString(12)));
+                    reader.GetString(12),
+                    reader.IsDBNull(13) ? null : reader.GetString(13),
+                    reader.IsDBNull(10) ? null : reader.GetString(10),
+                    reader.IsDBNull(14) ? null : reader.GetString(14),
+                    reader.IsDBNull(15) ? null : reader.GetString(15)));
             }
         }
 
@@ -4079,6 +4235,41 @@ public sealed class PhaseAMetadataStore
 
         var sessions = await ListProjectIterationSessionsAsync(projectId, cancellationToken);
         return sessions.FirstOrDefault(session => string.Equals(session.Session.SessionId, sessionId, StringComparison.Ordinal));
+    }
+
+    public async Task<ProjectIterationSessionDetails?> GetProjectIterationSessionByRequestIdentityAsync(
+        string accountId,
+        string projectId,
+        string requestIdentityHash,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(requestIdentityHash);
+
+        string? sessionId = null;
+        await using (var connection = await OpenConnectionAsync(cancellationToken))
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                """
+                SELECT id
+                FROM project_iteration_sessions
+                WHERE account_id = $account_id
+                  AND project_id = $project_id
+                  AND request_identity_hash = $request_identity_hash
+                ORDER BY created_utc DESC, id DESC
+                LIMIT 1;
+                """;
+            command.Parameters.AddWithValue("$account_id", accountId);
+            command.Parameters.AddWithValue("$project_id", projectId);
+            command.Parameters.AddWithValue("$request_identity_hash", requestIdentityHash);
+            sessionId = await command.ExecuteScalarAsync(cancellationToken) as string;
+        }
+
+        return string.IsNullOrWhiteSpace(sessionId)
+            ? null
+            : await GetProjectIterationSessionAsync(projectId, sessionId, cancellationToken);
     }
 
     public async Task<int> DeleteProjectIterationSessionsAsync(
@@ -5102,12 +5293,47 @@ public sealed class PhaseAMetadataStore
             remediation_hint_id = entry.RemediationHintId
         };
 
-        await File.WriteAllTextAsync(
-            path,
-            JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true }),
-            Encoding.UTF8,
-            cancellationToken);
+        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+        try
+        {
+            await File.WriteAllTextAsync(
+                temporaryPath,
+                JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true }),
+                Encoding.UTF8,
+                cancellationToken);
+            File.Move(temporaryPath, path, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
+        }
         return relativeRef;
+    }
+
+    private bool DiagnosticSpoolFileExists(string spoolRef, ProjectDiagnosticSpoolCommand entry)
+    {
+        return File.Exists(ResolveDiagnosticSpoolFilePath(spoolRef, entry));
+    }
+
+    private void DeleteDiagnosticSpoolFile(string spoolRef, ProjectDiagnosticSpoolCommand entry)
+    {
+        var path = ResolveDiagnosticSpoolFilePath(spoolRef, entry);
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+    }
+
+    private string ResolveDiagnosticSpoolFilePath(string spoolRef, ProjectDiagnosticSpoolCommand entry)
+    {
+        return Path.Combine(
+            ResolveDiagnosticSpoolRoot(),
+            SanitizePathSegment(entry.AccountId),
+            SanitizePathSegment(entry.ProjectId),
+            Path.GetFileName(spoolRef.Replace('/', Path.DirectorySeparatorChar)));
     }
 
     private string ResolveDiagnosticSpoolRoot()

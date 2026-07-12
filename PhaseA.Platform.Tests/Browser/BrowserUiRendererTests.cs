@@ -2169,7 +2169,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("#iterationPlanUpdateModal .modal-card > .stack { max-height: calc(100vh - 4rem); }");
         html.Should().Contain("confirmIterationPlanUpdate");
         html.Should().Contain("deleteIterationPlan");
-        html.Should().Contain("[createPlan, evaluatePlan, executeGoal, deletePlan]");
+        html.Should().Contain("[createPlan, evaluatePlan, confirmPlan, executeGoal, deletePlan]");
         html.Should().Contain("删除当前轮游戏模块");
         html.Should().Contain("该操作不会删除其他轮次");
         html.Should().Contain("/iteration-plans/${encodeURIComponent(sessionId)}");
@@ -3381,7 +3381,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("type=\"button\" class=\"secondary\" data-needs-fix-goal");
         html.Should().Contain("onclick=\"event.stopPropagation(); runNeedsFixIterationGoal('");
         html.Should().Contain("needsFixDisabledAttrs");
-        html.Should().Contain("const needsFixDisabled = !isLatestPlan || isGlobalBusy();");
+        html.Should().Contain("const needsFixDisabled = !isLatestPlan || !planConfirmed || planBlockers.length > 0 || isGlobalBusy();");
         html.Should().Contain("只能修复最新一轮游戏模块。请切回最新轮次后再运行需要修复路由。");
         html.Should().Contain("function latestIterationPlanForAction()");
         html.Should().Contain("function selectLatestIterationPlanForAction()");
@@ -3469,7 +3469,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("待执行");
         html.Should().Contain("失败");
         html.Should().Contain("需要修复");
-        html.Should().Contain("prototype-feedback-iterations");
+        html.Should().Contain("needs-fix-route");
+        html.Should().NotContain("prototype-feedback-iterations");
         html.Should().NotContain("formal-feedback-failed");
         html.Should().Contain("assistantMessage");
         html.Should().NotContain("skillActionPanel");
@@ -3917,6 +3918,101 @@ public sealed class BrowserUiRendererTests
         AssertEndpointAppliesNoStore(source, "app.MapGet(\"/api/projects/{projectId}/workflow-route\"");
         AssertEndpointAppliesNoStore(source, "app.MapPost(\"/api/projects/{projectId}/workflow-route/intent\"");
         AssertEndpointAppliesNoStore(source, "app.MapGet(\"/api/projects/{projectId}/workflow-recommendation\"");
+    }
+
+    [Fact]
+    public void Program_IterationPlanEndpointsApplyNoStore()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        foreach (var marker in new[]
+        {
+            "app.MapPost(\"/api/projects/{projectId}/iteration-plan\"",
+            "app.MapGet(\"/api/projects/{projectId}/iteration-plan/latest\"",
+            "app.MapPost(\"/api/projects/{projectId}/iteration-plan/confirm\"",
+            "app.MapGet(\"/api/projects/{projectId}/iteration-plans\"",
+            "app.MapDelete(\"/api/projects/{projectId}/iteration-plan\"",
+            "app.MapDelete(\"/api/projects/{projectId}/iteration-plans/{sessionId}\"",
+            "app.MapPost(\"/api/projects/{projectId}/iteration-plan/evaluate\"",
+            "app.MapPost(\"/api/projects/{projectId}/iteration-plan/execute-next\"",
+            "app.MapPost(\"/api/projects/{projectId}/gdd-milestone-steps/current/iteration-plan\"",
+            "app.MapPost(\"/api/projects/{projectId}/gdd-milestone-steps/current/execute\"",
+            "app.MapPost(\"/api/projects/{projectId}/gdd-milestone-steps/{stepId}/feedback-run\"",
+            "app.MapPost(\"/api/projects/{projectId}/needs-fix-route\"",
+            "app.MapPost(\"/api/projects/{projectId}/repair-plan\"",
+            "app.MapPost(\"/api/projects/{projectId}/repair-plan/execute-next\""
+        })
+        {
+            AssertEndpointAppliesNoStore(source, marker);
+        }
+    }
+
+    [Fact]
+    public void Program_MilestoneExecutionEndpointsUseStrictTraceabilityAndRejectedEnvelope()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        foreach (var marker in new[]
+        {
+            "app.MapPost(\"/api/projects/{projectId}/gdd-milestone-steps/current/iteration-plan\"",
+            "app.MapPost(\"/api/projects/{projectId}/gdd-milestone-steps/current/execute\""
+        })
+        {
+            var endpoint = ExtractEndpointSource(source, marker);
+            endpoint.Should().Contain("ExecuteCurrentStepStrictAsync");
+            endpoint.Should().Contain("RejectInactiveRouteAction(context, \"execute_next_goal\")");
+            endpoint.Should().Contain("IterationPlanRejected(context");
+        }
+
+        ExtractEndpointSource(source, "app.MapPost(\"/api/projects/{projectId}/iteration-plan/execute-next\"")
+            .Should().Contain("RejectInactiveRouteAction(context, \"execute_next_goal\")");
+        ExtractEndpointSource(source, "app.MapPost(\"/api/projects/{projectId}/needs-fix-route\"")
+            .Should().Contain("RejectInactiveRouteAction(context, \"run_needs_fix\")");
+        foreach (var marker in new[]
+        {
+            "app.MapPost(\"/api/projects/{projectId}/repair-plan\"",
+            "app.MapPost(\"/api/projects/{projectId}/repair-plan/execute-next\""
+        })
+        {
+            var endpoint = ExtractEndpointSource(source, marker);
+            endpoint.Should().Contain("RejectInactiveRouteAction(context, \"run_needs_fix\")");
+            endpoint.Should().Contain("IterationPlanRejected(context");
+        }
+        source.Should().Contain("JsonSerializer.SerializeToNode(result");
+        source.Should().Contain("payload[\"operationStatus\"] = \"rejected\"");
+    }
+
+    [Fact]
+    public void Program_IterationPlanCreateUsesStandardRejectedEnvelope()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+        var endpoint = ExtractEndpointSource(source, "app.MapPost(\"/api/projects/{projectId}/iteration-plan\"");
+
+        endpoint.Should().Contain("IterationPlanRejected(context");
+        source.Should().Contain("payload[\"operationStatus\"] = \"rejected\"");
+        source.Should().Contain("domainCode");
+        source.Should().Contain("payload[\"requestId\"] = context.TraceIdentifier");
     }
 
     [Fact]
@@ -4493,6 +4589,28 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("data-final-readiness-boundary=\"true\"");
         html.Should().Contain("Ordinary package download is not final readiness");
         html.Should().Contain("workflowRenderRouteReadback(message?.workflowRoute)");
+    }
+
+    [Fact]
+    public void DetailView_IterationPlanUsesRealHashBoundConfirmationAndTraceability()
+    {
+        var html = new BrowserUiRenderer().RenderShellV2();
+
+        html.Should().Contain("id=\"confirmIterationPlan\"");
+        html.Should().Contain("async function confirmIterationPlan()");
+        html.Should().Contain("/iteration-plan/confirm");
+        html.Should().Contain("confirmation?.status === \"confirmed\"");
+        html.Should().Contain("plan.planHash");
+        html.Should().Contain("traceabilityGoals");
+        html.Should().Contain("requirementIds");
+        html.Should().Contain("sourceReason");
+        html.Should().Contain("interactionArtifactRef");
+        html.Should().Contain("styleSummary");
+        html.Should().Contain("styleApplicability?.status === \"reviewed_not_applicable\"");
+        html.Should().Contain("styleApplicability?.reviewedBy");
+        html.Should().Contain("styleApplicability?.reason");
+        html.Should().Contain("styleApplicability?.recheckTrigger");
+        html.Should().NotContain("requirement_ids_pending");
     }
 
     [Fact]

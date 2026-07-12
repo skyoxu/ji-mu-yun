@@ -38,6 +38,7 @@ class PhaseAGddToModuleGovernanceAuditTests(unittest.TestCase):
             summary = audit.audit_metadata_db(db, failures)
 
         self.assertEqual("checked", summary["status"])
+        self.assertIn("project_admin_review_queue", summary["tables"])
         self.assertIn("metadata_table_missing:project_diagnostic_spool", failures)
         self.assertIn("metadata_table_missing:project_delete_tombstones", failures)
         self.assertIn("metadata_table_missing:game_type_maintenance_records", failures)

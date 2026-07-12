@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -64,19 +65,63 @@ public sealed class PrototypeIterationGoalService
         string projectId,
         CancellationToken cancellationToken = default)
     {
+        return await ExecuteNextCoreAsync(accountId, projectId, requireTraceability: true, cancellationToken);
+    }
+
+    internal async Task<PrototypeIterationGoalExecutionResult> ExecuteNextLegacyCompatibleAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        return await ExecuteNextCoreAsync(accountId, projectId, requireTraceability: false, cancellationToken);
+    }
+
+    private async Task<PrototypeIterationGoalExecutionResult> ExecuteNextCoreAsync(
+        string accountId,
+        string projectId,
+        bool requireTraceability,
+        CancellationToken cancellationToken)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
-        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        ProjectSnapshot project;
+        ProjectIterationSessionDetails details;
+        ProjectIterationGoalSnapshot nextGoal;
+        GameTypeRouteProfile routeProfile;
+        string runId;
+        await using (var mutationLease = await ProjectMutationLockRegistry.Shared.AcquireAsync(accountId, projectId, cancellationToken))
+        {
+        project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken)
+            ?? throw new InvalidOperationException("Project not found.");
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }
 
         var newChainGuard = _contractFreezeService.EvaluateNewChainGuard(project);
+        var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
+        if (!newChainGuard.NewChainActive)
+        {
+            if (requireTraceability || string.Equals(ReadIterationPlanString(iterationPlanState, "traceability_contract"), "iteration-plan-traceability.v2", StringComparison.Ordinal))
+            {
+                var result = new PrototypeIterationGoalExecutionResult(
+                    "",
+                    "",
+                    "",
+                    "legacy_plan_source_unknown",
+                    "Legacy iteration-plan route state remains readable but must be regenerated before execution.",
+                    0,
+                    false,
+                    "blocked");
+                await RecordEarlySourceDiagnosticAsync(project, result.Status, result.Summary, iterationPlanState, "legacy-source", cancellationToken);
+                return result;
+            }
+        }
+
         if (newChainGuard.NewChainActive && !newChainGuard.Allowed)
         {
-            return new PrototypeIterationGoalExecutionResult(
+            var result = new PrototypeIterationGoalExecutionResult(
                 "",
                 "",
                 "",
@@ -85,12 +130,35 @@ public sealed class PrototypeIterationGoalService
                 0,
                 false,
                 "blocked");
+            var sourceHashRef = IterationPlanTraceabilityBuilder.ComputeSourceHashRef(
+                ToIterationPlanSourceHashes(newChainGuard.ContractStatus),
+                PrototypeIterationPlanService.ToIterationStyleApplicability(newChainGuard.ContractStatus));
+            await RecordEarlySourceDiagnosticAsync(project, result.Status, result.Summary, iterationPlanState, sourceHashRef, cancellationToken);
+            return result;
         }
 
-        var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
-        if (details is null)
+        var loadedDetails = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        if (loadedDetails is null)
         {
             return new PrototypeIterationGoalExecutionResult("", "", "", "missing_plan", "当前项目还没有游戏模块。", 0, false, "failed");
+        }
+        details = loadedDetails;
+
+        iterationPlanState = PrototypeIterationPlanService.RestoreCurrentPlanState(
+            project,
+            details,
+            _stateWriter,
+            iterationPlanState);
+
+        var anchoredIterationPlanState = PrototypeIterationPlanService.ProjectStateFromTrustedAnchor(
+            iterationPlanState,
+            details.Session.TraceabilityAnchorJson);
+        if (!string.Equals(anchoredIterationPlanState, iterationPlanState, StringComparison.Ordinal))
+        {
+            iterationPlanState = anchoredIterationPlanState;
+            var anchoredStateNode = JsonNode.Parse(iterationPlanState) ?? throw new JsonException("Anchored iteration plan state is invalid.");
+            _stateWriter.WriteIterationPlanSessionState(project, details.Session.SessionId, anchoredStateNode);
+            _stateWriter.WriteIterationPlanState(project, anchoredStateNode);
         }
 
         var blockingEvaluation = BuildBlockingEvaluationResult(details);
@@ -115,32 +183,81 @@ public sealed class PrototypeIterationGoalService
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, needsFixGoal.GoalId, "", "needs_fix", summary, needsFixGoal.GoalIndex, true, "needs_fix");
         }
 
-        var nextGoal = details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal));
+        nextGoal = details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal))!;
         if (nextGoal is null)
         {
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, "", "", "no_pending_goal", "当前计划中没有待执行任务。", details.Session.CurrentGoalIndex, false, details.Session.Status);
         }
 
-        _workspaceSeeder.EnsureSeeded(project.RepoPath);
-        var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+        var preflight = newChainGuard.NewChainActive
+            ? IterationPlanExecutionPreflight.Evaluate(
+                iterationPlanState,
+                details.Session.SessionId,
+                nextGoal.GoalIndex,
+                ToIterationPlanSourceHashes(newChainGuard.ContractStatus),
+                project.RepoPath,
+                details.Session.TraceabilityAnchorJson ?? "",
+                requireTrustedAnchor: newChainGuard.NewChainActive,
+                currentStyleApplicability: PrototypeIterationPlanService.ToIterationStyleApplicability(newChainGuard.ContractStatus))
+            : new IterationPlanExecutionPreflightResult(true, "", "");
+        if (!preflight.Allowed)
+        {
+                await RecordPreflightDiagnosticAsync(project, preflight, iterationPlanState, cancellationToken);
+                _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
+                {
+                    route = "execute-next-goal",
+                    status = "blocked",
+                    session_id = details.Session.SessionId,
+                    goal_id = nextGoal.GoalId,
+                    goal_index = nextGoal.GoalIndex,
+                    domain_code = preflight.DomainCode,
+                    summary = preflight.Summary,
+                    source_iteration_session_hash = ReadIterationPlanHash(iterationPlanState),
+                    updated_utc = DateTimeOffset.UtcNow.ToString("O")
+                });
+                return new PrototypeIterationGoalExecutionResult(
+                    details.Session.SessionId,
+                    nextGoal.GoalId,
+                    "",
+                    preflight.DomainCode,
+                    preflight.Summary,
+                    nextGoal.GoalIndex,
+                    false,
+                    "blocked");
+        }
 
-        var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
+        _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+
+        runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         if (!locked)
         {
             await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "project_busy", "当前有任务正在执行，请等待完成后再试。", nextGoal.GoalIndex, true, "paused_for_review");
         }
+        try
+        {
+            await _metadataStore.LinkProjectIterationGoalRunAsync(details.Session.SessionId, nextGoal.GoalId, runId, RunType, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "running", null, null, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"Starting goal {nextGoal.GoalIndex}.", details.Session.LatestEvaluationJson, null, CancellationToken.None);
+        }
+        catch (OperationCanceledException ex)
+        {
+            return await FailRunClaimAsync(project, details, nextGoal, runId, ex, 408);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return await FailRunClaimAsync(project, details, nextGoal, runId, ex, 500);
+        }
+        try
+        {
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
-        await _metadataStore.LinkProjectIterationGoalRunAsync(details.Session.SessionId, nextGoal.GoalId, runId, RunType, CancellationToken.None);
-        await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "running", null, null, CancellationToken.None);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行任务 {nextGoal.GoalIndex}。", details.Session.LatestEvaluationJson, null, CancellationToken.None);
         await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", $"正在准备任务 {nextGoal.GoalIndex}。", CancellationToken.None);
 
-        try
-        {
             var relativeDir = Path.Combine("logs", "phase-a-iteration", project.ProjectId, details.Session.SessionId, nextGoal.GoalId, runId);
             var absoluteDir = Path.Combine(project.RepoPath, relativeDir);
             Directory.CreateDirectory(absoluteDir);
@@ -157,7 +274,6 @@ public sealed class PrototypeIterationGoalService
             var prototypeContract = _contractService.Read(project);
             var projectExecutionGuide = _stateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
             var prototypeState = _stateWriter.ReadLatestPrototypeState(project);
-            var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
             if (string.IsNullOrWhiteSpace(prototypeState))
             {
                 const string failure = "Please run prototype creation before executing the next iteration goal.";
@@ -389,6 +505,208 @@ public sealed class PrototypeIterationGoalService
         finally
         {
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+        }
+        }
+    }
+
+    private async Task<PrototypeIterationGoalExecutionResult> FailRunClaimAsync(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails details,
+        ProjectIterationGoalSnapshot goal,
+        string runId,
+        Exception exception,
+        int exitCode)
+    {
+        const string failure = "本轮任务未能建立执行声明，请稍后重试。";
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            run_type = RunType,
+            failure_code = "prototype_iteration_goal_claim_failed",
+            session_id = details.Session.SessionId,
+            goal_id = goal.GoalId
+        });
+        try
+        {
+            await _metadataStore.CompleteRunAsync(runId, "failed", exitCode, "", exception.Message, evidenceJson, CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "failed", "claim", failure, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "failed", failure, null, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", goal.GoalIndex, failure, details.Session.LatestEvaluationJson, null, CancellationToken.None);
+        }
+        finally
+        {
+            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+        }
+
+        return new PrototypeIterationGoalExecutionResult(
+            details.Session.SessionId,
+            goal.GoalId,
+            runId,
+            "failed",
+            failure,
+            goal.GoalIndex,
+            true,
+            "paused_for_review");
+    }
+
+    private static PrototypeIterationPlanSourceHashes ToIterationPlanSourceHashes(PrototypeContractStatusResult status)
+    {
+        return new PrototypeIterationPlanSourceHashes(
+            status.SourceGddHash,
+            status.SourceSceneRouteHash,
+            status.SourceRequirementMapHash,
+            status.ContractHash,
+            status.SourceContractSnapshotHash,
+            status.SourceGodotUiContractHash,
+            status.SourceUiStyleContractHash,
+            status.UiStyleSnapshotHash);
+    }
+
+    private async Task RecordPreflightDiagnosticAsync(
+        ProjectSnapshot project,
+        IterationPlanExecutionPreflightResult preflight,
+        string iterationPlanState,
+        CancellationToken cancellationToken)
+    {
+        var sourceHashRef = ReadIterationPlanString(iterationPlanState, "source_hash_ref");
+        var planHash = ReadIterationPlanString(iterationPlanState, "plan_hash");
+        var stableSourceHashRef = string.IsNullOrWhiteSpace(sourceHashRef) ? "no-source" : sourceHashRef;
+        var stablePlanHash = string.IsNullOrWhiteSpace(planHash) ? "no-plan" : planHash;
+        var existing = await _metadataStore.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery(
+                "unresolved",
+                project.AccountId,
+                project.ProjectId,
+                "execute-next-goal",
+                preflight.DomainCode,
+                "P1",
+                500),
+            cancellationToken);
+        if (existing.Any(row => HasDiagnosticScope(row.SourceRefsJson, stableSourceHashRef, stablePlanHash)))
+        {
+            return;
+        }
+
+        var evidenceJson = JsonSerializer.Serialize(new[]
+        {
+            new { kind = "sidecar", @ref = "meta/routes/iteration-plan/latest.json" },
+            new { kind = "source_hash_ref", @ref = stableSourceHashRef },
+            new { kind = "plan_hash", @ref = stablePlanHash }
+        });
+        await _metadataStore.RecordProjectDiagnosticSpoolEntryAsync(
+            new ProjectDiagnosticSpoolCommand(
+                project.AccountId,
+                project.ProjectId,
+                "execute-next-goal",
+                preflight.DomainCode,
+                "P1",
+                preflight.Summary,
+                evidenceJson,
+                "meta/routes/iteration-plan/latest.json",
+                ProjectNameSnapshot: project.Name,
+                SourceRefsJson: evidenceJson,
+                RetentionClass: "unresolved_blocker",
+                RemediationHintId: preflight.DomainCode,
+                DedupeScopeKey: ProjectDiagnosticScopeKey.Compute(stableSourceHashRef, stablePlanHash)),
+            cancellationToken);
+    }
+
+    private async Task RecordEarlySourceDiagnosticAsync(
+        ProjectSnapshot project,
+        string domainCode,
+        string summary,
+        string iterationPlanState,
+        string sourceHashRef,
+        CancellationToken cancellationToken)
+    {
+        var planHash = ReadIterationPlanString(iterationPlanState, "plan_hash");
+        var stableSourceHashRef = string.IsNullOrWhiteSpace(sourceHashRef) ? "no-source" : sourceHashRef;
+        var stablePlanHash = string.IsNullOrWhiteSpace(planHash) ? "no-plan" : planHash;
+        var existing = await _metadataStore.ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery("unresolved", project.AccountId, project.ProjectId, "execute-next-goal", domainCode, "P1", 100),
+            cancellationToken);
+        if (existing.Any(row => HasDiagnosticScope(row.SourceRefsJson, stableSourceHashRef, stablePlanHash)))
+        {
+            return;
+        }
+
+        var sourceRefsJson = JsonSerializer.Serialize(new[]
+        {
+            new { kind = "sidecar", @ref = "meta/routes/iteration-plan/latest.json" },
+            new { kind = "source_hash_ref", @ref = stableSourceHashRef },
+            new { kind = "plan_hash", @ref = stablePlanHash }
+        });
+        await _metadataStore.RecordProjectDiagnosticSpoolEntryAsync(
+            new ProjectDiagnosticSpoolCommand(
+                project.AccountId,
+                project.ProjectId,
+                "execute-next-goal",
+                domainCode,
+                "P1",
+                summary,
+                JsonSerializer.Serialize(new[] { "meta/routes/iteration-plan/latest.json" }),
+                "meta/routes/iteration-plan/latest.json",
+                ProjectNameSnapshot: project.Name,
+                SourceRefsJson: sourceRefsJson,
+                RetentionClass: "unresolved_blocker",
+                RemediationHintId: domainCode,
+                DedupeScopeKey: ProjectDiagnosticScopeKey.Compute(stableSourceHashRef, stablePlanHash)),
+            cancellationToken);
+    }
+
+    internal static bool HasDiagnosticScope(string sourceRefsJson, string sourceHashRef, string planHash)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(sourceRefsJson);
+            if (document.RootElement.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            var refs = document.RootElement.EnumerateArray()
+                .Where(static item => item.ValueKind == JsonValueKind.Object)
+                .Select(static item => new
+                {
+                    Kind = item.TryGetProperty("kind", out var kind) ? kind.GetString() ?? "" : "",
+                    Ref = item.TryGetProperty("ref", out var reference) ? reference.GetString() ?? "" : ""
+                })
+                .ToArray();
+            return refs.Any(item => item.Kind == "source_hash_ref" && item.Ref == sourceHashRef) &&
+                   refs.Any(item => item.Kind == "plan_hash" && item.Ref == planHash);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static string ReadIterationPlanHash(string stateJson)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(stateJson);
+            return document.RootElement.TryGetProperty("plan_hash", out var value) && value.ValueKind == JsonValueKind.String
+                ? value.GetString() ?? ""
+                : "";
+        }
+        catch (JsonException)
+        {
+            return "";
+        }
+    }
+
+    private static string ReadIterationPlanString(string stateJson, string propertyName)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(stateJson);
+            return document.RootElement.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+                ? value.GetString() ?? ""
+                : "";
+        }
+        catch (JsonException)
+        {
+            return "";
         }
     }
 

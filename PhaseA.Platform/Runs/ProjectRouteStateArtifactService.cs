@@ -420,7 +420,7 @@ public sealed class ProjectRouteStateArtifactService
             var updateMode = ReadString(surface, "ui_update_ownership_mode");
             if (!string.IsNullOrWhiteSpace(updateMode) && !GodotUiCapabilityContract.IsKnownUpdateOwnershipMode(updateMode))
             {
-                issues.Add(Issue($"ui-wiring:{feature}:ui_update_owner_missing", "diagnostic_blocked", "P1", "meta/routes/ui-wiring/latest.json"));
+                issues.Add(Issue($"ui-wiring:{feature}:ui_update_ownership_missing", "diagnostic_blocked", "P1", "meta/routes/ui-wiring/latest.json"));
             }
 
             ValidateProfile(surface, feature, "material_profile", GodotUiCapabilityContract.IsKnownMaterialProfile, "material_profile_missing", issues);

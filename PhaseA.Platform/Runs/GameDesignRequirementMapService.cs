@@ -11,6 +11,7 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class GameDesignRequirementMapService
 {
+    private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
     private const string GddRelativePath = "docs/gdd/GDD.md";
     private const string SceneRouteRelativePath = "meta/routes/scene-route/latest.json";
     private const string GddDocumentRelativePath = "meta/routes/gdd-document/latest.json";
@@ -604,17 +605,21 @@ public sealed class GameDesignRequirementMapService
               "capability_domain_ids": ["stable_capability_id"],
               "godot_ui_update_ownership": {
                 "construction_owner": "owner",
-                "update_mode": "signal_driven|polling|immutable",
-                "state_owner": "owner",
-                "cleanup_policy": "policy",
-                "stable_item_identity": "identity"
+                 "update_mode": "signal_driven|polling|immutable",
+                 "state_owner": "owner",
+                 "cleanup_policy": "policy",
+                 "signal_ownership": "signal owner",
+                 "stable_item_identity": "identity"
               },
               "godot_third_person_camera_profile": {
                 "rig_ref": "repo-owned rig/profile",
                 "target_owner": "owner",
-                "input_owner": "owner",
-                "collision_owner": "owner",
-                "validation_method": "method"
+                 "input_owner": "owner",
+                 "collision_owner": "owner",
+                 "validation_method": "method",
+                 "yaw_pitch_ownership": "repo-owned rig/profile",
+                 "camera_relative_movement_boundary": "movement owner",
+                 "camera_state_validation": "validation reference"
               },
               "acceptance_markers": ["observable acceptance"]
             }
@@ -651,7 +656,8 @@ public sealed class GameDesignRequirementMapService
                 ReadString(ownershipElement, "update_mode"),
                 ReadString(ownershipElement, "state_owner"),
                 ReadString(ownershipElement, "cleanup_policy"),
-                ReadString(ownershipElement, "stable_item_identity"))
+                ReadString(ownershipElement, "stable_item_identity"),
+                ReadString(ownershipElement, "signal_ownership"))
             : null;
         var camera = root.TryGetProperty("godot_third_person_camera_profile", out var cameraElement) && cameraElement.ValueKind == JsonValueKind.Object
             ? new GodotThirdPersonCameraProfile(
@@ -659,7 +665,10 @@ public sealed class GameDesignRequirementMapService
                 ReadString(cameraElement, "target_owner"),
                 ReadString(cameraElement, "input_owner"),
                 ReadString(cameraElement, "collision_owner"),
-                ReadString(cameraElement, "validation_method"))
+                ReadString(cameraElement, "validation_method"),
+                ReadString(cameraElement, "yaw_pitch_ownership"),
+                ReadString(cameraElement, "camera_relative_movement_boundary"),
+                ReadString(cameraElement, "camera_state_validation"))
             : null;
         return new GameDesignRequirementRow(
             id,
@@ -706,6 +715,19 @@ public sealed class GameDesignRequirementMapService
             return false;
         }
 
+        if (item.GodotUiUpdateOwnership is not null && item.GodotUiUpdateOwnership is not
+            {
+                ConstructionOwner.Length: > 0,
+                UpdateMode.Length: > 0,
+                StateOwner.Length: > 0,
+                CleanupPolicy.Length: > 0,
+                StableItemIdentity.Length: > 0,
+                SignalOwnership.Length: > 0
+            })
+        {
+            return false;
+        }
+
         var thirdPerson = item.NormalizedRequirement.Contains("third-person", StringComparison.OrdinalIgnoreCase) ||
                           item.NormalizedRequirement.Contains("third person", StringComparison.OrdinalIgnoreCase);
         return !thirdPerson || item.GodotThirdPersonCameraProfile is
@@ -714,7 +736,10 @@ public sealed class GameDesignRequirementMapService
             TargetOwner.Length: > 0,
             InputOwner.Length: > 0,
             CollisionOwner.Length: > 0,
-            ValidationMethod.Length: > 0
+            ValidationMethod.Length: > 0,
+            YawPitchOwnership.Length: > 0,
+            CameraRelativeMovementBoundary.Length: > 0,
+            CameraStateValidation.Length: > 0
         };
     }
 
@@ -815,6 +840,7 @@ public sealed class GameDesignRequirementMapService
                 update_mode = item.GodotUiUpdateOwnership.UpdateMode,
                 state_owner = item.GodotUiUpdateOwnership.StateOwner,
                 cleanup_policy = item.GodotUiUpdateOwnership.CleanupPolicy,
+                signal_ownership = item.GodotUiUpdateOwnership.SignalOwnership,
                 stable_item_identity = item.GodotUiUpdateOwnership.StableItemIdentity
             },
             godot_third_person_camera_profile = item.GodotThirdPersonCameraProfile is null ? null : new
@@ -823,7 +849,10 @@ public sealed class GameDesignRequirementMapService
                 target_owner = item.GodotThirdPersonCameraProfile.TargetOwner,
                 input_owner = item.GodotThirdPersonCameraProfile.InputOwner,
                 collision_owner = item.GodotThirdPersonCameraProfile.CollisionOwner,
-                validation_method = item.GodotThirdPersonCameraProfile.ValidationMethod
+                validation_method = item.GodotThirdPersonCameraProfile.ValidationMethod,
+                yaw_pitch_ownership = item.GodotThirdPersonCameraProfile.YawPitchOwnership,
+                camera_relative_movement_boundary = item.GodotThirdPersonCameraProfile.CameraRelativeMovementBoundary,
+                camera_state_validation = item.GodotThirdPersonCameraProfile.CameraStateValidation
             }
         };
     }
@@ -864,7 +893,8 @@ public sealed class GameDesignRequirementMapService
                 ReadString(value, "update_mode"),
                 ReadString(value, "state_owner"),
                 ReadString(value, "cleanup_policy"),
-                ReadString(value, "stable_item_identity"))
+                ReadString(value, "stable_item_identity"),
+                ReadString(value, "signal_ownership"))
             : null;
     }
 
@@ -876,7 +906,10 @@ public sealed class GameDesignRequirementMapService
                 ReadString(value, "target_owner"),
                 ReadString(value, "input_owner"),
                 ReadString(value, "collision_owner"),
-                ReadString(value, "validation_method"))
+                ReadString(value, "validation_method"),
+                ReadString(value, "yaw_pitch_ownership"),
+                ReadString(value, "camera_relative_movement_boundary"),
+                ReadString(value, "camera_state_validation"))
             : null;
     }
 
@@ -903,7 +936,7 @@ public sealed class GameDesignRequirementMapService
     {
         var path = Resolve(project.RepoPath, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await File.WriteAllTextAsync(path, JsonSerializer.Serialize(payload, JsonOptions()), Encoding.UTF8, cancellationToken);
+        await File.WriteAllTextAsync(path, JsonSerializer.Serialize(payload, JsonOptions()), Utf8NoBom, cancellationToken);
     }
 
     private static string Resolve(string root, string relativePath)
@@ -1029,14 +1062,18 @@ public sealed record GodotUiUpdateOwnership(
     string UpdateMode,
     string StateOwner,
     string CleanupPolicy,
-    string StableItemIdentity);
+    string StableItemIdentity,
+    string SignalOwnership = "");
 
 public sealed record GodotThirdPersonCameraProfile(
     string RigRef,
     string TargetOwner,
     string InputOwner,
     string CollisionOwner,
-    string ValidationMethod);
+    string ValidationMethod,
+    string YawPitchOwnership = "",
+    string CameraRelativeMovementBoundary = "",
+    string CameraStateValidation = "");
 
 internal sealed record RequirementGenerationResult(
     List<GameDesignRequirementRow> Requirements,

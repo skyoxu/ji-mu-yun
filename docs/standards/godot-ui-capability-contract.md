@@ -102,7 +102,7 @@ UI update ownership modes:
 - `dynamic_item_factory`
 - `no_dynamic_update`
 
-Missing or unknown profiles block affected P0/P1 surfaces with `material_profile_missing`, `rendering_profile_missing`, `animation_state_profile_missing`, or `ui_update_owner_missing`.
+Missing or unknown profiles block affected P0/P1 surfaces with `material_profile_missing`, `rendering_profile_missing`, `animation_state_profile_missing`, or `ui_update_ownership_missing`.
 
 Third-person camera surfaces must provide `camera_controller_profile` when `third_person_camera_required` is true. Missing profile blocks with `third_person_camera_profile_missing`.
 
