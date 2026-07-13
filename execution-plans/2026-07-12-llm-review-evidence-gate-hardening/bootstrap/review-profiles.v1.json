@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "bootstrap-review-profiles.v1",
+  "profiles": {
+    "bootstrap-upstream-plan": {
+      "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
+      "policyRevision": "sha256:b3a57cbc8e1b73d083bffec7a158ff8ef7ba48414ae3c2589a0815b9db9a8b52",
+      "routeVersion": "bootstrap-review-route.v1",
+      "requiredLayers": [
+        "blind_hunter",
+        "edge_case_hunter",
+        "acceptance_auditor"
+      ],
+      "readOnly": true,
+      "automaticInvocation": false
+    }
+  }
+}

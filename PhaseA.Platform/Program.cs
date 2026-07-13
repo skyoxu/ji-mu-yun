@@ -3185,7 +3185,12 @@ app.MapGet("/api/projects/{projectId}/ui-wiring-closure/latest", async (
         return Results.NotFound(new { error = "project_not_found" });
     }
 
-    var readback = routeArtifacts.Read(project);
+    var promptBindings = (await store.ListProjectRoutePromptEvidenceBindingsAsync(project.ProjectId, cancellationToken))
+        .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
+    var projectArtifactIds = (await store.ListArtifactsForProjectAsync(project.ProjectId, cancellationToken))
+        .Select(artifact => artifact.ArtifactId)
+        .ToHashSet(StringComparer.Ordinal);
+    var readback = routeArtifacts.Read(project, promptBindings, projectArtifactIds);
     var ui = readback.Artifacts.FirstOrDefault(item => item.Route == "ui-wiring");
     return ui is null
         ? Results.NotFound(new { error = "ui_wiring_closure_not_found" })

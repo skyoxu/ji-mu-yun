@@ -4,15 +4,29 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Prototypes;
+using PhaseA.Platform.Workflow;
 using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Runs;
 
 public sealed class GameDesignDocumentService
 {
+    private static readonly string[] ForbiddenSourcePatterns =
+    [
+        "docs/game-type-guides/** raw excerpts",
+        "unapproved raw game-type guide excerpt before contract freeze"
+    ];
     private const string RunType = "game-design-gdd";
     private const string SectionBatchRunType = "game-design-gdd-section-batch";
     private const string ArtifactType = "game-design-gdd";
+    internal const string PromptArtifactType = "game-design-gdd-prompt";
+    internal const string PromptSourceEvidenceArtifactType = "game-design-gdd-prompt-source-evidence";
+
+    internal static bool IsInternalOnlyArtifactType(string artifactType)
+    {
+        return artifactType.StartsWith("game-design-gdd", StringComparison.Ordinal) &&
+               artifactType.Contains("-prompt", StringComparison.Ordinal);
+    }
     private const string OutputRelativePath = "docs/gdd/GDD.md";
     private const string OutlineRelativePath = "docs/gdd/gdd-outline.json";
     private const string ReferenceRelativeDir = "docs/gdd/references";
@@ -142,10 +156,12 @@ public sealed class GameDesignDocumentService
             var relativeDir = ToSlash(Path.Combine("logs", "phase-a-gdd", project.ProjectId, runId));
             var promptRelativePath = ToSlash(Path.Combine(relativeDir, "gdd-prompt.md"));
             var codexOutputRelativePath = ToSlash(Path.Combine(relativeDir, "codex-output.txt"));
+            var promptSourceEvidenceRelativePath = ToSlash(Path.Combine(relativeDir, "gdd-prompt-source-evidence.json"));
             var outlineDraftRelativePath = ToSlash(Path.Combine(relativeDir, "gdd-outline.generated.json"));
             var gddAbsolutePath = ResolveUnderProject(projectRoot, OutputRelativePath);
             var outlineAbsolutePath = ResolveUnderProject(projectRoot, OutlineRelativePath);
             var promptAbsolutePath = ResolveUnderProject(projectRoot, promptRelativePath);
+            var promptSourceEvidenceAbsolutePath = ResolveUnderProject(projectRoot, promptSourceEvidenceRelativePath);
             var codexOutputAbsolutePath = ResolveUnderProject(projectRoot, codexOutputRelativePath);
             var outlineDraftAbsolutePath = ResolveUnderProject(projectRoot, outlineDraftRelativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(gddAbsolutePath)!);
@@ -162,7 +178,28 @@ public sealed class GameDesignDocumentService
             var designTemplate = SelectGameTypeDesignTemplate(project, message, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments, allowGameTypeKeywordFallback);
             var sceneRoute = GameDesignSceneRouteService.NormalizeSubmittedSceneRoute(request.SceneRoute);
             var prompt = BuildPrompt(project, message, sceneRoute, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments, designTemplate, now, outlineDraftRelativePath);
-            await File.WriteAllTextAsync(promptAbsolutePath, prompt, Encoding.UTF8, CancellationToken.None);
+            var persistedPrompt = SecretRedactionPolicy.RedactForPersistence(prompt);
+            var promptSourceScan = EnsurePromptSourceBoundary(prompt, designTemplate?.Entry);
+            await File.WriteAllTextAsync(promptAbsolutePath, persistedPrompt, Encoding.UTF8, CancellationToken.None);
+            await WritePromptSourceEvidenceAsync(
+                promptSourceEvidenceAbsolutePath,
+                runId,
+                promptRelativePath,
+                promptSourceScan,
+                persistedPrompt,
+                CancellationToken.None);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                project.ProjectId,
+                PromptArtifactType,
+                promptRelativePath,
+                "Game design GDD generation prompt"), CancellationToken.None);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                project.ProjectId,
+                PromptSourceEvidenceArtifactType,
+                promptSourceEvidenceRelativePath,
+                "Game design GDD prompt source evidence"), CancellationToken.None);
 
             using var timeout = new CancellationTokenSource();
             timeout.CancelAfter(_executionTimeout);
@@ -232,7 +269,6 @@ public sealed class GameDesignDocumentService
                 return Failure(project.ProjectId, generatedOutline.FailureCode, generatedOutline.FailureSummary, runId);
             }
 
-            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-prompt", promptRelativePath, "Game design GDD generation prompt"), CancellationToken.None);
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-codex-output", codexOutputRelativePath, "Game design GDD generation output"), CancellationToken.None);
             await WriteOutlineFilesAsync(outlineAbsolutePath, gddAbsolutePath, generatedOutline.Document, CancellationToken.None);
             var specRelativePaths = await GddMilestoneSpecDocumentWriter.WriteFromGddAsync(project, await File.ReadAllTextAsync(gddAbsolutePath, Encoding.UTF8, CancellationToken.None), CancellationToken.None);
@@ -259,6 +295,15 @@ public sealed class GameDesignDocumentService
                 outline_file = OutlineRelativePath,
                 spec_files = specRelativePaths,
                 prompt = promptRelativePath,
+                prompt_source_evidence = promptSourceEvidenceRelativePath,
+                prompt_manifest = new
+                {
+                    execution_prompt_hash = promptSourceScan.PromptHash,
+                    persisted_prompt_hash = HostedRouteForbiddenSourceGuard.PromptHash(persistedPrompt),
+                    prompt_artifact_ref = promptRelativePath,
+                    prompt_source_evidence_ref = promptSourceEvidenceRelativePath,
+                    redacted = true
+                },
                 codex_output = codexOutputRelativePath,
                 attachment_count = persistedAttachments.Count,
                 historical_attachment_count = historicalAttachments.Count,
@@ -271,6 +316,7 @@ public sealed class GameDesignDocumentService
                         id = designTemplate.Entry.Id,
                         name = designTemplate.Entry.Name,
                         fragment_path = designTemplate.Entry.FragmentRelativePath,
+                        guide_excerpt_hash = HostedRouteForbiddenSourceGuard.ContentHash(designTemplate.Entry.GuideExcerpt),
                         selection_source = designTemplate.SelectionSource,
                         selection_reason = designTemplate.SelectionReason
                     }
@@ -549,7 +595,9 @@ public sealed class GameDesignDocumentService
             var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, CancellationToken.None);
             var historicalAttachments = LoadHistoricalAttachments(projectRoot, []);
             var prompt = BuildSectionPrompt(project, outline, section, message, memory?.MemorySummary, historicalAttachments, DateTimeOffset.UtcNow.ToString("O"), outlineDraftRelativePath);
-            await File.WriteAllTextAsync(promptAbsolutePath, prompt, Encoding.UTF8, CancellationToken.None);
+            var persistedPrompt = SecretRedactionPolicy.RedactForPersistence(prompt);
+            EnsurePromptSourceBoundary(prompt, null);
+            await File.WriteAllTextAsync(promptAbsolutePath, persistedPrompt, Encoding.UTF8, CancellationToken.None);
 
             using var timeout = new CancellationTokenSource();
             timeout.CancelAfter(_executionTimeout);
@@ -776,7 +824,9 @@ public sealed class GameDesignDocumentService
             var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, CancellationToken.None);
             var historicalAttachments = LoadHistoricalAttachments(projectRoot, []);
             var prompt = BuildAddSectionPrompt(project, outline, expectedSection, message, memory?.MemorySummary, historicalAttachments, DateTimeOffset.UtcNow.ToString("O"), outlineDraftRelativePath);
-            await File.WriteAllTextAsync(promptAbsolutePath, prompt, Encoding.UTF8, CancellationToken.None);
+            var persistedPrompt = SecretRedactionPolicy.RedactForPersistence(prompt);
+            EnsurePromptSourceBoundary(prompt, null);
+            await File.WriteAllTextAsync(promptAbsolutePath, persistedPrompt, Encoding.UTF8, CancellationToken.None);
 
             using var timeout = new CancellationTokenSource();
             timeout.CancelAfter(_executionTimeout);
@@ -1116,7 +1166,9 @@ public sealed class GameDesignDocumentService
             File.Delete(outlineDraftAbsolutePath);
 
             var prompt = BuildSectionPrompt(project, outline, section, request.Message ?? "", memory?.MemorySummary, historicalAttachments, DateTimeOffset.UtcNow.ToString("O"), outlineDraftRelativePath);
-            await File.WriteAllTextAsync(promptAbsolutePath, prompt, Encoding.UTF8, CancellationToken.None);
+            var persistedPrompt = SecretRedactionPolicy.RedactForPersistence(prompt);
+            EnsurePromptSourceBoundary(prompt, null);
+            await File.WriteAllTextAsync(promptAbsolutePath, persistedPrompt, Encoding.UTF8, CancellationToken.None);
 
             using var timeout = new CancellationTokenSource();
             timeout.CancelAfter(_executionTimeout);
@@ -1890,6 +1942,83 @@ public sealed class GameDesignDocumentService
             GuideExcerpt:
             {{EmptyAsNone(entry.GuideExcerpt)}}
             """;
+    }
+
+    private HostedRouteForbiddenSourceScan EnsurePromptSourceBoundary(string executionPrompt, BmadGameTypeDesignEntry? approvedEntry)
+    {
+        var approvedHash = approvedEntry is null
+            ? ""
+            : HostedRouteForbiddenSourceGuard.ContentHash(approvedEntry.GuideExcerpt);
+        var approvedChunkHashes = approvedEntry is null
+            ? new HashSet<string>(StringComparer.Ordinal)
+            : HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                    approvedEntry.FragmentRelativePath,
+                    approvedEntry.GuideExcerpt)
+                .Select(item => item.ContentHash)
+                .ToHashSet(StringComparer.Ordinal);
+        var designCatalog = new BmadGameTypeDesignCatalog(_options);
+        var forbiddenFingerprints = designCatalog.SourceEntries
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.GuideExcerpt))
+            .Where(entry => !string.Equals(
+                HostedRouteForbiddenSourceGuard.ContentHash(entry.GuideExcerpt),
+                approvedHash,
+                StringComparison.Ordinal))
+            .SelectMany(entry => HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                entry.FragmentRelativePath,
+                entry.GuideExcerpt))
+            .Where(item => !approvedChunkHashes.Contains(item.ContentHash))
+            .GroupBy(item => item.ContentHash, StringComparer.Ordinal)
+            .Select(group => group.First())
+            .OrderBy(item => item.ContentHash, StringComparer.Ordinal)
+            .ToArray();
+        var scan = HostedRouteForbiddenSourceGuard.Scan(
+            executionPrompt,
+            ForbiddenSourcePatterns,
+            forbiddenFingerprints,
+            requireForbiddenContentFingerprints: true,
+            allowedSourceReferences: approvedEntry is null ? [] : [approvedEntry.FragmentRelativePath],
+            allowedContentExcerpts: approvedEntry is null ? [] : [approvedEntry.GuideExcerpt],
+            forbiddenContentFingerprintSetComplete: designCatalog.IsComplete);
+        if (!string.Equals(scan.Status, "clean", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("gdd_forbidden_source_detected");
+        }
+
+        return scan;
+    }
+
+    private static async Task WritePromptSourceEvidenceAsync(
+        string absolutePath,
+        string runId,
+        string promptRelativePath,
+        HostedRouteForbiddenSourceScan scan,
+        string persistedPrompt,
+        CancellationToken cancellationToken)
+    {
+        var payload = new
+        {
+            schema_version = "gdd-prompt-source-evidence.v1",
+            route = "gdd-document-generation",
+            run_id = runId,
+            prompt_manifest = new
+            {
+                prompt_count = 1,
+                prompt_artifact_refs = new[] { promptRelativePath },
+                execution_prompt_hash = scan.PromptHash,
+                persisted_prompt_hash = HostedRouteForbiddenSourceGuard.PromptHash(persistedPrompt),
+                retention = "internal_recovery_only",
+                browser_readable = false,
+                redacted = true
+            },
+            allowed_source_references = scan.AllowedSourceReferences,
+            forbidden_source_scan = scan,
+            created_utc = DateTimeOffset.UtcNow.ToString("O")
+        };
+        await File.WriteAllTextAsync(
+            absolutePath,
+            JsonSerializer.Serialize(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }),
+            Utf8NoBom,
+            cancellationToken);
     }
 
     private static string FormatContractSnapshot(ProjectSnapshot project)

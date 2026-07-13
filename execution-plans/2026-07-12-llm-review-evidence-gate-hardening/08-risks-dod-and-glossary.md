@@ -13,10 +13,12 @@
 | 项目间泄露 | finding memory 跨账户读取 | account/project/workspace key、隔离测试、redaction |
 | 与进行中重构冲突 | 修改共享入口或旧计划 | R0 handoff gate；未完成前禁止运行时接入 |
 | 中途切换三层审查 | 同一 7 月 7 日 review run 混用两套规则 | in-flight route 保持不变；handoff 后按 route version 切换；历史 finding 不重分类 |
+| Bootstrap 冒充正式 authority | supplemental 结果被当作 BH-HANDOFF、repair 或完成证据 | sidecar 标记 bootstrap；不接正式 pipeline；operator 手工选择是否反馈上游 |
+| Bootstrap 修改目标 | review 工具越界写 7-07/7-11 | prepare/gate/finalize target-read-only 测试；输出目录不得位于 scope 内 |
 
 ## 2. Stop Conditions
 
-- 两个上游重构无可验证完成证据；
+- 两个上游重构无可验证完成证据时阻止 R1–R6，但不阻止 R0 Bootstrap Review；
 - 需要修改 Protected Phase Paths 但尚未获得批准；
 - schema 无法表达 P0–P2 三联证明；
 - shadow 显示 blocker precision 或 seeded-defect recall 不达标；
@@ -38,6 +40,7 @@
 - shadow 指标和人工标注支持进入 blocking；
 - AGENTS/README/standards 只在对应能力真实落地时同步；
 - tests、smoke 和 evidence 位于既有 owner 路径，失败证据未被覆盖。
+- Bootstrap Review 可由用户手工运行，且没有模型调用、目标写入或正式 pipeline 副作用。
 
 ## 4. 术语
 
@@ -55,3 +58,4 @@
 - incomplete：必要 layer、validator 或 evidence 不完整，不能宣告 clean。
 - advisory：通过门禁但不自动阻断/循环的 P2。
 - plan-ready：计划可实施，不代表代码或产品能力完成。
+- bootstrap review：handoff 前可用的 plan-local、只读、用户手工 reviewer 编排与事实门禁；输出是 supplemental evidence，不是生产 gateway 或上游完成 authority。

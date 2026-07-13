@@ -126,6 +126,7 @@ def audit_metadata_db(metadata_db: Path, failures: list[str]) -> dict[str, Any]:
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         required = {
             "project_admin_review_queue",
+            "project_route_prompt_evidence_bindings",
             "project_diagnostic_spool",
             "project_delete_tombstones",
             "game_type_maintenance_records",

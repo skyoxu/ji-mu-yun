@@ -47,6 +47,10 @@ public sealed class GddToModuleBackendContractServiceTests
         readback.Should().BeEquivalentTo(result, options => options.Excluding(item => item.OperationStatus));
         var sidecar = fixture.ReadJson("meta/routes/scene-route/latest.json");
         sidecar.RootElement.GetProperty("schema_version").GetString().Should().Be("scene-route.v1");
+        sidecar.RootElement.GetProperty("status_dimension").GetString().Should().Be(RouteStatusVocabulary.SceneRouteConfirmation);
+        sidecar.RootElement.GetProperty("status_allowed_values").EnumerateArray()
+            .Select(item => item.GetString())
+            .Should().Contain("confirmed");
         sidecar.RootElement.GetProperty("confirmed_scene_route_hash").GetString().Should().Be(result.ConfirmedSceneRouteHash);
         sidecar.RootElement.GetProperty("scenes")[0].GetProperty("scene_id").GetString().Should().Be("route_map");
         sidecar.RootElement.GetProperty("source_boundary").GetProperty("authority_sources").GetArrayLength().Should().BeGreaterThan(0);
@@ -59,19 +63,26 @@ public sealed class GddToModuleBackendContractServiceTests
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
+        var runId = await fixture.CreateGddPromptRunAsync("ready");
 
-        var result = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, "run-gdd-1");
+        var result = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, runId);
 
         result.Should().NotBeNull();
         result!.Status.Should().Be("ready");
         result.GeneratedGddHash.Should().NotBeNullOrWhiteSpace();
         result.SceneRouteRecordedGeneratedGddHash.Should().Be(result.GeneratedGddHash);
         var documentState = fixture.ReadJson("meta/routes/gdd-document/latest.json");
+        documentState.RootElement.GetProperty("status_dimension").GetString().Should().Be(RouteStatusVocabulary.RouteReadback);
+        documentState.RootElement.GetProperty("status_allowed_values").EnumerateArray()
+            .Select(item => item.GetString())
+            .Should().Contain("ready");
         documentState.RootElement.GetProperty("generated_gdd_hash").GetString().Should().Be(result.GeneratedGddHash);
         var sceneState = fixture.ReadJson("meta/routes/scene-route/latest.json");
         sceneState.RootElement.GetProperty("source_generated_gdd_hash").GetString().Should().Be(result.GeneratedGddHash);
         File.Exists(fixture.PathForTest("meta/routes/gdd-document/prompt-evidence.json")).Should().BeTrue();
-        var routeReadback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync());
+        var routeBindings = (await fixture.Store.ListProjectRoutePromptEvidenceBindingsAsync(fixture.ProjectId))
+            .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
+        var routeReadback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync(), routeBindings);
         routeReadback.BlockingIssues.Should().NotContain(issue =>
             issue.IssueId.StartsWith("meta/routes/gdd-document/latest.json:prompt_evidence", StringComparison.Ordinal));
     }
@@ -84,7 +95,8 @@ public sealed class GddToModuleBackendContractServiceTests
         var sceneRoute = fixture.DefaultSceneRoute();
         var first = await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, sceneRoute);
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
-        var gdd = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, "run-gdd-retry");
+        var promptRunId = await fixture.CreateGddPromptRunAsync("retry");
+        var gdd = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, promptRunId);
 
         var retry = await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, sceneRoute);
 
@@ -111,13 +123,115 @@ public sealed class GddToModuleBackendContractServiceTests
     }
 
     [Fact]
+    public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWithoutRunPromptArtifact()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var service = new GddToModulePhase1StateService(fixture.Store);
+        await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
+        fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
+        var project = await fixture.GetProjectAsync();
+        var runId = await fixture.Store.CreateRunAsync(fixture.ProjectId, project.WorkspaceId, "game-design-gdd");
+        await fixture.Store.CompleteRunAsync(runId, "succeeded", 0, "", "", JsonSerializer.Serialize(new
+        {
+            prompt_manifest = new
+            {
+                execution_prompt_hash = new string('a', 64),
+                persisted_prompt_hash = new string('b', 64),
+                prompt_artifact_ref = "logs/phase-a-gdd/missing/prompt.md",
+                prompt_source_evidence_ref = "logs/phase-a-gdd/missing/evidence.json",
+                redacted = true
+            }
+        }));
+
+        var result = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, runId);
+
+        result!.Status.Should().Be("blocked");
+        result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "gdd_prompt_evidence_missing");
+        File.Exists(fixture.PathForTest("meta/routes/gdd-document/latest.json")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenPersistedPromptWasTampered()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var service = new GddToModulePhase1StateService(fixture.Store);
+        await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
+        fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
+        var runId = await fixture.CreateGddPromptRunAsync("tampered");
+        var promptArtifact = (await fixture.Store.ListArtifactsForRunAsync(runId))
+            .Single(artifact => artifact.ArtifactType == GameDesignDocumentService.PromptArtifactType);
+        fixture.WriteText(promptArtifact.RelativePath, "Tampered after source scan.");
+
+        var result = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, runId);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("blocked");
+        result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "gdd_forbidden_source_detected");
+    }
+
+    [Fact]
+    public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenPromptEvidenceAndFilesDivergeFromDatabaseBinding()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var service = new GddToModulePhase1StateService(fixture.Store);
+        await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
+        fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
+        var runId = await fixture.CreateGddPromptRunAsync("coordinated-tamper");
+        var artifacts = await fixture.Store.ListArtifactsForRunAsync(runId);
+        var promptArtifact = artifacts.Single(artifact => artifact.ArtifactType == GameDesignDocumentService.PromptArtifactType);
+        var evidenceArtifact = artifacts.Single(artifact => artifact.ArtifactType == GameDesignDocumentService.PromptSourceEvidenceArtifactType);
+        const string tamperedPrompt = "Coordinated tampered prompt and evidence.";
+        var tamperedHash = HostedRouteForbiddenSourceGuard.PromptHash(tamperedPrompt);
+        fixture.WriteText(promptArtifact.RelativePath, tamperedPrompt);
+        var evidenceNode = JsonNode.Parse(File.ReadAllText(fixture.PathForTest(evidenceArtifact.RelativePath), Encoding.UTF8))!.AsObject();
+        evidenceNode["prompt_manifest"]!["execution_prompt_hash"] = tamperedHash;
+        evidenceNode["prompt_manifest"]!["persisted_prompt_hash"] = tamperedHash;
+        evidenceNode["forbidden_source_scan"]!["prompt_hash"] = tamperedHash;
+        fixture.WriteJson(evidenceArtifact.RelativePath, evidenceNode.ToJsonString());
+
+        var result = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, runId);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("blocked");
+        result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "gdd_prompt_evidence_invalid");
+    }
+
+    [Fact]
+    public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedForAnotherProjectsRun()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var service = new GddToModulePhase1StateService(fixture.Store);
+        await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
+        fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
+        var creation = new ProjectCreationService(
+            fixture.Store,
+            fixture.Options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(fixture.Options),
+            gameTypeMatchService: new FixedGameTypeMatchService());
+        var other = await creation.CreateProjectAsync(
+            fixture.AccountId,
+            new ProjectCreationRequest(null, "Other RPG", "RPG", null, null, null, null));
+        var otherProject = await fixture.Store.GetProjectSnapshotAsync(other.ProjectId!);
+        var otherRunId = await fixture.Store.CreateRunAsync(other.ProjectId!, otherProject!.WorkspaceId, "game-design-gdd");
+        await fixture.Store.CompleteRunAsync(otherRunId, "succeeded", 0, "", "", "{}", CancellationToken.None);
+
+        var result = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, otherRunId);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("blocked");
+        result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "gdd_prompt_run_invalid");
+    }
+
+    [Fact]
     public async Task Phase1State_GetGddDocumentStateAsync_RejectsIncompleteOrMismatchedWriteThrough()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
-        var recorded = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, "run-gdd-partial");
+        var promptRunId = await fixture.CreateGddPromptRunAsync("partial");
+        var recorded = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, promptRunId);
         recorded!.Status.Should().Be("ready");
 
         var documentNode = JsonNode.Parse(File.ReadAllText(fixture.PathForTest("meta/routes/gdd-document/latest.json"), Encoding.UTF8))!.AsObject();
@@ -173,7 +287,9 @@ public sealed class GddToModuleBackendContractServiceTests
         sidecar.RootElement.GetProperty("source_boundary_enforced").GetBoolean().Should().BeTrue();
         sidecar.RootElement.GetProperty("source_boundary").GetProperty("recovery_source_order").GetArrayLength().Should().Be(7);
         File.Exists(fixture.PathForTest("meta/routes/gdd-requirements/prompt-evidence.json")).Should().BeTrue();
-        var routeReadback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync());
+        var routeBindings = (await fixture.Store.ListProjectRoutePromptEvidenceBindingsAsync(fixture.ProjectId))
+            .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
+        var routeReadback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync(), routeBindings);
         routeReadback.BlockingIssues.Should().NotContain(issue =>
             issue.IssueId.StartsWith("meta/routes/gdd-requirements/latest.json:prompt_evidence", StringComparison.Ordinal));
         sidecar.RootElement.GetProperty("requirements")[0].GetProperty("requirement_id").GetString().Should().Be("REQ-001");
@@ -204,8 +320,18 @@ public sealed class GddToModuleBackendContractServiceTests
             0);
         rows.Should().Contain(row =>
             row.Id == obsolete.Id && row.Status == "superseded" && !string.IsNullOrWhiteSpace(row.SupersededByEntryId));
-        rows.Should().Contain(row =>
-            row.RequirementId == "REQ-OBSOLETE" && row.Status == "resolved" && row.SupersedesEntryId == obsolete.Id);
+        var resolved = rows.Should().ContainSingle(row =>
+            row.RequirementId == "REQ-OBSOLETE" && row.Status == "resolved" && row.SupersedesEntryId == obsolete.Id).Subject;
+        resolved.DecisionStatus.Should().Be("resolved");
+        resolved.DecisionActorAccountId.Should().Be("system");
+        resolved.DecisionVersion.Should().Be(1);
+        resolved.DecidedUtc.Should().NotBeNullOrWhiteSpace();
+        await using var connection = new SqliteConnection(fixture.ConnectionString);
+        await connection.OpenAsync();
+        await using var history = connection.CreateCommand();
+        history.CommandText = "SELECT COUNT(*) FROM project_admin_review_decisions WHERE entry_id = $entry_id AND decision_actor_account_id = 'system';";
+        history.Parameters.AddWithValue("$entry_id", resolved.Id);
+        Convert.ToInt64(await history.ExecuteScalarAsync()).Should().Be(1);
     }
 
     [Fact]
@@ -273,6 +399,42 @@ public sealed class GddToModuleBackendContractServiceTests
         var sidecar = fixture.ReadJson("meta/routes/gdd-requirements/latest.json");
         sidecar.RootElement.GetProperty("requirements")[1].GetProperty("godot_ui_update_ownership").GetProperty("state_owner").GetString().Should().Be("combat_state");
         sidecar.RootElement.GetProperty("source_boundary").GetProperty("prompt_evidence_refs").GetArrayLength().Should().Be(1);
+        using var promptEvidence = fixture.ReadJson("meta/routes/gdd-requirements/prompt-evidence.json");
+        var promptManifest = promptEvidence.RootElement.GetProperty("prompt_manifest");
+        promptManifest.GetProperty("execution_prompt_hash").GetString().Should().Be(
+            HostedRouteForbiddenSourceGuard.PromptHash(engine.Requests[0].Prompt));
+        var persistedPrompt = File.ReadAllText(fixture.PathForTest("meta/routes/gdd-requirements/prompt.txt"), Encoding.UTF8);
+        promptManifest.GetProperty("persisted_prompt_hash").GetString().Should().Be(
+            HostedRouteForbiddenSourceGuard.PromptHash(persistedPrompt));
+        promptEvidence.RootElement.GetProperty("forbidden_source_scan").GetProperty("prompt_hash").GetString().Should().Be(
+            promptManifest.GetProperty("execution_prompt_hash").GetString());
+    }
+
+    [Fact]
+    public async Task RequirementMap_ReadbackRejectsCoordinatedPromptEvidenceTamperAgainstDatabaseBinding()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        fixture.SeedConfirmedSceneRouteAndGdd();
+        await new GameDesignRequirementMapService(fixture.Store)
+            .CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest());
+        const string tamperedPrompt = "Coordinated replacement prompt.";
+        var tamperedHash = HostedRouteForbiddenSourceGuard.PromptHash(tamperedPrompt);
+        fixture.WriteText("meta/routes/gdd-requirements/prompt.txt", tamperedPrompt);
+        var evidenceNode = JsonNode.Parse(File.ReadAllText(
+            fixture.PathForTest("meta/routes/gdd-requirements/prompt-evidence.json"),
+            Encoding.UTF8))!.AsObject();
+        evidenceNode["prompt_manifest"]!["execution_prompt_hash"] = tamperedHash;
+        evidenceNode["prompt_manifest"]!["persisted_prompt_hash"] = tamperedHash;
+        evidenceNode["forbidden_source_scan"]!["prompt_hash"] = tamperedHash;
+        fixture.WriteJson("meta/routes/gdd-requirements/prompt-evidence.json", evidenceNode.ToJsonString());
+        var bindings = (await fixture.Store.ListProjectRoutePromptEvidenceBindingsAsync(fixture.ProjectId))
+            .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
+
+        var readback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync(), bindings);
+
+        readback.BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_invalid" &&
+            issue.Severity == "P0");
     }
 
     [Theory]
@@ -460,10 +622,15 @@ public sealed class GddToModuleBackendContractServiceTests
 
         var firstMap = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest());
         var firstEntry = (await fixture.Store.ListProjectAdminReviewQueueForProjectAsync(fixture.AccountId, fixture.ProjectId, "open")).Single();
+        fixture.WriteJson("meta/reviews/first-hash-set.json", "{}");
         (await fixture.Store.DecideProjectAdminReviewQueueEntryAsync(
             firstEntry.Id,
             fixture.AccountId,
-            new ProjectAdminReviewDecisionRequest("approved", "approved first hash set", 0))).Status.Should().Be("updated");
+            new ProjectAdminReviewDecisionRequest(
+                "approved",
+                "approved first hash set",
+                0,
+                ["meta/reviews/first-hash-set.json"]))).Status.Should().Be("updated");
 
         fixture.SeedConfirmedSceneRouteAndGdd(secondGdd);
         var secondMap = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest(Refresh: true));
@@ -528,8 +695,91 @@ public sealed class GddToModuleBackendContractServiceTests
         var canonical = fixture.ReadJson("routes/prototype-contract/latest.json");
         var mirror = fixture.ReadJson("meta/routes/prototype-contract/latest.json");
         canonical.RootElement.GetProperty("schema_version").GetString().Should().Be("prototype-contract.v2");
+        canonical.RootElement.GetProperty("status_dimension").GetString().Should().Be(RouteStatusVocabulary.RouteReadback);
+        canonical.RootElement.GetProperty("status").GetString().Should().Be("ready");
+        canonical.RootElement.GetProperty("status_allowed_values").EnumerateArray()
+            .Select(item => item.GetString())
+            .Should().Contain("ready");
         canonical.RootElement.GetProperty("source_gdd_hash").GetString().Should().Be(fixture.GddHash);
         mirror.RootElement.GetProperty("contract_hash").GetString().Should().Be(result.ContractHash);
+    }
+
+    [Fact]
+    public async Task PrototypeContract_WriteFromRequest_PreservesFrozenV2AuthorityAndRepairsMirror()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        var frozen = await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        var project = await fixture.GetProjectAsync();
+        var canonicalPath = fixture.PathForTest("routes/prototype-contract/latest.json");
+        var mirrorPath = fixture.PathForTest("meta/routes/prototype-contract/latest.json");
+        var canonicalBefore = File.ReadAllText(canonicalPath, Encoding.UTF8);
+        File.WriteAllText(mirrorPath, "{\"schema_version\":1}", Encoding.UTF8);
+
+        var result = new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                "deckbuilder",
+                "Changed Name",
+                "deckbuilder",
+                "manual",
+                "Changed hypothesis",
+                "Changed fantasy",
+                "Changed loop",
+                ["Changed success"],
+                "Changed feature",
+                "Changed gameplay loop",
+                "Changed win condition"),
+            "docs/prototypes/changed.md",
+            "deckbuilder");
+
+        File.ReadAllText(canonicalPath, Encoding.UTF8).Should().Be(canonicalBefore);
+        File.ReadAllText(mirrorPath, Encoding.UTF8).Should().Be(canonicalBefore);
+        result.Json.Should().Be(canonicalBefore);
+        using var document = JsonDocument.Parse(result.Json);
+        document.RootElement.GetProperty("contract_hash").GetString().Should().Be(frozen.ContractHash);
+    }
+
+    [Fact]
+    public async Task ContractFreeze_FreezeAsync_BlocksSceneSemanticTamperWithUnchangedDeclaredHash()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        var scenePath = fixture.PathForTest("meta/routes/scene-route/latest.json");
+        var scene = JsonNode.Parse(File.ReadAllText(scenePath, Encoding.UTF8))!.AsObject();
+        scene["entry_scene"] = "tampered_scene";
+        File.WriteAllText(scenePath, scene.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
+
+        var result = await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest(Refresh: true));
+
+        result.Status.Should().Be("blocked");
+        result.BlockingIssues.Should().Contain(issue =>
+            issue.DomainCode == "source_stale" && issue.Severity == "P0");
+    }
+
+    [Fact]
+    public async Task PrototypeContract_ReadAndWriteFromRequest_FailClosedForTamperedFrozenContract()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+        var project = await fixture.GetProjectAsync();
+        var canonicalPath = fixture.PathForTest("routes/prototype-contract/latest.json");
+        var canonical = JsonNode.Parse(File.ReadAllText(canonicalPath, Encoding.UTF8))!.AsObject();
+        canonical["source_gdd_hash"] = "tampered-with-old-contract-hash";
+        File.WriteAllText(canonicalPath, canonical.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
+        var service = new PrototypeContractService();
+
+        service.Read(project).Json.Should().BeEmpty();
+        var action = () => service.WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(null, null, null, null, null, null, null, null, null, null, null),
+            "docs/prototypes/tampered.md",
+            "tampered");
+        action.Should().Throw<InvalidOperationException>().WithMessage("prototype_contract_frozen_invalid");
     }
 
     [Fact]
@@ -617,6 +867,7 @@ public sealed class GddToModuleBackendContractServiceTests
     [Theory]
     [InlineData("stale_scene", "scene_route_stale")]
     [InlineData("game_type_hash_mismatch", "game_type_structured_stale")]
+    [InlineData("game_type_hash_missing", "game_type_structured_stale")]
     [InlineData("gdd_hash_mismatch", "generated_gdd_hash_mismatch")]
     [InlineData("requirement_map_scene_hash_mismatch", "requirement_map_invalid")]
     public async Task ContractFreeze_FreezeAsync_BlocksStaleOrMismatchedSources(string scenario, string domainCode)
@@ -700,16 +951,22 @@ public sealed class GddToModuleBackendContractServiceTests
             "Review policy probe.",
             "meta/routes/gdd-requirements/latest.json",
             "[]"));
+        fixture.WriteJson("meta/reviews/policy-decision.json", "{}");
         var request = decisionStatus == "deferred"
             ? new ProjectAdminReviewDecisionRequest(
                 decisionStatus,
                 "deferred with a bounded recheck",
                 0,
                 DeferredOwner: "phase-platform",
-                DeferredUntilUtc: "2099-01-01T00:00:00Z",
-                RecheckTrigger: "requirement map refreshed",
-                AffectedRoutes: ["gdd-requirements", "prototype-contract"])
-            : new ProjectAdminReviewDecisionRequest(decisionStatus, "policy decision", 0);
+                 DeferredUntilUtc: "2099-01-01T00:00:00Z",
+                 RecheckTrigger: "requirement map refreshed",
+                 AffectedRoutes: ["gdd-requirements", "prototype-contract"],
+                 DecisionEvidenceRefs: ["meta/reviews/policy-decision.json"])
+            : new ProjectAdminReviewDecisionRequest(
+                decisionStatus,
+                "policy decision",
+                0,
+                ["meta/reviews/policy-decision.json"]);
         (await fixture.Store.DecideProjectAdminReviewQueueEntryAsync(entry.Id, fixture.AccountId, request))
             .Status.Should().Be("updated");
 
@@ -735,18 +992,20 @@ public sealed class GddToModuleBackendContractServiceTests
         await fixture.SeedRequirementMapAsync();
         var oldEntry = await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             fixture.AccountId, fixture.ProjectId, "gdd-requirements", "REQ-HISTORY", "P1", "Historical blocker.",
-            "meta/routes/gdd-requirements/latest.json", "[\"old\"]"));
+            "meta/routes/gdd-requirements/latest.json", """[{"kind":"sidecar","path":"meta/reviews/old.json"}]"""));
+        fixture.WriteJson("meta/reviews/old.json", "{}");
         await fixture.Store.DecideProjectAdminReviewQueueEntryAsync(
             oldEntry.Id,
             fixture.AccountId,
-            new ProjectAdminReviewDecisionRequest("rejected", "old evidence rejected", 0));
+            new ProjectAdminReviewDecisionRequest("rejected", "old evidence rejected", 0, ["meta/reviews/old.json"]));
         var currentEntry = await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             fixture.AccountId, fixture.ProjectId, "gdd-requirements", "REQ-HISTORY", "P1", "Historical blocker.",
-            "meta/routes/gdd-requirements/latest.json", "[\"new\"]"));
+            "meta/routes/gdd-requirements/latest.json", """[{"kind":"sidecar","path":"meta/reviews/new.json"}]"""));
+        fixture.WriteJson("meta/reviews/new.json", "{}");
         await fixture.Store.DecideProjectAdminReviewQueueEntryAsync(
             currentEntry.Id,
             fixture.AccountId,
-            new ProjectAdminReviewDecisionRequest("approved", "new evidence accepted", 0));
+            new ProjectAdminReviewDecisionRequest("approved", "new evidence accepted", 0, ["meta/reviews/new.json"]));
 
         var result = await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1058,7 +1317,7 @@ public sealed class GddToModuleBackendContractServiceTests
             "P1",
             "Private admin review reason.",
             @"C:\host\private\admin-review.json",
-            "[\"raw-admin-evidence\"]"));
+            """[{"kind":"sidecar","path":"meta/reviews/raw-admin-evidence.json"}]"""));
         var adminRows = await fixture.Store.ListProjectAdminReviewQueueForProjectAsync(
             fixture.AccountId,
             fixture.ProjectId,
@@ -1212,6 +1471,7 @@ public sealed class GddToModuleBackendContractServiceTests
     [InlineData("missing_authority_source")]
     [InlineData("reordered_authority_sources")]
     [InlineData("nested_hash_mismatch")]
+    [InlineData("mixed_evidence_refs")]
     public async Task IterationPlan_CreateAsync_BlocksIncompleteSkeletonSourceBoundaryBeforeLlm(string scenario)
     {
         using var fixture = await BackendContractFixture.CreateAsync();
@@ -1995,6 +2255,16 @@ public sealed class GddToModuleBackendContractServiceTests
                 ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot.Path, "metadata.sqlite3"),
                 ["PHASEA_REPOSITORY_ROOT"] = repoRoot.Path
             });
+            var guideRoot = Path.Combine(repoRoot.Path, "docs", "game-type-guides");
+            Directory.CreateDirectory(guideRoot);
+            File.WriteAllText(
+                Path.Combine(guideRoot, "game-types.csv"),
+                "id,name,description,genre_tags,fragment_file\nrpg,RPG,Role-playing game,rpg,rpg.md\n",
+                Encoding.UTF8);
+            File.WriteAllText(
+                Path.Combine(guideRoot, "rpg.md"),
+                "# RPG Guide\n\nThis stable guide paragraph defines an RPG field-map, encounter, reward, and return loop for source-boundary fingerprint tests.\n",
+                Encoding.UTF8);
             await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
             var accountId = await store.EnsureSingleAdminAsync();
@@ -2006,12 +2276,90 @@ public sealed class GddToModuleBackendContractServiceTests
                 gameTypeMatchService: new FixedGameTypeMatchService());
             var result = await creation.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo RPG", "RPG", null, null, null, null));
             await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
+            var project = await store.GetProjectSnapshotAsync(result.ProjectId!);
+            var hostedGuideRoot = Path.Combine(project!.RepoPath, "docs", "game-type-guides");
+            Directory.CreateDirectory(hostedGuideRoot);
+            File.Copy(Path.Combine(guideRoot, "game-types.csv"), Path.Combine(hostedGuideRoot, "game-types.csv"), overwrite: true);
+            File.Copy(Path.Combine(guideRoot, "rpg.md"), Path.Combine(hostedGuideRoot, "rpg.md"), overwrite: true);
             return new BackendContractFixture(database, workspaceRoot, repoRoot, store, options, accountId, result.ProjectId!);
         }
 
         public async Task<ProjectSnapshot> GetProjectAsync()
         {
             return (await Store.GetProjectSnapshotAsync(ProjectId))!;
+        }
+
+        public async Task<string> CreateGddPromptRunAsync(string suffix)
+        {
+            var project = await GetProjectAsync();
+            var runId = await Store.CreateRunAsync(ProjectId, project.WorkspaceId, "game-design-gdd");
+            var promptRelativePath = $"logs/phase-a-gdd/test/{suffix}-gdd-prompt.md";
+            var prompt = "Generate the GDD from the confirmed scene route.";
+            WriteText(promptRelativePath, prompt);
+            await Store.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                ProjectId,
+                "game-design-gdd-prompt",
+                promptRelativePath,
+                "GDD prompt"));
+            var fingerprints = new BmadGameTypeDesignCatalog(Options).Entries
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.GuideExcerpt))
+                .SelectMany(entry => HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                    entry.FragmentRelativePath,
+                    entry.GuideExcerpt))
+                .GroupBy(item => item.ContentHash, StringComparer.Ordinal)
+                .Select(group => group.First())
+                .OrderBy(item => item.ContentHash, StringComparer.Ordinal)
+                .ToArray();
+            var scan = HostedRouteForbiddenSourceGuard.Scan(
+                prompt,
+                ["docs/game-type-guides/** raw excerpts", "unapproved raw game-type guide excerpt before contract freeze"],
+                fingerprints,
+                requireForbiddenContentFingerprints: true);
+            var promptEvidenceRelativePath = $"logs/phase-a-gdd/test/{suffix}-gdd-prompt-source-evidence.json";
+            WriteJson(promptEvidenceRelativePath, JsonSerializer.Serialize(new
+            {
+                schema_version = "gdd-prompt-source-evidence.v1",
+                route = "gdd-document-generation",
+                run_id = runId,
+                prompt_manifest = new
+                {
+                    prompt_count = 1,
+                    prompt_artifact_refs = new[] { promptRelativePath },
+                    execution_prompt_hash = scan.PromptHash,
+                    persisted_prompt_hash = HostedRouteForbiddenSourceGuard.PromptHash(prompt),
+                    retention = "internal_recovery_only",
+                    browser_readable = false,
+                    redacted = true
+                },
+                allowed_source_references = Array.Empty<string>(),
+                forbidden_source_scan = scan
+            }));
+            await Store.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                ProjectId,
+                GameDesignDocumentService.PromptSourceEvidenceArtifactType,
+                promptEvidenceRelativePath,
+                "GDD prompt source evidence"));
+            await Store.CompleteRunAsync(
+                runId,
+                "succeeded",
+                0,
+                "",
+                "",
+                JsonSerializer.Serialize(new
+                {
+                    run_type = "game-design-gdd",
+                    prompt_manifest = new
+                    {
+                        execution_prompt_hash = scan.PromptHash,
+                        persisted_prompt_hash = HostedRouteForbiddenSourceGuard.PromptHash(prompt),
+                        prompt_artifact_ref = promptRelativePath,
+                        prompt_source_evidence_ref = promptEvidenceRelativePath,
+                        redacted = true
+                    }
+                }));
+            return runId;
         }
 
         public void SeedConfirmedSceneRouteAndGdd(string? gddText = null)
@@ -2024,8 +2372,7 @@ public sealed class GddToModuleBackendContractServiceTests
             """;
             WriteText("docs/gdd/GDD.md", text);
             GddHash = Sha256(NormalizeText(text));
-            SceneRouteHash = "scene-route-hash-v1";
-            WriteSceneRoute("confirmed", SceneRouteHash, GddHash, StructuredHash());
+            WriteSceneRoute("confirmed", "", GddHash, StructuredHash());
             WriteJson("meta/routes/gdd-document/latest.json", $$"""
             {
               "schema_version": "gdd-document-generation.v1",
@@ -2084,10 +2431,14 @@ public sealed class GddToModuleBackendContractServiceTests
         {
             contract ??= new PrototypeContractFreezeService(Store).EvaluateNewChainGuard(await GetProjectAsync()).ContractStatus;
             var project = await GetProjectAsync();
-            new PrototypeRouteStateWriter().WritePrototypeSkeletonState(project, new
+            WriteJson("meta/routes/prototype-skeleton/acceptance-evidence.json", "{}");
+            var routeStateWriter = new PrototypeRouteStateWriter();
+            routeStateWriter.WritePrototypeSkeletonState(project, new
             {
                 schema_version = "prototype-skeleton-readback.v1",
                 route = "prototype-skeleton",
+                status_dimension = RouteStatusVocabulary.RouteReadback,
+                status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
                 status = "succeeded",
                 source_boundary_enforced = true,
                 recovery_source_order_ref = "hosted-route-recovery-order.v1",
@@ -2131,7 +2482,7 @@ public sealed class GddToModuleBackendContractServiceTests
                 ui_style_snapshot_hash = contract.UiStyleSnapshotHash,
                 verified_scene_ids = new[] { "field_map" },
                 verified_requirement_ids = verifiedRequirementIds ?? ["REQ-001", "REQ-002"],
-                evidence_refs = new[] { "meta/routes/prototype/latest.json" },
+                evidence_refs = new[] { new { kind = "sidecar", path = "meta/routes/prototype-skeleton/acceptance-evidence.json" } },
                 updated_utc = DateTimeOffset.UtcNow.ToString("O")
             });
         }
@@ -2164,6 +2515,13 @@ public sealed class GddToModuleBackendContractServiceTests
                     break;
                 case "nested_hash_mismatch":
                     boundary["source_hashes"]!["source_contract_hash"] = "stale-contract-hash";
+                    break;
+                case "mixed_evidence_refs":
+                    root["evidence_refs"] = new JsonArray
+                    {
+                        new JsonObject { ["kind"] = "sidecar", ["path"] = "meta/routes/prototype/latest.json" },
+                        new JsonObject { ["kind"] = "sidecar", ["path"] = "../outside.json" }
+                    };
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(scenario), scenario, "Unknown skeleton boundary scenario.");
@@ -2207,6 +2565,9 @@ public sealed class GddToModuleBackendContractServiceTests
                 case "game_type_hash_mismatch":
                     WriteSceneRoute("confirmed", SceneRouteHash, GddHash, "old-game-type-hash");
                     break;
+                case "game_type_hash_missing":
+                    WriteSceneRoute("confirmed", SceneRouteHash, GddHash, "");
+                    break;
                 case "gdd_hash_mismatch":
                     WriteSceneRoute("confirmed", SceneRouteHash, "old-gdd-hash", StructuredHash());
                     break;
@@ -2228,23 +2589,31 @@ public sealed class GddToModuleBackendContractServiceTests
 
         private void WriteSceneRoute(string status, string sceneHash, string gddHash, string structuredHash)
         {
-            WriteJson("meta/routes/scene-route/latest.json", $$"""
+            var project = GetProjectAsync().GetAwaiter().GetResult();
+            var node = JsonSerializer.SerializeToNode(new
             {
-              "schema_version": "scene-route.v1",
-              "route": "scene-route-confirmation",
-              "status": "{{status}}",
-              "source_game_type_structured_hash": "{{structuredHash}}",
-              "source_gdd_form_hash": "gdd-form-hash-v1",
-              "source_generated_gdd_hash": "{{gddHash}}",
-              "source_contract_snapshot_hash": "contract-snapshot-hash-v1",
-              "confirmed_scene_route_hash": "{{sceneHash}}",
-              "scenes": [
+                schema_version = "scene-route.v1",
+                route = "scene-route-confirmation",
+                status,
+                source_game_type_structured_hash = structuredHash,
+                source_gdd_form_hash = "gdd-form-hash-v1",
+                source_generated_gdd_hash = gddHash,
+                source_contract_snapshot_hash = GddToModuleAuthorityHashes.ComputeContractSnapshotHash(project.GameTypeMatchJson),
+                confirmed_scene_route_hash = sceneHash,
+                scene_count_intent = "single",
+                entry_scene = "field_map",
+                scenes = new[]
                 {
-                  "scene_id": "field_map"
-                }
-              ]
-            }
-            """);
+                    new { scene_id = "field_map", scene_name = "Field Map", role = "hub", m1_required = true, player_goal = "Move and encounter." }
+                },
+                transitions = Array.Empty<object>(),
+                single_scene_confirmation = new { allowed = true, reason = "fixture" },
+                notes = Array.Empty<string>()
+            })!.AsObject();
+            using var document = JsonDocument.Parse(node.ToJsonString());
+            SceneRouteHash = GddToModuleAuthorityHashes.ComputeSceneRouteHash(document.RootElement);
+            node["confirmed_scene_route_hash"] = SceneRouteHash;
+            WriteJson("meta/routes/scene-route/latest.json", node.ToJsonString());
         }
 
         private void PatchRequirementMapSourceSceneHash(string value)
@@ -2260,10 +2629,11 @@ public sealed class GddToModuleBackendContractServiceTests
 
         private string StructuredHash()
         {
-            return Sha256(NormalizeText(GetProjectAsync().GetAwaiter().GetResult().GameTypeMatchJson));
+            return GddToModuleAuthorityHashes.ComputeStructuredGameTypeHash(
+                GetProjectAsync().GetAwaiter().GetResult().GameTypeMatchJson);
         }
 
-        private void WriteText(string relativePath, string text)
+        public void WriteText(string relativePath, string text)
         {
             var path = PathFor(relativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);

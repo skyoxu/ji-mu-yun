@@ -526,6 +526,8 @@ public sealed class GameTypeTemplateCatalogTests
         rpg!.Description.Should().Be("Docs description");
         rpg.FragmentRelativePath.Should().Be("docs/game-type-guides/rpg.md");
         rpg.GuideExcerpt.Should().Be("Docs RPG guide.");
+        catalog.SourceEntries.Should().HaveCount(2);
+        catalog.SourceEntries.Select(item => item.GuideExcerpt).Should().Contain(["Docs RPG guide.", "Skill fallback RPG guide."]);
     }
 
     [Fact]
@@ -665,11 +667,13 @@ public sealed class GameTypeTemplateCatalogTests
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
 
-        var rpg = new BmadGameTypeDesignCatalog(options).Find("rpg");
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
 
         rpg.Should().NotBeNull();
         rpg!.Description.Should().Be("Canonical description");
         rpg.GuideExcerpt.Should().Be("Canonical RPG guide.");
+        catalog.IsComplete.Should().BeFalse();
     }
 
     [Fact]

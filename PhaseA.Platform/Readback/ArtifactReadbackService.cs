@@ -485,7 +485,7 @@ public sealed class ArtifactReadbackService
 
     private static bool IsBrowserReadableArtifact(ArtifactSnapshot artifact)
     {
-        return !string.Equals(artifact.ArtifactType, "game-design-gdd-prompt", StringComparison.Ordinal);
+        return !GameDesignDocumentService.IsInternalOnlyArtifactType(artifact.ArtifactType);
     }
 
     public ArtifactReadResult? ReadProjectHealth(string relativePath)

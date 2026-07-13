@@ -1,6 +1,6 @@
 # LLM 审查事实门禁与降噪实施计划索引
 
-状态：Plan-ready；Phase R0 仍等待两个上游重构目录的完成/handoff evidence。通过只表示计划可实施，不表示代码完成。
+状态：Plan-ready；Phase R0 Bootstrap Review 可以在 handoff 前只读运行，R1–R6 仍等待两个上游重构目录的完成/handoff evidence。通过只表示计划可实施，不表示正式 gateway 或产品代码完成。
 语言：中文
 研究依据：[`_bmad-output/planning-artifacts/research/technical-everything-claude-code-review-anti-hallucination-research-2026-07-12.md`](../../_bmad-output/planning-artifacts/research/technical-everything-claude-code-review-anti-hallucination-research-2026-07-12.md)
 
@@ -29,8 +29,9 @@
 
 - [`2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening`](../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md) 和 [`2026-07-11-phase-frontend-boundary-hardening-execution-plan`](../2026-07-11-phase-frontend-boundary-hardening-execution-plan/00-index.md) 仅作为文档结构参考和后续集成依赖。
 - 本目录不复制它们的 GDD-to-module、React `/ui-v2`、Permit、mutation、数据迁移或 Phase 路由业务要求。
-- 在上述进行中重构完成前，本计划只允许实施不触碰其文件和共享 Phase 入口的 Phase R0；其余运行时接入必须等待两个上游计划完成并取得明确 handoff evidence。
-- 当前针对 7 月 7 日目录运行中的三层审查继续按其现有规则完成；本计划不改 prompt、不改输出、不重分类 finding、不触发重跑。R3 只接管 handoff 后的新 review route。
+- 在上述进行中重构完成前，本计划只允许实施不触碰其文件和共享 Phase 入口的 Phase R0 Bootstrap Review；其余运行时接入必须等待两个上游计划完成并取得明确 handoff evidence。
+- Bootstrap Review 是本目录拥有的只读手动工具：它生成 reviewer prompt/template，消费用户手动保存的输出并写独立 evidence；不得自动调用 reviewer、修改目标目录、接入 `scripts/sc`、写 repair guide 或冒充 BH-HANDOFF/production gateway。
+- 7 月 7 日既有历史 review run、prompt、输出和 ledger 保持不变；用户可从新的显式 review ID 开始，对 7-07/7-11 运行 supplemental Bootstrap Review。R3 仍只接管 handoff 后的新正式 review route。
 
 ## 分册顺序
 
@@ -42,10 +43,11 @@
 6. [测试、观测与渐进启用](06-testing-observability-and-rollout.md)
 7. [实施阶段](07-implementation-phases.md)
 8. [风险、DoD 与术语](08-risks-dod-and-glossary.md)
-9. [Whole-directory review 标准](96-global-review-and-validation.md)
-10. [计划新增要求台账](97-plan-added-requirements-ledger.md)
-11. [来源到拆分审计](98-source-to-split-audit.md)
-12. [来源覆盖图](99-source-coverage.md)
+9. [Bootstrap Review 手工操作指南](09-bootstrap-review-operator-guide.md)
+10. [Whole-directory review 标准](96-global-review-and-validation.md)
+11. [计划新增要求台账](97-plan-added-requirements-ledger.md)
+12. [来源到拆分审计](98-source-to-split-audit.md)
+13. [来源覆盖图](99-source-coverage.md)
 
 机器合同：
 
@@ -53,6 +55,9 @@
 - [review-rejection.v1.schema.json](schemas/review-rejection.v1.schema.json)
 - [review-result.v1.schema.json](schemas/review-result.v1.schema.json)
 - [review-validation-fixtures.v1.json](schemas/review-validation-fixtures.v1.json)
+- [bootstrap-reviewer-output.v1.schema.json](schemas/bootstrap-reviewer-output.v1.schema.json)
+- [bootstrap-verifier-output.v1.schema.json](schemas/bootstrap-verifier-output.v1.schema.json)
+- [review-profiles.v1.json](bootstrap/review-profiles.v1.json)
 
 计划验证入口：
 
@@ -62,6 +67,6 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/valida
 
 ## 全局实施顺序
 
-`R0 上游等待与计划基线` → `R1 标准和机器合同` → `R2 平台开发审查网关` → `R3 BMAD/GDS 薄适配` → `R4 前台触发 Codex 接入` → `R5 shadow 评估` → `R6 强制门禁与文档同步`。
+`R0A 计划基线` → `R0B Bootstrap Review 工具` → `R0C 用户手工审查 7-07/7-11` → `R0D 上游 handoff` → `R1 标准和机器合同` → `R2 平台开发审查网关` → `R3 BMAD/GDS 薄适配` → `R4 前台触发 Codex 接入` → `R5 shadow 评估` → `R6 强制门禁与文档同步`。
 
 任何阶段不得以 reviewer 的自然语言总结代替 schema、测试和 evidence sidecar。

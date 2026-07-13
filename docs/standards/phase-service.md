@@ -79,9 +79,12 @@ Action routes are allowed only when the backend starts a command, workflow, tick
 - Cross-project queue readback is admin-only at `GET /api/admin/project-admin-review-queue` and supports bounded filters for `projectId`, `routeId`, `severity`, `status`, `minimumAgeMinutes`, and `limit`.
 - Admin decisions use `POST /api/admin/project-admin-review-queue/{entryId}/decision` with `approved|deferred|rejected|backlog|resolved`, a required reason, and an expected decision version.
 - Same-payload retries are idempotent. A different payload against a stale version returns `409 conflict`; a missing entry returns `404`; invalid status, version, reason, or deferred metadata returns `400`.
-- `deferred` requires `deferredOwner`, a parseable `deferredUntilUtc`, `recheckTrigger`, and at least one non-empty `affectedRoutes` value.
-- `open|rejected|backlog` remain blocking. `approved|deferred|resolved` clear the current blocker. `superseded` is immutable historical state and never participates as a live blocker.
+- `deferred` requires `deferredOwner`, a future `deferredUntilUtc`, `recheckTrigger`, and `affectedRoutes` containing the current queue entry route. Same-payload retries remain idempotent even after the deferred window expires.
+- `open|rejected|backlog` remain blocking. `approved|resolved` clear the current blocker. `deferred` clears it only while its future window remains active and route-scoped; expired, malformed, or out-of-scope deferred metadata is blocking. `superseded` is immutable historical state and never participates as a live blocker.
 - Regeneration with changed source evidence appends a new queue row and links `supersedesEntryId` / `supersededByEntryId`; it must not overwrite the previous row or its decision history.
+- Reconciliation that resolves a no-longer-produced blocker records actor `system`, decision version/time/metadata, and a matching append-only decision row. Legacy duplicate-key migration records all predecessor/successor choices in migration lineage and prioritizes live blocking severity before recency.
+- Queue `evidenceRefs` are arrays of structured objects with a closed evidence kind and a workspace-relative `path` or `artifactId`; malformed JSON, external URIs, rooted paths, and traversal are rejected.
+- Decision evidence string inputs are compatibility syntax only. Persistence normalizes them to structured sidecar/artifact refs, verifies project ownership/existence for a new version, and rejects traversal, rooted/URI paths, and unknown artifacts.
 
 ### Response Shape
 
@@ -197,12 +200,16 @@ Structured evidence and audit records should include the fields needed for recov
 
 - Enforced route-state boundaries use the shared `hosted-route-recovery-order.v1` contract and preserve its ordered seven-source recovery sequence from `AGENTS.md`.
 - Prompt-producing route evidence must be structured JSON and prove the exact recovery contract ID, ordered recovery sources, and every source-hash key/value recorded by the route state. Merely mentioning a hash or contract token in free text is not proof.
-- Prompt evidence refs must resolve inside the hosted project boundary. Missing, unreadable, unparseable, reordered, or hash-mismatched evidence fails closed as a P0 source-boundary blocker.
+- Prompt-producing routes must scan the exact in-memory execution prompt before dispatch using `hosted-route-forbidden-source-scan.v1`. Evidence records the execution prompt SHA-256, exact pattern list, required content-fingerprint hashes, matched hashes, fingerprint-set status, authority-derived allowed references, violations, and `clean|blocked`. The prompt manifest separately records `execution_prompt_hash` and the secret-redacted artifact's `persisted_prompt_hash`.
+- The GDD route may use one selected pre-freeze game-type guide only when its stable ID/path/full-content hash is recorded. The allowed relative guide reference is derived from that authority; matching sidecar and evidence declarations cannot create a new allowed source. Unapproved guide chunks are denied before Codex dispatch. After freeze, raw mutable guide chunks are denied using normalized paragraphs plus overlapping word-window fingerprints without a fixed paragraph-count limit, so path removal, late-document copying, light edits, or whitespace changes do not bypass the guard.
+- Required guide catalogs/fingerprint sets and prompt artifacts fail closed when missing, unreadable, empty, or unparseable; absence is not evidence of no forbidden source.
+- Prompt evidence refs must resolve inside the hosted project boundary. Every accepted prompt-producing route updates `project_route_prompt_evidence_bindings` with the execution hash, redacted persisted hash, prompt artifact ref, and evidence ref; readback must match that DB authority as well as the workspace files. GDD prompt evidence additionally requires a succeeded same-project run carrying the same binding. Missing, unreadable, unparseable, cross-project, reordered, DB-mismatched, or hash-mismatched evidence fails closed as a P0 source-boundary blocker.
+- Source-hash validation recomputes current structured game-type, scene-route, and contract-snapshot semantics. Sidecar-declared hash fields are continuity metadata, not hash authority.
 - Non-prompt routes use the explicit `source_boundary_not_applicable` shape when enforcement does not apply; omission is not an implicit exemption.
 
 ### Redaction
 
-- Do not log bearer tokens, admin token material, user token material, token hashes, provider keys, raw secret environment values, raw command environments, or raw prompts in browser-readable evidence.
+- Do not log bearer tokens, admin token material, user token material, token hashes, provider keys, raw secret environment values, raw command environments, or raw prompts in browser-readable evidence. Internal recovery prompt artifacts are secret-redacted before persistence and remain excluded from browser list, direct, and nested artifact projections.
 - Admin readback may aggregate operational state, but raw cross-account evidence blobs require an explicit security decision.
 - Use sanitized workspace-relative paths, artifact IDs, package names, or tickets instead of raw host paths in browser/API output.
 
@@ -270,6 +277,8 @@ Minimum evidence commands or files by change type:
 - Unknown or stale state should remain explicit. Do not silently convert missing evidence into success.
 - Browser/UI labels may be friendlier, but API and sidecar status values must remain stable.
 - New sidecars should use stable field names: `status`, `status_reason`, `evidence_refs`, `updated_utc`, and scoped IDs such as `project_id`, `run_id`, or `route_id` where applicable.
+- Every registered JSON route artifact must declare and exactly match its registry route ID, string `schema_version`, `status_dimension`, and allowed status subset, with `status` inside both vocabulary sets. Omitting fields or substituting another known route/schema/dimension does not create a legacy exemption.
+- Transitional route states use canonical `queued|running`; legacy `writing`, `queued`, and `running` are non-fresh and cannot unlock downstream recommendations.
 - `evidence_refs` should be an array of objects with `kind`, `path` or `artifact_id`, optional `run_id`, and optional `summary`. Paths must be sanitized and workspace-relative unless the evidence is an internal-only log.
 - `evidence_refs.kind` is a closed enum by default: `log`, `artifact`, `sidecar`, `screenshot`, `db_row`, `smoke`, or `validator`. New kinds must update this standards document.
 

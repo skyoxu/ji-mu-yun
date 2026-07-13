@@ -46,9 +46,16 @@ Missing required recovery sources must fail closed.
 
 The ordered list is represented by the shared `hosted-route-recovery-order.v1` contract. Prompt-producing routes persist structured evidence that repeats the contract ID, the exact ordered list, and the route-local source-hash map; free-text token presence is not accepted as proof.
 
+The persisted evidence also carries `hosted-route-forbidden-source-scan.v1`, computed from the exact in-memory prompt before dispatch. The manifest keeps a database-bound `execution_prompt_hash` for the scan and a separate `persisted_prompt_hash` for the secret-redacted internal artifact. The scan must match the declared patterns, authority-derived allowed source references, and complete paragraph/overlapping-window fingerprint set, with no matches or violations. Missing catalogs, empty required fingerprint sets, missing prompt artifacts, cross-project runs, incomplete runs, or mismatched database bindings fail closed. Authoritative hashes are recomputed from current structured content; copied sidecar hash declarations are not authority.
+
+The pre-freeze GDD lane may use one selected game-type guide whose ID, path, and content hash are recorded. It rejects unapproved guide chunks before Codex dispatch. Post-freeze requirement and execution lanes reject raw mutable guide chunks even if paths were removed or whitespace changed.
+
 ## Invariants
 
 - Route state must be source-linked and stale-state aware.
+- A frozen `prototype-contract.v2` is immutable authority for the current chain. Prototype execution may read it and repair an identical mirror, but request-derived legacy contract generation must not overwrite the frozen canonical contract or change its hash.
+- Frozen-contract consumption recomputes the canonical contract hash and current GDD, semantic scene-route, requirement-map, and contract-snapshot hashes. An invalid canonical contract cannot fall back to legacy request-derived content.
+- Registered JSON route artifacts must match the registry's exact route ID, schema version, status dimension, allowed subset, and status; switching to another known contract or removing schema and dimension together fails closed.
 - Acceptance status must be derived from validators, markers, scripts, logs, database rows, imported assets, package outputs, or stable diagnostics.
 - Browser/API readback may display route state, but must not reinterpret route decisions independently.
 - Any new route must declare recovery inputs, authority order, missing-source behavior, browser-safe output rules, and tests.

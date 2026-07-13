@@ -48,6 +48,42 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task Readback_HidesInternalGddPromptAndSourceEvidenceArtifactsFromListsAndDirectReads()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = (await store.GetProjectSnapshotAsync(projectId))!;
+        var runId = await store.CreateRunAsync(projectId, null, "game-design-gdd");
+        var internalTypes = new[]
+        {
+            "game-design-gdd-prompt",
+            "game-design-gdd-prompt-source-evidence",
+            "game-design-gdd-section-prompt",
+            "game-design-gdd-section-add-prompt"
+        };
+        foreach (var artifactType in internalTypes)
+        {
+            var relativePath = $"logs/phase-a-gdd/{artifactType}.txt";
+            Write(project.RepoPath, relativePath, "Authorization: Bearer secret-token");
+            await store.AddArtifactAsync(new ArtifactCreationCommand(
+                runId, projectId, artifactType, relativePath, "Internal GDD prompt artifact"));
+        }
+        var internalArtifacts = await store.ListArtifactsForRunAsync(runId);
+        var service = new ArtifactReadbackService(store, options);
+
+        (await service.ListArtifactsForRunAsync(runId)).Should().BeEmpty();
+        foreach (var internalArtifact in internalArtifacts)
+        {
+            (await service.ReadArtifactAsync(internalArtifact.ArtifactId)).Should().BeNull();
+            (await service.ReadArtifactForAccountAsync(project.AccountId, internalArtifact.ArtifactId)).Should().BeNull();
+        }
+    }
+
+    [Fact]
     public async Task MetadataStore_ListArtifactsForRunsAsync_ReturnsArtifactsForMultipleRuns()
     {
         using var database = TempSqliteDatabase.Create();

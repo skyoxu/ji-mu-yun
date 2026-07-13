@@ -25,6 +25,7 @@
 - 平台开发 Codex 作业前自检和作业后审查；
 - 前台用户触发 Codex 的候选 finding、修复建议和阻断决定；
 - BMAD/GDS code-review 与 quick-dev 的仓库级适配。
+- handoff 前由用户手工运行、只读审查 7-07/7-11 的 plan-local Bootstrap Review。
 
 ## 4. 非目标
 
@@ -35,6 +36,7 @@
 - 不在本计划中实施 GDD-to-module、React `/ui-v2` 或 Phase boundary 重构；
 - 不用 LLM finding 替代编译、测试、schema、link、smoke 或安全扫描；
 - 不把计划可实施解释为代码已完成。
+- 不让 Bootstrap Review 自动调用任何 reviewer、修改目标文件、成为 BH-HANDOFF verifier 或替代正式 gateway。
 
 ## 5. 两类 Codex 的共享与差异
 
@@ -44,10 +46,11 @@
 
 ## 6. 上游等待门
 
-除本目录纯计划和本目录 plan-local schema/validator 外，实施者必须证明两个上游重构目录都已达到各自完成定义，并记录不可变 commit/evidence 引用。未满足时，禁止把 schema/validator 迁入长期 owner，禁止修改共享 Phase LLM/Codex 入口、现有执行计划或前台 route integration。
+除本目录纯计划、plan-local schema/validator、Bootstrap Review CLI/fixtures/operator guide 外，实施者必须证明两个上游重构目录都已达到各自完成定义，并记录不可变 commit/evidence 引用。未满足时，Bootstrap Review 只能读取用户声明的 7-07/7-11 scope 并写用户选择的独立输出目录；禁止把 schema/validator 迁入长期 owner，禁止修改共享 Phase LLM/Codex 入口、上游文件、现有正式 review route 或前台 integration。
 
 ## 验收标准
 
 - Given 实施者准备开始 R1–R6，When 检查上游 handoff，Then 两个上游完成证据均存在且可定位，否则 fail closed。
 - Given reviewer prompt 与 schema 冲突，When gateway 校验，Then 以 schema/standard 为准并拒绝不合格 finding。
 - Given BMAD/GDS 升级，When重新安装技能，Then 本目录规划的标准、custom override、gateway 和回归测试仍由仓库拥有。
+- Given 上游 handoff 尚未完成，When用户手工运行 Bootstrap Review，Then工具不调用模型、不修改目标 scope，并把结果标记为 supplemental bootstrap evidence。

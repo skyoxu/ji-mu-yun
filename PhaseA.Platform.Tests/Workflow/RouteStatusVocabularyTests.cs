@@ -73,7 +73,7 @@ public sealed class RouteStatusVocabularyTests
         return new ProjectAdminReviewQueueEntry(
             "entry", "account", "project", "gdd-requirements", "REQ-001", "P1", "reason", "source", "[]",
             "deferred", "deferred", "admin", "reason",
-            $$"""{"deferred_until_utc":"{{untilUtc}}","affected_routes":["{{affectedRoute}}"]}""",
+            $$"""{"deferred_owner":"platform","recheck_trigger":"timer","deferred_until_utc":"{{untilUtc}}","affected_routes":["{{affectedRoute}}"]}""",
             1, "2026-07-12T00:00:00Z", "2026-07-12T00:00:00Z", "2026-07-12T00:00:00Z", null, null, null);
     }
 }

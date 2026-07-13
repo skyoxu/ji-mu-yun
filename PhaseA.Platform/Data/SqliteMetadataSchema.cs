@@ -268,14 +268,178 @@ public static class SqliteMetadataSchema
             connection,
             """
             WITH ranked AS (
-                SELECT id,
+                SELECT id, project_id, route_id, requirement_id, status, severity, blocking_reason,
                        FIRST_VALUE(id) OVER (
                            PARTITION BY project_id, route_id, requirement_id
-                           ORDER BY updated_utc DESC, id DESC
+                           ORDER BY
+                                CASE
+                                    WHEN status IN ('open', 'rejected', 'backlog') THEN 0
+                                    WHEN status = 'deferred' AND (
+                                        json_valid(decision_metadata_json) = 0 OR
+                                        trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_owner'), '')) = '' OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) = '' AND
+                                         trim(COALESCE(json_extract(decision_metadata_json, '$.recheck_trigger'), '')) = '') OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) <> '' AND
+                                         (julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) IS NULL OR
+                                          julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) <= julianday('now'))) OR
+                                        json_type(decision_metadata_json, '$.affected_routes') <> 'array' OR
+                                        NOT EXISTS (
+                                            SELECT 1 FROM json_each(decision_metadata_json, '$.affected_routes') route
+                                            WHERE trim(route.value) = route_id)
+                                    ) THEN 0
+                                    ELSE 1
+                                END,
+                               CASE severity WHEN 'P0' THEN 0 WHEN 'P1' THEN 1 ELSE 2 END,
+                               updated_utc DESC, id DESC
                        ) AS winner_id,
                        ROW_NUMBER() OVER (
                            PARTITION BY project_id, route_id, requirement_id
-                           ORDER BY updated_utc DESC, id DESC
+                           ORDER BY
+                                CASE
+                                    WHEN status IN ('open', 'rejected', 'backlog') THEN 0
+                                    WHEN status = 'deferred' AND (
+                                        json_valid(decision_metadata_json) = 0 OR
+                                        trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_owner'), '')) = '' OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) = '' AND
+                                         trim(COALESCE(json_extract(decision_metadata_json, '$.recheck_trigger'), '')) = '') OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) <> '' AND
+                                         (julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) IS NULL OR
+                                          julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) <= julianday('now'))) OR
+                                        json_type(decision_metadata_json, '$.affected_routes') <> 'array' OR
+                                        NOT EXISTS (
+                                            SELECT 1 FROM json_each(decision_metadata_json, '$.affected_routes') route
+                                            WHERE trim(route.value) = route_id)
+                                    ) THEN 0
+                                    ELSE 1
+                                END,
+                               CASE severity WHEN 'P0' THEN 0 WHEN 'P1' THEN 1 ELSE 2 END,
+                               updated_utc DESC, id DESC
+                       ) AS row_number
+                FROM project_admin_review_queue
+                WHERE status <> 'superseded'
+            )
+            INSERT OR IGNORE INTO project_admin_review_migration_lineage (
+                predecessor_entry_id, successor_entry_id, prior_status, prior_severity,
+                prior_blocking_reason, migration_reason, migrated_utc)
+            SELECT id, winner_id, status, severity, blocking_reason,
+                   'stable_requirement_identity_migration', strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+            FROM ranked
+            WHERE row_number > 1;
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            WITH ranked AS (
+                SELECT id,
+                       FIRST_VALUE(id) OVER (
+                           PARTITION BY project_id, route_id, requirement_id
+                           ORDER BY
+                                CASE
+                                    WHEN status IN ('open', 'rejected', 'backlog') THEN 0
+                                    WHEN status = 'deferred' AND (
+                                        json_valid(decision_metadata_json) = 0 OR
+                                        trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_owner'), '')) = '' OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) = '' AND
+                                         trim(COALESCE(json_extract(decision_metadata_json, '$.recheck_trigger'), '')) = '') OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) <> '' AND
+                                         (julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) IS NULL OR
+                                          julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) <= julianday('now'))) OR
+                                        json_type(decision_metadata_json, '$.affected_routes') <> 'array' OR
+                                        NOT EXISTS (
+                                            SELECT 1 FROM json_each(decision_metadata_json, '$.affected_routes') route
+                                            WHERE trim(route.value) = route_id)
+                                    ) THEN 0
+                                    ELSE 1
+                                END,
+                               CASE severity WHEN 'P0' THEN 0 WHEN 'P1' THEN 1 ELSE 2 END,
+                               updated_utc DESC, id DESC
+                       ) AS winner_id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY project_id, route_id, requirement_id
+                           ORDER BY
+                                CASE
+                                    WHEN status IN ('open', 'rejected', 'backlog') THEN 0
+                                    WHEN status = 'deferred' AND (
+                                        json_valid(decision_metadata_json) = 0 OR
+                                        trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_owner'), '')) = '' OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) = '' AND
+                                         trim(COALESCE(json_extract(decision_metadata_json, '$.recheck_trigger'), '')) = '') OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) <> '' AND
+                                         (julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) IS NULL OR
+                                          julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) <= julianday('now'))) OR
+                                        json_type(decision_metadata_json, '$.affected_routes') <> 'array' OR
+                                        NOT EXISTS (
+                                            SELECT 1 FROM json_each(decision_metadata_json, '$.affected_routes') route
+                                            WHERE trim(route.value) = route_id)
+                                    ) THEN 0
+                                    ELSE 1
+                                END,
+                               CASE severity WHEN 'P0' THEN 0 WHEN 'P1' THEN 1 ELSE 2 END,
+                               updated_utc DESC, id DESC
+                       ) AS row_number
+                FROM project_admin_review_queue
+                WHERE status <> 'superseded'
+            )
+            UPDATE project_admin_review_queue
+            SET supersedes_entry_id = COALESCE(
+                supersedes_entry_id,
+                (SELECT loser.id FROM ranked loser WHERE loser.winner_id = project_admin_review_queue.id AND loser.row_number > 1 ORDER BY loser.row_number LIMIT 1))
+            WHERE id IN (SELECT winner_id FROM ranked WHERE row_number = 1);
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            WITH ranked AS (
+                SELECT id,
+                       FIRST_VALUE(id) OVER (
+                           PARTITION BY project_id, route_id, requirement_id
+                           ORDER BY
+                                CASE
+                                    WHEN status IN ('open', 'rejected', 'backlog') THEN 0
+                                    WHEN status = 'deferred' AND (
+                                        json_valid(decision_metadata_json) = 0 OR
+                                        trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_owner'), '')) = '' OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) = '' AND
+                                         trim(COALESCE(json_extract(decision_metadata_json, '$.recheck_trigger'), '')) = '') OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) <> '' AND
+                                         (julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) IS NULL OR
+                                          julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) <= julianday('now'))) OR
+                                        json_type(decision_metadata_json, '$.affected_routes') <> 'array' OR
+                                        NOT EXISTS (
+                                            SELECT 1 FROM json_each(decision_metadata_json, '$.affected_routes') route
+                                            WHERE trim(route.value) = route_id)
+                                    ) THEN 0
+                                    ELSE 1
+                                END,
+                               CASE severity WHEN 'P0' THEN 0 WHEN 'P1' THEN 1 ELSE 2 END,
+                               updated_utc DESC, id DESC
+                       ) AS winner_id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY project_id, route_id, requirement_id
+                           ORDER BY
+                                CASE
+                                    WHEN status IN ('open', 'rejected', 'backlog') THEN 0
+                                    WHEN status = 'deferred' AND (
+                                        json_valid(decision_metadata_json) = 0 OR
+                                        trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_owner'), '')) = '' OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) = '' AND
+                                         trim(COALESCE(json_extract(decision_metadata_json, '$.recheck_trigger'), '')) = '') OR
+                                        (trim(COALESCE(json_extract(decision_metadata_json, '$.deferred_until_utc'), '')) <> '' AND
+                                         (julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) IS NULL OR
+                                          julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) <= julianday('now'))) OR
+                                        json_type(decision_metadata_json, '$.affected_routes') <> 'array' OR
+                                        NOT EXISTS (
+                                            SELECT 1 FROM json_each(decision_metadata_json, '$.affected_routes') route
+                                            WHERE trim(route.value) = route_id)
+                                    ) THEN 0
+                                    ELSE 1
+                                END,
+                               CASE severity WHEN 'P0' THEN 0 WHEN 'P1' THEN 1 ELSE 2 END,
+                               updated_utc DESC, id DESC
                        ) AS row_number
                 FROM project_admin_review_queue
                 WHERE status <> 'superseded'
@@ -926,6 +1090,19 @@ public static class SqliteMetadataSchema
         );
         """,
         """
+        CREATE TABLE IF NOT EXISTS project_route_prompt_evidence_bindings (
+            project_id TEXT NOT NULL,
+            route_id TEXT NOT NULL,
+            execution_prompt_hash TEXT NOT NULL,
+            persisted_prompt_hash TEXT NOT NULL,
+            prompt_artifact_ref TEXT NOT NULL,
+            prompt_evidence_ref TEXT NOT NULL,
+            updated_utc TEXT NOT NULL,
+            PRIMARY KEY (project_id, route_id),
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        """,
+        """
         CREATE TABLE IF NOT EXISTS run_duration_metrics (
             id TEXT PRIMARY KEY,
             bucket TEXT NOT NULL,
@@ -1202,6 +1379,19 @@ public static class SqliteMetadataSchema
         );
         """,
         """
+        CREATE TABLE IF NOT EXISTS project_admin_review_migration_lineage (
+            predecessor_entry_id TEXT PRIMARY KEY,
+            successor_entry_id TEXT NOT NULL,
+            prior_status TEXT NOT NULL,
+            prior_severity TEXT NOT NULL,
+            prior_blocking_reason TEXT NOT NULL,
+            migration_reason TEXT NOT NULL,
+            migrated_utc TEXT NOT NULL,
+            FOREIGN KEY (predecessor_entry_id) REFERENCES project_admin_review_queue(id) ON DELETE CASCADE,
+            FOREIGN KEY (successor_entry_id) REFERENCES project_admin_review_queue(id) ON DELETE CASCADE
+        );
+        """,
+        """
         CREATE TABLE IF NOT EXISTS project_diagnostic_spool (
             id TEXT PRIMARY KEY,
             diagnostic_id TEXT NOT NULL DEFAULT '',
@@ -1286,6 +1476,7 @@ public static class SqliteMetadataSchema
         "CREATE INDEX IF NOT EXISTS ix_project_admin_review_queue_project_status ON project_admin_review_queue(project_id, status);",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_admin_review_queue_project_route_requirement_reason ON project_admin_review_queue(project_id, route_id, requirement_id) WHERE status <> 'superseded';",
         "CREATE INDEX IF NOT EXISTS ix_project_admin_review_decisions_entry_version ON project_admin_review_decisions(entry_id, decision_version DESC);",
+        "CREATE INDEX IF NOT EXISTS ix_project_admin_review_migration_lineage_successor ON project_admin_review_migration_lineage(successor_entry_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_triage_created ON project_diagnostic_spool(triage_status, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_project_triage ON project_diagnostic_spool(project_id, triage_status);",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_diagnostic_spool_diagnostic_id ON project_diagnostic_spool(diagnostic_id);",

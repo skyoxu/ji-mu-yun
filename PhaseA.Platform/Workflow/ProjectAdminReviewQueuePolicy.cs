@@ -48,10 +48,15 @@ public static class ProjectAdminReviewQueuePolicy
         {
             using var document = JsonDocument.Parse(metadataJson);
             var root = document.RootElement;
-            if (!root.TryGetProperty("deferred_until_utc", out var untilElement) ||
-                untilElement.ValueKind != JsonValueKind.String ||
-                !DateTimeOffset.TryParse(untilElement.GetString(), out var until) ||
-                until <= now ||
+            var hasExpiry = root.TryGetProperty("deferred_until_utc", out var untilElement) &&
+                            untilElement.ValueKind == JsonValueKind.String &&
+                            !string.IsNullOrWhiteSpace(untilElement.GetString());
+            var hasValidFutureExpiry = hasExpiry &&
+                                       DateTimeOffset.TryParse(untilElement.GetString(), out var until) &&
+                                       until > now;
+            if (!HasNonEmptyString(root, "deferred_owner") ||
+                (hasExpiry && !hasValidFutureExpiry) ||
+                (!hasValidFutureExpiry && !HasNonEmptyString(root, "recheck_trigger")) ||
                 !root.TryGetProperty("affected_routes", out var routes) ||
                 routes.ValueKind != JsonValueKind.Array)
             {
@@ -66,5 +71,12 @@ public static class ProjectAdminReviewQueuePolicy
         {
             return false;
         }
+    }
+
+    private static bool HasNonEmptyString(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var value) &&
+               value.ValueKind == JsonValueKind.String &&
+               !string.IsNullOrWhiteSpace(value.GetString());
     }
 }

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Workflow;
 
 namespace PhaseA.Platform.Runs;
@@ -18,9 +19,26 @@ public sealed class ProjectRouteStateArtifactService
 
     public ProjectRouteStateArtifactReadback Read(ProjectSnapshot project)
     {
-        ArgumentNullException.ThrowIfNull(project);
+        return Read(project, new Dictionary<string, ProjectRoutePromptEvidenceBinding>(StringComparer.Ordinal));
+    }
 
-        var context = ProjectRouteStateContext.Load(project);
+    public ProjectRouteStateArtifactReadback Read(
+        ProjectSnapshot project,
+        IReadOnlyDictionary<string, ProjectRoutePromptEvidenceBinding> promptBindings)
+    {
+        return Read(project, promptBindings, new HashSet<string>(StringComparer.Ordinal));
+    }
+
+    public ProjectRouteStateArtifactReadback Read(
+        ProjectSnapshot project,
+        IReadOnlyDictionary<string, ProjectRoutePromptEvidenceBinding> promptBindings,
+        IReadOnlySet<string> projectArtifactIds)
+    {
+        ArgumentNullException.ThrowIfNull(project);
+        ArgumentNullException.ThrowIfNull(promptBindings);
+        ArgumentNullException.ThrowIfNull(projectArtifactIds);
+
+        var context = ProjectRouteStateContext.Load(project, promptBindings, projectArtifactIds);
         var summaries = new List<ProjectRouteStateArtifactSummary>
         {
             BuildSummary(context, RouteArtifactKind.GddQuestionForm),
@@ -205,8 +223,8 @@ public sealed class ProjectRouteStateArtifactService
     private static ProjectRouteStateArtifactSummary BuildSummary(ProjectRouteStateContext context, RouteArtifactKind kind)
     {
         var spec = ArtifactSpec.For(kind);
-        var canonical = context.Read(spec.CanonicalPath);
-        var mirror = spec.MirrorPath is null ? null : context.Read(spec.MirrorPath);
+        var canonical = context.Read(spec.CanonicalPath, spec);
+        var mirror = spec.MirrorPath is null ? null : context.Read(spec.MirrorPath, spec);
         var status = canonical.Status;
         var freshness = canonical.Freshness;
         var issues = canonical.Issues.ToList();
@@ -612,7 +630,9 @@ public sealed class ProjectRouteStateArtifactService
 
     private static IEnumerable<JsonElement> ReadArray(JsonElement root, string propertyName)
     {
-        if (!root.TryGetProperty(propertyName, out var value) || value.ValueKind != JsonValueKind.Array)
+        if (root.ValueKind != JsonValueKind.Object ||
+            !root.TryGetProperty(propertyName, out var value) ||
+            value.ValueKind != JsonValueKind.Array)
         {
             return [];
         }
@@ -622,7 +642,8 @@ public sealed class ProjectRouteStateArtifactService
 
     private static string ReadString(JsonElement root, string propertyName)
     {
-        return root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+        return root.ValueKind == JsonValueKind.Object &&
+               root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()?.Trim() ?? ""
             : "";
     }
@@ -659,6 +680,7 @@ public sealed class ProjectRouteStateArtifactService
         string CanonicalPath,
         string? MirrorPath,
         string Authority,
+        string SchemaVersion,
         string StatusDimension,
         IReadOnlyList<string> AllowedStatuses)
     {
@@ -666,26 +688,32 @@ public sealed class ProjectRouteStateArtifactService
         {
             return kind switch
             {
-                RouteArtifactKind.GddQuestionForm => new(kind, "gdd-question-form", "meta/routes/gdd-question-form/latest.json", "meta/routes/gdd-question-form/legacy-import/latest.json", "readback", "route_readback", RouteReadbackStatuses),
-                RouteArtifactKind.SceneRoute => new(kind, "scene-route-confirmation", "meta/routes/scene-route/latest.json", "meta/routes/gdd-scene-route/latest.json", "authority", RouteStatusVocabulary.SceneRouteConfirmation, RouteStatusVocabulary.Values(RouteStatusVocabulary.SceneRouteConfirmation).ToArray()),
-                RouteArtifactKind.GddDocument => new(kind, "gdd-document-generation", "meta/routes/gdd-document/latest.json", "docs/gdd/GDD.md", "authority", "route_readback", RouteReadbackStatuses),
-                RouteArtifactKind.GddRequirements => new(kind, "gdd-requirements", "meta/routes/gdd-requirements/latest.json", null, "authority", "route_readback", RequirementMapStatuses),
-                RouteArtifactKind.PrototypeContract => new(kind, "prototype-contract", "routes/prototype-contract/latest.json", "meta/routes/prototype-contract/latest.json", "authority", "route_readback", ["fresh", "stale", "unknown", "ready", "blocked"]),
-                RouteArtifactKind.PrototypeSkeleton => new(kind, "prototype-skeleton", "meta/routes/prototype-skeleton/latest.json", "meta/routes/prototype/latest.json", "readback", "route_readback", RouteReadbackStatuses),
-                RouteArtifactKind.UiWiring => new(kind, "ui-wiring", "meta/routes/ui-wiring/latest.json", "meta/routes/ui-closure/latest.json", "authority", "route_readback", UiClosureStatuses),
+                RouteArtifactKind.GddQuestionForm => new(kind, "gdd-question-form", "meta/routes/gdd-question-form/latest.json", "meta/routes/gdd-question-form/legacy-import/latest.json", "readback", "gdd-question-form.v1", RouteStatusVocabulary.RouteReadback, RouteReadbackStatuses),
+                RouteArtifactKind.SceneRoute => new(kind, "scene-route-confirmation", "meta/routes/scene-route/latest.json", "meta/routes/gdd-scene-route/latest.json", "authority", "scene-route.v1", RouteStatusVocabulary.SceneRouteConfirmation, RouteStatusVocabulary.Values(RouteStatusVocabulary.SceneRouteConfirmation).ToArray()),
+                RouteArtifactKind.GddDocument => new(kind, "gdd-document-generation", "meta/routes/gdd-document/latest.json", "docs/gdd/GDD.md", "authority", "gdd-document-generation.v1", RouteStatusVocabulary.RouteReadback, RouteReadbackStatuses),
+                RouteArtifactKind.GddRequirements => new(kind, "gdd-requirements", "meta/routes/gdd-requirements/latest.json", null, "authority", "gdd-requirements.v1", RouteStatusVocabulary.RouteReadback, RequirementMapStatuses),
+                RouteArtifactKind.PrototypeContract => new(kind, "prototype-contract", "routes/prototype-contract/latest.json", "meta/routes/prototype-contract/latest.json", "authority", "prototype-contract.v2", RouteStatusVocabulary.RouteReadback, ["ready", "blocked", "stale", "unknown"]),
+                RouteArtifactKind.PrototypeSkeleton => new(kind, "prototype-skeleton", "meta/routes/prototype-skeleton/latest.json", "meta/routes/prototype/latest.json", "readback", "prototype-skeleton-readback.v1", RouteStatusVocabulary.RouteReadback, RouteReadbackStatuses),
+                RouteArtifactKind.UiWiring => new(kind, "ui-wiring", "meta/routes/ui-wiring/latest.json", "meta/routes/ui-closure/latest.json", "authority", "ui-wiring-closure.v1", RouteStatusVocabulary.RouteReadback, UiClosureStatuses),
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
     }
 
-    private sealed record ProjectRouteStateContext(ProjectSnapshot Project)
+    private sealed record ProjectRouteStateContext(
+        ProjectSnapshot Project,
+        IReadOnlyDictionary<string, ProjectRoutePromptEvidenceBinding> PromptBindings,
+        IReadOnlySet<string> ProjectArtifactIds)
     {
-        public static ProjectRouteStateContext Load(ProjectSnapshot project)
+        public static ProjectRouteStateContext Load(
+            ProjectSnapshot project,
+            IReadOnlyDictionary<string, ProjectRoutePromptEvidenceBinding> promptBindings,
+            IReadOnlySet<string> projectArtifactIds)
         {
-            return new ProjectRouteStateContext(project);
+            return new ProjectRouteStateContext(project, promptBindings, projectArtifactIds);
         }
 
-        public ArtifactRead Read(string relativePath)
+        public ArtifactRead Read(string relativePath, ArtifactSpec? spec = null)
         {
             if (string.IsNullOrWhiteSpace(relativePath))
             {
@@ -709,8 +737,12 @@ public sealed class ProjectRouteStateArtifactService
 
                 using var document = JsonDocument.Parse(text);
                 var root = document.RootElement.Clone();
+                if (root.ValueKind != JsonValueKind.Object)
+                {
+                    return new ArtifactRead("failed", "unknown", hash, null, [$"{relativePath}:invalid_root"]);
+                }
                 var status = ReadArtifactStatus(root);
-                var issues = ValidateCommon(relativePath, root).ToList();
+                var issues = ValidateCommon(relativePath, root, spec).ToList();
                 return new ArtifactRead(status, ReadFreshness(root), hash, root, issues);
             }
             catch (JsonException)
@@ -747,14 +779,39 @@ public sealed class ProjectRouteStateArtifactService
             }
 
             var status = ReadString(root, "status");
-            return status is "stale" ? "stale" : "fresh";
+            var statusDimension = ReadString(root, "status_dimension");
+            if (!string.IsNullOrWhiteSpace(statusDimension) &&
+                (!RouteStatusVocabulary.IsKnownDimension(statusDimension) ||
+                 !RouteStatusVocabulary.Contains(statusDimension, status)))
+            {
+                return "unknown";
+            }
+            return status switch
+            {
+                "stale" => "stale",
+                "queued" or "running" or "writing" or "unknown" => "unknown",
+                _ => "fresh"
+            };
         }
 
-        private IEnumerable<string> ValidateCommon(string relativePath, JsonElement root)
+        private IEnumerable<string> ValidateCommon(string relativePath, JsonElement root, ArtifactSpec? spec)
         {
             var statusDimension = ReadString(root, "status_dimension");
             var status = ReadArtifactStatus(root);
-            if (string.IsNullOrWhiteSpace(statusDimension) && root.TryGetProperty("schema_version", out _))
+            if (string.IsNullOrWhiteSpace(ReadString(root, "schema_version")))
+            {
+                yield return $"{relativePath}:schema_version_missing";
+            }
+            else if (spec is not null &&
+                     !string.Equals(ReadString(root, "schema_version"), spec.SchemaVersion, StringComparison.Ordinal))
+            {
+                yield return $"{relativePath}:schema_version_unexpected";
+            }
+            if (spec is not null && !string.Equals(ReadString(root, "route"), spec.Route, StringComparison.Ordinal))
+            {
+                yield return $"{relativePath}:route_unexpected";
+            }
+            if (string.IsNullOrWhiteSpace(statusDimension))
             {
                 yield return $"{relativePath}:status_dimension_missing";
             }
@@ -768,6 +825,10 @@ public sealed class ProjectRouteStateArtifactService
                 {
                     yield return $"{relativePath}:status_dimension_unknown";
                 }
+                if (spec is not null && !string.Equals(statusDimension, spec.StatusDimension, StringComparison.Ordinal))
+                {
+                    yield return $"{relativePath}:status_dimension_unexpected";
+                }
 
                 if (allowed.Length == 0)
                 {
@@ -777,6 +838,11 @@ public sealed class ProjectRouteStateArtifactService
                 if (allowed.Length > 0 && !RouteStatusVocabulary.IsSubset(statusDimension, allowed))
                 {
                     yield return $"{relativePath}:status_allowed_values_outside_dimension";
+                }
+                if (spec is not null && allowed.Length > 0 &&
+                    !allowed.ToHashSet(StringComparer.Ordinal).SetEquals(spec.AllowedStatuses))
+                {
+                    yield return $"{relativePath}:status_allowed_values_unexpected";
                 }
 
                 if (allowed.Length > 0 && !allowed.Contains(status, StringComparer.Ordinal))
@@ -813,8 +879,8 @@ public sealed class ProjectRouteStateArtifactService
                     boundary.ValueKind != JsonValueKind.Object ||
                     !boundary.TryGetProperty("authority_sources", out _) ||
                     ReadStringArray(boundary, "authority_sources").Count == 0 ||
-                    !boundary.TryGetProperty("forbidden_source_patterns", out _) ||
-                    ReadStringArray(boundary, "forbidden_source_patterns").Count == 0)
+                    !boundary.TryGetProperty("forbidden_source_patterns", out var forbiddenPatterns) ||
+                    forbiddenPatterns.ValueKind != JsonValueKind.Array)
                 {
                     yield return $"{relativePath}:source_boundary_incomplete";
                 }
@@ -837,7 +903,7 @@ public sealed class ProjectRouteStateArtifactService
 
                 if (boundary.ValueKind == JsonValueKind.Object && promptProducingRoute)
                 {
-                    foreach (var issue in ValidatePromptEvidence(relativePath, boundary))
+                    foreach (var issue in ValidatePromptEvidence(relativePath, ReadString(root, "route"), boundary))
                     {
                         yield return issue;
                     }
@@ -846,12 +912,35 @@ public sealed class ProjectRouteStateArtifactService
 
             foreach (var evidenceRef in ReadEvidenceRefs(root))
             {
+                if (evidenceRef.ValueKind != JsonValueKind.Object)
+                {
+                    yield return $"{relativePath}:evidence_ref_invalid";
+                    continue;
+                }
+
                 var kind = ReadString(evidenceRef, "kind");
                 if (string.IsNullOrWhiteSpace(kind) || !RouteEvidenceRefKinds.Contains(kind))
                 {
                     yield return $"{relativePath}:evidence_ref_kind_invalid";
                 }
+                else if (!HasSafeEvidenceLocator(evidenceRef))
+                {
+                    yield return $"{relativePath}:evidence_ref_locator_invalid";
+                }
             }
+        }
+
+        private bool HasSafeEvidenceLocator(JsonElement evidenceRef)
+        {
+            var path = ReadString(evidenceRef, "path");
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                var fullPath = Resolve(path);
+                return fullPath is not null && File.Exists(fullPath);
+            }
+
+            var artifactId = ReadString(evidenceRef, "artifact_id");
+            return !string.IsNullOrWhiteSpace(artifactId) && ProjectArtifactIds.Contains(artifactId);
         }
 
         private static IEnumerable<JsonElement> ReadEvidenceRefs(JsonElement root)
@@ -875,9 +964,50 @@ public sealed class ProjectRouteStateArtifactService
             }
 
             var properties = hashes.EnumerateObject().ToArray();
-            return properties.Length > 0 && properties.All(property =>
+            if (properties.Length == 0 || !properties.All(property =>
                 property.Value.ValueKind == JsonValueKind.String &&
-                !string.IsNullOrWhiteSpace(property.Value.GetString()));
+                !string.IsNullOrWhiteSpace(property.Value.GetString())))
+            {
+                return false;
+            }
+
+            var authoritySources = ReadStringArray(boundary, "authority_sources");
+            var normalizedAuthorityKeys = authoritySources.Select(NormalizeAuthoritySourceKey).ToArray();
+            var allAuthoritiesMapped = normalizedAuthorityKeys.All(key => !string.IsNullOrWhiteSpace(key));
+            var normalizedAuthorities = normalizedAuthorityKeys
+                .Where(key => !string.IsNullOrWhiteSpace(key))
+                .ToHashSet(StringComparer.Ordinal);
+            var provided = properties.Select(property => property.Name.Replace('\\', '/')).ToHashSet(StringComparer.Ordinal);
+            if (!normalizedAuthorities.IsSubsetOf(provided))
+            {
+                return false;
+            }
+
+            return allAuthoritiesMapped && provided.SetEquals(normalizedAuthorities);
+        }
+
+        private static string NormalizeAuthoritySourceKey(string source)
+        {
+            var normalized = source.Trim().Replace('\\', '/');
+            return normalized switch
+            {
+                "confirmed scene route" => "meta/routes/scene-route/latest.json",
+                "project contract snapshot" => "project-contract-snapshot",
+                "structured game-type metadata" => "structured-game-type-metadata",
+                _ when normalized.StartsWith("game-type-guide:", StringComparison.Ordinal) => normalized,
+                "source_gdd_hash" or
+                "source_scene_route_hash" or
+                "source_requirement_map_hash" or
+                "source_contract_hash" or
+                "source_contract_snapshot_hash" or
+                "source_godot_ui_contract_hash" or
+                "source_ui_style_contract_hash" or
+                "ui_style_snapshot_hash" => normalized,
+                _ when normalized.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
+                       normalized.EndsWith(".md", StringComparison.OrdinalIgnoreCase) => normalized,
+                "project-contract-snapshot" or "structured-game-type-metadata" => normalized,
+                _ => ""
+            };
         }
 
         private static bool HasCanonicalRecoverySourceOrder(JsonElement boundary)
@@ -889,16 +1019,17 @@ public sealed class ProjectRouteStateArtifactService
         private static bool IsPromptProducingRoute(string relativePath, JsonElement root)
         {
             var route = ReadString(root, "route");
-            return route is "gdd-requirements" or "gdd-document-generation" or "iteration-plan" or "execute-next-goal" or "needs-fix" or "repair" ||
+            return RouteModuleContracts.Find(route)?.PromptSourceBoundaryRequired == true ||
                    relativePath.Contains("/gdd-requirements/", StringComparison.OrdinalIgnoreCase) ||
                    relativePath.Contains("/gdd-document/", StringComparison.OrdinalIgnoreCase) ||
+                   relativePath.Contains("/prototype-skeleton/", StringComparison.OrdinalIgnoreCase) ||
                    relativePath.Contains("/iteration-plan/", StringComparison.OrdinalIgnoreCase) ||
                    relativePath.Contains("/execute-next-goal/", StringComparison.OrdinalIgnoreCase) ||
                    relativePath.Contains("/needs-fix/", StringComparison.OrdinalIgnoreCase) ||
                    relativePath.Contains("/repair/", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static bool HasValidNotApplicableBoundary(JsonElement root)
+        private bool HasValidNotApplicableBoundary(JsonElement root)
         {
             if (!root.TryGetProperty("source_boundary_not_applicable", out var exemption) ||
                 exemption.ValueKind != JsonValueKind.Object ||
@@ -906,19 +1037,31 @@ public sealed class ProjectRouteStateArtifactService
                 !DateTimeOffset.TryParse(ReadString(exemption, "checked_utc"), out _) ||
                 !string.Equals(ReadString(exemption, "decision_by"), "system", StringComparison.Ordinal) ||
                 !exemption.TryGetProperty("evidence_refs", out var evidenceRefs) ||
-                evidenceRefs.ValueKind != JsonValueKind.Array)
+                evidenceRefs.ValueKind != JsonValueKind.Array ||
+                evidenceRefs.GetArrayLength() == 0)
             {
                 return false;
             }
 
             return evidenceRefs.EnumerateArray().All(item =>
-                item.ValueKind == JsonValueKind.Object &&
-                !string.IsNullOrWhiteSpace(ReadString(item, "kind")) &&
-                (!string.IsNullOrWhiteSpace(ReadString(item, "path")) ||
-                 !string.IsNullOrWhiteSpace(ReadString(item, "artifact_id"))));
+            {
+                if (item.ValueKind != JsonValueKind.Object ||
+                    !RouteEvidenceRefKinds.Contains(ReadString(item, "kind")))
+                {
+                    return false;
+                }
+
+                var path = ReadString(item, "path");
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return false;
+                }
+                var fullPath = Resolve(path);
+                return fullPath is not null && File.Exists(fullPath);
+            });
         }
 
-        private IEnumerable<string> ValidatePromptEvidence(string relativePath, JsonElement boundary)
+        private IEnumerable<string> ValidatePromptEvidence(string relativePath, string expectedRoute, JsonElement boundary)
         {
             var refs = ReadArray(boundary, "prompt_evidence_refs")
                 .Select(item => item.ValueKind == JsonValueKind.String ? item.GetString() ?? "" : ReadString(item, "path"))
@@ -940,26 +1083,16 @@ public sealed class ProjectRouteStateArtifactService
                     yield return $"{relativePath}:prompt_evidence_missing";
                     continue;
                 }
+                if (Directory.Exists(fullPath))
+                {
+                    yield return $"{relativePath}:prompt_evidence_directory_forbidden";
+                    continue;
+                }
 
                 var readFailed = false;
                 try
                 {
-                    if (File.Exists(fullPath))
-                    {
-                        TryAddEvidenceDocument(evidenceDocuments, File.ReadAllText(fullPath, Encoding.UTF8), ref rawPromptPersisted);
-                    }
-                    else
-                    {
-                        foreach (var file in Directory.EnumerateFiles(fullPath).OrderBy(path => path, StringComparer.Ordinal).TakeLast(20))
-                        {
-                            if (HasReparsePointBetween(Path.GetFullPath(Project.RepoPath), Path.GetFullPath(file)))
-                            {
-                                readFailed = true;
-                                continue;
-                            }
-                            TryAddEvidenceDocument(evidenceDocuments, File.ReadAllText(file, Encoding.UTF8), ref rawPromptPersisted);
-                        }
-                    }
+                    TryAddEvidenceDocument(evidenceDocuments, File.ReadAllText(fullPath, Encoding.UTF8), ref rawPromptPersisted);
                 }
                 catch (IOException)
                 {
@@ -982,7 +1115,7 @@ public sealed class ProjectRouteStateArtifactService
                 {
                     yield return $"{relativePath}:raw_prompt_persisted_forbidden";
                 }
-                if (!evidenceDocuments.Any(document => EvidenceProvesBoundary(document.RootElement, boundary)))
+                if (!evidenceDocuments.Any(document => EvidenceProvesBoundary(document.RootElement, expectedRoute, boundary, refs)))
                 {
                     yield return $"{relativePath}:prompt_evidence_invalid";
                 }
@@ -1016,12 +1149,17 @@ public sealed class ProjectRouteStateArtifactService
             }
         }
 
-        private static bool EvidenceProvesBoundary(JsonElement evidenceRoot, JsonElement expectedBoundary)
+        private bool EvidenceProvesBoundary(
+            JsonElement evidenceRoot,
+            string expectedRoute,
+            JsonElement expectedBoundary,
+            IReadOnlyList<string> promptEvidenceRefs)
         {
             var evidence = evidenceRoot.TryGetProperty("source_boundary", out var nested) && nested.ValueKind == JsonValueKind.Object
                 ? nested
                 : evidenceRoot;
-            if (!string.Equals(
+            if (!string.Equals(ReadString(evidence, "route"), expectedRoute, StringComparison.Ordinal) ||
+                !string.Equals(
                     ReadString(evidence, "recovery_source_order_ref"),
                     HostedRouteRecoveryContract.ContractId,
                     StringComparison.Ordinal) ||
@@ -1030,6 +1168,39 @@ public sealed class ProjectRouteStateArtifactService
                 evidenceHashes.ValueKind != JsonValueKind.Object ||
                 !expectedBoundary.TryGetProperty("source_hashes", out var expectedHashes) ||
                 expectedHashes.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            var expectedHashKeys = expectedHashes.EnumerateObject()
+                .Select(property => property.Name)
+                .ToHashSet(StringComparer.Ordinal);
+            var evidenceHashKeys = evidenceHashes.EnumerateObject()
+                .Select(property => property.Name)
+                .ToHashSet(StringComparer.Ordinal);
+            if (!evidenceHashKeys.SetEquals(expectedHashKeys))
+            {
+                return false;
+            }
+
+            var forbiddenPatterns = ReadStringArray(expectedBoundary, "forbidden_source_patterns");
+            var forbiddenGuideCatalog = ResolveForbiddenGuideContentHashes(expectedBoundary);
+            if (!TryResolveAllowedGuideReferences(expectedBoundary, out var allowedSourceReferences))
+            {
+                return false;
+            }
+            var requiresFingerprints = forbiddenPatterns.Any(pattern =>
+                pattern.Contains("game-type guide excerpt", StringComparison.OrdinalIgnoreCase) ||
+                pattern.Contains("game-type-guides", StringComparison.OrdinalIgnoreCase));
+            if (!HostedRouteForbiddenSourceGuard.IsValidEvidence(
+                    evidence,
+                    forbiddenPatterns,
+                    forbiddenGuideCatalog.ContentHashes,
+                    requiresFingerprints,
+                    allowedSourceReferences,
+                    forbiddenContentFingerprintSetComplete: forbiddenGuideCatalog.IsComplete) ||
+                !PromptHashMatchesPersistedArtifacts(evidence) ||
+                !PromptBindingMatchesDatabase(evidence, promptEvidenceRefs))
             {
                 return false;
             }
@@ -1046,6 +1217,174 @@ public sealed class ProjectRouteStateArtifactService
             }
 
             return true;
+        }
+
+        private bool PromptBindingMatchesDatabase(
+            JsonElement evidence,
+            IReadOnlyList<string> promptEvidenceRefs)
+        {
+            var route = ReadString(evidence, "route");
+            if (string.IsNullOrWhiteSpace(route) ||
+                !PromptBindings.TryGetValue(route, out var binding) ||
+                !string.Equals(binding.ProjectId, Project.ProjectId, StringComparison.Ordinal) ||
+                !promptEvidenceRefs.Contains(binding.PromptEvidenceRef, StringComparer.Ordinal) ||
+                !evidence.TryGetProperty("prompt_manifest", out var manifest) ||
+                manifest.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            var artifactRefs = ReadStringArray(manifest, "prompt_artifact_refs");
+            return artifactRefs.Count == 1 &&
+                   string.Equals(artifactRefs[0], binding.PromptArtifactRef, StringComparison.Ordinal) &&
+                   string.Equals(ReadString(manifest, "execution_prompt_hash"), binding.ExecutionPromptHash, StringComparison.Ordinal) &&
+                   string.Equals(ReadString(manifest, "persisted_prompt_hash"), binding.PersistedPromptHash, StringComparison.Ordinal);
+        }
+
+        private bool TryResolveAllowedGuideReferences(
+            JsonElement expectedBoundary,
+            out IReadOnlyList<string> allowedSourceReferences)
+        {
+            allowedSourceReferences = [];
+            var declaredReferences = ReadStringArray(expectedBoundary, "allowed_source_references")
+                .OrderBy(item => item, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            if (!expectedBoundary.TryGetProperty("source_hashes", out var sourceHashes) ||
+                sourceHashes.ValueKind != JsonValueKind.Object)
+            {
+                return declaredReferences.Length == 0;
+            }
+
+            try
+            {
+                var catalog = new BmadGameTypeDesignCatalog(Project.RepoPath);
+                var derivedReferences = new List<string>();
+                foreach (var property in sourceHashes.EnumerateObject()
+                             .Where(property => property.Name.StartsWith("game-type-guide:", StringComparison.Ordinal)))
+                {
+                    var guideId = property.Name["game-type-guide:".Length..];
+                    var entry = catalog.Find(guideId);
+                    if (entry is null ||
+                        property.Value.ValueKind != JsonValueKind.String ||
+                        !string.Equals(
+                            property.Value.GetString(),
+                            HostedRouteForbiddenSourceGuard.ContentHash(entry.GuideExcerpt),
+                            StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+                    derivedReferences.Add(entry.FragmentRelativePath.Replace('\\', '/'));
+                }
+
+                allowedSourceReferences = derivedReferences
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(item => item, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+                return declaredReferences.SequenceEqual(allowedSourceReferences, StringComparer.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or IOException or UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+
+        private ForbiddenGuideHashCatalog ResolveForbiddenGuideContentHashes(JsonElement expectedBoundary)
+        {
+            var patterns = ReadStringArray(expectedBoundary, "forbidden_source_patterns");
+            if (!patterns.Any(pattern => pattern.Contains("game-type guide excerpt", StringComparison.OrdinalIgnoreCase) ||
+                                         pattern.Contains("game-type-guides", StringComparison.OrdinalIgnoreCase)))
+            {
+                return new ForbiddenGuideHashCatalog([], IsComplete: true);
+            }
+
+            var approvedHashes = expectedBoundary.TryGetProperty("source_hashes", out var sourceHashes) &&
+                                 sourceHashes.ValueKind == JsonValueKind.Object
+                ? sourceHashes.EnumerateObject()
+                    .Where(property => property.Name.StartsWith("game-type-guide:", StringComparison.Ordinal))
+                    .Select(property => property.Value.ValueKind == JsonValueKind.String ? property.Value.GetString() ?? "" : "")
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .ToHashSet(StringComparer.Ordinal)
+                : new HashSet<string>(StringComparer.Ordinal);
+            try
+            {
+                var catalog = new BmadGameTypeDesignCatalog(Project.RepoPath);
+                var entries = catalog.SourceEntries;
+                var approvedChunkHashes = entries
+                    .Where(entry => approvedHashes.Contains(HostedRouteForbiddenSourceGuard.ContentHash(entry.GuideExcerpt)))
+                    .SelectMany(entry => HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                        entry.FragmentRelativePath,
+                        entry.GuideExcerpt))
+                    .Select(item => item.ContentHash)
+                    .ToHashSet(StringComparer.Ordinal);
+                var hashes = entries
+                    .Where(entry => !string.IsNullOrWhiteSpace(entry.GuideExcerpt))
+                    .Where(entry => !approvedHashes.Contains(HostedRouteForbiddenSourceGuard.ContentHash(entry.GuideExcerpt)))
+                    .SelectMany(entry => HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                        entry.FragmentRelativePath,
+                        entry.GuideExcerpt))
+                    .Where(item => !approvedChunkHashes.Contains(item.ContentHash))
+                    .Select(item => item.ContentHash)
+                    .Distinct(StringComparer.Ordinal)
+                    .OrderBy(hash => hash, StringComparer.Ordinal)
+                    .ToArray();
+                return new ForbiddenGuideHashCatalog(hashes, catalog.IsComplete);
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or IOException or UnauthorizedAccessException)
+            {
+                return new ForbiddenGuideHashCatalog([], IsComplete: false);
+            }
+        }
+
+        private sealed record ForbiddenGuideHashCatalog(IReadOnlyList<string> ContentHashes, bool IsComplete);
+
+        private bool PromptHashMatchesPersistedArtifacts(JsonElement evidence)
+        {
+            if (!evidence.TryGetProperty("prompt_manifest", out var manifest) ||
+                manifest.ValueKind != JsonValueKind.Object ||
+                !evidence.TryGetProperty("forbidden_source_scan", out var scan) ||
+                scan.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            var executionPromptHash = ReadString(manifest, "execution_prompt_hash");
+            var persistedPromptHash = ReadString(manifest, "persisted_prompt_hash");
+            if (!string.Equals(executionPromptHash, ReadString(scan, "prompt_hash"), StringComparison.Ordinal) ||
+                executionPromptHash.Length != 64 ||
+                persistedPromptHash.Length != 64)
+            {
+                return false;
+            }
+
+            var artifactRefs = ReadStringArray(manifest, "prompt_artifact_refs");
+            if (artifactRefs.Count == 0)
+            {
+                return false;
+            }
+
+            var persistedPrompts = new List<string>();
+            foreach (var artifactRef in artifactRefs)
+            {
+                var fullPath = Resolve(artifactRef);
+                if (fullPath is null || !File.Exists(fullPath))
+                {
+                    return false;
+                }
+                try
+                {
+                    persistedPrompts.Add(File.ReadAllText(fullPath, Encoding.UTF8));
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    return false;
+                }
+            }
+
+            var persistedPrompt = string.Join("\n---\n", persistedPrompts);
+            return string.Equals(
+                persistedPromptHash,
+                HostedRouteForbiddenSourceGuard.PromptHash(persistedPrompt),
+                StringComparison.Ordinal);
         }
 
         private bool SourceHashesMatchAuthority(JsonElement boundary)
@@ -1075,18 +1414,64 @@ public sealed class ProjectRouteStateArtifactService
             var normalizedKey = sourceKey.Replace('\\', '/');
             if (string.Equals(normalizedKey, "project-contract-snapshot", StringComparison.Ordinal))
             {
-                return TryReadJsonField("meta/routes/scene-route/latest.json", "source_contract_snapshot_hash", out hashes);
+                hashes = [GddToModuleAuthorityHashes.ComputeContractSnapshotHash(Project.GameTypeMatchJson ?? "")];
+                return true;
+            }
+
+            if (normalizedKey.StartsWith("game-type-guide:", StringComparison.Ordinal))
+            {
+                var gameTypeId = normalizedKey["game-type-guide:".Length..];
+                try
+                {
+                    var entry = new BmadGameTypeDesignCatalog(Project.RepoPath).Find(gameTypeId);
+                    if (entry is null || string.IsNullOrWhiteSpace(entry.GuideExcerpt))
+                    {
+                        return false;
+                    }
+                    hashes = [HostedRouteForbiddenSourceGuard.ContentHash(entry.GuideExcerpt)];
+                    return true;
+                }
+                catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or IOException or UnauthorizedAccessException)
+                {
+                    return false;
+                }
             }
 
             if (string.Equals(normalizedKey, "meta/routes/scene-route/latest.json", StringComparison.Ordinal))
             {
-                return TryReadJsonField(normalizedKey, "confirmed_scene_route_hash", out hashes);
+                var sceneRoutePath = Resolve(normalizedKey);
+                if (sceneRoutePath is null || !File.Exists(sceneRoutePath))
+                {
+                    return false;
+                }
+                try
+                {
+                    using var document = JsonDocument.Parse(File.ReadAllText(sceneRoutePath, Encoding.UTF8));
+                    hashes = [GddToModuleAuthorityHashes.ComputeSceneRouteHash(document.RootElement)];
+                    return true;
+                }
+                catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
+                {
+                    return false;
+                }
             }
 
             if (string.Equals(normalizedKey, "structured-game-type-metadata", StringComparison.Ordinal))
             {
-                hashes = HashCandidates(Project.GameTypeMatchJson ?? "");
+                hashes = [GddToModuleAuthorityHashes.ComputeStructuredGameTypeHash(Project.GameTypeMatchJson ?? "")];
                 return hashes.Count > 0;
+            }
+
+            if (normalizedKey is "source_gdd_hash" or
+                "source_scene_route_hash" or
+                "source_requirement_map_hash" or
+                "source_contract_hash" or
+                "source_contract_snapshot_hash" or
+                "source_godot_ui_contract_hash" or
+                "source_ui_style_contract_hash" or
+                "ui_style_snapshot_hash")
+            {
+                return TryReadJsonField("routes/prototype-contract/latest.json", normalizedKey, out hashes);
             }
 
             var fullPath = Resolve(normalizedKey);
@@ -1145,6 +1530,18 @@ public sealed class ProjectRouteStateArtifactService
 
         private string? Resolve(string relativePath)
         {
+            try
+            {
+                if ((File.GetAttributes(Path.GetFullPath(Project.RepoPath)) & FileAttributes.ReparsePoint) != 0)
+                {
+                    return null;
+                }
+            }
+            catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException)
+            {
+                return null;
+            }
+
             var normalized = relativePath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
             if (Path.IsPathRooted(normalized) ||
                 normalized.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Any(part => part == ".."))
@@ -1152,10 +1549,19 @@ public sealed class ProjectRouteStateArtifactService
                 return null;
             }
 
-            var primaryRoot = relativePath.StartsWith("routes/", StringComparison.OrdinalIgnoreCase)
-                ? Project.RepoPath
-                : Project.RepoPath;
-            return SafeCombine(primaryRoot, normalized) ?? SafeCombine(Project.MetaPath, normalized);
+            var fromRepository = SafeCombine(Project.RepoPath, normalized);
+            if (fromRepository is not null && (File.Exists(fromRepository) || Directory.Exists(fromRepository)))
+            {
+                return fromRepository;
+            }
+
+            if (relativePath.Replace('\\', '/').StartsWith("meta/", StringComparison.OrdinalIgnoreCase))
+            {
+                var metadataRelativePath = normalized[("meta" + Path.DirectorySeparatorChar).Length..];
+                return SafeCombine(Project.MetaPath, metadataRelativePath);
+            }
+
+            return fromRepository;
         }
 
         private static string? SafeCombine(string root, string relativePath)
@@ -1178,6 +1584,18 @@ public sealed class ProjectRouteStateArtifactService
 
         internal static bool HasReparsePointBetween(string rootFullPath, string candidateFullPath)
         {
+            try
+            {
+                if ((File.GetAttributes(rootFullPath) & FileAttributes.ReparsePoint) != 0)
+                {
+                    return true;
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                return true;
+            }
+
             var relative = Path.GetRelativePath(rootFullPath, candidateFullPath);
             var current = rootFullPath;
             foreach (var segment in relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
@@ -1211,7 +1629,8 @@ public sealed class ProjectRouteStateArtifactService
 
         private static string ReadString(JsonElement root, string propertyName)
         {
-            return root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+            return root.ValueKind == JsonValueKind.Object &&
+                   root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
                 ? value.GetString()?.Trim() ?? ""
                 : "";
         }

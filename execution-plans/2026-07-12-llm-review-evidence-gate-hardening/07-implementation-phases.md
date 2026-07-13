@@ -1,6 +1,6 @@
 # 实施阶段
 
-## Phase R0：上游等待与计划基线
+## Phase R0A：计划与合同基线
 
 Owner：平台架构/工作流维护者。
 
@@ -8,10 +8,41 @@ Owner：平台架构/工作流维护者。
 
 1. 完成本目录 Whole-directory review；
 2. 冻结 schema v1 和 RFG requirement ledger；
-3. 记录两个上游重构目录的完成/handoff evidence；
-4. 未取得 handoff 前，只允许修改本目录和独立验证 fixture。
+3. 冻结 Bootstrap Review 的 route/profile/schema revision；
+4. 未取得 handoff 前，只允许修改本目录 plan-local 工具、合同、操作指南和独立验证 fixture。
 
-退出标准：96 review PASS、97 无缺 owner/acceptance、98/99 覆盖完整、validator 通过。此退出不表示运行时代码完成。
+退出标准：96 review PASS、97 无缺 owner/acceptance、98/99 覆盖完整、validator 通过。此退出不表示正式 gateway 或运行时代码完成。
+
+## Phase R0B：只读 Bootstrap Review
+
+Owner：plan-local review bootstrap maintainer。
+
+操作步骤：
+
+1. 实现 `prepare/gate/finalize` 手工 CLI；
+2. `prepare` 只生成 hash-bound input、三个 reviewer prompt 和输出模板；
+3. `gate` 只消费用户手工保存的 reviewer 输出，执行 schema、精确证据、required layer、dedup 和 rejection；
+4. P0/P1 存在时生成 verifier prompt/template，等待用户手工完成独立核验；
+5. `finalize` 只消费 verifier 决策并写独立 sidecar；
+6. 工具不导入 LLM backend、不启动子进程 reviewer、不修改目标 scope。
+
+退出标准：zero finding、missing layer、stale evidence、dedup、P0/P1 verifier 和 target-read-only tests 全部通过；操作指南可复制执行。
+
+## Phase R0C：用户手工审查上游
+
+Owner：review operator（用户）。
+
+操作步骤：用户分别对 7-07/7-11 创建新 review ID，手工执行三个 reviewer 与独立 verifier，再运行 gate/finalize。Bootstrap 输出只作为新增 supplemental evidence；既有历史 finding、ledger 和 BH-HANDOFF authority 不变。
+
+退出标准：由用户决定；本计划实施 agent 不代跑 reviewer，也不根据 bootstrap 输出自动修改上游。
+
+## Phase R0D：上游 handoff
+
+Owner：平台架构/工作流维护者。
+
+操作步骤：记录两个上游重构目录的最终 completion、不可变 commit 和 handoff evidence；验证 Bootstrap Review 输出未被误用为上游完成 authority。
+
+退出标准：两个上游 handoff 均存在且可定位，才允许开始 R1。
 
 ## Phase R1：长期标准与机器合同
 

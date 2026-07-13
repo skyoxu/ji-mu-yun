@@ -96,7 +96,12 @@ public sealed class ProjectWorkflowRouteService
         var stage = steps.FirstOrDefault(step => step.Id == action.UiTarget) ??
                     steps.FirstOrDefault(step => step.Id == state.StageId) ??
                     steps.First();
-        var routeStateArtifacts = _routeStateArtifacts.Read(project);
+        var promptBindings = (await _metadataStore.ListProjectRoutePromptEvidenceBindingsAsync(project.ProjectId, cancellationToken))
+            .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
+        var projectArtifactIds = (await _metadataStore.ListArtifactsForProjectAsync(project.ProjectId, cancellationToken))
+            .Select(artifact => artifact.ArtifactId)
+            .ToHashSet(StringComparer.Ordinal);
+        var routeStateArtifacts = _routeStateArtifacts.Read(project, promptBindings, projectArtifactIds);
         var workflowRecommendation = _routeStateArtifacts.BuildRecommendation(project, routeStateArtifacts, action);
         var unresolvedDiagnosticBlockerCount = await _metadataStore.CountUnresolvedBlockingDiagnosticsAsync(
             accountId,

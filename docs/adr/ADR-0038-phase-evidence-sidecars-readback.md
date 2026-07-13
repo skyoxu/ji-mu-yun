@@ -21,8 +21,13 @@ Use generated sidecars, database rows, artifacts, logs, and sanitized readback a
 - Evidence bundles must have B0-03 Evidence Bundle Schema And Validator before any readiness catalog or route status marks a route green from that bundle.
 - Failure evidence is preserved; new sidecar evidence is added rather than rewriting generated history.
 - Prompt-producing route sidecars use the shared hosted-route recovery contract, structured source-hash evidence, and workspace-bound prompt manifests. Validators recompute or resolve authoritative source hashes instead of trusting two matching self-declarations.
+- Prompt-producing routes scan the exact in-memory execution prompt before dispatch against the declared forbidden-source patterns. Evidence separates `execution_prompt_hash` from the secret-redacted `persisted_prompt_hash`; the former must match the scan and the database run binding, while the latter must recompute from the internal prompt artifact. A declaration or arbitrary 64-hex value is not acceptance evidence.
+- Before contract freeze, the GDD route may consume the single selected game-type guide only when guide ID/path/full-content hash are recorded as authority. The allowed relative source reference is derived from that authority and cannot be self-declared by a sidecar. Other guide content is denied. After freeze, prompt routes deny raw mutable guide excerpts using normalized paragraph and overlapping word-window fingerprints without a fixed paragraph-count truncation.
+- Run-bound prompt evidence is accepted only when the run is a succeeded GDD run for the same project and its database evidence binds the execution hash, persisted hash, prompt artifact, and source-evidence artifact.
 - Raw prompt artifacts are internal-recovery-only and are excluded from browser/account artifact listing and direct readback. Browser-readable prompt evidence contains manifests and hashes only.
+- Internal prompt artifacts are also secret-redacted before persistence; internal-only controls browser reachability, not permission to store bearer tokens or provider secrets verbatim.
 - Persisted/exported evidence, decision metadata, diagnostics, and LLM telemetry are redacted before write; project-local queue sidecars are atomic projections of the latest DB snapshot.
+- Workspace-bound evidence rejects a repository root that is itself a reparse point, and semantic source hashes are recomputed from current structured game-type, scene-route, contract-snapshot, and frozen-contract canonical content rather than accepted from sidecar-declared hash fields.
 
 ## Consequences
 

@@ -20,6 +20,23 @@ public sealed class RouteActionDescriptorsTests
         RouteActionDescriptors.Get("preview_package").DefaultPhaseEligibility.Should().Be("not_active");
     }
 
+    [Theory]
+    [InlineData("generate_requirement_map", "/api/projects/{projectId}/gdd/requirements-map", "/api/projects/{projectId}/gdd/requirements-map/latest")]
+    [InlineData("freeze_contract", "/api/projects/{projectId}/prototype-contract/freeze", "/api/projects/{projectId}/prototype-contract/status")]
+    [InlineData("refresh_contract", "/api/projects/{projectId}/prototype-contract/freeze", "/api/projects/{projectId}/prototype-contract/status")]
+    public void MutationActions_ShouldDeclareRunSemanticsAndRealEndpoints(
+        string actionId,
+        string apiRoute,
+        string readbackRoute)
+    {
+        var descriptor = RouteActionDescriptors.Get(actionId);
+
+        descriptor.OperationScope.Should().Be("run");
+        descriptor.DuplicateRunPolicy.Should().Be("request_identity_or_active_run_reuse");
+        descriptor.ApiRouteTemplate.Should().Be(apiRoute);
+        descriptor.ReadbackUrlTemplate.Should().Be(readbackRoute);
+    }
+
     [Fact]
     public void Fixture_ShouldMatchRuntimeDescriptors()
     {

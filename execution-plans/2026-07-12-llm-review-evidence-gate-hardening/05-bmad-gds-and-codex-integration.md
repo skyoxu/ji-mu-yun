@@ -27,11 +27,14 @@
 
 ## 3. 当前 7 月 7 日审查隔离
 
-- 当前运行中的 7 月 7 日目录审查继续由现有流程完成；
+- 已产生的 7 月 7 日历史 review run 继续由其原流程解释；
 - 不修改其 reviewer prompt、任务输入、historical ledger、severity 或 closure；
 - 不使用新 gateway 重新解释已经产生的 finding；
 - handoff 时只记录旧 route 的输入/输出格式、完成状态和不可变 evidence ref；
+- 用户可以新建显式 Bootstrap review ID，手工对当前 7-07/7-11 scope 执行 reviewer；该输出是 supplemental evidence，不自动写入上游 ledger、repair action 或完成状态；
 - R3 之后的新审查才切换到三个 candidate adapter；切换必须有 `routeVersion`、生效边界和 rollback evidence。
+
+Bootstrap prompt 不是 BMAD/GDS customization，也不修改安装文件。用户可选择使用已安装 reviewer skill 手工完成 prompt，但 CLI 不解析/调用 skill resolver，不自动启动 Codex 或任何 LLM backend。
 
 ## 4. 平台长期开发 Codex
 
@@ -74,3 +77,4 @@ BMAD/GDS 升级后必须验证：customization resolver 加载成功、stock ski
 - Given stock reviewer 产生十条候选，When只有零条通过门禁，Then用户看到 clean result 而不是十条噪音。
 - Given 前台项目 A 的 finding，When项目 B 发起审查，Then B 无法读取 A 的 evidence 或 disposition memory。
 - Given 7 月 7 日审查仍在运行，When R3 尚未取得 handoff，Then三个 reviewer 的现有 route、输出和 ledger 均不改变。
+- Given用户手工完成一个新 Bootstrap review，When gate/finalize 写结果，Then既有 7-07/7-11 历史 review artifact 无字节变化。

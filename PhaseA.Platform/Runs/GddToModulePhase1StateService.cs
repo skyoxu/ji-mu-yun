@@ -10,6 +10,11 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class GddToModulePhase1StateService
 {
+    private static readonly string[] ForbiddenSourcePatterns =
+    [
+        "docs/game-type-guides/** raw excerpts",
+        "unapproved raw game-type guide excerpt before contract freeze"
+    ];
     private const string SceneRouteRelativePath = "meta/routes/scene-route/latest.json";
     private const string GddDocumentRelativePath = "meta/routes/gdd-document/latest.json";
     private const string GddDocumentPromptEvidenceRelativePath = "meta/routes/gdd-document/prompt-evidence.json";
@@ -72,9 +77,8 @@ public sealed class GddToModulePhase1StateService
             notes = normalized.Notes
         };
         var sceneHash = Sha256(JsonSerializer.Serialize(hashPayload, JsonOptions()));
-        var structuredHash = Sha256(project.GameTypeMatchJson);
-        var contractSnapshot = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson).ContractSnapshot;
-        var contractSnapshotHash = Sha256(JsonSerializer.Serialize(contractSnapshot, JsonOptions()));
+        var structuredHash = GddToModuleAuthorityHashes.ComputeStructuredGameTypeHash(project.GameTypeMatchJson);
+        var contractSnapshotHash = GddToModuleAuthorityHashes.ComputeContractSnapshotHash(project.GameTypeMatchJson);
         var gddFormHash = ReadOptionalFileHash(project, GddFormRelativePath);
         var existing = ReadSceneRoute(project);
         if (existing is not null &&
@@ -92,6 +96,7 @@ public sealed class GddToModulePhase1StateService
             route = "scene-route-confirmation",
             project_id = project.ProjectId,
             status_dimension = "scene_route_confirmation",
+            status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.SceneRouteConfirmation),
             status = "confirmed",
             operation_status = "created_run",
             confirmed_utc = now,
@@ -105,14 +110,14 @@ public sealed class GddToModulePhase1StateService
             {
                 recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
                 recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
-                authority_sources = new[] { "structured game-type metadata", GddFormRelativePath, "submitted confirmed scene route" },
+                authority_sources = new[] { "structured-game-type-metadata", GddFormRelativePath, "project-contract-snapshot" },
                 source_hashes = new Dictionary<string, string>
                 {
                     ["structured-game-type-metadata"] = structuredHash,
                     [GddFormRelativePath] = gddFormHash,
                     ["project-contract-snapshot"] = contractSnapshotHash
                 },
-                forbidden_source_patterns = new[] { "docs/game-type-guides/** raw excerpts" },
+                forbidden_source_patterns = ForbiddenSourcePatterns,
                 prompt_evidence_refs = Array.Empty<object>(),
                 checked_utc = now
             },
@@ -197,17 +202,98 @@ public sealed class GddToModulePhase1StateService
             [SceneRouteRelativePath] = sceneHash,
             [GddRelativePath] = generatedHash
         };
-        var promptArtifactRefs = runId.Length == 0
-            ? Array.Empty<string>()
-            : (await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken))
-                .Where(artifact => string.Equals(artifact.ArtifactType, "game-design-gdd-prompt", StringComparison.Ordinal))
-                .Select(artifact => artifact.RelativePath)
-                .ToArray();
-        var promptManifestHashes = promptArtifactRefs
-            .Select(relativePath => Resolve(project.RepoPath, relativePath))
-            .Where(File.Exists)
-            .Select(path => Sha256(File.ReadAllText(path, Encoding.UTF8)))
+        var run = string.IsNullOrWhiteSpace(runId)
+            ? null
+            : await _metadataStore.GetRunSnapshotAsync(runId, cancellationToken);
+        if (run is null ||
+            !string.Equals(run.ProjectId, project.ProjectId, StringComparison.Ordinal) ||
+            !string.Equals(run.RunType, "game-design-gdd", StringComparison.Ordinal) ||
+            !string.Equals(run.Status, "succeeded", StringComparison.Ordinal) ||
+            !TryReadRunPromptBinding(run, out var runPromptBinding))
+        {
+            return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_run_invalid", "Generated GDD run is missing, incomplete, or belongs to another project.");
+        }
+
+        var approvedGuide = ReadApprovedGuide(project, run);
+        if (approvedGuide is not null)
+        {
+            sourceHashes[$"game-type-guide:{approvedGuide.Id}"] = approvedGuide.ContentHash;
+        }
+        IReadOnlyList<ArtifactSnapshot> runArtifacts = runId.Length == 0
+            ? Array.Empty<ArtifactSnapshot>()
+            : await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
+        var promptArtifactRefs = runArtifacts
+            .Where(artifact => string.Equals(artifact.ArtifactType, GameDesignDocumentService.PromptArtifactType, StringComparison.Ordinal))
+            .Select(artifact => artifact.RelativePath)
             .ToArray();
+        var promptEvidenceRefs = runArtifacts
+            .Where(artifact => string.Equals(artifact.ArtifactType, GameDesignDocumentService.PromptSourceEvidenceArtifactType, StringComparison.Ordinal))
+            .Select(artifact => artifact.RelativePath)
+            .ToArray();
+        if (promptArtifactRefs.Length != 1 || promptEvidenceRefs.Length != 1)
+        {
+            return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_evidence_missing", "Generated GDD run does not have one prompt artifact and one matching source-evidence artifact.");
+        }
+
+        var promptArtifactPath = Resolve(project.RepoPath, promptArtifactRefs[0]);
+        var promptEvidencePath = Resolve(project.RepoPath, promptEvidenceRefs[0]);
+        if (!File.Exists(promptArtifactPath) || !File.Exists(promptEvidencePath))
+        {
+            return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_evidence_missing", "Generated GDD prompt evidence files are missing.");
+        }
+
+        JsonElement forbiddenSourceScan;
+        string executionPromptHash;
+        string persistedPromptHash;
+        try
+        {
+            using var promptEvidenceDocument = JsonDocument.Parse(await File.ReadAllTextAsync(promptEvidencePath, Encoding.UTF8, cancellationToken));
+            var promptEvidenceRoot = promptEvidenceDocument.RootElement;
+            if (!string.Equals(ReadString(promptEvidenceRoot, "schema_version"), "gdd-prompt-source-evidence.v1", StringComparison.Ordinal) ||
+                !string.Equals(ReadString(promptEvidenceRoot, "route"), "gdd-document-generation", StringComparison.Ordinal) ||
+                !string.Equals(ReadString(promptEvidenceRoot, "run_id"), runId, StringComparison.Ordinal) ||
+                !promptEvidenceRoot.TryGetProperty("prompt_manifest", out var promptManifest) ||
+                promptManifest.ValueKind != JsonValueKind.Object ||
+                !ReadStringArray(promptManifest, "prompt_artifact_refs").SequenceEqual(promptArtifactRefs, StringComparer.Ordinal) ||
+                !ReadBoolean(promptManifest, "redacted"))
+            {
+                return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_evidence_invalid", "Generated GDD prompt evidence is not bound to the current run artifacts.");
+            }
+
+            executionPromptHash = ReadString(promptManifest, "execution_prompt_hash");
+            persistedPromptHash = ReadString(promptManifest, "persisted_prompt_hash");
+            if (!string.Equals(executionPromptHash, runPromptBinding.ExecutionPromptHash, StringComparison.Ordinal) ||
+                !string.Equals(persistedPromptHash, runPromptBinding.PersistedPromptHash, StringComparison.Ordinal) ||
+                !string.Equals(promptArtifactRefs[0], runPromptBinding.PromptArtifactRef, StringComparison.Ordinal) ||
+                !string.Equals(promptEvidenceRefs[0], runPromptBinding.PromptSourceEvidenceRef, StringComparison.Ordinal))
+            {
+                return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_evidence_invalid", "Generated GDD prompt evidence does not match the database run binding.");
+            }
+            var allowedSourceReferences = approvedGuide is null ? Array.Empty<string>() : new[] { approvedGuide.RelativePath };
+            var forbiddenGuideCatalog = BuildGuideFingerprints(project.RepoPath, approvedGuide?.ContentHash);
+            if (!HostedRouteForbiddenSourceGuard.IsValidEvidence(
+                    promptEvidenceRoot,
+                    ForbiddenSourcePatterns,
+                    forbiddenGuideCatalog.Fingerprints.Select(item => item.ContentHash).Distinct(StringComparer.Ordinal).OrderBy(item => item, StringComparer.Ordinal).ToArray(),
+                    requireForbiddenContentFingerprints: true,
+                    expectedAllowedSourceReferences: allowedSourceReferences,
+                    forbiddenContentFingerprintSetComplete: forbiddenGuideCatalog.IsComplete) ||
+                !promptEvidenceRoot.TryGetProperty("forbidden_source_scan", out var sourceScan) ||
+                !string.Equals(ReadString(sourceScan, "prompt_hash"), executionPromptHash, StringComparison.Ordinal) ||
+                !string.Equals(
+                    HostedRouteForbiddenSourceGuard.PromptHash(await File.ReadAllTextAsync(promptArtifactPath, Encoding.UTF8, cancellationToken)),
+                    persistedPromptHash,
+                    StringComparison.Ordinal))
+            {
+                return GddDocumentRouteStateResult.Blocked(projectId, "gdd_forbidden_source_detected", "Generated GDD prompt source boundary could not be verified.");
+            }
+
+            forbiddenSourceScan = sourceScan.Clone();
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+        {
+            return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_evidence_invalid", "Generated GDD prompt evidence could not be read.");
+        }
         await WriteJsonAsync(project, GddDocumentPromptEvidenceRelativePath, new
         {
             schema_version = "gdd-document-prompt-evidence.v1",
@@ -218,14 +304,39 @@ public sealed class GddToModulePhase1StateService
             source_hashes = sourceHashes,
             prompt_manifest = new
             {
-                prompt_count = promptManifestHashes.Length,
-                prompt_hashes = promptManifestHashes,
+                prompt_count = promptArtifactRefs.Length,
+                prompt_artifact_refs = promptArtifactRefs,
+                execution_prompt_hash = executionPromptHash,
+                persisted_prompt_hash = persistedPromptHash,
                 retention = "internal_recovery_only",
-                browser_readable = false
+                browser_readable = false,
+                redacted = true
             },
+            forbidden_source_scan = forbiddenSourceScan,
+            approved_guide_sources = approvedGuide is null
+                ? Array.Empty<object>()
+                : new object[]
+                {
+                    new
+                    {
+                        id = approvedGuide.Id,
+                        path = approvedGuide.RelativePath,
+                        content_hash = approvedGuide.ContentHash
+                    }
+                },
             raw_prompt_persisted = false,
+            redacted_prompt_persisted = true,
             checked_utc = now
         }, cancellationToken);
+        await _metadataStore.UpsertProjectRoutePromptEvidenceBindingAsync(
+            new ProjectRoutePromptEvidenceBindingCommand(
+                project.ProjectId,
+                "gdd-document-generation",
+                executionPromptHash,
+                persistedPromptHash,
+                promptArtifactRefs[0],
+                GddDocumentPromptEvidenceRelativePath),
+            cancellationToken);
         sceneRoot["source_generated_gdd_hash"] = generatedHash;
         sceneRoot["updated_utc"] = now;
         object BuildDocumentPayload(string status, string operationStatus) => new
@@ -235,6 +346,7 @@ public sealed class GddToModulePhase1StateService
             project_id = project.ProjectId,
             run_id = runId,
             status_dimension = "route_readback",
+            status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
             status,
             operation_status = operationStatus,
             generated_gdd_path = GddRelativePath,
@@ -247,9 +359,10 @@ public sealed class GddToModulePhase1StateService
             {
                 recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
                 recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
-                authority_sources = new[] { SceneRouteRelativePath, GddRelativePath },
+                authority_sources = sourceHashes.Keys.ToArray(),
                 source_hashes = sourceHashes,
-                forbidden_source_patterns = new[] { "docs/game-type-guides/** raw excerpts" },
+                forbidden_source_patterns = ForbiddenSourcePatterns,
+                allowed_source_references = approvedGuide is null ? Array.Empty<string>() : new[] { approvedGuide.RelativePath },
                 prompt_evidence_refs = new[] { GddDocumentPromptEvidenceRelativePath },
                 checked_utc = now
             },
@@ -263,7 +376,7 @@ public sealed class GddToModulePhase1StateService
 
         try
         {
-            await WriteJsonAsync(project, GddDocumentRelativePath, BuildDocumentPayload("writing", "in_progress"), cancellationToken);
+            await WriteJsonAsync(project, GddDocumentRelativePath, BuildDocumentPayload("running", "in_progress"), cancellationToken);
             await WriteTextAtomicallyAsync(scenePath, sceneRoot.ToJsonString(JsonOptions()), cancellationToken);
             await WriteJsonAsync(project, GddDocumentRelativePath, BuildDocumentPayload("ready", "created_run"), cancellationToken);
         }
@@ -484,6 +597,126 @@ public sealed class GddToModulePhase1StateService
     {
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value.Replace("\r\n", "\n").Trim()))).ToLowerInvariant();
     }
+
+    private static bool TryReadRunPromptBinding(RunSnapshot run, out RunPromptBinding binding)
+    {
+        binding = new RunPromptBinding("", "", "", "");
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            if (!document.RootElement.TryGetProperty("prompt_manifest", out var manifest) ||
+                manifest.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            binding = new RunPromptBinding(
+                ReadString(manifest, "execution_prompt_hash"),
+                ReadString(manifest, "persisted_prompt_hash"),
+                ReadString(manifest, "prompt_artifact_ref"),
+                ReadString(manifest, "prompt_source_evidence_ref"));
+            return binding.ExecutionPromptHash.Length == 64 &&
+                   binding.PersistedPromptHash.Length == 64 &&
+                   !string.IsNullOrWhiteSpace(binding.PromptArtifactRef) &&
+                   !string.IsNullOrWhiteSpace(binding.PromptSourceEvidenceRef);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static ApprovedGuideSource? ReadApprovedGuide(ProjectSnapshot project, RunSnapshot run)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson!);
+            if (!document.RootElement.TryGetProperty("game_type_design_template", out var template) ||
+                template.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            var id = template.TryGetProperty("id", out var idValue) && idValue.ValueKind == JsonValueKind.String
+                ? idValue.GetString()?.Trim() ?? ""
+                : "";
+            var recordedHash = template.TryGetProperty("guide_excerpt_hash", out var hashValue) && hashValue.ValueKind == JsonValueKind.String
+                ? hashValue.GetString()?.Trim() ?? ""
+                : "";
+            var entry = new BmadGameTypeDesignCatalog(project.RepoPath).Find(id);
+            if (entry is null)
+            {
+                return null;
+            }
+
+            var currentHash = HostedRouteForbiddenSourceGuard.ContentHash(entry.GuideExcerpt);
+            return string.Equals(recordedHash, currentHash, StringComparison.Ordinal)
+                ? new ApprovedGuideSource(entry.Id, entry.FragmentRelativePath, currentHash)
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static ForbiddenGuideCatalog BuildGuideFingerprints(
+        string repositoryRoot,
+        string? approvedContentHash)
+    {
+        try
+        {
+            var catalog = new BmadGameTypeDesignCatalog(repositoryRoot);
+            var entries = catalog.SourceEntries;
+            var approvedEntry = entries.FirstOrDefault(entry => string.Equals(
+                HostedRouteForbiddenSourceGuard.ContentHash(entry.GuideExcerpt),
+                approvedContentHash,
+                StringComparison.Ordinal));
+            var approvedChunkHashes = approvedEntry is null
+                ? new HashSet<string>(StringComparer.Ordinal)
+                : HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                        approvedEntry.FragmentRelativePath,
+                        approvedEntry.GuideExcerpt)
+                    .Select(item => item.ContentHash)
+                    .ToHashSet(StringComparer.Ordinal);
+            var fingerprints = entries
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.GuideExcerpt))
+                .Where(entry => !string.Equals(
+                    HostedRouteForbiddenSourceGuard.ContentHash(entry.GuideExcerpt),
+                    approvedContentHash,
+                    StringComparison.Ordinal))
+                .SelectMany(entry => HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                    entry.FragmentRelativePath,
+                    entry.GuideExcerpt))
+                .Where(item => !approvedChunkHashes.Contains(item.ContentHash))
+                .GroupBy(item => item.ContentHash, StringComparer.Ordinal)
+                .Select(group => group.First())
+                .OrderBy(item => item.ContentHash, StringComparer.Ordinal)
+                .ToArray();
+            return new ForbiddenGuideCatalog(fingerprints, catalog.IsComplete);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or IOException or UnauthorizedAccessException)
+        {
+            return new ForbiddenGuideCatalog([], IsComplete: false);
+        }
+    }
+
+    private sealed record ForbiddenGuideCatalog(
+        IReadOnlyList<HostedRouteForbiddenContentFingerprint> Fingerprints,
+        bool IsComplete);
+
+    private sealed record ApprovedGuideSource(string Id, string RelativePath, string ContentHash);
+
+    private sealed record RunPromptBinding(
+        string ExecutionPromptHash,
+        string PersistedPromptHash,
+        string PromptArtifactRef,
+        string PromptSourceEvidenceRef);
 
     private static JsonSerializerOptions JsonOptions()
     {

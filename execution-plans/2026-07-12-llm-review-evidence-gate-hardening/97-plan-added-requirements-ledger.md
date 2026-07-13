@@ -36,6 +36,14 @@
 | RFG-030 | requiredLayers 必须由 gateway-assigned reviewProfile/policyRevision 派生，producer 不得改选 profile 或自行缩小 | 02 | R1 | `review-gate://RFG-030/trusted-layer-policy-test` | active |
 | RFG-031 | unverified P0/P1 必须具有 gateway-owned class/disposition，并与 blocked/incomplete 唯一对应 | 02 | R1 | `review-gate://RFG-031/unverified-disposition-test` | active |
 | RFG-032 | 关键 negative fixture 必须断言目标失败原因，不能依赖无关约束维持 invalid | 03 | R1 | `review-gate://RFG-032/targeted-negative-fixture-test` | active |
+| RFG-033 | handoff 前允许 plan-local 只读 Bootstrap Review 服务 7-07/7-11 新 review run | 01 | R0 | `review-gate://RFG-033/bootstrap-scope-test` | active |
+| RFG-034 | Bootstrap CLI 只生成 prompt/template 并消费手工输出，不得调用 reviewer/LLM | 09 | R0 | `review-gate://RFG-034/no-model-invocation-test` | active |
+| RFG-035 | Bootstrap prepare/gate/finalize 不得修改目标 scope，输出目录不得位于 scope 内 | 04 | R0 | `review-gate://RFG-035/target-read-only-test` | active |
+| RFG-036 | Bootstrap input/candidate 必须绑定 artifact hash，stale evidence fail closed | 04 | R0 | `review-gate://RFG-036/stale-evidence-test` | active |
+| RFG-037 | required reviewer 缺失与合法零 finding 必须区分，all-complete zero 可 clean | 04 | R0 | `review-gate://RFG-037/bootstrap-layer-result-test` | active |
+| RFG-038 | Bootstrap P0/P1 必须等待用户手工独立 verifier，verifier 不得新增 finding | 04 | R0 | `review-gate://RFG-038/manual-verifier-test` | active |
+| RFG-039 | Bootstrap evidence 必须标记 supplemental，不得重写历史或替代 BH-HANDOFF/完成 authority | 01 | R0 | `review-gate://RFG-039/bootstrap-authority-isolation-test` | active |
+| RFG-040 | R1 必须提升同一 Bootstrap schema/profile revision，不得重新派生第二套合同 | 05 | R1 | `review-gate://RFG-040/bootstrap-promotion-identity-test` | active |
 
 ## 验收标准
 

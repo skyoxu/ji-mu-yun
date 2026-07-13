@@ -18,7 +18,7 @@ public static class RouteStatusVocabulary
     private static readonly Dictionary<string, IReadOnlySet<string>> Dimensions = new(StringComparer.Ordinal)
     {
         [StageTimeline] = Set("not_started", "ready", "running", "needs_review", "blocked", "completed", "stale"),
-        [RouteReadback] = Set("queued", "running", "ready", "blocked", "needs_fix", "succeeded", "failed", "cancelled", "stale", "unknown"),
+        [RouteReadback] = Set("queued", "running", "ready", "needs_review", "blocked", "needs_fix", "succeeded", "failed", "cancelled", "stale", "unknown"),
         [RequirementCoverage] = Set("mapped", "missing_scene", "missing_module", "needs_review", "explicitly_deferred", "conflict"),
         [SceneRouteConfirmation] = Set("draft", "needs_review", "confirmed", "stale", "blocked"),
         [AdminReviewQueue] = Set("open", "approved", "deferred", "rejected", "backlog", "superseded", "resolved"),

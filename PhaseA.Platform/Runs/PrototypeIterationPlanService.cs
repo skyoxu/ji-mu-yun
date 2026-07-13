@@ -224,14 +224,8 @@ public sealed class PrototypeIterationPlanService
                 source_boundary_enforced = true,
                 recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
                 recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
-                source_hashes = sourceHashes,
-                authority_sources = new[]
-                {
-                    "game-type-route-profile",
-                    PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
-                    "routes/prototype-contract/latest.json",
-                    "meta/routes/gdd-requirements/latest.json"
-                },
+                source_hashes = ToSourceBoundaryHashMap(sourceHashes),
+                authority_sources = SourceBoundaryHashKeys,
                 request_identity_hash = requestIdentityHash,
                 prompt_transport = "stdin-first-shared-route-engine",
                 raw_prompt_persisted = false,
@@ -510,14 +504,7 @@ public sealed class PrototypeIterationPlanService
                 enforced = true,
                 recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
                 recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
-                authority_sources = new[]
-                {
-                    "game-type-route-profile",
-                    PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
-                    "routes/prototype-contract/latest.json",
-                    "meta/routes/gdd-requirements/latest.json",
-                    "meta/routes/iteration-plan/latest.json"
-                },
+                authority_sources = SourceBoundaryHashKeys,
                 forbidden_source_patterns = new[]
                 {
                     "docs/game-type-guides/** raw excerpts",
@@ -530,7 +517,7 @@ public sealed class PrototypeIterationPlanService
                     "meta/routes/iteration-plan/planning-analysis.json",
                     "routes/prototype-contract/latest.json"
                 },
-                source_hashes = sourceHashes
+                source_hashes = sourceHashes is null ? null : ToSourceBoundaryHashMap(sourceHashes)
             },
             source_boundary_enforced = true,
             recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
@@ -3691,6 +3678,33 @@ public sealed class PrototypeIterationPlanService
             status.SourceGodotUiContractHash,
             status.SourceUiStyleContractHash,
             status.UiStyleSnapshotHash);
+    }
+
+    private static readonly string[] SourceBoundaryHashKeys =
+    [
+        "source_gdd_hash",
+        "source_scene_route_hash",
+        "source_requirement_map_hash",
+        "source_contract_hash",
+        "source_contract_snapshot_hash",
+        "source_godot_ui_contract_hash",
+        "source_ui_style_contract_hash",
+        "ui_style_snapshot_hash"
+    ];
+
+    private static IReadOnlyDictionary<string, string> ToSourceBoundaryHashMap(PrototypeIterationPlanSourceHashes sourceHashes)
+    {
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["source_gdd_hash"] = sourceHashes.SourceGddHash,
+            ["source_scene_route_hash"] = sourceHashes.SourceSceneRouteHash,
+            ["source_requirement_map_hash"] = sourceHashes.SourceRequirementMapHash,
+            ["source_contract_hash"] = sourceHashes.SourceContractHash,
+            ["source_contract_snapshot_hash"] = sourceHashes.SourceContractSnapshotHash,
+            ["source_godot_ui_contract_hash"] = sourceHashes.SourceGodotUiContractHash,
+            ["source_ui_style_contract_hash"] = sourceHashes.SourceUiStyleContractHash,
+            ["ui_style_snapshot_hash"] = sourceHashes.UiStyleSnapshotHash
+        };
     }
 
     internal static PrototypeIterationStyleApplicability ToIterationStyleApplicability(PrototypeContractStatusResult status)

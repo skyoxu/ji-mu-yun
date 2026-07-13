@@ -2,7 +2,7 @@
 title: 'Phase 0A Clause-Level Acceptance Closure'
 type: 'refactor'
 created: '2026-07-12'
-status: 'in-progress'
+status: 'done'
 review_loop_iteration: 0
 baseline_commit: 'f58c1d2819ca4cffeb5ad02bdf06fd5a0718990b'
 context:
@@ -51,12 +51,12 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Complete admin queue additive schema, append/supersede behavior, filters, mutation API, decision metadata and sidecar tests.
-- [ ] Apply no-store and admin authorization checks to all touched private audit/readback endpoints.
-- [ ] Close secret redaction, shared LLM evidence uniqueness, action descriptor and source-boundary negative paths.
-- [ ] Replace inferred matrix verification with explicit per-check evidence; mark later phases blocked until predecessor exit.
-- [ ] Run targeted/full regression, hardening smoke, governance audit and append a new Phase 0A exit review.
-- [ ] Run Blind Hunter, Edge Case Hunter and Acceptance Auditor; patch every P0/P1/P2 and repeat until clean.
+- [x] Complete admin queue additive schema, append/supersede behavior, filters, mutation API, decision metadata and sidecar tests.
+- [x] Apply no-store and admin authorization checks to all touched private audit/readback endpoints.
+- [x] Close secret redaction, shared LLM evidence uniqueness, action descriptor and source-boundary negative paths.
+- [x] Replace inferred matrix verification with explicit per-check evidence; mark later phases blocked until predecessor exit.
+- [x] Run targeted/full regression, hardening smoke, governance audit and append a new Phase 0A exit review.
+- [x] Run Blind Hunter, Edge Case Hunter and Acceptance Auditor; patch every P0/P1/P2 and repeat until clean.
 
 **Acceptance Criteria:**
 - Given every Phase 0A exit, local 01-07 acceptance and relevant split-added row, when the matrix is generated, then each has an allowed status and concrete owner/code/test/evidence refs or an auditable gap.
@@ -77,3 +77,44 @@ The acceptance matrix is a traceability projection, not an authority that can ma
 - `py -3 -m pytest scripts/python/tests/test_build_gdd_to_module_acceptance_matrix.py scripts/sc/tests/test_llm_backend.py` -- matrix and shared Python LLM entrypoint pass.
 - `py -3 scripts/python/phase_a_gdd_to_module_hardening_smoke.py --repository-root C:/jimuyun` -- status ok with new append-only evidence.
 - Governance audit and three-layer review -- zero unresolved P0/P1/P2.
+
+## Suggested Review Order
+
+**Source-boundary enforcement**
+
+- Start with the route-level fail-closed boundary and evidence construction.
+  [`GameDesignDocumentService.cs:1947`](../../PhaseA.Platform/Runs/GameDesignDocumentService.cs#L1947)
+
+- Inspect exact, edited, inserted, deleted, and repeated-token detection.
+  [`HostedRouteForbiddenSourceGuard.cs:12`](../../PhaseA.Platform/Workflow/HostedRouteForbiddenSourceGuard.cs#L12)
+
+- Verify every catalog variant participates and partial loads fail closed.
+  [`BmadGameTypeDesignCatalog.cs:44`](../../PhaseA.Platform/Prototypes/BmadGameTypeDesignCatalog.cs#L44)
+
+- Confirm requirement-map generation propagates catalog completeness.
+  [`GameDesignRequirementMapService.cs:585`](../../PhaseA.Platform/Runs/GameDesignRequirementMapService.cs#L585)
+
+**Readback and persistence authority**
+
+- Check prompt evidence validation against current source hashes and completeness.
+  [`ProjectRouteStateArtifactService.cs:1195`](../../PhaseA.Platform/Runs/ProjectRouteStateArtifactService.cs#L1195)
+
+- Review append-only queue supersession and concurrent producer serialization.
+  [`PhaseAMetadataStore.cs:1517`](../../PhaseA.Platform/Data/PhaseAMetadataStore.cs#L1517)
+
+- Verify admin decision APIs and private no-store handling.
+  [`Program.cs:519`](../../PhaseA.Platform/Program.cs#L519)
+
+- Inspect sidecar authority fields for live, deferred, and superseded states.
+  [`ProjectAdminReviewQueueSidecarWriter.cs:8`](../../PhaseA.Platform/Runs/ProjectAdminReviewQueueSidecarWriter.cs#L8)
+
+**Governance and verification**
+
+- Review canonical action semantics, paths, auth, and idempotency metadata.
+  [`RouteActionDescriptors.cs:6`](../../PhaseA.Platform/Workflow/RouteActionDescriptors.cs#L6)
+
+- Confirm matrix status transitions require explicit reviewed check-ID evidence.
+  [`build_gdd_to_module_acceptance_matrix.py:763`](../../scripts/python/build_gdd_to_module_acceptance_matrix.py#L763)
+
+- Finish with adversarial source-boundary regression coverage.
+  [`RouteOperationGovernanceTests.cs:136`](../../PhaseA.Platform.Tests/Workflow/RouteOperationGovernanceTests.cs#L136)

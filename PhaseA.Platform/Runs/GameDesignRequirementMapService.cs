@@ -17,6 +17,12 @@ public sealed class GameDesignRequirementMapService
     private const string GddDocumentRelativePath = "meta/routes/gdd-document/latest.json";
     private const string RequirementMapRelativePath = "meta/routes/gdd-requirements/latest.json";
     private const string RequirementPromptEvidenceRelativePath = "meta/routes/gdd-requirements/prompt-evidence.json";
+    private const string RequirementPromptArtifactRelativePath = "meta/routes/gdd-requirements/prompt.txt";
+    private static readonly string[] ForbiddenSourcePatterns =
+    [
+        "docs/game-type-guides/** raw excerpts",
+        "raw mutable game-type guide excerpt after freeze"
+    ];
     private const string ContractRelativePath = "routes/prototype-contract/latest.json";
     private static readonly Regex RequirementLineRegex = new(@"^\s*(?:[-*]|\d+[\.\)、:：])\s*(?<text>.+)$", RegexOptions.Compiled);
     private readonly PhaseAMetadataStore _metadataStore;
@@ -134,6 +140,7 @@ public sealed class GameDesignRequirementMapService
             [SceneRouteRelativePath] = sceneHash,
             ["project-contract-snapshot"] = contractSnapshotHash
         };
+        await WriteTextAsync(project, RequirementPromptArtifactRelativePath, generation.PersistedPrompt, cancellationToken);
         await WriteJsonAsync(project, RequirementPromptEvidenceRelativePath, new
         {
             schema_version = "gdd-requirements-prompt-evidence.v1",
@@ -141,11 +148,32 @@ public sealed class GameDesignRequirementMapService
             recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
             recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
             source_hashes = sourceHashes,
+            forbidden_source_scan = generation.ForbiddenSourceScan,
+            prompt_manifest = new
+            {
+                prompt_count = 1,
+                prompt_artifact_refs = new[] { RequirementPromptArtifactRelativePath },
+                execution_prompt_hash = generation.ForbiddenSourceScan.PromptHash,
+                persisted_prompt_hash = HostedRouteForbiddenSourceGuard.PromptHash(generation.PersistedPrompt),
+                retention = "internal_recovery_only",
+                browser_readable = false,
+                redacted = true
+            },
             prompt_purpose = "gdd-requirement-map",
             prompt_transport = "shared-llm-route-engine",
             raw_prompt_persisted = false,
+            redacted_prompt_persisted = true,
             checked_utc = now
         }, cancellationToken);
+        await _metadataStore.UpsertProjectRoutePromptEvidenceBindingAsync(
+            new ProjectRoutePromptEvidenceBindingCommand(
+                project.ProjectId,
+                "gdd-requirements",
+                generation.ForbiddenSourceScan.PromptHash,
+                HostedRouteForbiddenSourceGuard.PromptHash(generation.PersistedPrompt),
+                RequirementPromptArtifactRelativePath,
+                RequirementPromptEvidenceRelativePath),
+            cancellationToken);
         var result = new GameDesignRequirementMapResult(
             project.ProjectId,
             status,
@@ -184,9 +212,10 @@ public sealed class GameDesignRequirementMapService
             {
                 recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
                 recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
-                authority_sources = new[] { "docs/gdd/GDD.md", "confirmed scene route", "project contract snapshot" },
+                authority_sources = sourceHashes.Keys.ToArray(),
                 source_hashes = sourceHashes,
-                forbidden_source_patterns = new[] { "docs/game-type-guides/** raw excerpts" },
+                forbidden_source_patterns = ForbiddenSourcePatterns,
+                allowed_source_references = Array.Empty<string>(),
                 prompt_evidence_refs = new[] { RequirementPromptEvidenceRelativePath },
                 checked_utc = now
             },
@@ -551,9 +580,22 @@ public sealed class GameDesignRequirementMapService
         IReadOnlyList<GameDesignRequirementRow> deterministicRequirements,
         CancellationToken cancellationToken)
     {
+        var prompt = BuildStructuredRequirementPrompt(gddText, sceneRoot, deterministicRequirements);
+        var persistedPrompt = SecretRedactionPolicy.RedactForPersistence(prompt);
+        var forbiddenGuideCatalog = BuildForbiddenGuideFingerprints(project.RepoPath);
+        var forbiddenSourceScan = HostedRouteForbiddenSourceGuard.Scan(
+            prompt,
+            ForbiddenSourcePatterns,
+            forbiddenGuideCatalog.Fingerprints,
+            requireForbiddenContentFingerprints: true,
+            forbiddenContentFingerprintSetComplete: forbiddenGuideCatalog.IsComplete);
+        if (forbiddenSourceScan.Status != "clean")
+        {
+            return FallbackRequirements(deterministicRequirements, "forbidden_source_detected", [], forbiddenSourceScan, persistedPrompt);
+        }
         if (_llmRouteEngine is null)
         {
-            return FallbackRequirements(deterministicRequirements, "llm_unavailable", []);
+            return FallbackRequirements(deterministicRequirements, "llm_unavailable", [], forbiddenSourceScan, persistedPrompt);
         }
 
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -561,7 +603,7 @@ public sealed class GameDesignRequirementMapService
                 project.RepoPath,
                 "gdd-requirement-map",
                 PrototypeModelPolicy.Normalize(request.Model),
-                BuildStructuredRequirementPrompt(gddText, sceneRoot, deterministicRequirements),
+                prompt,
                 new CodexChatClientOptions(ReasoningEffort: "low"),
                 project.AccountId,
                 RequireJsonObject: true),
@@ -569,7 +611,7 @@ public sealed class GameDesignRequirementMapService
         var promptEvidence = new object[] { new { kind = "log", path = "logs/phase-a-chat/", purpose = "gdd-requirement-map" } };
         if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
         {
-            return FallbackRequirements(deterministicRequirements, completion.FailureCode ?? "llm_failed", promptEvidence);
+            return FallbackRequirements(deterministicRequirements, completion.FailureCode ?? "llm_failed", promptEvidence, forbiddenSourceScan, persistedPrompt);
         }
 
         try
@@ -578,7 +620,7 @@ public sealed class GameDesignRequirementMapService
             if (!document.RootElement.TryGetProperty("requirements", out var requirementsElement) ||
                 requirementsElement.ValueKind != JsonValueKind.Array)
             {
-                return FallbackRequirements(deterministicRequirements, "llm_requirements_missing", promptEvidence);
+                return FallbackRequirements(deterministicRequirements, "llm_requirements_missing", promptEvidence, forbiddenSourceScan, persistedPrompt);
             }
 
             var requirementElements = requirementsElement.EnumerateArray().ToArray();
@@ -589,13 +631,13 @@ public sealed class GameDesignRequirementMapService
                 .ToArray();
             if (declaredIds.Distinct(StringComparer.Ordinal).Count() != declaredIds.Length)
             {
-                return FallbackRequirements(deterministicRequirements, "duplicate_requirement_id", promptEvidence);
+                return FallbackRequirements(deterministicRequirements, "duplicate_requirement_id", promptEvidence, forbiddenSourceScan, persistedPrompt);
             }
 
             var parsed = requirementElements.Select(ReadStructuredRequirement).ToArray();
             if (parsed.Any(item => item is null || !IsStructuredRequirementSemanticallyComplete(item)))
             {
-                return FallbackRequirements(deterministicRequirements, "llm_requirement_invalid", promptEvidence);
+                return FallbackRequirements(deterministicRequirements, "llm_requirement_invalid", promptEvidence, forbiddenSourceScan, persistedPrompt);
             }
 
             var rows = parsed.Select(item => item!).ToArray();
@@ -606,7 +648,7 @@ public sealed class GameDesignRequirementMapService
             var returnedIds = rows.Select(item => item.RequirementId).ToHashSet(StringComparer.Ordinal);
             if (rows.Length < deterministicRequirements.Count || !requiredFloorIds.IsSubsetOf(returnedIds))
             {
-                return FallbackRequirements(deterministicRequirements, "llm_requirement_coverage_incomplete", promptEvidence);
+                return FallbackRequirements(deterministicRequirements, "llm_requirement_coverage_incomplete", promptEvidence, forbiddenSourceScan, persistedPrompt);
             }
 
             var floorById = deterministicRequirements.ToDictionary(item => item.RequirementId, StringComparer.Ordinal);
@@ -622,11 +664,11 @@ public sealed class GameDesignRequirementMapService
                     AcceptanceMarkers = floor.AcceptanceMarkers.Concat(item.AcceptanceMarkers).Distinct(StringComparer.Ordinal).ToArray()
                 }
                 : item).ToList();
-            return new RequirementGenerationResult(mergedRows, promptEvidence);
+            return new RequirementGenerationResult(mergedRows, promptEvidence, forbiddenSourceScan, persistedPrompt);
         }
         catch (JsonException)
         {
-            return FallbackRequirements(deterministicRequirements, "llm_json_parse_failed", promptEvidence);
+            return FallbackRequirements(deterministicRequirements, "llm_json_parse_failed", promptEvidence, forbiddenSourceScan, persistedPrompt);
         }
     }
 
@@ -695,6 +737,32 @@ public sealed class GameDesignRequirementMapService
         Keep every deterministic P0/P1 floor row. Preserve its requirement_id, normalized_requirement, and priority; enrich only mapping and capability evidence. Requirement IDs must be unique and stable.
         """;
     }
+
+    private static ForbiddenGuideCatalog BuildForbiddenGuideFingerprints(string repositoryRoot)
+    {
+        try
+        {
+            var catalog = new BmadGameTypeDesignCatalog(repositoryRoot);
+            var fingerprints = catalog.SourceEntries
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.GuideExcerpt))
+                .SelectMany(entry => HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                    entry.FragmentRelativePath,
+                    entry.GuideExcerpt))
+                .GroupBy(item => item.ContentHash, StringComparer.Ordinal)
+                .Select(group => group.First())
+                .OrderBy(item => item.ContentHash, StringComparer.Ordinal)
+                .ToArray();
+            return new ForbiddenGuideCatalog(fingerprints, catalog.IsComplete);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or IOException or UnauthorizedAccessException)
+        {
+            return new ForbiddenGuideCatalog([], IsComplete: false);
+        }
+    }
+
+    private sealed record ForbiddenGuideCatalog(
+        IReadOnlyList<HostedRouteForbiddenContentFingerprint> Fingerprints,
+        bool IsComplete);
 
     private static GameDesignRequirementRow? ReadStructuredRequirement(JsonElement root)
     {
@@ -813,7 +881,9 @@ public sealed class GameDesignRequirementMapService
     private static RequirementGenerationResult FallbackRequirements(
         IReadOnlyList<GameDesignRequirementRow> deterministicRequirements,
         string reason,
-        IReadOnlyList<object> promptEvidenceRefs)
+        IReadOnlyList<object> promptEvidenceRefs,
+        HostedRouteForbiddenSourceScan forbiddenSourceScan,
+        string persistedPrompt)
     {
         var marker = $"structured_llm_fallback:{reason}";
         var rows = deterministicRequirements.Select(item => item with
@@ -821,7 +891,7 @@ public sealed class GameDesignRequirementMapService
             Status = item.Priority is "P0" or "P1" ? "needs_review" : item.Status,
             AcceptanceMarkers = item.AcceptanceMarkers.Concat([marker]).Distinct(StringComparer.Ordinal).ToArray()
         }).ToList();
-        return new RequirementGenerationResult(rows, promptEvidenceRefs);
+        return new RequirementGenerationResult(rows, promptEvidenceRefs, forbiddenSourceScan, persistedPrompt);
     }
 
     private static string InferKind(string text)
@@ -1006,6 +1076,13 @@ public sealed class GameDesignRequirementMapService
         await File.WriteAllTextAsync(path, JsonSerializer.Serialize(payload, JsonOptions()), Utf8NoBom, cancellationToken);
     }
 
+    private static async Task WriteTextAsync(ProjectSnapshot project, string relativePath, string content, CancellationToken cancellationToken)
+    {
+        var path = Resolve(project.RepoPath, relativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await File.WriteAllTextAsync(path, content, Utf8NoBom, cancellationToken);
+    }
+
     private static string Resolve(string root, string relativePath)
     {
         var rootFullPath = Path.GetFullPath(root);
@@ -1144,4 +1221,6 @@ public sealed record GodotThirdPersonCameraProfile(
 
 internal sealed record RequirementGenerationResult(
     List<GameDesignRequirementRow> Requirements,
-    IReadOnlyList<object> PromptEvidenceRefs);
+    IReadOnlyList<object> PromptEvidenceRefs,
+    HostedRouteForbiddenSourceScan ForbiddenSourceScan,
+    string PersistedPrompt);

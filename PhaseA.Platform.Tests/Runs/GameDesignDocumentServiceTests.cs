@@ -8,6 +8,7 @@ using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Workflow;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
@@ -42,7 +43,7 @@ public sealed class GameDesignDocumentServiceTests
             new GameDesignDocumentRequest(
                 "Create a complete GDD.",
                 "gpt-5.4",
-                [new TextAttachment("reference.txt", "Reference file says the village hub matters.")],
+                [new TextAttachment("reference.txt", "Reference file says the village hub matters. Authorization: Bearer persisted-secret-token")],
                 ConfirmedSceneRoute()));
 
         result.Status.Should().Be("succeeded");
@@ -58,6 +59,7 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("$bmad-agent-game-designer");
         runner.Commands[0].StandardInput.Should().Contain("I want a cozy RPG loop.");
         runner.Commands[0].StandardInput.Should().Contain("Reference file says the village hub matters.");
+        runner.Commands[0].StandardInput.Should().Contain("persisted-secret-token");
         runner.Commands[0].StandardInput.Should().Contain("gdd-outline.generated.json");
         runner.Commands[0].StandardInput.Should().Contain("mandatory");
         runner.Commands[0].StandardInput.Should().Contain("reference game");
@@ -96,6 +98,22 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("TemplateId: rpg");
         runner.Commands[0].StandardInput.Should().Contain("Default Prototype Contract");
         runner.Commands[0].StandardInput.Should().Contain("Project Contract Snapshot");
+        var promptArtifact = (await store.ListArtifactsForRunAsync(result.RunId!))
+            .Single(artifact => artifact.ArtifactType == "game-design-gdd-prompt");
+        var persistedPrompt = await File.ReadAllTextAsync(Path.Combine(project.RepoPath, promptArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar)));
+        persistedPrompt.Should().NotContain("persisted-secret-token");
+        persistedPrompt.Should().Contain("[redacted]");
+        var promptEvidenceArtifact = (await store.ListArtifactsForRunAsync(result.RunId!))
+            .Single(artifact => artifact.ArtifactType == GameDesignDocumentService.PromptSourceEvidenceArtifactType);
+        using var promptEvidence = JsonDocument.Parse(await File.ReadAllTextAsync(
+            Path.Combine(project.RepoPath, promptEvidenceArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar))));
+        var promptManifest = promptEvidence.RootElement.GetProperty("prompt_manifest");
+        promptManifest.GetProperty("execution_prompt_hash").GetString().Should().Be(
+            promptEvidence.RootElement.GetProperty("forbidden_source_scan").GetProperty("prompt_hash").GetString());
+        promptManifest.GetProperty("persisted_prompt_hash").GetString().Should().Be(
+            HostedRouteForbiddenSourceGuard.PromptHash(persistedPrompt));
+        promptManifest.GetProperty("execution_prompt_hash").GetString().Should().NotBe(
+            promptManifest.GetProperty("persisted_prompt_hash").GetString());
         runner.Commands[0].StandardInput.Should().Contain("MatchedGameTypeId: rpg");
         runner.Commands[0].StandardInput.Should().Contain("DefaultScenes:");
         runner.Commands[0].StandardInput.Should().Contain("RequiredModules:");
@@ -126,6 +144,82 @@ public sealed class GameDesignDocumentServiceTests
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-outline-draft" && item.RelativePath.EndsWith("gdd-outline.generated.json", StringComparison.Ordinal));
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-milestone-spec" && item.RelativePath == "docs/prototype-v1-plan.md");
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-milestone-spec" && item.RelativePath.StartsWith("docs/m1-", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldBlockUnapprovedGuideExcerptBeforeCodexDispatch()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = (await store.CreateUserAccountAsync("account-guide-boundary", 10)).AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var approvedEntry = catalog.Find("rpg")!;
+        var approvedChunkHashes = HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                approvedEntry.FragmentRelativePath,
+                approvedEntry.GuideExcerpt)
+            .Select(item => item.ContentHash)
+            .ToHashSet(StringComparer.Ordinal);
+        var copiedChunk = catalog.Entries
+            .Where(entry => entry.Id != "rpg")
+            .SelectMany(entry => HostedRouteForbiddenSourceGuard.CreateContentFingerprints(
+                entry.FragmentRelativePath,
+                entry.GuideExcerpt))
+            .First(item => !approvedChunkHashes.Contains(item.ContentHash))
+            .Content;
+        var runner = new FakeHostedProcessRunner();
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest(
+                "Create a GDD from this copied guide paragraph.",
+                "gpt-5.4",
+                [new TextAttachment("copied-guide.txt", copiedChunk)],
+                ConfirmedSceneRoute()));
+
+        result.Status.Should().Be("failed");
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldScanRawExecutionPromptBeforeHostPathRedaction()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = (await store.CreateUserAccountAsync("account-raw-prompt-boundary", 10)).AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runner = new FakeHostedProcessRunner();
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest(
+                @"Create an RPG after reading C:\private\docs\game-type-guides\rpg.md.",
+                "gpt-5.4",
+                [],
+                ConfirmedSceneRoute()));
+
+        result.Status.Should().Be("failed");
+        runner.Commands.Should().BeEmpty();
     }
 
     [Fact]

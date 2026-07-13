@@ -5,7 +5,6 @@ import hashlib
 import json
 import os
 import re
-import subprocess
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -241,17 +240,6 @@ SPLIT_ADDED_RULES = [
 
 def read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def git_head(repo_root: Path) -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=repo_root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout.strip()
 
 
 def extract_phase_criteria(lines: list[str], phase: str, start_marker: str, end_marker: str | None) -> list[tuple[int, str]]:
@@ -730,7 +718,9 @@ def validate_rows(repo_root: Path, rows: list[dict]) -> None:
             if not (repo_root / path_text).exists():
                 failures.append(f"{row['check_id']}: missing implementation/test ref {ref}")
         for ref in row["evidence_refs"]:
-            if not re.match(r"^[a-z]+://", ref) and not (repo_root / ref.split("#", 1)[0]).exists():
+            if re.match(r"^[a-z]+://", ref):
+                failures.append(f"{row['check_id']}: external evidence refs require imported local evidence {ref}")
+            elif not (repo_root / ref.split("#", 1)[0]).exists():
                 failures.append(f"{row['check_id']}: missing evidence ref {ref}")
     if failures:
         raise SystemExit("\n".join(failures))
@@ -774,7 +764,12 @@ def apply_evidence_index(rows: list[dict]) -> list[dict]:
     if not EVIDENCE_INDEX.exists():
         return rows
     document = read_json(EVIDENCE_INDEX)
-    entries = {entry["check_id"]: entry for entry in document.get("entries", [])}
+    raw_entries = document.get("entries", [])
+    entry_ids = [entry["check_id"] for entry in raw_entries]
+    duplicates = sorted(check_id for check_id, count in Counter(entry_ids).items() if count > 1)
+    if duplicates:
+        raise SystemExit(f"Evidence index contains duplicate check IDs: {duplicates}")
+    entries = {entry["check_id"]: entry for entry in raw_entries}
     known = {row["check_id"] for row in rows}
     unknown = sorted(set(entries) - known)
     if unknown:
@@ -791,40 +786,24 @@ def apply_evidence_index(rows: list[dict]) -> list[dict]:
     return rows
 
 
-def source_tree_provenance(repo_root: Path) -> tuple[bool, str]:
-    excluded = {OUTPUT_JSON.as_posix(), OUTPUT_MARKDOWN.as_posix()}
-    status = subprocess.run(
-        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
-        cwd=repo_root,
-        check=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    ).stdout.splitlines()
-    relevant_status = [line for line in status if line[3:].replace("\\", "/") not in excluded]
+def source_inputs_hash(repo_root: Path) -> str:
+    inputs = {
+        PHASE_SOURCE,
+        CAPABILITY_SOURCE,
+        ACCEPTANCE_REGISTRY,
+        SPLIT_ADDED_LEDGER,
+        PHASE1_EXIT,
+        EVIDENCE_INDEX,
+        *(PLAN_DIR / file_name for file_name in LOCAL_ACCEPTANCE_FILES),
+    }
     digest = hashlib.sha256()
-    diff = subprocess.run(
-        ["git", "diff", "--binary", "HEAD", "--", ".", f":(exclude){OUTPUT_JSON.as_posix()}", f":(exclude){OUTPUT_MARKDOWN.as_posix()}"],
-        cwd=repo_root,
-        check=True,
-        capture_output=True,
-    ).stdout
-    digest.update(diff)
-    untracked = subprocess.run(
-        ["git", "ls-files", "--others", "--exclude-standard", "-z"],
-        cwd=repo_root,
-        check=True,
-        capture_output=True,
-    ).stdout.split(b"\0")
-    for raw_path in sorted(path for path in untracked if path):
-        relative = raw_path.decode("utf-8").replace("\\", "/")
-        if relative in excluded:
-            continue
+    for relative in sorted(inputs, key=lambda path: path.as_posix()):
         path = repo_root / relative
-        if path.is_file():
-            digest.update(relative.encode("utf-8"))
-            digest.update(path.read_bytes())
-    return bool(relevant_status), digest.hexdigest()
+        digest.update(relative.as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
 
 
 def build_document(repo_root: Path, rows: list[dict], generated_utc: str | None = None) -> dict:
@@ -833,13 +812,10 @@ def build_document(repo_root: Path, rows: list[dict], generated_utc: str | None 
         phase: dict(Counter(row["status"] for row in rows if row["phase"] == phase))
         for phase in PHASE_SECTIONS
     }
-    worktree_dirty, source_tree_hash = source_tree_provenance(repo_root)
     return {
         "schema_version": "gdd-to-module-implementation-acceptance-matrix.v1",
         "generated_utc": generated_utc or datetime.now(timezone.utc).isoformat(),
-        "source_commit": git_head(repo_root),
-        "worktree_dirty": worktree_dirty,
-        "source_tree_hash": source_tree_hash,
+        "source_inputs_hash": source_inputs_hash(repo_root),
         "authority": {
             "phase_exit_source": PHASE_SOURCE.as_posix(),
             "capability_inventory": CAPABILITY_SOURCE.as_posix(),

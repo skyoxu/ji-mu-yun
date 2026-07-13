@@ -8,6 +8,7 @@
 - 用户批准仓库自有 standard、gateway、schema/validator、BMAD/GDS 薄适配方案；
 - 用户明确要求不修改 BMAD/GDS 安装文件；
 - 用户明确要求三联证明覆盖 P0–P2；
+- 用户明确要求在 7-07/7-11 完成前先具备 7-12 review 能力，并由用户手工执行 reviewer；
 - ECC pinned-source 研究文档；
 - `AGENTS.md` 的 Phase scope、Protected Phase Paths、shared LLM/Codex entrypoint 和文档放置规则。
 
@@ -37,6 +38,9 @@
 | reviewer layer 完备性、可信 policy 派生、no-spec applicability 与全链 route-version 切换 | RFG-026, RFG-027, RFG-030 | 02, 04, 05 |
 | 三层 reviewer 跨合同身份一致 | RFG-028 | 02, schemas |
 | fixture 分阶段 schema/composite validity | RFG-029 | 96, schemas, tools |
+| handoff 前手工 Bootstrap Review、目标只读与 supplemental authority | RFG-033, RFG-034, RFG-035, RFG-039 | 01, 04, 09 |
+| hash-bound stale gate、零 finding/layer 与手工 verifier | RFG-036, RFG-037, RFG-038 | 04, schemas, tools |
+| Bootstrap 到 R1 合同身份连续 | RFG-040 | 05, 07 |
 
 ## 3. 结构规范化
 

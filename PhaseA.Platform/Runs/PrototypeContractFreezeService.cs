@@ -122,13 +122,16 @@ public sealed class PrototypeContractFreezeService
         var payload = new SortedDictionary<string, object?>(canonicalPayload)
         {
             ["contract_hash"] = contractHash,
+            ["status_dimension"] = RouteStatusVocabulary.RouteReadback,
+            ["status_allowed_values"] = new[] { "ready", "blocked", "stale", "unknown" },
+            ["status"] = "ready",
             ["freshness"] = new { status = "fresh", stale_reasons = Array.Empty<string>() },
             ["source_boundary_enforced"] = true,
             ["source_boundary"] = new
             {
                 recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
                 recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
-                authority_sources = new[] { "docs/gdd/GDD.md", "confirmed scene route", "meta/routes/gdd-requirements/latest.json", "project contract snapshot" },
+                authority_sources = new[] { GddRelativePath, SceneRouteRelativePath, RequirementMapRelativePath, "project-contract-snapshot" },
                 source_hashes = new Dictionary<string, string>
                 {
                     [GddRelativePath] = source.SourceGddHash,
@@ -381,18 +384,31 @@ public sealed class PrototypeContractFreezeService
                     [new ProjectRouteStateEvidenceRef("sidecar", SceneRouteRelativePath)]));
             }
 
-            var sceneHash = ReadString(root, "confirmed_scene_route_hash");
-            if (string.IsNullOrWhiteSpace(sceneHash))
+            var declaredSceneHash = ReadString(root, "confirmed_scene_route_hash");
+            var sceneHash = GddToModuleAuthorityHashes.ComputeSceneRouteHash(root);
+            if (string.IsNullOrWhiteSpace(declaredSceneHash) ||
+                string.IsNullOrWhiteSpace(sceneHash) ||
+                !string.Equals(declaredSceneHash, sceneHash, StringComparison.Ordinal))
             {
-                issues.Add(new ProjectWorkflowBlockingIssue("scene_route_unconfirmed", "scene_route_unconfirmed", "P1", "Confirmed scene route hash is missing.", [new ProjectRouteStateEvidenceRef("sidecar", SceneRouteRelativePath)]));
+                issues.Add(new ProjectWorkflowBlockingIssue("scene_route_hash_mismatch", "source_stale", "P0", "Confirmed scene route hash does not match current scene semantics.", [new ProjectRouteStateEvidenceRef("sidecar", SceneRouteRelativePath)]));
             }
 
-            var currentStructuredHash = Sha256(NormalizeText(project.GameTypeMatchJson));
+            var currentStructuredHash = GddToModuleAuthorityHashes.ComputeStructuredGameTypeHash(project.GameTypeMatchJson);
             var structuredHash = ReadString(root, "source_game_type_structured_hash");
-            if (!string.IsNullOrWhiteSpace(structuredHash) &&
+            if (string.IsNullOrWhiteSpace(structuredHash) ||
+                string.IsNullOrWhiteSpace(currentStructuredHash) ||
                 !string.Equals(structuredHash, currentStructuredHash, StringComparison.Ordinal))
             {
                 issues.Add(new ProjectWorkflowBlockingIssue("game_type_structured_stale", "game_type_structured_stale", "P1", "Structured game-type metadata changed after scene route confirmation.", [new ProjectRouteStateEvidenceRef("sidecar", SceneRouteRelativePath)]));
+            }
+
+            var currentContractSnapshotHash = GddToModuleAuthorityHashes.ComputeContractSnapshotHash(project.GameTypeMatchJson);
+            var declaredContractSnapshotHash = ReadString(root, "source_contract_snapshot_hash");
+            if (string.IsNullOrWhiteSpace(declaredContractSnapshotHash) ||
+                string.IsNullOrWhiteSpace(currentContractSnapshotHash) ||
+                !string.Equals(declaredContractSnapshotHash, currentContractSnapshotHash, StringComparison.Ordinal))
+            {
+                issues.Add(new ProjectWorkflowBlockingIssue("contract_snapshot_hash_mismatch", "source_stale", "P0", "Scene route contract snapshot hash does not match current structured authority.", [new ProjectRouteStateEvidenceRef("sidecar", SceneRouteRelativePath)]));
             }
 
             var gddDocumentPath = Resolve(project.RepoPath, GddDocumentRelativePath);
@@ -410,7 +426,7 @@ public sealed class PrototypeContractFreezeService
                 }
             }
 
-            return new PrototypeContractSceneSource(sceneHash, ReadString(root, "source_contract_snapshot_hash"));
+            return new PrototypeContractSceneSource(sceneHash, currentContractSnapshotHash);
         }
         catch (JsonException)
         {
@@ -657,7 +673,7 @@ public sealed class PrototypeContractFreezeService
         }
     }
 
-    private static string ComputeRecordedContractHash(JsonElement root)
+    internal static string ComputeRecordedContractHash(JsonElement root)
     {
         var fieldNames = new[]
         {
@@ -689,6 +705,48 @@ public sealed class PrototypeContractFreezeService
         }
 
         return Sha256(JsonSerializer.Serialize(payload, JsonOptions()));
+    }
+
+    internal static bool IsFrozenContractCurrentForConsumption(ProjectSnapshot project, JsonElement root)
+    {
+        if (root.ValueKind != JsonValueKind.Object ||
+            !string.Equals(ReadString(root, "schema_version"), "prototype-contract.v2", StringComparison.Ordinal) ||
+            !string.Equals(ReadString(root, "status"), "ready", StringComparison.Ordinal) ||
+            !root.TryGetProperty("freshness", out var freshness) ||
+            freshness.ValueKind != JsonValueKind.Object ||
+            !string.Equals(ReadString(freshness, "status"), "fresh", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var recordedHash = ReadString(root, "contract_hash");
+        var recomputedHash = ComputeRecordedContractHash(root);
+        if (string.IsNullOrWhiteSpace(recordedHash) ||
+            !string.Equals(recordedHash, recomputedHash, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var gddPath = Resolve(project.RepoPath, GddRelativePath);
+        var scenePath = Resolve(project.RepoPath, SceneRouteRelativePath);
+        var requirementPath = Resolve(project.RepoPath, RequirementMapRelativePath);
+        if (!File.Exists(gddPath) || !File.Exists(scenePath) || !File.Exists(requirementPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var sceneDocument = JsonDocument.Parse(File.ReadAllText(scenePath, Encoding.UTF8));
+            return string.Equals(ReadString(root, "source_gdd_hash"), Sha256(NormalizeText(File.ReadAllText(gddPath, Encoding.UTF8))), StringComparison.Ordinal) &&
+                   string.Equals(ReadString(root, "source_scene_route_hash"), GddToModuleAuthorityHashes.ComputeSceneRouteHash(sceneDocument.RootElement), StringComparison.Ordinal) &&
+                   string.Equals(ReadString(root, "source_requirement_map_hash"), Sha256(NormalizeText(File.ReadAllText(requirementPath, Encoding.UTF8))), StringComparison.Ordinal) &&
+                   string.Equals(ReadString(root, "source_contract_snapshot_hash"), GddToModuleAuthorityHashes.ComputeContractSnapshotHash(project.GameTypeMatchJson), StringComparison.Ordinal);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private static async Task WriteJsonAsync(ProjectSnapshot project, string relativePath, object payload, CancellationToken cancellationToken)

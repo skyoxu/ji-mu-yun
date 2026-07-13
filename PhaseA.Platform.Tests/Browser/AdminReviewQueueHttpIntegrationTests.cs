@@ -47,6 +47,12 @@ public sealed class AdminReviewQueueHttpIntegrationTests
             var project = await store.CreateProjectAsync(new ProjectCreationCommand(
                 "project-http", adminId, "HTTP", "HTTP", "manual", "default", false, [],
                 projectRoot, Path.Combine(projectRoot, "repo"), Path.Combine(projectRoot, "runtime"), Path.Combine(projectRoot, "repo", "meta")));
+            await store.SetProjectBootstrapStatusAsync(project.ProjectId!, "succeeded", null);
+            var projectSnapshot = await store.GetProjectSnapshotAsync(project.ProjectId!);
+            var decisionEvidencePath = Path.Combine(projectSnapshot!.RepoPath, "meta", "reviews", "http-decision.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(decisionEvidencePath)!);
+            await File.WriteAllTextAsync(decisionEvidencePath, "{}");
+            File.Exists(decisionEvidencePath).Should().BeTrue();
             var entry = await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
                 adminId, project.ProjectId!, "gdd-requirements", "REQ-HTTP", "P1", "HTTP blocker",
                 "meta/routes/gdd-requirements/latest.json", "[]"));
@@ -56,6 +62,7 @@ public sealed class AdminReviewQueueHttpIntegrationTests
             process = StartServer(url, databasePath, workspaceRoot, adminToken);
             using var client = new HttpClient { BaseAddress = new Uri(url), Timeout = TimeSpan.FromSeconds(10) };
             await WaitForHealthAsync(client, process);
+            File.Exists(decisionEvidencePath).Should().BeTrue();
 
             var unauthorized = await client.GetAsync("/api/admin/project-admin-review-queue");
             unauthorized.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -81,9 +88,22 @@ public sealed class AdminReviewQueueHttpIntegrationTests
             missing.StatusCode.Should().Be(HttpStatusCode.NotFound);
             AssertNoStore(missing);
 
-            var decided = await client.PostAsJsonAsync($"/api/admin/project-admin-review-queue/{entry.Id}/decision",
+            var noEvidence = await client.PostAsJsonAsync($"/api/admin/project-admin-review-queue/{entry.Id}/decision",
                 new ProjectAdminReviewDecisionRequest("approved", "accepted", 0));
-            decided.StatusCode.Should().Be(HttpStatusCode.OK);
+            noEvidence.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            (await noEvidence.Content.ReadAsStringAsync()).Should().Contain("admin_review_decision_evidence_required");
+            AssertNoStore(noEvidence);
+
+            var decided = await client.PostAsJsonAsync($"/api/admin/project-admin-review-queue/{entry.Id}/decision",
+                new
+                {
+                    decisionStatus = "approved",
+                    decisionReason = "accepted",
+                    expectedDecisionVersion = 0,
+                    decisionEvidenceRefs = new[] { "meta/reviews/http-decision.json" }
+                });
+            var decidedBody = await decided.Content.ReadAsStringAsync();
+            decided.StatusCode.Should().Be(HttpStatusCode.OK, decidedBody);
             AssertNoStore(decided);
 
             var conflict = await client.PostAsJsonAsync($"/api/admin/project-admin-review-queue/{entry.Id}/decision",

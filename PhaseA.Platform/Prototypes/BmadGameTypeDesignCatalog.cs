@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Workflow;
 using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Prototypes;
@@ -18,20 +19,30 @@ public sealed class BmadGameTypeDesignCatalog
 {
     private const int MaxGuideExcerptChars = 4200;
     private readonly IReadOnlyDictionary<string, BmadGameTypeDesignEntry> _entries;
+    private readonly IReadOnlyList<BmadGameTypeDesignEntry> _sourceEntries;
 
     public BmadGameTypeDesignCatalog(PhaseAPlatformOptions options)
+        : this(options?.RepositoryRoot ?? throw new ArgumentNullException(nameof(options)))
     {
-        ArgumentNullException.ThrowIfNull(options);
+    }
 
-        var root = Path.GetFullPath(options.RepositoryRoot);
-        _entries = Load(
+    public BmadGameTypeDesignCatalog(string repositoryRoot)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
+        var root = Path.GetFullPath(repositoryRoot);
+        var loadResult = Load(
             root,
             Path.Combine(root, "docs", "game-type-guides"),
             Path.Combine(root, ".agents", "skills", "gds-gdd", "assets"),
             Path.Combine(root, ".agents", "skills", "gds-create-gdd"));
+        _entries = loadResult.Entries;
+        _sourceEntries = loadResult.SourceEntries;
+        IsComplete = loadResult.IsComplete;
     }
 
     public IReadOnlyCollection<BmadGameTypeDesignEntry> Entries => _entries.Values.ToArray();
+    public IReadOnlyCollection<BmadGameTypeDesignEntry> SourceEntries => _sourceEntries;
+    public bool IsComplete { get; }
 
     public BmadGameTypeDesignEntry? Find(string? gameType)
     {
@@ -57,7 +68,7 @@ public sealed class BmadGameTypeDesignCatalog
         return null;
     }
 
-    private static IReadOnlyDictionary<string, BmadGameTypeDesignEntry> Load(
+    private static CatalogLoadResult Load(
         string repositoryRoot,
         string docsRoot,
         string canonicalSkillAssetsRoot,
@@ -79,7 +90,21 @@ public sealed class BmadGameTypeDesignCatalog
             docsRoot,
             "docs/game-type-guides");
 
-        return MergeCatalogs(fromCompatibilitySkill, fromCanonicalSkill, fromDocs);
+        var availableCatalogs = new[] { fromCompatibilitySkill, fromCanonicalSkill, fromDocs }
+            .Where(item => item.IsPresent)
+            .ToArray();
+        var sourceEntries = availableCatalogs
+            .SelectMany(item => item.Entries.Values)
+            .GroupBy(
+                item => $"{item.FragmentRelativePath}\n{HostedRouteForbiddenSourceGuard.ContentHash(item.GuideExcerpt)}",
+                StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .OrderBy(item => item.FragmentRelativePath, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        return new CatalogLoadResult(
+            MergeCatalogs(availableCatalogs.Select(item => item.Entries).ToArray()),
+            sourceEntries,
+            availableCatalogs.Length > 0 && availableCatalogs.All(item => item.IsComplete));
     }
 
     private static IReadOnlyDictionary<string, BmadGameTypeDesignEntry> MergeCatalogs(
@@ -124,7 +149,7 @@ public sealed class BmadGameTypeDesignCatalog
         return string.IsNullOrWhiteSpace(preferred) ? fallback : preferred;
     }
 
-    private static IReadOnlyDictionary<string, BmadGameTypeDesignEntry> LoadFromPaths(
+    private static CatalogSourceLoadResult LoadFromPaths(
         string repositoryRoot,
         string csvPath,
         string gameTypesRoot,
@@ -132,7 +157,10 @@ public sealed class BmadGameTypeDesignCatalog
     {
         if (!IsSafeExistingFile(repositoryRoot, csvPath))
         {
-            return new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase);
+            return new CatalogSourceLoadResult(
+                new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase),
+                IsPresent: File.Exists(csvPath),
+                IsComplete: false);
         }
 
         try
@@ -140,7 +168,7 @@ public sealed class BmadGameTypeDesignCatalog
             var lines = File.ReadAllLines(csvPath, Encoding.UTF8);
             if (lines.Length < 2)
             {
-                return new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase);
+                return InvalidPresentCatalog();
             }
 
             if (!TryParseCsvLine(lines[0], out var headers) ||
@@ -149,7 +177,7 @@ public sealed class BmadGameTypeDesignCatalog
                 new[] { "id", "name", "description", "genre_tags", "fragment_file" }
                     .Any(required => !headers.Contains(required, StringComparer.OrdinalIgnoreCase)))
             {
-                return new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase);
+                return InvalidPresentCatalog();
             }
             var entries = new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase);
             foreach (var line in lines.Skip(1))
@@ -161,36 +189,36 @@ public sealed class BmadGameTypeDesignCatalog
 
                 if (!TryParseCsvLine(line, out var values) || values.Count != headers.Count)
                 {
-                    return new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase);
+                    return InvalidPresentCatalog();
                 }
 
                 var row = ToRow(headers, values);
                 var id = NormalizeId(Read(row, "id"));
                 if (string.IsNullOrWhiteSpace(id))
                 {
-                    continue;
+                    return InvalidPresentCatalog();
                 }
 
                 if (entries.ContainsKey(id))
                 {
-                    return new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase);
+                    return InvalidPresentCatalog();
                 }
 
                 var fragmentFile = Read(row, "fragment_file");
                 if (string.IsNullOrWhiteSpace(fragmentFile))
                 {
-                    continue;
+                    return InvalidPresentCatalog();
                 }
                 var fragmentRelativePath = $"{relativeRoot.TrimEnd('/')}/{fragmentFile}";
                 var guidePath = ResolveGuidePath(repositoryRoot, gameTypesRoot, fragmentFile);
                 if (string.IsNullOrWhiteSpace(guidePath))
                 {
-                    continue;
+                    return InvalidPresentCatalog();
                 }
                 var guideExcerpt = ReadGuideExcerpt(guidePath);
                 if (string.IsNullOrWhiteSpace(guideExcerpt))
                 {
-                    continue;
+                    return InvalidPresentCatalog();
                 }
                 entries[id] = new BmadGameTypeDesignEntry(
                     id,
@@ -202,16 +230,26 @@ public sealed class BmadGameTypeDesignCatalog
                     guideExcerpt);
             }
 
-            return entries;
+            return entries.Count > 0
+                ? new CatalogSourceLoadResult(entries, IsPresent: true, IsComplete: true)
+                : InvalidPresentCatalog();
         }
         catch (IOException)
         {
-            return new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase);
+            return InvalidPresentCatalog();
         }
         catch (UnauthorizedAccessException)
         {
-            return new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase);
+            return InvalidPresentCatalog();
         }
+    }
+
+    private static CatalogSourceLoadResult InvalidPresentCatalog()
+    {
+        return new CatalogSourceLoadResult(
+            new Dictionary<string, BmadGameTypeDesignEntry>(StringComparer.OrdinalIgnoreCase),
+            IsPresent: true,
+            IsComplete: false);
     }
 
     private static string ResolveGuidePath(string repositoryRoot, string gameTypesRoot, string fragmentFile)
@@ -622,6 +660,14 @@ public sealed class BmadGameTypeDesignCatalog
     }
 
     private sealed record ModuleMatrixRow(string No, string Id, string Module, string Default, string Purpose, string Acceptance);
+    private sealed record CatalogLoadResult(
+        IReadOnlyDictionary<string, BmadGameTypeDesignEntry> Entries,
+        IReadOnlyList<BmadGameTypeDesignEntry> SourceEntries,
+        bool IsComplete);
+    private sealed record CatalogSourceLoadResult(
+        IReadOnlyDictionary<string, BmadGameTypeDesignEntry> Entries,
+        bool IsPresent,
+        bool IsComplete);
 
     private static string TruncateTail(string text, int maxChars)
     {

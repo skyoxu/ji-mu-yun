@@ -14,6 +14,7 @@
       "queued",
       "running",
       "ready",
+      "needs_review",
       "blocked",
       "needs_fix",
       "succeeded",

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import ast
+import hashlib
 import json
 import re
 import sys
@@ -18,6 +20,7 @@ REQUIRED_BOOKS = [
     "06-testing-observability-and-rollout.md",
     "07-implementation-phases.md",
     "08-risks-dod-and-glossary.md",
+    "09-bootstrap-review-operator-guide.md",
     "96-global-review-and-validation.md",
     "97-plan-added-requirements-ledger.md",
     "98-source-to-split-audit.md",
@@ -28,6 +31,13 @@ REQUIRED_JSON = [
     "schemas/review-rejection.v1.schema.json",
     "schemas/review-result.v1.schema.json",
     "schemas/review-validation-fixtures.v1.json",
+    "schemas/bootstrap-reviewer-output.v1.schema.json",
+    "schemas/bootstrap-verifier-output.v1.schema.json",
+    "bootstrap/review-profiles.v1.json",
+]
+REQUIRED_TOOLS = [
+    "tools/run_bootstrap_review.py",
+    "tools/tests/test_run_bootstrap_review.py",
 ]
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 RFG_PATTERN = re.compile(r"\bRFG-(\d{3})\b")
@@ -60,7 +70,7 @@ def fail(errors: list[str], message: str) -> None:
 
 
 def validate_files(errors: list[str]) -> None:
-    for relative in [*REQUIRED_BOOKS, *REQUIRED_JSON]:
+    for relative in [*REQUIRED_BOOKS, *REQUIRED_JSON, *REQUIRED_TOOLS]:
         if not (ROOT / relative).is_file():
             fail(errors, f"missing required artifact: {relative}")
 
@@ -100,7 +110,7 @@ def validate_requirements(errors: list[str]) -> None:
     coverage_table = coverage.split("## 3. Requirement Coverage", 1)[1].split(
         "## 4. Cross-cutting Coverage", 1
     )[0]
-    expected = [f"{number:03d}" for number in range(1, 33)]
+    expected = [f"{number:03d}" for number in range(1, 41)]
     expected_ids = [f"RFG-{number}" for number in expected]
     ledger_rows: dict[str, tuple[str, str]] = {}
     ordered_ids: list[str] = []
@@ -118,7 +128,7 @@ def validate_requirements(errors: list[str]) -> None:
         ledger_rows[identifier] = (owner, phase)
         if not requirement:
             fail(errors, f"requirement text is empty: {identifier}")
-        if owner not in {"01", "02", "03", "04", "05", "06", "96"}:
+        if owner not in {"01", "02", "03", "04", "05", "06", "09", "96"}:
             fail(errors, f"invalid requirement owner {owner}: {identifier}")
         if phase not in {f"R{number}" for number in range(7)}:
             fail(errors, f"invalid requirement phase {phase}: {identifier}")
@@ -477,7 +487,7 @@ def validate_semantic_contracts(errors: list[str]) -> None:
 
     scope_text = (ROOT / "01-scope-authority-and-non-goals.md").read_text(encoding="utf-8")
     integration_text = (ROOT / "05-bmad-gds-and-codex-integration.md").read_text(encoding="utf-8")
-    if "本目录 plan-local schema/validator" not in scope_text:
+    if "plan-local schema/validator、Bootstrap Review CLI/fixtures/operator guide" not in scope_text:
         fail(errors, "upstream wait gate must limit pre-handoff schema work to plan-local artifacts")
     documentation_sync_markers = [
         "R1 新增 `docs/standards/llm-review-findings.md`",
@@ -521,7 +531,7 @@ def validate_semantic_contracts(errors: list[str]) -> None:
     if "准备开始 R1–R6" not in scope_text:
         fail(errors, "upstream handoff acceptance must cover R1 through R6")
     index_text = (ROOT / "00-index.md").read_text(encoding="utf-8")
-    if "当前针对 7 月 7 日目录运行中的三层审查继续按其现有规则完成" not in index_text:
+    if "7 月 7 日既有历史 review run、prompt、输出和 ledger 保持不变" not in index_text:
         fail(errors, "the current July 7 in-flight review must remain isolated")
     if "Blind Hunter" not in integration_text or "Edge Case Hunter" not in integration_text or "Acceptance Auditor" not in integration_text:
         fail(errors, "all three reviewer roles must be routed explicitly")
@@ -529,6 +539,127 @@ def validate_semantic_contracts(errors: list[str]) -> None:
         fail(errors, "routeVersion must bind candidate, finding, result, and rejection")
     if "fingerprint 输入至少包含 routeVersion" not in gateway_text or "routeVersion、candidate hash" not in gateway_text:
         fail(errors, "finding and suppression fingerprints must include routeVersion")
+
+
+def validate_bootstrap_contracts(errors: list[str]) -> None:
+    profile_path = ROOT / "bootstrap/review-profiles.v1.json"
+    reviewer_schema_path = ROOT / "schemas/bootstrap-reviewer-output.v1.schema.json"
+    verifier_schema_path = ROOT / "schemas/bootstrap-verifier-output.v1.schema.json"
+    tool_path = ROOT / "tools/run_bootstrap_review.py"
+    test_path = ROOT / "tools/tests/test_run_bootstrap_review.py"
+    if not all(path.is_file() for path in [profile_path, reviewer_schema_path, verifier_schema_path, tool_path, test_path]):
+        return
+
+    profile_registry = json.loads(profile_path.read_text(encoding="utf-8"))
+    if profile_registry.get("schemaVersion") != "bootstrap-review-profiles.v1":
+        fail(errors, "bootstrap profile registry schemaVersion is invalid")
+        return
+    profiles = profile_registry.get("profiles")
+    profile = profiles.get("bootstrap-upstream-plan") if isinstance(profiles, dict) else None
+    if not isinstance(profile, dict):
+        fail(errors, "bootstrap-upstream-plan profile is missing")
+        return
+    required_layers = ["blind_hunter", "edge_case_hunter", "acceptance_auditor"]
+    if profile.get("requiredLayers") != required_layers:
+        fail(errors, "bootstrap profile must require Blind Hunter, Edge Case Hunter, and Acceptance Auditor")
+    if profile.get("readOnly") is not True or profile.get("automaticInvocation") is not False:
+        fail(errors, "bootstrap profile must be read-only with automatic invocation disabled")
+    if profile.get("reviewProfile") != "review-policy://bootstrap-upstream-plan/v1":
+        fail(errors, "bootstrap profile URI is invalid")
+    if profile.get("routeVersion") != "bootstrap-review-route.v1":
+        fail(errors, "bootstrap routeVersion is invalid")
+    revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
+    canonical = json.dumps(revision_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    expected_revision = "sha256:" + hashlib.sha256(canonical).hexdigest()
+    if profile.get("policyRevision") != expected_revision:
+        fail(errors, "bootstrap policyRevision must hash the canonical profile content")
+
+    registry = {
+        path.name: json.loads(path.read_text(encoding="utf-8"))
+        for path in (ROOT / "schemas").glob("*.schema.json")
+    }
+    reviewer_template = {
+        "schemaVersion": "bootstrap-reviewer-output.v1",
+        "reviewId": "bootstrap-contract-001",
+        "reviewerLayer": "blind_hunter",
+        "routeVersion": profile.get("routeVersion"),
+        "authorityRevision": "0123456789abcdef",
+        "inputHash": "sha256:" + "1" * 64,
+        "status": "pending",
+        "coverage": {
+            "requiredArtifacts": ["example.md"],
+            "readArtifacts": [],
+            "missingArtifacts": ["example.md"],
+        },
+        "candidates": [],
+    }
+    for schema_name, instance in [
+        (reviewer_schema_path.name, reviewer_template),
+        (
+            verifier_schema_path.name,
+            {
+                "schemaVersion": "bootstrap-verifier-output.v1",
+                "reviewId": "bootstrap-contract-001",
+                "routeVersion": profile.get("routeVersion"),
+                "authorityRevision": "0123456789abcdef",
+                "inputHash": "sha256:" + "1" * 64,
+                "decisions": [],
+            },
+        ),
+    ]:
+        contract_errors = schema_errors(registry[schema_name], instance, registry)
+        if contract_errors:
+            fail(errors, f"bootstrap template violates {schema_name}: {'; '.join(contract_errors)}")
+
+    source = tool_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(tool_path))
+    forbidden_import_roots = {"urllib", "requests", "httpx", "openai", "anthropic"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.split(".", 1)[0] in forbidden_import_roots:
+                    fail(errors, f"bootstrap tool imports forbidden network/LLM module: {alias.name}")
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            if node.module.split(".", 1)[0] in forbidden_import_roots:
+                fail(errors, f"bootstrap tool imports forbidden network/LLM module: {node.module}")
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            if isinstance(node.func.value, ast.Name) and node.func.value.id == "subprocess":
+                valid_git_run = (
+                    node.func.attr == "run"
+                    and bool(node.args)
+                    and isinstance(node.args[0], (ast.List, ast.Tuple))
+                    and bool(node.args[0].elts)
+                    and isinstance(node.args[0].elts[0], ast.Constant)
+                    and node.args[0].elts[0].value == "git"
+                )
+                if not valid_git_run:
+                    fail(errors, "bootstrap tool may use subprocess only for deterministic Git metadata reads")
+    required_source_markers = [
+        'AUTHORITY_CLASS = "supplemental_bootstrap"',
+        '"bootstrap-reviewer-output.v1.schema.json"',
+        '"bootstrap-verifier-output.v1.schema.json"',
+        "validate_scope_references(candidate.get(\"contextRead\")",
+        "validate_scope_references(checked, manifest, \"evidenceChecked\")",
+    ]
+    for marker in required_source_markers:
+        if marker not in source:
+            fail(errors, f"bootstrap tool is missing required guard: {marker}")
+    test_source = test_path.read_text(encoding="utf-8")
+    for marker in [
+        "test_prepare_records_binary_artifacts_without_decoding_them",
+        "test_gate_rejects_context_outside_prepared_scope",
+        "test_gate_applies_reviewer_json_schema",
+        "test_gate_rejects_completed_layer_with_incomplete_coverage",
+        "test_gate_maps_failed_missing_context_layer_to_incomplete",
+        "test_finalize_rejects_verifier_evidence_outside_scope",
+    ]:
+        if marker not in test_source:
+            fail(errors, f"bootstrap regression suite is missing: {marker}")
+    operator_text = (ROOT / "09-bootstrap-review-operator-guide.md").read_text(encoding="utf-8")
+    quota_markers = ["禁止把“至少输出十条”", "固定数量最多只能用于首轮内部假设探索", "零 candidate 合法"]
+    for marker in quota_markers:
+        if marker not in operator_text:
+            fail(errors, f"bootstrap operator guide is missing no-quota policy: {marker}")
 
 
 def main() -> int:
@@ -539,6 +670,7 @@ def main() -> int:
     validate_requirements(errors)
     validate_fixture_intent(errors)
     validate_semantic_contracts(errors)
+    validate_bootstrap_contracts(errors)
     if errors:
         for error in errors:
             print(f"ERROR: {error}")

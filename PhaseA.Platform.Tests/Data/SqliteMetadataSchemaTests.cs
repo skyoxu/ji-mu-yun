@@ -1,9 +1,12 @@
 using FluentAssertions;
+using System.Text;
+using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Security;
+using PhaseA.Platform.Workflow;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Data;
@@ -38,6 +41,7 @@ public sealed class SqliteMetadataSchemaTests
             "project_iteration_sessions",
             "project_iteration_goals",
             "project_iteration_goal_runs",
+            "project_route_prompt_evidence_bindings",
             "project_admin_review_queue",
             "project_admin_review_decisions",
             "project_diagnostic_spool",
@@ -113,6 +117,26 @@ public sealed class SqliteMetadataSchemaTests
                 VALUES (
                     'legacy-entry', 'legacy-account', 'legacy-project', 'gdd-requirements', 'REQ-LEGACY', 'P1', 'legacy blocker',
                     'meta/routes/gdd-requirements/latest.json', '[]', 'open', '2026-07-01T00:00:00Z', '2026-07-01T00:00:00Z');
+                INSERT INTO project_admin_review_queue (
+                    id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                    source_artifact_path, evidence_refs_json, status, decision_status, created_utc, updated_utc)
+                VALUES (
+                    'legacy-approved', 'legacy-account', 'legacy-project', 'gdd-requirements', 'REQ-LEGACY', 'P2', 'newer approved reason',
+                    'meta/routes/gdd-requirements/latest.json', '[]', 'approved', 'approved', '2026-07-02T00:00:00Z', '2026-07-02T00:00:00Z');
+                INSERT INTO project_admin_review_queue (
+                    id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                    source_artifact_path, evidence_refs_json, status, decision_status, decision_metadata_json, created_utc, updated_utc)
+                VALUES (
+                    'legacy-expired-deferred', 'legacy-account', 'legacy-project', 'prototype-contract', 'REQ-DEFERRED', 'P2', 'expired deferred blocker',
+                    'meta/routes/prototype-contract/latest.json', '[]', 'deferred', 'deferred',
+                    '{"deferred_owner":"platform","recheck_trigger":"timer","deferred_until_utc":"2000-01-01T00:00:00Z","affected_routes":["prototype-contract"]}',
+                    '2026-07-03T00:00:00Z', '2026-07-03T00:00:00Z');
+                INSERT INTO project_admin_review_queue (
+                    id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                    source_artifact_path, evidence_refs_json, status, decision_status, created_utc, updated_utc)
+                VALUES (
+                    'legacy-deferred-approved', 'legacy-account', 'legacy-project', 'prototype-contract', 'REQ-DEFERRED', 'P0', 'approved after deferral',
+                    'meta/routes/prototype-contract/latest.json', '[]', 'approved', 'approved', '2026-07-04T00:00:00Z', '2026-07-04T00:00:00Z');
                 """;
             await command.ExecuteNonQueryAsync();
         }
@@ -135,6 +159,22 @@ public sealed class SqliteMetadataSchemaTests
         columns.Should().Contain(["supersedes_entry_id", "superseded_by_entry_id"]);
         (await ScalarLongAsync(verify, "SELECT COUNT(*) FROM project_admin_review_queue WHERE id = 'legacy-entry';"))
             .Should().Be(1);
+        (await ScalarStringAsync(verify, "SELECT status FROM project_admin_review_queue WHERE id = 'legacy-entry';"))
+            .Should().Be("open");
+        (await ScalarStringAsync(verify, "SELECT status FROM project_admin_review_queue WHERE id = 'legacy-approved';"))
+            .Should().Be("superseded");
+        (await ScalarStringAsync(verify, "SELECT superseded_by_entry_id FROM project_admin_review_queue WHERE id = 'legacy-approved';"))
+            .Should().Be("legacy-entry");
+        (await ScalarLongAsync(verify, "SELECT COUNT(*) FROM project_admin_review_migration_lineage WHERE predecessor_entry_id = 'legacy-approved' AND successor_entry_id = 'legacy-entry';"))
+            .Should().Be(1);
+        (await ScalarStringAsync(verify, "SELECT supersedes_entry_id FROM project_admin_review_queue WHERE id = 'legacy-entry';"))
+            .Should().Be("legacy-approved");
+        (await ScalarStringAsync(verify, "SELECT status FROM project_admin_review_queue WHERE id = 'legacy-expired-deferred';"))
+            .Should().Be("deferred");
+        (await ScalarStringAsync(verify, "SELECT status FROM project_admin_review_queue WHERE id = 'legacy-deferred-approved';"))
+            .Should().Be("superseded");
+        (await ScalarStringAsync(verify, "SELECT superseded_by_entry_id FROM project_admin_review_queue WHERE id = 'legacy-deferred-approved';"))
+            .Should().Be("legacy-expired-deferred");
         var indexSql = await ScalarStringAsync(
             verify,
             "SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'ix_project_admin_review_queue_project_route_requirement_reason';");
@@ -292,6 +332,7 @@ public sealed class SqliteMetadataSchemaTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var project = await store.CreateProjectAsync(CreateCommand(accountId, "queue-project", "Queue Game"));
+        await WriteDecisionEvidenceFilesAsync(store, project.ProjectId!, "meta/reviews/D-1.json", "meta/reviews/D-3.json");
         var entry = await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             accountId,
             project.ProjectId!,
@@ -382,6 +423,7 @@ public sealed class SqliteMetadataSchemaTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var project = await store.CreateProjectAsync(CreateCommand(accountId, "queue-concurrency", "Queue Concurrency"));
+        await WriteDecisionEvidenceFilesAsync(store, project.ProjectId!, "meta/reviews/concurrent.json");
         var entry = await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             accountId, project.ProjectId!, "gdd-requirements", "REQ-CONCURRENT", "P1", "concurrent decision",
             "meta/routes/gdd-requirements/latest.json", "[]"));
@@ -403,7 +445,219 @@ public sealed class SqliteMetadataSchemaTests
         var projectSnapshot = await store.GetProjectSnapshotAsync(project.ProjectId!);
         var sidecarPath = Path.Combine(projectSnapshot!.RepoPath, "meta", "routes", "admin-review-queue", "latest.json");
         using var sidecar = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(sidecarPath));
-        sidecar.RootElement.GetProperty("entries")[0].GetProperty("decision_version").GetInt32().Should().Be(1);
+        var sidecarText = sidecar.RootElement.ToString();
+        sidecarText.Should().Contain("Administrative review is not currently blocking this route.");
+        sidecar.RootElement.GetProperty("status_dimension").GetString().Should().Be("route_readback");
+        sidecar.RootElement.GetProperty("entry_status_dimension").GetString().Should().Be("admin_review_queue");
+        sidecarText.Should().NotContain("decision_version");
+        sidecarText.Should().NotContain("decision_reason");
+        sidecarText.Should().NotContain("decision_by");
+    }
+
+    [Fact]
+    public async Task AdminReviewQueueUpsert_ConcurrentDifferentPayloadsSerializeOneCurrentVersion()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "queue-upsert-concurrency", "Queue Upsert Concurrency"));
+
+        var results = await Task.WhenAll(
+            store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+                accountId, project.ProjectId!, "gdd-requirements", "REQ-CONCURRENT-UPSERT", "P1", "first payload",
+                "meta/routes/gdd-requirements/latest.json", "[]")),
+            store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+                accountId, project.ProjectId!, "gdd-requirements", "REQ-CONCURRENT-UPSERT", "P0", "second payload",
+                "meta/routes/gdd-requirements/latest.json", "[]")));
+
+        results.Should().HaveCount(2);
+        var rows = await store.ListProjectAdminReviewQueueForAdminAsync(new ProjectAdminReviewQueueQuery(
+            Status: "", ProjectId: project.ProjectId, RouteId: "gdd-requirements", Limit: 10));
+        rows.Should().HaveCount(2);
+        rows.Should().ContainSingle(row => row.Status != "superseded");
+        rows.Should().ContainSingle(row => row.Status == "superseded");
+        rows.Single(row => row.Status == "superseded").SupersededByEntryId.Should().Be(rows.Single(row => row.Status != "superseded").Id);
+    }
+
+    [Fact]
+    public async Task AdminReviewQueueDecision_ExpiredDeferredSamePayloadRetryRemainsIdempotent()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "deferred-retry", "Deferred Retry"));
+        await WriteDecisionEvidenceFilesAsync(store, project.ProjectId!, "meta/reviews/expiry.json");
+        var entry = await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            accountId, project.ProjectId!, "gdd-requirements", "REQ-DEFERRED", "P1", "deferred retry",
+            "meta/routes/gdd-requirements/latest.json", "[]"));
+        var request = new ProjectAdminReviewDecisionRequest(
+            "deferred", "bounded deferral", 0,
+            DeferredOwner: "platform",
+            DeferredUntilUtc: DateTimeOffset.UtcNow.AddMilliseconds(750).ToString("O"),
+            RecheckTrigger: "timer",
+            AffectedRoutes: ["gdd-requirements"],
+            DecisionEvidenceRefs: ["meta/reviews/expiry.json"]);
+
+        (await store.DecideProjectAdminReviewQueueEntryAsync(entry.Id, accountId, request)).Status.Should().Be("updated");
+        await Task.Delay(1000);
+        var retry = await store.DecideProjectAdminReviewQueueEntryAsync(entry.Id, accountId, request);
+
+        retry.Status.Should().Be("returned_existing");
+        ProjectAdminReviewQueuePolicy.IsBlocking(retry.Entry!).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task AdminReviewQueueDecision_DeferredAcceptsExpiryOrRecheckButRequiresEvidence()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "deferred-or", "Deferred Or"));
+        await WriteDecisionEvidenceFilesAsync(store, project.ProjectId!, "meta/reviews/deferred-or.json");
+        async Task<ProjectAdminReviewQueueEntry> Entry(string requirementId) =>
+            await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+                accountId, project.ProjectId!, "gdd-requirements", requirementId, "P1", requirementId,
+                "meta/routes/gdd-requirements/latest.json", "[]"));
+        var expiryEntry = await Entry("REQ-EXPIRY");
+        var recheckEntry = await Entry("REQ-RECHECK");
+        var noEvidenceEntry = await Entry("REQ-NO-EVIDENCE");
+
+        var expiryOnly = await store.DecideProjectAdminReviewQueueEntryAsync(
+            expiryEntry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest(
+                "deferred", "expiry only", 0,
+                DecisionEvidenceRefs: ["meta/reviews/deferred-or.json"],
+                DeferredOwner: "platform",
+                DeferredUntilUtc: "2099-01-01T00:00:00Z",
+                AffectedRoutes: ["gdd-requirements"]));
+        var recheckOnly = await store.DecideProjectAdminReviewQueueEntryAsync(
+            recheckEntry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest(
+                "deferred", "recheck only", 0,
+                DecisionEvidenceRefs: ["meta/reviews/deferred-or.json"],
+                DeferredOwner: "platform",
+                RecheckTrigger: "contract regenerated",
+                AffectedRoutes: ["gdd-requirements"]));
+        var noEvidence = await store.DecideProjectAdminReviewQueueEntryAsync(
+            noEvidenceEntry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest(
+                "deferred", "unsupported", 0,
+                DeferredOwner: "platform",
+                RecheckTrigger: "contract regenerated",
+                AffectedRoutes: ["gdd-requirements"]));
+
+        expiryOnly.Status.Should().Be("updated");
+        recheckOnly.Status.Should().Be("updated");
+        ProjectAdminReviewQueuePolicy.IsBlocking(expiryOnly.Entry!).Should().BeFalse();
+        ProjectAdminReviewQueuePolicy.IsBlocking(recheckOnly.Entry!).Should().BeFalse();
+        noEvidence.Status.Should().Be("rejected");
+        noEvidence.FailureCode.Should().Be("admin_review_decision_evidence_required");
+    }
+
+    [Theory]
+    [InlineData("approved")]
+    [InlineData("rejected")]
+    [InlineData("backlog")]
+    [InlineData("resolved")]
+    public async Task AdminReviewQueueDecision_AllTerminalDecisionsRequireEvidence(string decisionStatus)
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, $"decision-evidence-{decisionStatus}", "Decision Evidence"));
+        var entry = await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            accountId, project.ProjectId!, "gdd-requirements", $"REQ-{decisionStatus.ToUpperInvariant()}", "P1", "evidence required",
+            "meta/routes/gdd-requirements/latest.json", "[]"));
+
+        var result = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest(decisionStatus, "decision without evidence", 0));
+
+        result.Status.Should().Be("rejected");
+        result.FailureCode.Should().Be("admin_review_decision_evidence_required");
+    }
+
+    [Fact]
+    public async Task AdminReviewQueueDecision_RejectsUnsafeOrMissingEvidenceRefsAndPersistsStructuredRefs()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "decision-evidence", "Decision Evidence"));
+        var entry = await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            accountId, project.ProjectId!, "gdd-requirements", "REQ-EVIDENCE", "P1", "decision evidence",
+            "meta/routes/gdd-requirements/latest.json", "[]"));
+
+        var unsafeRef = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest("approved", "unsafe", 0, ["../escape.json"]));
+        var missingRef = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest("approved", "missing", 0, ["meta/reviews/missing.json"]));
+        var runId = await store.CreateRunAsync(project.ProjectId!, null, "admin-review-evidence");
+        await store.AddArtifactAsync(new ArtifactCreationCommand(
+            runId, project.ProjectId!, "admin-review-evidence", "meta/reviews/missing-artifact.json", "Missing artifact"));
+        var missingArtifact = (await store.ListArtifactsForRunAsync(runId)).Single();
+        var missingArtifactRef = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest("approved", "missing artifact", 0, [$"artifact:{missingArtifact.ArtifactId}"]));
+        var projectSnapshot = await store.GetProjectSnapshotAsync(project.ProjectId!);
+        var evidenceDirectory = Path.Combine(projectSnapshot!.RepoPath, "meta", "reviews", "directory-only");
+        Directory.CreateDirectory(evidenceDirectory);
+        var directoryRef = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest("approved", "directory", 0, ["meta/reviews/directory-only"]));
+        var outsideEvidence = Path.Combine(Path.GetTempPath(), $"phase-a-outside-evidence-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(outsideEvidence);
+        File.WriteAllText(Path.Combine(outsideEvidence, "outside.json"), "{}");
+        var linkPath = Path.Combine(projectSnapshot.RepoPath, "meta", "reviews", "linked-outside");
+        ProjectAdminReviewDecisionResult linkedRef;
+        try
+        {
+            Directory.CreateSymbolicLink(linkPath, outsideEvidence);
+            linkedRef = await store.DecideProjectAdminReviewQueueEntryAsync(
+                entry.Id,
+                accountId,
+                new ProjectAdminReviewDecisionRequest("approved", "linked", 0, ["meta/reviews/linked-outside/outside.json"]));
+        }
+        finally
+        {
+            Directory.Delete(outsideEvidence, recursive: true);
+        }
+        await WriteDecisionEvidenceFilesAsync(store, project.ProjectId!, "meta/reviews/present.json");
+        var accepted = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest("approved", "present", 0, ["meta/reviews/present.json"]));
+
+        unsafeRef.Status.Should().Be("rejected");
+        unsafeRef.FailureCode.Should().Be("admin_review_decision_evidence_ref_invalid");
+        missingRef.Status.Should().Be("rejected");
+        missingRef.FailureCode.Should().Be("admin_review_decision_evidence_ref_not_found");
+        missingArtifactRef.FailureCode.Should().Be("admin_review_decision_evidence_ref_not_found");
+        directoryRef.FailureCode.Should().Be("admin_review_decision_evidence_ref_not_found");
+        linkedRef.FailureCode.Should().Be("admin_review_decision_evidence_ref_not_found");
+        accepted.Status.Should().Be("updated");
+        accepted.Entry!.DecisionMetadataJson.Should().Contain("\"kind\":\"sidecar\"");
+        accepted.Entry.DecisionMetadataJson.Should().Contain("meta/reviews/present.json");
     }
 
     [Fact]
@@ -429,6 +683,28 @@ public sealed class SqliteMetadataSchemaTests
             .WithMessage("*admin_review_queue_severity_invalid*");
     }
 
+    [Theory]
+    [InlineData("not-json")]
+    [InlineData("[\"legacy-string\"]")]
+    [InlineData("[{\"kind\":\"sidecar\",\"path\":\"../escape.json\"}]")]
+    [InlineData("[{\"kind\":\"sidecar\",\"path\":\"C:\\\\host\\\\escape.json\"}]")]
+    [InlineData("[{\"kind\":\"unknown\",\"path\":\"meta/evidence.json\"}]")]
+    public async Task AdminReviewQueue_RejectsMalformedOrUnsafeEvidenceRefs(string evidenceRefsJson)
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "unsafe-evidence", "Unsafe Evidence"));
+
+        Func<Task> action = () => store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            accountId, project.ProjectId!, "gdd-requirements", "REQ-UNSAFE", "P1", "unsafe evidence",
+            "meta/routes/gdd-requirements/latest.json", evidenceRefsJson));
+
+        await action.Should().ThrowAsync<ArgumentException>().WithMessage("*admin_review_evidence_ref*");
+    }
+
     [Fact]
     public async Task AdminReviewQueue_RegenerationSupersedesHistoryAndSupportsFiltersDeferredValidationAndSidecar()
     {
@@ -440,6 +716,7 @@ public sealed class SqliteMetadataSchemaTests
         var accountId = await store.EnsureSingleAdminAsync();
         var createCommand = CreateCommand(accountId, "queue-history", "Queue History");
         var project = await store.CreateProjectAsync(createCommand);
+        await WriteDecisionEvidenceFilesAsync(store, project.ProjectId!, "meta/reviews/first.json", "meta/reviews/deferred.json");
         var first = await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             accountId,
             project.ProjectId!,
@@ -546,9 +823,18 @@ public sealed class SqliteMetadataSchemaTests
         File.Exists(sidecarPath).Should().BeTrue();
         using var sidecar = System.Text.Json.JsonDocument.Parse(File.ReadAllText(sidecarPath));
         sidecar.RootElement.GetProperty("entries").GetArrayLength().Should().Be(2);
-        sidecar.RootElement.ToString().Should().Contain(first.Id);
-        sidecar.RootElement.ToString().Should().Contain(regenerated.Id);
-        sidecar.RootElement.ToString().Should().Contain("deferred_owner");
+        sidecar.RootElement.GetProperty("status").GetString().Should().Be("unknown");
+        sidecar.RootElement.GetProperty("status_authority").GetString().Should().Be("metadata_db_live");
+        sidecar.RootElement.GetProperty("live_recheck_required").GetBoolean().Should().BeTrue();
+        var sidecarText = sidecar.RootElement.ToString();
+        sidecarText.Should().Contain("Deferred review status requires a live metadata recheck.");
+        sidecar.RootElement.GetProperty("entries").EnumerateArray()
+            .Single(item => item.GetProperty("status").GetString() == "deferred")
+            .GetProperty("is_blocking").ValueKind.Should().Be(JsonValueKind.Null);
+        sidecarText.Should().NotContain(first.Id);
+        sidecarText.Should().NotContain(regenerated.Id);
+        sidecarText.Should().NotContain("deferred_owner");
+        sidecarText.Should().NotContain("blocking_reason");
     }
 
     [Fact]
@@ -629,6 +915,45 @@ public sealed class SqliteMetadataSchemaTests
             entry.ProjectTombstoneId == tombstones[0].ProjectTombstoneId &&
             entry.DeletionEventId == tombstones[0].DeletionEventId);
         diagnostics.Should().Contain(entry => entry.RouteId == "project-delete" && entry.FailureFamily == "workspace_delete_failed");
+    }
+
+    [Fact]
+    public async Task DeleteProjectAsync_CountsMalformedDeferredAdminReviewEntriesAsUnresolved()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "deleted-malformed-deferred", "Deleted Deferred"));
+        var malformedMetadata = new[]
+        {
+            """{"deferred_owner":"platform","recheck_trigger":"timer","deferred_until_utc":"not-a-date","affected_routes":["route-a"]}""",
+            """{"deferred_owner":"platform","recheck_trigger":"timer","deferred_until_utc":"2099-01-01T00:00:00Z","affected_routes":["other-route"]}""",
+            """{"deferred_until_utc":"2099-01-01T00:00:00Z","affected_routes":["route-c"]}"""
+        };
+
+        await using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString))
+        {
+            await connection.OpenAsync();
+            for (var index = 0; index < malformedMetadata.Length; index++)
+            {
+                var routeId = $"route-{(char)('a' + index)}";
+                var entry = await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+                    accountId, project.ProjectId!, routeId, $"REQ-{index}", "P1", $"malformed deferred {index}",
+                    $"meta/routes/{routeId}/latest.json", "[]"));
+                await using var update = connection.CreateCommand();
+                update.CommandText = "UPDATE project_admin_review_queue SET status = 'deferred', decision_status = 'deferred', decision_metadata_json = $metadata WHERE id = $id;";
+                update.Parameters.AddWithValue("$metadata", malformedMetadata[index]);
+                update.Parameters.AddWithValue("$id", entry.Id);
+                await update.ExecuteNonQueryAsync();
+            }
+        }
+
+        await store.DeleteProjectAsync(project.ProjectId!);
+
+        (await store.ListProjectDeleteTombstonesForAdminAsync()).Should().ContainSingle(tombstone =>
+            tombstone.ProjectId == project.ProjectId && tombstone.UnresolvedAdminReviewCount == 3);
     }
 
     [Fact]
@@ -1602,6 +1927,20 @@ public sealed class SqliteMetadataSchemaTests
             Path.Combine(root, "repo"),
             Path.Combine(root, "runtime"),
             Path.Combine(root, "meta"));
+    }
+
+    private static async Task WriteDecisionEvidenceFilesAsync(
+        PhaseAMetadataStore store,
+        string projectId,
+        params string[] relativePaths)
+    {
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        foreach (var relativePath in relativePaths)
+        {
+            var path = Path.Combine(project!.RepoPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            await File.WriteAllTextAsync(path, "{}", Encoding.UTF8);
+        }
     }
 
     private static async Task SetProjectCreatedUtcAsync(string connectionString, string projectId, string createdUtc)

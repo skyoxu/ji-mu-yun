@@ -33,6 +33,13 @@
 - 当前 7 月 7 日 in-flight review 在 R3 handoff 前不改变 route version、输出或 ledger。
 - old/new `routeVersion` 的 sidecar、fingerprint namespace 和 metrics 不混用。
 - finding/candidate 缺 routeVersion，或 fingerprint/suppression fingerprint 未绑定 routeVersion 时被拒绝。
+- Bootstrap prepare 不调用 subprocess/LLM/reviewer，且目标 scope 在 prepare/gate/finalize 前后 hash 不变；
+- Bootstrap 输出目录位于 scope 内、scope 越过 repository root 或包含不存在路径时 fail closed；
+- required reviewer 输出缺失与空 findings 明确区分；三层均完成且零 finding 可以 clean；
+- prepare 后 artifact 漂移、行区间反转、exactEvidence 不匹配、context 越界均产生稳定 rejection；
+- 相同 evidence/failure tuple 跨 reviewer 合并 provenance；
+- P0/P1 没有完整 verifier decisions 时保持 incomplete，verifier 新增 finding ID 被拒绝；
+- Bootstrap sidecar 标记 `supplemental_bootstrap`，不能被正式 repair/summary consumer 自动发现。
 
 ## 2. Shadow 数据
 

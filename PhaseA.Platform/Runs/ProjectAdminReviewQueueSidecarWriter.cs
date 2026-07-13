@@ -18,33 +18,34 @@ internal static class ProjectAdminReviewQueueSidecarWriter
         ArgumentNullException.ThrowIfNull(entries);
 
         var path = Path.Combine(project.RepoPath, "meta", "routes", "admin-review-queue", "latest.json");
+        var hasBlockingEntry = entries.Any(entry => ProjectAdminReviewQueuePolicy.IsBlocking(entry));
+        var hasDeferredEntry = entries.Any(entry => string.Equals(entry.Status, "deferred", StringComparison.Ordinal));
         var payload = JsonSerializer.Serialize(new
         {
             schema_version = "project-admin-review-queue.v1",
             route = "admin-review-queue",
-            status = entries.Any(entry => ProjectAdminReviewQueuePolicy.IsBlocking(entry)) ? "blocked" : "ready",
-            status_dimension = "admin_review_queue",
-            status_allowed_values = new[] { "open", "approved", "deferred", "rejected", "backlog", "superseded", "resolved" },
+            status = hasBlockingEntry ? "blocked" : hasDeferredEntry ? "unknown" : "ready",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
+            entry_status_dimension = RouteStatusVocabulary.AdminReviewQueue,
+            entry_status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.AdminReviewQueue),
+            status_authority = "metadata_db_live",
+            live_recheck_required = hasDeferredEntry,
             updated_utc = DateTimeOffset.UtcNow.ToString("O"),
             entries = entries.Select(entry => new
             {
-                entry_id = entry.Id,
                 route_id = entry.RouteId,
                 requirement_id = entry.RequirementId,
                 severity = entry.Severity,
-                blocking_reason = entry.BlockingReason,
-                source_artifact_path = entry.SourceArtifactPath,
-                evidence_refs = JsonNodeOrString(entry.EvidenceRefsJson),
                 status = entry.Status,
-                decision_status = entry.DecisionStatus,
-                decision_by = entry.DecisionActorAccountId,
-                decision_reason = entry.DecisionReason,
-                decision_metadata = JsonNodeOrString(entry.DecisionMetadataJson),
-                decision_version = entry.DecisionVersion,
-                decided_utc = entry.DecidedUtc,
-                project_deleted_utc = entry.ProjectDeletedUtc,
-                supersedes_entry_id = entry.SupersedesEntryId,
-                superseded_by_entry_id = entry.SupersededByEntryId
+                is_blocking = string.Equals(entry.Status, "deferred", StringComparison.Ordinal)
+                    ? (bool?)null
+                    : ProjectAdminReviewQueuePolicy.IsBlocking(entry),
+                user_safe_summary = string.Equals(entry.Status, "deferred", StringComparison.Ordinal)
+                    ? "Deferred review status requires a live metadata recheck."
+                    : ProjectAdminReviewQueuePolicy.IsBlocking(entry)
+                    ? "Administrative review is required before this route can continue."
+                    : "Administrative review is not currently blocking this route."
             }).ToArray()
         }, new JsonSerializerOptions { WriteIndented = true });
 
@@ -61,18 +62,6 @@ internal static class ProjectAdminReviewQueueSidecarWriter
             {
                 File.Delete(tempPath);
             }
-        }
-    }
-
-    private static object JsonNodeOrString(string value)
-    {
-        try
-        {
-            return JsonSerializer.Deserialize<JsonElement>(value);
-        }
-        catch (JsonException)
-        {
-            return value;
         }
     }
 }

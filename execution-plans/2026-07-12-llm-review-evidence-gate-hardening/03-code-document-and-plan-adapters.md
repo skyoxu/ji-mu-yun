@@ -69,6 +69,18 @@ Whole-directory review 额外检查：
 
 三个 adapter 均写入 `sourceReviewers[]`。同一证据由多个角色发现时合并来源，不增加 finding 数量或 severity。
 
+## 7. Bootstrap 手工输出 adapter
+
+Bootstrap `prepare` 为三个 reviewer 分别生成 prompt 和空 JSON template，但不调用 reviewer。用户手工保存的输出必须遵守 `bootstrap-reviewer-output.v1`：
+
+- reviewer 只能提供 artifact/line/evidence、failure tuple、context、guard、severity rationale、confidence 和文档专用字段；
+- `routeVersion`、`authorityRevision`、fingerprint、finding ID、status、unverified class/disposition 由 gateway 写入，reviewer 不能自报；
+- artifact 和 context path 必须位于 prepare 冻结的 scope manifest；
+- exactEvidence 必须与当前 hash-bound artifact 行区间逐字一致；
+- reviewer 输出可以是空 findings；required layer 文件缺失与合法零 findings 不同。
+
+Bootstrap adapter 只处理用户提供的 JSON；不得解析自由 Markdown 后猜测缺失字段，也不得从 reviewer 名称推断 severity。
+
 ## 验收标准
 
 - Given 文档候选没有命名 consumer，When gateway 校验，Then拒绝。
@@ -76,3 +88,4 @@ Whole-directory review 额外检查：
 - Given code smell 没有当前可达失败，When reviewer 输出，Then不得进入 P2。
 - Given Blind Hunter 只有 diff-only 推断，When无法补齐项目上下文，Then生成 rejection 而不是 P0–P2。
 - Given 三个 reviewer 命中相同证据和失败链，When gateway dedup，Then产生一条 finding 且 `sourceReviewers[]` 保留全部来源。
+- Given 用户尚未保存某个 required reviewer 输出，When Bootstrap gate 执行，Then结果 incomplete，而不是把缺文件视为零 finding。

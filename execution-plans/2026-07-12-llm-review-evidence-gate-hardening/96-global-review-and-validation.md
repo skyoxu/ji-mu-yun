@@ -2,7 +2,7 @@
 
 ## 1. Review Authority
 
-审查必须完整读取：本目录所有 Markdown、`schemas/**`、本文件、97、98、99，以及 `AGENTS.md` 中与 review、Phase shared LLM/Codex 和文档维护有关的规则。两个既有重构目录只用于验证依赖/不重复边界，不成为本计划业务要求来源。
+审查必须完整读取：本目录所有 Markdown、`schemas/**`、`bootstrap/**`、`tools/*.py`、`tools/tests/**`、本文件、97、98、99，以及 `AGENTS.md` 中与 review、Phase shared LLM/Codex 和文档维护有关的规则。两个既有重构目录只用于验证依赖/不重复边界和 Bootstrap read-only scope，不成为本计划业务要求来源。
 
 ## 2. Mechanical Checks
 
@@ -17,6 +17,8 @@
 - 98/99 覆盖全部批准来源要求；
 - historical finding ledger 没有 Open P0–P2；
 - 未修改或复制两个上游重构目录的业务范围。
+- Bootstrap prepare/gate/finalize tests 证明不调用 reviewer、不写目标 scope、缺 required layer 不 clean、stale evidence 被拒绝、P0/P1 必须手工 verifier；
+- Bootstrap sidecar 使用 `supplemental_bootstrap` authority class，且工具中不存在 `scripts/sc`、LLM backend、BMAD/GDS skill invocation 或上游写入入口。
 
 ## 3. Finding 输出门禁
 
@@ -123,6 +125,15 @@
 - Documentation timing：仍不提前修改 AGENTS/README；按 R1/R2/R3/R4/R6 的能力 operational 同批同步合同执行。
 - Skipped：未运行外部完整 JSON Schema metaschema validator；R1 仍须使用长期 owner 选定的生产级 Draft 2020-12 validator 复核。
 - Result：PASS / Plan-ready。该结论只表示计划可以实施，不表示代码、gateway、adapter、route 切换或前台能力完成。
+
+## 11. R0B Bootstrap 实施验证结果（2026-07-12）
+
+- Scope：仅验证本目录 Bootstrap CLI、reviewer/verifier Schema、profile registry、operator guide、回归测试及 Whole-directory validator；未对 7-07/7-11 执行 candidate discovery 或 reviewer。
+- Mechanical checks：PASS；17 个 Bootstrap 回归测试通过，Whole-directory plan validator 通过。
+- Contract closure：pending template 可被 Schema 接受但不能冒充 completed；binary artifact 可 hash-bound 但不能作为行证据；candidate context 与 verifier evidence 必须位于 prepared scope；policy revision 绑定 canonical profile；Bootstrap sidecar 标识 `supplemental_bootstrap`；finalize 会从原始 reviewer 输出重算 gate 产物且可幂等重跑。
+- Smoke：临时 Git 仓完成 `prepare → 三层合法空输出 → gate → finalize`，结果 clean，目标 scope SHA-256 前后相同；该 smoke 未使用真实上游目录。
+- Reviewer execution：按用户要求跳过 Blind Hunter、Edge Case Hunter、Acceptance Auditor 和独立 verifier；零条 7-07/7-11 finding 被生成或代写。
+- Result：PASS / R0B Bootstrap-ready。该结论只表示用户现在可以按 09 手工审查 7-07/7-11；不表示 R0C 手工审查、R0D handoff 或 R1–R6 已完成。
 
 ## 验收标准
 

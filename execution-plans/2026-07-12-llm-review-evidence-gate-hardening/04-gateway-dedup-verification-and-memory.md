@@ -67,6 +67,22 @@ fingerprint 输入至少包含 routeVersion、规范化 artifact path、证据 h
 
 不得为满足本计划破坏 `summary.json` 兼容性。
 
+## 7. Bootstrap sidecar 隔离
+
+R0 Bootstrap Review 使用用户选择的独立 run directory，并至少写入：
+
+- `review-input.json`；
+- `review-candidates.json`；
+- `review-rejections.json`；
+- `review-gate-result.json`；
+- `review-dispositions.json`；
+- `review-metrics.json`；
+- `review-report.md`。
+
+所有文件必须标记 `routeVersion=review-bootstrap.v1`、`authorityRevision`、input hash、profile/revision 和 `authorityClass=supplemental_bootstrap`。准备时冻结 scope file hashes；gate/finalize 检测任一引用 artifact 漂移时 fail closed。输出目录不得位于任一目标 scope 内。
+
+P0/P1 gate 后保持 incomplete，并生成 verifier prompt/template。`finalize` 必须要求每个 accepted P0/P1 恰有一个用户手工 verifier decision；verifier 不能新增 finding ID。confirmed/refuted/unverified 以 disposition sidecar 记录，unverified class 决定 blocking/manual_pause。
+
 ## 验收标准
 
 - Given 两个 reviewer 引用同一证据和失败链，When dedup，Then只产生一个 fingerprint。
@@ -74,3 +90,5 @@ fingerprint 输入至少包含 routeVersion、规范化 artifact path、证据 h
 - Given P2 advisory，When汇总，Then不启动自动修复循环。
 - Given result 的 required layer 与可信 profile/revision 不一致，When gateway 汇总，Then fail closed 而不是接受自报集合。
 - Given unverified class/disposition 不匹配，或 finding 被汇总为不一致的 result status，When schema/gateway 校验，Then result 被拒绝。
+- Given prepare 后 artifact hash 改变，When gate/finalize，Then stale candidate 被拒绝且不得形成 blocker。
+- Given输出目录位于目标 scope 内，When prepare，Then命令在写文件前失败。

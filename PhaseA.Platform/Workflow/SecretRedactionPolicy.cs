@@ -83,6 +83,10 @@ public static partial class SecretRedactionPolicy
             var node = JsonNode.Parse(text);
             if (node is not null)
             {
+                if (node is JsonValue rootValue && rootValue.TryGetValue<string>(out var rootString))
+                {
+                    return JsonSerializer.Serialize(RedactTextForPersistence(rootString));
+                }
                 RedactJsonNode(node);
                 return node.ToJsonString();
             }
@@ -173,6 +177,6 @@ public static partial class SecretRedactionPolicy
     [GeneratedRegex("(?:\\\\\\\\\\?\\\\)?[A-Za-z]:[\\\\/]", RegexOptions.IgnoreCase)]
     private static partial Regex WindowsDrivePathPrefix();
 
-    [GeneratedRegex("\\\\\\\\(?:\\?\\\\UNC\\\\)?[^\\\\/\\r\\n]+[\\\\/][^\\\\/\\r\\n]+[\\\\/]", RegexOptions.IgnoreCase)]
+    [GeneratedRegex("\\\\\\\\(?:\\?\\\\UNC\\\\)?[^\\\\/\\r\\n]+[\\\\/][^\\\\/\\r\\n]+(?:[\\\\/]|(?=$|[\\r\\n\\\"',;}\\]]))", RegexOptions.IgnoreCase)]
     private static partial Regex WindowsUncPathPrefix();
 }

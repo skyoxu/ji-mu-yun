@@ -3260,6 +3260,8 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         {
             schema_version = "prototype-skeleton-readback.v1",
             route = "prototype-skeleton",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
             status,
             source_boundary_enforced = true,
             recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
@@ -3269,11 +3271,14 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
                 recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
                 authority_sources = new[]
                 {
-                    "game-type-route-profile",
-                    PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
-                    "routes/prototype-contract/latest.json",
-                    "meta/routes/gdd-requirements/latest.json",
-                    "meta/routes/prototype/latest.json"
+                    "source_gdd_hash",
+                    "source_scene_route_hash",
+                    "source_requirement_map_hash",
+                    "source_contract_hash",
+                    "source_contract_snapshot_hash",
+                    "source_godot_ui_contract_hash",
+                    "source_ui_style_contract_hash",
+                    "ui_style_snapshot_hash"
                 },
                 source_hashes = new
                 {
@@ -3308,9 +3313,9 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             verified_requirement_ids = verifiedRequirementIds,
             evidence_refs = new[]
             {
-                "meta/routes/prototype/latest.json",
-                "routes/prototype-contract/latest.json",
-                "meta/routes/gdd-requirements/latest.json"
+                new { kind = "sidecar", path = "meta/routes/prototype/latest.json" },
+                new { kind = "sidecar", path = "routes/prototype-contract/latest.json" },
+                new { kind = "sidecar", path = "meta/routes/gdd-requirements/latest.json" }
             },
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });

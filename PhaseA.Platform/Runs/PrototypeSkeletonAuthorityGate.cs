@@ -52,7 +52,7 @@ internal static class PrototypeSkeletonAuthorityGate
                 sourceBoundary.ValueKind != JsonValueKind.True ||
                 ReadString(root, "status") is not ("ready" or "succeeded") ||
                 !string.Equals(ReadString(root, "freshness"), "fresh", StringComparison.Ordinal) ||
-                !HasEvidenceRefs(root) ||
+                !HasEvidenceRefs(project, root) ||
                 !DateTimeOffset.TryParse(ReadString(root, "updated_utc"), out _))
             {
                 return Blocked("prototype_skeleton_stale", "The prototype skeleton readback is incomplete or not fresh.");
@@ -125,11 +125,108 @@ internal static class PrototypeSkeletonAuthorityGate
                    .SequenceEqual(HostedRouteRecoveryContract.SourceOrder, StringComparer.Ordinal);
     }
 
-    private static bool HasEvidenceRefs(JsonElement root)
+    private static bool HasEvidenceRefs(ProjectSnapshot project, JsonElement root)
     {
-        return root.TryGetProperty("evidence_refs", out var refs) &&
-               refs.ValueKind == JsonValueKind.Array &&
-               refs.EnumerateArray().Any(item => item.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(item.GetString()));
+        if (!root.TryGetProperty("evidence_refs", out var refs) ||
+            refs.ValueKind != JsonValueKind.Array ||
+            refs.GetArrayLength() == 0)
+        {
+            return false;
+        }
+
+        return refs.EnumerateArray().All(item =>
+        {
+            if (item.ValueKind != JsonValueKind.Object ||
+                !RouteEvidenceRefKinds.Contains(ReadString(item, "kind")))
+            {
+                return false;
+            }
+
+            var relativePath = ReadString(item, "path");
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                return false;
+            }
+
+            return ResolveSafeExistingFile(project, relativePath) is not null;
+        });
+    }
+
+    private static string? ResolveSafeExistingFile(ProjectSnapshot project, string relativePath)
+    {
+        var candidates = new List<(string Root, string RelativePath)>
+        {
+            (project.RepoPath, relativePath)
+        };
+        var normalizedLogicalPath = relativePath.Replace('\\', '/');
+        if (normalizedLogicalPath.StartsWith("meta/", StringComparison.OrdinalIgnoreCase))
+        {
+            candidates.Add((project.MetaPath, normalizedLogicalPath["meta/".Length..]));
+        }
+
+        foreach (var candidate in candidates)
+        {
+            var resolved = ResolveSafeExistingFile(candidate.Root, candidate.RelativePath);
+            if (resolved is not null)
+            {
+                return resolved;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ResolveSafeExistingFile(string root, string relativePath)
+    {
+        try
+        {
+            var normalized = relativePath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+            if (Path.IsPathRooted(normalized) ||
+                normalized.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                    .Any(segment => segment == ".."))
+            {
+                return null;
+            }
+
+            var rootFullPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
+            var candidate = Path.GetFullPath(Path.Combine(rootFullPath, normalized));
+            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            if (!candidate.StartsWith(rootFullPath + Path.DirectorySeparatorChar, comparison) ||
+                !File.Exists(candidate) ||
+                HasReparsePointBetween(rootFullPath, candidate))
+            {
+                return null;
+            }
+
+            return candidate;
+        }
+        catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    private static bool HasReparsePointBetween(string rootFullPath, string candidateFullPath)
+    {
+        if ((File.GetAttributes(rootFullPath) & FileAttributes.ReparsePoint) != 0)
+        {
+            return true;
+        }
+
+        var relative = Path.GetRelativePath(rootFullPath, candidateFullPath);
+        var current = rootFullPath;
+        foreach (var segment in relative.Split(
+                     [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+                     StringSplitOptions.RemoveEmptyEntries))
+        {
+            current = Path.Combine(current, segment);
+            if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string ReadString(JsonElement root, string propertyName)

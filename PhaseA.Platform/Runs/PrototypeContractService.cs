@@ -36,6 +36,24 @@ public sealed class PrototypeContractService
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(request);
 
+        var relativePath = ContractRelativePath();
+        var frozenPath = Path.Combine(project.RepoPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        if (TryReadFrozenContract(project, frozenPath, out var frozenContract))
+        {
+            var frozenMirrorPath = Path.Combine(project.RepoPath, "meta", relativePath.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(frozenMirrorPath)!);
+            if (!File.Exists(frozenMirrorPath) ||
+                !string.Equals(File.ReadAllText(frozenMirrorPath, Encoding.UTF8), frozenContract, StringComparison.Ordinal))
+            {
+                File.WriteAllText(frozenMirrorPath, frozenContract, Utf8NoBom);
+            }
+            return new PrototypeContractSnapshot(relativePath, frozenContract);
+        }
+        if (File.Exists(frozenPath))
+        {
+            throw new InvalidOperationException("prototype_contract_frozen_invalid");
+        }
+
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var payload = new
         {
@@ -81,7 +99,6 @@ public sealed class PrototypeContractService
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         };
 
-        var relativePath = ContractRelativePath();
         var absolutePath = Path.Combine(project.MetaPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
         var mirroredPath = Path.Combine(project.RepoPath, "meta", relativePath.Replace('/', Path.DirectorySeparatorChar));
         var serialized = JsonSerializer.Serialize(payload, JsonOptions);
@@ -97,6 +114,15 @@ public sealed class PrototypeContractService
         ArgumentNullException.ThrowIfNull(project);
 
         var relativePath = ContractRelativePath();
+        var frozenPath = Path.Combine(project.RepoPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        if (TryReadFrozenContract(project, frozenPath, out var frozenContract))
+        {
+            return new PrototypeContractSnapshot(relativePath, frozenContract);
+        }
+        if (File.Exists(frozenPath))
+        {
+            return new PrototypeContractSnapshot(relativePath, "");
+        }
         var absolutePath = Path.Combine(project.MetaPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
         if (File.Exists(absolutePath))
         {
@@ -179,6 +205,41 @@ public sealed class PrototypeContractService
     private static string ContractRelativePath()
     {
         return Path.Combine("routes", "prototype-contract", "latest.json").Replace('\\', '/');
+    }
+
+    private static bool TryReadFrozenContract(ProjectSnapshot project, string path, out string contract)
+    {
+        contract = "";
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            var candidate = File.ReadAllText(path, Encoding.UTF8);
+            using var document = JsonDocument.Parse(candidate);
+            var root = document.RootElement;
+            if (!PrototypeContractFreezeService.IsFrozenContractCurrentForConsumption(project, root))
+            {
+                return false;
+            }
+
+            contract = candidate;
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     private static string FirstNonEmpty(params string?[] values)

@@ -11,6 +11,7 @@
 - 06 testing/observability/rollout；
 - 07 phases；
 - 08 risks/DoD/glossary；
+- 09 bootstrap operator guide；
 - 96 global review；
 - 97 requirement ledger；
 - 98 source audit；
@@ -23,6 +24,11 @@
 - `schemas/review-result.v1.schema.json`；
 - `schemas/review-validation-fixtures.v1.json`；
 - `tools/validate_whole_directory.py`。
+- `schemas/bootstrap-reviewer-output.v1.schema.json`；
+- `schemas/bootstrap-verifier-output.v1.schema.json`；
+- `bootstrap/review-profiles.v1.json`；
+- `tools/run_bootstrap_review.py`；
+- `tools/tests/test_run_bootstrap_review.py`。
 
 ## 3. Requirement Coverage
 
@@ -42,6 +48,10 @@
 | 06 / R2 | RFG-019 |
 | 05 / R1 | RFG-020 |
 | 96 / R0 | RFG-021, RFG-029 |
+| 01 / R0 | RFG-033, RFG-039 |
+| 09 / R0 | RFG-034 |
+| 04 / R0 | RFG-035, RFG-036, RFG-037, RFG-038 |
+| 05 / R1 | RFG-040 |
 
 ## 4. Cross-cutting Coverage
 
@@ -60,7 +70,8 @@
 | 阶段退出和 DoD | 07, 08 |
 | Whole-directory plan review | 96 |
 | 三层 reviewer 后续路由与 provenance | 03, 04, 05, 06, 07 |
+| handoff 前 Bootstrap Review | 01, 03, 04, 05, 06, 07, 09, schemas, tools |
 
 ## 5. Completion
 
-覆盖完成要求：required books/artifacts 全部存在；RFG-001 至 RFG-032 在 97 唯一且在本文件恰好覆盖一次；本地 validator 通过；96 ledger 无 Open P0–P2；Whole-directory review 结论明确“plan-ready 不等于 code-complete”。
+覆盖完成要求：required books/artifacts 全部存在；RFG-001 至 RFG-040 在 97 唯一且在本文件恰好覆盖一次；本地 validator 通过；96 ledger 无 Open P0–P2；Whole-directory review 结论明确“plan-ready 不等于 code-complete”。

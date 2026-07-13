@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Text.Json;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workflow;
@@ -8,6 +9,22 @@ namespace PhaseA.Platform.Tests.Runs;
 
 public sealed class ProjectRouteStateArtifactServiceTests
 {
+    [Theory]
+    [InlineData("null")]
+    [InlineData("\"ready\"")]
+    [InlineData("[]")]
+    public void Read_WhenRouteArtifactJsonRootIsNotObject_FailsClosed(string json)
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", json);
+
+        var readback = fixture.Read();
+
+        readback.Artifacts.Single(artifact => artifact.Route == "gdd-requirements").Status.Should().Be("failed");
+        readback.BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:invalid_root");
+    }
+
     [Fact]
     public void Read_WhenPromptRouteOmitsBoundaryDetails_BlocksWithSourceBoundaryIssue()
     {
@@ -27,7 +44,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.Status.Should().Be("blocked");
         readback.BlockingIssues.Should().Contain(issue =>
@@ -42,13 +59,11 @@ public sealed class ProjectRouteStateArtifactServiceTests
         const string gdd = "# GDD\n\n- Stable requirement.";
         var gddHash = RouteStateFixture.Hash(gdd);
         fixture.WriteText("docs/gdd/GDD.md", gdd);
-        fixture.WriteText("meta/routes/gdd-requirements/prompt-evidence.json", $$"""
-        {
-          "recovery_source_order_ref": "hosted-route-recovery-order.v1",
-          "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
-          "source_hashes": { "docs/gdd/GDD.md": "{{gddHash}}" }
-        }
-        """);
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-requirements/prompt-evidence.json",
+            "Use only the frozen GDD.",
+            new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+            ["assistant summary as acceptance authority"]);
         fixture.WriteJson("meta/routes/gdd-requirements/latest.json", $$"""
         {
           "schema_version": "gdd-requirements.v1",
@@ -60,14 +75,14 @@ public sealed class ProjectRouteStateArtifactServiceTests
             "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
             "authority_sources": ["docs/gdd/GDD.md"],
             "source_hashes": { "docs/gdd/GDD.md": "{{gddHash}}" },
-            "forbidden_source_patterns": ["docs/game-type-guides/** raw excerpts"],
+            "forbidden_source_patterns": ["assistant summary as acceptance authority"],
             "prompt_evidence_refs": ["meta/routes/gdd-requirements/prompt-evidence.json"]
           },
           "requirements": []
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().NotContain(issue =>
             issue.IssueId.Contains("source_boundary", StringComparison.Ordinal) ||
@@ -77,17 +92,91 @@ public sealed class ProjectRouteStateArtifactServiceTests
     }
 
     [Fact]
+    public void Read_WhenPromptEvidenceDeclaresExtraAuthorityHash_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string gdd = "# GDD\n\n- Stable requirement.";
+        var gddHash = RouteStateFixture.Hash(gdd);
+        fixture.WriteText("docs/gdd/GDD.md", gdd);
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-requirements/prompt-evidence.json",
+            "Use only the frozen GDD.",
+            new Dictionary<string, string>
+            {
+                ["docs/gdd/GDD.md"] = gddHash,
+                ["meta/project-execution-guide.md"] = new string('a', 64)
+            },
+            ["assistant summary as acceptance authority"]);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "docs/gdd/GDD.md" },
+                source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+                forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+            },
+            requirements = Array.Empty<object>()
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_invalid");
+    }
+
+    [Fact]
+    public void Read_WhenPromptEvidenceIsBoundToAnotherRoute_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string gdd = "# GDD\n\n- Stable requirement.";
+        var gddHash = RouteStateFixture.Hash(gdd);
+        fixture.WriteText("docs/gdd/GDD.md", gdd);
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-document/cross-route-prompt-evidence.json",
+            "Use only the frozen GDD.",
+            new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+            ["assistant summary as acceptance authority"]);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "docs/gdd/GDD.md" },
+                source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+                forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-document/cross-route-prompt-evidence.json" }
+            },
+            requirements = Array.Empty<object>()
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_invalid");
+    }
+
+    [Fact]
     public void Read_WhenPromptEvidenceRepeatsAHashThatDoesNotMatchAuthority_Blocks()
     {
         using var fixture = RouteStateFixture.Create();
         fixture.WriteText("docs/gdd/GDD.md", "# Actual GDD");
-        fixture.WriteText("meta/routes/gdd-requirements/prompt-evidence.json", """
-        {
-          "recovery_source_order_ref": "hosted-route-recovery-order.v1",
-          "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
-          "source_hashes": { "docs/gdd/GDD.md": "self-declared-but-wrong" }
-        }
-        """);
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-requirements/prompt-evidence.json",
+            "Use only the frozen GDD.",
+            new Dictionary<string, string> { ["docs/gdd/GDD.md"] = "self-declared-but-wrong" },
+            ["assistant summary as acceptance authority"]);
         fixture.WriteJson("meta/routes/gdd-requirements/latest.json", """
         {
           "route": "gdd-requirements",
@@ -98,15 +187,128 @@ public sealed class ProjectRouteStateArtifactServiceTests
             "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
             "authority_sources": ["docs/gdd/GDD.md"],
             "source_hashes": { "docs/gdd/GDD.md": "self-declared-but-wrong" },
-            "forbidden_source_patterns": ["raw guide"],
+            "forbidden_source_patterns": ["assistant summary as acceptance authority"],
             "prompt_evidence_refs": ["meta/routes/gdd-requirements/prompt-evidence.json"]
           }
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_hashes_authority_mismatch" &&
+            issue.Severity == "P0");
+    }
+
+    [Fact]
+    public void Read_WhenAuthoritySourceHasNoMatchingSourceHash_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string gdd = "# GDD";
+        var gddHash = RouteStateFixture.Hash(gdd);
+        fixture.WriteText("docs/gdd/GDD.md", gdd);
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-requirements/prompt-evidence.json",
+            "Use frozen GDD authority only.",
+            new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+            ["assistant summary as acceptance authority"]);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "docs/gdd/GDD.md", "meta/routes/scene-route/latest.json" },
+                source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+                forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+            }
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_hashes_missing" && issue.Severity == "P0");
+
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "docs/gdd/GDD.md", "opaque-runtime-memory" },
+                source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+                forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+            }
+        }));
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_hashes_missing" && issue.Severity == "P0");
+    }
+
+    [Fact]
+    public void Read_WhenSceneSemanticContentChangesButDeclaredHashesStayOld_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string sceneTemplate = """
+        {
+          "schema_version": "scene-route.v1",
+          "route": "scene-route-confirmation",
+          "status_dimension": "scene_route_confirmation",
+          "status": "confirmed",
+          "scene_count_intent": "multi",
+          "entry_scene": "field_map",
+          "scenes": [{"scene_id":"field_map","scene_name":"Field","role":"hub","m1_required":true,"player_goal":"Move"}],
+          "transitions": [],
+          "single_scene_confirmation": {"allowed":false,"reason":"multi"},
+          "notes": []
+        }
+        """;
+        fixture.WriteJson("meta/routes/scene-route/latest.json", sceneTemplate);
+        using var sceneDocument = JsonDocument.Parse(sceneTemplate);
+        var sceneHash = GddToModuleAuthorityHashes.ComputeSceneRouteHash(sceneDocument.RootElement);
+        var contractHash = GddToModuleAuthorityHashes.ComputeContractSnapshotHash(fixture.Project.GameTypeMatchJson);
+        var sourceHashes = new Dictionary<string, string>
+        {
+            ["meta/routes/scene-route/latest.json"] = sceneHash,
+            ["project-contract-snapshot"] = contractHash
+        };
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-requirements/prompt-evidence.json",
+            "Use frozen scene and contract.",
+            sourceHashes,
+            ["assistant summary as acceptance authority"]);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status_dimension = "route_readback",
+            status_allowed_values = new[] { "ready", "needs_review", "blocked", "stale", "unknown" },
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "meta/routes/scene-route/latest.json", "project-contract-snapshot" },
+                source_hashes = sourceHashes,
+                forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+            }
+        }));
+        fixture.WriteJson("meta/routes/scene-route/latest.json", sceneTemplate.Replace("\"scene_name\":\"Field\"", "\"scene_name\":\"Tampered\"", StringComparison.Ordinal));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_hashes_authority_mismatch" &&
             issue.Severity == "P0");
     }
@@ -146,7 +348,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
             }
             """);
 
-            var readback = fixture.Service.Read(fixture.Project);
+            var readback = fixture.Read();
 
             readback.BlockingIssues.Should().Contain(issue =>
                 issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_missing" &&
@@ -156,6 +358,26 @@ public sealed class ProjectRouteStateArtifactServiceTests
         {
             File.Delete(outside);
         }
+    }
+
+    [Fact]
+    public void Read_WhenProjectRepoRootIsDirectorySymlink_FailsClosed()
+    {
+        using var fixture = RouteStateFixture.CreateWithRepoSymlink();
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", """
+        {
+          "schema_version": "gdd-requirements.v1",
+          "route": "gdd-requirements",
+          "status_dimension": "route_readback",
+          "status_allowed_values": ["ready", "needs_review", "blocked", "stale", "unknown"],
+          "status": "ready",
+          "source_boundary_enforced": true
+        }
+        """);
+
+        var readback = fixture.Read();
+
+        readback.Artifacts.Single(artifact => artifact.Route == "gdd-requirements").Status.Should().Be("missing");
     }
 
     [Fact]
@@ -179,7 +401,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_invalid" &&
@@ -199,7 +421,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/ui-wiring/latest.json:source_boundary_not_applicable_invalid");
@@ -219,7 +441,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_boundary_enforced_invalid" &&
@@ -244,7 +466,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_boundary_enforcement_required" &&
@@ -252,9 +474,34 @@ public sealed class ProjectRouteStateArtifactServiceTests
     }
 
     [Fact]
+    public void Read_WhenPrototypeSkeletonPromptRouteDeclaresNotApplicableBoundary_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string relativePath = "meta/routes/prototype-skeleton/latest.json";
+        const string route = "prototype-skeleton";
+        fixture.WriteJson(relativePath, JsonSerializer.Serialize(new
+        {
+            route,
+            status = "ready",
+            source_boundary_enforced = false,
+            source_boundary_not_applicable = new
+            {
+                reason = "readback_only",
+                checked_utc = "2026-07-12T00:00:00Z",
+                decision_by = "system",
+                evidence_refs = Array.Empty<object>()
+            }
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == $"{relativePath}:source_boundary_enforcement_required" && issue.Severity == "P0");
+    }
+
+    [Fact]
     public void Read_WhenNonPromptRouteHasStructuredNotApplicableBoundary_AllowsExemption()
     {
         using var fixture = RouteStateFixture.Create();
+        fixture.WriteText("meta/routes/ui-wiring/exemption-evidence.json", "{}");
         fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
         {
           "schema_version": "ui-wiring-closure.v1",
@@ -264,16 +511,213 @@ public sealed class ProjectRouteStateArtifactServiceTests
             "reason": "static_browser_projection",
             "checked_utc": "2026-07-12T00:00:00Z",
             "decision_by": "system",
-            "evidence_refs": []
+            "evidence_refs": [{ "kind": "sidecar", "path": "meta/routes/ui-wiring/exemption-evidence.json" }]
           },
           "ui_surface_matrix": []
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().NotContain(issue =>
             issue.IssueId.Contains("source_boundary", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Read_WhenNonPromptRouteNotApplicableEvidenceIsEmpty_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1",
+          "status_dimension": "route_readback",
+          "status_allowed_values": ["ready", "blocked"],
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "static_browser_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": []
+          }
+        }
+        """);
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/ui-wiring/latest.json:source_boundary_not_applicable_invalid" && issue.Severity == "P0");
+    }
+
+    [Fact]
+    public void Read_WhenEvidenceRefHasNoSafeLocator_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteText("meta/routes/ui-wiring/exemption-evidence.json", "{}");
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1",
+          "status_dimension": "route_readback",
+          "status_allowed_values": ["ready", "blocked"],
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "static_browser_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": [{ "kind": "sidecar", "path": "meta/routes/ui-wiring/exemption-evidence.json" }]
+          },
+          "evidence_refs": [{ "kind": "sidecar" }]
+        }
+        """);
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/ui-wiring/latest.json:evidence_ref_locator_invalid" && issue.Severity == "P2");
+    }
+
+    [Fact]
+    public void Read_WhenEvidenceRefsContainsScalar_BlocksWithoutThrowing()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteText("meta/routes/ui-wiring/exemption-evidence.json", "{}");
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1",
+          "status_dimension": "route_readback",
+          "status_allowed_values": ["ready", "blocked"],
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "static_browser_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": [{ "kind": "sidecar", "path": "meta/routes/ui-wiring/exemption-evidence.json" }]
+          },
+          "evidence_refs": ["not-an-object"]
+        }
+        """);
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/ui-wiring/latest.json:evidence_ref_invalid");
+    }
+
+    [Fact]
+    public void Read_WhenStatusIsOutsideDimension_FreshnessIsUnknown()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1",
+          "status_dimension": "route_readback",
+          "status_allowed_values": ["ready", "blocked"],
+          "status": "surprising",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "static_browser_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": []
+          }
+        }
+        """);
+
+        fixture.Read().Artifacts.Single(artifact => artifact.Route == "ui-wiring").Freshness.Should().Be("unknown");
+    }
+
+    [Theory]
+    [InlineData("{\"scene_count_intent\":1,\"entry_scene\":\"field\",\"scenes\":[],\"transitions\":[],\"single_scene_confirmation\":{}}")]
+    [InlineData("{\"scene_count_intent\":\"single\",\"entry_scene\":\"field\",\"scenes\":{},\"transitions\":[],\"single_scene_confirmation\":{}}")]
+    [InlineData("{\"scene_count_intent\":\"single\",\"entry_scene\":\"field\",\"scenes\":[],\"transitions\":[],\"single_scene_confirmation\":[],\"notes\":[1]}")]
+    public void ComputeSceneRouteHash_WhenAuthorityShapeIsMalformed_ReturnsEmpty(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+
+        GddToModuleAuthorityHashes.ComputeSceneRouteHash(document.RootElement).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Read_WhenEvidenceRefUsesOwnedArtifactId_AllowsLocator()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.AddArtifactId("artifact-owned");
+        fixture.WriteText("meta/routes/ui-wiring/exemption-evidence.json", "{}");
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1",
+          "status_dimension": "route_readback",
+          "status_allowed_values": ["ready", "blocked"],
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "static_browser_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": [{ "kind": "sidecar", "path": "meta/routes/ui-wiring/exemption-evidence.json" }]
+          },
+          "evidence_refs": [{ "kind": "artifact", "artifact_id": "artifact-owned" }]
+        }
+        """);
+
+        fixture.Read().BlockingIssues.Should().NotContain(issue =>
+            issue.IssueId == "meta/routes/ui-wiring/latest.json:evidence_ref_locator_invalid");
+    }
+
+    [Fact]
+    public void Read_WhenEvidenceRefUsesUnknownArtifactId_BlocksLocator()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteText("meta/routes/ui-wiring/exemption-evidence.json", "{}");
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1",
+          "status_dimension": "route_readback",
+          "status_allowed_values": ["ready", "blocked"],
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "static_browser_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": [{ "kind": "sidecar", "path": "meta/routes/ui-wiring/exemption-evidence.json" }]
+          },
+          "evidence_refs": [{ "kind": "artifact", "artifact_id": "artifact-other-project" }]
+        }
+        """);
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/ui-wiring/latest.json:evidence_ref_locator_invalid" && issue.Severity == "P2");
+    }
+
+    [Fact]
+    public void Read_WhenPromptEvidenceRefIsDirectory_BlocksWithoutSamplingFiles()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string gdd = "# GDD";
+        var gddHash = RouteStateFixture.Hash(gdd);
+        fixture.WriteText("docs/gdd/GDD.md", gdd);
+        for (var index = 0; index < 25; index++)
+        {
+            fixture.WriteJson($"meta/routes/gdd-requirements/prompt-evidence/{index:D2}.json", "{}");
+        }
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback),
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "docs/gdd/GDD.md" },
+                source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+                forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence" }
+            }
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_directory_forbidden" && issue.Severity == "P0");
     }
 
     [Fact]
@@ -289,7 +733,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-document/latest.json:status_outside_declared_subset");
@@ -313,8 +757,75 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        fixture.Service.Read(fixture.Project).BlockingIssues.Should().Contain(issue =>
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/ui-wiring/latest.json:status_dimension_missing");
+    }
+
+    [Fact]
+    public void Read_WhenSidecarOmitsBothSchemaVersionAndStatusDimension_BlocksBothMissingFields()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/gdd-document/latest.json", """
+        {
+          "status_allowed_values": ["ready", "blocked"],
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "legacy_static_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": []
+          }
+        }
+        """);
+
+        var issues = fixture.Read().BlockingIssues;
+
+        issues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-document/latest.json:schema_version_missing");
+        issues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-document/latest.json:status_dimension_missing");
+    }
+
+    [Fact]
+    public void Read_WhenForbiddenSourceScanReportsViolation_BlocksPromptEvidence()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string gdd = "# GDD";
+        var gddHash = RouteStateFixture.Hash(gdd);
+        fixture.WriteText("docs/gdd/GDD.md", gdd);
+        var scan = HostedRouteForbiddenSourceGuard.Scan(
+            "Read docs/game-type-guides/rpg.md",
+            ["docs/game-type-guides/** raw excerpts"]);
+        fixture.WriteJson("meta/routes/gdd-requirements/prompt-evidence.json", JsonSerializer.Serialize(new
+        {
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+            recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+            source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+            forbidden_source_scan = scan
+        }));
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = new[] { "ready", "needs_review", "blocked", "stale", "unknown" },
+            status = "blocked",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "docs/gdd/GDD.md" },
+                source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+                forbidden_source_patterns = new[] { "docs/game-type-guides/** raw excerpts" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+            }
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_invalid" &&
+            issue.Severity == "P0");
     }
 
     [Fact]
@@ -347,7 +858,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
             }
         }));
 
-        fixture.Service.Read(fixture.Project).BlockingIssues.Should().Contain(issue =>
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-requirements/latest.json:raw_prompt_persisted_forbidden");
     }
 
@@ -364,12 +875,118 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-document/latest.json:status_allowed_values_outside_dimension");
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-document/latest.json:status_outside_dimension");
+    }
+
+    [Fact]
+    public void Read_WhenCanonicalArtifactClaimsWrongRegisteredContract_BlocksExactRegistryMismatch()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/gdd-document/latest.json", """
+        {
+          "schema_version": "prototype-contract.v2",
+          "route": "prototype-contract",
+          "status_dimension": "readiness_label",
+          "status_allowed_values": ["ready", "blocked", "stale", "unknown"],
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "static_browser_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": []
+          }
+        }
+        """);
+
+        var issues = fixture.Read().BlockingIssues;
+        issues.Should().Contain(issue => issue.IssueId.EndsWith(":schema_version_unexpected", StringComparison.Ordinal));
+        issues.Should().Contain(issue => issue.IssueId.EndsWith(":route_unexpected", StringComparison.Ordinal));
+        issues.Should().Contain(issue => issue.IssueId.EndsWith(":status_dimension_unexpected", StringComparison.Ordinal));
+        issues.Should().Contain(issue => issue.IssueId.EndsWith(":status_allowed_values_unexpected", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Read_WhenPersistedPromptChangesAfterScan_BlocksPromptEvidenceHashBinding()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string gdd = "# GDD";
+        var gddHash = RouteStateFixture.Hash(gdd);
+        fixture.WriteText("docs/gdd/GDD.md", gdd);
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-requirements/prompt-evidence.json",
+            "Use only the frozen GDD.",
+            new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+            ["assistant summary as acceptance authority"]);
+        fixture.WriteText("meta/routes/gdd-requirements/prompt-evidence.prompt.txt", "Tampered after scan.");
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = new[] { "ready", "needs_review", "blocked", "stale", "unknown" },
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "docs/gdd/GDD.md" },
+                source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash },
+                forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+            }
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_invalid" &&
+            issue.Severity == "P0");
+    }
+
+    [Fact]
+    public void Read_WhenAllowedGuideReferenceIsTamperedInBothBoundaryAndEvidence_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string guide = "# RPG Guide\n\nThis stable RPG guide paragraph defines the field, encounter, reward, and return loop used by the approved authority.";
+        fixture.WriteText("docs/game-type-guides/game-types.csv", "id,name,description,genre_tags,fragment_file\nrpg,RPG,Role-playing,rpg,rpg.md\n");
+        fixture.WriteText("docs/game-type-guides/rpg.md", guide);
+        var guideHash = HostedRouteForbiddenSourceGuard.ContentHash(guide);
+        var sourceHashes = new Dictionary<string, string> { ["game-type-guide:rpg"] = guideHash };
+        var tamperedReference = "docs/game-type-guides/other.md";
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-requirements/prompt-evidence.json",
+            "Use the approved guide authority.",
+            sourceHashes,
+            ["assistant summary as acceptance authority"],
+            [tamperedReference]);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status_dimension = RouteStatusVocabulary.RouteReadback,
+            status_allowed_values = new[] { "ready", "needs_review", "blocked", "stale", "unknown" },
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "game-type-guide:rpg" },
+                source_hashes = sourceHashes,
+                forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                allowed_source_references = new[] { tamperedReference },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+            }
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_invalid" &&
+            issue.Severity == "P0");
     }
 
     [Fact]
@@ -391,7 +1008,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         var contract = readback.Artifacts.Single(artifact => artifact.Route == "prototype-contract");
         contract.Authority.Should().Be("authority");
@@ -422,7 +1039,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "gdd-requirements:REQ-001:requirement_p0_gap" &&
@@ -453,7 +1070,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "gdd-requirements:REQ-002:admin_decision_required" &&
@@ -478,7 +1095,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "ui-wiring:route_map:godot_ui_surface_incomplete" &&
@@ -504,7 +1121,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "ui-wiring:combat_hud:godot_ui_no_ui_needed_review_missing" &&
@@ -543,7 +1160,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Select(issue => issue.IssueId).Should().Contain([
             "ui-wiring:reward_screen:technology_stack_leakage",
@@ -587,7 +1204,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().NotContain(issue => issue.IssueId.StartsWith("ui-wiring:route_map:", StringComparison.Ordinal));
     }
@@ -619,7 +1236,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "ui-wiring:style-gap:gap-1:unresolved_final_readiness_blocker" &&
@@ -653,7 +1270,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "ui-wiring:style-gap:gap-2:style_gap_family_unknown");
@@ -674,7 +1291,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Select(issue => issue.IssueId).Should().Contain([
             "ui-wiring:style-repair-prompt:missing_runtime_environment_ref",
@@ -700,7 +1317,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Select(issue => issue.IssueId).Should().Contain([
             "ui-wiring:full-target:ui_final_readiness_style_gate:invalid_final_readiness_status",
@@ -712,7 +1329,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
     public void BuildRecommendation_UsesSingleDescriptorCatalogForAllCanonicalActions()
     {
         using var fixture = RouteStateFixture.Create();
-        var artifacts = fixture.Service.Read(fixture.Project);
+        var artifacts = fixture.Read();
         var recommendation = fixture.Service.BuildRecommendation(
             fixture.Project,
             artifacts,
@@ -749,7 +1366,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Service.Read(fixture.Project);
+        var readback = fixture.Read();
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-document/latest.json:evidence_ref_kind_invalid");
@@ -760,7 +1377,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
     {
         using var fixture = RouteStateFixture.Create();
         fixture.WriteText("docs/gdd/GDD.md", "# GDD\n");
-        var artifacts = fixture.Service.Read(fixture.Project);
+        var artifacts = fixture.Read();
 
         var recommendation = fixture.Service.BuildRecommendation(
             fixture.Project,
@@ -776,10 +1393,21 @@ public sealed class ProjectRouteStateArtifactServiceTests
     private sealed class RouteStateFixture : IDisposable
     {
         private readonly string _root;
+        private readonly string? _outsideRoot;
+        private readonly Dictionary<string, ProjectRoutePromptEvidenceBinding> _promptBindings = new(StringComparer.Ordinal);
+        private readonly HashSet<string> _artifactIds = new(StringComparer.Ordinal);
 
-        private RouteStateFixture(string root)
+        private RouteStateFixture(string root, bool symlinkRepo = false)
         {
             _root = root;
+            var repoPath = Path.Combine(root, "repo");
+            if (symlinkRepo)
+            {
+                _outsideRoot = Path.Combine(Path.GetTempPath(), "phasea-route-state-repo-target-" + Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(_outsideRoot);
+                Directory.CreateDirectory(root);
+                Directory.CreateSymbolicLink(repoPath, _outsideRoot);
+            }
             Project = new ProjectSnapshot(
                 "project-1",
                 "account-1",
@@ -793,9 +1421,9 @@ public sealed class ProjectRouteStateArtifactServiceTests
                 null,
                 "workspace-1",
                 Path.Combine(root, "workspace"),
-                Path.Combine(root, "repo"),
+                repoPath,
                 Path.Combine(root, "runtime"),
-                Path.Combine(root, "repo", "meta"));
+                Path.Combine(repoPath, "meta"));
             Directory.CreateDirectory(Project.RepoPath);
             Directory.CreateDirectory(Project.MetaPath);
             Service = new ProjectRouteStateArtifactService();
@@ -805,10 +1433,23 @@ public sealed class ProjectRouteStateArtifactServiceTests
 
         public ProjectRouteStateArtifactService Service { get; }
 
+        public ProjectRouteStateArtifactReadback Read()
+        {
+            return Service.Read(Project, _promptBindings, _artifactIds);
+        }
+
+        public void AddArtifactId(string artifactId) => _artifactIds.Add(artifactId);
+
         public static RouteStateFixture Create()
         {
             var root = Path.Combine(Path.GetTempPath(), "phasea-route-state-artifacts-" + Guid.NewGuid().ToString("N"));
             return new RouteStateFixture(root);
+        }
+
+        public static RouteStateFixture CreateWithRepoSymlink()
+        {
+            var root = Path.Combine(Path.GetTempPath(), "phasea-route-state-artifacts-" + Guid.NewGuid().ToString("N"));
+            return new RouteStateFixture(root, symlinkRepo: true);
         }
 
         public void WriteJson(string relativePath, string json)
@@ -823,6 +1464,51 @@ public sealed class ProjectRouteStateArtifactServiceTests
             File.WriteAllText(path, text.Replace("\r\n", "\n"));
         }
 
+        public void WritePromptEvidence(
+            string evidenceRelativePath,
+            string prompt,
+            IReadOnlyDictionary<string, string> sourceHashes,
+            IReadOnlyList<string> forbiddenPatterns,
+            IReadOnlyList<string>? allowedSourceReferences = null)
+        {
+            var promptRelativePath = evidenceRelativePath.Replace(".json", ".prompt.txt", StringComparison.Ordinal);
+            WriteText(promptRelativePath, prompt);
+            var scan = HostedRouteForbiddenSourceGuard.Scan(
+                prompt,
+                forbiddenPatterns,
+                allowedSourceReferences: allowedSourceReferences);
+            var persistedPromptHash = HostedRouteForbiddenSourceGuard.PromptHash(prompt);
+            var route = evidenceRelativePath.Contains("gdd-document", StringComparison.Ordinal)
+                ? "gdd-document-generation"
+                : "gdd-requirements";
+            WriteJson(evidenceRelativePath, JsonSerializer.Serialize(new
+            {
+                route,
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                source_hashes = sourceHashes,
+                forbidden_source_scan = scan,
+                prompt_manifest = new
+                {
+                    prompt_count = 1,
+                    prompt_artifact_refs = new[] { promptRelativePath },
+                    execution_prompt_hash = scan.PromptHash,
+                    persisted_prompt_hash = persistedPromptHash,
+                    retention = "internal_recovery_only",
+                    browser_readable = false,
+                    redacted = true
+                }
+            }));
+            _promptBindings[route] = new ProjectRoutePromptEvidenceBinding(
+                Project.ProjectId,
+                route,
+                scan.PromptHash,
+                persistedPromptHash,
+                promptRelativePath,
+                evidenceRelativePath,
+                DateTimeOffset.UtcNow.ToString("O"));
+        }
+
         public static string Hash(string text)
         {
             var normalized = text.Replace("\r\n", "\n").Trim();
@@ -834,6 +1520,10 @@ public sealed class ProjectRouteStateArtifactServiceTests
             if (Directory.Exists(_root))
             {
                 Directory.Delete(_root, recursive: true);
+            }
+            if (_outsideRoot is not null && Directory.Exists(_outsideRoot))
+            {
+                Directory.Delete(_outsideRoot, recursive: true);
             }
         }
     }

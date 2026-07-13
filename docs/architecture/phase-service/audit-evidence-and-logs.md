@@ -36,7 +36,9 @@ Out of scope:
 - Evidence must carry enough context to diagnose producer, project, account, run, route, status, and path ownership.
 - Failure evidence is preserved; new evidence is added as sidecars.
 - Admin-review decisions preserve actor, role, reason, UTC, evidence refs, version, and deferred owner/expiry/recheck/route scope where applicable. Regenerated queue evidence links superseding records instead of rewriting the prior decision.
+- Automatic reconciliation records actor `system` and an append-only decision row; legacy duplicate migration records predecessor/successor lineage instead of choosing a winner without audit evidence.
 - Persistence and export paths apply the same secret and host-path redaction boundary; redaction is not deferred to the browser caller.
+- Internal recovery prompts are redacted before persistence and excluded from browser list/direct/nested artifact readback. Browser-safe prompt evidence contains only hashes, manifests, recovery order, and the forbidden-source scan result.
 
 ## Change Rules
 
