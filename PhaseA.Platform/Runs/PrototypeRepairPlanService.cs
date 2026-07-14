@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
+using PhaseA.Platform.Workflow;
 
 namespace PhaseA.Platform.Runs;
 
@@ -49,6 +50,7 @@ public sealed class PrototypeRepairPlanService
     {
         var project = await RequireProjectAsync(accountId, projectId, cancellationToken);
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+        var promptAuthorities = BuildPromptAuthorities(project, routeProfile);
 
         var failedRun = await FindLatestFailedRunAsync(project.ProjectId, cancellationToken);
         if (failedRun is null)
@@ -58,14 +60,14 @@ public sealed class PrototypeRepairPlanService
 
         var prototypeContract = _contractService.Read(project);
         var failureText = BuildFailureText(project, failedRun);
-        var planContext = BuildPlanContext(project, prototypeContract, failedRun, failureText, routeProfile);
+        var planContext = BuildPlanContext(project, prototypeContract, failedRun, failureText, routeProfile, promptAuthorities);
         var goals = await BuildRepairGoalsAsync(project, planContext, cancellationToken);
         var summary = $"已基于最近一次失败生成 {goals.Count} 个修复任务。请逐项执行，最后一步必须做全量验收。";
         var session = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
             project.ProjectId,
             SourceKind,
-            BuildSourceMessage(failedRun, failureText, routeProfile),
+            BuildSourceMessage(failedRun, failureText, routeProfile, promptAuthorities),
             $"通过小而独立的修复任务修复失败的原型路由：{routeProfile.GameTypeId}。",
             goals.Select(goal => new ProjectIterationGoalCreateCommand(
                 goal.GoalIndex,
@@ -86,6 +88,7 @@ public sealed class PrototypeRepairPlanService
             summary,
             game_type_profile = routeProfile,
             source_boundary = "gdd_derived_contract_only_after_gdd_generation",
+            prompt_authority_binding = BuildPromptAuthorityState(promptAuthorities),
             prototype_contract = prototypeContract.RelativePath,
             goals = goals.Select(goal => new
             {
@@ -126,11 +129,25 @@ public sealed class PrototypeRepairPlanService
     {
         var project = await RequireProjectAsync(accountId, projectId, cancellationToken);
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+        var promptAuthorities = BuildPromptAuthorities(project, routeProfile);
 
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, SourceKind, cancellationToken);
         if (details is null)
         {
             return new PrototypeRepairStepExecutionResult("", "", "", "missing_repair_plan", "当前项目还没有修复计划，请先生成修复计划。", 0, false, "missing_repair_plan");
+        }
+
+        if (!SessionPromptAuthoritiesMatch(details.Session.SourceMessage, promptAuthorities))
+        {
+            return new PrototypeRepairStepExecutionResult(
+                details.Session.SessionId,
+                "",
+                "",
+                "blocked_by_stale_recovery_authority",
+                "修复计划的路由权限来源已经变化，请重新生成修复计划后再执行。",
+                details.Session.CurrentGoalIndex,
+                true,
+                details.Session.Status);
         }
 
         var current = details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "needs_fix", StringComparison.OrdinalIgnoreCase))
@@ -150,7 +167,7 @@ public sealed class PrototypeRepairPlanService
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", current.GoalIndex, $"正在执行修复任务 {current.GoalIndex}。", null, null, cancellationToken);
 
         var projectExecutionGuide = _stateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
-        var feedback = BuildStepFeedback(project, details, current, request.Feedback, projectExecutionGuide);
+        var feedback = BuildStepFeedback(project, details, current, request.Feedback, projectExecutionGuide, promptAuthorities);
         var result = await _quickFixService.SubmitAsync(
             project.AccountId,
             project.ProjectId,
@@ -204,6 +221,7 @@ public sealed class PrototypeRepairPlanService
             status = result.Status,
             goal_status = goalStatus,
             session_status = sessionStatus,
+            prompt_authority_binding = BuildPromptAuthorityState(promptAuthorities),
             summary,
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
@@ -241,6 +259,7 @@ public sealed class PrototypeRepairPlanService
             status,
             goal_status = goalStatus,
             session_status = sessionStatus,
+            prompt_authority_binding = BuildPromptAuthorityState(BuildPromptAuthorities(project, routeProfile)),
             summary,
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
@@ -266,6 +285,7 @@ public sealed class PrototypeRepairPlanService
             source_message = details.Session.SourceMessage,
             game_type_profile = routeProfile,
             source_boundary = "gdd_derived_contract_only_after_gdd_generation",
+            prompt_authority_binding = BuildPromptAuthorityState(BuildPromptAuthorities(project, routeProfile)),
             goals = details.Goals.Select(goal => new
             {
                 goal.GoalIndex,
@@ -382,7 +402,11 @@ public sealed class PrototypeRepairPlanService
         }
     }
 
-    private static string BuildSourceMessage(RunSnapshot run, string failureText, GameTypeRouteProfile routeProfile)
+    private static string BuildSourceMessage(
+        RunSnapshot run,
+        string failureText,
+        GameTypeRouteProfile routeProfile,
+        RepairPromptAuthorityBinding promptAuthorities)
     {
         return JsonSerializer.Serialize(new
         {
@@ -391,6 +415,7 @@ public sealed class PrototypeRepairPlanService
             source_status = run.Status,
             game_type_profile = routeProfile,
             source_boundary = "gdd_derived_contract_only_after_gdd_generation",
+            prompt_authority_binding = BuildPromptAuthorityState(promptAuthorities),
             failure_excerpt = Trim(failureText, 4000),
             failure_signals = ExtractRepairEvidenceSummary(failureText, maxLines: 40)
         });
@@ -401,9 +426,10 @@ public sealed class PrototypeRepairPlanService
         PrototypeContractSnapshot contract,
         RunSnapshot failedRun,
         string failureText,
-        GameTypeRouteProfile routeProfile)
+        GameTypeRouteProfile routeProfile,
+        RepairPromptAuthorityBinding promptAuthorities)
     {
-        return new PrototypeRepairPlanContext(routeProfile, contract, failedRun, failureText);
+        return new PrototypeRepairPlanContext(routeProfile, contract, failedRun, failureText, promptAuthorities);
     }
 
     private async Task<List<PrototypeRepairGoalResult>> BuildRepairGoalsAsync(
@@ -1126,6 +1152,15 @@ public sealed class PrototypeRepairPlanService
             - Keep the final goal as full playable prototype acceptance, but write the user-facing final goal title in Chinese.
             - Keep each goal narrow enough to execute independently.
 
+            Parsed game-type route profile authority:
+            {context.PromptAuthorities.ParsedRouteProfileJson}
+
+            Selected route skill prompt block authority:
+            {context.PromptAuthorities.SelectedRouteSkillPromptBlock}
+
+            Authority use rule:
+            - These two values select and bind the current route behavior. They do not authorize reading mutable guide or skill files, and they do not override the frozen GDD-derived prototype contract.
+
             Project:
             - Name: {project.Name}
             - GameName: {project.GameName}
@@ -1261,7 +1296,13 @@ public sealed class PrototypeRepairPlanService
         return normalized;
     }
 
-    private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, string projectExecutionGuide)
+    private static string BuildStepFeedback(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails details,
+        ProjectIterationGoalSnapshot goal,
+        string? feedback,
+        string projectExecutionGuide,
+        RepairPromptAuthorityBinding promptAuthorities)
     {
         var recoveryOnlyRules = IsServiceRestartRecoveryGoal(goal)
             ? """
@@ -1305,6 +1346,15 @@ public sealed class PrototypeRepairPlanService
             - GameName: {project.GameName}
             - GameType: {project.GameTypeSource}
 
+            Parsed game-type route profile authority:
+            {promptAuthorities.ParsedRouteProfileJson}
+
+            Selected route skill prompt block authority:
+            {promptAuthorities.SelectedRouteSkillPromptBlock}
+
+            Authority use rule:
+            - These two values bind the current route behavior. Do not use them to bypass the frozen GDD-derived contract or to read mutable guide/skill files.
+
             Project Execution Guide:
             {Trim(projectExecutionGuide, 2200)}
 
@@ -1323,6 +1373,79 @@ public sealed class PrototypeRepairPlanService
             VERIFY: 用 1-3 行中文说明如何验证
             REMAINING: 若未完全完成，用中文写出剩余问题；若已完成，写 none
             """;
+    }
+
+    private static RepairPromptAuthorityBinding BuildPromptAuthorities(
+        ProjectSnapshot project,
+        GameTypeRouteProfile routeProfile)
+    {
+        var parsedRouteProfileJson = JsonSerializer.Serialize(routeProfile);
+        var selectedRouteSkillPromptBlock = PrototypeRouteSkillPolicy.BuildPromptBlock(project);
+        return new RepairPromptAuthorityBinding(
+            parsedRouteProfileJson,
+            selectedRouteSkillPromptBlock,
+            HostedRouteForbiddenSourceGuard.PromptHash(parsedRouteProfileJson),
+            HostedRouteForbiddenSourceGuard.PromptHash(selectedRouteSkillPromptBlock));
+    }
+
+    private static object BuildPromptAuthorityState(RepairPromptAuthorityBinding promptAuthorities)
+    {
+        return new
+        {
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+            recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+            authority_sources = new[]
+            {
+                HostedRouteRecoveryContract.ParsedRouteProfileSource,
+                HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource
+            },
+            source_hashes = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [HostedRouteRecoveryContract.ParsedRouteProfileHashKey] = promptAuthorities.ParsedRouteProfileHash,
+                [HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey] = promptAuthorities.SelectedRouteSkillPromptBlockHash
+            }
+        };
+    }
+
+    private static bool SessionPromptAuthoritiesMatch(
+        string? sourceMessage,
+        RepairPromptAuthorityBinding current)
+    {
+        if (string.IsNullOrWhiteSpace(sourceMessage))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(sourceMessage);
+            if (!document.RootElement.TryGetProperty("prompt_authority_binding", out var binding) ||
+                binding.ValueKind != JsonValueKind.Object ||
+                !string.Equals(ReadString(binding, "recovery_source_order_ref"), HostedRouteRecoveryContract.ContractId, StringComparison.Ordinal) ||
+                !binding.TryGetProperty("recovery_source_order", out var sourceOrder) ||
+                sourceOrder.ValueKind != JsonValueKind.Array ||
+                !sourceOrder.EnumerateArray()
+                    .Select(item => item.ValueKind == JsonValueKind.String ? item.GetString() ?? "" : "")
+                    .SequenceEqual(HostedRouteRecoveryContract.SourceOrder, StringComparer.Ordinal) ||
+                !binding.TryGetProperty("source_hashes", out var hashes) ||
+                hashes.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            return string.Equals(
+                       ReadString(hashes, HostedRouteRecoveryContract.ParsedRouteProfileHashKey),
+                       current.ParsedRouteProfileHash,
+                       StringComparison.Ordinal) &&
+                   string.Equals(
+                       ReadString(hashes, HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey),
+                       current.SelectedRouteSkillPromptBlockHash,
+                       StringComparison.Ordinal);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private static bool IsServiceRestartRecoveryGoal(ProjectIterationGoalSnapshot goal)
@@ -1498,4 +1621,11 @@ public sealed record PrototypeRepairPlanContext(
     GameTypeRouteProfile RouteProfile,
     PrototypeContractSnapshot Contract,
     RunSnapshot FailedRun,
-    string FailureText);
+    string FailureText,
+    RepairPromptAuthorityBinding PromptAuthorities);
+
+public sealed record RepairPromptAuthorityBinding(
+    string ParsedRouteProfileJson,
+    string SelectedRouteSkillPromptBlock,
+    string ParsedRouteProfileHash,
+    string SelectedRouteSkillPromptBlockHash);

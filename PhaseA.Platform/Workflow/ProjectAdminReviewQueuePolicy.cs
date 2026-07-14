@@ -42,6 +42,24 @@ public static class ProjectAdminReviewQueuePolicy
         return IsCleared(entry.Status) && !IsBlocking(entry, now);
     }
 
+    public static bool HasDeferredRecheckTrigger(ProjectAdminReviewQueueEntry entry)
+    {
+        if (entry.Status != "deferred")
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(entry.DecisionMetadataJson);
+            return HasNonEmptyString(document.RootElement, "recheck_trigger");
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
     private static bool HasActiveDeferredWindow(string metadataJson, string routeId, DateTimeOffset now)
     {
         try

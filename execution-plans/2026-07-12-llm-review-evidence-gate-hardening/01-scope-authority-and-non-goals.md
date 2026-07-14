@@ -25,7 +25,7 @@
 - 平台开发 Codex 作业前自检和作业后审查；
 - 前台用户触发 Codex 的候选 finding、修复建议和阻断决定；
 - BMAD/GDS code-review 与 quick-dev 的仓库级适配。
-- handoff 前由用户手工运行、只读审查 7-07/7-11 的 plan-local Bootstrap Review。
+- handoff 前由用户手工运行或显式授权 Codex 隔离编排的只读 Bootstrap Review；对象包括计划 authority、实施闭合、Skill/路由和聚焦变更。
 
 ## 4. 非目标
 
@@ -36,11 +36,14 @@
 - 不在本计划中实施 GDD-to-module、React `/ui-v2` 或 Phase boundary 重构；
 - 不用 LLM finding 替代编译、测试、schema、link、smoke 或安全扫描；
 - 不把计划可实施解释为代码已完成。
-- 不让 Bootstrap Review 自动调用任何 reviewer、修改目标文件、成为 BH-HANDOFF verifier 或替代正式 gateway。
+- Bootstrap CLI 本身不调用 reviewer/LLM；外层 Skill 只有在用户显式授权后才能隔离编排 reviewer/verifier。任何模式都不得修改目标文件、成为 BH-HANDOFF verifier 或替代正式 gateway。
 
 ## 5. 两类 Codex 的共享与差异
 
 共享核心：同一 finding schema、三联证明、去重指纹、状态机、有限复审、零发现合法。
+
+Review profile 的 `requiredContextClasses` 必须在 Bootstrap prepare 时显式映射到 hash-bound scope artifact；profile 只声明名称而无 artifact binding 不构成 context closure。
+稳定的 Skill/route profile 必须对 class 执行 artifact 形态校验，不能把任意非空映射当成 authority 证明。
 
 平台开发 Codex adapter 额外读取 diff、调用关系、测试、ADR、standards 和任务 authority。前台触发 Codex adapter 额外读取账户/项目边界、route recovery authority、当前 acceptance blocker、workspace allowlist 与浏览器安全输出合同。两者不得建立两套互相漂移的严重等级。
 
@@ -53,4 +56,4 @@
 - Given 实施者准备开始 R1–R6，When 检查上游 handoff，Then 两个上游完成证据均存在且可定位，否则 fail closed。
 - Given reviewer prompt 与 schema 冲突，When gateway 校验，Then 以 schema/standard 为准并拒绝不合格 finding。
 - Given BMAD/GDS 升级，When重新安装技能，Then 本目录规划的标准、custom override、gateway 和回归测试仍由仓库拥有。
-- Given 上游 handoff 尚未完成，When用户手工运行 Bootstrap Review，Then工具不调用模型、不修改目标 scope，并把结果标记为 supplemental bootstrap evidence。
+- Given 用户手工运行或授权隔离编排 Bootstrap Review，When CLI prepare/gate/finalize 执行，Then CLI 本身不调用模型、不修改目标 scope，并把结果标记为 supplemental bootstrap evidence。

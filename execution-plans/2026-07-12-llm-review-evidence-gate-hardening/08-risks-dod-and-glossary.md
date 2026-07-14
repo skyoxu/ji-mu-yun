@@ -15,6 +15,16 @@
 | 中途切换三层审查 | 同一 7 月 7 日 review run 混用两套规则 | in-flight route 保持不变；handoff 后按 route version 切换；历史 finding 不重分类 |
 | Bootstrap 冒充正式 authority | supplemental 结果被当作 BH-HANDOFF、repair 或完成证据 | sidecar 标记 bootstrap；不接正式 pipeline；operator 手工选择是否反馈上游 |
 | Bootstrap 修改目标 | review 工具越界写 7-07/7-11 | prepare/gate/finalize target-read-only 测试；输出目录不得位于 scope 内 |
+| 以降 reasoning 换取漏读 | medium role 被错误解释为允许 sampling | completeness profile 固定 all/no-sampling/context-closure；prompt、manifest、gate 一致绑定 |
+| gate 重跑丢失 verifier | 恢复操作覆盖独立决策 | CLI 写前检查非空 decisions，拒绝重跑并保持文件 hash |
+| dedup 严重等级降级 | P2 抢先吞掉同证据 P1/P0 | evidence-root 分组后确定性保留最高 severity |
+| 完整 Review 成本失控 | 每修一条 finding 就重跑三层 reviewer | 首轮汇总、批量修复、targeted deterministic checks、默认两轮/硬上限三轮 |
+| 受审内容劫持 reviewer | Markdown/代码注释要求改角色、scope 或强制 APPROVE | 所有 artifact 视为 untrusted data；profile-bound prompt injection boundary |
+| 三角色同质化 | prompt 只有 reviewer 名称，三个进程重复同一检查 | profile-bound role rubric 与误报清单直接投影到各 prompt |
+| authority 未冻结 | reviewer 运行中规则或 artifact 改变导致 run stale | preflight 后 authorize-launch 冻结并在 validate/gate/finalize 重验 |
+| 重复语义审查 | Quick Dev/BMAD/GDS 与 Bootstrap 同时找问题 | 每 change cycle 单一 Bootstrap semantic authority，其他 workflow 只做实现与确定性检查 |
+| 长进程重复启动 | 工具等待超时但 reviewer 仍在后台，重新启动造成成本和重复 finding | PID process lease；alive 时 reattach/poll，dead 时标 stale 后才能重启 |
+| 成本不可见 | 73 artifacts × 三个 high reviewer 在未确认时启动 | prepare 计算 artifact/bytes/reasoning work，high-cost authorize 需要显式确认 |
 
 ## 2. Stop Conditions
 
@@ -25,6 +35,9 @@
 - evidence 隔离或 secret redaction 失败；
 - gateway 可以被某个生产入口绕过。
 - 当前 7 月 7 日审查尚未完成或缺少 route handoff evidence。
+- required deterministic preflight 失败或证据不可追溯时，停止在 reviewer 启动前。
+- 同一变更达到三轮完整语义 Review 仍未闭合时，停止自动循环并进入 manual pause。
+- `authorize-launch` 缺失或失效、同 operation 存在 live lease、high-cost 未确认时，停止 reviewer 启动。
 
 ## 3. Global Definition of Done
 
@@ -40,7 +53,8 @@
 - shadow 指标和人工标注支持进入 blocking；
 - AGENTS/README/standards 只在对应能力真实落地时同步；
 - tests、smoke 和 evidence 位于既有 owner 路径，失败证据未被覆盖。
-- Bootstrap Review 可由用户手工运行，且没有模型调用、目标写入或正式 pipeline 副作用。
+- Bootstrap CLI 可独立运行且没有模型调用、目标写入或正式 pipeline 副作用；外层隔离编排必须由用户显式授权。
+- 每个 profile 的 role rubric、误报抑制、untrusted-content、deterministic preflight 和 bounded review-cycle 均被 manifest/hash/test 绑定。
 
 ## 4. 术语
 
@@ -59,3 +73,6 @@
 - advisory：通过门禁但不自动阻断/循环的 P2。
 - plan-ready：计划可实施，不代表代码或产品能力完成。
 - bootstrap review：handoff 前可用的 plan-local、只读、用户手工 reviewer 编排与事实门禁；输出是 supplemental evidence，不是生产 gateway 或上游完成 authority。
+- review object profile：按计划 authority、实施闭合、Skill/路由、聚焦变更选择的可信 profile；改变 reasoning/depth 但不允许改变 all-artifact、no-sampling 和 context-closure 完整性合同。
+- deterministic preflight：在任何语义 reviewer 启动前执行的 build/test/schema/link/validator/smoke 等机器检查；失败即停止，但不能替代最终完整语义 Review。
+- full-review cycle：三层 reviewer、gate 和所需 verifier 组成的一次完整语义轮次；默认两轮，第三轮只处理新 P0/P1 或 authority/context graph 改变，之后 manual pause。

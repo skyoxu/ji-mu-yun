@@ -19,6 +19,13 @@ ALLOWED_STATUSES = {
     "blocked",
 }
 ALLOWED_OWNERS = {"backend", "frontend", "database", "scripts", "standards", "delivery-review"}
+COMMIT_READINESS_STATUSES = {"not_evaluated", "failed", "stale", "passed"}
+REQUIRED_COMMIT_RESULT_BINDINGS = [
+    "implementation_acceptance_matrix_sha256",
+    "implementation_acceptance_markdown_sha256",
+    "proposed_commit_set_manifest_sha256",
+    "git_tree_or_commit_sha",
+]
 
 PLAN_DIR = Path("execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening")
 PHASE_SOURCE = PLAN_DIR / "08-implementation-phases.md"
@@ -344,8 +351,92 @@ def phase_status(phase: str, requirement: str) -> tuple[str, str]:
         )
     return (
         "blocked",
-        "Blocked by sequential prerequisite: Phase 0A has not reached verified phase-exit status in the clause-level acceptance matrix. Existing implementation or historical evidence is not credited as completion.",
+        "No current reviewed check-ID evidence accepts this requirement. Existing implementation or historical evidence is retained only as supporting context.",
     )
+
+
+def _non_empty_string_list(value: object) -> bool:
+    return isinstance(value, list) and bool(value) and all(
+        isinstance(item, str) and bool(item.strip()) for item in value
+    )
+
+
+def _has_valid_recheck_condition(deferral: dict, now: datetime | None = None) -> bool:
+    trigger = deferral.get("recheck_trigger")
+    if isinstance(trigger, str) and trigger.strip():
+        return True
+    expires_utc = deferral.get("expires_utc")
+    if not isinstance(expires_utc, str) or not expires_utc.strip():
+        return False
+    try:
+        expiry = datetime.fromisoformat(expires_utc.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if expiry.tzinfo is None:
+        return False
+    return expiry.astimezone(timezone.utc) > (now or datetime.now(timezone.utc))
+
+
+def _phase6_closure_test_exists(repo_root: Path, reference: object) -> bool:
+    if not isinstance(reference, str) or "::" not in reference:
+        return False
+    relative_path, symbol = (part.strip() for part in reference.split("::", 1))
+    if not relative_path or not symbol:
+        return False
+    test_path = repo_root / relative_path
+    if not test_path.is_file():
+        return False
+    return re.search(rf"\b{re.escape(symbol)}\b", test_path.read_text(encoding="utf-8")) is not None
+
+
+def is_exit_permitted_deferral(
+    row: dict,
+    repo_root: Path | None = None,
+    now: datetime | None = None,
+) -> bool:
+    deferral = row.get("deferral", {})
+    root = (repo_root or Path.cwd()).resolve()
+    return (
+        row.get("status") == "explicitly_deferred"
+        and row.get("owner") in ALLOWED_OWNERS
+        and _non_empty_string_list(row.get("evidence_refs"))
+        and "recheck=" in row.get("gap", "")
+        and isinstance(deferral.get("owner"), str)
+        and bool(deferral.get("owner", "").strip())
+        and _non_empty_string_list(deferral.get("affected_routes"))
+        and deferral.get("severity") in {"P0", "P1", "P2"}
+        and isinstance(deferral.get("current_scope_non_impact_proof"), str)
+        and bool(deferral.get("current_scope_non_impact_proof", "").strip())
+        and _phase6_closure_test_exists(root, deferral.get("phase6_closure_test"))
+        and _has_valid_recheck_condition(deferral, now)
+    )
+
+
+def phase0a_exit_satisfied(rows: list[dict], repo_root: Path | None = None) -> bool:
+    phase_rows = [row for row in rows if row.get("phase") == "Phase 0A"]
+    return bool(phase_rows) and all(
+        row.get("status") in {"verified", "not_applicable"}
+        or is_exit_permitted_deferral(row, repo_root=repo_root)
+        for row in phase_rows
+    )
+
+
+def apply_phase0a_predecessor_gate(rows: list[dict], repo_root: Path | None = None) -> list[dict]:
+    if phase0a_exit_satisfied(rows, repo_root=repo_root):
+        return rows
+
+    blocker = (
+        "Blocked by sequential prerequisite: Phase 0A has not satisfied its audited phase-exit "
+        "dispositions; every Phase 0A row must be verified, not applicable with evidence, or an "
+        "owned and evidenced explicit deferral with a recheck condition."
+    )
+    for row in rows:
+        if row.get("phase") == "Phase 0A":
+            continue
+        prior_gap = row.get("gap", "").strip()
+        row["status"] = "blocked"
+        row["gap"] = f"{blocker} {prior_gap}".strip()
+    return rows
 
 
 def existing_ids() -> dict[tuple[str, str], str]:
@@ -445,7 +536,7 @@ def local_phase(file_name: str, marker_line: int, requirement: str) -> str:
     if file_name == "01-overview-workflow.md":
         return "Phase 0A"
     if file_name == "02a-route-state-artifacts.md":
-        mapping = {60: "Phase 0A", 138: "Phase 1", 255: "Phase 1", 311: "Phase 1", 409: "Phase 0A", 462: "Phase 1", 529: "Phase 3", 563: "Phase 1", 690: "Phase 5"}
+        mapping = {63: "Phase 0A", 143: "Phase 1", 262: "Phase 1", 318: "Phase 1", 416: "Phase 0A", 471: "Phase 1", 538: "Phase 3", 572: "Phase 1", 701: "Phase 5"}
         return mapping[marker_line]
     if file_name == "02b-backend-api-contracts.md":
         mapping = {20: "Phase 0A", 40: "Phase 1", 62: "Phase 1", 87: "Phase 1", 106: "Phase 2", 130: "Phase 4", 160: "Phase 3", 187: "Phase 0A"}
@@ -454,7 +545,7 @@ def local_phase(file_name: str, marker_line: int, requirement: str) -> str:
         mapping = {34: "Phase 0A", 56: "Phase 3", 82: "Phase 1", 93: "Phase 1", 106: "Phase 2", 117: "Phase 5", 131: "Phase 5", 171: "Phase 6"}
         return mapping[marker_line]
     if file_name == "03-testing-observability-admin.md":
-        default = "Phase 0A" if marker_line in {22, 101, 118, 241} else "Phase 0B" if marker_line in {149, 176, 206} else "Phase 6"
+        default = "Phase 0A" if marker_line in {22, 101, 118, 242} else "Phase 0B" if marker_line in {149, 176, 206} else "Phase 6"
         return infer_route_phase(requirement, default)
     if file_name == "04a-route-contracts-and-guards.md":
         return "Phase 6" if marker_line == 180 else "Phase 0A"
@@ -572,12 +663,12 @@ def build_capability_rows(repo_root: Path) -> list[dict]:
         coverage = exit_rows[capability_id]
         if coverage["coverage_status"] == "covered":
             status = "blocked"
-            gap = "Blocked until Phase 0A reaches verified clause-level phase-exit status; historical capability coverage is retained only as supporting evidence."
+            gap = "Historical capability coverage is retained only as supporting evidence; this capability row lacks current reviewed check-ID acceptance."
             evidence_refs = [PHASE1_EXIT.as_posix()]
         elif capability_id in PHASE2_TRIGGERED_CAPABILITIES:
             status = "blocked"
             gap = (
-                "Blocked until Phase 0A reaches verified clause-level phase-exit status. The Phase 1 deferral recheck trigger also fired during Phase 2, but no canonical full-target closure ledger exists."
+                "The Phase 1 deferral recheck trigger fired during Phase 2, but no canonical full-target closure ledger or current reviewed check-ID acceptance exists."
             )
             evidence_refs = [
                 PHASE1_EXIT.as_posix(),
@@ -586,7 +677,7 @@ def build_capability_rows(repo_root: Path) -> list[dict]:
         else:
             status = "blocked"
             gap = (
-                "Blocked until Phase 0A reaches verified clause-level phase-exit status. "
+                "This capability row lacks current reviewed check-ID acceptance. "
                 f"Historical deferral owner={coverage['owner']}; reason={coverage['reason']}; "
                 f"recheck={coverage['recheck_phase']}; trigger={coverage['trigger']}"
             )
@@ -643,14 +734,14 @@ def build_split_added_rows() -> list[dict]:
             evidence_refs = PHASE_EVIDENCE.get(phase, [])
         elif split_id == "split_added_full_target_capability_schedule":
             status = "blocked"
-            gap = "Blocked by unverified Phase 0A; consumed Phase 2 capability rows also lack a refreshed canonical full-target closure ledger."
+            gap = "Consumed Phase 2 capability rows lack a refreshed canonical full-target closure ledger and current reviewed check-ID acceptance."
             evidence_refs = [
                 "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-1-exit-review-20260711T104735Z.json",
                 "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase2-exit-final-20260712T005219Z/phase2-exit-evidence.md",
             ]
         else:
             status = "blocked"
-            gap = "Blocked by sequential prerequisite: Phase 0A has not reached verified clause-level phase-exit status."
+            gap = "No current reviewed check-ID evidence accepts this split-added requirement."
             evidence_refs = PHASE_EVIDENCE.get(phase, PHASE_EVIDENCE["Phase 0B"])
         rows.append(
             {
@@ -711,6 +802,8 @@ def validate_rows(repo_root: Path, rows: list[dict]) -> None:
             failures.append(f"{row['check_id']}: non-verified row lacks a gap explanation")
         if row["status"] == "explicitly_deferred" and "recheck=" not in row["gap"]:
             failures.append(f"{row['check_id']}: deferred row lacks a recheck condition")
+        if row["status"] == "explicitly_deferred" and not is_exit_permitted_deferral(row):
+            failures.append(f"{row['check_id']}: deferred row lacks the complete exit-permitted deferral contract")
         if row["status"] in {"verified", "not_applicable", "explicitly_deferred"} and not row["evidence_refs"]:
             failures.append(f"{row['check_id']}: status requires durable evidence refs")
         for ref in row["code_refs"] + row["test_refs"]:
@@ -783,12 +876,25 @@ def apply_evidence_index(rows: list[dict]) -> list[dict]:
         row["test_refs"] = entry.get("test_refs", [])
         row["evidence_refs"] = entry.get("evidence_refs", [])
         row["gap"] = entry.get("gap", "")
+        if row["status"] == "explicitly_deferred":
+            row["deferral"] = {
+                "owner": entry.get("defer_owner", ""),
+                "affected_routes": entry.get("defer_affected_routes", []),
+                "severity": entry.get("defer_severity", ""),
+                "expires_utc": entry.get("defer_expires_utc", ""),
+                "recheck_trigger": entry.get("defer_recheck_trigger", ""),
+                "current_scope_non_impact_proof": entry.get("defer_current_scope_non_impact_proof", ""),
+                "phase6_closure_test": entry.get("defer_phase6_closure_test", ""),
+                "acceptance_refs": entry.get("defer_acceptance_refs", []),
+            }
     return rows
 
 
 def source_inputs_hash(repo_root: Path) -> str:
     inputs = {
         PHASE_SOURCE,
+        PLAN_DIR / "00-index.md",
+        PLAN_DIR / "10-recommended-first-slice.md",
         CAPABILITY_SOURCE,
         ACCEPTANCE_REGISTRY,
         SPLIT_ADDED_LEDGER,
@@ -806,8 +912,43 @@ def source_inputs_hash(repo_root: Path) -> str:
     return digest.hexdigest()
 
 
+def validate_commit_readiness_evaluation(repo_root: Path, evaluation: dict) -> None:
+    status = evaluation.get("status", "not_evaluated")
+    if status != "not_evaluated":
+        raise SystemExit(
+            "Embedded Phase 0A commit-readiness status must remain not_evaluated; "
+            "evaluated results belong in the external predecessor-gate artifact"
+        )
+    bindings = evaluation.get("required_result_bindings")
+    if bindings != REQUIRED_COMMIT_RESULT_BINDINGS:
+        raise SystemExit(
+            "Phase 0A commit-readiness required_result_bindings must exactly match the four hash/tree bindings"
+        )
+    result_path_pattern = evaluation.get("result_path_pattern")
+    if (
+        not isinstance(result_path_pattern, str)
+        or not result_path_pattern.strip()
+        or "<run_id>" not in result_path_pattern
+    ):
+        raise SystemExit(
+            "Phase 0A commit-readiness result_path_pattern must be non-empty and contain <run_id>"
+        )
+    evidence_refs = evaluation.get("evidence_refs", [])
+    if not isinstance(evidence_refs, list):
+        raise SystemExit("Phase 0A commit-readiness evidence_refs must be an array")
+    for ref in evidence_refs:
+        if not isinstance(ref, str) or not ref.strip() or not (repo_root / ref).exists():
+            raise SystemExit(f"Missing Phase 0A commit-readiness evidence ref: {ref}")
+
+
 def build_document(repo_root: Path, rows: list[dict], generated_utc: str | None = None) -> dict:
     counts = Counter(row["status"] for row in rows)
+    evidence_index = read_json(EVIDENCE_INDEX)
+    commit_evaluation = evidence_index.get("phase0a_commit_readiness_evaluation", {})
+    commit_status = commit_evaluation.get("status", "not_evaluated")
+    validate_commit_readiness_evaluation(repo_root, commit_evaluation)
+    row_dispositions_passed = phase0a_exit_satisfied(rows, repo_root=repo_root)
+    phase1_authorized = row_dispositions_passed and commit_status == "passed"
     phase_counts = {
         phase: dict(Counter(row["status"] for row in rows if row["phase"] == phase))
         for phase in PHASE_SECTIONS
@@ -822,6 +963,34 @@ def build_document(repo_root: Path, rows: list[dict], generated_utc: str | None 
             "split_added_registry": ACCEPTANCE_REGISTRY.as_posix(),
             "split_added_ledger": SPLIT_ADDED_LEDGER.as_posix(),
         },
+        "phase0a_predecessor_gate": {
+            "evaluation_mode": "post_generation_external_result",
+            "effective_commit_readiness_status_values": sorted(COMMIT_READINESS_STATUSES),
+            "row_disposition_status": "passed" if row_dispositions_passed else "blocked",
+            "commit_readiness_status": commit_status,
+            "complete_predecessor_status": "passed" if phase1_authorized else "blocked",
+            "phase1_authorized": phase1_authorized,
+            "row_disposition_requirement": "Every Phase 0A row is verified, evidenced not_applicable, or explicitly_deferred with the complete deferral contract.",
+            "matrix_row_dispositions_alone_are_sufficient": False,
+            "additional_required_checks": [
+                {
+                    "check_id": "GTM-GATE-P0A-COMMIT-READINESS",
+                    "source_refs": [
+                        f"{(PLAN_DIR / '00-index.md').as_posix()}:26",
+                        f"{(PLAN_DIR / '10-recommended-first-slice.md').as_posix()}:9",
+                    ],
+                    "validator_refs": [
+                        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/capture_commit_set.py",
+                        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/review_harness.py#COMMIT-PROPOSED-SET-COMPLETE",
+                    ],
+                    "required_result": "passed",
+                    "evaluation": commit_evaluation,
+                    "effective_result_authority": commit_evaluation.get("result_path_pattern", ""),
+                    "required_result_bindings": commit_evaluation.get("required_result_bindings", []),
+                    "requirement": "The complete split directory and schemas are included in the proposed commit/PR, no split-plan file is untracked, and monolithic-source changes comply with the source-history policy.",
+                }
+            ],
+        },
         "allowed_statuses": sorted(ALLOWED_STATUSES),
         "summary": {
             "check_count": len(rows),
@@ -835,6 +1004,8 @@ def build_document(repo_root: Path, rows: list[dict], generated_utc: str | None 
 def write_outputs(repo_root: Path, rows: list[dict]) -> None:
     document = build_document(repo_root, rows)
     counts = Counter(row["status"] for row in rows)
+    gate = document["phase0a_predecessor_gate"]
+    commit_evaluation = gate["additional_required_checks"][0]["evaluation"]
     OUTPUT_JSON.write_text(
         json.dumps(document, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -861,6 +1032,18 @@ No other status value is allowed.
 - Total checks: `{len(rows)}`
 {chr(10).join(f'- `{status}`: `{counts.get(status, 0)}`' for status in sorted(ALLOWED_STATUSES))}
 
+## Phase 0A Predecessor Gate
+
+- Evaluation mode: `{gate['evaluation_mode']}`.
+- Row-disposition gate: `{gate['row_disposition_status']}`.
+- Commit-readiness gate: `{gate['commit_readiness_status']}` (`{commit_evaluation.get('reason_code', 'not_evaluated')}`).
+- Complete predecessor gate: `{gate['complete_predecessor_status']}`.
+- Phase 1 authorized: `{str(gate['phase1_authorized']).lower()}`.
+- Commit-readiness evidence: {', '.join(f'`{ref}`' for ref in commit_evaluation.get('evidence_refs', [])) or '-'}
+- External result authority: `{gate['additional_required_checks'][0]['effective_result_authority']}`.
+- Required result bindings: {', '.join(f'`{item}`' for item in gate['additional_required_checks'][0]['required_result_bindings'])}.
+- Recheck condition: {commit_evaluation.get('recheck_condition', 'Run the commit-readiness validator before Phase 1.')}
+
 ## Matrix
 
 {markdown_table(rows)}
@@ -882,6 +1065,7 @@ def main() -> int:
     lines = PHASE_SOURCE.read_text(encoding="utf-8").splitlines()
     rows = build_phase_rows(lines) + build_local_acceptance_rows() + build_split_added_rows() + build_capability_rows(repo_root)
     rows = apply_evidence_index(rows)
+    rows = apply_phase0a_predecessor_gate(rows, repo_root=repo_root)
     validate_rows(repo_root, rows)
     if args.check_only:
         current = read_json(OUTPUT_JSON)

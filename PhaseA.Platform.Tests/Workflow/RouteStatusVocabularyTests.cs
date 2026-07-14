@@ -66,6 +66,7 @@ public sealed class RouteStatusVocabularyTests
         ProjectAdminReviewQueuePolicy.IsBlocking(expired, now).Should().BeTrue();
         ProjectAdminReviewQueuePolicy.IsCleared(expired, now).Should().BeFalse();
         ProjectAdminReviewQueuePolicy.IsBlocking(unrelated, now).Should().BeTrue();
+        ProjectAdminReviewQueuePolicy.HasDeferredRecheckTrigger(active).Should().BeTrue();
     }
 
     private static ProjectAdminReviewQueueEntry DeferredEntry(string untilUtc, string affectedRoute)

@@ -157,6 +157,14 @@ public sealed class RouteModuleContractsTests
             .Where(contract => !contract.PromptSourceBoundaryRequired)
             .Should()
             .OnlyContain(contract => contract.RecoverySourceOrderRef == "source_boundary_not_applicable");
+
+        HostedRouteRecoveryContract.SourceOrder.Should().StartWith([
+            HostedRouteRecoveryContract.ParsedRouteProfileSource,
+            HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource,
+            "meta/project-execution-guide.md"
+        ]);
+        HostedRouteRecoveryContract.ParsedRouteProfileHashKey
+            .Should().NotBe(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey);
     }
 
     [Fact]
@@ -171,6 +179,48 @@ public sealed class RouteModuleContractsTests
         contract.ActionIds.Should().Contain(["freeze_contract", "refresh_contract"]);
     }
 
+    [Fact]
+    public void RunNeedsFixMachineContract_ShouldBindProfileAndSelectedPromptBlockSeparately()
+    {
+        var path = Path.Combine(
+            FindRepoRoot(),
+            "execution-plans",
+            "2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening",
+            "schemas",
+            "workflow-action-contracts.v1.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        var subOperations = document.RootElement
+            .GetProperty("action_descriptors")
+            .GetProperty("run_needs_fix")
+            .GetProperty("sub_operations")
+            .EnumerateArray()
+            .ToArray();
+
+        foreach (var subOperation in subOperations)
+        {
+            var recoveryInputs = subOperation.GetProperty("required_recovery_inputs")
+                .EnumerateArray()
+                .Select(item => item.GetString())
+                .ToArray();
+
+            recoveryInputs.Should().StartWith([
+                HostedRouteRecoveryContract.ParsedRouteProfileHashKey,
+                HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey,
+                "project_execution_guide"
+            ]);
+            recoveryInputs.Where(item => item == HostedRouteRecoveryContract.ParsedRouteProfileHashKey)
+                .Should().ContainSingle();
+            recoveryInputs.Where(item => item == HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey)
+                .Should().ContainSingle();
+
+            recoveryInputs
+                .Where(item => item != HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey)
+                .SequenceEqual(recoveryInputs, StringComparer.Ordinal)
+                .Should()
+                .BeFalse("omitting the selected prompt-block authority must change the exact recovery contract");
+        }
+    }
+
     private static JsonDocument ReadFixture()
     {
         var path = Path.Combine(AppContext.BaseDirectory, "Fixtures", "route-module-contracts.v1.json");
@@ -181,5 +231,22 @@ public sealed class RouteModuleContractsTests
     {
         var property = element.GetProperty(propertyName);
         return property.ValueKind == JsonValueKind.Null ? null : property.GetString();
+    }
+
+    private static string FindRepoRoot()
+    {
+        var directory = AppContext.BaseDirectory;
+        while (!string.IsNullOrWhiteSpace(directory))
+        {
+            if (File.Exists(Path.Combine(directory, "AGENTS.md")) &&
+                Directory.Exists(Path.Combine(directory, "PhaseA.Platform")))
+            {
+                return directory;
+            }
+
+            directory = Directory.GetParent(directory)?.FullName;
+        }
+
+        throw new DirectoryNotFoundException("Repository root not found.");
     }
 }

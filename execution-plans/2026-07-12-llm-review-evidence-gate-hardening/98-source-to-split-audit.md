@@ -8,6 +8,8 @@
 - 用户批准仓库自有 standard、gateway、schema/validator、BMAD/GDS 薄适配方案；
 - 用户明确要求不修改 BMAD/GDS 安装文件；
 - 用户明确要求三联证明覆盖 P0–P2；
+- 用户批准与 ECC 当前 review 能力对齐，并要求补齐角色/误报投影、受审内容不可信边界、deterministic preflight 和完整 Review 轮次止损，避免逐 finding 重跑；
+- 用户要求修复过早启动、authority 运行中变化、Quick Dev 与 Bootstrap 重复审查、实施计划完整检查遗漏、长进程超时重复启动和高成本无预估等控制面问题；
 - 用户明确要求在 7-07/7-11 完成前先具备 7-12 review 能力，并由用户手工执行 reviewer；
 - ECC pinned-source 研究文档；
 - `AGENTS.md` 的 Phase scope、Protected Phase Paths、shared LLM/Codex entrypoint 和文档放置规则。
@@ -41,6 +43,22 @@
 | handoff 前手工 Bootstrap Review、目标只读与 supplemental authority | RFG-033, RFG-034, RFG-035, RFG-039 | 01, 04, 09 |
 | hash-bound stale gate、零 finding/layer 与手工 verifier | RFG-036, RFG-037, RFG-038 | 04, schemas, tools |
 | Bootstrap 到 R1 合同身份连续 | RFG-040 | 05, 07 |
+| Bootstrap Codex exec 跨会话模型策略与工具探针 | RFG-041 | 03, 06, 09, bootstrap/review-profiles.v1.json, tools/run_bootstrap_review.py |
+| Review 对象 profile 与不可降级完整性 | RFG-042, RFG-045 | 01, 03, 06, 09, bootstrap/review-profiles.v1.json |
+| Gate 重跑 verifier 决策保护 | RFG-043 | 04, 06, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Severity-safe evidence-root dedup | RFG-044 | 03, 04, 06, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Bootstrap sidecar route binding 与 gate-only 状态 Schema | RFG-046, RFG-047 | 04, 09, schemas/bootstrap-review-gate-result.v1.schema.json, schemas/review-result.v1.schema.json, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Failure tuple 占位文本拒绝 | RFG-048 | 02, 09, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Coverage 顺序无关与 verifier evidence 相关性 | RFG-049, RFG-050 | 04, 09, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| 严格 JSON 有限数与 path-only 整文件覆盖 | RFG-051, RFG-052 | 02, 04, 09, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Required context class 到 scope artifact 的 prepare-time 绑定 | RFG-053 | 01, 09, bootstrap/review-profiles.v1.json, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Skill-route context 语义 predicate 与 finalized run 的 gate/finalize 不可重开 | RFG-054, RFG-055 | 01, 04, 09, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| 三角色 rubric、profile 专用误报抑制与不可信内容边界 | RFG-056, RFG-057 | 03, 09, bootstrap/review-profiles.v1.json, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Reviewer 前确定性 preflight 与完整 Review 轮次止损 | RFG-058, RFG-059 | 04, 06, 08, 09, bootstrap/review-profiles.v1.json, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Reviewer 写回后的只读 coverage/candidate 自校验 | RFG-060 | 04, 06, 09, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Reviewer 前 authority freeze 与跨 run round/predecessor lineage | RFG-061, RFG-062 | 04, 09, schemas/bootstrap-review-launch-authorization.v1.schema.json, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| Quick Dev/BMAD/GDS 语义互斥与 implementation plan-bound required checks | RFG-063, RFG-064 | 09, bootstrap/review-profiles.v1.json, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
+| 高成本显式确认与 PID process lease/reattach | RFG-065 | 06, 08, 09, schemas/bootstrap-process-leases.v1.schema.json, tools/run_bootstrap_review.py, tools/tests/test_run_bootstrap_review.py |
 
 ## 3. 结构规范化
 

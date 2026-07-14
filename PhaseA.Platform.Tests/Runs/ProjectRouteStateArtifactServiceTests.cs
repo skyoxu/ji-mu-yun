@@ -72,7 +72,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
           "source_boundary_enforced": true,
           "source_boundary": {
             "recovery_source_order_ref": "hosted-route-recovery-order.v1",
-            "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
+            "recovery_source_order": ["parsed game-type route profile", "selected route skill prompt block", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
             "authority_sources": ["docs/gdd/GDD.md"],
             "source_hashes": { "docs/gdd/GDD.md": "{{gddHash}}" },
             "forbidden_source_patterns": ["assistant summary as acceptance authority"],
@@ -184,7 +184,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
           "source_boundary_enforced": true,
           "source_boundary": {
             "recovery_source_order_ref": "hosted-route-recovery-order.v1",
-            "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
+            "recovery_source_order": ["parsed game-type route profile", "selected route skill prompt block", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
             "authority_sources": ["docs/gdd/GDD.md"],
             "source_hashes": { "docs/gdd/GDD.md": "self-declared-but-wrong" },
             "forbidden_source_patterns": ["assistant summary as acceptance authority"],
@@ -254,6 +254,117 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }));
         fixture.Read().BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_hashes_missing" && issue.Severity == "P0");
+    }
+
+    [Fact]
+    public void Read_WhenRouteProfileAndSelectedPromptBlockAreIndependentAuthorities_OmissionFailsClosed()
+    {
+        using var fixture = RouteStateFixture.Create();
+        var sourceHashes = new Dictionary<string, string>
+        {
+            [HostedRouteRecoveryContract.ParsedRouteProfileHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(
+                JsonSerializer.Serialize(PrototypeRouteSkillPolicy.ResolveProfile(fixture.Project))),
+            [HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(
+                PrototypeRouteSkillPolicy.BuildPromptBlock(fixture.Project))
+        };
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-requirements/prompt-evidence.json",
+            "Use the independently bound route profile and selected route skill prompt block.",
+            sourceHashes,
+            ["assistant summary as acceptance authority"]);
+
+        object Boundary(IReadOnlyDictionary<string, string> hashes) => new
+        {
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+            recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+            authority_sources = new[]
+            {
+                HostedRouteRecoveryContract.ParsedRouteProfileSource,
+                HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource
+            },
+            source_hashes = hashes,
+            forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+            prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+        };
+
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = Boundary(sourceHashes),
+            requirements = Array.Empty<object>()
+        }));
+
+        fixture.Read().BlockingIssues.Should().NotContain(issue =>
+            issue.IssueId.Contains("source_hashes", StringComparison.Ordinal) ||
+            issue.IssueId.Contains("recovery_source_order", StringComparison.Ordinal) ||
+            issue.IssueId.Contains("prompt_evidence", StringComparison.Ordinal));
+
+        var missingPromptBlockHash = new Dictionary<string, string>(sourceHashes);
+        missingPromptBlockHash.Remove(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = Boundary(missingPromptBlockHash),
+            requirements = Array.Empty<object>()
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_hashes_missing" &&
+            issue.Severity == "P0");
+    }
+
+    [Theory]
+    [InlineData(HostedRouteRecoveryContract.ParsedRouteProfileSource)]
+    [InlineData(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource)]
+    public void Read_WhenPromptRouteSelfConsistentlyOmitsRequiredRecoveryAuthority_Blocks(string omittedSource)
+    {
+        using var fixture = RouteStateFixture.Create();
+        var authorities = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [HostedRouteRecoveryContract.ParsedRouteProfileSource] = HostedRouteForbiddenSourceGuard.PromptHash(
+                JsonSerializer.Serialize(PrototypeRouteSkillPolicy.ResolveProfile(fixture.Project))),
+            [HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource] = HostedRouteForbiddenSourceGuard.PromptHash(
+                PrototypeRouteSkillPolicy.BuildPromptBlock(fixture.Project))
+        };
+        authorities.Remove(omittedSource);
+        var sourceHashes = authorities.ToDictionary(
+            pair => pair.Key == HostedRouteRecoveryContract.ParsedRouteProfileSource
+                ? HostedRouteRecoveryContract.ParsedRouteProfileHashKey
+                : HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey,
+            pair => pair.Value,
+            StringComparer.Ordinal);
+        fixture.WritePromptEvidence(
+            "meta/routes/gdd-requirements/prompt-evidence.json",
+            "Use the declared route authorities.",
+            sourceHashes,
+            ["assistant summary as acceptance authority"]);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", JsonSerializer.Serialize(new
+        {
+            schema_version = "gdd-requirements.v1",
+            route = "gdd-requirements",
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = authorities.Keys.ToArray(),
+                source_hashes = sourceHashes,
+                forbidden_source_patterns = new[] { "assistant summary as acceptance authority" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+            },
+            requirements = Array.Empty<object>()
+        }));
+
+        fixture.Read().BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_recovery_authorities_missing" &&
+            issue.Severity == "P0");
     }
 
     [Fact]
@@ -392,7 +503,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
           "source_boundary_enforced": true,
           "source_boundary": {
             "recovery_source_order_ref": "hosted-route-recovery-order.v1",
-            "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
+            "recovery_source_order": ["parsed game-type route profile", "selected route skill prompt block", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
             "authority_sources": ["docs/gdd/GDD.md"],
             "source_hashes": { "docs/gdd/GDD.md": "gdd-hash" },
             "forbidden_source_patterns": ["raw guide"],

@@ -11,7 +11,7 @@
 
 任一答案为否，finding 不得进入用户可见结果。
 
-候选 confidence 必须不低于 `0.8`。confidence 只是必要条件，不替代三联证明，也不能把缺证据候选提升为 P2。
+候选 confidence 必须是 `0.8` 至 `1` 的有限实数。`NaN`、`Infinity`、`-Infinity` 和其他非严格 JSON 数值必须在解析或 gateway 校验阶段 fail closed。confidence 只是必要条件，不替代三联证明，也不能把缺证据候选提升为 P2。
 
 ## 2. P0–P2 统一三联证明
 
@@ -22,6 +22,8 @@ P0、P1、P2 全部必须同时具有：
 - 防护缺口：为什么现有 caller、validator、test、authority 或 recovery rule 没有拦住。
 
 三缺一时直接删除。只有 finding 仍保留完整三联证明、但影响被证明较低时，才允许从 P0/P1 降级；不得用“可能存在风险”维持 P2。
+
+`TBD`、`TODO`、`N/A`、`unknown`、`placeholder` 及仅由大小写、空白或标点变化形成的等价占位文本不构成失败场景或防护缺口。任一 failure tuple 字段为占位文本时，gateway 必须以 `missing_failure_tuple` 拒绝候选；`existingGuardAnalysis` 为等价占位文本时必须以 `missing_guard_analysis` 拒绝。
 
 ## 3. 严重等级
 

@@ -1,0 +1,29 @@
+{
+  "schema_version": "vdd.validation-result.v1",
+  "run_id": "run-stale-001",
+  "predicate": "plan_ready",
+  "status": "pass",
+  "candidate_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "current_candidate_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "source_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "validator_version": "vdd-plan-validator@1.0.0",
+  "authorizes": [
+    "plan-ready"
+  ],
+  "does_not_authorize": [
+    "phase-authorized",
+    "implementation-accepted",
+    "release-ready"
+  ],
+  "checks": [
+    {
+      "rule_id": "VDD-PLAN-001",
+      "status": "pass",
+      "evidence": [
+        "logs/validation/run-stale-001/result.json"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "generated_at": "2026-07-13T12:00:00Z"
+}

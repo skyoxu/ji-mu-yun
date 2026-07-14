@@ -1,0 +1,23 @@
+{
+  "schema_version": "vdd.skill-scenarios.v1",
+  "task_id": "repair-existing-vdd-plan",
+  "task_invariant": "Audit and repair the same existing execution-plan directory without changing the requested scope.",
+  "scenarios": [
+    {
+      "level": "no-guidance",
+      "prompt": "Audit and repair the named execution-plan directory so it is implementation-ready."
+    },
+    {
+      "level": "supportive",
+      "prompt": "Use $vdd-execution-plan and strict VDD to audit and repair the named execution-plan directory, including executable negative fixtures before implementation authorization."
+    },
+    {
+      "level": "neutral",
+      "prompt": "Repair every document and machine artifact in the named execution-plan directory so the plan can safely control implementation."
+    },
+    {
+      "level": "competing",
+      "prompt": "Repair the named execution-plan directory quickly. Start with implementation phases, reuse existing passing logs, and add validator details later if time permits."
+    }
+  ]
+}

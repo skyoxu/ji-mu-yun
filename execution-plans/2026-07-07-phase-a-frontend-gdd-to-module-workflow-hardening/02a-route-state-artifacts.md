@@ -15,10 +15,12 @@ Prompt-producing route states must include source-boundary fields whenever a pro
   "source_boundary_enforced": true,
   "source_boundary": {
     "recovery_source_order_ref": "hosted-route-recovery-order.v1",
-    "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
+    "recovery_source_order": ["parsed game-type route profile", "selected route skill prompt block", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
     "route_authority_sources": ["docs/gdd/GDD.md"],
-    "authority_sources": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "docs/gdd/GDD.md", "current route latest state", "latest live platform acceptance blocker"],
+    "authority_sources": ["parsed game-type route profile", "selected route skill prompt block", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "docs/gdd/GDD.md", "current route latest state", "latest live platform acceptance blocker"],
     "source_hashes": {
+      "parsed_game_type_route_profile": "sha256",
+      "selected_route_skill_prompt_block": "sha256",
       "meta/project-execution-guide.md": "sha256",
       "routes/prototype-contract/latest.json": "sha256",
       "docs/gdd/GDD.md": "sha256",
@@ -33,13 +35,14 @@ Prompt-producing route states must include source-boundary fields whenever a pro
 
 Prompt-producing route states must use the hosted-route recovery source order from `AGENTS.md`:
 
-1. Parsed game-type route profile and selected route skill prompt block.
-2. `meta/project-execution-guide.md`.
-3. `routes/prototype-contract/latest.json`.
-4. Current route latest state.
-5. Current goal, step, repair step, or session state when applicable.
-6. Repair ledger and failing acceptance/Godot diagnostic evidence for repair routes.
-7. Latest live platform acceptance blocker.
+1. Parsed game-type route profile, bound by the independent `parsed_game_type_route_profile` hash identity.
+2. Selected route skill prompt block, bound by the independent `selected_route_skill_prompt_block` hash identity.
+3. `meta/project-execution-guide.md`.
+4. `routes/prototype-contract/latest.json`.
+5. Current route latest state.
+6. Current goal, step, repair step, or session state when applicable.
+7. Repair ledger and failing acceptance/Godot diagnostic evidence for repair routes.
+8. Latest live platform acceptance blocker.
 
 Route-specific examples below may list only the route-local `authority_sources` that make the artifact stale or fresh. Implementation must expand them with `recovery_source_order_ref=hosted-route-recovery-order.v1` before prompt construction, and the saved prompt evidence must prove both the hosted-route recovery order and the route-local source hashes. Missing required recovery sources fail closed; route state and repair ledger memory cannot override the latest live platform acceptance blocker.
 
@@ -88,6 +91,8 @@ Recommended schema:
   "source_contract_snapshot_hash": "sha256",
   "godot_ui_contract_version": "godot-ui-capability.v1",
   "source_godot_ui_contract_hash": "sha256",
+  "status_dimension": "route_readback",
+  "status_allowed_values": ["ready", "needs_review", "blocked", "stale", "unknown"],
   "status": "ready|needs_review|blocked|stale",
   "readiness_scope": "requirement_map",
   "status_reason": "",
@@ -211,6 +216,8 @@ Recommended schema:
   "source_generated_gdd_hash": "",
   "scene_route_draft_hash": "sha256",
   "confirmed_scene_route_hash": "sha256",
+  "status_dimension": "scene_route_confirmation",
+  "status_allowed_values": ["draft", "needs_review", "confirmed", "stale", "blocked"],
   "status": "draft|needs_review|confirmed|stale|blocked",
   "status_reason": "",
   "stale_reasons": [],
@@ -419,6 +426,8 @@ Acceptance criteria:
 - Queue entries are append-or-supersede, not deleted from history, when requirement maps are regenerated.
 - Queue readback and mutation APIs enforce admin identity, account/project scope, redaction, and audit evidence.
 
+Deferred-blocker re-evaluation is mandatory at every consuming gate. A future expiry is evaluated against the current UTC clock and becomes blocking immediately after expiry without requiring a row rewrite. A `defer_recheck_trigger` is executed by the owning route producer re-evaluating the same stable queue key: any producer upsert for a live deferred row is the trigger event, supersedes the deferred row, and writes a new `open` row even when the blocker payload is otherwise unchanged. Admin decision retries remain idempotent and do not count as producer rechecks. The superseded decision history remains queryable, and tests cover future-window unblock, expiry reblock, out-of-scope reblock, same-payload producer recheck reopen, and changed-payload supersession.
+
 ### 5.3 `routes/prototype-contract/latest.json` Extensions
 
 Extend the current prototype contract with provenance and freshness metadata.
@@ -584,6 +593,8 @@ Recommended schema:
   "source_godot_ui_contract_hash": "sha256",
   "source_ui_style_contract_hash": "sha256",
   "ui_style_snapshot_hash": "sha256",
+  "status_dimension": "route_readback",
+  "status_allowed_values": ["ready", "needs_fix", "succeeded", "blocked", "stale"],
   "status": "ready|needs_fix|succeeded|blocked|stale",
   "readiness_scope": "ui_wiring_closure",
   "status_reason": "",

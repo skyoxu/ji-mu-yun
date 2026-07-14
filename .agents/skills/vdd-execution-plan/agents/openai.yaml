@@ -1,0 +1,4 @@
+interface:
+  display_name: "VDD Execution Plan"
+  short_description: "Create or repair strict verification-driven execution plans"
+  default_prompt: "Use $vdd-execution-plan to create or repair a strict, executable VDD execution-plan directory."

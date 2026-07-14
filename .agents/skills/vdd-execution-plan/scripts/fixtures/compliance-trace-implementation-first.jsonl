@@ -1,0 +1,9 @@
+{"seq":1,"action":"select_mode","evidence":"target existence inspected"}
+{"seq":2,"action":"load_authority","evidence":"repository rules loaded"}
+{"seq":3,"action":"snapshot_baseline","evidence":"candidate manifest recorded"}
+{"seq":4,"action":"define_contract","evidence":"requirements defined"}
+{"seq":5,"action":"implement","evidence":"production change made before validator RED proof"}
+{"seq":6,"action":"prove_validator_red","evidence":"negative fixture added after implementation"}
+{"seq":7,"action":"authorize_slice","evidence":"slice marked authorized late"}
+{"seq":8,"action":"run_fresh_validation","evidence":"validation run"}
+{"seq":9,"action":"diagnose_or_complete","evidence":"completion claimed"}

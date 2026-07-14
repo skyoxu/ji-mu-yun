@@ -66,6 +66,7 @@
           ],
           "required_recovery_inputs": [
             "parsed_game_type_route_profile",
+            "selected_route_skill_prompt_block",
             "project_execution_guide",
             "prototype_contract",
             "current_route_latest_state",
@@ -89,6 +90,7 @@
           ],
           "required_recovery_inputs": [
             "parsed_game_type_route_profile",
+            "selected_route_skill_prompt_block",
             "project_execution_guide",
             "prototype_contract",
             "current_route_latest_state",

@@ -71,20 +71,44 @@ public sealed class GddToModuleBackendContractServiceTests
         result!.Status.Should().Be("ready");
         result.GeneratedGddHash.Should().NotBeNullOrWhiteSpace();
         result.SceneRouteRecordedGeneratedGddHash.Should().Be(result.GeneratedGddHash);
+        var project = await fixture.GetProjectAsync();
+        var expectedAuthorityHashes = fixture.RecoveryAuthorityHashes(project);
         var documentState = fixture.ReadJson("meta/routes/gdd-document/latest.json");
         documentState.RootElement.GetProperty("status_dimension").GetString().Should().Be(RouteStatusVocabulary.RouteReadback);
         documentState.RootElement.GetProperty("status_allowed_values").EnumerateArray()
             .Select(item => item.GetString())
             .Should().Contain("ready");
         documentState.RootElement.GetProperty("generated_gdd_hash").GetString().Should().Be(result.GeneratedGddHash);
+        var boundary = documentState.RootElement.GetProperty("source_boundary");
+        boundary.GetProperty("authority_sources").EnumerateArray().Select(item => item.GetString()).Should().ContainInOrder(
+            HostedRouteRecoveryContract.ParsedRouteProfileSource,
+            HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource);
+        boundary.GetProperty("source_hashes").GetProperty(HostedRouteRecoveryContract.ParsedRouteProfileHashKey).GetString()
+            .Should().Be(expectedAuthorityHashes[HostedRouteRecoveryContract.ParsedRouteProfileHashKey]);
+        boundary.GetProperty("source_hashes").GetProperty(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey).GetString()
+            .Should().Be(expectedAuthorityHashes[HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey]);
         var sceneState = fixture.ReadJson("meta/routes/scene-route/latest.json");
         sceneState.RootElement.GetProperty("source_generated_gdd_hash").GetString().Should().Be(result.GeneratedGddHash);
         File.Exists(fixture.PathForTest("meta/routes/gdd-document/prompt-evidence.json")).Should().BeTrue();
+        var routePromptEvidence = fixture.ReadJson("meta/routes/gdd-document/prompt-evidence.json");
+        routePromptEvidence.RootElement.GetProperty("source_hashes")
+            .GetProperty(HostedRouteRecoveryContract.ParsedRouteProfileHashKey).GetString()
+            .Should().Be(expectedAuthorityHashes[HostedRouteRecoveryContract.ParsedRouteProfileHashKey]);
+        routePromptEvidence.RootElement.GetProperty("source_hashes")
+            .GetProperty(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey).GetString()
+            .Should().Be(expectedAuthorityHashes[HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey]);
         var routeBindings = (await fixture.Store.ListProjectRoutePromptEvidenceBindingsAsync(fixture.ProjectId))
             .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
         var routeReadback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync(), routeBindings);
         routeReadback.BlockingIssues.Should().NotContain(issue =>
             issue.IssueId.StartsWith("meta/routes/gdd-document/latest.json:prompt_evidence", StringComparison.Ordinal));
+        var statusReadback = await service.GetGddDocumentStateAsync(fixture.AccountId, fixture.ProjectId);
+        statusReadback!.Status.Should().Be("ready");
+
+        using var changedPromptPolicy = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        var staleReadback = new ProjectRouteStateArtifactService().Read(project, routeBindings);
+        staleReadback.BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-document/latest.json:source_hashes_authority_mismatch");
     }
 
     [Fact]
@@ -130,9 +154,14 @@ public sealed class GddToModuleBackendContractServiceTests
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
         var project = await fixture.GetProjectAsync();
+        var recoveryAuthorityHashes = fixture.RecoveryAuthorityHashes(project);
         var runId = await fixture.Store.CreateRunAsync(fixture.ProjectId, project.WorkspaceId, "game-design-gdd");
         await fixture.Store.CompleteRunAsync(runId, "succeeded", 0, "", "", JsonSerializer.Serialize(new
         {
+            generated_gdd_hash = Sha256(NormalizeText(File.ReadAllText(fixture.PathForTest("docs/gdd/GDD.md"), Encoding.UTF8))),
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+            recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+            source_hashes = recoveryAuthorityHashes,
             prompt_manifest = new
             {
                 execution_prompt_hash = new string('a', 64),
@@ -197,6 +226,63 @@ public sealed class GddToModuleBackendContractServiceTests
     }
 
     [Fact]
+    public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenSelectedPromptBlockHashIsMissing()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var service = new GddToModulePhase1StateService(fixture.Store);
+        await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
+        fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
+        var runId = await fixture.CreateGddPromptRunAsync("missing-prompt-block-hash");
+        var evidenceArtifact = (await fixture.Store.ListArtifactsForRunAsync(runId))
+            .Single(artifact => artifact.ArtifactType == GameDesignDocumentService.PromptSourceEvidenceArtifactType);
+        var evidenceNode = JsonNode.Parse(File.ReadAllText(fixture.PathForTest(evidenceArtifact.RelativePath), Encoding.UTF8))!.AsObject();
+        evidenceNode["source_hashes"]!.AsObject().Remove(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey);
+        fixture.WriteJson(evidenceArtifact.RelativePath, evidenceNode.ToJsonString());
+
+        var result = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, runId);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("blocked");
+        result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "gdd_prompt_evidence_invalid");
+    }
+
+    [Fact]
+    public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenPromptBlockAuthorityChangesAfterRun()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var service = new GddToModulePhase1StateService(fixture.Store);
+        await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
+        fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
+        var runId = await fixture.CreateGddPromptRunAsync("stale-prompt-block");
+
+        using var changedPromptPolicy = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        var result = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, runId);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("blocked");
+        result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "gdd_prompt_authority_stale");
+        File.Exists(fixture.PathForTest("meta/routes/gdd-document/latest.json")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenGeneratedFileChangedAfterRun()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var service = new GddToModulePhase1StateService(fixture.Store);
+        await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
+        fixture.WriteGdd("# Deckbuilder\n\n- Original generated content.\n");
+        var runId = await fixture.CreateGddPromptRunAsync("generated-file-changed");
+        fixture.WriteGdd("# Deckbuilder\n\n- Changed after the successful run.\n");
+
+        var result = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, runId);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("blocked");
+        result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "gdd_generated_file_run_mismatch");
+        File.Exists(fixture.PathForTest("meta/routes/gdd-document/latest.json")).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedForAnotherProjectsRun()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
@@ -249,6 +335,66 @@ public sealed class GddToModuleBackendContractServiceTests
         mismatched!.BlockingIssues.Should().Contain(issue => issue.DomainCode == "gdd_document_state_stale");
     }
 
+    [Theory]
+    [InlineData("authority_changed")]
+    [InlineData("source_boundary_missing")]
+    [InlineData("prompt_evidence_missing")]
+    [InlineData("database_binding_mismatch")]
+    public async Task Phase1State_GetGddDocumentStateAsync_RevalidatesPromptSourceBoundary(string scenario)
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        var service = new GddToModulePhase1StateService(fixture.Store);
+        await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
+        fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
+        var runId = await fixture.CreateGddPromptRunAsync("readback-" + scenario);
+        var recorded = await service.RecordGeneratedGddAsync(fixture.AccountId, fixture.ProjectId, runId);
+        recorded!.Status.Should().Be("ready");
+
+        IDisposable? authorityOverride = null;
+        try
+        {
+            switch (scenario)
+            {
+                case "authority_changed":
+                    authorityOverride = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+                    break;
+                case "source_boundary_missing":
+                {
+                    var node = JsonNode.Parse(File.ReadAllText(fixture.PathForTest("meta/routes/gdd-document/latest.json"), Encoding.UTF8))!.AsObject();
+                    node.Remove("source_boundary");
+                    fixture.WriteJson("meta/routes/gdd-document/latest.json", node.ToJsonString());
+                    break;
+                }
+                case "prompt_evidence_missing":
+                    File.Delete(fixture.PathForTest("meta/routes/gdd-document/prompt-evidence.json"));
+                    break;
+                case "database_binding_mismatch":
+                {
+                    var binding = (await fixture.Store.ListProjectRoutePromptEvidenceBindingsAsync(fixture.ProjectId))
+                        .Single(item => item.RouteId == "gdd-document-generation");
+                    await fixture.Store.UpsertProjectRoutePromptEvidenceBindingAsync(new ProjectRoutePromptEvidenceBindingCommand(
+                        fixture.ProjectId,
+                        binding.RouteId,
+                        new string('f', 64),
+                        binding.PersistedPromptHash,
+                        binding.PromptArtifactRef,
+                        binding.PromptEvidenceRef));
+                    break;
+                }
+            }
+
+            var result = await service.GetGddDocumentStateAsync(fixture.AccountId, fixture.ProjectId);
+
+            result.Should().NotBeNull();
+            result!.Status.Should().Be("blocked");
+            result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "gdd_document_source_boundary_invalid");
+        }
+        finally
+        {
+            authorityOverride?.Dispose();
+        }
+    }
+
     [Fact]
     public async Task Phase1State_ReadAndWriteOperations_EnforceAccountBoundary()
     {
@@ -285,7 +431,8 @@ public sealed class GddToModuleBackendContractServiceTests
             .Should().NotEqual([0xEF, 0xBB, 0xBF]);
         sidecar.RootElement.GetProperty("schema_version").GetString().Should().Be("gdd-requirements.v1");
         sidecar.RootElement.GetProperty("source_boundary_enforced").GetBoolean().Should().BeTrue();
-        sidecar.RootElement.GetProperty("source_boundary").GetProperty("recovery_source_order").GetArrayLength().Should().Be(7);
+        sidecar.RootElement.GetProperty("source_boundary").GetProperty("recovery_source_order").GetArrayLength()
+            .Should().Be(HostedRouteRecoveryContract.SourceOrder.Count);
         File.Exists(fixture.PathForTest("meta/routes/gdd-requirements/prompt-evidence.json")).Should().BeTrue();
         var routeBindings = (await fixture.Store.ListProjectRoutePromptEvidenceBindingsAsync(fixture.ProjectId))
             .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
@@ -2294,7 +2441,18 @@ public sealed class GddToModuleBackendContractServiceTests
             var project = await GetProjectAsync();
             var runId = await Store.CreateRunAsync(ProjectId, project.WorkspaceId, "game-design-gdd");
             var promptRelativePath = $"logs/phase-a-gdd/test/{suffix}-gdd-prompt.md";
-            var prompt = "Generate the GDD from the confirmed scene route.";
+            var parsedRouteProfileJson = JsonSerializer.Serialize(PrototypeRouteSkillPolicy.ResolveProfile(project));
+            var selectedRouteSkillPromptBlock = PrototypeRouteSkillPolicy.BuildPromptBlock(project);
+            var recoveryAuthorityHashes = RecoveryAuthorityHashes(project);
+            var prompt = $"""
+                Parsed game-type route profile authority:
+                {parsedRouteProfileJson}
+
+                Selected route skill prompt block authority:
+                {selectedRouteSkillPromptBlock}
+
+                Generate the GDD from the confirmed scene route.
+                """;
             WriteText(promptRelativePath, prompt);
             await Store.AddArtifactAsync(new ArtifactCreationCommand(
                 runId,
@@ -2322,6 +2480,9 @@ public sealed class GddToModuleBackendContractServiceTests
                 schema_version = "gdd-prompt-source-evidence.v1",
                 route = "gdd-document-generation",
                 run_id = runId,
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                source_hashes = recoveryAuthorityHashes,
                 prompt_manifest = new
                 {
                     prompt_count = 1,
@@ -2350,6 +2511,10 @@ public sealed class GddToModuleBackendContractServiceTests
                 JsonSerializer.Serialize(new
                 {
                     run_type = "game-design-gdd",
+                    generated_gdd_hash = Sha256(NormalizeText(File.ReadAllText(PathFor("docs/gdd/GDD.md"), Encoding.UTF8))),
+                    recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                    recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                    source_hashes = recoveryAuthorityHashes,
                     prompt_manifest = new
                     {
                         execution_prompt_hash = scan.PromptHash,
@@ -2360,6 +2525,17 @@ public sealed class GddToModuleBackendContractServiceTests
                     }
                 }));
             return runId;
+        }
+
+        public Dictionary<string, string> RecoveryAuthorityHashes(ProjectSnapshot project)
+        {
+            return new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [HostedRouteRecoveryContract.ParsedRouteProfileHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(
+                    JsonSerializer.Serialize(PrototypeRouteSkillPolicy.ResolveProfile(project))),
+                [HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(
+                    PrototypeRouteSkillPolicy.BuildPromptBlock(project))
+            };
         }
 
         public void SeedConfirmedSceneRouteAndGdd(string? gddText = null)

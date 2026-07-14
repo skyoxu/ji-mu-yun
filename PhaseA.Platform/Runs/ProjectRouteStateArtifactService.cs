@@ -601,7 +601,8 @@ public sealed class ProjectRouteStateArtifactService
 
     private static string DomainCode(string issueId)
     {
-        if (issueId.Contains("source_boundary", StringComparison.Ordinal)) return "source_stale";
+        if (issueId.Contains("source_boundary", StringComparison.Ordinal) ||
+            issueId.Contains("prompt_recovery_authorities", StringComparison.Ordinal)) return "source_stale";
         if (issueId.Contains("admin", StringComparison.Ordinal) || issueId.Contains("decision", StringComparison.Ordinal)) return "admin_review_blocked";
         if (issueId.Contains("status", StringComparison.Ordinal)) return "route_state_invalid";
         if (issueId.Contains("freshness", StringComparison.Ordinal) || issueId.Contains("stale", StringComparison.Ordinal)) return "source_stale";
@@ -615,6 +616,7 @@ public sealed class ProjectRouteStateArtifactService
             issueId.Contains("source_boundary", StringComparison.Ordinal) ||
             issueId.Contains("recovery_source_order", StringComparison.Ordinal) ||
             issueId.Contains("source_hashes", StringComparison.Ordinal) ||
+            issueId.Contains("prompt_recovery_authorities", StringComparison.Ordinal) ||
             issueId.Contains("prompt_evidence", StringComparison.Ordinal))
         {
             return "P0";
@@ -903,6 +905,11 @@ public sealed class ProjectRouteStateArtifactService
 
                 if (boundary.ValueKind == JsonValueKind.Object && promptProducingRoute)
                 {
+                    if (!HasRequiredPromptRecoveryAuthorities(boundary))
+                    {
+                        yield return $"{relativePath}:prompt_recovery_authorities_missing";
+                    }
+
                     foreach (var issue in ValidatePromptEvidence(relativePath, ReadString(root, "route"), boundary))
                     {
                         yield return issue;
@@ -986,11 +993,20 @@ public sealed class ProjectRouteStateArtifactService
             return allAuthoritiesMapped && provided.SetEquals(normalizedAuthorities);
         }
 
+        private static bool HasRequiredPromptRecoveryAuthorities(JsonElement boundary)
+        {
+            var authoritySources = ReadStringArray(boundary, "authority_sources");
+            return authoritySources.Contains(HostedRouteRecoveryContract.ParsedRouteProfileSource, StringComparer.Ordinal) &&
+                   authoritySources.Contains(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource, StringComparer.Ordinal);
+        }
+
         private static string NormalizeAuthoritySourceKey(string source)
         {
             var normalized = source.Trim().Replace('\\', '/');
             return normalized switch
             {
+                HostedRouteRecoveryContract.ParsedRouteProfileSource => HostedRouteRecoveryContract.ParsedRouteProfileHashKey,
+                HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource => HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey,
                 "confirmed scene route" => "meta/routes/scene-route/latest.json",
                 "project contract snapshot" => "project-contract-snapshot",
                 "structured game-type metadata" => "structured-game-type-metadata",
@@ -1415,6 +1431,18 @@ public sealed class ProjectRouteStateArtifactService
             if (string.Equals(normalizedKey, "project-contract-snapshot", StringComparison.Ordinal))
             {
                 hashes = [GddToModuleAuthorityHashes.ComputeContractSnapshotHash(Project.GameTypeMatchJson ?? "")];
+                return true;
+            }
+
+            if (string.Equals(normalizedKey, HostedRouteRecoveryContract.ParsedRouteProfileHashKey, StringComparison.Ordinal))
+            {
+                hashes = [HostedRouteForbiddenSourceGuard.PromptHash(JsonSerializer.Serialize(PrototypeRouteSkillPolicy.ResolveProfile(Project)))];
+                return true;
+            }
+
+            if (string.Equals(normalizedKey, HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey, StringComparison.Ordinal))
+            {
+                hashes = [HostedRouteForbiddenSourceGuard.PromptHash(PrototypeRouteSkillPolicy.BuildPromptBlock(Project))];
                 return true;
             }
 

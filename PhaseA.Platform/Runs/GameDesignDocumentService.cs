@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
@@ -17,6 +18,7 @@ public sealed class GameDesignDocumentService
         "unapproved raw game-type guide excerpt before contract freeze"
     ];
     private const string RunType = "game-design-gdd";
+    private const string ReplacementBackupArtifactType = "game-design-gdd-replacement-backup";
     private const string SectionBatchRunType = "game-design-gdd-section-batch";
     private const string ArtifactType = "game-design-gdd";
     internal const string PromptArtifactType = "game-design-gdd-prompt";
@@ -80,11 +82,30 @@ public sealed class GameDesignDocumentService
         _modelCapacityRetryDelay = modelCapacityRetryDelay ?? DefaultModelCapacityRetryDelay;
     }
 
-    public async Task<GameDesignDocumentResult> CreateAsync(
+    public Task<GameDesignDocumentResult> CreateAsync(
         string accountId,
         string projectId,
         GameDesignDocumentRequest request,
         CancellationToken cancellationToken = default)
+    {
+        return CreateCoreAsync(accountId, projectId, request, replaceExistingForAuthorityRecovery: false, cancellationToken);
+    }
+
+    internal Task<GameDesignDocumentResult> CreateForAuthorityRecoveryAsync(
+        string accountId,
+        string projectId,
+        GameDesignDocumentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return CreateCoreAsync(accountId, projectId, request, replaceExistingForAuthorityRecovery: true, cancellationToken);
+    }
+
+    private async Task<GameDesignDocumentResult> CreateCoreAsync(
+        string accountId,
+        string projectId,
+        GameDesignDocumentRequest request,
+        bool replaceExistingForAuthorityRecovery,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
@@ -133,7 +154,7 @@ public sealed class GameDesignDocumentService
 
         var existingOutlinePath = ResolveUnderProject(projectRoot, OutlineRelativePath);
         var existingGddPath = ResolveUnderProject(projectRoot, OutputRelativePath);
-        if (File.Exists(existingOutlinePath) || File.Exists(existingGddPath))
+        if ((File.Exists(existingOutlinePath) || File.Exists(existingGddPath)) && !replaceExistingForAuthorityRecovery)
         {
             return Failure(project.ProjectId, "gdd_already_exists", "\u7b56\u5212\u5927\u7eb2\u5df2\u5b58\u5728\uff0c\u8bf7\u5148\u67e5\u9605\u6216\u5220\u9664\u540e\u518d\u91cd\u65b0\u521b\u5efa\u3002");
         }
@@ -150,6 +171,8 @@ public sealed class GameDesignDocumentService
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
         await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", "\u6b63\u5728\u51c6\u5907\u7b56\u5212\u5927\u7eb2\u3002", CancellationToken.None);
+        ExistingGddReplacementBackup? replacementBackup = null;
+        var replacementCommitted = false;
 
         try
         {
@@ -169,6 +192,22 @@ public sealed class GameDesignDocumentService
             Directory.CreateDirectory(Path.GetDirectoryName(promptAbsolutePath)!);
             Directory.CreateDirectory(Path.GetDirectoryName(outlineDraftAbsolutePath)!);
             File.Delete(outlineDraftAbsolutePath);
+            if (replaceExistingForAuthorityRecovery &&
+                (File.Exists(existingOutlinePath) || File.Exists(existingGddPath)))
+            {
+                replacementBackup = await BackupExistingGddAsync(
+                    projectRoot,
+                    runId,
+                    existingOutlinePath,
+                    existingGddPath,
+                    CancellationToken.None);
+                await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                    runId,
+                    project.ProjectId,
+                    ReplacementBackupArtifactType,
+                    replacementBackup.ManifestRelativePath,
+                    "Pre-replacement GDD recovery manifest"), CancellationToken.None);
+            }
 
             var chatMessages = await _metadataStore.ListProjectChatMessagesAsync(project.AccountId, project.ProjectId, ProjectChatHistoryService.DefaultLimit, CancellationToken.None);
             var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, CancellationToken.None);
@@ -177,7 +216,27 @@ public sealed class GameDesignDocumentService
             var historicalAttachments = LoadHistoricalAttachments(projectRoot, persistedAttachments);
             var designTemplate = SelectGameTypeDesignTemplate(project, message, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments, allowGameTypeKeywordFallback);
             var sceneRoute = GameDesignSceneRouteService.NormalizeSubmittedSceneRoute(request.SceneRoute);
-            var prompt = BuildPrompt(project, message, sceneRoute, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments, designTemplate, now, outlineDraftRelativePath);
+            var parsedRouteProfileJson = JsonSerializer.Serialize(PrototypeRouteSkillPolicy.ResolveProfile(project));
+            var selectedRouteSkillPromptBlock = PrototypeRouteSkillPolicy.BuildPromptBlock(project);
+            // ADR-0036/ADR-0038: prompt-producing routes bind both recovery authorities independently.
+            var recoveryAuthorityHashes = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [HostedRouteRecoveryContract.ParsedRouteProfileHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(parsedRouteProfileJson),
+                [HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(selectedRouteSkillPromptBlock)
+            };
+            var prompt = BuildPrompt(
+                project,
+                message,
+                sceneRoute,
+                memory?.MemorySummary,
+                chatMessages,
+                persistedAttachments,
+                historicalAttachments,
+                designTemplate,
+                parsedRouteProfileJson,
+                selectedRouteSkillPromptBlock,
+                now,
+                outlineDraftRelativePath);
             var persistedPrompt = SecretRedactionPolicy.RedactForPersistence(prompt);
             var promptSourceScan = EnsurePromptSourceBoundary(prompt, designTemplate?.Entry);
             await File.WriteAllTextAsync(promptAbsolutePath, persistedPrompt, Encoding.UTF8, CancellationToken.None);
@@ -187,6 +246,7 @@ public sealed class GameDesignDocumentService
                 promptRelativePath,
                 promptSourceScan,
                 persistedPrompt,
+                recoveryAuthorityHashes,
                 CancellationToken.None);
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
                 runId,
@@ -287,6 +347,7 @@ public sealed class GameDesignDocumentService
             var evidenceJson = JsonSerializer.Serialize(new
             {
                 run_type = RunType,
+                generated_gdd_hash = ComputeGeneratedGddHash(await File.ReadAllTextAsync(gddAbsolutePath, Encoding.UTF8, CancellationToken.None)),
                 model,
                 model_capacity_retry_count = modelCapacityRetryCount,
                 skill_name = "bmad-agent-game-designer",
@@ -296,6 +357,10 @@ public sealed class GameDesignDocumentService
                 spec_files = specRelativePaths,
                 prompt = promptRelativePath,
                 prompt_source_evidence = promptSourceEvidenceRelativePath,
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                source_hashes = recoveryAuthorityHashes,
+                replacement_backup_manifest = replacementBackup?.ManifestRelativePath,
                 prompt_manifest = new
                 {
                     execution_prompt_hash = promptSourceScan.PromptHash,
@@ -324,6 +389,7 @@ public sealed class GameDesignDocumentService
             await _metadataStore.CompleteRunAsync(runId, "succeeded", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
             await RecordCodexAuditAsync(runId, RunType, model, project.ProjectId, codexResult, providerBilling, CancellationToken.None);
             await _metadataStore.UpdateRunProgressAsync(runId, "succeeded", "completed", "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002", CancellationToken.None);
+            replacementCommitted = true;
             var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, CancellationToken.None);
             return new GameDesignDocumentResult(
                 project.ProjectId,
@@ -332,7 +398,9 @@ public sealed class GameDesignDocumentService
                 OutputRelativePath,
                 $"/api/projects/{project.ProjectId}/gdd/download",
                 artifacts,
-                Summary: "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002");
+                Summary: replacementBackup is null
+                    ? "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002"
+                    : "\u7b56\u5212\u5927\u7eb2\u5df2\u91cd\u65b0\u751f\u6210\uff0c\u65e7\u7248\u672c\u5df2\u4fdd\u7559\u4f9b\u6062\u590d\u3002");
         }
         catch (OperationCanceledException)
         {
@@ -353,7 +421,17 @@ public sealed class GameDesignDocumentService
         }
         finally
         {
-            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+            try
+            {
+                if (replacementBackup is not null && !replacementCommitted)
+                {
+                    RestoreExistingGdd(replacementBackup, existingOutlinePath, existingGddPath);
+                }
+            }
+            finally
+            {
+                await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+            }
         }
     }
 
@@ -1280,6 +1358,8 @@ public sealed class GameDesignDocumentService
         IReadOnlyList<TextAttachment> currentAttachments,
         IReadOnlyList<TextAttachment> historicalAttachments,
         SelectedGameTypeDesignTemplate? designTemplate,
+        string parsedRouteProfileJson,
+        string selectedRouteSkillPromptBlock,
         string now,
         string outlineDraftRelativePath)
     {
@@ -1310,6 +1390,12 @@ public sealed class GameDesignDocumentService
             7. Project memory, server chat history, and implicit LLM context have low priority.
             If sources conflict, keep the higher-priority source and discard or ignore conflicting lower-priority details.
             Lay down the selected game type baseline first as reusable genre scaffolding and as default scene/module coverage. Current user input and uploaded references below must override it only when they explicitly conflict.
+
+            Parsed game-type route profile authority:
+            {{parsedRouteProfileJson}}
+
+            Selected route skill prompt block authority:
+            {{selectedRouteSkillPromptBlock}}
 
             Outline requirements:
             - Write user-facing fields in Chinese.
@@ -1993,6 +2079,7 @@ public sealed class GameDesignDocumentService
         string promptRelativePath,
         HostedRouteForbiddenSourceScan scan,
         string persistedPrompt,
+        IReadOnlyDictionary<string, string> recoveryAuthorityHashes,
         CancellationToken cancellationToken)
     {
         var payload = new
@@ -2000,6 +2087,9 @@ public sealed class GameDesignDocumentService
             schema_version = "gdd-prompt-source-evidence.v1",
             route = "gdd-document-generation",
             run_id = runId,
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+            recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+            source_hashes = recoveryAuthorityHashes,
             prompt_manifest = new
             {
                 prompt_count = 1,
@@ -2019,6 +2109,105 @@ public sealed class GameDesignDocumentService
             JsonSerializer.Serialize(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }),
             Utf8NoBom,
             cancellationToken);
+    }
+
+    private static string ComputeGeneratedGddHash(string content)
+    {
+        var normalized = content.Replace("\r\n", "\n", StringComparison.Ordinal).Trim();
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized))).ToLowerInvariant();
+    }
+
+    private static async Task<ExistingGddReplacementBackup> BackupExistingGddAsync(
+        string projectRoot,
+        string runId,
+        string existingOutlinePath,
+        string existingGddPath,
+        CancellationToken cancellationToken)
+    {
+        var relativeDirectory = ToSlash(Path.Combine("meta", "recovery", "gdd-replacements", runId));
+        var absoluteDirectory = ResolveUnderProject(projectRoot, relativeDirectory);
+        Directory.CreateDirectory(absoluteDirectory);
+        var hadOutline = File.Exists(existingOutlinePath);
+        var hadGdd = File.Exists(existingGddPath);
+        var outlineBackupPath = Path.Combine(absoluteDirectory, "gdd-outline.json");
+        var gddBackupPath = Path.Combine(absoluteDirectory, "GDD.md");
+        if (hadOutline)
+        {
+            File.Copy(existingOutlinePath, outlineBackupPath, overwrite: true);
+        }
+        if (hadGdd)
+        {
+            File.Copy(existingGddPath, gddBackupPath, overwrite: true);
+        }
+
+        var manifestRelativePath = ToSlash(Path.Combine(relativeDirectory, "manifest.json"));
+        var manifestAbsolutePath = ResolveUnderProject(projectRoot, manifestRelativePath);
+        var payload = new
+        {
+            schema_version = "gdd-authority-recovery-backup.v1",
+            run_id = runId,
+            reason = "stale_prompt_recovery_authority",
+            created_utc = DateTimeOffset.UtcNow.ToString("O"),
+            files = new object[]
+            {
+                new
+                {
+                    relative_path = OutlineRelativePath,
+                    existed = hadOutline,
+                    backup_path = hadOutline ? ToSlash(Path.Combine(relativeDirectory, "gdd-outline.json")) : null,
+                    sha256 = hadOutline ? FileSha256(outlineBackupPath) : null
+                },
+                new
+                {
+                    relative_path = OutputRelativePath,
+                    existed = hadGdd,
+                    backup_path = hadGdd ? ToSlash(Path.Combine(relativeDirectory, "GDD.md")) : null,
+                    sha256 = hadGdd ? FileSha256(gddBackupPath) : null
+                }
+            }
+        };
+        await File.WriteAllTextAsync(
+            manifestAbsolutePath,
+            JsonSerializer.Serialize(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }),
+            Utf8NoBom,
+            cancellationToken);
+        return new ExistingGddReplacementBackup(
+            manifestRelativePath,
+            hadOutline,
+            hadGdd,
+            outlineBackupPath,
+            gddBackupPath);
+    }
+
+    private static void RestoreExistingGdd(
+        ExistingGddReplacementBackup backup,
+        string existingOutlinePath,
+        string existingGddPath)
+    {
+        if (backup.HadOutline)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(existingOutlinePath)!);
+            File.Copy(backup.OutlineBackupPath, existingOutlinePath, overwrite: true);
+        }
+        else
+        {
+            File.Delete(existingOutlinePath);
+        }
+
+        if (backup.HadGdd)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(existingGddPath)!);
+            File.Copy(backup.GddBackupPath, existingGddPath, overwrite: true);
+        }
+        else
+        {
+            File.Delete(existingGddPath);
+        }
+    }
+
+    private static string FileSha256(string path)
+    {
+        return Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
     }
 
     private static string FormatContractSnapshot(ProjectSnapshot project)
@@ -2692,6 +2881,13 @@ public sealed class GameDesignDocumentService
     }
 
     private sealed record OutlineCandidate(string AbsolutePath, string RelativePath);
+
+    private sealed record ExistingGddReplacementBackup(
+        string ManifestRelativePath,
+        bool HadOutline,
+        bool HadGdd,
+        string OutlineBackupPath,
+        string GddBackupPath);
 
     private sealed record ModelCapacityRetryRun(HostedProcessResult Result, int ModelCapacityRetryCount);
 

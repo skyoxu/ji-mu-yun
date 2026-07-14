@@ -1,0 +1,102 @@
+{
+  "schema_version": "vdd.skill-contract.v1",
+  "required_files": [
+    "SKILL.md",
+    "agents/openai.yaml",
+    "references/strict-vdd-standard.md",
+    "references/skill-compliance-protocol.md",
+    "scripts/skill-contract.json",
+    "scripts/fixtures/validation-result-pass.json",
+    "scripts/fixtures/validation-result-stale.json",
+    "scripts/fixtures/compliance-scenarios.json",
+    "scripts/fixtures/compliance-trace-pass.jsonl",
+    "scripts/fixtures/compliance-trace-implementation-first.jsonl",
+    "scripts/tests/test_validate_skill_contract.py",
+    "scripts/validate_skill_contract.py"
+  ],
+  "required_headings": {
+    "SKILL.md": [
+      "# VDD Execution Plan",
+      "## Select the mode",
+      "## Establish authority before writing",
+      "## Build the VDD control chain",
+      "## Put verification in the control position",
+      "## Repair workflow",
+      "## Creation workflow",
+      "## Completion contract",
+      "## Maintain and evaluate this Skill"
+    ],
+    "references/strict-vdd-standard.md": [
+      "# Strict VDD Standard",
+      "## 3. Authority, intent kernels, and executable contracts",
+      "## 4. Specification deltas and drift control",
+      "## 5. Validator control and result envelope",
+      "## 7. Counterexamples, diagnostics, repair, and re-entry",
+      "## 8. Evidence, freshness, and authority levels",
+      "## 10. BMad interoperability",
+      "## 13. Assessment rubric"
+    ],
+    "references/skill-compliance-protocol.md": [
+      "# Skill Compliance Protocol",
+      "## Observable sequence",
+      "## Scenario levels",
+      "## Trace contract",
+      "## Deterministic scoring",
+      "## Evidence levels"
+    ]
+  },
+  "required_links": {
+    "SKILL.md": [
+      "references/strict-vdd-standard.md",
+      "references/skill-compliance-protocol.md",
+      "scripts/validate_skill_contract.py"
+    ]
+  },
+  "validation_result": {
+    "required_fields": [
+      "schema_version",
+      "run_id",
+      "predicate",
+      "status",
+      "candidate_hash",
+      "current_candidate_hash",
+      "source_hash",
+      "validator_version",
+      "authorizes",
+      "does_not_authorize",
+      "checks",
+      "diagnostics",
+      "generated_at"
+    ],
+    "allowed_statuses": [
+      "pass",
+      "fail",
+      "blocked",
+      "incomplete"
+    ],
+    "allowed_check_statuses": [
+      "pass",
+      "fail",
+      "skip"
+    ]
+  },
+  "compliance": {
+    "required_scenario_levels": [
+      "no-guidance",
+      "supportive",
+      "neutral",
+      "competing"
+    ],
+    "ordered_steps": [
+      "select_mode",
+      "load_authority",
+      "snapshot_baseline",
+      "define_contract",
+      "prove_validator_red",
+      "authorize_slice",
+      "implement",
+      "run_fresh_validation",
+      "diagnose_or_complete"
+    ]
+  }
+}

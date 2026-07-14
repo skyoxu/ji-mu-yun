@@ -1552,7 +1552,10 @@ public sealed class PhaseAMetadataStore
             entry.RouteId,
             entry.RequirementId,
             cancellationToken);
-        if (current is not null &&
+        var producerRecheckTriggered = current is not null &&
+                                       ProjectAdminReviewQueuePolicy.HasDeferredRecheckTrigger(current);
+        if (!producerRecheckTriggered &&
+            current is not null &&
             string.Equals(current.AccountId, entry.AccountId, StringComparison.Ordinal) &&
             string.Equals(current.Severity, entry.Severity, StringComparison.Ordinal) &&
             string.Equals(current.BlockingReason, safeBlockingReason, StringComparison.Ordinal) &&

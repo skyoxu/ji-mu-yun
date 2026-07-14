@@ -64,14 +64,42 @@ public sealed class AdminReviewQueueHttpIntegrationTests
             await WaitForHealthAsync(client, process);
             File.Exists(decisionEvidencePath).Should().BeTrue();
 
+            var unauthorizedProjects = await client.GetAsync("/api/projects");
+            unauthorizedProjects.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            AssertNoStore(unauthorizedProjects);
+
             var unauthorized = await client.GetAsync("/api/admin/project-admin-review-queue");
             unauthorized.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             AssertNoStore(unauthorized);
 
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.Token);
+            var userProjects = await client.GetAsync("/api/projects");
+            userProjects.StatusCode.Should().Be(HttpStatusCode.OK);
+            AssertNoStore(userProjects);
+            (await userProjects.Content.ReadAsStringAsync()).Should().NotContain(project.ProjectId!);
+            var userSession = await client.GetAsync("/api/session");
+            userSession.StatusCode.Should().Be(HttpStatusCode.OK);
+            AssertNoStore(userSession);
+            (await userSession.Content.ReadAsStringAsync()).Should().Contain(user.AccountId);
+            var noProjectCreationFailure = await client.GetAsync("/api/project-creation-failures/latest");
+            noProjectCreationFailure.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            AssertNoStore(noProjectCreationFailure);
+
             var forbidden = await client.GetAsync("/api/admin/project-admin-review-queue");
             forbidden.StatusCode.Should().Be(HttpStatusCode.Forbidden);
             AssertNoStore(forbidden);
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+            var adminProjects = await client.GetAsync("/api/projects");
+            adminProjects.StatusCode.Should().Be(HttpStatusCode.OK);
+            AssertNoStore(adminProjects);
+            (await adminProjects.Content.ReadAsStringAsync()).Should().Contain(project.ProjectId!);
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.Token);
+            var userProjectsAfterAccountSwitch = await client.GetAsync("/api/projects");
+            userProjectsAfterAccountSwitch.StatusCode.Should().Be(HttpStatusCode.OK);
+            AssertNoStore(userProjectsAfterAccountSwitch);
+            (await userProjectsAfterAccountSwitch.Content.ReadAsStringAsync()).Should().NotContain(project.ProjectId!);
 
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
             var ok = await client.GetAsync("/api/admin/project-admin-review-queue?status=open&severity=P1&limit=100");

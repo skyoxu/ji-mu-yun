@@ -237,6 +237,7 @@ Required test areas:
 - Phase exit review JSON parse and required-field tests.
 - Evidence ref existence and redaction tests for phase review artifacts.
 - Severity count tests for unresolved P0/P1/P2 findings.
+- Deferred admin-review queue tests distinguish idempotent admin decision retries from producer rechecks: future expiry reblocks by current UTC, and any same-key producer upsert for a deferred row with `recheck_trigger` supersedes it with a new blocking `open` row while preserving decision history.
 
 Acceptance criteria:
 

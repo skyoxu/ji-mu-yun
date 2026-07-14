@@ -18,6 +18,8 @@
 - historical finding ledger 没有 Open P0–P2；
 - 未修改或复制两个上游重构目录的业务范围。
 - Bootstrap prepare/gate/finalize tests 证明不调用 reviewer、不写目标 scope、缺 required layer 不 clean、stale evidence 被拒绝、P0/P1 必须手工 verifier；
+- 检查四类 profile 的 role rubric、误报抑制、untrusted-content、deterministic preflight 与 bounded full-review cycle policy 及 policy hash；
+- 检查 `preflight-result.json` 合同、required check 集合、evidence path/hash 和 gate/finalize binding；
 - Bootstrap sidecar 使用 `supplemental_bootstrap` authority class，且工具中不存在 `scripts/sc`、LLM backend、BMAD/GDS skill invocation 或上游写入入口。
 
 ## 3. Finding 输出门禁
@@ -41,9 +43,10 @@
 3. fact gate；
 4. fingerprint dedup；
 5. P0/P1 独立核验；
-6. 修复全部 confirmed P0–P2；
-7. 只对变化证据复审；
-8. ledger 无 Open 且机械检查通过时 PASS。
+6. 首轮 accepted findings 全部汇总后批量修复；
+7. 修复期间只跑 targeted deterministic validation，禁止逐 finding 重跑 Whole-directory review；
+8. 批量修复后执行一次最终 Whole-directory review；默认两轮，第三轮仅用于新 P0/P1 或 authority/context graph 改变，硬上限后 manual pause；
+9. ledger 无 Open 且机械检查通过时 PASS。
 
 ## 5. Historical Finding Ledger
 
@@ -76,6 +79,22 @@
 | RFG-REV-4-P1-02 | P1 | Closed | Source refs: pre-fix `review-result.v1.schema.json:11,25-28` 接受 producer 自报 requiredLayers，`04-gateway-dedup-verification-and-memory.md:28` 仅校验集合内部一致。触发为 producer 只声明 manual reviewer，状态为 required/completed 相同且三层 reviewer skipped，结果为未经既定 route 审查仍 clean；旧合同没有可信 policy authority。 | result 必填 `reviewProfile`/`policyRevision`；gateway/validator 要求其匹配 execution context 已分配 policy，再从可信 registry 派生 requiredLayers；producer-narrowing 与 trusted-profile-substitution 反例均 fail closed。Owner: review policy/gateway；acceptance: `review-gate://RFG-026/skipped-layer-result-test`。 |
 | RFG-REV-4-P1-03 | P1 | Closed | Source refs: pre-fix `04-gateway-dedup-verification-and-memory.md:44-45` 区分阻断与人工暂停，但 `review-result.v1.schema.json:137-167` 允许同一 P1 unverified 同时形成 blocked 或 incomplete。触发为相同 verifier 结果由不同 producer 汇总，结果为 consumer 得到相反处置；旧合同没有机器分类。 | finding 新增 gateway-owned `unverifiedClass`/`unverifiedDisposition`；schema、semantic validator 与组合 fixtures 强制 security/data_loss 仅 blocking、other 仅 manual_pause，并拒绝 manual_pause 混入含 confirmed blocker 的 blocked result。Owner: review result contract；acceptance: `review-gate://RFG-010/verifier-scope-tests`。 |
 | RFG-REV-4-P1-04 | P1 | Closed | Source refs: pre-fix `review-validation-fixtures.v1.json:61-87` 的 missing-consumer 案例同时使用 `confidence=0.5`。触发为 consumer required 约束被误删，状态为低 confidence 仍存在，结果为 fixture 继续 invalid 并产生假绿；旧 validator 不检查预期失败原因。 | missing-consumer fixture 现使用合法 confidence，并声明 `expectedErrorContains=missing required consumer`；validator 强制目标错误出现。Owner: document adapter fixture owner；acceptance: `review-gate://RFG-006/document-adapter-fixtures`。 |
+| RFG-REV-5-P1-01 | P1 | Closed | Source refs: Bootstrap Skill 自审 `BSR-0A5B2119C52CF2BB`、`BSR-1787C8598C0F5E0B`、`BSR-72300A33E211A064`，pre-fix `tools/run_bootstrap_review.py:650-655` 在 gate 重跑时无条件覆盖非空 `verifier-output.json`。触发为独立 verifier 已保存决策后恢复/重跑 gate，结果为核验 evidence 静默丢失；Skill preflight 不能约束直接 CLI 调用。 | `command_gate` 现于任何 sidecar 写入前读取 verifier output，非空 decisions 时非零退出并保持文件字节不变；增加 gate-rerun preservation 回归。Owner: Bootstrap gate owner；acceptance: `review-gate://RFG-043/verifier-decision-preservation-test`。 |
+| RFG-REV-5-P1-02 | P1 | Closed | Source refs: Bootstrap Skill 自审 `BSR-7DB895AD69466508`，pre-fix `tools/run_bootstrap_review.py:501-507` 的 fingerprint 未形成 severity-safe evidence root。触发为同证据 P2 先于 P1，结果为 P1 被 duplicate rejection 吞掉并绕过 verifier；旧测试只覆盖同 severity duplicate。 | gateway 现按 artifact、inclusive line range、exact evidence、route/authority 构建 evidence root，组内确定性保留最高 severity、合并 source reviewers，并把其余变体写 duplicate rejection；增加 P2→P1 回归。Owner: Bootstrap dedup owner；acceptance: `review-gate://RFG-044/severity-safe-evidence-root-dedup-test`。 |
+| RFG-REV-6-P1-01 | P1 | Closed | Source refs: Skill/route 完整复审 `BSR-17E836AA4258FA55`，pre-fix `04-gateway-dedup-verification-and-memory.md:83` 指定 `routeVersion=review-bootstrap.v1`，而 profile/CLI 实际使用 `bootstrap-review-route.v1`，candidate/rejection 等 sidecar 还未完整绑定 route/profile/hash。触发为 consumer 按文档 route identity 选择 sidecar，结果为真实产物无法匹配或跨 route 混用；现有 validator 只固定 profile 值，未验证全部 sidecar。 | 统一 `review-input.json.routeVersion` 为唯一 authority；所有 Bootstrap sidecar、最终 result 与报告投影完整 binding，gate/finalize 校验中间状态绑定并加入回归。Owner: Bootstrap route owner；acceptance: `review-gate://RFG-046/bootstrap-sidecar-route-binding-test`。 |
+| RFG-REV-6-P1-02 | P1 | Closed | Source refs: Skill/route 完整复审 `BSR-B980F079DB28A2F9`，pre-fix `04-gateway-dedup-verification-and-memory.md:85` 声称 P0/P1 gate 保持 incomplete，但 CLI/测试输出 `awaiting_verification`，且该中间 contract 无 Schema。触发为 consumer 处理 accepted P0/P1，结果为把合法待核验 run 当未知/终态而跳过 verifier；Skill 路由能识别实际值但不能修复 plan/Schema 分裂。 | 明确 `awaiting_verification` 是 gate-only 状态；新增 `bootstrap-review-gate-result.v1.schema.json`，CLI 在 gate/finalize 校验，operator/Skill/计划同步并加入无 blocker 反例。Owner: Bootstrap gate contract owner；acceptance: `review-gate://RFG-047/bootstrap-gate-state-schema-test`。 |
+| RFG-REV-7-P1-01 | P1 | Closed | Source refs: 修复后 Skill/route 复审 `BSR-228E1FECD473CC01`，pre-fix `tools/run_bootstrap_review.py:519-524` 只验证 failure tuple 字符串非空。触发为 reviewer 提交 `TBD`/`TODO`/`N/A`，状态为其余 hash、行号、context、guard 均合法，结果为无具体失败模式的候选进入 verifier 或 P2 advisory；现有 schema minLength 与测试均未识别占位等价文本。 | gateway 对 failure tuple 做大小写、空白、标点归一化并拒绝稳定占位词表；prompt、Skill、operator 和 02 明确规则，新增 rejection 回归。Owner: Bootstrap fact-gate owner；acceptance: `review-gate://RFG-048/placeholder-failure-tuple-test`。 |
+| RFG-REV-8-P2-01 | P2 | Closed | Source refs: 第三轮修复后 Skill/route 复审 `BSR-0DF285E493C6BA06`，pre-fix `tools/run_bootstrap_review.py:459-460` 对 completed `readArtifacts` 与 manifest list 做顺序比较。触发为 reviewer 已读全部 artifact、missing 为空但重排 read array，结果为合法输出被误判 incomplete；schema 和公开合同只要求完整 unique 集合。 | completed coverage 改为 set equality，保留 requiredArtifacts/pending template 的绑定顺序；新增 reversed order clean 回归。Owner: Bootstrap coverage owner；acceptance: `review-gate://RFG-049/order-independent-coverage-test`。 |
+| RFG-REV-8-P1-01 | P1 | Closed | Source refs: 第三轮修复后 Skill/route 复审 `BSR-461C76DC1E9C0E73`，pre-fix `tools/run_bootstrap_review.py:810-815` 只验证 verifier evidenceChecked 为非空且 in-scope。触发为 verifier 用 `AGENTS.md:1` 等无关 in-scope 引用确认 P1，结果为 finalize 生成无证据支撑的 blocked result；现有测试只覆盖 out-of-scope。 | verifier 现在必须覆盖 finding 精确行范围及全部 contextRead，prompt/Skill/operator 同步；增加 unrelated in-scope fail-closed 回归。Owner: Bootstrap verifier owner；acceptance: `review-gate://RFG-050/verifier-evidence-relevance-test`。 |
+| RFG-REV-9-P1-01 | P1 | Closed | Source refs: 第四轮修复后 Skill/route 复审 `BSR-9BAAC153EC8B1893`，pre-fix `tools/run_bootstrap_review.py:502-505` 在 required context 无行号时接受任意同文件行范围。触发为 contextRead=`AGENTS.md`、verifier 仅检查 `AGENTS.md:1`，结果为局部检查冒充整文件 closure 并控制 blocker disposition。 | `reference_covers` 现要求 path-only required reference 只能由 path-only checked reference 覆盖；新增先失败、整文件引用后成功的回归。Owner: Bootstrap verifier coverage owner；acceptance: `review-gate://RFG-052/path-only-context-coverage-test`。 |
+| RFG-REV-9-P1-02 | P1 | Closed | Source refs: 第四轮修复后 Skill/route 复审 `BSR-DE4363AC33AA4D9F`，pre-fix `read_json` 使用 Python 默认 `json.loads`，且 confidence 只做有序比较。触发为 JSON confidence=`NaN`，结果为 `<0.8` 与 `>1` 均 false，非有限数候选进入 blocker；本地 schema runtime 同样从宽解析。 | CLI 与 Whole-directory validator 使用 strict parse_constant；canonical/write 禁止 allow_nan；candidate gate 增加 `math.isfinite`；新增 NaN incomplete 回归。Owner: Bootstrap JSON/fact-gate owner；acceptance: `review-gate://RFG-051/strict-json-finite-confidence-test`。 |
+| RFG-REV-10-P1-01 | P1 | Refuted | Source refs: 第五轮 Skill/route 复审 `BSR-4A2CC9007299E3AF` 指出 Skill 的 verifier decision discard 分支不可执行。 | Counterevidence: 同一 Skill 明确提供新 review run 作为保留旧 verifier evidence 的安全恢复路径；CLI 与 `test_gate_refuses_to_overwrite_saved_verifier_decisions` 故意拒绝原 run 重写。因此“无可执行安全恢复路径”的 bad outcome 不成立，独立 verifier refuted。Owner: Bootstrap gate recovery owner；acceptance: `review-gate://RFG-043/verifier-decision-preservation-test`。 |
+| RFG-REV-10-P1-02 | P1 | Closed | Source refs: 第五轮 Skill/route 复审 `BSR-D092A28E0D170F4F`，pre-fix prepare 仅把 `requiredContextClasses` 名称写入 manifest，未绑定 artifact。触发为 `bootstrap-skill-route --scope AGENTS.md`，结果为三层可完成单文件 manifest 并 clean，缺失 Skill/operator/CLI/schema/tests/usage authority。 | `prepare` 新增每类必填 `--context-class class=scope`，生成 hash-bound `contextClassArtifacts`；缺失/未知/零匹配在写文件前失败，load_run/prompt/Skill/operator/测试同步。Owner: Bootstrap scope/context owner；acceptance: `review-gate://RFG-053/context-class-artifact-binding-test`。 |
+| RFG-REV-11-P1-01 | P1 | Closed | Source refs: 首个 context-bound Skill/route 复审 `BSR-C58577C553B8B272`，pre-fix context class 只校验非空和 in-scope。触发为把 AGENTS.md 同时映射为 Skill/schema/tests/usage 等全部 class，结果为语法完整但 authority 缺失的 manifest 可 clean。 | `bootstrap-skill-route` 新增确定性 artifact semantics：稳定文件名/路径形态、profile+openai 双配置、schema/test/usage/repository rules 分类；spoofed all-class mapping 回归 fail closed。Owner: Bootstrap skill-route context owner；acceptance: `review-gate://RFG-054/skill-route-context-semantics-test`。 |
+| RFG-REV-11-P2-01 | P2 | Closed | Source refs: 首个 context-bound Skill/route 复审 `BSR-A2988596569500F7`，pre-fix finalized clean/advisory run 的 verifier decisions 为空，重复 gate 会覆盖 final result 为中间状态。 | `command_gate` 在任何写入前检测 `review-result.v1` 并拒绝重开；增加 final result bytes unchanged 回归。Owner: Bootstrap lifecycle owner；acceptance: `review-gate://RFG-055/finalized-run-immutability-test`。 |
+| RFG-REV-12-P1-01 | P1 | Closed | Source refs: 快速 Skill/route review gateway candidate `BSR-70B6B8F91F070A00` 指出 pre-fix `command_finalize()` 未检查现有最终 `review-result.v1`。触发为首次 finalize 后修改 `verifier-output.json` 并再次 finalize，结果为终态 `review-gate-result.json` 与处置 sidecar 可被覆盖；`command_gate()` 的终态防护不能约束直接 finalize。该 candidate 未进入独立 verifier，按用户授权先做保守修复。 | `command_finalize()` 现在于任何 sidecar 写入前拒绝已 finalized run；新增 blocker run 修改 verifier 后重复 finalize 的字节级不可变回归，并把 Skill/operator/RFG-055 同步为 gate/finalize 均不可重开。Owner: Bootstrap lifecycle owner；acceptance: `review-gate://RFG-055/finalized-run-immutability-test`。 |
+| RFG-REV-13-P1-01 | P1 | Closed | Source refs: `review-gateway-bootstrap-skill-route-fast-20260714-002501` 的 Acceptance Auditor 输出声明 `status=completed` 且 `readArtifacts` 覆盖 31/31，但模板中的 31 项 `missingArtifacts` 未清空，导致 gate 保持 incomplete；原 prompt 只有自然语言移动要求，没有 reviewer 退出前的确定性自校验。 | CLI 新增不写 sidecar 的 `validate-layer`，生成 prompt 与 Skill 强制 reviewer 保存后自行执行；completed coverage 矛盾回归必须非零，合法输出零退出。Owner: Bootstrap reviewer orchestration owner；acceptance: `review-gate://RFG-060/reviewer-output-self-validation-test`。 |
+| RFG-REV-14-P2-01 | P2 | Closed | Source refs: 最终 Skill/Route Review `BSR-035E95627389230A`；pre-fix `candidate_reason()` 对 `existingGuardAnalysis` 只校验非空。触发为 P2 candidate 使用 `N/A` 且其余字段合法，结果为缺少第三联防护缺口证明的 candidate 可成为用户可见 advisory。 | 复用 failure tuple 的大小写/空白/标点归一化词表，`existingGuardAnalysis` 占位文本现在以 `missing_guard_analysis` 拒绝；generated prompt、Skill、02/04/06/09 同步，新增 targeted P2 regression。Owner: Bootstrap fact-gate owner；acceptance: `review-gate://RFG-003/proof-triplet-tests` 与 `review-gate://RFG-007/gateway-validation-tests`。 |
 
 允许空表。`Closed` 必须包含修复 owner 和验收引用；`Refuted` 必须包含反证；`Open` P0–P2 阻止 plan-ready PASS。
 
@@ -130,10 +149,91 @@
 
 - Scope：仅验证本目录 Bootstrap CLI、reviewer/verifier Schema、profile registry、operator guide、回归测试及 Whole-directory validator；未对 7-07/7-11 执行 candidate discovery 或 reviewer。
 - Mechanical checks：PASS；17 个 Bootstrap 回归测试通过，Whole-directory plan validator 通过。
-- Contract closure：pending template 可被 Schema 接受但不能冒充 completed；binary artifact 可 hash-bound 但不能作为行证据；candidate context 与 verifier evidence 必须位于 prepared scope；policy revision 绑定 canonical profile；Bootstrap sidecar 标识 `supplemental_bootstrap`；finalize 会从原始 reviewer 输出重算 gate 产物且可幂等重跑。
+- Contract closure：pending template 可被 Schema 接受但不能冒充 completed；Windows reviewer/verifier template 显式授予当前用户 Modify 且授权失败时 fail closed；binary artifact 可 hash-bound 但不能作为行证据；candidate context 与 verifier evidence 必须位于 prepared scope；policy revision 绑定 canonical profile；Bootstrap sidecar 标识 `supplemental_bootstrap`；finalize 会从原始 reviewer 输出重算 gate 产物且可幂等重跑。
 - Smoke：临时 Git 仓完成 `prepare → 三层合法空输出 → gate → finalize`，结果 clean，目标 scope SHA-256 前后相同；该 smoke 未使用真实上游目录。
 - Reviewer execution：按用户要求跳过 Blind Hunter、Edge Case Hunter、Acceptance Auditor 和独立 verifier；零条 7-07/7-11 finding 被生成或代写。
 - Result：PASS / R0B Bootstrap-ready。该结论只表示用户现在可以按 09 手工审查 7-07/7-11；不表示 R0C 手工审查、R0D handoff 或 R1–R6 已完成。
+
+## 12. Round 6 Skill/Route Review 与修复结果（2026-07-13）
+
+- Review run：`logs/ci/2026-07-13/review-gateway-bootstrap-skill-route-postfix-20260713-175433/`；profile 为 `bootstrap-skill-route`，32/32 artifacts 完整读取，禁止 sampling。
+- Reviewer execution：Blind Hunter 使用经探针验证的 fallback `gpt-5.5/medium`；Edge Case Hunter 与 Acceptance Auditor 使用 `gpt-5.6-terra/high`；独立 verifier 使用新的 `gpt-5.6-terra/high` 进程。
+- Findings：P0 `0`，P1 `2`，P2 `0`；`BSR-17E836AA4258FA55` 与 `BSR-B980F079DB28A2F9` 均经独立 verifier confirmed，并以 `RFG-REV-6-P1-01`、`RFG-REV-6-P1-02` Closed 进入历史 ledger，Open `0`。
+- Closure：统一 manifest route identity；candidate/rejection/gate/disposition/metrics/final result/report 全部绑定 route/profile/revision/authority/input；新增 gate-only `bootstrap-review-gate-result.v1` Schema，明确 `awaiting_verification` 不属于最终 `review-result.v1` 状态。
+- Mechanical checks：PASS；26 个 Bootstrap 回归测试、Whole-directory validator、Skill quick validation 全部通过。
+- Result：修复已达到重新审查条件；本结论只证明本轮两个 confirmed P1 已关闭，不替代修复后新快照的独立复审，也不表示 7-07/7-11 代码完成。
+
+## 13. Round 7 修复后 Skill/Route 复审与修复结果（2026-07-13）
+
+- Review run：`logs/ci/2026-07-13/review-gateway-bootstrap-skill-route-postfix2-20260713-183651/`；profile 为 `bootstrap-skill-route`，35/35 artifacts 完整读取，禁止 sampling。
+- Reviewer execution：Blind Hunter 使用 `gpt-5.5/medium`；Edge Case Hunter 使用 `gpt-5.6-terra/high`；Acceptance Auditor 的首选进程未写回并保持 pending，按 fail-closed 记录后由通过 workspace-write 探针的 `gpt-5.5/high` 新进程完成；独立 verifier 使用新的 `gpt-5.6-terra/high` 进程。
+- Findings：P0 `0`，P1 `1`，P2 `0`；`BSR-228E1FECD473CC01` 经独立 verifier confirmed，并以 `RFG-REV-7-P1-01` Closed 进入历史 ledger，Open `0`。
+- Closure：failure tuple 新增占位文本归一化拒绝，非空 `TBD`/`TODO`/`N/A` 等不能再绕过事实门禁；新增 RFG-048 与 deterministic rejection 回归。
+- Mechanical checks：PASS；27 个 Bootstrap 回归测试、Whole-directory validator、Skill quick validation 全部通过。
+- Result：本轮 confirmed P1 已关闭并达到再次新快照复审条件；不表示 7-07/7-11 代码完成。
+
+## 14. Round 8 第三轮 Skill/Route 复审与修复结果（2026-07-13）
+
+- Review run：`logs/ci/2026-07-13/review-gateway-bootstrap-skill-route-postfix3-20260713-190302/`；profile 为 `bootstrap-skill-route`，40/40 artifacts 完整读取，禁止 sampling。
+- Gate：3 个 raw candidates 中 2 个通过，1 个因 `stale_evidence` 被拒绝；accepted 为 P1 `1`、P2 `1`，rejection 不是 finding。
+- Findings：P1 `BSR-461C76DC1E9C0E73` 经独立 verifier confirmed；P2 `BSR-0DF285E493C6BA06` 具备完整三联证明；二者分别以 `RFG-REV-8-P1-01`、`RFG-REV-8-P2-01` Closed 进入 ledger，Open `0`。
+- Closure：completed coverage 改为顺序无关集合；verifier evidence 必须覆盖 finding 精确证据和全部 contextRead，无关 in-scope 引用 fail closed。
+- Mechanical checks：PASS；29 个 Bootstrap 回归测试、Whole-directory validator、Skill quick validation 全部通过。
+- Result：本轮 P1/P2 已关闭并达到新快照完整复审条件；不表示 7-07/7-11 代码完成。
+
+## 15. Round 9 第四轮 Skill/Route 复审与修复结果（2026-07-13）
+
+- Review run：`logs/ci/2026-07-13/review-gateway-bootstrap-skill-route-postfix4-20260713-192955/`；profile 为 `bootstrap-skill-route`，44/44 artifacts 完整读取，禁止 sampling。
+- Findings：P0 `0`，P1 `2`，P2 `0`；`BSR-9BAAC153EC8B1893` 与 `BSR-DE4363AC33AA4D9F` 均经独立 verifier confirmed，并以 `RFG-REV-9-P1-01`、`RFG-REV-9-P1-02` Closed 进入 ledger，Open `0`。
+- Closure：path-only context 只能由整文件 verifier evidence 覆盖；CLI/validator 严格拒绝 JSON 非有限数，confidence 额外要求 `math.isfinite`，hash/write 同样禁止 NaN。
+- Mechanical checks：PASS；31 个 Bootstrap 回归测试、Whole-directory validator、Skill quick validation 全部通过。
+- Result：本轮两个 confirmed P1 已关闭并达到新快照完整复审条件；不表示 7-07/7-11 代码完成。
+
+## 16. Round 10 第五轮 Skill/Route 复审与修复结果（2026-07-13）
+
+- Review run：`logs/ci/2026-07-13/review-gateway-bootstrap-skill-route-final-20260713-195601/`；profile 为 `bootstrap-skill-route`，47/47 artifacts 完整读取，禁止 sampling。
+- Findings：gate 接受 P1 `2`；独立 verifier 将 `BSR-4A2CC9007299E3AF` refuted、`BSR-D092A28E0D170F4F` confirmed。历史 ledger 记录一条 Refuted 与一条 Closed，Open `0`。
+- Closure：prepare 强制把每个 required context class 映射到非空 in-scope hash-bound artifacts，manifest/prompt/recovery 全部绑定；无映射的单文件 skill-route prepare 在写文件前失败。
+- Mechanical checks：PASS；32 个 Bootstrap 回归测试、Whole-directory validator、Skill quick validation 全部通过。
+- Result：confirmed P1 已关闭；refuted 候选不作为 finding。达到新快照完整复审条件，不表示 7-07/7-11 代码完成。
+
+## 17. Round 11 Context-bound Skill/Route 复审与修复结果（2026-07-13）
+
+- Review run：`logs/ci/2026-07-13/review-gateway-bootstrap-skill-route-clean-20260713-202629/`；profile 为 `bootstrap-skill-route`，49/49 artifacts 与 8/8 context class bindings 完整读取，禁止 sampling。
+- Findings：P1 `BSR-C58577C553B8B272` 经独立 verifier confirmed；P2 `BSR-A2988596569500F7` 通过事实门禁；二者均 Closed，Open `0`。
+- Closure：Skill-route context classes 增加稳定 artifact semantics，拒绝同一无关文件冒名；finalized `review-result.v1` run 不得再次 gate 覆盖。
+- Mechanical checks：PASS；34 个 Bootstrap 回归测试、Whole-directory validator、Skill quick validation 全部通过。
+- Result：本轮 P1/P2 已关闭并达到新快照完整复审条件；不表示 7-07/7-11 代码完成。
+
+
+## 18. ECC 能力对齐与 Review 成本止损实施验证（2026-07-13）
+
+- Change scope：仅更新 7-12 plan-local profile/CLI/schema/tests/operator guide 与仓库外 `run-phase-bootstrap-review` Skill；未运行 Blind Hunter、Edge Case Hunter、Acceptance Auditor 或独立 verifier，未修改 7-07/7-11、AGENTS、README、`scripts/sc` 或 Phase 共享入口。
+- Contract：四类 profile 新增 hash-bound role rubric、profile 专用误报抑制、untrusted-content policy、required deterministic preflight 和默认两轮/硬上限三轮的 full-review cycle policy。
+- Enforcement：`prepare` 生成 `preflight-result.json` pending 合同；`gate` 拒绝 pending/failed、check 漂移、非零退出码、越界/缺失/stale evidence；`finalize` 绑定 gate-time preflight hash。修复阶段禁止逐 finding 自动完整复审，P2-only 不触发，硬上限后 manual pause。
+- Mechanical checks：PASS；37 个 Bootstrap 回归测试、Python compile、Whole-directory validator、Skill quick validation 全部通过。
+- Result：RFG-056 至 RFG-059 已落地，96 finding ledger Open `0`。本节只证明新路由合同和确定性验证可实施，不是新的语义 Whole-directory review，也不表示 7-07/7-11 代码完成。
+
+## 19. Round 12 快速 Skill/Route Review 单项修复（2026-07-14）
+
+- Review run：`logs/ci/2026-07-14/review-gateway-bootstrap-skill-route-fast-20260714-002501/`；Blind Hunter 完成且零 candidate，Edge Case Hunter 产生 `BSR-70B6B8F91F070A00`，Acceptance Auditor 输出不满足 coverage 合同，因此本 run 保持 `incomplete`，不构成完整 Review PASS。
+- Closure：按用户授权先修复 gateway accepted P1 candidate；`finalize` 与 `gate` 一致拒绝重开最终 `review-result.v1`，修改 verifier 后重复 finalize 也不得改写终态证据。
+- Mechanical checks：38 个 Bootstrap 回归测试通过；其余确定性验证见本次修复证据。
+- Result：该单项候选已关闭；不宣称本次三层 Review 完成，不表示 7-07/7-11 代码完成。
+
+## 20. Reviewer Output Self-validation 修复（2026-07-14）
+
+- Runtime evidence：Round 12 Acceptance Auditor 已读 31/31 artifacts，但增量写回时没有清空模板 `missingArtifacts`，其 output 因 coverage 分区矛盾被 gate 正确判 incomplete。
+- Closure：新增只读 `validate-layer`；每个 generated reviewer prompt 与 Skill 编排在退出/gate 前执行，失败由原 reviewer 修正自己的 JSON，主会话不得代修。
+- Mechanical checks：40 个 Bootstrap 回归测试通过，包括矛盾 coverage 失败且无 gate sidecar、合法 completed output 零退出。
+- Result：RFG-060 已落地；本节只证明输出收口闸门可执行，不是新的完整语义 Review。
+
+## 21. Round 14 P2 Targeted Repair（2026-07-14）
+
+- Source review：`logs/ci/2026-07-14/review-gateway-bootstrap-skill-route-final-20260714-020015/` 最终状态 `advisory`，唯一 accepted finding 为 `BSR-035E95627389230A`。
+- Closure：`existingGuardAnalysis` 使用 `N/A` 等价占位文本时稳定产生 `missing_guard_analysis` rejection；具体防护分析仍由既有正例通过。
+- Validation policy：只运行 targeted Bootstrap tests、Whole-directory validator、Python compile、Skill quick validation 与 diff check；依据 reviewCyclePolicy，P2-only 修复不触发下一轮完整三层 Review。
+- Result：该 P2 已关闭；最终 Review 历史证据保持不可变。
 
 ## 验收标准
 

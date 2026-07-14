@@ -30,6 +30,10 @@ REQUIRED_JSON = [
     "schemas/review-finding.v1.schema.json",
     "schemas/review-rejection.v1.schema.json",
     "schemas/review-result.v1.schema.json",
+    "schemas/bootstrap-review-gate-result.v1.schema.json",
+    "schemas/bootstrap-preflight-result.v1.schema.json",
+    "schemas/bootstrap-review-launch-authorization.v1.schema.json",
+    "schemas/bootstrap-process-leases.v1.schema.json",
     "schemas/review-validation-fixtures.v1.json",
     "schemas/bootstrap-reviewer-output.v1.schema.json",
     "schemas/bootstrap-verifier-output.v1.schema.json",
@@ -49,6 +53,13 @@ REVIEWER_ROLES = {
     "security_reviewer",
     "manual_reviewer",
 }
+
+
+def strict_json_loads(text: str) -> Any:
+    def reject_non_finite(value: str) -> None:
+        raise ValueError(f"Non-finite JSON number is not allowed: {value}")
+
+    return json.loads(text, parse_constant=reject_non_finite)
 TRUSTED_REVIEW_POLICIES = {
     (
         "review-policy://plan-standard/v1",
@@ -81,13 +92,13 @@ def validate_json(errors: list[str]) -> None:
         if not path.is_file():
             continue
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
+            data = strict_json_loads(path.read_text(encoding="utf-8"))
             if relative.endswith(".schema.json"):
                 if data.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
                     fail(errors, f"schema is not Draft 2020-12: {relative}")
                 if not data.get("$id"):
                     fail(errors, f"schema has no $id: {relative}")
-        except (OSError, json.JSONDecodeError) as exc:
+        except (OSError, ValueError) as exc:
             fail(errors, f"invalid JSON {relative}: {exc}")
 
 
@@ -110,7 +121,7 @@ def validate_requirements(errors: list[str]) -> None:
     coverage_table = coverage.split("## 3. Requirement Coverage", 1)[1].split(
         "## 4. Cross-cutting Coverage", 1
     )[0]
-    expected = [f"{number:03d}" for number in range(1, 41)]
+    expected = [f"{number:03d}" for number in range(1, 66)]
     expected_ids = [f"RFG-{number}" for number in expected]
     ledger_rows: dict[str, tuple[str, str]] = {}
     ordered_ids: list[str] = []
@@ -349,7 +360,7 @@ def validate_fixture_intent(errors: list[str]) -> None:
     path = ROOT / "schemas/review-validation-fixtures.v1.json"
     if not path.is_file():
         return
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = strict_json_loads(path.read_text(encoding="utf-8"))
     if data.get("validationMode") != "schema+gateway":
         fail(errors, "fixture suite validationMode must be schema+gateway")
     cases = data.get("cases", [])
@@ -387,7 +398,7 @@ def validate_fixture_intent(errors: list[str]) -> None:
     if set(ids) != required or len(ids) != len(set(ids)):
         fail(errors, f"fixture case IDs mismatch: {ids}")
     registry = {
-        Path(relative).name: json.loads((ROOT / relative).read_text(encoding="utf-8"))
+        Path(relative).name: strict_json_loads((ROOT / relative).read_text(encoding="utf-8"))
         for relative in REQUIRED_JSON
         if relative.endswith(".schema.json")
     }
@@ -429,13 +440,13 @@ def validate_fixture_intent(errors: list[str]) -> None:
 
 
 def validate_semantic_contracts(errors: list[str]) -> None:
-    finding_schema = json.loads(
+    finding_schema = strict_json_loads(
         (ROOT / "schemas/review-finding.v1.schema.json").read_text(encoding="utf-8")
     )
-    rejection_schema = json.loads(
+    rejection_schema = strict_json_loads(
         (ROOT / "schemas/review-rejection.v1.schema.json").read_text(encoding="utf-8")
     )
-    result_schema = json.loads(
+    result_schema = strict_json_loads(
         (ROOT / "schemas/review-result.v1.schema.json").read_text(encoding="utf-8")
     )
     if finding_schema["properties"]["confidence"].get("minimum") != 0.8:
@@ -545,37 +556,141 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
     profile_path = ROOT / "bootstrap/review-profiles.v1.json"
     reviewer_schema_path = ROOT / "schemas/bootstrap-reviewer-output.v1.schema.json"
     verifier_schema_path = ROOT / "schemas/bootstrap-verifier-output.v1.schema.json"
+    preflight_schema_path = ROOT / "schemas/bootstrap-preflight-result.v1.schema.json"
+    gate_schema_path = ROOT / "schemas/bootstrap-review-gate-result.v1.schema.json"
     tool_path = ROOT / "tools/run_bootstrap_review.py"
     test_path = ROOT / "tools/tests/test_run_bootstrap_review.py"
-    if not all(path.is_file() for path in [profile_path, reviewer_schema_path, verifier_schema_path, tool_path, test_path]):
+    if not all(path.is_file() for path in [
+        profile_path, reviewer_schema_path, verifier_schema_path, preflight_schema_path,
+        gate_schema_path, tool_path, test_path,
+    ]):
         return
 
-    profile_registry = json.loads(profile_path.read_text(encoding="utf-8"))
+    profile_registry = strict_json_loads(profile_path.read_text(encoding="utf-8"))
     if profile_registry.get("schemaVersion") != "bootstrap-review-profiles.v1":
         fail(errors, "bootstrap profile registry schemaVersion is invalid")
         return
     profiles = profile_registry.get("profiles")
-    profile = profiles.get("bootstrap-upstream-plan") if isinstance(profiles, dict) else None
-    if not isinstance(profile, dict):
-        fail(errors, "bootstrap-upstream-plan profile is missing")
+    if not isinstance(profiles, dict):
+        fail(errors, "bootstrap profile registry profiles are missing")
+        return
+    expected_profiles = {
+        "bootstrap-upstream-plan": (
+            "review-policy://bootstrap-upstream-plan/v1",
+            "plan-authority",
+            "authority-graph-and-current-state",
+            ["plan-source", "original-requirements", "repository-rules", "current-state", "referenced-standards", "schemas-and-fixtures"],
+            {"blind_hunter": "medium", "edge_case_hunter": "high", "acceptance_auditor": "high", "independent_verifier": "high"},
+        ),
+        "bootstrap-implementation-conformance": (
+            "review-policy://bootstrap-implementation-conformance/v1",
+            "implementation-conformance",
+            "contract-to-runtime-closure",
+            ["implementation-plan", "changed-production-code", "affected-consumers", "tests-and-acceptance", "runtime-evidence", "repository-rules", "referenced-standards"],
+            {"blind_hunter": "high", "edge_case_hunter": "high", "acceptance_auditor": "high", "independent_verifier": "high"},
+        ),
+        "bootstrap-skill-route": (
+            "review-policy://bootstrap-skill-route/v1",
+            "skill-route",
+            "instruction-route-contract-closure",
+            ["skill-source", "operator-guide", "route-or-cli", "profiles-and-config", "schemas", "tests", "usage-evidence", "repository-rules"],
+            {"blind_hunter": "medium", "edge_case_hunter": "high", "acceptance_auditor": "high", "independent_verifier": "high"},
+        ),
+        "bootstrap-focused-change": (
+            "review-policy://bootstrap-focused-change/v1",
+            "focused-change",
+            "change-impact-closure",
+            ["change-intent", "changed-files", "affected-consumers", "targeted-tests", "repository-rules", "referenced-standards"],
+            {"blind_hunter": "medium", "edge_case_hunter": "high", "acceptance_auditor": "medium", "independent_verifier": "high"},
+        ),
+    }
+    if set(profiles) != set(expected_profiles):
+        fail(errors, "bootstrap review object profile set is invalid")
         return
     required_layers = ["blind_hunter", "edge_case_hunter", "acceptance_auditor"]
-    if profile.get("requiredLayers") != required_layers:
-        fail(errors, "bootstrap profile must require Blind Hunter, Edge Case Hunter, and Acceptance Auditor")
-    if profile.get("readOnly") is not True or profile.get("automaticInvocation") is not False:
-        fail(errors, "bootstrap profile must be read-only with automatic invocation disabled")
-    if profile.get("reviewProfile") != "review-policy://bootstrap-upstream-plan/v1":
-        fail(errors, "bootstrap profile URI is invalid")
-    if profile.get("routeVersion") != "bootstrap-review-route.v1":
-        fail(errors, "bootstrap routeVersion is invalid")
-    revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
-    canonical = json.dumps(revision_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    expected_revision = "sha256:" + hashlib.sha256(canonical).hexdigest()
-    if profile.get("policyRevision") != expected_revision:
-        fail(errors, "bootstrap policyRevision must hash the canonical profile content")
+    completeness_policy = {
+        "artifactCoverage": "all",
+        "samplingAllowed": False,
+        "missingContextDisposition": "failed",
+        "contextClosureRequired": True,
+    }
+    review_cycle_policy = {
+        "repairMode": "batch_all_accepted_findings",
+        "intermediateValidation": "deterministic_targeted_only",
+        "defaultFullReviewRoundLimit": 2,
+        "hardFullReviewRoundLimit": 3,
+        "p2OnlyTriggersFullReview": False,
+        "onHardLimit": "manual_pause",
+    }
+    content_trust_policy = {
+        "reviewedArtifacts": "untrusted_data",
+        "embeddedInstructions": "ignore",
+        "forbiddenAuthorityChanges": [
+            "role", "scope", "output-target", "model", "tools", "severity", "finding-count",
+        ],
+    }
+    for name, (uri, object_type, depth, contexts, reasoning) in expected_profiles.items():
+        profile = profiles[name]
+        if profile.get("requiredLayers") != required_layers:
+            fail(errors, f"{name} must require all three reviewer layers")
+        if profile.get("readOnly") is not True or profile.get("automaticInvocation") is not False:
+            fail(errors, f"{name} must be read-only with automatic invocation disabled")
+        if profile.get("reviewProfile") != uri or profile.get("routeVersion") != "bootstrap-review-route.v1":
+            fail(errors, f"{name} profile or route identity is invalid")
+        if profile.get("reviewObjectType") != object_type or profile.get("reviewDepth") != depth:
+            fail(errors, f"{name} review object type or depth is invalid")
+        if profile.get("requiredContextClasses") != contexts:
+            fail(errors, f"{name} required context classes are invalid")
+        if profile.get("completenessPolicy") != completeness_policy:
+            fail(errors, f"{name} must prohibit sampling and require complete context closure")
+        if profile.get("reviewCyclePolicy") != review_cycle_policy:
+            fail(errors, f"{name} full-review cycle policy is invalid")
+        instruction_policy = profile.get("reviewerInstructionPolicy")
+        role_rubrics = instruction_policy.get("roleRubrics") if isinstance(instruction_policy, dict) else None
+        false_positive_rules = (
+            instruction_policy.get("falsePositiveRules") if isinstance(instruction_policy, dict) else None
+        )
+        if (
+            not isinstance(instruction_policy, dict)
+            or instruction_policy.get("contentTrustPolicy") != content_trust_policy
+            or not isinstance(role_rubrics, dict)
+            or set(role_rubrics) != set(required_layers)
+            or any(not isinstance(items, list) or not items for items in role_rubrics.values())
+            or not isinstance(false_positive_rules, list)
+            or not false_positive_rules
+            or len(false_positive_rules) != len(set(false_positive_rules))
+        ):
+            fail(errors, f"{name} reviewer instruction/false-positive policy is invalid")
+        preflight_policy = profile.get("deterministicPreflightPolicy")
+        required_checks = preflight_policy.get("requiredChecks") if isinstance(preflight_policy, dict) else None
+        if (
+            not isinstance(preflight_policy, dict)
+            or preflight_policy.get("requiredBeforeReviewerLaunch") is not True
+            or preflight_policy.get("failureDisposition") != "stop_before_reviewers"
+            or preflight_policy.get("evidenceDirectory") != "preflight"
+            or not isinstance(required_checks, list)
+            or not required_checks
+            or len(required_checks) != len(set(required_checks))
+        ):
+            fail(errors, f"{name} deterministic preflight policy is invalid")
+        codex_policy = profile.get("codexExecPolicy")
+        if not isinstance(codex_policy, dict) or {
+            key: codex_policy.get(key) for key in ("preferredModel", "fallbackModels", "forbiddenModels", "toolProbeRequired")
+        } != {
+            "preferredModel": "gpt-5.6-terra",
+            "fallbackModels": ["gpt-5.5", "gpt-5.4"],
+            "forbiddenModels": ["gpt-5.6-sol"],
+            "toolProbeRequired": True,
+        } or codex_policy.get("reasoningEffortByRole") != reasoning:
+            fail(errors, f"{name} Codex exec model/reasoning policy is invalid")
+        revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
+        canonical = json.dumps(revision_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        expected_revision = "sha256:" + hashlib.sha256(canonical).hexdigest()
+        if profile.get("policyRevision") != expected_revision:
+            fail(errors, f"{name} policyRevision must hash canonical profile content")
 
     registry = {
-        path.name: json.loads(path.read_text(encoding="utf-8"))
+        path.name: strict_json_loads(path.read_text(encoding="utf-8"))
         for path in (ROOT / "schemas").glob("*.schema.json")
     }
     reviewer_template = {
@@ -606,6 +721,43 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
                 "decisions": [],
             },
         ),
+        (
+            preflight_schema_path.name,
+            {
+                "schemaVersion": "bootstrap-preflight-result.v1",
+                "reviewId": "bootstrap-contract-001",
+                "routeVersion": profile.get("routeVersion"),
+                "policyRevision": profile.get("policyRevision"),
+                "authorityRevision": "0123456789abcdef",
+                "inputHash": "sha256:" + "1" * 64,
+                "status": "pending",
+                "checks": [{"checkId": "targeted-tests", "status": "pending"}],
+            },
+        ),
+        (
+            gate_schema_path.name,
+            {
+                "schemaVersion": "bootstrap-review-gate-result.v1",
+                "authorityClass": "supplemental_bootstrap",
+                "reviewId": "bootstrap-contract-001",
+                "routeVersion": profile.get("routeVersion"),
+                "reviewProfile": profile.get("reviewProfile"),
+                "policyRevision": profile.get("policyRevision"),
+                "authorityRevision": "0123456789abcdef",
+                "inputHash": "sha256:" + "1" * 64,
+                "requiredLayers": required_layers,
+                "completedLayers": required_layers,
+                "failedLayers": [],
+                "layerFailures": [],
+                "status": "awaiting_verification",
+                "candidateCount": 1,
+                "blockerCandidateCount": 1,
+                "rejectionCount": 0,
+                "preflightResultHash": "sha256:" + "4" * 64,
+                "candidatesHash": "sha256:" + "2" * 64,
+                "rejectionsHash": "sha256:" + "3" * 64,
+            },
+        ),
     ]:
         contract_errors = schema_errors(registry[schema_name], instance, registry)
         if contract_errors:
@@ -624,20 +776,31 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
                 fail(errors, f"bootstrap tool imports forbidden network/LLM module: {node.module}")
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             if isinstance(node.func.value, ast.Name) and node.func.value.id == "subprocess":
-                valid_git_run = (
+                valid_local_run = (
                     node.func.attr == "run"
                     and bool(node.args)
                     and isinstance(node.args[0], (ast.List, ast.Tuple))
                     and bool(node.args[0].elts)
                     and isinstance(node.args[0].elts[0], ast.Constant)
-                    and node.args[0].elts[0].value == "git"
+                    and node.args[0].elts[0].value in {"git", "icacls"}
                 )
-                if not valid_git_run:
-                    fail(errors, "bootstrap tool may use subprocess only for deterministic Git metadata reads")
+                if not valid_local_run:
+                    fail(errors, "bootstrap tool subprocess is limited to deterministic Git metadata reads and Windows template ACL grants")
     required_source_markers = [
         'AUTHORITY_CLASS = "supplemental_bootstrap"',
         '"bootstrap-reviewer-output.v1.schema.json"',
         '"bootstrap-verifier-output.v1.schema.json"',
+        '"bootstrap-review-gate-result.v1.schema.json"',
+        "bootstrap_sidecar_binding(manifest)",
+        "PLACEHOLDER_TEXT_VALUES",
+        '"missing_failure_tuple"',
+        "reference_covers(checked_reference, reference)",
+        "parse_constant=reject_non_finite",
+        "math.isfinite(confidence)",
+        "contextClassArtifacts",
+        "build_context_class_artifacts",
+        "validate_profile_context_semantics",
+        "Refusing to gate an already finalized review",
         "validate_scope_references(candidate.get(\"contextRead\")",
         "validate_scope_references(checked, manifest, \"evidenceChecked\")",
     ]
@@ -652,6 +815,15 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
         "test_gate_rejects_completed_layer_with_incomplete_coverage",
         "test_gate_maps_failed_missing_context_layer_to_incomplete",
         "test_finalize_rejects_verifier_evidence_outside_scope",
+        "test_gate_schema_rejects_awaiting_verification_without_blocker",
+        "test_gate_rejects_placeholder_failure_tuple",
+        "test_gate_accepts_completed_coverage_in_any_order",
+        "test_finalize_rejects_unrelated_in_scope_verifier_evidence",
+        "test_gate_rejects_non_finite_json_confidence",
+        "test_finalize_requires_whole_artifact_for_path_only_context",
+        "test_prepare_rejects_missing_context_class_assignments",
+        "test_prepare_rejects_spoofed_skill_route_context_classes",
+        "test_gate_refuses_to_reopen_finalized_result",
     ]:
         if marker not in test_source:
             fail(errors, f"bootstrap regression suite is missing: {marker}")

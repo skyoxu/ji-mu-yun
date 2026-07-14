@@ -22,6 +22,7 @@
   ],
   "properties": {
     "schemaVersion": { "const": "review-result.v1" },
+    "authorityClass": { "enum": ["supplemental_bootstrap"] },
     "reviewId": { "type": "string", "minLength": 1 },
     "routeVersion": { "type": "string", "minLength": 1 },
     "reviewProfile": { "type": "string", "pattern": "^review-policy://[a-z0-9-]+/v[0-9]+$" },

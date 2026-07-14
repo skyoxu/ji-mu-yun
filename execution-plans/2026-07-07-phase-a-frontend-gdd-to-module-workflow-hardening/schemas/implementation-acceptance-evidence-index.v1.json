@@ -2,6 +2,22 @@
   "schema_version": "gdd-to-module-implementation-acceptance-evidence-index.v1",
   "description": "Explicit check-ID evidence authority. A matrix row may transition only from an entry in this append-only reviewed ledger.",
   "review_state": "clean",
+  "phase0a_commit_readiness_evaluation": {
+    "check_id": "GTM-GATE-P0A-COMMIT-READINESS",
+    "status": "not_evaluated",
+    "reason_code": "post_generation_result_required",
+    "evaluated_utc": null,
+    "input_hash": null,
+    "evidence_refs": [],
+    "result_path_pattern": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-predecessor-gate-result-<run_id>.json",
+    "required_result_bindings": [
+      "implementation_acceptance_matrix_sha256",
+      "implementation_acceptance_markdown_sha256",
+      "proposed_commit_set_manifest_sha256",
+      "git_tree_or_commit_sha"
+    ],
+    "recheck_condition": "Generate the matrix and Markdown first, then capture a separate hash-bound predecessor-gate result without regenerating either generated artifact. Missing, failed, stale, or hash-mismatched results keep Phase 1 unauthorized."
+  },
   "entries": [
     {
       "check_id": "GTM-AC-P0A-001",
@@ -29,9 +45,12 @@
         "PhaseA.Platform/Program.cs"
       ],
       "test_refs": [
-        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs"
+        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+        "PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs"
       ],
       "evidence_refs": [
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/phasea-platform-tests-summary.json",
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/python-validation-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/platform-regression-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/hardening-smoke/summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0A-exit-review-20260712T220603Z.json",
@@ -508,14 +527,18 @@
       "code_refs": [
         "PhaseA.Platform/Runs/ProjectRouteStateArtifactService.cs",
         "PhaseA.Platform/Workflow/HostedRouteForbiddenSourceGuard.cs",
-        "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs"
+        "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs",
+        "PhaseA.Platform/Runs/GameDesignDocumentService.cs"
       ],
       "test_refs": [
         "PhaseA.Platform.Tests/Runs/ProjectRouteStateArtifactServiceTests.cs",
         "PhaseA.Platform.Tests/Workflow/RouteOperationGovernanceTests.cs",
-        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs"
+        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+        "PhaseA.Platform.Tests/Runs/GameDesignDocumentServiceTests.cs"
       ],
       "evidence_refs": [
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/phasea-platform-tests-summary.json",
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/python-validation-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/platform-regression-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/hardening-smoke/summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0A-exit-review-20260712T220603Z.json",
@@ -529,14 +552,18 @@
       "code_refs": [
         "PhaseA.Platform/Runs/ProjectRouteStateArtifactService.cs",
         "PhaseA.Platform/Workflow/HostedRouteForbiddenSourceGuard.cs",
-        "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs"
+        "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs",
+        "PhaseA.Platform/Runs/GameDesignDocumentService.cs"
       ],
       "test_refs": [
         "PhaseA.Platform.Tests/Runs/ProjectRouteStateArtifactServiceTests.cs",
         "PhaseA.Platform.Tests/Workflow/RouteOperationGovernanceTests.cs",
-        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs"
+        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+        "PhaseA.Platform.Tests/Runs/GameDesignDocumentServiceTests.cs"
       ],
       "evidence_refs": [
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/phasea-platform-tests-summary.json",
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/python-validation-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/platform-regression-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/hardening-smoke/summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0A-exit-review-20260712T220603Z.json",
@@ -550,14 +577,18 @@
       "code_refs": [
         "PhaseA.Platform/Runs/ProjectRouteStateArtifactService.cs",
         "PhaseA.Platform/Workflow/HostedRouteForbiddenSourceGuard.cs",
-        "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs"
+        "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs",
+        "PhaseA.Platform/Runs/GameDesignDocumentService.cs"
       ],
       "test_refs": [
         "PhaseA.Platform.Tests/Runs/ProjectRouteStateArtifactServiceTests.cs",
         "PhaseA.Platform.Tests/Workflow/RouteOperationGovernanceTests.cs",
-        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs"
+        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+        "PhaseA.Platform.Tests/Runs/GameDesignDocumentServiceTests.cs"
       ],
       "evidence_refs": [
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/phasea-platform-tests-summary.json",
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/python-validation-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/platform-regression-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/hardening-smoke/summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0A-exit-review-20260712T220603Z.json",
@@ -1124,12 +1155,15 @@
       ],
       "test_refs": [
         "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+        "PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs",
         "PhaseA.Platform.Tests/Workflow/RouteActionDescriptorsTests.cs",
         "PhaseA.Platform.Tests/Runs/ProjectRouteStateArtifactServiceTests.cs",
         "PhaseA.Platform.Tests/Data/SqliteMetadataSchemaTests.cs",
         "PhaseA.Platform.Tests/Workflow/GodotDiagnosticsQualityGateTests.cs"
       ],
       "evidence_refs": [
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/phasea-platform-tests-summary.json",
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/python-validation-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/platform-regression-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/governance/summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/hardening-smoke/summary.json",
@@ -1786,11 +1820,14 @@
       ],
       "test_refs": [
         "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+        "PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs",
         "PhaseA.Platform.Tests/Data/SqliteMetadataSchemaTests.cs",
         "PhaseA.Platform.Tests/Workflow/GodotDiagnosticsQualityGateTests.cs",
         "PhaseA.Platform.Tests/Workflow/RouteFreshnessPolicyTests.cs"
       ],
       "evidence_refs": [
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/phasea-platform-tests-summary.json",
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/python-validation-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/platform-regression-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/governance/summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0A-exit-review-20260712T220603Z.json",
@@ -1930,14 +1967,19 @@
       "code_refs": [
         "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
         "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
-        "PhaseA.Platform/Program.cs"
+        "PhaseA.Platform/Program.cs",
+        "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs",
+        "PhaseA.Platform/Runs/GameDesignDocumentService.cs"
       ],
       "test_refs": [
         "PhaseA.Platform.Tests/Data/SqliteMetadataSchemaTests.cs",
         "PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs",
-        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs"
+        "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+        "PhaseA.Platform.Tests/Runs/GameDesignDocumentServiceTests.cs"
       ],
       "evidence_refs": [
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/phasea-platform-tests-summary.json",
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/python-validation-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/platform-regression-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/hardening-smoke/summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0A-exit-review-20260712T220603Z.json",
@@ -2421,12 +2463,15 @@
       ],
       "test_refs": [
         "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+        "PhaseA.Platform.Tests/Browser/AdminReviewQueueHttpIntegrationTests.cs",
         "PhaseA.Platform.Tests/Workflow/RouteActionDescriptorsTests.cs",
         "PhaseA.Platform.Tests/Runs/ProjectRouteStateArtifactServiceTests.cs",
         "PhaseA.Platform.Tests/Data/SqliteMetadataSchemaTests.cs",
         "PhaseA.Platform.Tests/Workflow/GodotDiagnosticsQualityGateTests.cs"
       ],
       "evidence_refs": [
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/phasea-platform-tests-summary.json",
+        "logs/phase-a-innernet/reviews/gdd-to-module-hardening/bootstrap-blocker-fix-20260713T141813Z/conformance-evidence-042-043/python-validation-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/platform-regression-summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/governance/summary.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0a-final-closure-20260712T213138Z/hardening-smoke/summary.json",
@@ -4159,9 +4204,16 @@
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0A-exit-review-20260712T220603Z.json",
         "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-0A-acceptance-auditor-final-20260712T220257Z.json"
       ],
-      "gap": "Phase 0A descriptor, recommendation, and browser placement are verified. The legacy import/backfill writer and explicit confirmation sidecar are explicitly deferred. owner=backend+frontend; recheck=before Phase 1 enables import_gdd_form as an executable mutation or consumes meta/routes/gdd-question-form/legacy-import/latest.json as current authority.",
+      "gap": "Phase 0A descriptor, recommendation, and browser placement are verified. The legacy import/backfill writer and explicit confirmation sidecar are explicitly deferred. owner=backend+frontend; affected_routes=import_gdd_form,gdd-question-form-legacy-import; severity=P2; current_scope_non_impact=the action remains non_action and the legacy sidecar is readback-only; phase6_closure_test=ImportGddFormDeferral_Phase6ClosureGuard_ShouldRemainFailClosed; recheck=before Phase 1 enables import_gdd_form as an executable mutation or consumes meta/routes/gdd-question-form/legacy-import/latest.json as current authority.",
       "defer_owner": "backend + frontend",
+      "defer_affected_routes": [
+        "import_gdd_form",
+        "gdd-question-form-legacy-import"
+      ],
+      "defer_severity": "P2",
       "defer_recheck_trigger": "Before Phase 1 enables import_gdd_form as an executable action or consumes meta/routes/gdd-question-form/legacy-import/latest.json as current authority.",
+      "defer_current_scope_non_impact_proof": "RouteActionDescriptors keeps import_gdd_form as operation_scope=non_action with no mutation API, and ProjectRouteStateArtifactService treats meta/routes/gdd-question-form/legacy-import/latest.json as a readback path rather than current recovery authority.",
+      "defer_phase6_closure_test": "PhaseA.Platform.Tests/Workflow/GddToModuleImplementationPhasesTests.cs::ImportGddFormDeferral_Phase6ClosureGuard_ShouldRemainFailClosed",
       "defer_acceptance_refs": [
         "AC-IMPORT-GDD-DESCRIPTOR",
         "AC-IMPORT-GDD-BROWSER",

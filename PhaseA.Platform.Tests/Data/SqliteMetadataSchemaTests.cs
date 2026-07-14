@@ -563,6 +563,51 @@ public sealed class SqliteMetadataSchemaTests
         noEvidence.FailureCode.Should().Be("admin_review_decision_evidence_required");
     }
 
+    [Fact]
+    public async Task AdminReviewQueueProducerRecheck_ReopensSameDeferredBlockerPayload()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "deferred-recheck", "Deferred Recheck"));
+        await WriteDecisionEvidenceFilesAsync(store, project.ProjectId!, "meta/reviews/deferred-recheck.json");
+        var command = new ProjectAdminReviewQueueCommand(
+            accountId,
+            project.ProjectId!,
+            "gdd-requirements",
+            "REQ-RECHECK-OPEN",
+            "P1",
+            "same blocker payload",
+            "meta/routes/gdd-requirements/latest.json",
+            "[]");
+        var entry = await store.UpsertProjectAdminReviewQueueEntryAsync(command);
+        var deferred = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            new ProjectAdminReviewDecisionRequest(
+                "deferred",
+                "recheck when requirement map is produced again",
+                0,
+                DecisionEvidenceRefs: ["meta/reviews/deferred-recheck.json"],
+                DeferredOwner: "platform",
+                RecheckTrigger: "requirement map producer rerun",
+                AffectedRoutes: ["gdd-requirements"]));
+
+        deferred.Status.Should().Be("updated");
+        ProjectAdminReviewQueuePolicy.IsBlocking(deferred.Entry!).Should().BeFalse();
+
+        var reopened = await store.UpsertProjectAdminReviewQueueEntryAsync(command);
+        var rows = await store.ListProjectAdminReviewQueueForProjectAsync(accountId, project.ProjectId!, "", 0);
+
+        reopened.Id.Should().NotBe(entry.Id);
+        reopened.Status.Should().Be("open");
+        ProjectAdminReviewQueuePolicy.IsBlocking(reopened).Should().BeTrue();
+        rows.Should().ContainSingle(row => row.Id == entry.Id && row.Status == "superseded");
+        rows.Should().ContainSingle(row => row.Id == reopened.Id && row.Status == "open");
+    }
+
     [Theory]
     [InlineData("approved")]
     [InlineData("rejected")]

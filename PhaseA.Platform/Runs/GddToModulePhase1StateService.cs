@@ -21,10 +21,14 @@ public sealed class GddToModulePhase1StateService
     private const string GddRelativePath = "docs/gdd/GDD.md";
     private const string GddFormRelativePath = "meta/routes/gdd-question-form/latest.json";
     private readonly PhaseAMetadataStore _metadataStore;
+    private readonly ProjectRouteStateArtifactService _routeStateArtifacts;
 
-    public GddToModulePhase1StateService(PhaseAMetadataStore metadataStore)
+    public GddToModulePhase1StateService(
+        PhaseAMetadataStore metadataStore,
+        ProjectRouteStateArtifactService? routeStateArtifacts = null)
     {
         _metadataStore = metadataStore;
+        _routeStateArtifacts = routeStateArtifacts ?? new ProjectRouteStateArtifactService();
     }
 
     public async Task<SceneRouteStateResult?> ConfirmSceneRouteAsync(
@@ -197,10 +201,21 @@ public sealed class GddToModulePhase1StateService
         var generatedHash = Sha256(await File.ReadAllTextAsync(gddPath, Encoding.UTF8, cancellationToken));
         var sceneHash = sceneRoot["confirmed_scene_route_hash"]!.GetValue<string>();
         var now = DateTimeOffset.UtcNow.ToString("O");
+        // ADR-0036/ADR-0038: derive recovery authority hashes from current project state, never sidecar declarations.
+        var currentRecoveryAuthorityHashes = BuildRecoveryAuthorityHashes(project);
         var sourceHashes = new Dictionary<string, string>
         {
+            [HostedRouteRecoveryContract.ParsedRouteProfileHashKey] = currentRecoveryAuthorityHashes[HostedRouteRecoveryContract.ParsedRouteProfileHashKey],
+            [HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey] = currentRecoveryAuthorityHashes[HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey],
             [SceneRouteRelativePath] = sceneHash,
             [GddRelativePath] = generatedHash
+        };
+        var authoritySources = new List<string>
+        {
+            HostedRouteRecoveryContract.ParsedRouteProfileSource,
+            HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource,
+            SceneRouteRelativePath,
+            GddRelativePath
         };
         var run = string.IsNullOrWhiteSpace(runId)
             ? null
@@ -213,11 +228,28 @@ public sealed class GddToModulePhase1StateService
         {
             return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_run_invalid", "Generated GDD run is missing, incomplete, or belongs to another project.");
         }
+        if (!string.Equals(
+                runPromptBinding.ParsedRouteProfileHash,
+                currentRecoveryAuthorityHashes[HostedRouteRecoveryContract.ParsedRouteProfileHashKey],
+                StringComparison.Ordinal) ||
+            !string.Equals(
+                runPromptBinding.SelectedRouteSkillPromptBlockHash,
+                currentRecoveryAuthorityHashes[HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey],
+                StringComparison.Ordinal))
+        {
+            return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_authority_stale", "Generated GDD prompt recovery authorities are stale.");
+        }
+        if (!string.Equals(runPromptBinding.GeneratedGddHash, generatedHash, StringComparison.Ordinal))
+        {
+            return GddDocumentRouteStateResult.Blocked(projectId, "gdd_generated_file_run_mismatch", "Generated GDD content does not match the successful generation run.");
+        }
 
         var approvedGuide = ReadApprovedGuide(project, run);
         if (approvedGuide is not null)
         {
-            sourceHashes[$"game-type-guide:{approvedGuide.Id}"] = approvedGuide.ContentHash;
+            var approvedGuideHashKey = $"game-type-guide:{approvedGuide.Id}";
+            sourceHashes[approvedGuideHashKey] = approvedGuide.ContentHash;
+            authoritySources.Add(approvedGuideHashKey);
         }
         IReadOnlyList<ArtifactSnapshot> runArtifacts = runId.Length == 0
             ? Array.Empty<ArtifactSnapshot>()
@@ -255,7 +287,11 @@ public sealed class GddToModulePhase1StateService
                 !promptEvidenceRoot.TryGetProperty("prompt_manifest", out var promptManifest) ||
                 promptManifest.ValueKind != JsonValueKind.Object ||
                 !ReadStringArray(promptManifest, "prompt_artifact_refs").SequenceEqual(promptArtifactRefs, StringComparer.Ordinal) ||
-                !ReadBoolean(promptManifest, "redacted"))
+                !ReadBoolean(promptManifest, "redacted") ||
+                !TryReadRecoveryAuthorityHashes(
+                    promptEvidenceRoot,
+                    out var evidenceParsedRouteProfileHash,
+                    out var evidenceSelectedRouteSkillPromptBlockHash))
             {
                 return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_evidence_invalid", "Generated GDD prompt evidence is not bound to the current run artifacts.");
             }
@@ -265,7 +301,9 @@ public sealed class GddToModulePhase1StateService
             if (!string.Equals(executionPromptHash, runPromptBinding.ExecutionPromptHash, StringComparison.Ordinal) ||
                 !string.Equals(persistedPromptHash, runPromptBinding.PersistedPromptHash, StringComparison.Ordinal) ||
                 !string.Equals(promptArtifactRefs[0], runPromptBinding.PromptArtifactRef, StringComparison.Ordinal) ||
-                !string.Equals(promptEvidenceRefs[0], runPromptBinding.PromptSourceEvidenceRef, StringComparison.Ordinal))
+                !string.Equals(promptEvidenceRefs[0], runPromptBinding.PromptSourceEvidenceRef, StringComparison.Ordinal) ||
+                !string.Equals(evidenceParsedRouteProfileHash, runPromptBinding.ParsedRouteProfileHash, StringComparison.Ordinal) ||
+                !string.Equals(evidenceSelectedRouteSkillPromptBlockHash, runPromptBinding.SelectedRouteSkillPromptBlockHash, StringComparison.Ordinal))
             {
                 return GddDocumentRouteStateResult.Blocked(projectId, "gdd_prompt_evidence_invalid", "Generated GDD prompt evidence does not match the database run binding.");
             }
@@ -359,7 +397,7 @@ public sealed class GddToModulePhase1StateService
             {
                 recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
                 recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
-                authority_sources = sourceHashes.Keys.ToArray(),
+                authority_sources = authoritySources,
                 source_hashes = sourceHashes,
                 forbidden_source_patterns = ForbiddenSourcePatterns,
                 allowed_source_references = approvedGuide is null ? Array.Empty<string>() : new[] { approvedGuide.RelativePath },
@@ -443,6 +481,26 @@ public sealed class GddToModulePhase1StateService
                 !string.Equals(ReadString(sceneRoot, "source_generated_gdd_hash"), generatedHash, StringComparison.Ordinal))
             {
                 return GddDocumentRouteStateResult.Blocked(project.ProjectId, "gdd_document_state_stale", "GDD document route state does not match the confirmed scene route.");
+            }
+
+            var promptBindings = (await _metadataStore.ListProjectRoutePromptEvidenceBindingsAsync(project.ProjectId, cancellationToken))
+                .GroupBy(binding => binding.RouteId, StringComparer.Ordinal)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.OrderByDescending(binding => binding.UpdatedUtc, StringComparer.Ordinal).First(),
+                    StringComparer.Ordinal);
+            var routeReadback = _routeStateArtifacts.Read(project, promptBindings);
+            var gddArtifact = routeReadback.Artifacts.FirstOrDefault(artifact =>
+                string.Equals(artifact.Route, "gdd-document-generation", StringComparison.Ordinal));
+            var sourceBoundaryIssues = gddArtifact?.BlockingIssueIds
+                .Where(issue => !issue.EndsWith(":mirror_hash_mismatch", StringComparison.Ordinal))
+                .ToArray() ?? ["meta/routes/gdd-document/latest.json:route_state_missing"];
+            if (sourceBoundaryIssues.Length > 0)
+            {
+                return GddDocumentRouteStateResult.Blocked(
+                    project.ProjectId,
+                    "gdd_document_source_boundary_invalid",
+                    "GDD document route state no longer proves its prompt source boundary.");
             }
 
             return new GddDocumentRouteStateResult(
@@ -600,7 +658,7 @@ public sealed class GddToModulePhase1StateService
 
     private static bool TryReadRunPromptBinding(RunSnapshot run, out RunPromptBinding binding)
     {
-        binding = new RunPromptBinding("", "", "", "");
+        binding = new RunPromptBinding("", "", "", "", "", "", "");
         if (string.IsNullOrWhiteSpace(run.EvidenceJson))
         {
             return false;
@@ -610,7 +668,11 @@ public sealed class GddToModulePhase1StateService
         {
             using var document = JsonDocument.Parse(run.EvidenceJson);
             if (!document.RootElement.TryGetProperty("prompt_manifest", out var manifest) ||
-                manifest.ValueKind != JsonValueKind.Object)
+                manifest.ValueKind != JsonValueKind.Object ||
+                !TryReadRecoveryAuthorityHashes(
+                    document.RootElement,
+                    out var parsedRouteProfileHash,
+                    out var selectedRouteSkillPromptBlockHash))
             {
                 return false;
             }
@@ -619,9 +681,14 @@ public sealed class GddToModulePhase1StateService
                 ReadString(manifest, "execution_prompt_hash"),
                 ReadString(manifest, "persisted_prompt_hash"),
                 ReadString(manifest, "prompt_artifact_ref"),
-                ReadString(manifest, "prompt_source_evidence_ref"));
+                ReadString(manifest, "prompt_source_evidence_ref"),
+                parsedRouteProfileHash,
+                selectedRouteSkillPromptBlockHash,
+                ReadString(document.RootElement, "generated_gdd_hash"));
             return binding.ExecutionPromptHash.Length == 64 &&
                    binding.PersistedPromptHash.Length == 64 &&
+                   binding.GeneratedGddHash.Length == 64 &&
+                   binding.GeneratedGddHash.All(Uri.IsHexDigit) &&
                    !string.IsNullOrWhiteSpace(binding.PromptArtifactRef) &&
                    !string.IsNullOrWhiteSpace(binding.PromptSourceEvidenceRef);
         }
@@ -629,6 +696,40 @@ public sealed class GddToModulePhase1StateService
         {
             return false;
         }
+    }
+
+    private static Dictionary<string, string> BuildRecoveryAuthorityHashes(ProjectSnapshot project)
+    {
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [HostedRouteRecoveryContract.ParsedRouteProfileHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(
+                JsonSerializer.Serialize(PrototypeRouteSkillPolicy.ResolveProfile(project))),
+            [HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey] = HostedRouteForbiddenSourceGuard.PromptHash(
+                PrototypeRouteSkillPolicy.BuildPromptBlock(project))
+        };
+    }
+
+    private static bool TryReadRecoveryAuthorityHashes(
+        JsonElement root,
+        out string parsedRouteProfileHash,
+        out string selectedRouteSkillPromptBlockHash)
+    {
+        parsedRouteProfileHash = "";
+        selectedRouteSkillPromptBlockHash = "";
+        if (!string.Equals(ReadString(root, "recovery_source_order_ref"), HostedRouteRecoveryContract.ContractId, StringComparison.Ordinal) ||
+            !ReadStringArray(root, "recovery_source_order").SequenceEqual(HostedRouteRecoveryContract.SourceOrder, StringComparer.Ordinal) ||
+            !root.TryGetProperty("source_hashes", out var hashes) ||
+            hashes.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        parsedRouteProfileHash = ReadString(hashes, HostedRouteRecoveryContract.ParsedRouteProfileHashKey);
+        selectedRouteSkillPromptBlockHash = ReadString(hashes, HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey);
+        return parsedRouteProfileHash.Length == 64 &&
+               selectedRouteSkillPromptBlockHash.Length == 64 &&
+               parsedRouteProfileHash.All(Uri.IsHexDigit) &&
+               selectedRouteSkillPromptBlockHash.All(Uri.IsHexDigit);
     }
 
     private static ApprovedGuideSource? ReadApprovedGuide(ProjectSnapshot project, RunSnapshot run)
@@ -716,7 +817,10 @@ public sealed class GddToModulePhase1StateService
         string ExecutionPromptHash,
         string PersistedPromptHash,
         string PromptArtifactRef,
-        string PromptSourceEvidenceRef);
+        string PromptSourceEvidenceRef,
+        string ParsedRouteProfileHash,
+        string SelectedRouteSkillPromptBlockHash,
+        string GeneratedGddHash);
 
     private static JsonSerializerOptions JsonOptions()
     {

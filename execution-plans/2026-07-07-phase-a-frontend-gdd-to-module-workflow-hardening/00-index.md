@@ -28,7 +28,7 @@ Acceptance criteria:
 - A PR or commit that claims this plan is ready must include this whole split directory, including `schemas/`, `96-global-review-standard.md`, `97-split-added-requirements-ledger.md`, `98-original-to-split-audit.md`, and `99-source-coverage.md`; there must be no untracked split-plan files.
 - The monolithic source document must not be used to drive implementation after this split lands. If it changes after the split, the change must be either reverted before commit or recorded as source-history maintenance in `98-original-to-split-audit.md`.
 - New normative requirements after the split must land in this split directory or in linked standards/ADR/workflow docs. The monolithic source document may receive only source-history maintenance notes and must not become a second requirements source.
-- Reviewers validate `git status --short` before implementation starts and block if the split directory is missing, untracked, or inconsistent with the source-history policy.
+- Reviewers validate `git status --short` before implementation starts and block if the split directory is missing, untracked, or inconsistent with the source-history policy. The generated acceptance matrix binds this as separate machine gate `GTM-GATE-P0A-COMMIT-READINESS`, validated by the proposed-commit-set capture and `COMMIT-PROPOSED-SET-COMPLETE`; Phase 0A row dispositions alone cannot authorize Phase 1.
 
 ## Phase Service Execution Mapping
 

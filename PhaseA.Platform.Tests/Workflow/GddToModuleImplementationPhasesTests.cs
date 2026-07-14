@@ -95,6 +95,28 @@ public sealed class GddToModuleImplementationPhasesTests
     }
 
     [Fact]
+    public void ImportGddFormDeferral_Phase6ClosureGuard_ShouldRemainFailClosed()
+    {
+        const string evidenceIndexPath =
+            "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/schemas/implementation-acceptance-evidence-index.v1.json";
+        using var document = JsonDocument.Parse(ReadRepoFile(evidenceIndexPath));
+        var entry = document.RootElement.GetProperty("entries").EnumerateArray().Single(item =>
+            item.GetProperty("check_id").GetString() == "GTM-SAR-WORKFLOW-ACTION-IMPORT-GDD-FORM");
+
+        entry.GetProperty("status").GetString().Should().Be("explicitly_deferred");
+        entry.GetProperty("defer_severity").GetString().Should().BeOneOf("P0", "P1", "P2");
+        entry.GetProperty("defer_affected_routes").GetArrayLength().Should().BeGreaterThan(0);
+        entry.GetProperty("defer_current_scope_non_impact_proof").GetString().Should().NotBeNullOrWhiteSpace();
+        entry.GetProperty("defer_phase6_closure_test").GetString().Should().Be(
+            "PhaseA.Platform.Tests/Workflow/GddToModuleImplementationPhasesTests.cs::ImportGddFormDeferral_Phase6ClosureGuard_ShouldRemainFailClosed");
+        entry.GetProperty("defer_recheck_trigger").GetString().Should().NotBeNullOrWhiteSpace();
+
+        var descriptor = RouteActionDescriptors.Get("import_gdd_form");
+        descriptor.OperationScope.Should().Be("non_action");
+        descriptor.ApiRouteTemplate.Should().BeEmpty();
+    }
+
+    [Fact]
     public void DurableWorkflowDoc_ShouldLinkStandardsAndEvidenceSchema()
     {
         var doc = ReadRepoFile(GddToModuleImplementationPhases.StandardPath);

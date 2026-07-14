@@ -8,7 +8,7 @@ Start with Phase 0A, then the smallest Phase 1 slice. Phase 1 work must not begi
 
 Commit-readiness gate:
 
-- Before implementation starts, the split directory and schema fixture must be included in the commit/PR, with no untracked split-plan files.
+- Before implementation starts, the split directory and schema fixture must be included in the commit/PR, with no untracked split-plan files. This is machine gate `GTM-GATE-P0A-COMMIT-READINESS` in the generated acceptance-matrix gate contract and must report `passed` through proposed-commit-set validation before the Phase 0A predecessor gate can authorize Phase 1.
 - The monolithic source document is not a live implementation mirror. If it changes, the change must be explained as source-history maintenance.
 - After the split lands, new implementation guidance for this refactor must be added to the split directory or to durable standards/ADR/workflow docs linked from it. The monolithic source document cannot receive new normative requirements.
 

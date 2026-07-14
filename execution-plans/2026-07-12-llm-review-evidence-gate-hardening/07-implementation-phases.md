@@ -9,7 +9,8 @@ Owner：平台架构/工作流维护者。
 1. 完成本目录 Whole-directory review；
 2. 冻结 schema v1 和 RFG requirement ledger；
 3. 冻结 Bootstrap Review 的 route/profile/schema revision；
-4. 未取得 handoff 前，只允许修改本目录 plan-local 工具、合同、操作指南和独立验证 fixture。
+4. 冻结四类 review object profile、完整性合同、逐角色 reasoning、role rubric、误报抑制、untrusted-content、deterministic preflight 与 review-cycle policy；
+5. 未取得 handoff 前，只允许修改本目录 plan-local 工具、合同、操作指南和独立验证 fixture。
 
 退出标准：96 review PASS、97 无缺 owner/acceptance、98/99 覆盖完整、validator 通过。此退出不表示正式 gateway 或运行时代码完成。
 
@@ -21,12 +22,14 @@ Owner：plan-local review bootstrap maintainer。
 
 1. 实现 `prepare/gate/finalize` 手工 CLI；
 2. `prepare` 只生成 hash-bound input、三个 reviewer prompt 和输出模板；
-3. `gate` 只消费用户手工保存的 reviewer 输出，执行 schema、精确证据、required layer、dedup 和 rejection；
-4. P0/P1 存在时生成 verifier prompt/template，等待用户手工完成独立核验；
+3. `gate` 只消费手工或用户授权隔离 reviewer 保存的输出，执行 schema、精确证据、required layer、severity-safe evidence-root dedup 和 rejection；
+4. P0/P1 存在时生成 verifier prompt/template，等待手工或用户授权的全新独立 verifier 完成核验；
 5. `finalize` 只消费 verifier 决策并写独立 sidecar；
-6. 工具不导入 LLM backend、不启动子进程 reviewer、不修改目标 scope。
+6. 工具不导入 LLM backend、不启动子进程 reviewer、不修改目标 scope；
+7. `prepare` 将三角色任务、误报抑制、不可信内容边界、确定性 preflight 与完整 Review 轮次止损写入 hash-bound manifest/prompt；
+8. 外层 Skill 在 reviewer 前执行 required deterministic preflight，在 repair 阶段批量修复并只跑 targeted deterministic validation，最终最多再运行一次完整 Review；第三轮仅用于新 P0/P1 或 authority/context graph 改变。
 
-退出标准：zero finding、missing layer、stale evidence、dedup、P0/P1 verifier 和 target-read-only tests 全部通过；操作指南可复制执行。
+退出标准：四类 profile、完整 coverage/no-sampling、role rubric/误报投影、untrusted-content、deterministic preflight、bounded review-cycle、zero finding、missing context/layer、stale evidence、severity-safe dedup、verifier preservation、P0/P1 verifier 和 target-read-only tests 全部通过；操作指南可复制执行。
 
 ## Phase R0C：用户手工审查上游
 

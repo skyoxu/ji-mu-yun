@@ -179,11 +179,13 @@ if (interruptedRunCount > 0)
     app.Logger.LogWarning("Recovered {InterruptedRunCount} interrupted runs during startup.", interruptedRunCount);
 }
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(ResolveStaticWebRoot(builder.Environment.ContentRootPath)),
-    RequestPath = ""
-});
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/api"),
+    branch => branch.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(ResolveStaticWebRoot(builder.Environment.ContentRootPath)),
+        RequestPath = ""
+    }));
 
 app.Use(async (context, next) =>
 {
@@ -205,7 +207,8 @@ app.Use(async (context, next) =>
 
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/api/admin"))
+    // ADR-0034/ADR-0038: authenticated API responses are private by default, including auth failures.
+    if (context.Request.Path.StartsWithSegments("/api"))
     {
         ApplyNoStore(context);
     }
@@ -998,7 +1001,12 @@ app.MapPost("/api/projects/{projectId}/gdd/document/generate", async (
             }
         }
 
-        var result = await gdd.CreateAsync(accountId, projectId, request, cancellationToken);
+        var existingState = await phase1State.GetGddDocumentStateAsync(accountId, projectId, cancellationToken);
+        var requiresAuthorityRecovery = existingState?.BlockingIssues.Any(issue =>
+            string.Equals(issue.DomainCode, "gdd_document_source_boundary_invalid", StringComparison.Ordinal)) == true;
+        var result = requiresAuthorityRecovery
+            ? await gdd.CreateForAuthorityRecoveryAsync(accountId, projectId, request, cancellationToken)
+            : await gdd.CreateAsync(accountId, projectId, request, cancellationToken);
         if (result.Status == "succeeded")
         {
             var state = await phase1State.RecordGeneratedGddAsync(accountId, projectId, result.RunId, cancellationToken);
@@ -1025,7 +1033,15 @@ app.MapPost("/api/projects/{projectId}/gdd/document/generate", async (
         }
 
         return result.FailureCode == "gdd_already_exists"
-            ? Results.Conflict(new { operationStatus = "returned_existing", result.ProjectId, status = "ready", result.Summary })
+            ? Results.Conflict(new
+            {
+                operationStatus = "blocked",
+                result.ProjectId,
+                status = "blocked",
+                result.FailureCode,
+                result.Summary,
+                recoveryAction = "review_or_delete_existing_gdd"
+            })
             : Results.BadRequest(result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)

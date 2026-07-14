@@ -6,6 +6,7 @@ using PhaseA.Platform.Projects;
 using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workflow;
 using System.Text.Json;
 using Xunit;
 
@@ -51,13 +52,21 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         stateJson.GetProperty("route").GetString().Should().Be("repair-plan");
         stateJson.GetProperty("game_type_profile").GetProperty("gameTypeId").GetString().Should().Be("rpg");
         stateJson.GetProperty("source_boundary").GetString().Should().Be("gdd_derived_contract_only_after_gdd_generation");
+        var promptAuthorityBinding = stateJson.GetProperty("prompt_authority_binding");
+        promptAuthorityBinding.GetProperty("authority_sources").EnumerateArray().Select(item => item.GetString()).Should().Equal(
+            HostedRouteRecoveryContract.ParsedRouteProfileSource,
+            HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockSource);
+        promptAuthorityBinding.GetProperty("source_hashes").GetProperty(HostedRouteRecoveryContract.ParsedRouteProfileHashKey).GetString()
+            .Should().MatchRegex("^[0-9a-f]{64}$");
+        promptAuthorityBinding.GetProperty("source_hashes").GetProperty(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey).GetString()
+            .Should().MatchRegex("^[0-9a-f]{64}$");
         stateJson.GetProperty("summary").GetString().Should().Contain("4 个修复任务");
         stateJson.GetProperty("goals").GetArrayLength().Should().Be(4);
         stateJson.GetProperty("goals")[0].GetProperty("description").GetString().Should().NotContain("Permission denied");
         var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
         details!.Session.SourceMessage.Should().Contain("Permission denied");
         details.Session.SourceMessage.Should().Contain("failure_signals");
-        details.Session.SourceMessage.Should().NotContain("route_skill");
+        details.Session.SourceMessage.Should().Contain(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey);
     }
 
     [Fact]
@@ -88,6 +97,8 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         result.Goals[0].Title.Should().NotContain("TDD");
         codex.LastPrompt.Should().Contain("Use only the data provided in this prompt.");
         codex.LastPrompt.Should().Contain("Do not read files, inspect the repository, call tools, or ask for more context.");
+        codex.LastPrompt.Should().Contain("Parsed game-type route profile authority:");
+        codex.LastPrompt.Should().Contain("Selected route skill prompt block authority:");
         codex.LastOptions.Should().NotBeNull();
         codex.LastOptions!.IgnoreRules.Should().BeTrue();
         codex.LastOptions.ReasoningEffort.Should().Be("minimal");
@@ -340,6 +351,8 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         runner.LastPrompt.Should().Contain("Run the execute-repair-step top-level route.");
         runner.LastPrompt.Should().Contain("Repair evidence context:");
         runner.LastPrompt.Should().Contain("Permission denied");
+        runner.LastPrompt.Should().Contain("Parsed game-type route profile authority:");
+        runner.LastPrompt.Should().Contain("Selected route skill prompt block authority:");
     }
 
     [Fact]
@@ -402,6 +415,34 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         var step = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(stepStatePath));
         step.GetProperty("route").GetString().Should().Be("execute-repair-step");
         step.GetProperty("goal_status").GetString().Should().Be("needs_fix");
+        step.GetProperty("prompt_authority_binding").GetProperty("source_hashes")
+            .GetProperty(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey).GetString()
+            .Should().MatchRegex("^[0-9a-f]{64}$");
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldFailClosedWhenPromptRecoveryAuthorityChanges()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedFailedPrototypeRunAsync(store, projectId);
+        var runner = new GoalRepairPromptCaptureRunner();
+        var quickFix = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
+        await service.CreateAsync(accountId, projectId);
+
+        using var changedPromptPolicy = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        var result = await service.ExecuteNextAsync(accountId, projectId, new PrototypeRepairStepExecutionRequest());
+
+        result.Status.Should().Be("blocked_by_stale_recovery_authority");
+        result.RunId.Should().BeEmpty();
+        runner.LastPrompt.Should().BeEmpty();
     }
 
     [Fact]

@@ -3833,6 +3833,50 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void Program_StaticFilesCannotShortCircuitApiAuthAndNoStoreMiddleware()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        source.Should().Contain("context => !context.Request.Path.StartsWithSegments(\"/api\")");
+        source.Should().Contain("branch => branch.UseStaticFiles(new StaticFileOptions");
+        source.Should().NotContain("app.UseStaticFiles(new StaticFileOptions");
+    }
+
+    [Fact]
+    public void Program_GddGenerationRecoversStaleAuthorityWithoutReadyShapedConflict()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs"));
+        var source = File.ReadAllText(sourcePath);
+        var routeStart = source.IndexOf("app.MapPost(\"/api/projects/{projectId}/gdd/document/generate\"", StringComparison.Ordinal);
+        var routeEnd = source.IndexOf("app.MapGet(\"/api/projects/{projectId}/gdd/document/status\"", routeStart, StringComparison.Ordinal);
+        routeStart.Should().BeGreaterThanOrEqualTo(0);
+        routeEnd.Should().BeGreaterThan(routeStart);
+        var routeSource = source[routeStart..routeEnd];
+
+        routeSource.Should().Contain("GetGddDocumentStateAsync(accountId, projectId");
+        routeSource.Should().Contain("gdd_document_source_boundary_invalid");
+        routeSource.Should().Contain("CreateForAuthorityRecoveryAsync(accountId, projectId, request");
+        routeSource.Should().Contain("operationStatus = \"blocked\"");
+        routeSource.Should().Contain("status = \"blocked\"");
+        routeSource.Should().NotContain("status = \"ready\"");
+    }
+
+    [Fact]
     public void Program_DoesNotMapLegacyUserTokenToAdminAccount()
     {
         var sourcePath = Path.GetFullPath(Path.Combine(

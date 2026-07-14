@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
@@ -49,6 +50,10 @@ public sealed class GameDesignDocumentServiceTests
         result.Status.Should().Be("succeeded");
         result.RelativePath.Should().Be("docs/gdd/GDD.md");
         var project = await store.GetProjectSnapshotAsync(projectId);
+        var parsedRouteProfileJson = JsonSerializer.Serialize(PrototypeRouteSkillPolicy.ResolveProfile(project!));
+        var selectedRouteSkillPromptBlock = PrototypeRouteSkillPolicy.BuildPromptBlock(project!);
+        var expectedParsedRouteProfileHash = HostedRouteForbiddenSourceGuard.PromptHash(parsedRouteProfileJson);
+        var expectedSelectedRouteSkillPromptBlockHash = HostedRouteForbiddenSourceGuard.PromptHash(selectedRouteSkillPromptBlock);
         File.Exists(Path.Combine(project!.RepoPath, "docs", "gdd", "gdd-outline.json")).Should().BeTrue();
         File.Exists(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md")).Should().BeTrue();
         var outline = await service.ReadOutlineAsync(accountId, projectId);
@@ -98,6 +103,8 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("TemplateId: rpg");
         runner.Commands[0].StandardInput.Should().Contain("Default Prototype Contract");
         runner.Commands[0].StandardInput.Should().Contain("Project Contract Snapshot");
+        runner.Commands[0].StandardInput.Should().Contain(parsedRouteProfileJson);
+        runner.Commands[0].StandardInput.Should().Contain(selectedRouteSkillPromptBlock);
         var promptArtifact = (await store.ListArtifactsForRunAsync(result.RunId!))
             .Single(artifact => artifact.ArtifactType == "game-design-gdd-prompt");
         var persistedPrompt = await File.ReadAllTextAsync(Path.Combine(project.RepoPath, promptArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar)));
@@ -108,12 +115,33 @@ public sealed class GameDesignDocumentServiceTests
         using var promptEvidence = JsonDocument.Parse(await File.ReadAllTextAsync(
             Path.Combine(project.RepoPath, promptEvidenceArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar))));
         var promptManifest = promptEvidence.RootElement.GetProperty("prompt_manifest");
+        promptEvidence.RootElement.GetProperty("recovery_source_order_ref").GetString().Should().Be(HostedRouteRecoveryContract.ContractId);
+        promptEvidence.RootElement.GetProperty("recovery_source_order").EnumerateArray()
+            .Select(item => item.GetString())
+            .Should().Equal(HostedRouteRecoveryContract.SourceOrder);
+        var promptSourceHashes = promptEvidence.RootElement.GetProperty("source_hashes");
+        promptSourceHashes.GetProperty(HostedRouteRecoveryContract.ParsedRouteProfileHashKey).GetString()
+            .Should().Be(expectedParsedRouteProfileHash);
+        promptSourceHashes.GetProperty(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey).GetString()
+            .Should().Be(expectedSelectedRouteSkillPromptBlockHash);
         promptManifest.GetProperty("execution_prompt_hash").GetString().Should().Be(
             promptEvidence.RootElement.GetProperty("forbidden_source_scan").GetProperty("prompt_hash").GetString());
         promptManifest.GetProperty("persisted_prompt_hash").GetString().Should().Be(
             HostedRouteForbiddenSourceGuard.PromptHash(persistedPrompt));
         promptManifest.GetProperty("execution_prompt_hash").GetString().Should().NotBe(
             promptManifest.GetProperty("persisted_prompt_hash").GetString());
+        var run = await store.GetRunSnapshotAsync(result.RunId!);
+        using var runEvidence = JsonDocument.Parse(run!.EvidenceJson!);
+        var generatedGdd = await File.ReadAllTextAsync(Path.Combine(project.RepoPath, result.RelativePath!.Replace('/', Path.DirectorySeparatorChar)));
+        var expectedGeneratedGddHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(generatedGdd.Replace("\r\n", "\n", StringComparison.Ordinal).Trim()))).ToLowerInvariant();
+        runEvidence.RootElement.GetProperty("generated_gdd_hash").GetString().Should().Be(expectedGeneratedGddHash);
+        runEvidence.RootElement.GetProperty("recovery_source_order_ref").GetString().Should().Be(HostedRouteRecoveryContract.ContractId);
+        runEvidence.RootElement.GetProperty("source_hashes")
+            .GetProperty(HostedRouteRecoveryContract.ParsedRouteProfileHashKey).GetString()
+            .Should().Be(expectedParsedRouteProfileHash);
+        runEvidence.RootElement.GetProperty("source_hashes")
+            .GetProperty(HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey).GetString()
+            .Should().Be(expectedSelectedRouteSkillPromptBlockHash);
         runner.Commands[0].StandardInput.Should().Contain("MatchedGameTypeId: rpg");
         runner.Commands[0].StandardInput.Should().Contain("DefaultScenes:");
         runner.Commands[0].StandardInput.Should().Contain("RequiredModules:");
@@ -301,6 +329,99 @@ public sealed class GameDesignDocumentServiceTests
         result.FailureCode.Should().Be("gdd_already_exists");
         runner.Commands.Should().BeEmpty();
         (await File.ReadAllTextAsync(outlinePath)).Should().Be(existingOutline);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenAuthorityRecoveryIsRequested_ShouldBackupAndReplaceExistingGdd()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        const string existingOutline = "{\"title\":\"Legacy\",\"summary\":\"Preserve\",\"sections\":[]}";
+        const string existingGdd = "# Legacy GDD\n\nPreserve this version.\n";
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), existingOutline);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "GDD.md"), existingGdd);
+        var runner = new FakeHostedProcessRunner();
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateForAuthorityRecoveryAsync(
+            account.AccountId,
+            projectId,
+            new GameDesignDocumentRequest(
+                "Regenerate the GDD with current recovery authority.",
+                "gpt-5.4",
+                []));
+
+        result.Status.Should().Be("succeeded");
+        result.Summary.Should().Contain("旧版本已保留");
+        runner.Commands.Should().ContainSingle();
+        var backupArtifact = (await store.ListArtifactsForRunAsync(result.RunId!))
+            .Single(artifact => artifact.ArtifactType == "game-design-gdd-replacement-backup");
+        using var manifest = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(
+            project.RepoPath,
+            backupArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar))));
+        manifest.RootElement.GetProperty("reason").GetString().Should().Be("stale_prompt_recovery_authority");
+        var files = manifest.RootElement.GetProperty("files").EnumerateArray().ToArray();
+        var outlineBackup = files.Single(file => file.GetProperty("relative_path").GetString() == "docs/gdd/gdd-outline.json");
+        var gddBackup = files.Single(file => file.GetProperty("relative_path").GetString() == "docs/gdd/GDD.md");
+        (await File.ReadAllTextAsync(Path.Combine(project.RepoPath, outlineBackup.GetProperty("backup_path").GetString()!.Replace('/', Path.DirectorySeparatorChar))))
+            .Should().Be(existingOutline);
+        (await File.ReadAllTextAsync(Path.Combine(project.RepoPath, gddBackup.GetProperty("backup_path").GetString()!.Replace('/', Path.DirectorySeparatorChar))))
+            .Should().Be(existingGdd);
+        (await File.ReadAllTextAsync(Path.Combine(gddDir, "GDD.md"))).Should().NotBe(existingGdd);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenAuthorityRecoveryGenerationFails_ShouldRestoreExistingFiles()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        const string existingOutline = "{\"title\":\"Legacy\",\"summary\":\"Preserve\",\"sections\":[]}";
+        const string existingGdd = "# Legacy GDD\n\nPreserve this version.\n";
+        var outlinePath = Path.Combine(gddDir, "gdd-outline.json");
+        var gddPath = Path.Combine(gddDir, "GDD.md");
+        await File.WriteAllTextAsync(outlinePath, existingOutline);
+        await File.WriteAllTextAsync(gddPath, existingGdd);
+        var runner = new FakeHostedProcessRunner { ExitCode = 17, ShouldWriteOutline = false };
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateForAuthorityRecoveryAsync(
+            account.AccountId,
+            projectId,
+            new GameDesignDocumentRequest(
+                "Regenerate the GDD with current recovery authority.",
+                "gpt-5.4",
+                []));
+
+        result.Status.Should().Be("failed");
+        result.FailureCode.Should().Be("codex_failed");
+        (await File.ReadAllTextAsync(outlinePath)).Should().Be(existingOutline);
+        (await File.ReadAllTextAsync(gddPath)).Should().Be(existingGdd);
     }
 
     [Fact]
