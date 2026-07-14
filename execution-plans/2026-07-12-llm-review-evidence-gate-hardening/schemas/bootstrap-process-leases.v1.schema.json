@@ -14,7 +14,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["operationId", "role", "pid", "state", "acquiredAt", "updatedAt"],
+        "required": ["operationId", "role", "pid", "processIdentity", "state", "acquiredAt", "updatedAt"],
         "properties": {
           "operationId": { "type": "string", "pattern": "^[a-z][a-z0-9:._-]{2,95}$" },
           "role": {
@@ -28,6 +28,7 @@
             ]
           },
           "pid": { "type": "integer", "minimum": 1 },
+          "processIdentity": { "type": "string", "minLength": 3 },
           "state": { "enum": ["acquired", "completed", "failed", "stale"] },
           "acquiredAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" },

@@ -47,6 +47,11 @@ def validate_result_fixture(skill_root: Path, fixture: Path) -> dict[str, Any]:
         data = load_json(fixture)
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         return result([finding("VDD-RESULT-PARSE", str(fixture), str(exc))], checks)
+    if not isinstance(data, dict):
+        return result(
+            [finding("VDD-RESULT-PARSE", str(fixture), "validation result must be a JSON object")],
+            checks,
+        )
 
     rules = contract["validation_result"]
     for field_name in rules["required_fields"]:

@@ -6,6 +6,7 @@ import json
 import math
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -676,21 +677,44 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual("duplicate", self.read_json("review-rejections.json")["rejections"][0]["reasonCode"])
         self.assertEqual("awaiting_verification", self.read_json("review-gate-result.json")["status"])
 
-    def test_gate_merges_same_evidence_root_and_retains_highest_severity(self) -> None:
+    def test_gate_keeps_same_evidence_with_distinct_failure_tuple(self) -> None:
         self.prepare()
         p2 = self.candidate("BOOT-CANDIDATE-P2", "P2")
         p1 = self.candidate("BOOT-CANDIDATE-P1", "P1")
         p1["triggerInput"] = "A differently worded trigger reaches the same evidence root"
         p1["requiredState"] = "The same code span remains authoritative"
         p1["badOutcome"] = "A blocker is hidden behind an earlier advisory"
-        p1["dimension"] = "acceptance"
+        self.complete_layers({"blind_hunter": [p2], "acceptance_auditor": [p1]})
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        findings = self.read_json("review-candidates.json")["findings"]
+        self.assertEqual(2, len(findings))
+        self.assertEqual({"P1", "P2"}, {item["proposedSeverity"] for item in findings})
+        self.assertEqual("awaiting_verification", self.read_json("review-gate-result.json")["status"])
+        self.assertEqual([], self.read_json("review-rejections.json")["rejections"])
+
+    def test_gate_keeps_same_evidence_and_failure_tuple_with_distinct_dimension(self) -> None:
+        self.prepare()
+        plan = self.candidate("BOOT-CANDIDATE-PLAN", "P2")
+        acceptance = self.candidate("BOOT-CANDIDATE-ACCEPTANCE", "P2")
+        acceptance["dimension"] = "acceptance"
+        self.complete_layers({"blind_hunter": [plan], "acceptance_auditor": [acceptance]})
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        findings = self.read_json("review-candidates.json")["findings"]
+        self.assertEqual(2, len(findings))
+        self.assertEqual({"plan", "acceptance"}, {item["dimension"] for item in findings})
+        self.assertEqual([], self.read_json("review-rejections.json")["rejections"])
+
+    def test_gate_true_duplicate_retains_highest_severity(self) -> None:
+        self.prepare()
+        p2 = self.candidate("BOOT-CANDIDATE-P2", "P2")
+        p1 = self.candidate("BOOT-CANDIDATE-P1", "P1")
+        p1["triggerInput"] = "  AN IMPLEMENTER follows---the plan! "
         self.complete_layers({"blind_hunter": [p2], "acceptance_auditor": [p1]})
         self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
         findings = self.read_json("review-candidates.json")["findings"]
         self.assertEqual(1, len(findings))
         self.assertEqual("P1", findings[0]["proposedSeverity"])
         self.assertEqual(["acceptance_auditor", "blind_hunter"], findings[0]["sourceReviewers"])
-        self.assertEqual("awaiting_verification", self.read_json("review-gate-result.json")["status"])
         rejection = self.read_json("review-rejections.json")["rejections"][0]
         self.assertEqual("duplicate", rejection["reasonCode"])
         self.assertIn("retained severity P1", rejection["reason"])
@@ -731,6 +755,24 @@ class BootstrapReviewCliTests(unittest.TestCase):
         output["status"] = "completed"
         output["coverage"]["readArtifacts"] = output["coverage"]["requiredArtifacts"]
         self.write_json("reviewer-outputs/acceptance_auditor.json", output)
+
+        self.assertEqual(
+            1,
+            bootstrap.main(
+                [
+                    "validate-layer",
+                    "--run-dir",
+                    str(self.run_dir),
+                    "--layer",
+                    "acceptance_auditor",
+                ]
+            ),
+        )
+
+    def test_validate_layer_rejects_pending_output(self) -> None:
+        self.prepare()
+        self.complete_preflight()
+        self.authorize_launch()
 
         self.assertEqual(
             1,
@@ -980,7 +1022,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             ),
         )
 
-    def test_process_lease_rejects_duplicate_live_pid_and_reuses_stale_operation(self) -> None:
+    def test_process_lease_rejects_duplicate_live_pid_and_dead_acquire(self) -> None:
         self.prepare()
         base = [
             "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
@@ -1002,36 +1044,58 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
             "--operation-id", "model-probe:blind", "--role", "model_probe",
         ]
-        self.assertEqual(0, bootstrap.main([*dead_operation, "--pid", "99999999"]))
+        before = self.read_json("process-leases.json")
+        self.assertEqual(1, bootstrap.main([*dead_operation, "--pid", "99999999"]))
+        self.assertEqual(before, self.read_json("process-leases.json"))
         self.assertEqual(0, bootstrap.main([*dead_operation, "--pid", str(os.getpid())]))
         leases = self.read_json("process-leases.json")["leases"]
         states = [item["state"] for item in leases if item["operationId"] == "model-probe:blind"]
-        self.assertEqual(["stale", "acquired"], states)
+        self.assertEqual(["acquired"], states)
+        self.assertTrue(leases[-1]["processIdentity"])
 
     def test_process_lease_can_release_a_normally_exited_child(self) -> None:
         self.prepare()
-        self.assertEqual(
-            0,
-            bootstrap.main(
-                [
-                    "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
-                    "--operation-id", "model-probe:exited", "--role", "model_probe",
-                    "--pid", "99999998",
-                ]
-            ),
-        )
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+        self.addCleanup(lambda: child.poll() is None and child.kill())
+        self.assertEqual(0, bootstrap.main([
+            "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
+            "--operation-id", "model-probe:exited", "--role", "model_probe",
+            "--pid", str(child.pid),
+        ]))
+        child.terminate()
+        child.wait(timeout=10)
         self.assertEqual(
             0,
             bootstrap.main(
                 [
                     "process-lease", "--run-dir", str(self.run_dir), "--action", "release",
-                    "--operation-id", "model-probe:exited", "--pid", "99999998",
+                    "--operation-id", "model-probe:exited", "--pid", str(child.pid),
                     "--state", "completed",
                 ]
             ),
         )
         leases = self.read_json("process-leases.json")["leases"]
         self.assertEqual("completed", leases[-1]["state"])
+
+    def test_process_lease_release_requires_owner_pid_and_matching_live_identity(self) -> None:
+        self.prepare()
+        acquire = [
+            "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
+            "--operation-id", "model-probe:identity", "--role", "model_probe",
+            "--pid", str(os.getpid()),
+        ]
+        self.assertEqual(0, bootstrap.main(acquire))
+        release = [
+            "process-lease", "--run-dir", str(self.run_dir), "--action", "release",
+            "--operation-id", "model-probe:identity", "--state", "completed",
+        ]
+        self.assertEqual(1, bootstrap.main(release))
+        self.assertEqual(1, bootstrap.main([*release, "--pid", str(os.getpid() + 1)]))
+        state = self.read_json("process-leases.json")
+        state["leases"][-1]["processIdentity"] = "forged-process-identity"
+        self.write_json("process-leases.json", state)
+        self.assertEqual(1, bootstrap.main([*release, "--pid", str(os.getpid())]))
+        self.assertEqual("acquired", self.read_json("process-leases.json")["leases"][-1]["state"])
 
     def test_parallel_process_lease_updates_do_not_overwrite_each_other(self) -> None:
         self.prepare()
@@ -1045,12 +1109,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
             )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            results = list(
-                executor.map(
-                    lambda item: acquire(*item),
-                    [("model-probe:parallel-a", 99999995), ("model-probe:parallel-b", 99999996)],
-                )
-            )
+            results = list(executor.map(
+                lambda operation: acquire(operation, os.getpid()),
+                ["model-probe:parallel-a", "model-probe:parallel-b"],
+            ))
         self.assertEqual([0, 0], results)
         operations = {
             item["operationId"] for item in self.read_json("process-leases.json")["leases"]
@@ -1183,7 +1245,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 [
                     "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
                     "--operation-id", "model-probe:medium", "--role", "model_probe",
-                    "--pid", "99999997",
+                    "--pid", str(os.getpid()),
                 ]
             ),
         )

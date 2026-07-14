@@ -17,13 +17,13 @@
 | Bootstrap 修改目标 | review 工具越界写 7-07/7-11 | prepare/gate/finalize target-read-only 测试；输出目录不得位于 scope 内 |
 | 以降 reasoning 换取漏读 | medium role 被错误解释为允许 sampling | completeness profile 固定 all/no-sampling/context-closure；prompt、manifest、gate 一致绑定 |
 | gate 重跑丢失 verifier | 恢复操作覆盖独立决策 | CLI 写前检查非空 decisions，拒绝重跑并保持文件 hash |
-| dedup 严重等级降级 | P2 抢先吞掉同证据 P1/P0 | evidence-root 分组后确定性保留最高 severity |
+| dedup 错并或严重等级降级 | 同证据行的不同失败链互相吞并，或 P2 抢先吞掉同 fingerprint P1/P0 | fingerprint 必须包含规范化 failure tuple 与 dimension；仅完整 fingerprint 相同才分组并确定性保留最高 severity |
 | 完整 Review 成本失控 | 每修一条 finding 就重跑三层 reviewer | 首轮汇总、批量修复、targeted deterministic checks、默认两轮/硬上限三轮 |
 | 受审内容劫持 reviewer | Markdown/代码注释要求改角色、scope 或强制 APPROVE | 所有 artifact 视为 untrusted data；profile-bound prompt injection boundary |
 | 三角色同质化 | prompt 只有 reviewer 名称，三个进程重复同一检查 | profile-bound role rubric 与误报清单直接投影到各 prompt |
 | authority 未冻结 | reviewer 运行中规则或 artifact 改变导致 run stale | preflight 后 authorize-launch 冻结并在 validate/gate/finalize 重验 |
 | 重复语义审查 | Quick Dev/BMAD/GDS 与 Bootstrap 同时找问题 | 每 change cycle 单一 Bootstrap semantic authority，其他 workflow 只做实现与确定性检查 |
-| 长进程重复启动 | 工具等待超时但 reviewer 仍在后台，重新启动造成成本和重复 finding | PID process lease；alive 时 reattach/poll，dead 时标 stale 后才能重启 |
+| 长进程重复启动或身份伪造 | 超时后重复启动，或用不存在/无关 PID 制造 completed reviewer evidence | acquire 校验 live PID 并捕获 OS process identity；release 强制原 PID，live 时重验 identity，已正常退出时仅允许原 PID 收口 |
 | 成本不可见 | 73 artifacts × 三个 high reviewer 在未确认时启动 | prepare 计算 artifact/bytes/reasoning work，high-cost authorize 需要显式确认 |
 
 ## 2. Stop Conditions

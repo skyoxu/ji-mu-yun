@@ -117,6 +117,10 @@ def normalize_placeholder_text(value: str) -> str:
     return re.sub(r"[\W_]+", "", value.casefold())
 
 
+def normalize_finding_identity_text(value: str) -> str:
+    return " ".join(re.sub(r"[\W_]+", " ", value.casefold()).split())
+
+
 class BootstrapError(Exception):
     """A deterministic operator or validation error."""
 
@@ -532,6 +536,68 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def process_creation_identity(pid: int) -> str | None:
+    if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0:
+        return None
+    if os.name == "nt":
+        process_query_limited_information = 0x1000
+        still_active = 259
+
+        class FileTime(ctypes.Structure):
+            _fields_ = [("low", ctypes.c_ulong), ("high", ctypes.c_ulong)]
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.OpenProcess.argtypes = [ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
+        kernel32.OpenProcess.restype = ctypes.c_void_p
+        kernel32.GetExitCodeProcess.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulong)]
+        kernel32.GetExitCodeProcess.restype = ctypes.c_int
+        kernel32.GetProcessTimes.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(FileTime),
+            ctypes.POINTER(FileTime),
+            ctypes.POINTER(FileTime),
+            ctypes.POINTER(FileTime),
+        ]
+        kernel32.GetProcessTimes.restype = ctypes.c_int
+        kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
+        kernel32.CloseHandle.restype = ctypes.c_int
+        handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
+        if not handle:
+            return None
+        try:
+            exit_code = ctypes.c_ulong()
+            if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                return None
+            if exit_code.value != still_active:
+                return None
+            creation = FileTime()
+            exit_time = FileTime()
+            kernel = FileTime()
+            user = FileTime()
+            if not kernel32.GetProcessTimes(
+                handle,
+                ctypes.byref(creation),
+                ctypes.byref(exit_time),
+                ctypes.byref(kernel),
+                ctypes.byref(user),
+            ):
+                return None
+            creation_ticks = (creation.high << 32) | creation.low
+            return f"windows-filetime:{creation_ticks}"
+        finally:
+            kernel32.CloseHandle(handle)
+    proc_stat = Path(f"/proc/{pid}/stat")
+    if proc_stat.is_file():
+        try:
+            stat = proc_stat.read_text(encoding="ascii")
+            fields_after_comm = stat[stat.rfind(")") + 2:].split()
+            start_time = fields_after_comm[19]
+        except (OSError, UnicodeError, IndexError, ValueError):
+            return None
+        return f"linux-starttime:{start_time}"
+    return None
+
+
 def pid_is_alive(pid: int) -> bool:
     if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0:
         return False
@@ -539,21 +605,24 @@ def pid_is_alive(pid: int) -> bool:
         process_query_limited_information = 0x1000
         still_active = 259
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.OpenProcess.argtypes = [ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
+        kernel32.OpenProcess.restype = ctypes.c_void_p
+        kernel32.GetExitCodeProcess.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulong)]
+        kernel32.GetExitCodeProcess.restype = ctypes.c_int
+        kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
+        kernel32.CloseHandle.restype = ctypes.c_int
         handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
         if not handle:
             return False
         try:
             exit_code = ctypes.c_ulong()
-            if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
-                return False
-            return exit_code.value == still_active
+            return bool(
+                kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code))
+                and exit_code.value == still_active
+            )
         finally:
             kernel32.CloseHandle(handle)
-    try:
-        os.kill(pid, 0)
-    except (OSError, ProcessLookupError, PermissionError):
-        return False
-    return True
+    return Path(f"/proc/{pid}").is_dir()
 
 
 def finalized_review_result(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
@@ -1291,10 +1360,11 @@ def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manife
     changed = False
     if args.action != "release":
         for lease in state["leases"]:
-            if lease.get("state") == "acquired" and not pid_is_alive(lease.get("pid")):
+            current_identity = process_creation_identity(lease.get("pid"))
+            if lease.get("state") == "acquired" and current_identity != lease.get("processIdentity"):
                 lease["state"] = "stale"
                 lease["updatedAt"] = utc_now()
-                lease["note"] = "PID is no longer alive; lease marked stale"
+                lease["note"] = "PID is no longer the acquired process; lease marked stale"
                 changed = True
     if args.action == "inspect":
         if changed:
@@ -1308,6 +1378,9 @@ def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manife
             raise BootstrapError("process-lease acquire requires a valid --role")
         if not isinstance(args.pid, int) or args.pid <= 0:
             raise BootstrapError("process-lease acquire requires a positive --pid")
+        process_identity = process_creation_identity(args.pid)
+        if not pid_is_alive(args.pid) or process_identity is None:
+            raise BootstrapError("process-lease acquire requires a currently live --pid with a readable identity")
         if args.role in {*LAYERS, "independent_verifier"}:
             validate_launch_authorization(run_dir, manifest)
         active = [
@@ -1326,6 +1399,7 @@ def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manife
                 "operationId": args.operation_id,
                 "role": args.role,
                 "pid": args.pid,
+                "processIdentity": process_identity,
                 "state": "acquired",
                 "acquiredAt": timestamp,
                 "updatedAt": timestamp,
@@ -1336,6 +1410,8 @@ def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manife
         return 0
     if args.state not in {"completed", "failed", "stale"}:
         raise BootstrapError("process-lease release requires --state completed, failed, or stale")
+    if not isinstance(args.pid, int) or args.pid <= 0:
+        raise BootstrapError("process-lease release requires a positive --pid")
     matching = [
         item
         for item in state["leases"]
@@ -1344,8 +1420,12 @@ def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manife
     if not matching:
         raise BootstrapError(f"No acquired process lease exists for {args.operation_id}")
     lease = matching[-1]
-    if args.pid is not None and lease.get("pid") != args.pid:
+    if lease.get("pid") != args.pid:
         raise BootstrapError(f"PID does not own process lease {args.operation_id}")
+    if pid_is_alive(args.pid):
+        current_identity = process_creation_identity(args.pid)
+        if current_identity is None or current_identity != lease.get("processIdentity"):
+            raise BootstrapError(f"PID identity does not own process lease {args.operation_id}")
     lease["state"] = args.state
     lease["updatedAt"] = utc_now()
     if args.note:
@@ -1416,6 +1496,8 @@ def command_validate_layer(args: argparse.Namespace) -> int:
         raise BootstrapError(f"Reviewer layer is not required by this review: {layer}")
     output = read_json(run_dir / "reviewer-outputs" / f"{layer}.json")
     errors = validate_binding(output, manifest, layer)
+    if isinstance(output, dict) and output.get("status") != "completed":
+        errors.append("status_invalid: validate-layer requires a completed reviewer output")
     if not errors and isinstance(output, dict):
         for candidate in output.get("candidates", []):
             reason_code, reason = candidate_reason(candidate, manifest, repository_root)
@@ -1576,10 +1658,14 @@ def rejection(candidate: Any, layer: str, manifest: dict[str, Any], code: str, r
 
 def finding_from_candidate(candidate: dict[str, Any], layer: str, manifest: dict[str, Any]) -> dict[str, Any]:
     evidence_hash = value_hash(candidate["exactEvidence"])
+    failure_identity = [
+        normalize_finding_identity_text(candidate[field])
+        for field in ("triggerInput", "requiredState", "badOutcome")
+    ]
     fingerprint = value_hash(
         [
             manifest["routeVersion"], candidate["artifact"], candidate["startLine"], candidate["endLine"],
-            evidence_hash, manifest["authorityRevision"],
+            evidence_hash, *failure_identity, candidate["dimension"], manifest["authorityRevision"],
         ]
     )
     finding = {key: value for key, value in candidate.items() if key not in {"candidateId", "artifactHash"}}

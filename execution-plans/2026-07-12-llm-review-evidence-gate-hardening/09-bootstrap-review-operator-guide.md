@@ -132,7 +132,7 @@ CLI 会重验 Git revision、artifact hashes、profile/context graph、preflight
 - 三层都完成后，用户要求完整 review 时可以继续执行 gate；仅要求 prepare 或 reviewer 输出时应在对应阶段停止；
 - 每个 prompt 必须包含本角色 rubric、profile 专用误报抑制清单和 untrusted-content boundary；缺少任一项时拒绝启动；
 - 每个 reviewer 保存输出后必须重新读取自己的 JSON，并执行 `validate-layer --run-dir <run-dir> --layer <role>`；只有命令零退出才算该层完成。失败时由同一 reviewer 修正自己的输出或将该层保留为失败，主会话不得代修。
-- 使用 `codex exec` 时，每个 probe/reviewer/verifier 必须先用 `process-lease --action acquire` 记录稳定 operation ID、role 与真实子进程 PID，结束后用 `--action release --state completed|failed` 收口。reviewer operation 固定为 `reviewer:<role>`，verifier 固定为 `verifier`。工具等待超时但 PID 仍 alive 时只能 inspect/reattach/poll，不得启动第二个相同 operation；PID dead 时 CLI 标 stale 后才允许重新 acquire。
+- 使用 `codex exec` 时，每个 probe/reviewer/verifier 必须先用 `process-lease --action acquire` 记录稳定 operation ID、role 与真实且当前存活的子进程 PID；CLI 在 acquire 时捕获 OS process identity。结束后必须携带同一 PID 执行 `--action release --state completed|failed`：省略 PID、PID 不同或该 PID 仍存活但 identity 已变化时 fail closed；原进程正常退出后允许以已记录的原 PID 收口。reviewer operation 固定为 `reviewer:<role>`，verifier 固定为 `verifier`。工具等待超时但 PID 仍 alive 时只能 inspect/reattach/poll，不得启动第二个相同 operation；已退出 lease 由 inspect/后续 acquire 标 stale 后才允许重新 acquire。
 - 使用 `codex exec` 时，通过 UTF-8 stdin 传入 prompt（`codex exec ... -`），每个角色使用独立 ephemeral 进程；启动审查前必须用相同 provider/model/reasoning 做一次终端与 workspace-write 探针。正常命令必须显式传入 `-m gpt-5.6-terra -c model_reasoning_effort=<manifest-role-value>`，不能依赖全局默认值。首选探针失败后才可依次尝试 `gpt-5.5`、`gpt-5.4`，并保存失败模型及原因；`gpt-5.6-sol` 禁止用于 reviewer/verifier。探针失败、超时、认证失败、非零退出或缺少输出均按该层 incomplete 处理，主会话不得代修 JSON。
 
 Process lease 示例：
@@ -175,7 +175,7 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
   --layer <blind_hunter|edge_case_hunter|acceptance_auditor>
 ```
 
-该命令不运行 gate、不生成 candidate/rejection sidecar，也不修改 reviewer JSON。`completed` 必须满足 `missingArtifacts=[]` 且 required/read artifact 集合完全相等。
+该命令不运行 gate、不生成 candidate/rejection sidecar，也不修改 reviewer JSON；它只接受 `status=completed`。`pending`/`failed` 必须非零退出，`completed` 还必须满足 `missingArtifacts=[]` 且 required/read artifact 集合完全相等。
 
 本工具不规定用户或编排会话使用哪个 Codex/BMAD/GDS 命令；prompt 和 JSON 输出文件是唯一交换边界。
 
@@ -192,7 +192,7 @@ Failure tuple 或 `existingGuardAnalysis` 只“非空”不构成通过；`TBD`
 如果现有 `verifier-output.json.decisions` 非空，CLI 必须在写任何 gate sidecar 前拒绝重跑，保持 verifier 文件字节不变，并要求新 review run。Skill preflight 只是提前提示，CLI 是最终强制点。
 如果 `review-gate-result.json.schemaVersion=review-result.v1`，说明 run 已 finalized；再次 gate 或 finalize 都必须在任何写入前失败并要求新 run，包括 verifier decisions 为空的 clean/advisory 结果。不要通过修改 `verifier-output.json` 重开终态。
 
-Dedup 以 hash-bound artifact、inclusive line range 与 exact evidence 作为 evidence root；同根候选保留最高严重等级、合并 source reviewer，其他候选写 duplicate rejection。P2 不得抢先吞掉同根 P1/P0。
+Dedup fingerprint 绑定 hash-bound artifact、inclusive line range、exact evidence、规范化 failure tuple、finding family/dimension、route 与 authority revision。只有完整 fingerprint 相同的候选才合并 source reviewer 并保留最高严重等级，其他真实失败保持独立；P2 不得抢先吞掉同 fingerprint 的 P1/P0。
 
 输出：
 
@@ -269,13 +269,13 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/valida
 - Given Bootstrap review 完成，When检查上游目录，Then无工具产生的修改。
 - Given gate 后已有非空 verifier decisions，When再次执行 gate，Then命令非零退出且 verifier 文件字节不变。
 - Given run 已 finalized，When修改 verifier 后再次执行 finalize，Then命令非零退出，最终结果与 verifier 文件字节不变，并要求新 review run。
-- Given 同一 evidence root 先出现 P2 后出现 P1，When gate dedup，Then只保留一个 P1 finding 并进入独立 verifier。
+- Given 同一完整 fingerprint 先出现 P2 后出现 P1，When gate dedup，Then只保留一个 P1 finding 并进入独立 verifier；Given 同 evidence 但 failure tuple 或 dimension 不同，Then保留两个 finding。
 - Given 任一 profile，When prepare 生成 manifest/prompt，Then全部 artifact/context 必读且 sampling 永远为 false。
 - Given required deterministic preflight 失败，When执行完整 review，Then三个 reviewer 均不得启动。
-- Given reviewer 声明 completed 但 coverage 分区矛盾，When执行 `validate-layer`，Then命令非零退出且 gate sidecar 不存在。
+- Given reviewer 仍为 pending/failed 或声明 completed 但 coverage 分区矛盾，When执行 `validate-layer`，Then命令非零退出且 gate sidecar 不存在。
 - Given 受审内容包含嵌入指令，When reviewer 读取，Then指令不能改变角色、scope、模型、工具、severity 或 finding 数量。
 - Given 首轮 accepted findings 已汇总，When进入修复，Then批量修复并只跑 targeted deterministic checks；默认只在全部修完后运行最终完整 Review。
 - Given preflight 已通过但 authority 或 artifact 改变，When authorize-launch/validate/gate/finalize，Then fail closed 且旧授权不可复用。
-- Given同一 operation 的 PID 仍 alive，When工具等待超时后再次 acquire，Then拒绝重复启动并要求 reattach/poll。
+- Given同一 operation 的 PID 仍 alive，When工具等待超时后再次 acquire，Then拒绝重复启动并要求 reattach/poll；Given dead PID acquire、release 缺/错 PID 或 live PID identity 漂移，Then不得形成 completed lease。
 - Given implementation profile 未声明 plan-bound required check，When prepare，Then在写 manifest 前失败。
 - Given同一 change 已有 round 1，When换 review ID 再 prepare round 1，Then失败；round 4 永远失败。

@@ -14,7 +14,7 @@
 - confidence 低于 `0.8` 的候选被拒绝；
 - schema rejection 以独立 rejection contract 记录，不伪造完整 finding；
 - 文档 finding 缺 authority/consumer/validator 被拒绝；
-- duplicate fingerprint 合并；
+- 只有 evidence、规范化 failure tuple 与 finding family/dimension 全部相同的 duplicate fingerprint 才合并；
 - unchanged refuted/rejected fingerprint 不重现；
 - P2 不触发 repair loop；
 - P0/P1 advisory 与 P2 confirmed/unverified 组合被拒绝；
@@ -37,14 +37,14 @@
 - Bootstrap profile/manifest/prompt 必须一致投影 review object/depth、required context、complete/no-sampling policy、逐角色 reasoning、`gpt-5.6-terra` 首选、`gpt-5.5 -> gpt-5.4` 回退、`gpt-5.6-sol` 禁用和 mandatory tool probe；跨会话替换必须 fail closed；
 - Bootstrap 输出目录位于 scope 内、scope 越过 repository root 或包含不存在路径时 fail closed；
 - required reviewer 输出缺失与空 findings 明确区分；三层均完成且零 finding 可以 clean；
-- 每层 reviewer 写回后必须通过只读 `validate-layer`；`completed` 但 `missingArtifacts` 非空、required/read 集合不等或 coverage 不是精确分区时失败，且不得产生 gate sidecar；
+- 每层 reviewer 写回后必须通过只读 `validate-layer`；该命令只接受 `completed`，`pending`/`failed`、`missingArtifacts` 非空、required/read 集合不等或 coverage 不是精确分区时失败，且不得产生 gate sidecar；
 - prepare 后 artifact 漂移、行区间反转、exactEvidence 不匹配、context 越界均产生稳定 rejection；
 - failure tuple 或 `existingGuardAnalysis` 使用 `TBD`/`TODO`/`N/A` 等价占位文本时分别产生 `missing_failure_tuple`/`missing_guard_analysis` rejection；
-- 相同 evidence/failure tuple 跨 reviewer 合并 provenance；
+- 相同 evidence、规范化 failure tuple 与 dimension 跨 reviewer 合并 provenance；同 evidence 但任一 failure tuple 字段或 dimension 不同的候选保持独立；
 - P0/P1 没有完整 verifier decisions 时保持 incomplete，verifier 新增 finding ID 被拒绝；
 - gate 重跑遇到非空 verifier decisions 时非零退出，且 verifier 文件 hash 不变；
 - 已 finalized 的 `review-result.v1` run 再次 gate 或 finalize 时非零退出，且最终结果、verifier 与既有 sidecar 字节不变；
-- 同 evidence root 的 P2 先于 P1 到达时，dedup 保留 P1 并进入 verifier；不同 reviewer 的措辞差异不能制造同证据重复 finding；
+- 同一完整 fingerprint 的 P2 先于 P1 到达时，dedup 保留 P1 并进入 verifier；语义等价的空白、大小写或标点差异不能制造重复 finding，但不同 trigger/state/outcome 或 dimension 不能被同证据行吞并；
 - Bootstrap sidecar 标记 `supplemental_bootstrap`，不能被正式 repair/summary consumer 自动发现。
 - 四类 profile 必须投影 role rubric、误报抑制、untrusted-content、deterministic preflight 与 review-cycle policy；任一字段漂移使 load/gate/finalize fail closed。
 - 生成 prompt 必须包含对应角色 rubric、profile 专用误报清单和嵌入指令隔离文本；不能只包含 reviewer 名称。
@@ -55,8 +55,8 @@
 - implementation profile 缺 plan-bound `--required-check` 时 prepare 失败；附加检查必须映射到 prepared authority artifact 并进入 preflight requiredChecks。
 - 同一 changeId 换 review ID 重开 round 1、缺/错 predecessor、round 4、无 blocker/context change 的 round 3 均被拒绝。
 - Bootstrap 语义互斥 attestation 缺失时 prepare 失败；Quick Dev/BMAD/GDS 只能在该周期做实现与确定性检查。
-- high-cost review 未显式确认时 reviewer 启动授权失败；同 operation 的 live PID lease 禁止重复 acquire，dead PID 可标 stale 后重新 acquire。
-- `codex-exec` gate 要求三个 reviewer process lease completed；有 P0/P1 时 finalize 还要求独立 verifier lease completed。
+- high-cost review 未显式确认时 reviewer 启动授权失败；lease acquire 必须确认 PID 当前存活并捕获 OS process identity；同 operation 的 live PID lease 禁止重复 acquire，已退出 lease 可标 stale 后重新 acquire。
+- `codex-exec` gate 要求三个 reviewer process lease completed；有 P0/P1 时 finalize 还要求独立 verifier lease completed；release 缺 PID、PID 不匹配、live PID process identity 不匹配或 dead PID acquire 均不得形成 completed lease，正常退出的已捕获 child 可由原 PID 收口。
 
 ## 2. Shadow 数据
 

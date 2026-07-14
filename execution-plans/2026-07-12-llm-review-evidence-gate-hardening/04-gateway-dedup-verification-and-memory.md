@@ -32,7 +32,7 @@ gateway 必须：
 
 ## 3. 去重和稳定指纹
 
-fingerprint 输入至少包含 routeVersion、规范化 artifact path、证据 hash、failure tuple、authority revision 和 finding family。多个 reviewer 命中相同指纹时合并 `sourceReviewers[]`，保留最具体证据；不得按标题或 reviewer 名称拆分 finding。
+fingerprint 输入至少包含 routeVersion、规范化 artifact path、inclusive line range、证据 hash、规范化 failure tuple（trigger input、required state、bad outcome）、authority revision 和 finding family/dimension。只有这些字段全部相同的候选才可合并 `sourceReviewers[]` 并保留最高严重等级；同一证据行若失败链或 dimension 不同，必须保留为独立 finding。不得按标题或 reviewer 名称拆分或合并 finding。
 
 `refuted` finding 使用 evidence fingerprint；rejection record 使用由 routeVersion、candidate hash、input hash、reason code 和 authority revision 生成的 suppression fingerprint。各自绑定的 route/证据/输入/authority 未变化时不得重新出现。处置记忆作为 sidecar 添加，不修改现有 `summary.json` schema。
 
@@ -101,7 +101,7 @@ Final `review-result.v1` 是 run 终态；后续 gate 不得把它覆盖回 Boot
 
 ## 验收标准
 
-- Given 多个 reviewer 引用同一 hash-bound artifact、inclusive line range 与 exact evidence，When dedup，Then只产生一个 evidence-root fingerprint、保留最高严重等级并合并 source reviewers。
+- Given 多个 reviewer 引用同一 hash-bound artifact、inclusive line range、exact evidence、规范化 failure tuple 与 finding family/dimension，When dedup，Then只产生一个稳定 fingerprint、保留最高严重等级并合并 source reviewers；若 failure tuple 或 dimension 不同，则保留独立 finding。
 - Given refuted fingerprint 且输入未变，When复审，Then gateway 抑制重现。
 - Given P2 advisory，When汇总，Then不启动自动修复循环。
 - Given result 的 required layer 与可信 profile/revision 不一致，When gateway 汇总，Then fail closed 而不是接受自报集合。

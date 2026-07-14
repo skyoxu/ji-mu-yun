@@ -74,6 +74,20 @@ class SkillContractTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertIn("VDD-RESULT-FIELD", {item["rule_id"] for item in result["findings"]})
 
+    def test_non_object_result_fixture_returns_structured_parse_finding(self) -> None:
+        for value in (None, []):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as tmp:
+                fixture = Path(tmp) / "non-object-result.json"
+                fixture.write_text(
+                    json.dumps(value) + "\n", encoding="utf-8", newline="\n"
+                )
+                result = self.validator.validate_result_fixture(SKILL_ROOT, fixture)
+            self.assertFalse(result["ok"])
+            self.assertEqual(
+                ["VDD-RESULT-PARSE"],
+                [item["rule_id"] for item in result["findings"]],
+            )
+
     def test_compliant_trace_passes(self) -> None:
         fixture = SKILL_ROOT / "scripts" / "fixtures" / "compliance-trace-pass.jsonl"
         result = self.validator.validate_trace(SKILL_ROOT, fixture)
