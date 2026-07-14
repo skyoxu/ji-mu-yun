@@ -5,6 +5,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -27,16 +28,88 @@ def result(findings: list[dict[str, str]], checks: list[str] | None = None) -> d
     }
 
 
+def reject_json_constant(value: str) -> None:
+    raise ValueError(f"non-standard JSON constant is not allowed: {value}")
+
+
+def parse_json(text: str) -> Any:
+    return json.loads(text, parse_constant=reject_json_constant)
+
+
 def load_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return parse_json(path.read_text(encoding="utf-8"))
+
+
+def require_string_list(container: dict[str, Any], field_name: str) -> list[str]:
+    value = container.get(field_name)
+    if not isinstance(value, list) or not value or any(not is_non_empty_string(item) for item in value):
+        raise ValueError(f"skill contract {field_name} must be a non-empty string list")
+    return value
+
+
+def require_string_list_map(container: dict[str, Any], field_name: str) -> dict[str, list[str]]:
+    value = container.get(field_name)
+    if not isinstance(value, dict) or not value:
+        raise ValueError(f"skill contract {field_name} must be a non-empty object")
+    for key, items in value.items():
+        if not is_non_empty_string(key) or not isinstance(items, list) or not items or any(
+            not is_non_empty_string(item) for item in items
+        ):
+            raise ValueError(
+                f"skill contract {field_name} entries must map non-empty strings to non-empty string lists"
+            )
+    return value
 
 
 def load_contract(skill_root: Path) -> dict[str, Any]:
     path = skill_root / CONTRACT_PATH
     data = load_json(path)
+    if not isinstance(data, dict):
+        raise ValueError("skill contract must be a JSON object")
     if data.get("schema_version") != "vdd.skill-contract.v1":
         raise ValueError(f"unsupported skill contract schema: {data.get('schema_version')!r}")
+    require_string_list(data, "required_files")
+    require_string_list_map(data, "required_headings")
+    require_string_list_map(data, "required_links")
+    validation_result = data.get("validation_result")
+    if not isinstance(validation_result, dict):
+        raise ValueError("skill contract validation_result must be an object")
+    for field_name in ("required_fields", "allowed_statuses", "allowed_check_statuses"):
+        require_string_list(validation_result, field_name)
+    compliance = data.get("compliance")
+    if not isinstance(compliance, dict):
+        raise ValueError("skill contract compliance must be an object")
+    for field_name in ("required_scenario_levels", "ordered_steps"):
+        require_string_list(compliance, field_name)
     return data
+
+
+def is_non_empty_string(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def is_timezone_datetime(value: Any) -> bool:
+    if not is_non_empty_string(value):
+        return False
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return parsed.tzinfo is not None
+
+
+def validate_string_list(
+    findings: list[dict[str, str]], fixture: Path, data: dict[str, Any], field_name: str
+) -> None:
+    value = data.get(field_name)
+    if not isinstance(value, list) or any(not is_non_empty_string(item) for item in value):
+        findings.append(
+            finding(
+                "VDD-RESULT-FIELD",
+                str(fixture),
+                f"{field_name} must be a list of non-empty strings",
+            )
+        )
 
 
 def validate_result_fixture(skill_root: Path, fixture: Path) -> dict[str, Any]:
@@ -59,6 +132,24 @@ def validate_result_fixture(skill_root: Path, fixture: Path) -> dict[str, Any]:
             findings.append(
                 finding("VDD-RESULT-FIELD", str(fixture), f"missing required field: {field_name}")
             )
+
+    for field_name in ("run_id", "predicate", "validator_version"):
+        if not is_non_empty_string(data.get(field_name)):
+            findings.append(
+                finding(
+                    "VDD-RESULT-FIELD",
+                    str(fixture),
+                    f"{field_name} must be a non-empty string",
+                )
+            )
+    if not is_timezone_datetime(data.get("generated_at")):
+        findings.append(
+            finding(
+                "VDD-RESULT-FIELD",
+                str(fixture),
+                "generated_at must be a timezone-aware ISO 8601 datetime",
+            )
+        )
 
     if data.get("schema_version") != "vdd.validation-result.v1":
         findings.append(
@@ -104,7 +195,7 @@ def validate_result_fixture(skill_root: Path, fixture: Path) -> dict[str, Any]:
             if not isinstance(check, dict):
                 findings.append(finding("VDD-RESULT-CHECK", target, "check must be an object"))
                 continue
-            if not isinstance(check.get("rule_id"), str) or not check.get("rule_id"):
+            if not is_non_empty_string(check.get("rule_id")):
                 findings.append(finding("VDD-RESULT-CHECK", target, "check rule_id is required"))
             check_status = check.get("status")
             if check_status not in rules["allowed_check_statuses"]:
@@ -112,8 +203,8 @@ def validate_result_fixture(skill_root: Path, fixture: Path) -> dict[str, Any]:
                     finding("VDD-RESULT-CHECK", target, f"invalid check status: {check_status!r}")
                 )
             evidence = check.get("evidence")
-            if not isinstance(evidence, list) or not all(
-                isinstance(item, str) and item for item in evidence
+            if not isinstance(evidence, list) or not evidence or not all(
+                is_non_empty_string(item) for item in evidence
             ):
                 findings.append(
                     finding("VDD-RESULT-CHECK", target, "check evidence must be a non-empty string list")
@@ -123,11 +214,21 @@ def validate_result_fixture(skill_root: Path, fixture: Path) -> dict[str, Any]:
                     finding("VDD-RESULT-CHECK", target, "pass result cannot contain non-pass checks")
                 )
 
-    for list_field in ("authorizes", "does_not_authorize", "diagnostics"):
-        if list_field in data and not isinstance(data[list_field], list):
-            findings.append(
-                finding("VDD-RESULT-FIELD", str(fixture), f"{list_field} must be a list")
+    for list_field in ("authorizes", "does_not_authorize"):
+        validate_string_list(findings, fixture, data, list_field)
+    diagnostics = data.get("diagnostics")
+    if not isinstance(diagnostics, list) or any(not isinstance(item, dict) for item in diagnostics):
+        findings.append(
+            finding("VDD-RESULT-FIELD", str(fixture), "diagnostics must be a list of objects")
+        )
+    elif any(not is_non_empty_string(item.get("rule_id")) for item in diagnostics):
+        findings.append(
+            finding(
+                "VDD-RESULT-FIELD",
+                str(fixture),
+                "every diagnostic must contain a non-empty rule_id",
             )
+        )
 
     if status == "pass" and not data.get("authorizes"):
         findings.append(
@@ -141,6 +242,38 @@ def validate_result_fixture(skill_root: Path, fixture: Path) -> dict[str, Any]:
                 "pass result must bound what it does not authorize",
             )
         )
+    if status == "pass" and diagnostics:
+        findings.append(
+            finding("VDD-RESULT-STATUS", str(fixture), "pass result cannot contain diagnostics")
+        )
+    if status in {"fail", "blocked", "incomplete"}:
+        if data.get("authorizes"):
+            findings.append(
+                finding(
+                    "VDD-RESULT-AUTHORITY",
+                    str(fixture),
+                    f"{status} result cannot authorize a transition",
+                )
+            )
+        if not diagnostics:
+            findings.append(
+                finding(
+                    "VDD-RESULT-STATUS",
+                    str(fixture),
+                    f"{status} result must contain a diagnostic",
+                )
+            )
+        if isinstance(checks_value, list) and not any(
+            isinstance(check, dict) and check.get("status") in {"fail", "skip"}
+            for check in checks_value
+        ):
+            findings.append(
+                finding(
+                    "VDD-RESULT-CHECK",
+                    str(fixture),
+                    f"{status} result must contain a fail or skip check",
+                )
+            )
 
     return result(findings, checks)
 
@@ -159,13 +292,13 @@ def validate_trace(skill_root: Path, fixture: Path) -> dict[str, Any]:
         if not raw.strip():
             continue
         try:
-            event = json.loads(raw)
-        except json.JSONDecodeError as exc:
+            event = parse_json(raw)
+        except (json.JSONDecodeError, ValueError) as exc:
             findings.append(
                 finding(
                     "VDD-COMPLIANCE-PARSE",
                     f"{fixture}:{line_number}",
-                    f"invalid JSON: {exc.msg}",
+                    f"invalid JSON: {exc.msg if isinstance(exc, json.JSONDecodeError) else exc}",
                 )
             )
             continue
@@ -181,7 +314,10 @@ def validate_trace(skill_root: Path, fixture: Path) -> dict[str, Any]:
         events.append(event)
 
     seqs = [event.get("seq") for event in events]
-    if any(not isinstance(value, int) or value <= 0 for value in seqs):
+    if any(
+        not isinstance(value, int) or isinstance(value, bool) or value <= 0
+        for value in seqs
+    ):
         findings.append(
             finding("VDD-COMPLIANCE-SEQUENCE", str(fixture), "seq values must be positive integers")
         )
@@ -246,6 +382,11 @@ def validate_scenarios(skill_root: Path, fixture: Path) -> dict[str, Any]:
         data = load_json(fixture)
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         return result([finding("VDD-SCENARIO-PARSE", str(fixture), str(exc))], checks)
+    if not isinstance(data, dict):
+        return result(
+            [finding("VDD-SCENARIO-PARSE", str(fixture), "scenario fixture must be a JSON object")],
+            checks,
+        )
 
     if data.get("schema_version") != "vdd.skill-scenarios.v1":
         findings.append(
