@@ -1,13 +1,13 @@
 ---
 name: vdd-execution-plan
-description: Create, restructure, or repair execution-plan document directories under strict Verification-Driven Development (VDD). Use when the user asks to create a VDD implementation plan, verification-driven execution plan, plan directory, executable contract/validator/behavior-slice workflow, or when the prompt names an existing execution-plan directory that must be audited and repaired across all Markdown, schemas, fixtures, validators, tests, ledgers, and source-coverage artifacts.
+description: Clarify requirements before creating, restructuring, or repairing execution-plan document directories under strict Verification-Driven Development (VDD). Use when the user asks to create a VDD implementation plan, verification-driven execution plan, plan directory, executable contract/validator/behavior-slice workflow, or when the prompt names an existing execution-plan directory that must be audited and repaired across all Markdown, schemas, fixtures, validators, tests, ledgers, and source-coverage artifacts.
 ---
 
 # VDD Execution Plan
 
 Build execution plans in which executable verification controls development. Do not treat a plan as VDD merely because it contains testing sections.
 
-Before acting, read [references/strict-vdd-standard.md](references/strict-vdd-standard.md) completely. Apply repository instructions and more specific nested instructions first.
+Before acting, read [references/strict-vdd-standard.md](references/strict-vdd-standard.md) and [references/clarification-gate.md](references/clarification-gate.md) completely. Apply repository instructions and more specific nested instructions first.
 
 When maintaining or evaluating this Skill itself, also read [references/skill-compliance-protocol.md](references/skill-compliance-protocol.md) and use `scripts/validate_skill_contract.py`.
 
@@ -34,9 +34,24 @@ Use create mode when the user asks for a new plan or names a target that does no
 
 If the named target is ambiguous between a file and directory, inspect local context first. Ask only when choosing would materially alter authority or overwrite unrelated work.
 
+## Complete the pre-writing clarification gate
+
+For create and repair modes, complete the gate in [references/clarification-gate.md](references/clarification-gate.md) before writing or modifying the target plan, schemas, fixtures, validators, tests, or product code. Pure read-only review does not trigger this write gate.
+
+1. Load authority and inspect the current state read-only. Find discoverable answers instead of asking the user.
+2. Persist clarification state outside the target plan with `scripts/clarification_state.py` under the repository evidence root, normally `logs/vdd-clarifications/<target-slug>/<run-id>/`. Coordination uses one repository-canonical target registry and cross-process lock independent of the selected evidence root; multiple local Codex sessions must resume the same active target run.
+3. Discuss unresolved boundaries in dependency order. Each question round normally contains at least five same-level questions, stable `CQ-NNN` identities, a recommendation per question, and a confidence assessment. Fewer questions require an explicit same-level exhaustion reason; never invent filler.
+4. Continue until the user explicitly states both that no further clarification is needed and that writing may begin. Agreement, encouragement, urgency, a high confidence score, or an initial prompt that pre-authorizes writing is not an exit.
+5. Fail closed in headless mode. A caller may relay questions and resume the same run, but it may not simulate user confirmation or select a fast/express path.
+6. Recheck authority and target hashes before writing. Invalidate the exit and reopen affected questions when relevant inputs changed.
+
+The LLM may suggest ending clarification only at confidence `>= 90`, with no open blockers and all required boundary dimensions grounded. The user remains the only exit authority. If the user explicitly exits with blockers still open, writing may begin only in `draft`; clarification exit never proves `plan-ready`.
+
 ## Establish authority before writing
 
-1. Read the repository routing instructions, current-state sources, standards indexes, architecture/ADR indexes, and relevant recovery files.
+After the clarification gate exits, bind the confirmed boundary snapshot to the plan authority:
+
+1. Re-read the repository routing instructions, current-state sources, standards indexes, architecture/ADR indexes, and relevant recovery files needed by the confirmed scope.
 2. Inspect the target or neighboring execution plans without blind-scanning unrelated documentation.
 3. Identify the approved intent source, current-state authority, durable standards, protected paths, downstream consumers, and non-goals. If BMad artifacts exist, inherit `SPEC.md`/companions/`.memlog.md`, stable `CAP-N`, `ARCHITECTURE-SPINE.md` `AD-n`, FR/NFR/UX-DR coverage, stories, and baseline commits without duplicating their authority.
 4. Check Git status. Preserve unrelated user changes and never rewrite generated history.
@@ -122,7 +137,7 @@ Create one version-controlled composite entry such as `tools/validate_all.py`. I
 - never live only under `logs/`;
 - never claim implementation completion from plan consistency.
 
-Its authorizing output must use a versioned result envelope with run/predicate/status, candidate/current/source hashes, validator version, rule-level checks, diagnostics, `authorizes`, and `does_not_authorize`. A `pass` with mismatched hashes, skipped required checks, or unnamed authority is invalid.
+Its authorizing output must use a versioned result envelope with run/predicate/status, candidate/current/source hashes, validator version, rule-level checks, diagnostics, `authorizes`, and `does_not_authorize`. A `pass` with mismatched hashes, skipped required checks, an unregistered predicate, or authority sets that differ from the predicate's exact machine contract is invalid.
 
 Do not build a keyword-count validator. Parse the actual contracts and prove both valid and invalid fixtures. Test the validator by mutating required books, owners, phases, schemas, evidence, state transitions, hashes, and failure classifications.
 

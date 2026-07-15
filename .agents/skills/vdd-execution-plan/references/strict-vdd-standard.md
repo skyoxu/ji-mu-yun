@@ -67,6 +67,14 @@ Repairs must not rewrite prior failures. Start a new run when target hashes chan
 
 ## 3. Authority, intent kernels, and executable contracts
 
+### Pre-writing clarification authority
+
+For an interactive Skill that creates or repairs a VDD plan, inspect approved sources and current state read-only before asking the user to resolve remaining boundaries. Do not mutate the target plan or implementation until the user explicitly ends clarification after seeing the current boundary summary. Model confidence, an initial pre-authorization, urgency, generic agreement, or a headless caller assertion is not user exit authority.
+
+Clarification exit authorizes writing only. It does not resolve open blockers, prove plan readiness, authorize a phase, or accept implementation. If blockers remain when the user ends clarification, the candidate stays `draft`. Relevant authority or target changes invalidate the prior exit attestation and reopen affected questions.
+
+Persist resumable clarification state outside the target plan and minimize it: stable question IDs, confirmed boundaries, non-goals, conflicts, open/blocking items, authority hashes, per-round confidence and question-count evidence, and an explicit exit attestation. Treat that attestation as interaction evidence, not mechanical proof of human identity unless trusted runtime events independently establish it.
+
 Start from one approved intent kernel. When no durable kernel exists, define:
 
 - why the change exists;
@@ -158,7 +166,7 @@ Every authorizing composite result should use a versioned machine envelope with 
 }
 ```
 
-A `pass` is invalid when candidate and current candidate hashes differ, any required check is missing/non-pass, authorization is unnamed, or higher authority is unbounded. A fresh process exit without a valid envelope is a command result, not a readiness result.
+A `pass` is invalid when candidate and current candidate hashes differ, any required check is missing/non-pass, authorization is unnamed, or higher authority is unbounded. The machine contract must map each supported predicate to its exact `authorizes` and `does_not_authorize` sets. An unregistered predicate, missing exclusion, additional or duplicate authority, or overlap between the sets is invalid. For `plan_ready`, the only authorization is `plan-ready`, and the result must explicitly exclude `phase-authorized`, `implementation-accepted`, and `release-ready`. A fresh process exit without a valid envelope is a command result, not a readiness result.
 
 ### Validator location and identity
 

@@ -1426,6 +1426,9 @@ def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manife
         current_identity = process_creation_identity(args.pid)
         if current_identity is None or current_identity != lease.get("processIdentity"):
             raise BootstrapError(f"PID identity does not own process lease {args.operation_id}")
+        raise BootstrapError(
+            f"Process lease {args.operation_id} cannot be released while PID {args.pid} is still alive; reattach or poll until it exits"
+        )
     lease["state"] = args.state
     lease["updatedAt"] = utc_now()
     if args.note:
@@ -1629,6 +1632,8 @@ def candidate_reason(candidate: Any, manifest: dict[str, Any], repository_root: 
     for key in ("severityRationale", "authorityOwner", "consumer", "validatorRef"):
         if not isinstance(candidate.get(key), str) or not candidate[key].strip():
             return "schema_invalid", f"{key} is required"
+        if normalize_placeholder_text(candidate[key]) in PLACEHOLDER_TEXT_VALUES:
+            return "schema_invalid", f"{key} must be concrete, not placeholder-equivalent"
     return None, ""
 
 

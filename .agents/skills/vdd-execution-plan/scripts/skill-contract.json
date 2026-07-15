@@ -1,16 +1,22 @@
 {
-  "schema_version": "vdd.skill-contract.v1",
+  "schema_version": "vdd.skill-contract.v2",
   "required_files": [
     "SKILL.md",
     "agents/openai.yaml",
+    "references/clarification-gate.md",
     "references/strict-vdd-standard.md",
     "references/skill-compliance-protocol.md",
+    "scripts/clarification_state.py",
     "scripts/skill-contract.json",
+    "scripts/fixtures/clarification-state-pass.json",
+    "scripts/fixtures/clarification-cases.json",
     "scripts/fixtures/validation-result-pass.json",
     "scripts/fixtures/validation-result-stale.json",
     "scripts/fixtures/compliance-scenarios.json",
     "scripts/fixtures/compliance-trace-pass.jsonl",
     "scripts/fixtures/compliance-trace-implementation-first.jsonl",
+    "scripts/fixtures/compliance-trace-write-before-clarification.jsonl",
+    "scripts/tests/test_clarification_state_concurrency.py",
     "scripts/tests/test_validate_skill_contract.py",
     "scripts/validate_skill_contract.py"
   ],
@@ -18,6 +24,7 @@
     "SKILL.md": [
       "# VDD Execution Plan",
       "## Select the mode",
+      "## Complete the pre-writing clarification gate",
       "## Establish authority before writing",
       "## Build the VDD control chain",
       "## Put verification in the control position",
@@ -29,12 +36,24 @@
     "references/strict-vdd-standard.md": [
       "# Strict VDD Standard",
       "## 3. Authority, intent kernels, and executable contracts",
+      "### Pre-writing clarification authority",
       "## 4. Specification deltas and drift control",
       "## 5. Validator control and result envelope",
       "## 7. Counterexamples, diagnostics, repair, and re-entry",
       "## 8. Evidence, freshness, and authority levels",
       "## 10. BMad interoperability",
       "## 13. Assessment rubric"
+    ],
+    "references/clarification-gate.md": [
+      "# Pre-writing Clarification Gate",
+      "## Read-only discovery",
+      "## Boundary dimensions",
+      "## Question rounds",
+      "## Confidence and exit",
+      "## Persistence and recovery",
+      "## State commands",
+      "## Headless and stale-state handling",
+      "## Write boundary"
     ],
     "references/skill-compliance-protocol.md": [
       "# Skill Compliance Protocol",
@@ -47,9 +66,18 @@
   },
   "required_links": {
     "SKILL.md": [
+      "references/clarification-gate.md",
       "references/strict-vdd-standard.md",
       "references/skill-compliance-protocol.md",
+      "scripts/clarification_state.py",
       "scripts/validate_skill_contract.py"
+    ],
+    "references/clarification-gate.md": [
+      "scripts/clarification_state.py",
+      "scripts/fixtures/clarification-state-pass.json"
+    ],
+    "agents/openai.yaml": [
+      "$vdd-execution-plan"
     ]
   },
   "validation_result": {
@@ -78,6 +106,205 @@
       "pass",
       "fail",
       "skip"
+    ],
+    "authority_by_predicate": {
+      "plan_ready": {
+        "authorizes": [
+          "plan-ready"
+        ],
+        "does_not_authorize": [
+          "phase-authorized",
+          "implementation-accepted",
+          "release-ready"
+        ]
+      }
+    }
+  },
+  "clarification": {
+    "schema_version": "vdd.clarification-state.v1",
+    "required_state_fields": [
+      "schema_version",
+      "run_id",
+      "mode",
+      "target",
+      "target_slug",
+      "status",
+      "interaction_mode",
+      "authority_hash",
+      "current_authority_hash",
+      "target_hash",
+      "current_target_hash",
+      "confirmed_boundaries",
+      "non_goals",
+      "conflicts",
+      "open_items",
+      "open_blocker_count",
+      "questions",
+      "rounds",
+      "exit_attestation",
+      "write_disposition",
+      "updated_at"
+    ],
+    "required_round_fields": [
+      "round_id",
+      "question_ids",
+      "same_level_exhausted",
+      "same_level_exhausted_reason",
+      "confidence",
+      "blocker_count",
+      "dimension_scores",
+      "dimension_evidence",
+      "recommend_exit",
+      "analysis",
+      "user_turn_id"
+    ],
+    "required_question_fields": [
+      "id",
+      "status",
+      "blocking",
+      "summary",
+      "recommendation",
+      "basis"
+    ],
+    "allowed_question_fields": [
+      "id",
+      "status",
+      "blocking",
+      "summary",
+      "recommendation",
+      "basis",
+      "owner",
+      "recheck_condition"
+    ],
+    "required_exit_fields": [
+      "actor",
+      "explicit_no_more_clarification",
+      "explicit_write_permission",
+      "user_response_hash",
+      "user_turn_id",
+      "summary",
+      "confidence",
+      "authority_hash",
+      "target_hash",
+      "draft_only",
+      "closed_at"
+    ],
+    "allowed_modes": [
+      "create",
+      "repair"
+    ],
+    "allowed_statuses": [
+      "active",
+      "closed",
+      "invalidated",
+      "superseded"
+    ],
+    "allowed_invalidation_source_statuses": [
+      "active",
+      "closed"
+    ],
+    "allowed_supersede_source_statuses": [
+      "active",
+      "closed",
+      "invalidated"
+    ],
+    "evidence_target_overlap_policy": "disjoint",
+    "maximum_active_runs_per_target": 1,
+    "target_identity_case_policy": "windows-case-insensitive",
+    "state_mutation_lock_policy": "repository-canonical-target-scoped-cross-process",
+    "target_registry_policy": "repository-canonical-independent-of-evidence-root",
+    "transition_commit_policy": "recoverable-pending-idempotent-event",
+    "sensitive_value_families": [
+      "bearer",
+      "openai",
+      "github-classic",
+      "github-fine-grained",
+      "aws-access-key",
+      "google-api-key",
+      "slack-token",
+      "private-key"
+    ],
+    "required_command_rule_ids": [
+      "VDD-CLARIFICATION-ACTIVE-RUN",
+      "VDD-CLARIFICATION-EVIDENCE-OVERLAP",
+      "VDD-CLARIFICATION-QUESTION-TRANSITION",
+      "VDD-CLARIFICATION-STATE-TRANSITION"
+    ],
+    "allowed_interaction_modes": [
+      "interactive",
+      "headless"
+    ],
+    "allowed_question_statuses": [
+      "open",
+      "answered",
+      "deferred",
+      "superseded",
+      "reopened"
+    ],
+    "allowed_question_bases": [
+      "gap",
+      "conflict",
+      "change",
+      "reopened",
+      "confirmed_authority"
+    ],
+    "reopenable_question_statuses": [
+      "answered",
+      "deferred"
+    ],
+    "open_blocker_statuses": [
+      "open",
+      "reopened",
+      "deferred"
+    ],
+    "question_status_transitions": {
+      "open": [
+        "open",
+        "answered",
+        "deferred",
+        "superseded"
+      ],
+      "answered": [
+        "answered",
+        "superseded"
+      ],
+      "deferred": [
+        "deferred",
+        "answered",
+        "superseded"
+      ],
+      "reopened": [
+        "reopened",
+        "answered",
+        "deferred",
+        "superseded"
+      ],
+      "superseded": [
+        "superseded"
+      ]
+    },
+    "dimension_keys": [
+      "goal_scope_non_goals",
+      "authority_current_state",
+      "constraints_compatibility",
+      "acceptance_evidence",
+      "dependencies_risks_recovery"
+    ],
+    "minimum_questions_per_round": 5,
+    "required_case_ids": [
+      "pass",
+      "same-level-exhausted-pass",
+      "too-few-questions",
+      "headless-close",
+      "model-auto-exit",
+      "generic-agreement",
+      "pre-summary-exit",
+      "confidence-score-mismatch",
+      "premature-exit-recommendation",
+      "deferred-without-owner",
+      "stale-authority",
+      "blocker-with-normal-write",
+      "repair-reasks-confirmed-authority"
     ]
   },
   "compliance": {
@@ -90,6 +317,9 @@
     "ordered_steps": [
       "select_mode",
       "load_authority",
+      "inspect_current_state",
+      "clarify_boundaries",
+      "receive_clarification_exit",
       "snapshot_baseline",
       "define_contract",
       "prove_validator_red",

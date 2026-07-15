@@ -132,7 +132,7 @@ CLI 会重验 Git revision、artifact hashes、profile/context graph、preflight
 - 三层都完成后，用户要求完整 review 时可以继续执行 gate；仅要求 prepare 或 reviewer 输出时应在对应阶段停止；
 - 每个 prompt 必须包含本角色 rubric、profile 专用误报抑制清单和 untrusted-content boundary；缺少任一项时拒绝启动；
 - 每个 reviewer 保存输出后必须重新读取自己的 JSON，并执行 `validate-layer --run-dir <run-dir> --layer <role>`；只有命令零退出才算该层完成。失败时由同一 reviewer 修正自己的输出或将该层保留为失败，主会话不得代修。
-- 使用 `codex exec` 时，每个 probe/reviewer/verifier 必须先用 `process-lease --action acquire` 记录稳定 operation ID、role 与真实且当前存活的子进程 PID；CLI 在 acquire 时捕获 OS process identity。结束后必须携带同一 PID 执行 `--action release --state completed|failed`：省略 PID、PID 不同或该 PID 仍存活但 identity 已变化时 fail closed；原进程正常退出后允许以已记录的原 PID 收口。reviewer operation 固定为 `reviewer:<role>`，verifier 固定为 `verifier`。工具等待超时但 PID 仍 alive 时只能 inspect/reattach/poll，不得启动第二个相同 operation；已退出 lease 由 inspect/后续 acquire 标 stale 后才允许重新 acquire。
+- 使用 `codex exec` 时，每个 probe/reviewer/verifier 必须先用 `process-lease --action acquire` 记录稳定 operation ID、role 与真实且当前存活的子进程 PID；CLI 在 acquire 时捕获 OS process identity。结束后必须携带同一 PID 执行 `--action release --state completed|failed`：省略 PID、PID 不同或该 PID 仍存活但 identity 已变化时 fail closed；原进程正常退出后允许以已记录的原 PID 收口。reviewer operation 固定为 `reviewer:<role>`，verifier 固定为 `verifier`。工具等待超时但 PID 仍 alive 时只能 inspect/reattach/poll，不得启动第二个相同 operation；已退出 lease 由 inspect/后续 acquire 标 stale 后才允许重新 acquire。 Release with completed, failed, or stale is rejected while the recorded PID remains alive; reattach or poll until it exits.
 - 使用 `codex exec` 时，通过 UTF-8 stdin 传入 prompt（`codex exec ... -`），每个角色使用独立 ephemeral 进程；启动审查前必须用相同 provider/model/reasoning 做一次终端与 workspace-write 探针。正常命令必须显式传入 `-m gpt-5.6-terra -c model_reasoning_effort=<manifest-role-value>`，不能依赖全局默认值。首选探针失败后才可依次尝试 `gpt-5.5`、`gpt-5.4`，并保存失败模型及原因；`gpt-5.6-sol` 禁止用于 reviewer/verifier。探针失败、超时、认证失败、非零退出或缺少输出均按该层 incomplete 处理，主会话不得代修 JSON。
 
 Process lease 示例：
@@ -163,7 +163,7 @@ py -3 -c "from pathlib import Path; print(Path(r'<run-dir>/reviewer-prompts/blin
 2. 使用用户选择的 reviewer/session 手工执行；
 3. 保留 template 中所有绑定字段；逐个读取 manifest artifact 后，将其从 `coverage.missingArtifacts` 移到 `coverage.readArtifacts`；只有 required artifact 全部已读才把 `status` 改为 `completed`；
 4. 没有 finding 时保存合法空数组，不删除输出文件；
-5. 不在 reviewer 输出中添加 routeVersion、status、fingerprint 或 unverified disposition，这些字段由 gateway 拥有。
+5. Preserve the manifest-bound routeVersion; update the template status to completed or failed; do not add gateway-owned fingerprint, unverified disposition, or other gateway/verifier-generated fields.
 6. 禁止把“至少输出十条”或任何固定 finding 数量作为完成条件；固定数量最多只能用于首轮内部假设探索，最终只保存通过事实门禁的 candidate，零 candidate 合法。
 7. 如果 assigned role 所需 authority/context 不在 manifest，禁止越界读取；将 `status` 设为 `failed`、填写 `failureReason`、保持 candidates 为空，由 gate 输出 incomplete，并用包含所需 context 的新 scope 重新 prepare。
 

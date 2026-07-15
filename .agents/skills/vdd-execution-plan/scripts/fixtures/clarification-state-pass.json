@@ -1,0 +1,112 @@
+{
+  "schema_version": "vdd.clarification-state.v1",
+  "run_id": "clarification-pass-001",
+  "mode": "create",
+  "target": "execution-plans/example-plan",
+  "target_slug": "example-plan-12345678",
+  "status": "closed",
+  "interaction_mode": "interactive",
+  "authority_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "current_authority_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "target_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "current_target_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "confirmed_boundaries": [
+    "Create mode covers the complete execution-plan directory."
+  ],
+  "non_goals": [
+    "The clarification gate does not prove implementation completion."
+  ],
+  "conflicts": [],
+  "open_items": [],
+  "open_blocker_count": 0,
+  "questions": [
+    {
+      "id": "CQ-001",
+      "status": "answered",
+      "blocking": false,
+      "summary": "Confirm the goal and success outcome.",
+      "recommendation": "Bind the goal to an observable success signal.",
+      "basis": "gap"
+    },
+    {
+      "id": "CQ-002",
+      "status": "answered",
+      "blocking": false,
+      "summary": "Confirm scope and non-goals.",
+      "recommendation": "Exclude unrelated implementation work.",
+      "basis": "gap"
+    },
+    {
+      "id": "CQ-003",
+      "status": "answered",
+      "blocking": false,
+      "summary": "Confirm authority and current state.",
+      "recommendation": "Use repository sources instead of assistant memory.",
+      "basis": "gap"
+    },
+    {
+      "id": "CQ-004",
+      "status": "answered",
+      "blocking": false,
+      "summary": "Confirm acceptance and failure evidence.",
+      "recommendation": "Require executable acceptance identities.",
+      "basis": "gap"
+    },
+    {
+      "id": "CQ-005",
+      "status": "answered",
+      "blocking": false,
+      "summary": "Confirm dependencies and recovery.",
+      "recommendation": "Order work by predecessor evidence.",
+      "basis": "gap"
+    }
+  ],
+  "rounds": [
+    {
+      "round_id": "CR-001",
+      "question_ids": [
+        "CQ-001",
+        "CQ-002",
+        "CQ-003",
+        "CQ-004",
+        "CQ-005"
+      ],
+      "same_level_exhausted": false,
+      "same_level_exhausted_reason": null,
+      "confidence": 96,
+      "blocker_count": 0,
+      "dimension_scores": {
+        "goal_scope_non_goals": 20,
+        "authority_current_state": 20,
+        "constraints_compatibility": 19,
+        "acceptance_evidence": 19,
+        "dependencies_risks_recovery": 18
+      },
+      "dimension_evidence": {
+        "goal_scope_non_goals": "The goal, complete target scope, and non-goals are confirmed.",
+        "authority_current_state": "Repository authority and current state were inspected read-only.",
+        "constraints_compatibility": "Protected boundaries and compatibility expectations are explicit.",
+        "acceptance_evidence": "Executable acceptance and failure evidence are identified.",
+        "dependencies_risks_recovery": "Dependencies, risks, and recovery boundaries are identified."
+      },
+      "recommend_exit": true,
+      "analysis": "All five boundary dimensions are grounded and no blockers remain.",
+      "user_turn_id": "user-turn-001"
+    }
+  ],
+  "exit_attestation": {
+    "actor": "user",
+    "explicit_no_more_clarification": true,
+    "explicit_write_permission": true,
+    "user_response_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "user_turn_id": "user-turn-002",
+    "summary": "No further clarification is needed and writing may begin.",
+    "confidence": 96,
+    "authority_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "target_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "draft_only": false,
+    "closed_at": "2026-07-14T12:00:00Z"
+  },
+  "write_disposition": "normal",
+  "updated_at": "2026-07-14T12:00:00Z"
+}

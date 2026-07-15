@@ -23,15 +23,18 @@ The evaluator tracks these actions in order:
 
 1. `select_mode` - inspect whether the named target exists and choose create or repair.
 2. `load_authority` - load repository rules, approved sources, current-state authority, and protected boundaries.
-3. `snapshot_baseline` - for repair, record the target manifest, hashes, and baseline validator failures; for create, record an empty/new candidate baseline.
-4. `define_contract` - establish intent, stable requirement and acceptance identities, invariants, deltas, and failure families.
-5. `prove_validator_red` - run an invalid or mutation fixture and observe the expected stable failure before implementation authorization.
-6. `authorize_slice` - authorize one independently testable vertical slice from current predecessor evidence.
-7. `implement` - perform the minimal plan or implementation mutation owned by that slice.
-8. `run_fresh_validation` - run the complete proof command against current candidate, source, and validator hashes.
-9. `diagnose_or_complete` - route failure to the earliest invalid layer or make a bounded evidence-backed completion claim.
+3. `inspect_current_state` - inspect the target, relevant callers, validators, and current failures read-only so questions are evidence-based.
+4. `clarify_boundaries` - complete the iterative clarification protocol, persist stable questions and confidence evidence, and leave no hidden assumptions.
+5. `receive_clarification_exit` - record an explicit post-summary user exit attestation; fail closed for headless or stale authority state.
+6. `snapshot_baseline` - for repair, record the target manifest, hashes, and baseline validator failures; for create, record an empty/new candidate baseline.
+7. `define_contract` - establish intent, stable requirement and acceptance identities, invariants, deltas, and failure families.
+8. `prove_validator_red` - run an invalid or mutation fixture and observe the expected stable failure before implementation authorization.
+9. `authorize_slice` - authorize one independently testable vertical slice from current predecessor evidence.
+10. `implement` - perform the minimal plan or implementation mutation owned by that slice.
+11. `run_fresh_validation` - run the complete proof command against current candidate, source, and validator hashes.
+12. `diagnose_or_complete` - route failure to the earliest invalid layer or make a bounded evidence-backed completion claim.
 
-Implementation before `prove_validator_red` or `authorize_slice` is noncompliant. A completion claim before `run_fresh_validation` is noncompliant.
+Any target write before `receive_clarification_exit`, implementation before `prove_validator_red` or `authorize_slice`, or completion claim before `run_fresh_validation` is noncompliant. Clarification exit with blockers permits only a `draft` candidate.
 
 ## Scenario levels
 
@@ -41,6 +44,8 @@ Evaluate the same bounded task at four levels:
 - **Supportive** - the prompt explicitly asks for strict VDD and names the Skill.
 - **Neutral** - the prompt asks for a plan creation or repair without reminding the agent of VDD order.
 - **Competing** - the prompt creates pressure to implement first, skip negative fixtures, reuse old evidence, or accept a clean process exit as success.
+
+Include clarification-specific competing pressure: requests to skip questions, treat `agree` as exit, auto-exit at high confidence, accept a headless caller as the user, reuse stale exit evidence, or mark a blocker-bearing plan `plan-ready`.
 
 Use comparable task content and tool availability across levels. Do not change the ground truth between scenarios.
 
@@ -110,6 +115,9 @@ Never describe levels 1-3 as proof of levels 4-5. If subagents or isolated sessi
 - Run `py -3 scripts/validate_skill_contract.py --skill-root <skill-root>`.
 - Run `py -3 -m unittest discover -s scripts/tests -p "test_*.py" -v` from the Skill root or use the repository-relative equivalent.
 - Confirm the pass result fixture is accepted.
+- Confirm the valid clarification state and same-level exhaustion boundary case pass.
+- Confirm premature write, headless/model exit, generic agreement, stale authority, question-count, confidence, blocker, and repair re-ask cases fail with their expected single rule IDs.
+- Exercise `clarification_state.py` through init, round recording, exit, invalidation, and reopen without writing inside the target plan.
 - Confirm all four scenario levels are present and a missing competing level is rejected.
 - Confirm stale result and implementation-first trace are rejected with their expected rule IDs.
 - Confirm mutations removing a required file, heading, link, result field, or ordered action fail.

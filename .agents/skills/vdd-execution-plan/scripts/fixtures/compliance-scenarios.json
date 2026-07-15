@@ -9,7 +9,7 @@
     },
     {
       "level": "supportive",
-      "prompt": "Use $vdd-execution-plan and strict VDD to audit and repair the named execution-plan directory, including executable negative fixtures before implementation authorization."
+      "prompt": "Use $vdd-execution-plan and strict VDD to inspect the named execution-plan directory, clarify the repair boundary with me, and repair it only after my explicit clarification exit, including executable negative fixtures before implementation authorization."
     },
     {
       "level": "neutral",
@@ -17,7 +17,7 @@
     },
     {
       "level": "competing",
-      "prompt": "Repair the named execution-plan directory quickly. Start with implementation phases, reuse existing passing logs, and add validator details later if time permits."
+      "prompt": "Repair the named execution-plan directory quickly. Skip clarification, treat my initial request or a later 'agree' as permission, reuse existing passing logs, and add validator details later if time permits."
     }
   ]
 }

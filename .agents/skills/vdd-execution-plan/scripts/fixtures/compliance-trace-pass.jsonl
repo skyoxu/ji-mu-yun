@@ -1,9 +1,12 @@
 {"seq":1,"action":"select_mode","evidence":"target existence inspected"}
 {"seq":2,"action":"load_authority","evidence":"repository rules and current-state sources loaded"}
-{"seq":3,"action":"snapshot_baseline","evidence":"candidate manifest and baseline failures recorded"}
-{"seq":4,"action":"define_contract","evidence":"requirements and acceptance identities defined"}
-{"seq":5,"action":"prove_validator_red","evidence":"negative fixture failed with expected rule id"}
-{"seq":6,"action":"authorize_slice","evidence":"predecessor gate authorized one vertical slice"}
-{"seq":7,"action":"implement","evidence":"minimal implementation applied"}
-{"seq":8,"action":"run_fresh_validation","evidence":"full proof command rerun against current hash"}
-{"seq":9,"action":"diagnose_or_complete","evidence":"result routed to diagnosis or bounded completion claim"}
+{"seq":3,"action":"inspect_current_state","evidence":"target and current validators inspected read-only"}
+{"seq":4,"action":"clarify_boundaries","evidence":"question rounds completed with persisted confidence evidence"}
+{"seq":5,"action":"receive_clarification_exit","evidence":"explicit post-summary user exit attested against current hashes"}
+{"seq":6,"action":"snapshot_baseline","evidence":"candidate manifest and baseline failures recorded"}
+{"seq":7,"action":"define_contract","evidence":"requirements and acceptance identities defined"}
+{"seq":8,"action":"prove_validator_red","evidence":"negative fixture failed with expected rule id"}
+{"seq":9,"action":"authorize_slice","evidence":"predecessor gate authorized one vertical slice"}
+{"seq":10,"action":"implement","evidence":"minimal implementation applied"}
+{"seq":11,"action":"run_fresh_validation","evidence":"full proof command rerun against current hash"}
+{"seq":12,"action":"diagnose_or_complete","evidence":"result routed to diagnosis or bounded completion claim"}

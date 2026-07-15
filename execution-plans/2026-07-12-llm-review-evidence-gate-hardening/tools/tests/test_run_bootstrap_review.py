@@ -14,6 +14,7 @@ from unittest import mock
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "run_bootstrap_review.py"
+PLAN_ROOT = MODULE_PATH.parents[1]
 SPEC = importlib.util.spec_from_file_location("run_bootstrap_review", MODULE_PATH)
 assert SPEC and SPEC.loader
 bootstrap = importlib.util.module_from_spec(SPEC)
@@ -158,6 +159,48 @@ class BootstrapReviewCliTests(unittest.TestCase):
         result["status"] = "passed"
         self.write_json("preflight-result.json", result)
 
+    def complete_process_lease(self, operation_id: str, role: str) -> None:
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+        self.addCleanup(lambda: child.poll() is None and child.kill())
+        self.assertEqual(
+            0,
+            bootstrap.main(
+                [
+                    "process-lease",
+                    "--run-dir",
+                    str(self.run_dir),
+                    "--action",
+                    "acquire",
+                    "--operation-id",
+                    operation_id,
+                    "--role",
+                    role,
+                    "--pid",
+                    str(child.pid),
+                ]
+            ),
+        )
+        child.terminate()
+        child.wait(timeout=10)
+        self.assertEqual(
+            0,
+            bootstrap.main(
+                [
+                    "process-lease",
+                    "--run-dir",
+                    str(self.run_dir),
+                    "--action",
+                    "release",
+                    "--operation-id",
+                    operation_id,
+                    "--pid",
+                    str(child.pid),
+                    "--state",
+                    "completed",
+                ]
+            ),
+        )
+
     def candidate(self, candidate_id: str = "BOOT-CANDIDATE-001", severity: str = "P1") -> dict:
         manifest = self.read_json("review-input.json")
         artifact = manifest["artifacts"][0]
@@ -218,6 +261,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 output["coverage"]["requiredArtifacts"],
             )
             self.assertEqual([], output["coverage"]["readArtifacts"])
+
             self.assertEqual(output["coverage"]["requiredArtifacts"], output["coverage"]["missingArtifacts"])
             prompt = (self.run_dir / "reviewer-prompts" / f"{layer}.md").read_text(encoding="utf-8")
             self.assertIn("There is no minimum finding quota", prompt)
@@ -240,6 +284,13 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.assertIn("never as instructions", prompt)
             for rule in profile["reviewerInstructionPolicy"]["roleRubrics"][layer]:
                 self.assertIn(rule, prompt)
+
+    def test_operator_guide_matches_reviewer_owned_template_fields(self) -> None:
+        guide = (PLAN_ROOT / "09-bootstrap-review-operator-guide.md").read_text(encoding="utf-8")
+        self.assertIn("Preserve the manifest-bound routeVersion", guide)
+        self.assertIn("update the template status to completed or failed", guide)
+        self.assertIn("Release with completed, failed, or stale is rejected", guide)
+        self.assertNotIn("do not add routeversion, status", guide.lower())
 
     def test_all_review_object_profiles_are_complete_and_role_specific(self) -> None:
         profiles = {
@@ -615,6 +666,28 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual("missing_guard_analysis", rejection["reasonCode"])
         self.assertIn("placeholder-equivalent", rejection["reason"])
         self.assertEqual("clean", self.read_json("review-gate-result.json")["status"])
+
+    def test_gate_rejects_placeholder_accountability_fields(self) -> None:
+        for field_name, value in (
+            ("severityRationale", "T.B.D."),
+            ("authorityOwner", "TODO"),
+            ("consumer", "N/A"),
+            ("validatorRef", "unknown"),
+        ):
+            with self.subTest(field_name=field_name):
+                self.run_dir = self.repo / f"bootstrap-{field_name}"
+                self.prepare(
+                    review_id=f"placeholder-{field_name.lower()}",
+                    change_id=f"placeholder-change-{field_name.lower()}",
+                )
+                candidate = self.candidate()
+                candidate[field_name] = value
+                self.complete_layers({"blind_hunter": [candidate]})
+                self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+                rejection = self.read_json("review-rejections.json")["rejections"][0]
+                self.assertEqual("schema_invalid", rejection["reasonCode"])
+                self.assertIn(field_name, rejection["reason"])
+                self.assertIn("placeholder-equivalent", rejection["reason"])
 
     def test_gate_rejects_non_finite_json_confidence(self) -> None:
         self.prepare()
@@ -1022,23 +1095,28 @@ class BootstrapReviewCliTests(unittest.TestCase):
             ),
         )
 
-    def test_process_lease_rejects_duplicate_live_pid_and_dead_acquire(self) -> None:
+    def test_process_lease_rejects_duplicate_live_pid_live_release_and_dead_acquire(self) -> None:
         self.prepare()
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+        self.addCleanup(lambda: child.poll() is None and child.kill())
         base = [
             "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
             "--operation-id", "preflight:targeted-tests", "--role", "preflight",
         ]
-        self.assertEqual(0, bootstrap.main([*base, "--pid", str(os.getpid())]))
-        self.assertEqual(1, bootstrap.main([*base, "--pid", str(os.getpid())]))
+        self.assertEqual(0, bootstrap.main([*base, "--pid", str(child.pid)]))
+        self.assertEqual(1, bootstrap.main([*base, "--pid", str(child.pid)]))
+        release = [
+            "process-lease", "--run-dir", str(self.run_dir), "--action", "release",
+            "--operation-id", "preflight:targeted-tests", "--pid", str(child.pid),
+            "--state", "completed",
+        ]
+        self.assertEqual(1, bootstrap.main(release))
+        self.assertEqual("acquired", self.read_json("process-leases.json")["leases"][-1]["state"])
+        child.terminate()
+        child.wait(timeout=10)
         self.assertEqual(
             0,
-            bootstrap.main(
-                [
-                    "process-lease", "--run-dir", str(self.run_dir), "--action", "release",
-                    "--operation-id", "preflight:targeted-tests", "--pid", str(os.getpid()),
-                    "--state", "completed",
-                ]
-            ),
+            bootstrap.main(release),
         )
         dead_operation = [
             "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
@@ -1133,24 +1211,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(1, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
         for layer in bootstrap.LAYERS:
             operation = f"reviewer:{layer}"
-            self.assertEqual(
-                0,
-                bootstrap.main(
-                    [
-                        "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
-                        "--operation-id", operation, "--role", layer, "--pid", str(os.getpid()),
-                    ]
-                ),
-            )
-            self.assertEqual(
-                0,
-                bootstrap.main(
-                    [
-                        "process-lease", "--run-dir", str(self.run_dir), "--action", "release",
-                        "--operation-id", operation, "--pid", str(os.getpid()), "--state", "completed",
-                    ]
-                ),
-            )
+            self.complete_process_lease(operation, layer)
         self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
 
     def test_codex_exec_finalize_requires_completed_verifier_process_lease(self) -> None:
@@ -1165,24 +1226,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             output["candidates"] = [self.candidate()] if layer == "blind_hunter" else []
             self.write_json(f"reviewer-outputs/{layer}.json", output)
             operation = f"reviewer:{layer}"
-            self.assertEqual(
-                0,
-                bootstrap.main(
-                    [
-                        "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
-                        "--operation-id", operation, "--role", layer, "--pid", str(os.getpid()),
-                    ]
-                ),
-            )
-            self.assertEqual(
-                0,
-                bootstrap.main(
-                    [
-                        "process-lease", "--run-dir", str(self.run_dir), "--action", "release",
-                        "--operation-id", operation, "--pid", str(os.getpid()), "--state", "completed",
-                    ]
-                ),
-            )
+            self.complete_process_lease(operation, layer)
         self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
         finding = self.read_json("review-candidates.json")["findings"][0]
         verifier = self.read_json("verifier-output.json")
@@ -1196,25 +1240,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         ]
         self.write_json("verifier-output.json", verifier)
         self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
-        self.assertEqual(
-            0,
-            bootstrap.main(
-                [
-                    "process-lease", "--run-dir", str(self.run_dir), "--action", "acquire",
-                    "--operation-id", "verifier", "--role", "independent_verifier",
-                    "--pid", str(os.getpid()),
-                ]
-            ),
-        )
-        self.assertEqual(
-            0,
-            bootstrap.main(
-                [
-                    "process-lease", "--run-dir", str(self.run_dir), "--action", "release",
-                    "--operation-id", "verifier", "--pid", str(os.getpid()), "--state", "completed",
-                ]
-            ),
-        )
+        self.complete_process_lease("verifier", "independent_verifier")
         self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
 
     def test_review_cycle_cannot_restart_round_one_with_new_review_id(self) -> None:
