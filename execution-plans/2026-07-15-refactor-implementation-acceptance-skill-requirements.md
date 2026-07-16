@@ -3,11 +3,11 @@
 - Title: `run-refactor-implementation-acceptance` Skill 需求规格
 - Status: draft
 - Branch: 当前工作树
-- Git Head: d1bc716
+- Git Head: 28d31b5
 - Goal: 定义一个以验收条款为单位、按阶段顺序判断重构实施完成度的只读 Skill
 - Scope: Skill 的触发、输入、验收矩阵、阶段门禁、DoD 层级、输出和验证场景
-- Current step: 边界与manifest合同优化完成，等待实施确认
-- Last completed step: 已将companion校验归属新Skill finalize，并补齐多角色、删除、重命名和双快照hash合同
+- Current step: 原始语义来源覆盖合同优化完成，等待实施确认
+- Last completed step: 已冻结inventory attestation scope，并强制校验semantic source、派生工件和必要context的完整读取与hash绑定
 - Stop-loss: 本文件不创建或修改 Skill，不修改被验收重构目录，不执行 Bootstrap reviewer
 - Next action: 用户确认修订版后，使用 `skill-creator` 创建 Skill
 - Recovery command: `py -3 -c "from pathlib import Path; print(Path(r'execution-plans/2026-07-15-refactor-implementation-acceptance-skill-requirements.md').read_text(encoding='utf-8'))"`
@@ -117,6 +117,9 @@ Bootstrap Review 不负责创建实施验收矩阵。Bootstrap `clean` 也不能
 | `baseline_content_manifest_hash` | baseline内容manifest自身的hash |
 | `candidate_content_manifest_path` | 可展开审计的candidate内容manifest路径 |
 | `candidate_content_manifest_hash` | 候选全部受审内容的manifest hash |
+| `inventory_attestation_requirement` | `required\|not_required`，由当前授权范围是否消费semantic partition确定 |
+| `inventory_attestation_scope_path`、`inventory_attestation_scope_hash` | required时在auditor启动前冻结的原始source、派生工件和必要context scope；not_required时为`null` |
+| `inventory_attestation_scope_schema_path`、`inventory_attestation_scope_schema_hash` | 新Skill冻结并用于生成和校验attestation scope的schema身份 |
 | `inventory_attestation_path` | 正向inventory完整性证明的预期输出路径 |
 | `inventory_attestation_schema_path`、`inventory_attestation_schema_hash` | 新Skill冻结并用于finalize的attestation schema身份 |
 | `finding_acceptance_map_path` | Bootstrap finding映射sidecar的预期输出路径 |
@@ -156,7 +159,7 @@ candidate manifest表达baseline到candidate的完整受审集合与diff，包�
   "files": [
     {
       "change_type": "unchanged|added|modified|deleted|renamed|untracked",
-      "roles": ["implementation", "consumer", "authority", "test", "evidence"],
+      "roles": ["implementation", "consumer", "source", "authority", "test", "evidence"],
       "baseline_path": "old/path.cs",
       "candidate_path": "new/path.cs",
       "baseline_sha256": "sha256:...",
@@ -167,7 +170,7 @@ candidate manifest表达baseline到candidate的完整受审集合与diff，包�
 }
 ```
 
-`roles`必须是来自`implementation|consumer|authority|test|evidence`的非空去重数组，一个文件可以同时承担多个角色。字段条件规则为：
+`roles`必须是来自`implementation|consumer|source|authority|test|evidence`的非空去重数组，一个文件可以同时承担多个角色。原始语义来源使用`source`，解释其规范性语义的直接标准或ADR使用`authority`。字段条件规则为：
 
 - `unchanged`：两侧path和hash都存在，path相同且hash相同；
 - `modified`：两侧path和hash都存在，path相同且hash不同；
@@ -264,7 +267,39 @@ source inventory至少记录：
 
 `overallCompleteness`由所有partition按最弱结果计算；任何`incomplete`使整体为`incomplete`，任何未完成审计的`candidate`使整体最多为`candidate`。阶段授权只检查该阶段`consumed_partition_ids`实际消费的partitions，不能因无关partition仍为candidate而阻断，也不能用一个complete partition覆盖另一个candidate partition。
 
-当当前授权范围消费的partitions全部为`deterministic_complete`时，`inventory-attest`为`not_required`，不得为了流程整齐而额外启动语义auditor。只有至少一个被消费partition为`semantic_candidate`时，以下正向证明合同才启用。
+当当前授权范围消费的partitions全部为`deterministic_complete`时，`inventory_attestation_requirement=not_required`，scope和attestation路径/hash为`null`，不得为了流程整齐而额外启动语义auditor。只有至少一个被消费partition为`semantic_candidate`时，该字段才为`required`并启用以下正向证明合同。
+
+在启动auditor前，新Skill必须确定性生成并冻结`inventory-attestation-scope.json`：
+
+```json
+{
+  "schemaVersion": "inventory-attestation-scope.v1",
+  "acceptanceRunId": "...",
+  "acceptanceRunInputHash": "sha256:...",
+  "semanticPartitionIds": ["referenced-adrs"],
+  "requiredSourceArtifacts": [
+    {
+      "path": "docs/adr/example.md",
+      "sha256": "sha256:...",
+      "partitionIds": ["referenced-adrs"]
+    }
+  ],
+  "requiredDerivedArtifacts": [
+    {"path": "acceptance-source-inventory.json", "sha256": "sha256:..."},
+    {"path": "acceptance-source-clauses.json", "sha256": "sha256:..."},
+    {"path": "implementation-acceptance-matrix.json", "sha256": "sha256:..."}
+  ],
+  "requiredContextArtifacts": [
+    {
+      "path": "docs/standards/example.md",
+      "sha256": "sha256:...",
+      "reason": "Interprets normative terms used by docs/adr/example.md"
+    }
+  ]
+}
+```
+
+`requiredSourceArtifacts`必须等于当前被审计semantic partitions全部原始`source_refs`解析后的文件并集；目录、glob或仅有逻辑ID的引用必须在冻结前展开为具体文件和hash。`requiredContextArtifacts`只包含判断这些原始来源规范性语义所需、且由source、adapter或计划权威直接引用的context，不允许auditor临时扩大scope。原始source和必要context都必须作为candidate content manifest中的`source`或`authority`角色记录并使用相同path/hash；无法解析、缺hash或存在冲突时，scope为`incomplete`且不得启动auditor。
 
 `semantic_candidate`不得仅凭reviewer已读完文件或findings为空提升完整度。用户明确授权完整语义闭合后，新Skill必须通过自己的`inventory-attest`步骤启动一个隔离的`inventory_completeness_auditor`，产生版本化正向证明。它不是Bootstrap Acceptance Auditor，不修改Bootstrap prompt、profile、CLI、schema registry、reviewer output或finding合同，也不得产生另一套semantic findings；发现漏项时只在attestation的结构化缺口字段中给出`incomplete`结论：
 
@@ -280,10 +315,38 @@ source inventory至少记录：
   "auditorRole": "inventory_completeness_auditor",
   "auditorExecutionId": "...",
   "auditorPromptHash": "sha256:...",
-  "coverage": {
-    "requiredArtifacts": ["acceptance-source-inventory.json", "acceptance-source-clauses.json", "implementation-acceptance-matrix.json"],
-    "readArtifacts": ["acceptance-source-inventory.json", "acceptance-source-clauses.json", "implementation-acceptance-matrix.json"],
+  "attestationScopePath": "inventory-attestation-scope.json",
+  "attestationScopeHash": "sha256:...",
+  "sourceCoverage": {
+    "requiredSourceArtifacts": [
+      {"path": "docs/adr/example.md", "sha256": "sha256:..."}
+    ],
+    "readSourceArtifacts": [
+      {"path": "docs/adr/example.md", "sha256": "sha256:..."}
+    ],
+    "missingSourceArtifacts": []
+  },
+  "derivedArtifactCoverage": {
+    "requiredArtifacts": [
+      {"path": "acceptance-source-inventory.json", "sha256": "sha256:..."},
+      {"path": "acceptance-source-clauses.json", "sha256": "sha256:..."},
+      {"path": "implementation-acceptance-matrix.json", "sha256": "sha256:..."}
+    ],
+    "readArtifacts": [
+      {"path": "acceptance-source-inventory.json", "sha256": "sha256:..."},
+      {"path": "acceptance-source-clauses.json", "sha256": "sha256:..."},
+      {"path": "implementation-acceptance-matrix.json", "sha256": "sha256:..."}
+    ],
     "missingArtifacts": []
+  },
+  "contextCoverage": {
+    "requiredContextArtifacts": [
+      {"path": "docs/standards/example.md", "sha256": "sha256:..."}
+    ],
+    "readContextArtifacts": [
+      {"path": "docs/standards/example.md", "sha256": "sha256:..."}
+    ],
+    "missingContextArtifacts": []
   },
   "inventoryPath": "acceptance-source-inventory.json",
   "inventoryHash": "sha256:...",
@@ -305,7 +368,18 @@ source inventory至少记录：
 }
 ```
 
-该sidecar由新Skill控制的隔离auditor写入预先冻结的run-scoped路径，再由新Skill的`finalize`使用run input中冻结的schema path/hash校验，并绑定到只读导入的finalized Bootstrap `review-result.v1`。现有Bootstrap gateway不发现、不校验也不写入该sidecar。只有Bootstrap review已finalized、required layers完成、sidecar schema和全部绑定hash与当前run一致、auditor provenance完整、`requiredArtifacts`与`readArtifacts`集合相等且`missingArtifacts=[]`、计数闭合，并且`unmappedClauseIds`、`duplicateCheckIds`和`atomizationConflicts`均为空时，finalize才能把对应partition从`candidate`提升为`semantically_attested_complete`。sidecar缺失、stale或结论为`incomplete`时不得授权。
+该sidecar由新Skill控制的隔离auditor写入预先冻结的run-scoped路径，再由新Skill的`finalize`使用run input中冻结的schema path/hash校验，并绑定到只读导入的finalized Bootstrap `review-result.v1`。现有Bootstrap gateway不发现、不校验也不写入该sidecar。
+
+`finalize`必须确定性验证：
+
+- `attestationScopePath/hash`与run input冻结值一致；
+- 每个被审计semantic partition的全部原始`source_refs`都展开并出现在scope的`requiredSourceArtifacts`；
+- scope与attestation中required source、derived和context集合分别完全相等；
+- source、derived和context三组required/read集合均按`path+sha256`完全相等，所有missing数组为空；
+- 每个source和context hash与冻结candidate content manifest中相应`source`/`authority`记录一致，每个derived hash与当前acceptance run工件一致；
+- Bootstrap review已finalized且required layers完成，auditor provenance完整，partition计数闭合，`unmappedClauseIds`、`duplicateCheckIds`和`atomizationConflicts`均为空。
+
+漏读任一原始source、必要context或派生工件，scope包含无法解释的额外文件，或任一path/hash不匹配时，attestation只能为`incomplete`。只有以上条件全部满足时，finalize才能把对应partition从`candidate`提升为`semantically_attested_complete`。
 
 ### 5.2 原子化与稳定身份
 
@@ -638,6 +712,7 @@ Program DoD 默认要求所有适用要求达到终态闭合。任何仍未关�
        -> Edge Case Hunter
        -> Acceptance Auditor审计矩阵
   -> 导入hash-bound finalized review-result.v1
+  -> 从被消费semantic partitions冻结inventory-attestation-scope
   -> 用户已授权完整语义闭合且存在被消费semantic partition时运行inventory-attest
        -> 隔离inventory_completeness_auditor写入正向attestation
   -> map-findings确定性生成finding-to-acceptance mapping companion
@@ -745,6 +820,7 @@ logs/ci/<date>/refactor-implementation-acceptance-<run-id>/
 ├── phase-acceptance-result.json
 ├── program-dod-result.json
 ├── bootstrap-review-request.json
+├── inventory-attestation-scope.json
 ├── acceptance-inventory-audit-attestation.json
 ├── bootstrap-finding-acceptance-map.json
 ├── acceptance-report.md
@@ -792,7 +868,7 @@ logs/ci/<date>/refactor-implementation-acceptance-<run-id>/
 
 - JSON 是机器权威，Markdown 是派生视图。
 - 输出必须绑定run input、baseline/candidate content manifest、目标目录、源文件hashes、adapter、validator、验证命令和运行时间。
-- companion sidecar在Bootstrap尚未运行时可以不存在，但run input必须预先冻结其预期路径、schema路径和schema hash；finalize需要语义授权时缺失任一required sidecar必须失败关闭。
+- companion sidecar在Bootstrap尚未运行时可以不存在；`inventory_attestation_requirement=required`时，run input必须预先冻结scope、attestation的预期路径和schema hash，finalize缺失任一工件必须失败关闭；`not_required`时不得生成伪attestation。finding map的预期路径和schema hash始终由run input冻结。
 - 目标、权威或验证器变更后，旧结果必须标记为 stale，不能继续授权。
 - 运行目录不得位于被审查的重构目录内。
 - “只读”指不得修改被验收源文件、计划权威、live状态、97台账、历史日志或Bootstrap findings；controlled validation只能写manifest声明的隔离输出路径。
@@ -807,6 +883,7 @@ logs/ci/<date>/refactor-implementation-acceptance-<run-id>/
 - 找不到阶段权威或 DoD 权威；
 - 任一partition的抽取模式、extractor/adapter身份或completeness无法证明，或阶段消费的partition仍为`candidate`/`incomplete`；
 - `semantic_candidate`缺少当前hash绑定的`acceptance-inventory-audit-attestation.v1`却声明`semantically_attested_complete`；
+- inventory attestation scope未覆盖全部semantic partition原始`source_refs`、必要context或三个派生工件，required/read集合不等、missing非空，或source/context hash与candidate manifest不一致；
 - 无法把复合条款原子化或建立稳定source clause/check身份；
 - 97、98、99 或原始来源存在未解释的覆盖缺口；
 - 矩阵存在重复、孤立或无来源的 `check_id`；
@@ -838,6 +915,7 @@ logs/ci/<date>/refactor-implementation-acceptance-<run-id>/
 │   ├── acceptance-run-input.v1.schema.json
 │   ├── acceptance-baseline-content-manifest.v1.schema.json
 │   ├── acceptance-candidate-content-manifest.v1.schema.json
+│   ├── inventory-attestation-scope.v1.schema.json
 │   ├── acceptance-source-inventory.v1.schema.json
 │   ├── acceptance-source-clauses.v1.schema.json
 │   ├── implementation-acceptance-matrix.v1.schema.json
@@ -872,7 +950,7 @@ prepare
   -> finalize
 ```
 
-只提供`validate_acceptance.py`不足以说明矩阵如何生成、证据如何执行、candidate如何冻结以及Bootstrap结果如何导入。`import-bootstrap`只接受hash-bound finalized `review-result.v1`；`inventory-attest`必须使用隔离执行上下文和冻结prompt/schema；`map-findings`必须保持确定性且把无法稳定映射的finding写为`unmapped`。每个子命令都必须读取前序机器工件、验证hash并只写新的run-scoped输出。
+只提供`validate_acceptance.py`不足以说明矩阵如何生成、证据如何执行、candidate如何冻结以及Bootstrap结果如何导入。`import-bootstrap`只接受hash-bound finalized `review-result.v1`；`inventory-attest`必须先验证冻结scope覆盖全部semantic partition原始source、必要context和派生工件，再使用隔离执行上下文和冻结prompt/schema；`map-findings`必须保持确定性且把无法稳定映射的finding写为`unmapped`。每个子命令都必须读取前序机器工件、验证hash并只写新的run-scoped输出。
 
 不要求为该 Skill 创建单独的严格 VDD 00-99执行计划目录。
 
@@ -972,7 +1050,7 @@ HEAD未变但任一受审文件内容改变时，旧结果必须stale；未纳�
 
 ### RA-SKILL-024：正向完整性证明
 
-三个Bootstrap reviewer均为零finding但新Skill未运行隔离`inventory_completeness_auditor`、缺少`acceptance-inventory-audit-attestation.v1`、auditor provenance/schema hash不合法、required/read artifact集合不等、存在未映射条款、重复check或原子化冲突时，semantic partition不得提升为`semantically_attested_complete`。
+三个Bootstrap reviewer均为零finding但新Skill未运行隔离`inventory_completeness_auditor`、冻结scope未覆盖任一semantic partition原始source或必要context、缺少`acceptance-inventory-audit-attestation.v1`、auditor provenance/schema hash不合法、任一required/read artifact集合不等、存在未映射条款、重复check或原子化冲突时，semantic partition不得提升为`semantically_attested_complete`。
 
 ### RA-SKILL-025：Bootstrap finding映射
 
@@ -1025,6 +1103,7 @@ deterministic、semantic、external和effective结果只能使用本规格枚举
 25. 删除关键authority/test文件时candidate manifest没有tombstone，或为deleted记录伪造candidate hash。
 26. rename只保存新路径，无法回查baseline旧路径和hash。
 27. companion sidecar由新Skill生成，却被报告为Bootstrap gateway已校验。
+28. semantic partition引用的一个ADR没有进入auditor source scope，但派生inventory、clauses和matrix内部计数闭合，仍被声明`semantically_attested_complete`。
 
 ## 15. 非目标
 
@@ -1049,4 +1128,4 @@ deterministic、semantic、external和effective结果只能使用本规格枚举
 5. 只有用户明确要求完整语义审查时才调用Bootstrap流程；仅在当前授权范围消费`semantic_candidate` partition时运行新Skill的`inventory-attest`，否则为`not_required`。未完成所需语义步骤时只输出candidate结论。
 6. 通用Skill从目标计划解析phase DAG；7-07规则作为首个线性adapter和回归fixture。
 7. 现有7-07 `100-*`与机器矩阵作为兼容输入和真实测试样本，不作为无需重验的完成证明。
-8. 首版必须实现统一run input、双schema baseline/candidate manifests、partitioned source inventory、structured evidence、orthogonal state、phase graph、Bootstrap request、隔离`inventory-attest`、确定性`map-findings`及两个companion sidecar schema；跨模型稳定性属于发布级独立证据，不阻止本地开发迭代。
+8. 首版必须实现统一run input、双schema baseline/candidate manifests、partitioned source inventory、structured evidence、orthogonal state、phase graph、Bootstrap request、冻结inventory attestation scope、隔离`inventory-attest`、确定性`map-findings`及两个companion sidecar schema；跨模型稳定性属于发布级独立证据，不阻止本地开发迭代。
