@@ -1,0 +1,74 @@
+{
+  "schema_version": "bootstrap-review-self-audit-summary.v1",
+  "audit_id": "bootstrap-self-audit-20260716-proposal-r2",
+  "audit_result": {
+    "path": "logs/ci/bootstrap-self-audit/bootstrap-self-audit-20260716-proposal-r2/audit-result.json",
+    "sha256": "sha256:ccad4469eaf4c39992c63d6493d7726d6729de6bad342fd52764bae426323010",
+    "status": "pass"
+  },
+  "repository_git_head": "8c29ef64f5fa726bc9bbed8a453a55fa96bd5a81",
+  "audit_implementation": [
+    {
+      "path": "scripts/python/bootstrap_review_self_audit.py",
+      "sha256": "sha256:0bba6b90a80ffe5ed2eaaa35d76bf902bcfe75cd303ffce275b750b3e114d92d"
+    },
+    {
+      "path": "scripts/python/_bootstrap_review_audit.py",
+      "sha256": "sha256:fc8342c6e4f8189620bc1e6f1b00f411f57e76fbafbaa59231f1a48be33cd821"
+    }
+  ],
+  "components": [
+    {
+      "path": "logs/ci/bootstrap-self-audit/bootstrap-self-audit-20260716-proposal-r2/audit-input-manifest.json",
+      "sha256": "sha256:486c5e92da05de80f40cb0a1e5d52250428aadfefb0d819a7b3377442e231d8f"
+    },
+    {
+      "path": "logs/ci/bootstrap-self-audit/bootstrap-self-audit-20260716-proposal-r2/per-run-classification.json",
+      "sha256": "sha256:98bdab8cbb6942132dc8f8e42973aab7782f000891f6b6d896ef00977d5bebf8"
+    },
+    {
+      "path": "logs/ci/bootstrap-self-audit/bootstrap-self-audit-20260716-proposal-r2/candidate-funnel.json",
+      "sha256": "sha256:9861a7232fa6314bad7ad308b68b0a699f371eb61e690bf46c8ab500838ed2a4"
+    },
+    {
+      "path": "logs/ci/bootstrap-self-audit/bootstrap-self-audit-20260716-proposal-r2/token-and-duration-summary.json",
+      "sha256": "sha256:5f4b6160ed8771ecfc4d209e687de1fae341ea6dd7747e0ea77a8e642eb4488d"
+    }
+  ],
+  "candidate_funnel": {
+    "all_run_reviewer_submissions": 139,
+    "all_run_reviewer_submissions_by_role": {
+      "blind_hunter": 32,
+      "edge_case_hunter": 71,
+      "acceptance_auditor": 36
+    },
+    "finalized_run_reviewer_submissions": 82,
+    "finalized_run_reviewer_submissions_by_role": {
+      "blind_hunter": 21,
+      "edge_case_hunter": 38,
+      "acceptance_auditor": 23
+    },
+    "gateway_accepted_unique": 79,
+    "gateway_rejected": 3,
+    "final_confirmed_p1": 62,
+    "final_advisory_p2": 11,
+    "verifier_refuted": 6
+  },
+  "operational_totals": {
+    "real_run_count": 45,
+    "finalized_run_count": 26,
+    "recorded_token_lower_bound": 11681358,
+    "non_finalized_recorded_tokens": 2379293,
+    "lease_states": {
+      "completed": 58,
+      "failed": 13,
+      "stale": 1,
+      "acquired": 4
+    }
+  },
+  "reproducibility": {
+    "local": "Run the tracked audit script against the hash-bound local logs to reproduce all five audit components.",
+    "remote": "The compact summary is reviewable in Git, but independent remote recomputation requires access to the original append-only logs or a separately published evidence bundle.",
+    "raw_logs_committed": false
+  }
+}

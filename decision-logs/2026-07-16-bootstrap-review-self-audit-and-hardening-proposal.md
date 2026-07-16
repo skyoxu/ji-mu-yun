@@ -9,16 +9,16 @@
 - Git Head: 28d31b5fa602eab8ad831ea59d1756ffbdd16095
 - Why now: 2026-07-13 至 2026-07-16 已累计产生 45 个真实 Bootstrap Review run；多轮 Review 证明事实门禁能发现高价值问题，但 Windows ACL、受限 token 访问、重复 reviewer、悬空 lease、非终态 run 和失真的成本估算造成了可观的时间与 token 消耗，需要在继续扩大使用范围前先修复控制面。
 - Context: 本次只读自检覆盖 `logs/ci/**/review-gateway-bootstrap-*` 下全部真实 run，并以当前 `run-phase-bootstrap-review` Skill、operator guide、profile registry 和 `run_bootstrap_review.py --help` 为运行权威。`logs/ci/2026-07-16/synthetic-rmap-binding-clean/` 仅是合成绑定证据，不计为真实 Review run。
-- Decision: 提议保留三层独立 reviewer、完整 artifact 覆盖、P0/P1 独立 verifier 和三轮硬上限，同时优先实施受限 token 全 artifact 探针、hash-equal artifact pack、仓库自有 layer runner、append-only run 生命周期索引、Round 2/3 repair-closure gate、历史校准成本估算和严格 probe 缓存。
+- Decision: 提议保留三层独立 reviewer、完整 artifact 覆盖、P0/P1 独立 verifier 和三轮硬上限。实施前必须先接受 Bootstrap Review Execution Control Plane Ownership ADR 并建立 durable standard；随后由仓库自有 Skill 拥有 Codex Exec runner、Artifact View、attempt/event、repair closure 和恢复协议，7-12 目录仅保留迁移期兼容入口，外部全局 Skill 只做 revision-bound 薄路由。
 - Consequences: Review 的语义强度不下降；启动前失败会更早、更便宜；历史 run 可以被确定性归类而不改写原始 evidence；后续完整 Review 需要额外的 access proof 和 repair closure，但能显著降低无效 reviewer 消耗。
 - Recovery impact: 后续会话应先读取本文件，再读取 `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md` 和待新增的 run index/inspect 输出。任何优化都必须新增 sidecar 或新 run，不得重写 45 个历史目录。
-- Validation: 本提案形成时已解析 45 份真实 `review-input.json`、31 份 gate result、26 份 final metrics/dispositions、17 份 process lease 和全部可读 token 记录；未修改历史 Review evidence。
-- Related ADRs: pending; 若接受 hash-equal artifact pack、跨 run probe cache 或仓库自有 Codex layer runner，应补充或引用控制面所有权 ADR。
+- Validation: `py -3 scripts/python/bootstrap_review_self_audit.py --audit-id bootstrap-self-audit-20260716-proposal-r2 --out-dir logs/ci/bootstrap-self-audit/bootstrap-self-audit-20260716-proposal-r2` 已通过；`audit-result.json` 为 `sha256:ccad4469eaf4c39992c63d6493d7726d6729de6bad342fd52764bae426323010`。审计解析了 45 份真实 input、31 份 gate result、26 份 final metrics/dispositions、17 份 process lease 和全部符合声明规则的 token 记录，未修改历史 Review evidence。
+- Related ADRs: required before implementation: `Bootstrap Review Execution Control Plane Ownership`；该 ADR 必须明确 durable standard、仓库自有 Skill、7-12 compatibility layer、logs evidence 和外部薄 Skill 的所有权。
 - Related execution plans: `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/`; `execution-plans/2026-07-15-repository-maintenance-tdd-adapter/`
 - Related task id(s): n/a; Bootstrap Review run 当前不绑定 Taskmaster task id。
 - Related run id: 2026-07-13 至 2026-07-16 的 45 个 `review-gateway-bootstrap-*` run；重点包括 `vdd-clarification-quick-20260715-004024`、`repo-maint-tdd-final-20260716-0129`、`repo-maint-tdd-final-r2-20260716-024940`、`repo-maint-tdd-final-r3-20260716-110837`。
 - Related latest.json: n/a; Bootstrap Review 当前没有跨 run 的 canonical latest/status pointer，这正是本提案要修复的恢复缺口之一。
-- Related pipeline artifacts: `logs/ci/2026-07-13/`、`logs/ci/2026-07-14/`、`logs/ci/2026-07-15/`、`logs/ci/2026-07-16/` 下的 `review-gateway-bootstrap-*` 目录。
+- Related pipeline artifacts: `logs/ci/2026-07-13/` 至 `logs/ci/2026-07-16/` 下的 `review-gateway-bootstrap-*`；当前自检 evidence 为 `logs/ci/bootstrap-self-audit/bootstrap-self-audit-20260716-proposal-r2/`；前一版审计 evidence 保留为 superseded sidecar；可提交摘要为 `decision-logs/evidence/2026-07-16-bootstrap-review-self-audit-summary.json`。
 
 ## 1. 结论摘要
 
@@ -58,6 +58,30 @@
 - 17 个较新 run 使用当前控制协议。
 - 早期 run 用于识别演进和失败模式，不应倒推为当前 CLI 的合规失败。
 
+### 2.4 可复现审计合同
+
+审计由版本控制内脚本 `scripts/python/bootstrap_review_self_audit.py` 执行，并生成：
+
+```text
+logs/ci/bootstrap-self-audit/<audit-id>/
+  audit-input-manifest.json
+  per-run-classification.json
+  candidate-funnel.json
+  token-and-duration-summary.json
+  audit-result.json
+```
+
+证据绑定：
+
+- 45 个 run 的仓库相对路径。
+- 每个关键 sidecar 和 token 记录文件的 SHA-256。
+- 分类理由、缺失 sidecar 和不可读输入。
+- 统计实现文件及其 SHA-256。
+- Git HEAD 和工作区状态。
+- Candidate、token、duration、lease 和 run-state 的精确定义。
+
+本提案只声明“基于本机 append-only logs 的 hash-bound 可复算统计”。由于原始 45 个 run 未提交到 Git，GitHub 只能检查可提交摘要、脚本和 hash，不能在没有原始 evidence bundle 的情况下独立复算。若未来需要远端独立复算，必须发布原始 evidence bundle 或提供稳定的受控 artifact locator。
+
 ## 3. 全量事实基线
 
 ### 3.1 Run 状态
@@ -87,11 +111,14 @@
 
 ### 3.3 Finding 与事实门禁
 
+Candidate funnel 必须区分全部 run 和 finalized run：
+
 | 指标 | 数量 |
 | --- | ---: |
-| 原始 candidate | 82 |
-| Gate 接受的唯一 candidate | 79 |
-| Gate rejection | 3 |
+| 全部 45 个 run 的 reviewer submissions | 139 |
+| 26 个 finalized run 的 reviewer submissions | 82 |
+| Finalized gate 接受的唯一 candidate | 79 |
+| Finalized gate rejection | 3 |
 | Rejection 原因 `stale_evidence` | 3 |
 | Verifier refuted | 6 |
 | 最终 confirmed P1 | 62 |
@@ -99,15 +126,15 @@
 | P0 | 0 |
 | Unverified | 0 |
 
-Reviewer 贡献：
+Reviewer submissions：
 
-| 角色 | 原始 candidate | 最终 finding source |
-| --- | ---: | ---: |
-| Blind Hunter | 32 | 19 |
-| Edge Case Hunter | 71 | 34 |
-| Acceptance Auditor | 36 | 20 |
+| 角色 | 全部 45 个 run | 仅 26 个 finalized run | 最终 finding source |
+| --- | ---: | ---: | ---: |
+| Blind Hunter | 32 | 21 | 19 |
+| Edge Case Hunter | 71 | 38 | 34 |
+| Acceptance Auditor | 36 | 23 | 20 |
 
-一个 finding 可以有多个 source reviewer，因此 source 数量不要求与最终 finding 总数相等。
+机械闭合关系为：`82 finalized submissions = 79 accepted unique + 3 rejected`。`139` 与 `82` 的差异来自 19 个非 finalized run，不是 dedup。一个最终 finding 可以有多个 source reviewer，因此最终 source 数量不要求与最终 finding 总数相等。
 
 ### 3.4 时间、token 与日志体积
 
@@ -247,9 +274,9 @@ Probe、reviewer、verifier 的启动、lease、PID、stdin、fallback、timeout
 
 Round 2/3 启动前必须证明 predecessor finding 的批量修复和相邻回归覆盖。
 
-### G-5：成本可预测
+### G-5：成本可解释
 
-启动前报告基于历史校准的 token 区间、wall-time 区间、verifier 概率和 retry 风险。
+启动前报告基于有限历史样本校准的 token P50/P90、wall-time P50/P90、verifier likelihood、retry risk、样本量和置信度；该启发式只用于运营告警，不参与语义 authorization。
 
 ## 7. 不可削弱项
 
@@ -268,41 +295,43 @@ Round 2/3 启动前必须证明 predecessor finding 的批量修复和相邻回�
 
 ## 8. 修复方案
 
-### P1-1：受限 token Artifact Access Probe
+### P1-1：两级 Artifact Access Proof
 
-在 `authorize-launch` 后、reviewer lease 前新增确定性 access proof：
+不得声明运行平台无法证明的“相同 Windows token”。访问证明分两级：
 
-1. 使用与 reviewer 相同的 sandbox、Windows token 和 workspace root。
-2. 读取 manifest 中每个 artifact。
-3. 对读取 bytes 重新计算 SHA-256。
-4. 验证角色输出目录中可以创建、覆盖和原子替换角色自己的临时文件。
-5. 保存 `artifact-access-result.json`，绑定 route/profile/policy/authority/input/preflight hash。
-6. 任一 artifact 缺失、拒绝访问或 hash 不符时 fail closed，三个 reviewer 均不得启动。
+1. Launch 前 identity-equivalent probe：使用相同 sandbox policy、workspace、model route、executable/config 和用户身份类别读取 manifest artifact 并复核 SHA-256。
+2. Reviewer 同进程 access handshake：实际 reviewer child 在开始语义推理前调用 deterministic helper，读取本角色全部 Artifact View 项并返回 hash-bound handshake result。
 
-验收：构造一个父进程可读、受限 token 不可读的 fixture，证明 reviewer lease 数量保持为零。
+Runner 只有在同一 child 的 handshake 通过后才允许传入语义任务。任一 artifact 缺失、拒绝访问或 hash 不符时，该 child fail closed 且不产生 candidate。
 
-### P1-2：Hash-Equal Read-Only Artifact Pack
+实施前先做 capability probe，确认 Codex CLI 能证明哪些 process/token identity 字段；schema 只能要求可观测、可复核的身份等价条件。
 
-`prepare` 为 reviewed artifact 生成可选但推荐的 run-local artifact pack：
+验收：构造父进程可读但 reviewer child 不可读的 fixture，identity-equivalent probe 或同进程 handshake 必须在语义推理前失败，正式 reviewer output 保持 pending，candidate 数量为零。
+
+### P1-2：受控 Artifact View
+
+先对 Codex Exec canary 启用 `artifact-view.v1`，不立即改变 manual 或 specialized-agent 模式：
 
 ```text
-original repository path
-  -> run-local snapshot path
-  -> original sha256
-  -> snapshot sha256
-  -> size and line-count identity
+run-dir/artifact-view/
+  manifest.json
+  tree/<original-relative-layout>
 ```
 
-要求：
+Manifest 至少记录 original repository-relative path、snapshot path、双侧 SHA-256、size、encoding、line count、file type、binary/text、symlink/reparse-point、Windows case-normalized identity、context-class membership、source scope、creation hash 和时间。
 
-- Snapshot 位于 run directory，不位于 reviewed scope。
-- Original 与 snapshot bytes 必须完全相同。
-- Reviewer 读取 snapshot，finding 仍引用 original path 和 original line range。
-- Gateway 根据 mapping 校验 exact evidence。
-- Snapshot 创建后只读；授权后不得替换。
-- 当前 live artifact 漂移使旧 run stale，但不会让已经启动的 reviewer 在半途读取不同版本。
+控制要求：
 
-验收：在 reviewer 运行期间修改 live artifact，旧 reviewer 仍只看到 frozen snapshot；gate 必须根据 authority freeze policy 拒绝把 stale run 当作当前结果。
+- View 位于 run directory，不位于 reviewed scope，并保持原始相对目录结构。
+- Reviewer 对 view 只读，对自己的 attempt output temp 只写。
+- Reviewer 在一个 run 中不能同时读取 live original 和 snapshot。
+- Gateway 把 snapshot evidence 投影回 original path 和 original line range。
+- Original 与 snapshot bytes 不同立即失败；live original 后续漂移使 run stale。
+- Windows 大小写冲突、junction/reparse escape 和 snapshot path collision 必须拒绝。
+- Binary artifact 可以纳入 manifest，但不能生成文本 exact-evidence line range。
+- 复制到 `logs/` 的敏感内容必须受 ACL、retention 和 archive contract 约束。
+
+验收：Codex Exec canary 运行期间修改 live artifact，child 只能读取 frozen view；gate 仍必须根据 authority freshness 拒绝把 stale run 当作当前结果。
 
 ### P1-3：仓库自有 Layer Runner
 
@@ -312,21 +341,41 @@ original repository path
 run-layer --run-dir <run> --role <role>
 ```
 
-职责：
+Runner v1 只服务 `codex-exec`。Manual 和 specialized-agent 继续保留外部执行边界，不能为了统一而变成隐藏 provider 调度。
 
-- 读取 manifest-bound model/reasoning/sandbox policy。
-- UTF-8 stdin-first prompt transport。
-- 启动 isolated child 并获取真实 PID。
-- acquire/release process lease。
-- 同一 operation timeout 时只 reattach/poll，不重复启动。
-- Preferred model 失败后按 manifest 顺序 fallback。
-- 原子写入 reviewer/verifier 输出。
-- 自动执行 `validate-layer`。
-- 保存统一 process result、last message、stderr 摘要和 token usage。
+交换协议：
 
-Runner 不拥有 finding、severity、gate、done、commit 或 release authority；它只拥有 manifest-bound 子进程执行。
+```text
+Codex child
+  读取 Artifact View
+  完成同进程 access handshake
+  最终只输出结构化 candidate response
 
-验收：删除所有 run-local helper 仍能完成 probe、三个 reviewer、verifier 和 finalize；重复 acquire 必须稳定失败。
+Runner
+  捕获 last message/result file
+  schema 与 binding 校验
+  原子写入正式 reviewer/verifier output
+  执行 validate-layer
+```
+
+模型不得直接覆盖正式 reviewer JSON。Runner 必须区分半写文件、child 成功但缺输出、retry attempt、并发写竞争和 stale attempt。
+
+每次执行保存：
+
+```text
+process-events.jsonl
+attempts/<attempt-id>/
+  request.json
+  process-result.json
+  stdout.log
+  stderr.log
+  token-usage.json
+  candidate-output.json
+```
+
+Append-only process events 是执行事实权威；`process-leases.json` 是可再生当前视图，不再作为唯一可变状态权威。Runner 不拥有 finding 接受、severity、gate、done、commit、handoff 或 release authority。
+
+验收：删除所有 run-local helper 后仍能完成 Codex Exec probe、三个 reviewer、verifier 和 finalize；重复 operation 必须稳定拒绝；任何失败 attempt 不得覆盖先前 evidence 或正式 role output。
 
 ### P1-4：Run Lifecycle Index 与恢复命令
 
@@ -335,23 +384,27 @@ Runner 不拥有 finding、severity、gate、done、commit 或 release authority
 ```text
 list-runs [--change-id <id>]
 inspect-run --run-dir <run>
-seal-run --run-dir <run> --state abandoned|superseded --reason <code>
+seal-run --run-dir <run> --state abandoned|superseded --reason <code> [--successor <run>]
 ```
 
-派生状态至少包含：
+状态必须分维度：
 
-- prepared
-- preflight-failed
-- authorized
-- reviewer-running
-- reviewer-incomplete
-- awaiting-verification
-- finalized
-- abandoned
-- superseded
-- manual-pause
+```text
+run_execution_state
+  prepared | preflight-failed | authorized | layers-running |
+  layers-incomplete | awaiting-verification | finalized | abandoned
 
-`seal-run` 只写 append-only sidecar，不修改 reviewer output、gate result、verifier output 或 final result。
+run_relationship
+  active | superseded | replaced-after-probe-failure
+
+change_cycle_state
+  review-required | repair-required | next-round-authorized |
+  accepted | manual-pause | closed
+```
+
+一个 Round 3 run 可以同时是 `run_execution_state=finalized` 和 `change_cycle_state=manual-pause`。全局 index 只是可再生视图，不能成为新的状态权威。
+
+`seal-run` 写一次性 immutable annotation：finalized 不能 seal 为 abandoned；superseded 必须引用 successor；sidecar 禁止覆盖；seal 不得修改 gate、reviewer、verifier、event 或 lease 历史；change-cycle manual pause 不能通过 seal 伪造。
 
 验收：对本次 45 个历史 run 生成只读索引，必须得到 26 finalized、14 prepared/no-gate、3 awaiting-verification、2 incomplete，并显式标出 4 条 acquired lease。
 
@@ -360,54 +413,67 @@ seal-run --run-dir <run> --state abandoned|superseded --reason <code>
 Round > 1 时要求 `repair-closure.json`，至少包含：
 
 - predecessor run/input/result hash。
-- predecessor 全部 accepted P0/P1/P2 finding ID。
-- 每项 fix refs、当前 disposition 和验证命令。
+- predecessor finalized disposition 中全部 finding ID；confirmed/advisory/refuted 均不得从 exact set 消失。
+- 每项 current disposition；需要修复的 finding 提供 fix refs 和验证命令，refuted finding 提供 no-action authority reference。
 - 当前 candidate/source/validator hash。
-- targeted regression 和相邻 mutation/counterexample。
+- finding-family 对应的 closure proof 与相邻回归证据。
 - 允许延期的 owner、severity、expiry 与 closure test。
 - Git index 和 reviewed write-set drift 结果。
 
-`authorize-launch` 必须验证 closure 与 predecessor finding 集合完全一致。该 gate 只证明修复 evidence 完整，不声称 finding 已经被新一轮语义 reviewer 关闭。
+Canonical finding set 必须来自 finalized `review-gate-result.json` 与 `review-dispositions.json` 的联合，不得使用原始 reviewer candidate 或 pre-verifier gate-only state。
 
-验收：遗漏任一 predecessor finding、使用 stale candidate 或缺 adjacent mutation 时，Round 2/3 reviewer lease 数量保持为零。
+分两阶段验证：
 
-### P2-1：历史校准的成本模型
+- `prepare`：检查 closure schema、predecessor identity、finalized finding exact set、声明 evidence 路径和 proof-family 适配。
+- `authorize-launch`：重新检查 evidence hash、candidate/source/validator hash、Git/index、write-set 和 context graph freshness。
+
+Closure proof 按 finding family 选择：code/runtime defect 使用 failing test 或 targeted regression；schema/validator defect 使用 negative fixture 或 mutation；documentation/authority defect 使用 source-to-contract counterexample 或 exact predicate proof；ACL/process defect 使用 restricted-context execution fixture；P2 deferred 使用 owner、non-impact proof、expiry 和 closure test。不得强制所有 finding 伪造 mutation test。
+
+该 gate 只证明 repair evidence 完整，不声称 finding 已被新一轮语义 reviewer 关闭。
+
+验收：遗漏任一 finalized finding、proof family 不匹配、使用 stale candidate 或缺当前 freshness proof 时，Round 2/3 reviewer lease 数量保持为零。
+
+### P2-1：历史校准的成本启发式
 
 成本估算应增加：
 
-- `effectiveReviewBytes = totalBytes × role reasoning weight`。
-- 三 reviewer 的预计输入与输出 token 区间。
-- 需要 verifier 时的附加区间。
-- 当前 round 与历史同 profile 的 P50/P90 wall time。
-- Artifact access 或 ACL 风险。
-- 前一轮 retry rate。
+- Estimated input range。
+- Estimated total token P50/P90。
+- Estimated wall-time P50/P90。
+- Verifier likelihood band。
+- Retry-risk class。
+- Basis sample count 和 `confidence=low|medium|high`。
+- Profile、reasoning、artifact count、bytes、文本/binary 比例、context-class fanout、round、代码/文档比例和历史 retry rate。
 
-High-cost 不能只看单份 `totalBytes`。建议用历史 token/byte 比率校准并保留保守上界。
+High-cost 不能只看单份 `totalBytes`，但 17 个带 token 记录的样本不足以训练精确预测模型。该启发式只提供运营告警和人工确认依据，不拥有语义 authorization。
 
-验收：以 Round 3 的 49 artifact、535,333 bytes 为 fixture，新模型必须将其识别为高成本或输出不少于实际量级的明确成本告警。
+验收：以 Round 3 的 49 artifact、535,333 bytes 为 fixture，启发式必须输出明显高成本告警、样本量、P50/P90 区间和置信度；不得要求精确预测不低于单一历史 run 的 705,767 tokens。
 
 ### P2-2：严格 Probe Cache
 
-允许缓存模型/终端健康 probe，但不能缓存每轮 artifact access proof。
+Probe Cache 延后到 runner、attempt/event 和 Artifact View 稳定之后。允许缓存模型/终端健康，不能缓存每轮 artifact access、preflight 或 authority proof。
 
 Cache key：
 
 ```text
-provider + model + reasoning + sandbox + Codex CLI version + host identity
+provider + endpoint/config hash + model + reasoning + sandbox +
+Codex executable hash + non-secret credential identity + OS/build +
+current user identity + tool-policy hash + network/proxy identity +
+runner protocol version
 ```
 
 要求：
 
-- 短 TTL。
-- Preferred model 的失败也按短 TTL 保存。
+- Success 使用短 TTL，failure 使用更短 TTL。
 - Host、CLI、sandbox 或 credential source 变化立即失效。
 - Artifact access probe、preflight 和 authority freeze 每个 run 必须新跑。
+- 启用跨 run cache 会改变 profile 的 `toolProbeRequired` 语义，必须更新 policy revision 和所有权 ADR，不能只改 runner。
 
 验收：相同 key 在 TTL 内不启动第二个模型健康 probe；任一 key 字段变化必须重新 probe。
 
 ### P2-3：误报抑制回归集
 
-把 6 个 verifier refute 抽象为 profile fixture：
+先把 6 个 verifier refute 分类为 deterministic gateway rule、role rubric、verifier fixture 或 profile-specific false-positive rule，不能全部直接扩成宽泛 prompt 指令。候选负例包括：
 
 - 允许延期不等于缺少合同。
 - Route-local 示例不等于完整 authority。
@@ -416,7 +482,9 @@ provider + model + reasoning + sandbox + Codex CLI version + host identity
 - 创建新 run 可以是合法恢复路径。
 - EvidencePath 不自动意味着必须递归纳入所有引用文件，除非 profile 明确要求。
 
-验收：fixture 不能产生 accepted P1；同时现有 confirmed counterexample 仍必须被发现。
+每个 refuted 负例必须配一个语义相近的 confirmed 正例，证明抑制规则不会吞掉真实 defect。现有 profile 已包含部分延期/阶段误报抑制，新增规则必须证明不是重复或过宽。
+
+验收：负例不能产生 accepted P1；配对正例仍必须被发现，并保持相同 authority/context 读取要求。
 
 ### P2-4：日志摘要与保留策略
 
@@ -429,7 +497,19 @@ Finalized 或 sealed run 生成统一 `run-summary.json`，记录：
 - retry、stale、ACL 和 drift 信号。
 - gate/verifier/final result hash。
 
-Raw stdout/stderr 可以压缩，但不得删除或改写；摘要必须保存原文件 hash。
+Raw stdout/stderr 不能被静默压缩或替换。压缩必须先定义：
+
+```text
+archive-manifest.json
+  original_path
+  original_sha256
+  archive_path
+  archive_sha256
+  codec
+  retained_until
+```
+
+只有全部消费者支持 archive mapping 后才能迁移；已被 manifest、lease 或 metrics 直接 hash-bound 的文件不能在原路径静默替换。敏感信息应优先在采集时避免写入或写入受控 raw evidence，再生成可公开的脱敏摘要；不得事后改写历史 evidence 来“清理”secret。
 
 验收：索引和恢复命令无需解析 raw stdout/stderr 即可回答当前 run 状态、成本、失败原因和下一动作。
 
@@ -437,45 +517,50 @@ Raw stdout/stderr 可以压缩，但不得删除或改写；摘要必须保存�
 
 ### Phase 0：冻结基线
 
-- 把本次 45-run 统计固化为只读 regression fixture。
+- 使用本提案的五文件审计包冻结 45-run 可复算基线和统计定义。
 - 为 ACL failure、stale input、pending layer、failed lease、acquired lease 和 Round 3 manual pause 建立最小样例。
 - 冻结当前 Skill、operator guide、profile registry、CLI 和 schema hash。
+- 接受 Bootstrap Review Execution Control Plane Ownership ADR，并建立 durable standard。
 
-### Phase 1：访问与快照边界
+### Phase 1：Runner 协议与最小实现
 
-- 实施 artifact access probe。
-- 实施 artifact pack 与 original-path mapping。
-- 增加 Windows ACL、junction、case-insensitive containment 和 atomic write 测试。
+- 定义 runner request/response、attempt、process event、candidate output 和 atomic sidecar schema。
+- 实施最小 Codex Exec layer runner。
+- 明确 child 只返回结构化 candidate，runner 才能写正式 role output。
+- 保持 manual/specialized-agent 外部执行边界。
 
-### Phase 2：统一执行入口
+### Phase 2：Artifact View 与实际访问证明
 
-- 实施 layer runner。
-- 把 lease、PID identity、fallback、timeout、reattach 和 validate-layer 收入统一状态机。
-- 移除新增 run 对临时 helper 脚本的依赖；历史 helper 保留不动。
+- 实施 Artifact View 和 original-path projection。
+- 实施 identity-equivalent launch probe。
+- 实施 reviewer 同进程 access handshake。
+- 增加 Windows ACL、junction、reparse、case-insensitive collision、binary 和 atomic write 测试。
 
 ### Phase 3：生命周期与恢复
 
 - 实施 list/inspect/seal。
 - 生成全仓 run index。
-- 将 active、stale、abandoned、superseded 和 manual pause 明确分开。
+- 分离 run execution、run relationship 和 change-cycle state。
+- 把 process lease 作为 event-derived view。
 
 ### Phase 4：轮次收敛
 
 - 定义 repair-closure schema。
-- Round 2/3 authorize-launch 强制消费 closure。
+- Round 2/3 在 prepare 和 authorize-launch 两阶段消费 closure。
 - 加入 predecessor finding exact-set 和 current hash 验证。
 
 ### Phase 5：成本与运营
 
-- 历史校准成本模型。
-- 严格 probe cache。
-- 误报抑制 fixture。
-- Run summary、压缩和保留策略。
+- 实施带样本量和置信度的成本启发式。
+- Runner 稳定后再实施严格 probe cache，并更新 profile policy revision。
+- 实施成对 false-positive/confirmed fixtures。
+- 实施 run summary、archive manifest 和 retention contract。
 
 ### Phase 6：权威同步与独立 Review
 
-- 同步更新 repo operator guide、CLI `--help`、profile registry、schemas 和 regression tests。
-- 更新外部 `run-phase-bootstrap-review` Skill，并在 `logs/ci` 建立 hash-equal review snapshot。
+- 把 7-12 CLI 收缩为 compatibility adapter，并同步 operator guide、CLI `--help`、profiles、schemas 和 regression tests。
+- 更新仓库自有 Skill revision，再更新外部 `run-phase-bootstrap-review` 薄 Skill 的委托 revision。
+- 在 `logs/ci` 建立 hash-equal Skill/route review snapshot。
 - 使用 `bootstrap-skill-route` 运行一次完整独立 Review。
 - 该 Review 结果仍是 supplemental Bootstrap evidence，不替代生产 authority。
 
@@ -483,43 +568,65 @@ Raw stdout/stderr 可以压缩，但不得删除或改写；摘要必须保存�
 
 实施完成后至少达到：
 
-1. 受限 token artifact 访问失败时，reviewer lease 数量为零。
+1. Artifact access handshake 失败时，child 不进入语义阶段，正式 candidate 数量为零。
 2. 新 run 不再生成临时 runner、`.go` 或手工 PID 协议文件。
-3. 每个 Codex child 都有且只有一个可恢复 lease lineage。
-4. Finalized 或 sealed run 不存在未解释的 acquired lease。
-5. `list-runs` 能完整复现本次 45-run 基线。
-6. Round 2/3 缺 repair closure 时无法 authorize launch。
-7. 成本估算能把 Round 3 量级识别为高成本。
-8. Probe cache 不跨 host/model/reasoning/sandbox/CLI drift 复用。
-9. 六个 refuted 模式进入误报回归集。
-10. 三层 reviewer、完整覆盖、独立 verifier、零 finding 合法和三轮 hard limit 均保持不变。
+3. 每个 Codex child 都有且只有一个 append-only attempt/event lineage；lease 可从事件重建。
+4. Finalized 或 immutable sealed run 不存在未解释的 acquired lease。
+5. `list-runs` 能完整复现本次 45-run 基线，并分别输出三类状态维度。
+6. Round 2/3 缺 repair closure 时在 prepare 阶段失败；evidence 漂移时在 authorize-launch 阶段失败。
+7. 成本启发式能把 Round 3 量级识别为高成本，并输出样本量、P50/P90 和置信度。
+8. Probe cache 不跨 provider/config/executable/user/tool-policy/network/runner drift 复用。
+9. 六个 refuted 模式均有 paired confirmed fixture。
+10. Artifact View 保持 original path、bytes、line 和 context-class 投影一致。
+11. 三层 reviewer、完整覆盖、独立 verifier、零 finding 合法和三轮 hard limit 均保持不变。
 
 ## 11. 风险与待批准决策
 
-### D-1：Artifact Pack 是否成为 Codex Exec 默认路径
+### D-1：Artifact View 是否进入 Codex Exec canary
 
-建议：接受。原始路径仍是 finding authority，snapshot 只提供 hash-equal、ACL 稳定的读取介质。
+建议：有条件接受。改为受控 Artifact View，先仅用于 Codex Exec canary；manual 和 specialized-agent 不在第一批强制迁移范围。
 
-风险：如果 mapping 或行号处理错误，reviewer 可能引用 snapshot 路径。必须由 gateway 强制 original-path projection。
+风险：mapping、行号、binary、reparse、大小写冲突、敏感内容 ACL 或 retention 错误都会破坏 authority 投影。Gateway 必须强制 original-path projection。
 
 ### D-2：是否允许跨 run Probe Cache
 
-建议：接受严格短 TTL cache，只缓存模型/终端健康，不缓存 artifact、authority 或 preflight 结论。
+建议：原则接受但延期。Runner、attempt/event 和 Artifact View 稳定后再启用，只缓存模型/终端健康，不缓存 artifact、authority 或 preflight 结论，并更新 profile policy revision。
 
 风险：过宽 key 或 TTL 会把 provider/credential 漂移隐藏为旧成功。
 
 ### D-3：Layer Runner 的所有权
 
-建议：仓库 `tools/` 拥有可执行协议和 deterministic process state；外部 Skill 只做薄路由；run directory 只拥有合同实例与 evidence。
+建议：拒绝原先“仓库 `tools/` 拥有”的宽泛表述。实施前必须接受框架级 ADR，并采用以下所有权：
+
+```text
+docs/standards/
+  长期语义、权威和生命周期规范
+
+docs/adr/
+  Bootstrap Review Execution Control Plane Ownership
+
+仓库自有 Skill/
+  runner、schemas、artifact-view、attempt/event、
+  repair-closure、inspect/list/seal 通用实现
+
+7-12 execution-plan/
+  兼容入口、迁移适配、plan-specific fixture
+
+logs/
+  append-only run、attempt、review 和审计 evidence
+
+外部全局 Skill/
+  revision-bound 薄路由
+```
 
 风险：Runner 不能演化成隐藏 provider scheduler，也不能拥有 reviewer 结论、gate 或 release authority。
 
 ### D-4：历史非终态 run 如何归档
 
-建议：新增 append-only `sealed-run` sidecar 和派生索引，不修改旧 sidecar，不删除 raw evidence。
+建议：接受。新增 immutable annotation 和可再生索引，分离 run execution、run relationship 与 change-cycle state；不修改旧 sidecar，不删除 raw evidence。
 
 风险：如果直接编辑旧 lease 或 gate state，会破坏本提案依赖的历史事实基线。
 
 ## 12. 下一步
 
-在实施前应先批准本提案的四个待决项，并决定是否为“Bootstrap Review Execution Control Plane”新增框架级 ADR。批准后再创建独立 execution-plan；不要直接在现有 7-12 plan 或历史 run 目录中追加未规划能力。
+本提案修订完成后仍保持 `proposed`。下一步必须先接受框架级 `Bootstrap Review Execution Control Plane Ownership` ADR 和对应 durable standard，再把本文件作为 approved intent source 创建独立 VDD execution-plan。不要直接在现有 7-12 plan、模糊顶层 `tools/` 或历史 run 目录中追加未规划能力。
