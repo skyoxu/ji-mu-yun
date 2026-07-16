@@ -22,6 +22,10 @@
 18. S0 ownership duplicate as the behavior-specific observed RED.
 19. Protected-tree hash and count drift for all three shadow plans.
 20. Positive and negative candidate/review/preflight/disposition identity binding.
+21. Manual-pause projection, Round 4 rejection, and blocked predicate result status.
+22. Clean-checkout validation without clarification or repair logs.
+23. Executable acceptance registry, derived requirement quality, and exact earliest-phase mapping.
+24. Command descriptor versus RED/GREEN/REFACTOR invocation expectation separation.
 
 ## Required Adapter Fixtures
 
@@ -57,13 +61,15 @@ Minimum run files:
 - `run-events.jsonl`;
 - `recovery-state.json`.
 
-Every file binds the same run, plan, contract, slice, source, validator, command registry, and candidate identities.
+Every file binds the same run, plan, contract, slice, source, validator, command registry, and candidate identities. Stage files also record command identity, observed exit, timestamp, and predecessor-stage hash; RED records the declared selector and stable failures. The candidate directory contains hash-bound `changed-files.json` and `test-diff.patch`.
 
-S6 and S7 commands receive `--candidate-result` and `--bootstrap-run`; implicit latest selection is forbidden. Candidate evidence must be a manifest artifact under `logs/tdd-adapter/**`, and the Bootstrap run must remain under `logs/ci/**`.
+Every slice command receives `--run-dir`, `--red-result`, `--green-result`, and `--refactor-result`; implicit latest selection and repository-wide evidence scans are forbidden. S6 additionally receives `--candidate-result`. Only S7 receives `--bootstrap-run`.
+
+Raw clarification and repair evidence remains under `logs/**`, but clean-checkout authorization consumes only the minimized projections in `schemas/clarification-decisions.v1.json`, `schemas/review-blocking-state.v1.json`, and `schemas/shadow-protected-baseline.v1.json`.
 
 ## Candidate Envelope
 
-The candidate result authorizes only `bootstrap-review`. It explicitly excludes `implementation-accepted`, protected handoff, and release.
+The candidate result authorizes only `bootstrap-review`. It explicitly excludes `implementation-accepted`, protected handoff, and release. Its worktree identity covers only declared slice write/read/dependency/authority closure through S6, so unrelated unstaged or untracked work does not invalidate it; Git index drift remains blocking.
 
 ## Plan Validation Evidence
 

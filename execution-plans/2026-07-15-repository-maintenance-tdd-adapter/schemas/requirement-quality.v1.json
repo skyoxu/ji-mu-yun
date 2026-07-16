@@ -1,29 +1,105 @@
 {
-  "schema_version": "rmap.requirement-quality.v1",
-  "checks": [
-    {"requirement_id":"RMAP-001","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-002","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-003","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-004","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-005","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-006","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-007","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-008","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-009","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-010","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-011","observable":true,"normative_strength":"must_not","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-012","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-013","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-014","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-015","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-016","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-017","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-018","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-019","observable":true,"normative_strength":"must_not","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-020","observable":true,"normative_strength":"must_not","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-021","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-022","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-023","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
-    {"requirement_id":"RMAP-024","observable":true,"normative_strength":"must_not","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true}
+  "schema_version": "rmap.requirement-quality.v2",
+  "requirements_hash": "sha256:c6890efce9e172334f51003cc39f1055938d64ef46855a422aa749ba577ef830",
+  "acceptance_contracts_hash": "sha256:c30367241436cff6b8d3e1c16a942bda95c6f54c5011fd19aff4eeebef478fff",
+  "validator_version": "rmap-plan-validator.v2",
+  "generated_at": "2026-07-16T09:20:00Z",
+  "requirements": [
+    {
+      "requirement_id": "RMAP-001",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-002",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-003",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-004",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-005",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-006",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-007",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-008",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-009",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-010",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-011",
+      "normative_strength": "must_not"
+    },
+    {
+      "requirement_id": "RMAP-012",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-013",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-014",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-015",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-016",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-017",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-018",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-019",
+      "normative_strength": "must_not"
+    },
+    {
+      "requirement_id": "RMAP-020",
+      "normative_strength": "must_not"
+    },
+    {
+      "requirement_id": "RMAP-021",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-022",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-023",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-024",
+      "normative_strength": "must_not"
+    }
   ]
 }

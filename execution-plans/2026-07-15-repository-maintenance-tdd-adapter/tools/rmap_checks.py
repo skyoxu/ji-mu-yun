@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import Any
 from contract_guards import glob_patterns_overlap, schema_error, typed_path_is_safe
 from source_guards import validate_coverage as validate_source_coverage
-from shadow_guards import validate_shadow_protected_trees
+from shadow_guards import validate_shadow_protected_trees, validate_shadow_registry as validate_shadow_registry_guard
+from authority_guards import validate_acceptance_contracts, validate_authority_manifest, validate_clarification_projection, validate_plan_state as validate_plan_state_guard, validate_script_sizes
 
-
-VALIDATOR_VERSION = "rmap-plan-validator.v1"
+VALIDATOR_VERSION = "rmap-plan-validator.v2"
 HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 REQ_RE = re.compile(r"^RMAP-(\d{3})$")
 PLACEHOLDER_RE = re.compile(r"\$\{[^}]+\}")
@@ -31,31 +31,36 @@ REQUIRED_FILES = {
     "schemas/command-registry.v1.json", "schemas/implementation-contract.v1.schema.json",
     "schemas/shadow-protected-baseline.v1.json",
     "schemas/validation-result.v1.schema.json", "schemas/diagnostic.v1.schema.json",
+    "schemas/acceptance-contracts.v1.json", "schemas/authority-manifest.v1.json",
+    "schemas/clarification-decisions.v1.json", "schemas/review-blocking-state.v1.json",
     "fixtures/fixture-cases.v1.json", "tools/validate_all.py", "tools/rmap_checks.py",
-    "tools/contract_guards.py", "tools/evidence_guards.py", "tools/shadow_guards.py", "tools/source_guards.py", "tools/slice_guards.py",
+    "tools/contract_guards.py", "tools/evidence_guards.py", "tools/authority_guards.py", "tools/shadow_guards.py", "tools/source_guards.py", "tools/slice_guards.py",
     "tools/fixture_checks.py", "tools/tests/test_plan_validator.py",
 }
 PREDICATE_AUTHORITY = {
+    "plan-repair-verified": (["plan-repair-verified"], ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]),
     "plan-ready": (["plan-ready"], ["slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]),
     "slice-ready": (["slice-ready"], ["bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]),
     "implementation-candidate": (["bootstrap-review"], ["implementation-accepted", "protected-handoff", "release-ready"]),
     "implementation-accepted": (["implementation-accepted"], ["protected-handoff", "release-ready"]),
 }
 
-
 def finding(rule_id: str, target: str, message: str) -> dict[str, str]:
     return {"rule_id": rule_id, "target": target, "message": message}
 
+def validate_plan_state(state: dict[str, Any], review_blocker: dict[str, Any]) -> list[dict[str, str]]:
+    return validate_plan_state_guard(state, review_blocker, PREDICATE_AUTHORITY)
+
+def validate_shadow_registry(shadow: dict[str, Any]) -> list[dict[str, str]]:
+    return validate_shadow_registry_guard(Path(__file__).resolve().parents[1], shadow)
 
 def strict_json(path: Path) -> Any:
     def reject_constant(value: str) -> None:
         raise ValueError(f"non-standard JSON constant: {value}")
     return json.loads(path.read_text(encoding="utf-8"), parse_constant=reject_constant)
 
-
 def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
-
 
 def candidate_hash(plan_root: Path) -> str:
     digest = hashlib.sha256()
@@ -67,11 +72,9 @@ def candidate_hash(plan_root: Path) -> str:
         digest.update(path.read_bytes()); digest.update(b"\0")
     return "sha256:" + digest.hexdigest()
 
-
 def validate_required_files(plan_root: Path) -> list[dict[str, str]]:
     missing = sorted(rel for rel in REQUIRED_FILES if not (plan_root / rel).is_file())
     return [finding("RMAP-STRUCT-MISSING", rel, "required artifact is missing") for rel in missing]
-
 
 def load_machine(plan_root: Path) -> tuple[dict[str, Any], list[dict[str, str]]]:
     names = {
@@ -80,6 +83,8 @@ def load_machine(plan_root: Path) -> tuple[dict[str, Any], list[dict[str, str]]]
         "quality": "schemas/requirement-quality.v1.json", "baseline": "schemas/create-baseline-manifest.v1.json",
         "shadow": "schemas/shadow-backfill.v1.json", "commands": "schemas/command-registry.v1.json",
         "contract": "implementation-contract.v1.json", "fixtures": "fixtures/fixture-cases.v1.json",
+        "acceptance": "schemas/acceptance-contracts.v1.json", "authority_manifest": "schemas/authority-manifest.v1.json",
+        "clarification": "schemas/clarification-decisions.v1.json", "review_blocker": "schemas/review-blocking-state.v1.json",
     }
     data: dict[str, Any] = {}
     findings: list[dict[str, str]] = []
@@ -92,7 +97,6 @@ def load_machine(plan_root: Path) -> tuple[dict[str, Any], list[dict[str, str]]]
         except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
             findings.append(finding("RMAP-STRUCT-JSON", rel, str(exc)))
     return data, findings
-
 
 def validate_links(plan_root: Path) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
@@ -107,8 +111,7 @@ def validate_links(plan_root: Path) -> list[dict[str, str]]:
                 findings.append(finding("RMAP-STRUCT-LINK", path.name, f"missing link target: {target}"))
     return findings
 
-
-def validate_requirements(plan_root: Path, registry: dict[str, Any], quality: dict[str, Any]) -> list[dict[str, str]]:
+def validate_requirements(plan_root: Path, registry: dict[str, Any], quality: dict[str, Any], acceptance: dict[str, Any]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     items = registry.get("requirements")
     if not isinstance(items, list):
@@ -135,23 +138,31 @@ def validate_requirements(plan_root: Path, registry: dict[str, Any], quality: di
         acceptances.add(item["acceptance_id"])
         if not item["source_refs"] or not item["consumers"] or item["quality_check"] != "pass":
             findings.append(finding("RMAP-REQ-CLOSURE", rid, "source, consumer, or quality closure is missing"))
-    checks = quality.get("checks") if isinstance(quality, dict) else None
-    if not isinstance(checks, list) or [item.get("requirement_id") for item in checks if isinstance(item, dict)] != expected:
-        findings.append(finding("RMAP-REQ-QUALITY", "requirement-quality", "quality checklist IDs do not match registry"))
-    else:
-        for item in checks:
-            if any(item.get(field) is not True for field in ("observable", "executable_acceptance", "negative_or_boundary", "no_implementation_leakage", "single_owner")):
-                findings.append(finding("RMAP-REQ-QUALITY", item["requirement_id"], "quality check is not fully satisfied"))
-            if item.get("normative_strength") not in {"must", "must_not"}:
-                findings.append(finding("RMAP-REQ-QUALITY", item["requirement_id"], "invalid normative strength"))
+    quality_items = quality.get("requirements") if isinstance(quality, dict) else None
+    acceptance_items = acceptance.get("acceptances") if isinstance(acceptance, dict) else None
+    if quality.get("requirements_hash") != sha256_file(plan_root / "schemas/requirements.v1.json") or quality.get("acceptance_contracts_hash") != sha256_file(plan_root / "schemas/acceptance-contracts.v1.json") or quality.get("validator_version") != VALIDATOR_VERSION:
+        findings.append(finding("RMAP-REQ-QUALITY-FRESHNESS", "requirement-quality", "quality projection hashes or validator version are stale"))
+    if not isinstance(quality_items, list) or [item.get("requirement_id") for item in quality_items if isinstance(item, dict)] != expected:
+        findings.append(finding("RMAP-REQ-QUALITY", "requirement-quality", "quality requirement IDs do not match registry"))
+    elif any(item.get("normative_strength") not in {"must", "must_not"} for item in quality_items):
+        findings.append(finding("RMAP-REQ-QUALITY", "requirement-quality", "normative strength is invalid"))
+    if not isinstance(acceptance_items, list):
+        findings.append(finding("RMAP-REQ-ACCEPTANCE-CONTRACT", "acceptance-contracts", "acceptance registry is missing"))
+        return findings
+    acceptance_by_requirement = {item.get("requirement_id"): item for item in acceptance_items if isinstance(item, dict)}
+    if set(acceptance_by_requirement) != set(expected) or len(acceptance_items) != len(expected):
+        findings.append(finding("RMAP-REQ-ACCEPTANCE-CONTRACT", "acceptance-contracts", "requirements do not map exactly once to acceptance contracts"))
+    for item in items:
+        contract = acceptance_by_requirement.get(item["id"], {})
+        required_acceptance = {"acceptance_id", "requirement_id", "owner_slice_id", "supporting_slice_ids", "phase_id", "positive_command_ids", "negative_fixture_ids", "expected_failure_ids", "evidence_required", "exit_predicate"}
+        if set(contract) != required_acceptance or contract.get("acceptance_id") != item["acceptance_id"] or not contract.get("positive_command_ids") or not contract.get("negative_fixture_ids") or not contract.get("evidence_required"):
+            findings.append(finding("RMAP-REQ-ACCEPTANCE-CONTRACT", item["id"], "acceptance contract is incomplete or mismatched"))
     return findings
-
 
 def validate_coverage(plan_root: Path, coverage: dict[str, Any], requirement_ids: set[str]) -> list[dict[str, str]]:
     return validate_source_coverage(plan_root, coverage, requirement_ids, sha256_file)
 
-
-def validate_deltas(deltas: dict[str, Any], requirement_ids: set[str]) -> list[dict[str, str]]:
+def validate_deltas(plan_root: Path, deltas: dict[str, Any], requirement_ids: set[str]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     items = deltas.get("deltas")
     if not isinstance(items, list):
@@ -166,30 +177,16 @@ def validate_deltas(deltas: dict[str, Any], requirement_ids: set[str]) -> list[d
         if not isinstance(reqs, list) or not reqs or set(reqs) - requirement_ids:
             findings.append(finding("RMAP-REQ-DELTA", str(item.get("id")), "invalid requirement mapping")); continue
         mapped.extend(reqs)
-        if not item.get("acceptance_ids") or not item.get("consumers") or not item.get("compatibility"):
+        required = {"id", "operation", "requirements", "summary", "prior_revision", "proposed_contract_hash", "consumers", "compatibility", "acceptance_ids", "affected_validators", "affected_fixtures", "affected_slices", "revalidation_command", "expected_rule_ids"}
+        if set(item) != required or not HASH_RE.fullmatch(str(item.get("prior_revision"))) or item.get("proposed_contract_hash") != sha256_file(plan_root / "implementation-contract.v1.json"):
+            findings.append(finding("RMAP-REQ-DELTA", str(item.get("id")), "delta revision or shape is incomplete"))
+        if not item.get("acceptance_ids") or not item.get("consumers") or not item.get("compatibility") or not item.get("affected_validators") or not item.get("affected_fixtures") or not item.get("affected_slices") or not item.get("revalidation_command") or not item.get("expected_rule_ids"):
             findings.append(finding("RMAP-REQ-DELTA", str(item.get("id")), "delta closure is incomplete"))
     if operations != {"ADDED", "MODIFIED", "REMOVED", "RENAMED"}:
         findings.append(finding("RMAP-REQ-DELTA", "spec-deltas", "all delta operations must be represented"))
     if sorted(mapped) != sorted(requirement_ids) or len(mapped) != len(set(mapped)):
         findings.append(finding("RMAP-REQ-DELTA", "spec-deltas", "each requirement must map exactly once"))
     return findings
-
-
-def validate_plan_state(state: dict[str, Any]) -> list[dict[str, str]]:
-    findings: list[dict[str, str]] = []
-    if state.get("status") not in {"draft", "plan-ready"} or state.get("open_blockers") != []:
-        findings.append(finding("RMAP-AUTH-PLAN-STATE", "plan-state", "invalid status or open blocker"))
-    predicates = state.get("predicates")
-    if not isinstance(predicates, dict) or set(predicates) != set(PREDICATE_AUTHORITY):
-        return findings + [finding("RMAP-AUTH-PREDICATE", "plan-state", "predicate set mismatch")]
-    for name, (authorizes, excludes) in PREDICATE_AUTHORITY.items():
-        item = predicates.get(name, {})
-        if item.get("authorizes") != authorizes or item.get("does_not_authorize") != excludes:
-            findings.append(finding("RMAP-AUTH-PREDICATE", name, "predicate authority set mismatch"))
-    if any(state.get("current_capabilities", {}).values()):
-        findings.append(finding("RMAP-AUTH-FUTURE-CLAIM", "plan-state", "future capability is marked current"))
-    return findings
-
 
 def validate_commands(registry: dict[str, Any], plan_root: Path | None = None) -> list[dict[str, str]]:
     plan_root = plan_root or Path(__file__).resolve().parents[1]; findings: list[dict[str, str]] = []
@@ -204,7 +201,7 @@ def validate_commands(registry: dict[str, Any], plan_root: Path | None = None) -
     if not isinstance(commands, list):
         return findings + [finding("RMAP-CMD-SHAPE", "command-registry", "commands must be a list")]
     seen: set[str] = set()
-    allowed_fields = {"id", "executable", "argv", "cwd", "timeout_seconds", "expected_exit", "expected_failure_ids", "declared_predicate", "slice_id"}
+    allowed_fields = {"id", "executable", "argv", "cwd", "timeout_seconds", "declared_predicate", "slice_id"}
     for command in commands:
         cid = command.get("id") if isinstance(command, dict) else "command"
         if not isinstance(command, dict) or set(command) - allowed_fields:
@@ -212,8 +209,10 @@ def validate_commands(registry: dict[str, Any], plan_root: Path | None = None) -
         if cid in seen or not isinstance(cid, str):
             findings.append(finding("RMAP-CMD-SHAPE", str(cid), "duplicate or invalid command id"))
         seen.add(cid)
-        if not isinstance(command.get("executable"), str) or not isinstance(command.get("argv"), list) or command.get("expected_exit") not in {"zero", "nonzero"}:
+        if not isinstance(command.get("executable"), str) or not isinstance(command.get("argv"), list):
             findings.append(finding("RMAP-CMD-SHAPE", str(cid), "command shape is invalid"))
+        elif command.get("executable") != "py":
+            findings.append(finding("RMAP-CMD-EXECUTABLE", str(cid), "command executable is not allowlisted"))
         if not isinstance(command.get("timeout_seconds"), int) or command["timeout_seconds"] <= 0:
             findings.append(finding("RMAP-CMD-SHAPE", str(cid), "timeout must be positive"))
         unsafe_path = False
@@ -238,8 +237,14 @@ def validate_commands(registry: dict[str, Any], plan_root: Path | None = None) -
             findings.append(finding("RMAP-CMD-SHAPE", str(cid), "declared predicate is invalid"))
         if command.get("slice_id") is not None and not re.fullmatch(r"RMAP-S[0-9]+", str(command.get("slice_id"))):
             findings.append(finding("RMAP-CMD-SHAPE", str(cid), "slice id is invalid"))
+        if declared_predicate and command.get("slice_id"):
+            argv = command.get("argv", [])
+            required_flags = {"--predicate", "--slice-id", "--run-dir", "--red-result", "--green-result", "--refactor-result"}
+            required_flags.update({"--candidate-result"} if declared_predicate == "implementation-candidate" else set())
+            required_flags.update({"--candidate-result", "--bootstrap-run"} if declared_predicate == "implementation-accepted" else set())
+            if not required_flags.issubset({item for item in argv if isinstance(item, str)}):
+                findings.append(finding("RMAP-CMD-STAGE-PROTOCOL", str(cid), "slice proof command omits required explicit evidence arguments"))
     return findings
-
 
 def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[str, Any], commands: dict[str, Any]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
@@ -266,16 +271,19 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
     if backend.get("hidden_state") is not False or backend.get("provider_scheduling") is not False or backend.get("subprocess_ownership") is not False:
         findings.append(finding("RMAP-BACKEND-STATE", "backend", "backend must be stateless and scheduler-free"))
     forbidden_backend = {"semantic-review", "done", "commit", "implementation-accepted", "protected-handoff", "release-ready"}
-    if set(backend.get("authorities", [])) & forbidden_backend or not forbidden_backend.issubset(set(backend.get("forbidden_authorities", []))):
+    allowed_backend = {"implement-within-write-set", "run-declared-deterministic-checks", "report-candidate"}
+    if set(backend.get("authorities", [])) != allowed_backend or set(backend.get("forbidden_authorities", [])) != forbidden_backend:
         findings.append(finding("RMAP-BACKEND-AUTHORITY", "backend", "backend authority escaped"))
     recovery = contract.get("recovery", {})
-    if recovery.get("initial_state") != "initialized" or recovery.get("successor_initial_state") != "initialized" or recovery.get("stale_state") != "stale" or recovery.get("append_only") is not True:
+    if recovery.get("initial_state") != "initialized" or recovery.get("successor_initial_state") != "initialized" or recovery.get("stale_state") != "stale" or recovery.get("append_only") is not True or recovery.get("resume_requires_hash_match") is not True or set(recovery.get("lineage_fields", [])) != {"predecessor_run_id", "supersedes_run_id"}:
         findings.append(finding("RMAP-RECOVERY-NEW-RUN-STATE", "recovery", "successor or state contract is invalid"))
     drift = contract.get("drift_policy", {})
     required_drift = {"block_git_index_drift", "block_authority_drift", "block_contract_drift", "block_validator_drift", "block_command_registry_drift", "block_write_set_overlap", "block_execution_read_set_drift", "block_dependency_closure_drift", "allow_unrelated_worktree_drift"}
     if set(drift) != required_drift or any(drift.get(key) is not True for key in required_drift):
         findings.append(finding("RMAP-HASH-DRIFT-POLICY", "drift-policy", "drift policy is incomplete"))
     policy = contract.get("acceptance_policy", {})
+    if policy.get("open_accepted_p0_p1_blocks") is not True or policy.get("p2_requires_disposition") is not True or policy.get("expired_p2_deferral_blocks") is not True:
+        findings.append(finding("RMAP-REVIEW-P2-DISPOSITION", "acceptance-policy", "acceptance blocker policy is incomplete"))
     if policy.get("high_risk_p2_deferrable") is not False:
         findings.append(finding("RMAP-REVIEW-P2-HIGH-RISK", "acceptance-policy", "high-risk P2 cannot be deferred"))
     if policy.get("release_authorized") is not False or policy.get("confidence_authoritative") is not False:
@@ -308,6 +316,13 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
     slice_ids = [item.get("slice_id") for item in slices if isinstance(item, dict)]
     if slice_ids != [f"RMAP-S{index}" for index in range(8)]:
         findings.append(finding("RMAP-TDD-SLICE", "slices", "slice sequence mismatch"))
+    identity_policy = contract.get("candidate_identity_policy", {})
+    required_identity = {"head", "index_tree", "tracked_diff_hash", "untracked_manifest_hash", "contract_hash", "command_registry_hash", "validator_hash", "authority_manifest_hash", "changed_file_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id", "refactor_run_id", "candidate_worktree_hash"}
+    expected_artifacts = {"changed-files.json", "test-diff.patch", "red-result.json", "green-result.json", "refactor-result.json", "recovery-state.json"}
+    stage_binding = identity_policy.get("stage_binding", {})
+    if identity_policy.get("exact_match_required") is not True or identity_policy.get("worktree_scope") != "declared-slice-closure-through-candidate" or identity_policy.get("unrelated_worktree_drift") != "excluded-from-candidate-hash" or set(identity_policy.get("required_run_artifacts", [])) != expected_artifacts or not stage_binding or any(value is not True for value in stage_binding.values()) or set(identity_policy.get("required_fields", [])) != required_identity:
+        findings.append(finding("RMAP-HASH-CANDIDATE-IDENTITY", "candidate-identity-policy", "candidate identity contract is incomplete"))
+    phase_order = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
     seen: set[str] = set()
     for item in slices:
         sid = item.get("slice_id", "slice")
@@ -320,10 +335,15 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
         if set(reqs) - set(req_map) or set(item.get("acceptance_ids", [])) != expected_acceptance:
             findings.append(finding("RMAP-TDD-ACCEPTANCE", sid, "requirement or acceptance mapping mismatch"))
         tdd = item.get("tdd", {})
-        used_commands = [tdd.get("red", {}).get("command_id"), tdd.get("green", {}).get("command_id"), *tdd.get("refactor", {}).get("command_ids", [])]
+        red = tdd.get("red", {})
+        green = tdd.get("green", {})
+        refactor = tdd.get("refactor", {}).get("invocations", [])
+        used_commands = [red.get("command_id"), green.get("command_id"), *[entry.get("command_id") for entry in refactor if isinstance(entry, dict)]]
         if any(command not in command_ids for command in used_commands):
             findings.append(finding("RMAP-CMD-UNKNOWN", sid, "slice references unknown command"))
-        proof_command = command_map.get(tdd.get("green", {}).get("command_id"), {})
+        if red.get("expected_exit") != "nonzero" or not red.get("test_selector") or not red.get("expected_failure_ids") or green.get("expected_exit") != "zero" or not refactor or any(entry.get("expected_exit") != "zero" for entry in refactor if isinstance(entry, dict)):
+            findings.append(finding("RMAP-TDD-STAGE-EXPECTATION", sid, "stage invocation expectations are incomplete or contradictory"))
+        proof_command = command_map.get(green.get("command_id"), {})
         if proof_command.get("declared_predicate") != item.get("exit_predicate") or proof_command.get("slice_id") != sid:
             findings.append(finding("RMAP-TDD-EXIT-PROOF", sid, "GREEN command cannot prove its exit predicate"))
         allowed = item.get("allowed_changes", {})
@@ -334,34 +354,18 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
             findings.append(finding("RMAP-PATH-OVERLAP", sid, f"write/forbidden overlap: {overlap[0]} <> {overlap[1]}"))
         if not item.get("execution_read_set") or not item.get("dependency_closure") or item.get("exit_predicate") not in PREDICATE_AUTHORITY:
             findings.append(finding("RMAP-PATH-CLOSURE", sid, "read/dependency/predicate closure is missing"))
+        if not item.get("source_refs") or item.get("phase_id") not in phase_order:
+            findings.append(finding("RMAP-TDD-PHASE", sid, "slice source or phase identity is missing"))
+        for rid in reqs:
+            if rid in req_map and req_map[rid].get("first_phase") != item.get("phase_id") and not any(rid in previous.get("requirement_ids", []) for previous in slices[:slices.index(item)]):
+                findings.append(finding("RMAP-TDD-PHASE", rid, "earliest slice phase differs from requirement first_phase"))
     slice_requirements = {rid for item in slices for rid in item.get("requirement_ids", [])}
     if slice_requirements != set(req_map):
         findings.append(finding("RMAP-TDD-REQUIREMENT-COVERAGE", "slices", "active requirement union differs from slice coverage"))
+    by_id = {item.get("slice_id"): item for item in slices}
+    if by_id.get("RMAP-S2", {}).get("exit_predicate") != "slice-ready" or by_id.get("RMAP-S6", {}).get("exit_predicate") != "implementation-candidate" or by_id.get("RMAP-S7", {}).get("exit_predicate") != "implementation-accepted":
+        findings.append(finding("RMAP-TDD-CANDIDATE-SEQUENCE", "S2-S7", "candidate, Bootstrap, and acceptance sequence is inverted"))
     return findings
-
-
-def validate_shadow_registry(shadow: dict[str, Any]) -> list[dict[str, str]]:
-    findings: list[dict[str, str]] = []
-    expected = ["llm-review-evidence-gate-hardening", "phase-a-frontend-gdd-to-module-workflow-hardening", "phase-frontend-boundary-hardening"]
-    plans = shadow.get("plans")
-    if shadow.get("authoritative") is not False or shadow.get("mode") != "additive-metadata-shadow-only":
-        findings.append(finding("RMAP-SHADOW-AUTHORITY", "shadow-backfill", "shadow registry is authoritative"))
-    if not isinstance(plans, list) or [item.get("plan_id") for item in plans] != expected or [item.get("order") for item in plans] != [1, 2, 3]:
-        findings.append(finding("RMAP-SHADOW-ORDER", "shadow-backfill", "shadow order mismatch"))
-    elif any(item.get("state_change_authorized") is not False for item in plans):
-        findings.append(finding("RMAP-SHADOW-AUTHORITY", "shadow-backfill", "shadow state change is authorized"))
-    findings.extend(validate_shadow_protected_trees(Path(__file__).resolve().parents[1], shadow))
-    return findings
-
-
-def validate_script_sizes(plan_root: Path) -> list[dict[str, str]]:
-    findings: list[dict[str, str]] = []
-    for path in (plan_root / "tools").rglob("*.py"):
-        lines = len(path.read_text(encoding="utf-8").splitlines())
-        if lines > 400:
-            findings.append(finding("RMAP-STRUCT-SCRIPT-SIZE", path.relative_to(plan_root).as_posix(), f"script has {lines} lines"))
-    return findings
-
 
 def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, str]], dict[str, Any]]:
     checks: list[dict[str, Any]] = []
@@ -373,13 +377,16 @@ def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[st
     requirement_ids = {item["id"] for item in data["requirements"].get("requirements", []) if isinstance(item, dict) and "id" in item}
     groups = [
         ("RMAP-STRUCT-LINKS", validate_links(plan_root)),
-        ("RMAP-REQ-REGISTRY", validate_requirements(plan_root, data["requirements"], data["quality"])),
+        ("RMAP-REQ-REGISTRY", validate_requirements(plan_root, data["requirements"], data["quality"], data["acceptance"])),
         ("RMAP-REQ-COVERAGE", validate_coverage(plan_root, data["coverage"], requirement_ids)),
-        ("RMAP-REQ-DELTAS", validate_deltas(data["deltas"], requirement_ids)),
-        ("RMAP-AUTH-PREDICATES", validate_plan_state(data["state"])),
+        ("RMAP-REQ-DELTAS", validate_deltas(plan_root, data["deltas"], requirement_ids)),
+        ("RMAP-AUTH-PREDICATES", validate_plan_state(data["state"], data["review_blocker"])),
         ("RMAP-CMD-REGISTRY", validate_commands(data["commands"], plan_root)),
         ("RMAP-CONTRACT", validate_contract(plan_root, data["contract"], data["requirements"], data["commands"])),
         ("RMAP-SHADOW", validate_shadow_registry(data["shadow"])),
+        ("RMAP-AUTH-MANIFEST", validate_authority_manifest(plan_root, data["authority_manifest"])),
+        ("RMAP-REQ-CLARIFICATION", validate_clarification_projection(data["clarification"], data["state"])),
+        ("RMAP-REQ-ACCEPTANCE", validate_acceptance_contracts(data["acceptance"], data["requirements"], data["contract"], data["commands"], data["fixtures"])),
         ("RMAP-SCRIPT-SIZE", validate_script_sizes(plan_root)),
     ]
     for check_id, group_findings in groups:

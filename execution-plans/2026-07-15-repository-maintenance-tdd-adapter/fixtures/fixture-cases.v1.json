@@ -1,29 +1,448 @@
 {
   "schema_version": "rmap.fixture-cases.v1",
   "cases": [
-    {"id":"valid-contract","target":"contract","mutations":[],"expected_valid":true,"expected_rule":null},
-    {"id":"shell-true","target":"command_registry","mutations":[{"op":"replace","path":"/shell","value":true}],"expected_valid":false,"expected_rule":"RMAP-CMD-SHELL"},
-    {"id":"environment-not-allowlisted","target":"command_registry","mutations":[{"op":"add","path":"/environment_allowlist/-","value":"UNSAFE_ENV"}],"expected_valid":false,"expected_rule":"RMAP-CMD-ENV"},
-    {"id":"untyped-placeholder","target":"command_registry","mutations":[{"op":"replace","path":"/commands/0/argv/1","value":"${plan_path}"}],"expected_valid":false,"expected_rule":"RMAP-CMD-PLACEHOLDER"},
-    {"id":"raw-command-field","target":"command_registry","mutations":[{"op":"add","path":"/commands/0/command","value":"py -3 tools/validate_all.py"}],"expected_valid":false,"expected_rule":"RMAP-CMD-RAW"},
-    {"id":"schema-missing-plan-id","target":"contract","mutations":[{"op":"remove","path":"/plan_id"}],"expected_valid":false,"expected_rule":"RMAP-STRUCT-SCHEMA"},
-    {"id":"typed-plan-path-escape","target":"command_registry","mutations":[{"op":"replace","path":"/commands/0/argv/1/value","value":"../../outside.py"}],"expected_valid":false,"expected_rule":"RMAP-CMD-PATH-CONTAINMENT"},
-    {"id":"authority-hash-runtime-bound","target":"contract","mutations":[{"op":"replace","path":"/authority/source_hashes/01-intent-authority-and-non-goals.md","value":"runtime-bound"}],"expected_valid":false,"expected_rule":"RMAP-HASH-AUTHORITY"},
-    {"id":"nested-write-forbidden-overlap","target":"contract","mutations":[{"op":"replace","path":"/slices/0/allowed_changes/documentation/0","value":"Docs/**"},{"op":"replace","path":"/slices/0/forbidden_changes/0","value":"docs/standards/**"}],"expected_valid":false,"expected_rule":"RMAP-PATH-OVERLAP"},
-    {"id":"s0-exit-proof-mismatch","target":"contract","mutations":[{"op":"replace","path":"/slices/0/tdd/green/command_id","value":"rmap-plan-validate"}],"expected_valid":false,"expected_rule":"RMAP-TDD-EXIT-PROOF"},
-    {"id":"s1-exit-proof-mismatch","target":"contract","mutations":[{"op":"replace","path":"/slices/1/tdd/green/command_id","value":"rmap-plan-validate"}],"expected_valid":false,"expected_rule":"RMAP-TDD-EXIT-PROOF"},
-    {"id":"source-coverage-location-drift","target":"source_coverage","mutations":[{"op":"replace","path":"/sources/0/sections/0/lines","value":"1-1"}],"expected_valid":false,"expected_rule":"RMAP-REQ-COVERAGE-LOCATION"},
-    {"id":"missing-active-slice-requirement","target":"contract","mutations":[{"op":"remove","path":"/slices/6/requirement_ids/2"},{"op":"remove","path":"/slices/6/acceptance_ids/2"},{"op":"remove","path":"/slices/7/requirement_ids/2"},{"op":"remove","path":"/slices/7/acceptance_ids/2"}],"expected_valid":false,"expected_rule":"RMAP-TDD-REQUIREMENT-COVERAGE"},
-    {"id":"duplicate-ownership","target":"contract","mutations":[{"op":"replace","path":"/ownership/runtime_evidence_owner","value":"execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json"}],"expected_valid":false,"expected_rule":"RMAP-OWNERSHIP-DUPLICATE"},
-    {"id":"shadow-protected-tree-drift","target":"shadow","mutations":[{"op":"replace","path":"/plans/0/path","value":"../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening"}],"expected_valid":false,"expected_rule":"RMAP-SHADOW-PROTECTED-DRIFT"},
-    {"id":"stale-source-hash","target":"contract","mutations":[{"op":"replace","path":"/source_revision","value":"sha256:0000000000000000000000000000000000000000000000000000000000000000"}],"expected_valid":false,"expected_rule":"RMAP-HASH-SOURCE"},
-    {"id":"write-forbidden-overlap","target":"contract","mutations":[{"op":"replace","path":"/slices/0/forbidden_changes/0","value":"docs/standards/repository-maintenance-agent-protocol.md"}],"expected_valid":false,"expected_rule":"RMAP-PATH-OVERLAP"},
-    {"id":"missing-slice-dependency","target":"contract","mutations":[{"op":"replace","path":"/slices/2/depends_on/0","value":"RMAP-S404"}],"expected_valid":false,"expected_rule":"RMAP-TDD-DEPENDENCY"},
-    {"id":"backend-commit-authority","target":"contract","mutations":[{"op":"add","path":"/backend/authorities/-","value":"commit"}],"expected_valid":false,"expected_rule":"RMAP-BACKEND-AUTHORITY"},
-    {"id":"shadow-authoritative","target":"contract","mutations":[{"op":"replace","path":"/shadow_backfills/0/authoritative","value":true}],"expected_valid":false,"expected_rule":"RMAP-SHADOW-AUTHORITY"},
-    {"id":"successor-starts-stale","target":"contract","mutations":[{"op":"replace","path":"/recovery/successor_initial_state","value":"stale"}],"expected_valid":false,"expected_rule":"RMAP-RECOVERY-NEW-RUN-STATE"},
-    {"id":"high-risk-p2-deferrable","target":"contract","mutations":[{"op":"replace","path":"/acceptance_policy/high_risk_p2_deferrable","value":true}],"expected_valid":false,"expected_rule":"RMAP-REVIEW-P2-HIGH-RISK"},
-    {"id":"expired-p2-deferral","target":"contract","mutations":[{"op":"add","path":"/acceptance_policy/p2_deferrals/-","value":{"finding_id":"P2-EXPIRED","risk":"normal","owner":"workflow owner","non_impact_proof":"No current consumer impact.","expires_at":"2000-01-01T00:00:00Z","closure_test":"rmap-adapter-tests","status":"deferred"}}],"expected_valid":false,"expected_rule":"RMAP-REVIEW-P2-EXPIRED"},
-    {"id":"predicate-authority-escalation","target":"plan_state","mutations":[{"op":"add","path":"/predicates/plan-ready/authorizes/-","value":"release-ready"}],"expected_valid":false,"expected_rule":"RMAP-AUTH-PREDICATE"}
+    {
+      "id": "valid-contract",
+      "target": "contract",
+      "mutations": [],
+      "expected_valid": true,
+      "expected_rule": null
+    },
+    {
+      "id": "shell-true",
+      "target": "command_registry",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/shell",
+          "value": true
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-CMD-SHELL"
+    },
+    {
+      "id": "environment-not-allowlisted",
+      "target": "command_registry",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/environment_allowlist/-",
+          "value": "UNSAFE_ENV"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-CMD-ENV"
+    },
+    {
+      "id": "untyped-placeholder",
+      "target": "command_registry",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/commands/0/argv/1",
+          "value": "${plan_path}"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-CMD-PLACEHOLDER"
+    },
+    {
+      "id": "raw-command-field",
+      "target": "command_registry",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/commands/0/command",
+          "value": "py -3 tools/validate_all.py"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-CMD-RAW"
+    },
+    {
+      "id": "schema-missing-plan-id",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/plan_id"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-STRUCT-SCHEMA"
+    },
+    {
+      "id": "typed-plan-path-escape",
+      "target": "command_registry",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/commands/0/argv/1/value",
+          "value": "../../outside.py"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-CMD-PATH-CONTAINMENT"
+    },
+    {
+      "id": "authority-hash-runtime-bound",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/authority/source_hashes/01-intent-authority-and-non-goals.md",
+          "value": "runtime-bound"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-HASH-AUTHORITY"
+    },
+    {
+      "id": "nested-write-forbidden-overlap",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/slices/0/allowed_changes/documentation/0",
+          "value": "Docs/**"
+        },
+        {
+          "op": "replace",
+          "path": "/slices/0/forbidden_changes/0",
+          "value": "docs/standards/**"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-PATH-OVERLAP"
+    },
+    {
+      "id": "s0-exit-proof-mismatch",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/slices/0/tdd/green/command_id",
+          "value": "rmap-plan-validate"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-TDD-EXIT-PROOF"
+    },
+    {
+      "id": "s1-exit-proof-mismatch",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/slices/1/tdd/green/command_id",
+          "value": "rmap-plan-validate"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-TDD-EXIT-PROOF"
+    },
+    {
+      "id": "source-coverage-location-drift",
+      "target": "source_coverage",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/sources/0/sections/0/lines",
+          "value": "1-1"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-REQ-COVERAGE-LOCATION"
+    },
+    {
+      "id": "missing-active-slice-requirement",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/slices/6/requirement_ids/2"
+        },
+        {
+          "op": "remove",
+          "path": "/slices/6/acceptance_ids/2"
+        },
+        {
+          "op": "remove",
+          "path": "/slices/7/requirement_ids/2"
+        },
+        {
+          "op": "remove",
+          "path": "/slices/7/acceptance_ids/2"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-TDD-REQUIREMENT-COVERAGE"
+    },
+    {
+      "id": "duplicate-ownership",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/ownership/runtime_evidence_owner",
+          "value": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-OWNERSHIP-DUPLICATE"
+    },
+    {
+      "id": "shadow-protected-tree-drift",
+      "target": "shadow",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/plans/0/path",
+          "value": "../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-SHADOW-PROTECTED-DRIFT"
+    },
+    {
+      "id": "stale-source-hash",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/source_revision",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-HASH-SOURCE"
+    },
+    {
+      "id": "write-forbidden-overlap",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/slices/0/forbidden_changes/0",
+          "value": "docs/standards/repository-maintenance-agent-protocol.md"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-PATH-OVERLAP"
+    },
+    {
+      "id": "missing-slice-dependency",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/slices/2/depends_on/0",
+          "value": "RMAP-S404"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-TDD-DEPENDENCY"
+    },
+    {
+      "id": "backend-commit-authority",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/backend/authorities/-",
+          "value": "commit"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-BACKEND-AUTHORITY"
+    },
+    {
+      "id": "shadow-authoritative",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/shadow_backfills/0/authoritative",
+          "value": true
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-SHADOW-AUTHORITY"
+    },
+    {
+      "id": "successor-starts-stale",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/recovery/successor_initial_state",
+          "value": "stale"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-RECOVERY-NEW-RUN-STATE"
+    },
+    {
+      "id": "high-risk-p2-deferrable",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/acceptance_policy/high_risk_p2_deferrable",
+          "value": true
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-REVIEW-P2-HIGH-RISK"
+    },
+    {
+      "id": "expired-p2-deferral",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/acceptance_policy/p2_deferrals/-",
+          "value": {
+            "finding_id": "P2-EXPIRED",
+            "risk": "normal",
+            "owner": "workflow owner",
+            "non_impact_proof": "No current consumer impact.",
+            "expires_at": "2000-01-01T00:00:00Z",
+            "closure_test": "rmap-adapter-tests",
+            "status": "deferred"
+          }
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-REVIEW-P2-EXPIRED"
+    },
+    {
+      "id": "predicate-authority-escalation",
+      "target": "plan_state",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/predicates/plan-ready/authorizes/-",
+          "value": "release-ready"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-AUTH-PREDICATE"
+    },
+    {
+      "id": "manual-pause-cleared",
+      "target": "plan_state",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": "plan-ready"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-REVIEW-MANUAL-PAUSE"
+    },
+    {
+      "id": "review-round4-authorized",
+      "target": "review_blocker",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/round_4_authorized",
+          "value": true
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-REVIEW-MANUAL-PAUSE"
+    },
+    {
+      "id": "red-stage-exit-conflict",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/slices/2/tdd/red/expected_exit",
+          "value": "zero"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-TDD-STAGE-EXPECTATION"
+    },
+    {
+      "id": "candidate-identity-incomplete",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/candidate_identity_policy/required_fields/13"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-HASH-CANDIDATE-IDENTITY"
+    },
+    {
+      "id": "authority-manifest-missing-agents",
+      "target": "authority_manifest",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/categories/repository_rules/0"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-HASH-AUTHORITY-MANIFEST"
+    },
+    {
+      "id": "clarification-projection-log-path",
+      "target": "clarification_projection",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/sources/0/path",
+          "value": "logs/vdd-clarifications/state.json"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-REQ-CLARIFICATION-PROJECTION"
+    },
+    {
+      "id": "acceptance-contract-missing",
+      "target": "acceptance",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/acceptances/0"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-REQ-ACCEPTANCE-CONTRACT"
+    },
+    {
+      "id": "requirement-quality-stale",
+      "target": "requirement_quality",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/requirements_hash",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-REQ-QUALITY-FRESHNESS"
+    },
+    {
+      "id": "slice-phase-mismatch",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/slices/2/phase_id",
+          "value": "P2"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-TDD-PHASE"
+    }
   ]
 }

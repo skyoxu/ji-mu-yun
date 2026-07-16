@@ -62,6 +62,8 @@ Security, data-loss, authority-bypass, evidence-integrity, irreversible-mutation
 - Bootstrap full semantic review follows its own two-round default and three-round hard limit.
 - Historical evidence is never rewritten to make a later run pass.
 
+The current stop-loss owner is [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json). It records `manual_pause_after_round_3`, forbids Round 4 under the current policy revision, and requires a new external policy decision for semantic re-entry.
+
 ## Confirmed P1 Repair Lineage
 
 The repair baseline is `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-p1-repair-baseline/baseline-manifest.json`. It preserves Bootstrap findings `BSR-06FAE36E33FCD8DF`, `BSR-074B1DAA968AF43B`, `BSR-592AAB6881E55672`, `BSR-83E672E6803298AD`, and `BSR-9CAF6A01EDF7AAA7`. Closure requires the matching schema, authority-hash, typed-path, nested-glob, and S0-exit fixtures plus a fresh composite result; this section is not closure evidence by itself.
@@ -69,3 +71,5 @@ The repair baseline is `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/
 Round 2 repair uses `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-p1-r2-repair-baseline/baseline-manifest.json` and preserves `BSR-813CC04B3E5C6009`, `BSR-BA46227BDFEF4DA7`, and `BSR-C69B8ECB622B98EA`. Closure requires a controlled-temp test, all-slice exit-proof counterexamples, exact source-location counterexamples, and a new candidate envelope. Round 1 and Round 2 evidence remain immutable predecessors.
 
 Round 3 repair uses `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-p1-r3-repair-baseline/baseline-manifest.json` and preserves all eight finalized Round 3 P1 dispositions. The repair covers slice requirement union, restricted-token junction testing, S0 ownership RED, independent shadow-byte baselines, and current S6/S7 evidence binding. Because the semantic review hard limit is exhausted, deterministic closure retains `manual_pause` and cannot claim the Bootstrap blockers closed.
+
+The follow-up control-chain repair baseline is `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-222-repair-baseline/baseline-manifest.json`. It preserves the pre-repair target hash and the local false-positive `plan-ready` PASS. Its candidate may prove only `plan-repair-verified`; it cannot rewrite any prior disposition.

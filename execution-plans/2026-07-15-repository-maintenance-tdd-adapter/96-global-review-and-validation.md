@@ -10,7 +10,7 @@ Sampling is not allowed.
 
 Before semantic review:
 
-1. run `tools/validate_all.py --predicate plan-ready`;
+1. run `tools/validate_all.py --predicate plan-repair-verified` and confirm that `--predicate plan-ready` returns `blocked`;
 2. run every test under `tools/tests/`;
 3. run the VDD Skill contract validator and tests;
 4. run the 7-12 Whole-directory validator and Bootstrap regression suite when reviewing integration claims;
@@ -29,6 +29,10 @@ A deterministic failure stops semantic review.
 - The parent session never edits reviewer or verifier decisions.
 - The result is supplemental and cannot become BH-HANDOFF or release authority.
 
+## Plan-Repair-Verified Predicate
+
+`plan-repair-verified` requires all deterministic plan checks, durable clean-checkout authority projections, exact machine ownership, and current hashes. It authorizes only `plan-repair-verified` and explicitly excludes plan-ready, slice-ready, Bootstrap review, implementation acceptance, handoff, and release.
+
 ## Plan-Ready Predicate
 
 Plan-ready requires:
@@ -39,6 +43,8 @@ Plan-ready requires:
 - no open blocker exists;
 - plan status is `draft` or `plan-ready` and the result authorizes only transition to or confirmation of `plan-ready`;
 - `does_not_authorize` includes slice, implementation candidate, implementation acceptance, protected handoff, and release.
+
+The current Round 3 blocking projection violates the no-open-blocker condition by design, so `plan-ready` must return machine status `blocked` and nonzero exit until an external policy decision supersedes it.
 
 ## Implementation Review Predicate
 

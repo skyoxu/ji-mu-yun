@@ -15,11 +15,17 @@ def _expected_locations(source_id: str, source_path: Path) -> list[tuple[str, st
         bounds = list(zip([1, *[item + 2 for item in separators]], [*[item - 2 for item in separators], len(lines)]))
         return [(f"AGENT-SRC-{value}", f"{start}-{end}") for value, (start, end) in zip(("I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"), bounds)]
     document = __import__("json").loads(source_path.read_text(encoding="utf-8"))
-    settled = sorted(int(item["id"].split("-")[1]) for item in document.get("questions", []) if item.get("status") == "answered")
-    groups = [(1, 5), (6, 12), (13, 17)]
-    if settled != list(range(1, 18)):
+    decision_sets = document.get("decision_sets", {})
+    creation = [item.get("id") for item in decision_sets.get("creation", []) if item.get("status") == "accepted"]
+    repair = [item.get("id") for item in decision_sets.get("repair", []) if item.get("status") == "accepted"]
+    if creation != [f"CQ-{index:03d}" for index in range(1, 18)] or repair != [f"CQ-{index:03d}" for index in range(1, 6)]:
         return []
-    return [(f"CQ-{start:03d}-{end:03d}", f"questions:CQ-{start:03d}..CQ-{end:03d}") for start, end in groups]
+    return [
+        ("CREATE-CQ-001-005", "creation:CQ-001..CQ-005"),
+        ("CREATE-CQ-006-012", "creation:CQ-006..CQ-012"),
+        ("CREATE-CQ-013-017", "creation:CQ-013..CQ-017"),
+        ("REPAIR-CQ-001-005", "repair:CQ-001..CQ-005"),
+    ]
 
 
 def _locations_are_exact(source_id: str, sections: list[Any], source_path: Path) -> bool:
@@ -38,7 +44,7 @@ def validate_coverage(
 ) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     sources = coverage.get("sources")
-    if not isinstance(sources, list) or {item.get("source_id") for item in sources if isinstance(item, dict)} != {"agentbuild", "clarification"}:
+    if not isinstance(sources, list) or {item.get("source_id") for item in sources if isinstance(item, dict)} != {"agentbuild", "clarification-projection"}:
         return [_finding("RMAP-REQ-COVERAGE", "source-coverage", "required sources are missing")]
     covered: set[str] = set()
     for source in sources:
@@ -47,7 +53,7 @@ def validate_coverage(
         if not source_path.is_file() or sha256_file(source_path) != source.get("sha256"):
             findings.append(_finding("RMAP-HASH-SOURCE", source_id, "source is missing or stale"))
         sections = source.get("sections")
-        expected_count = 9 if source_id == "agentbuild" else 3
+        expected_count = 9 if source_id == "agentbuild" else 4
         if not isinstance(sections, list) or len(sections) != expected_count:
             findings.append(_finding("RMAP-REQ-COVERAGE", source_id, "section coverage is incomplete")); continue
         if source_path.is_file() and not _locations_are_exact(source_id, sections, source_path):

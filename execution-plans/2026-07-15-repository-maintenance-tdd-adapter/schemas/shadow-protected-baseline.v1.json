@@ -2,8 +2,11 @@
   "schema_version": "rmap.shadow-protected-baseline.v1",
   "baseline_id": "round3-p1-repair-pre-shadow-backfill",
   "captured_from_review": "repo-maint-tdd-final-r3-20260716-110837",
-  "evidence_path": "../../logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-p1-r3-repair-baseline/shadow-protected-baseline.json",
-  "evidence_sha256": "sha256:90227e2019964fc3d20ed41eb0d1885033d08387818007bd0e231365158368fd",
+  "historical_source": {
+    "path": "logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-p1-r3-repair-baseline/shadow-protected-baseline.json",
+    "sha256": "sha256:90227e2019964fc3d20ed41eb0d1885033d08387818007bd0e231365158368fd",
+    "required_for_clean_checkout_validation": false
+  },
   "plans": [
     {
       "plan_id": "llm-review-evidence-gate-hardening",

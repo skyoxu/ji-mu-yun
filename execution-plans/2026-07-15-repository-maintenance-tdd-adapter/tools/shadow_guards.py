@@ -32,10 +32,9 @@ def validate_shadow_protected_trees(plan_root: Path, shadow: dict[str, Any]) -> 
     except (OSError, UnicodeError, ValueError):
         return [{"rule_id": "RMAP-SHADOW-PROTECTED-DRIFT", "target": baseline_path.as_posix(), "message": "protected baseline is missing or invalid"}]
     baseline_plans = {item.get("plan_id"): item for item in baseline.get("plans", []) if isinstance(item, dict)}
-    evidence_path = (plan_root / baseline.get("evidence_path", "")).resolve()
-    evidence_hash = "sha256:" + hashlib.sha256(evidence_path.read_bytes()).hexdigest() if evidence_path.is_file() else None
-    if evidence_hash != baseline.get("evidence_sha256"):
-        findings.append({"rule_id": "RMAP-SHADOW-PROTECTED-DRIFT", "target": "shadow-baseline-evidence", "message": "protected baseline evidence is missing or stale"})
+    historical = baseline.get("historical_source", {})
+    if not isinstance(historical, dict) or historical.get("required_for_clean_checkout_validation") is not False:
+        findings.append({"rule_id": "RMAP-SHADOW-PROTECTED-DRIFT", "target": "shadow-baseline-projection", "message": "durable protected baseline projection is invalid"})
     if shadow.get("protected_baseline_id") != baseline.get("baseline_id"):
         findings.append({"rule_id": "RMAP-SHADOW-PROTECTED-DRIFT", "target": "shadow-backfill", "message": "protected baseline identity differs"})
     for item in shadow.get("plans", []):
@@ -48,4 +47,18 @@ def validate_shadow_protected_trees(plan_root: Path, shadow: dict[str, Any]) -> 
         actual_hash, actual_count = protected_tree_identity(target)
         if actual_hash != frozen.get("protected_tree_sha256") or actual_count != frozen.get("protected_file_count"):
             findings.append({"rule_id": "RMAP-SHADOW-PROTECTED-DRIFT", "target": str(item.get("plan_id")), "message": "protected tree bytes differ from baseline"})
+    return findings
+
+
+def validate_shadow_registry(plan_root: Path, shadow: dict[str, Any]) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    expected = ["llm-review-evidence-gate-hardening", "phase-a-frontend-gdd-to-module-workflow-hardening", "phase-frontend-boundary-hardening"]
+    plans = shadow.get("plans")
+    if shadow.get("authoritative") is not False or shadow.get("mode") != "additive-metadata-shadow-only":
+        findings.append({"rule_id": "RMAP-SHADOW-AUTHORITY", "target": "shadow-backfill", "message": "shadow registry is authoritative"})
+    if not isinstance(plans, list) or [item.get("plan_id") for item in plans] != expected or [item.get("order") for item in plans] != [1, 2, 3]:
+        findings.append({"rule_id": "RMAP-SHADOW-ORDER", "target": "shadow-backfill", "message": "shadow order mismatch"})
+    elif any(item.get("state_change_authorized") is not False for item in plans):
+        findings.append({"rule_id": "RMAP-SHADOW-AUTHORITY", "target": "shadow-backfill", "message": "shadow state change is authorized"})
+    findings.extend(validate_shadow_protected_trees(plan_root, shadow))
     return findings

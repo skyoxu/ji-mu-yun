@@ -31,4 +31,13 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `REMOVED`: no first-release Bootstrap CLI modification without a proved extension-point gap.
 - `REMOVED`: no P4 BMAD removal within this plan.
 
+## Control-Chain Repair Deltas
+
+- `MODIFIED`: plan state is blocked by the durable Round 3 manual-pause projection; local deterministic validation cannot clear it.
+- `MODIFIED`: S2 proves lifecycle under `slice-ready`; S6 finalizes the current candidate without Bootstrap output; S7 alone consumes finalized Bootstrap evidence for acceptance.
+- `MODIFIED`: command registry owns execution descriptors while each stage invocation owns expected exit, selector, and failure IDs.
+- `MODIFIED`: every slice consumes explicit run and stage evidence; repository-wide `logs/**` discovery is removed.
+- `ADDED`: executable acceptance registry, complete authority manifest, clarification projection, and review blocking projection.
+- `ADDED`: clean-checkout shadow baseline projection, derived requirement-quality hashes, exact earliest-phase validation, and complete candidate identity policy.
+
 No requirement is silently dropped. Machine-level delta details live in `schemas/spec-deltas.v1.json`.

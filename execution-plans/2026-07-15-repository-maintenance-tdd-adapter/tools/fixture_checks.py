@@ -9,7 +9,10 @@ from rmap_checks import (
     validate_commands,
     validate_contract,
     validate_coverage,
+    validate_authority_manifest,
+    validate_clarification_projection,
     validate_plan_state,
+    validate_requirements,
     validate_shadow_registry,
 )
 
@@ -52,7 +55,17 @@ def validate_fixture_document(plan_root: Path, target: str, document: dict[str, 
     if target == "command_registry":
         return validate_commands(document)
     if target == "plan_state":
-        return validate_plan_state(document)
+        return validate_plan_state(document, data["review_blocker"])
+    if target == "review_blocker":
+        return validate_plan_state(data["state"], document)
+    if target == "authority_manifest":
+        return validate_authority_manifest(plan_root, document)
+    if target == "clarification_projection":
+        return validate_clarification_projection(document)
+    if target == "acceptance":
+        return validate_requirements(plan_root, data["requirements"], data["quality"], document)
+    if target == "requirement_quality":
+        return validate_requirements(plan_root, data["requirements"], document, data["acceptance"])
     if target == "shadow":
         return validate_shadow_registry(document)
     if target == "source_coverage":
@@ -66,7 +79,7 @@ def evaluate_fixture(plan_root: Path, fixture_id: str, data: dict[str, Any]) -> 
     case = next((item for item in cases if item.get("id") == fixture_id), None)
     if case is None:
         return [finding("RMAP-STRUCT-FIXTURE", fixture_id, "fixture does not exist")]
-    base_key = {"contract": "contract", "command_registry": "commands", "plan_state": "state", "shadow": "shadow", "source_coverage": "coverage"}.get(case.get("target"))
+    base_key = {"contract": "contract", "command_registry": "commands", "plan_state": "state", "review_blocker": "review_blocker", "authority_manifest": "authority_manifest", "clarification_projection": "clarification", "acceptance": "acceptance", "requirement_quality": "quality", "shadow": "shadow", "source_coverage": "coverage"}.get(case.get("target"))
     if base_key is None:
         return [finding("RMAP-STRUCT-FIXTURE", fixture_id, "fixture target is invalid")]
     mutated = apply_mutations(data[base_key], case.get("mutations", []))
@@ -80,7 +93,7 @@ def validate_fixture_suite(plan_root: Path, data: dict[str, Any]) -> list[dict[s
         return [finding("RMAP-STRUCT-FIXTURE", "fixture-cases", "fixture suite is incomplete")]
     for case in cases:
         observed = evaluate_fixture(plan_root, case["id"], data)
-        rules = [item["rule_id"] for item in observed]
+        rules = sorted({item["rule_id"] for item in observed})
         if case.get("expected_valid") is True:
             if observed:
                 findings.append(finding("RMAP-STRUCT-FIXTURE", case["id"], f"valid fixture failed: {rules}"))

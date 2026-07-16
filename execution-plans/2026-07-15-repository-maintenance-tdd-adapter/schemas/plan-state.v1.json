@@ -1,19 +1,30 @@
 {
   "schema_version": "rmap.plan-state.v1",
   "plan_id": "repository-maintenance-tdd-adapter",
-  "status": "plan-ready",
+  "status": "blocked",
   "source": {
     "path": "../../agentbuild.txt",
     "sha256": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807"
   },
   "clarification": {
-    "state_path": "../../logs/vdd-clarifications/2026-07-15-repository-maintenance-tdd-adapter-f6d1143a/clarification-20260715T094322Z/state.json",
-    "sha256": "sha256:21da9212cdeb767c579dcdad6e374cba01d81d63563064724335e7016a85a0ec",
+    "projection_path": "schemas/clarification-decisions.v1.json",
+    "creation_run_id": "clarification-20260715T094322Z",
+    "repair_run_id": "repair-20260716T081500Z",
     "status": "closed",
     "write_disposition": "normal",
     "confidence": 96
   },
+  "blocking_disposition": {
+    "path": "schemas/review-blocking-state.v1.json",
+    "state": "manual_pause_after_round_3",
+    "blocker_id": "RMAP-BLOCK-BOOTSTRAP-MANUAL-PAUSE",
+    "reentry": "new_review_policy_decision_required"
+  },
   "predicates": {
+    "plan-repair-verified": {
+      "authorizes": ["plan-repair-verified"],
+      "does_not_authorize": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+    },
     "plan-ready": {
       "authorizes": ["plan-ready"],
       "does_not_authorize": ["slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
@@ -33,7 +44,14 @@
   },
   "phases": ["P0", "P1", "P2", "P3"],
   "out_of_scope_phase": "P4",
-  "open_blockers": [],
+  "open_blockers": [
+    {
+      "blocker_id": "RMAP-BLOCK-BOOTSTRAP-MANUAL-PAUSE",
+      "source_review_id": "repo-maint-tdd-final-r3-20260716-110837",
+      "reason": "round_3_p1_dispositions_not_semantically_reclosed",
+      "reentry": "new_review_policy_decision_required"
+    }
+  ],
   "current_capabilities": {
     "adapter_operational": false,
     "common_schema_skill_owned": false,

@@ -18,13 +18,16 @@ Machine owner: [`schemas/source-coverage.v1.json`](schemas/source-coverage.v1.js
 
 The machine owner declares ranges and exact arrays. The validator independently derives agentbuild section ranges from the hash-bound `---` separators and clarification selectors from the settled question set, then requires exact ID/selector equality. Section count and requirement-union equality alone are insufficient.
 
-## Clarification Coverage
+## Durable Clarification Coverage
 
 | Decisions | Requirement IDs |
 | --- | --- |
 | CQ-001 to CQ-005 | RMAP-001-003, 005, 011, 012, 017, 019, 024 |
 | CQ-006 to CQ-012 | RMAP-004, 005, 010, 013, 014, 017, 020, 022, 023 |
 | CQ-013 to CQ-017 | RMAP-003, 014-017, 021 |
+| Repair CQ-001 to CQ-005 | RMAP-003, 004, 006, 007, 010, 013, 014, 016-018, 021, 023 |
+
+The machine source is `schemas/clarification-decisions.v1.json`, not the ignored raw clarification run under `logs/**`.
 
 ## Exactness Rules
 

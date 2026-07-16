@@ -21,13 +21,15 @@ Every contract instance binds:
 - review profile and exit predicate;
 - backend, recovery, drift, P2, and release-authority policies.
 
+[`schemas/acceptance-contracts.v1.json`](schemas/acceptance-contracts.v1.json) owns the executable requirement -> acceptance -> slice -> command -> negative fixture -> evidence chain. [`schemas/authority-manifest.v1.json`](schemas/authority-manifest.v1.json) owns the complete clean-checkout authority closure.
+
 The instance is a projection, not a second requirements document. Long prose remains in the owning books; the instance cites stable IDs and source references.
 
 ## Command Execution Contract
 
 - `shell` is always `false`.
 - Commands are stable registry entries, never raw command strings.
-- Each command has a repository-resolved executable, structured `argv`, `cwd`, timeout, expected exit semantics, and expected failure IDs where applicable.
+- Each command uses the allowlisted `py` executable with structured `argv`, `cwd`, and timeout. RED/GREEN/REFACTOR expected exits, selectors, and failure IDs belong to the slice invocation contract, not the reusable command descriptor.
 - Environment keys come from an explicit allowlist. Secret-bearing values are never stored in the contract or evidence.
 - Substitution uses typed placeholder objects. Free-form `${...}` interpolation is invalid.
 - Windows paths are resolved, normalized case-insensitively, checked for repository containment, and rejected when a reparse-point escape cannot be disproved.
@@ -59,7 +61,7 @@ Terminal or side states are `blocked`, `failed`, `stale`, and `superseded`.
 
 ## Baseline And Drift Contract
 
-The baseline freezes HEAD, Git index tree, tracked diff, untracked manifest, authority hashes, plan/source/contract/schema/validator/test hashes, execution read set, dependency closure, and declared write set.
+The baseline freezes HEAD, Git index tree, scoped tracked diff, scoped untracked manifest, authority hashes, plan/source/contract/schema/validator/test hashes, execution read set, dependency closure, and declared write set. Worktree manifests cover the declared slice closure through S6; unrelated unstaged and untracked paths are excluded, while whole-index drift remains blocking.
 
 Every entry in `implementation-contract.v1.json.authority.source_hashes` is a concrete `sha256:<64 lowercase hex>` value. `runtime-bound` and other symbolic values are invalid. Prepare and resume recompute each referenced book and fail with `RMAP-HASH-AUTHORITY` before consuming older RED or candidate evidence.
 
@@ -76,12 +78,15 @@ Unrelated worktree drift outside all bound sets is recorded but does not block.
 
 | Predicate | Authorizes | Explicitly does not authorize |
 | --- | --- | --- |
+| `plan-repair-verified` | `plan-repair-verified` | plan-ready, slice, candidate, acceptance, handoff, release |
 | `plan-ready` | `plan-ready` | slice, candidate, acceptance, handoff, release |
 | `slice-ready` | `slice-ready` | candidate, acceptance, handoff, release |
 | `implementation-candidate` | `bootstrap-review` | acceptance, handoff, release |
 | `implementation-accepted` | `implementation-accepted` | handoff, release |
 
 `implementation-accepted` requires current deterministic evidence, no open accepted P0/P1, and a disposition for every accepted P2. A high-risk P2 is non-deferrable. A deferral requires owner, non-impact proof, expiry or recheck trigger, and an exact closure test; expiry automatically blocks acceptance.
+
+The current [`review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json) blocks all predicates above `plan-repair-verified`. A local pass cannot clear or rewrite that disposition.
 
 ## S0 Slice Proof
 
@@ -91,7 +96,7 @@ The same command-to-exit rule applies to every slice. Each S0-S7 GREEN command h
 
 The junction regression creates one uniquely named junction directly under `logs/`, points it at an existing outside directory, verifies resolved containment rejection, and removes it in `finally`. It does not depend on host `%TEMP%` or on creating a writable grandchild under a restricted token. Disposable test state never becomes plan authority.
 
-S6 and S7 never discover evidence through a repository-wide `logs/**` scan. Their command contracts require explicit candidate-result and Bootstrap-run paths. The validator checks the candidate file's hash in the review manifest, current plan/source/slice identity, exact authority exclusions, review/preflight/disposition identity, required-check completion, and current finding disposition before authorizing a transition.
+Every slice command receives an explicit run directory plus RED, GREEN, and REFACTOR result paths. Stage results bind the current contract and validator hashes, one nonempty run ID, increasing observation timestamps, a predecessor-file hash chain, the declared command/selector/failure IDs, and observed exit codes. `recovery-state.json` binds the same run and current hashes. S6 additionally receives the current candidate result and does not consume Bootstrap output. Its candidate binds sibling `changed-files.json` and `test-diff.patch` bytes plus the supplied stage run IDs. S7 consumes the S6 candidate plus an explicit Bootstrap run and checks the trusted profile, recomputed input hash, review/preflight/disposition identity, preflight evidence bytes, and final layer closure before acceptance.
 
 ## Confidence Contract
 

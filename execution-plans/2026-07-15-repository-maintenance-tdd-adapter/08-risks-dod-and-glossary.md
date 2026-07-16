@@ -23,7 +23,8 @@
 - Deliberate invalid and mutation cases fail with their expected stable rule IDs.
 - Validator unit tests and the fresh composite command pass.
 - The current result envelope has matching candidate/source/validator hashes and exact authority sets.
-- Status is `plan-ready` only after the draft candidate produces valid plan-ready evidence.
+- `plan-repair-verified` may pass only after the blocked candidate produces fresh deterministic evidence; it does not promote status.
+- Status remains `blocked` while the Round 3 manual-pause projection is current.
 - No implementation, old-plan backfill, ADR, standard, Skill, or Bootstrap runtime change is falsely claimed complete.
 
 ## Definition Of Done: Future Implementation

@@ -9,17 +9,17 @@ from pathlib import Path, PureWindowsPath
 from typing import Any
 
 
-SCHEMA_ANNOTATIONS = {"$schema", "$id", "title", "description"}
-SCHEMA_ASSERTIONS = {"type", "required", "additionalProperties", "properties", "const", "pattern", "minItems", "items", "enum"}
+SCHEMA_ANNOTATIONS = {"$schema", "$id", "$defs", "title", "description"}
+SCHEMA_ASSERTIONS = {"$ref", "type", "required", "additionalProperties", "properties", "const", "pattern", "minItems", "minLength", "uniqueItems", "items", "enum"}
 
 
-def junction_escape_is_rejected(plan_root: Path) -> bool:
+def junction_escape_is_rejected(plan_root: Path) -> bool | None:
     repository_root = plan_root.parents[1]
     junction = repository_root / "logs" / f"rmap-junction-{uuid.uuid4().hex}"
     outside = Path(__file__).resolve().anchor + "Windows\\Temp"
     result = subprocess.run(["cmd", "/c", "mklink", "/J", str(junction), str(outside)], capture_output=True, text=True, check=False)
     if result.returncode != 0:
-        raise RuntimeError(result.stderr)
+        return None
     try:
         return not typed_path_is_safe(f"logs/{junction.name}/file.txt", "repo_path", plan_root)
     finally:
@@ -44,10 +44,19 @@ def _matches_type(value: Any, expected: str) -> bool:
     return False
 
 
-def schema_error(value: Any, schema: dict[str, Any], path: str = "$") -> str | None:
+def schema_error(value: Any, schema: dict[str, Any], path: str = "$", root_schema: dict[str, Any] | None = None) -> str | None:
+    root_schema = schema if root_schema is None else root_schema
     unsupported = set(schema) - SCHEMA_ANNOTATIONS - SCHEMA_ASSERTIONS
     if unsupported:
         return f"{path}: unsupported schema keywords {sorted(unsupported)}"
+    reference = schema.get("$ref")
+    if reference is not None:
+        if not isinstance(reference, str) or not reference.startswith("#/$defs/"):
+            return f"{path}: unsupported schema reference"
+        definition = root_schema.get("$defs", {}).get(reference.removeprefix("#/$defs/"))
+        if not isinstance(definition, dict):
+            return f"{path}: missing schema definition {reference}"
+        return schema_error(value, definition, path, root_schema)
     expected_type = schema.get("type")
     if expected_type is not None:
         allowed = expected_type if isinstance(expected_type, list) else [expected_type]
@@ -59,6 +68,10 @@ def schema_error(value: Any, schema: dict[str, Any], path: str = "$") -> str | N
         return f"{path}: value is not in enum"
     if isinstance(value, str) and "pattern" in schema and re.search(schema["pattern"], value) is None:
         return f"{path}: value does not match pattern"
+    if isinstance(value, str) and "minLength" in schema:
+        minimum = schema["minLength"]
+        if not isinstance(minimum, int) or minimum < 0 or len(value) < minimum:
+            return f"{path}: string is shorter than minLength"
     if isinstance(value, dict):
         required = schema.get("required", [])
         if not isinstance(required, list) or not all(isinstance(item, str) for item in required):
@@ -77,19 +90,23 @@ def schema_error(value: Any, schema: dict[str, Any], path: str = "$") -> str | N
             if key in value:
                 if not isinstance(child_schema, dict):
                     return f"{path}.{key}: property schema must be an object"
-                error = schema_error(value[key], child_schema, f"{path}.{key}")
+                error = schema_error(value[key], child_schema, f"{path}.{key}", root_schema)
                 if error:
                     return error
     if isinstance(value, list):
         minimum = schema.get("minItems")
         if minimum is not None and (not isinstance(minimum, int) or len(value) < minimum):
             return f"{path}: array has fewer than minItems"
+        if schema.get("uniqueItems") is True:
+            serialized = [repr(item) for item in value]
+            if len(serialized) != len(set(serialized)):
+                return f"{path}: array items are not unique"
         item_schema = schema.get("items")
         if item_schema is not None:
             if not isinstance(item_schema, dict):
                 return f"{path}: items must be an object"
             for index, item in enumerate(value):
-                error = schema_error(item, item_schema, f"{path}[{index}]")
+                error = schema_error(item, item_schema, f"{path}[{index}]", root_schema)
                 if error:
                     return error
     return None

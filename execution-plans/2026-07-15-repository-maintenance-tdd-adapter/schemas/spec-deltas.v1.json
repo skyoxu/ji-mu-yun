@@ -5,15 +5,406 @@
     "sha256": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807"
   },
   "deltas": [
-    {"id":"RMAP-DELTA-001","operation":"MODIFIED","requirements":["RMAP-017"],"summary":"Backfill all three existing refactor plans rather than one pilot.","consumers":["7-12","7-07","7-11"],"compatibility":"additive-shadow-only","acceptance_ids":["RMAP-ACC-017"]},
-    {"id":"RMAP-DELTA-002","operation":"MODIFIED","requirements":["RMAP-011"],"summary":"Use a repository-owned capsule executor instead of stock Quick Dev backend v1.","consumers":["adapter","backend"],"compatibility":"stock-quick-dev-remains-unchanged","acceptance_ids":["RMAP-ACC-011"]},
-    {"id":"RMAP-DELTA-003","operation":"ADDED","requirements":["RMAP-001","RMAP-002","RMAP-024"],"summary":"Add one framework ADR and exact three-layer ownership.","consumers":["standards","Skill","plans","logs"],"compatibility":"new-framework-authority","acceptance_ids":["RMAP-ACC-001","RMAP-ACC-002","RMAP-ACC-024"]},
-    {"id":"RMAP-DELTA-004","operation":"ADDED","requirements":["RMAP-004","RMAP-014","RMAP-023"],"summary":"Add shell, environment, placeholder, Windows path, index, read-set, and dependency-closure controls.","consumers":["command registry","adapter"],"compatibility":"fail-closed","acceptance_ids":["RMAP-ACC-004","RMAP-ACC-014","RMAP-ACC-023"]},
-    {"id":"RMAP-DELTA-005","operation":"ADDED","requirements":["RMAP-015","RMAP-021"],"summary":"Add append-only recovery with stale predecessor and normally initialized successor.","consumers":["recovery","logs"],"compatibility":"new-evidence-contract","acceptance_ids":["RMAP-ACC-015","RMAP-ACC-021"]},
-    {"id":"RMAP-DELTA-006","operation":"ADDED","requirements":["RMAP-016"],"summary":"Require no open P0/P1 and full P2 disposition with non-deferrable high-risk families and expiry blocking.","consumers":["implementation-accepted"],"compatibility":"stricter-acceptance","acceptance_ids":["RMAP-ACC-016"]},
-    {"id":"RMAP-DELTA-007","operation":"REMOVED","requirements":["RMAP-012"],"summary":"Remove first-release Bootstrap CLI modification unless a deterministic gap proves it necessary.","consumers":["7-12 Bootstrap CLI"],"compatibility":"existing-extension-points-first","acceptance_ids":["RMAP-ACC-012"]},
-    {"id":"RMAP-DELTA-008","operation":"REMOVED","requirements":["RMAP-019"],"summary":"Remove P4 BMAD elimination from this plan.","consumers":["future plan"],"compatibility":"separate-plan-required","acceptance_ids":["RMAP-ACC-019"]},
-    {"id":"RMAP-DELTA-009","operation":"RENAMED","requirements":["RMAP-005"],"summary":"Rename quick-dev-tdd-adapter architecture concept to Repository Maintenance TDD Adapter while retaining the stateless adapter identity.","consumers":["plan","future Skill"],"compatibility":"identity-preserved","acceptance_ids":["RMAP-ACC-005"]},
-    {"id":"RMAP-DELTA-010","operation":"ADDED","requirements":["RMAP-003","RMAP-006","RMAP-007","RMAP-008","RMAP-009","RMAP-010","RMAP-013","RMAP-018","RMAP-020","RMAP-022"],"summary":"Add the remaining executable contract, lifecycle, validation, test, confidence, and source-custody requirements needed for a complete VDD control chain.","consumers":["plan validator","adapter","test suite","source audit"],"compatibility":"new-control-plane","acceptance_ids":["RMAP-ACC-003","RMAP-ACC-006","RMAP-ACC-007","RMAP-ACC-008","RMAP-ACC-009","RMAP-ACC-010","RMAP-ACC-013","RMAP-ACC-018","RMAP-ACC-020","RMAP-ACC-022"]}
+    {
+      "id": "RMAP-DELTA-001",
+      "operation": "MODIFIED",
+      "requirements": [
+        "RMAP-017"
+      ],
+      "summary": "Backfill all three existing refactor plans rather than one pilot.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "7-12",
+        "7-07",
+        "7-11"
+      ],
+      "compatibility": "additive-shadow-only",
+      "acceptance_ids": [
+        "RMAP-ACC-017"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "shadow-authoritative"
+      ],
+      "affected_slices": [
+        "RMAP-S3",
+        "RMAP-S4",
+        "RMAP-S5"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-SHADOW-AUTHORITY"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-002",
+      "operation": "MODIFIED",
+      "requirements": [
+        "RMAP-011"
+      ],
+      "summary": "Use a repository-owned capsule executor instead of stock Quick Dev backend v1.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "adapter",
+        "backend"
+      ],
+      "compatibility": "stock-quick-dev-remains-unchanged",
+      "acceptance_ids": [
+        "RMAP-ACC-011"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "backend-commit-authority"
+      ],
+      "affected_slices": [
+        "RMAP-S2",
+        "RMAP-S7"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-BACKEND-AUTHORITY"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-003",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-001",
+        "RMAP-002",
+        "RMAP-024"
+      ],
+      "summary": "Add one framework ADR and exact three-layer ownership.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "standards",
+        "Skill",
+        "plans",
+        "logs"
+      ],
+      "compatibility": "new-framework-authority",
+      "acceptance_ids": [
+        "RMAP-ACC-001",
+        "RMAP-ACC-002",
+        "RMAP-ACC-024"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "duplicate-ownership"
+      ],
+      "affected_slices": [
+        "RMAP-S0"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-OWNERSHIP-DUPLICATE"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-004",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-004",
+        "RMAP-014",
+        "RMAP-023"
+      ],
+      "summary": "Add shell, environment, placeholder, Windows path, index, read-set, and dependency-closure controls.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "command registry",
+        "adapter"
+      ],
+      "compatibility": "fail-closed",
+      "acceptance_ids": [
+        "RMAP-ACC-004",
+        "RMAP-ACC-014",
+        "RMAP-ACC-023"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "authority-manifest-missing-agents",
+        "shell-true",
+        "typed-plan-path-escape"
+      ],
+      "affected_slices": [
+        "RMAP-S1",
+        "RMAP-S2"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-CMD-PATH-CONTAINMENT",
+        "RMAP-CMD-SHELL",
+        "RMAP-HASH-AUTHORITY-MANIFEST"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-005",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-015",
+        "RMAP-021"
+      ],
+      "summary": "Add append-only recovery with stale predecessor and normally initialized successor.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "recovery",
+        "logs"
+      ],
+      "compatibility": "new-evidence-contract",
+      "acceptance_ids": [
+        "RMAP-ACC-015",
+        "RMAP-ACC-021"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "clarification-projection-log-path",
+        "successor-starts-stale"
+      ],
+      "affected_slices": [
+        "RMAP-S0",
+        "RMAP-S2"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-RECOVERY-NEW-RUN-STATE",
+        "RMAP-REQ-CLARIFICATION-PROJECTION"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-006",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-016"
+      ],
+      "summary": "Require no open P0/P1 and full P2 disposition with non-deferrable high-risk families and expiry blocking.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "implementation-accepted"
+      ],
+      "compatibility": "stricter-acceptance",
+      "acceptance_ids": [
+        "RMAP-ACC-016"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "manual-pause-cleared"
+      ],
+      "affected_slices": [
+        "RMAP-S6",
+        "RMAP-S7"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-REVIEW-MANUAL-PAUSE"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-007",
+      "operation": "REMOVED",
+      "requirements": [
+        "RMAP-012"
+      ],
+      "summary": "Remove first-release Bootstrap CLI modification unless a deterministic gap proves it necessary.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "7-12 Bootstrap CLI"
+      ],
+      "compatibility": "existing-extension-points-first",
+      "acceptance_ids": [
+        "RMAP-ACC-012"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "manual-pause-cleared"
+      ],
+      "affected_slices": [
+        "RMAP-S6"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-REVIEW-MANUAL-PAUSE"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-008",
+      "operation": "REMOVED",
+      "requirements": [
+        "RMAP-019"
+      ],
+      "summary": "Remove P4 BMAD elimination from this plan.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "future plan"
+      ],
+      "compatibility": "separate-plan-required",
+      "acceptance_ids": [
+        "RMAP-ACC-019"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "predicate-authority-escalation"
+      ],
+      "affected_slices": [
+        "RMAP-S0"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-AUTH-PREDICATE"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-009",
+      "operation": "RENAMED",
+      "requirements": [
+        "RMAP-005"
+      ],
+      "summary": "Rename quick-dev-tdd-adapter architecture concept to Repository Maintenance TDD Adapter while retaining the stateless adapter identity.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "plan",
+        "future Skill"
+      ],
+      "compatibility": "identity-preserved",
+      "acceptance_ids": [
+        "RMAP-ACC-005"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "backend-commit-authority"
+      ],
+      "affected_slices": [
+        "RMAP-S2"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-BACKEND-AUTHORITY"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-010",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-003",
+        "RMAP-006",
+        "RMAP-007",
+        "RMAP-008",
+        "RMAP-009",
+        "RMAP-010",
+        "RMAP-013",
+        "RMAP-018",
+        "RMAP-020",
+        "RMAP-022"
+      ],
+      "summary": "Add the remaining executable contract, lifecycle, validation, test, confidence, and source-custody requirements needed for a complete VDD control chain.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e",
+      "consumers": [
+        "plan validator",
+        "adapter",
+        "test suite",
+        "source audit"
+      ],
+      "compatibility": "new-control-plane",
+      "acceptance_ids": [
+        "RMAP-ACC-003",
+        "RMAP-ACC-006",
+        "RMAP-ACC-007",
+        "RMAP-ACC-008",
+        "RMAP-ACC-009",
+        "RMAP-ACC-010",
+        "RMAP-ACC-013",
+        "RMAP-ACC-018",
+        "RMAP-ACC-020",
+        "RMAP-ACC-022"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "candidate-identity-incomplete",
+        "missing-slice-dependency",
+        "predicate-authority-escalation",
+        "red-stage-exit-conflict",
+        "schema-missing-plan-id",
+        "shadow-protected-tree-drift",
+        "stale-source-hash"
+      ],
+      "affected_slices": [
+        "RMAP-S0",
+        "RMAP-S1",
+        "RMAP-S2",
+        "RMAP-S3",
+        "RMAP-S4",
+        "RMAP-S5",
+        "RMAP-S6",
+        "RMAP-S7"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-AUTH-PREDICATE",
+        "RMAP-HASH-CANDIDATE-IDENTITY",
+        "RMAP-HASH-SOURCE",
+        "RMAP-SHADOW-PROTECTED-DRIFT",
+        "RMAP-STRUCT-SCHEMA",
+        "RMAP-TDD-DEPENDENCY",
+        "RMAP-TDD-STAGE-EXPECTATION"
+      ]
+    }
   ]
 }

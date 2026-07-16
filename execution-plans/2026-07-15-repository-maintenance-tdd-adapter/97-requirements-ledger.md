@@ -2,6 +2,8 @@
 
 Machine owner: [`schemas/requirements.v1.json`](schemas/requirements.v1.json).
 
+Executable acceptance owner: [`schemas/acceptance-contracts.v1.json`](schemas/acceptance-contracts.v1.json). Requirement quality is derived against current requirement and acceptance hashes rather than accepted from self-declared booleans.
+
 | ID | Requirement | Owner | First phase | Acceptance | Status |
 | --- | --- | --- | --- | --- | --- |
 | RMAP-001 | Establish one framework ADR for protocol ownership. | workflow architect | P0 | RMAP-ACC-001 | active |

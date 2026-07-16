@@ -2,13 +2,14 @@
 
 ## Composite Entry
 
-`tools/validate_all.py` is the only plan-readiness entry. It must return nonzero unless the requested predicate passes and must emit a versioned result envelope containing current candidate, source, validator, and contract hashes.
+`tools/validate_all.py` is the only composite entry. `plan-repair-verified` may pass while the plan is blocked, but it authorizes no readiness or implementation state. Every predicate blocked by the Round 3 disposition returns nonzero with machine status `blocked`.
 
 ## Required Checks
 
 1. Required books and unique ownership.
-2. UTF-8 JSON parsing and strict validation against the declared implementation-contract schema. Unsupported schema keywords fail closed.
-3. Markdown local-link closure.
+2. Durable closed-set authority manifest, clarification projection, and fully bound Round 3 blocking disposition; no required clean-checkout authority may resolve under ignored `logs/**`.
+3. UTF-8 JSON parsing and strict validation against the declared implementation-contract and result-envelope schemas. Unsupported schema keywords fail closed.
+4. Markdown local-link closure.
 4. Requirement uniqueness, quality, owner, phase, acceptance, source, status, and evidence intent.
 5. Exact agreement among requirement registry, 97 ledger, 98 audit, and 99 coverage.
 6. Explicit `ADDED`, `MODIFIED`, `REMOVED`, and `RENAMED` delta semantics.
@@ -18,7 +19,9 @@
 10. Source section IDs and selectors are derived from the hash-bound source structure and must match the coverage machine owner exactly.
 11. The union of all slice requirement IDs equals the complete active requirement registry.
 12. Shadow slices compare protected-tree hashes and file counts against an independent pre-backfill baseline.
-13. Candidate and acceptance predicates consume explicit evidence paths and cross-bind candidate, review input, preflight, final result, and dispositions.
+13. Every slice consumes explicit run/RED/GREEN/REFACTOR paths and verifies current hashes, observed exits, strict time/order, predecessor hashes, and recovery lineage; S6 consumes candidate only, while S7 cross-binds candidate, trusted review profile, preflight evidence, final result, and dispositions.
+14. Every active requirement maps to one executable acceptance contract whose expected failure IDs equal the referenced negative fixtures' actual stable rules.
+15. Validation snapshots the plan, source, and validator before and after all checks; drift forces a non-authorizing failure envelope with distinct candidate/current hashes.
 9. Predicate-to-authority exactness and release exclusion.
 10. Shadow backfill exact population, order, additive-only policy, and non-authoritative status.
 11. Recovery initial/stale/successor state rules and append-only lineage.

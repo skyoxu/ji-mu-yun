@@ -1,12 +1,14 @@
 # Repository Maintenance TDD Adapter VDD Plan
 
-Status: `plan-ready`
+Status: `blocked` (`manual_pause_after_round_3`)
 
 Plan ID: `repository-maintenance-tdd-adapter`
 
 Approved intent source: [`../../agentbuild.txt`](../../agentbuild.txt)
 
-Clarification authority: `logs/vdd-clarifications/2026-07-15-repository-maintenance-tdd-adapter-f6d1143a/clarification-20260715T094322Z/state.json` at SHA-256 `21da9212cdeb767c579dcdad6e374cba01d81d63563064724335e7016a85a0ec`.
+Durable clarification authority: [`schemas/clarification-decisions.v1.json`](schemas/clarification-decisions.v1.json), projected from the closed creation and repair clarification runs without raw conversation content.
+
+Current review blocker: [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json). Round 3 finalized eight P1 findings and exhausted the three-round hard limit. No Round 4 or implementation predicate is authorized under the current policy revision.
 
 ## Outcome
 
@@ -52,20 +54,25 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 - Proposed common contract schema: [`schemas/implementation-contract.v1.schema.json`](schemas/implementation-contract.v1.schema.json)
 - Self-hosted contract instance: [`implementation-contract.v1.json`](implementation-contract.v1.json)
 - Command registry: [`schemas/command-registry.v1.json`](schemas/command-registry.v1.json)
+- Executable acceptance registry: [`schemas/acceptance-contracts.v1.json`](schemas/acceptance-contracts.v1.json)
+- Durable authority manifest: [`schemas/authority-manifest.v1.json`](schemas/authority-manifest.v1.json)
+- Clarification decision projection: [`schemas/clarification-decisions.v1.json`](schemas/clarification-decisions.v1.json)
+- Bootstrap blocking disposition: [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json)
 - Shadow migration registry: [`schemas/shadow-backfill.v1.json`](schemas/shadow-backfill.v1.json)
 - Composite validator: [`tools/validate_all.py`](tools/validate_all.py)
 
 ## Validation Commands
 
 ```powershell
+py -3 execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py --predicate plan-repair-verified
 py -3 execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py --predicate plan-ready
 py -3 -m unittest discover -s execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests -p "test_*.py" -v
 ```
 
-A successful `plan-ready` result authorizes only `plan-ready`. It does not authorize a slice, implementation, acceptance, handoff, or release.
+A successful `plan-repair-verified` result proves only that the blocked plan is internally coherent and reproducible. `plan-ready` and every implementation predicate must return nonzero with `RMAP-REVIEW-MANUAL-PAUSE` until a new policy decision supersedes the current blocking disposition.
 
 ## Phase Order
 
-`P0 framework ADR and ownership` -> `P1 contract and self-hosted adapter` -> `P2 old-plan shadow backfill` -> `P3 Bootstrap-bound candidate and acceptance`.
+`P0 framework ADR and ownership` -> `P1 contract and adapter lifecycle` -> `P2 old-plan shadow backfill` -> `P3 final candidate` -> external Bootstrap review -> `P3 implementation acceptance`.
 
 Removal of BMAD is explicitly outside this plan and requires a separate future plan.

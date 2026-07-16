@@ -4,31 +4,145 @@
   "title": "Ji Mu Yun Implementation Contract",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "plan_id", "source_revision", "protocol_version", "authority", "ownership", "command_registry", "backend", "recovery", "drift_policy", "acceptance_policy", "shadow_backfills", "slices"],
+  "required": ["schema_version", "plan_id", "source_revision", "protocol_version", "authority", "ownership", "command_registry", "backend", "recovery", "drift_policy", "acceptance_policy", "candidate_identity_policy", "shadow_backfills", "slices"],
   "properties": {
     "schema_version": {"const": "jimuyun.implementation-contract.v1"},
     "plan_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
     "source_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "protocol_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"},
+    "authority": {"$ref": "#/$defs/authority"},
+    "ownership": {"$ref": "#/$defs/ownership"},
+    "command_registry": {"type": "string", "pattern": "^schemas/[a-z0-9.-]+\\.json$"},
+    "backend": {"$ref": "#/$defs/backendPolicy"},
+    "recovery": {"$ref": "#/$defs/recoveryPolicy"},
+    "drift_policy": {"$ref": "#/$defs/driftPolicy"},
+    "acceptance_policy": {"$ref": "#/$defs/acceptancePolicy"},
+    "candidate_identity_policy": {"$ref": "#/$defs/candidateIdentityPolicy"},
+    "shadow_backfills": {"type": "array", "items": {"$ref": "#/$defs/shadowBackfill"}},
+    "slices": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/slice"}}
+  },
+  "$defs": {
+    "stringArray": {"type": "array", "items": {"type": "string"}},
     "authority": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "requirements", "coverage", "deltas", "source_hashes"],
+      "required": ["index", "requirements", "coverage", "deltas", "acceptance_contracts", "authority_manifest", "clarification_projection", "review_blocking_state", "source_hashes"],
       "properties": {
         "index": {"type": "string"},
         "requirements": {"type": "string"},
         "coverage": {"type": "string"},
         "deltas": {"type": "string"},
+        "acceptance_contracts": {"type": "string"},
+        "authority_manifest": {"type": "string"},
+        "clarification_projection": {"type": "string"},
+        "review_blocking_state": {"type": "string"},
         "source_hashes": {"type": "object"}
       }
     },
-    "ownership": {"type": "object"},
-    "command_registry": {"type": "string", "pattern": "^schemas/[a-z0-9.-]+\\.json$"},
-    "backend": {"type": "object"},
-    "recovery": {"type": "object"},
-    "drift_policy": {"type": "object"},
-    "acceptance_policy": {"type": "object"},
-    "shadow_backfills": {"type": "array"},
-    "slices": {"type": "array", "minItems": 1, "items": {"type": "object"}}
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["framework_adr", "standard_owner", "common_protocol_owner", "plan_instance_owner", "runtime_evidence_owner"],
+      "properties": {
+        "framework_adr": {"type": "string"}, "standard_owner": {"type": "string"}, "common_protocol_owner": {"type": "string"}, "plan_instance_owner": {"type": "string"}, "runtime_evidence_owner": {"type": "string"}
+      }
+    },
+    "backendPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "hidden_state", "provider_scheduling", "subprocess_ownership", "authorities", "forbidden_authorities"],
+      "properties": {
+        "mode": {"const": "in-session-slice-capsule"}, "hidden_state": {"const": false}, "provider_scheduling": {"const": false}, "subprocess_ownership": {"const": false}, "authorities": {"$ref": "#/$defs/stringArray"}, "forbidden_authorities": {"$ref": "#/$defs/stringArray"}
+      }
+    },
+    "recoveryPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_root_template", "initial_state", "stale_state", "successor_initial_state", "resume_requires_hash_match", "lineage_fields", "append_only"],
+      "properties": {
+        "evidence_root_template": {"type": "string"}, "initial_state": {"enum": ["initialized", "stale"]}, "stale_state": {"const": "stale"}, "successor_initial_state": {"enum": ["initialized", "stale"]}, "resume_requires_hash_match": {"const": true}, "lineage_fields": {"$ref": "#/$defs/stringArray"}, "append_only": {"const": true}
+      }
+    },
+    "driftPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["block_git_index_drift", "block_authority_drift", "block_contract_drift", "block_validator_drift", "block_command_registry_drift", "block_write_set_overlap", "block_execution_read_set_drift", "block_dependency_closure_drift", "allow_unrelated_worktree_drift"],
+      "properties": {
+        "block_git_index_drift": {"const": true}, "block_authority_drift": {"const": true}, "block_contract_drift": {"const": true}, "block_validator_drift": {"const": true}, "block_command_registry_drift": {"const": true}, "block_write_set_overlap": {"const": true}, "block_execution_read_set_drift": {"const": true}, "block_dependency_closure_drift": {"const": true}, "allow_unrelated_worktree_drift": {"const": true}
+      }
+    },
+    "acceptancePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["open_accepted_p0_p1_blocks", "p2_requires_disposition", "high_risk_p2_deferrable", "expired_p2_deferral_blocks", "p2_deferrals", "confidence_authoritative", "confidence_improvement_round_limit", "release_authorized"],
+      "properties": {
+        "open_accepted_p0_p1_blocks": {"const": true}, "p2_requires_disposition": {"const": true}, "high_risk_p2_deferrable": {"type": "boolean"}, "expired_p2_deferral_blocks": {"const": true}, "p2_deferrals": {"type": "array", "items": {"$ref": "#/$defs/p2Deferral"}}, "confidence_authoritative": {"const": false}, "confidence_improvement_round_limit": {"const": 3}, "release_authorized": {"const": false}
+      }
+    },
+    "p2Deferral": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding_id", "risk", "owner", "non_impact_proof", "expires_at", "closure_test", "status"],
+      "properties": {"finding_id": {"type": "string"}, "risk": {"type": "string"}, "owner": {"type": "string"}, "non_impact_proof": {"type": "string"}, "expires_at": {"type": "string"}, "closure_test": {"type": "string"}, "status": {"const": "deferred"}}
+    },
+    "candidateIdentityPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exact_match_required", "worktree_scope", "unrelated_worktree_drift", "required_run_artifacts", "stage_binding", "required_fields"],
+      "properties": {
+        "exact_match_required": {"const": true},
+        "worktree_scope": {"const": "declared-slice-closure-through-candidate"},
+        "unrelated_worktree_drift": {"const": "excluded-from-candidate-hash"},
+        "required_run_artifacts": {"$ref": "#/$defs/stringArray"},
+        "stage_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contract_and_validator_hashes_current", "shared_nonempty_run_id", "strict_observation_order", "predecessor_hash_chain", "command_selector_failure_and_exit_checked"],
+          "properties": {
+            "contract_and_validator_hashes_current": {"const": true},
+            "shared_nonempty_run_id": {"const": true},
+            "strict_observation_order": {"const": true},
+            "predecessor_hash_chain": {"const": true},
+            "command_selector_failure_and_exit_checked": {"const": true}
+          }
+        },
+        "required_fields": {"$ref": "#/$defs/stringArray"}
+      }
+    },
+    "shadowBackfill": {
+      "type": "object", "additionalProperties": false, "required": ["order", "plan_id", "mode", "authoritative"],
+      "properties": {"order": {"type": "integer"}, "plan_id": {"type": "string"}, "mode": {"const": "additive-metadata-shadow-only"}, "authoritative": {"type": "boolean"}}
+    },
+    "writeSet": {
+      "type": "object", "additionalProperties": false, "required": ["production", "tests", "documentation"],
+      "properties": {"production": {"$ref": "#/$defs/stringArray"}, "tests": {"$ref": "#/$defs/stringArray"}, "documentation": {"$ref": "#/$defs/stringArray"}}
+    },
+    "redExpectation": {
+      "type": "object", "additionalProperties": false, "required": ["command_id", "test_selector", "expected_exit", "expected_failure_family", "expected_failure_ids"],
+      "properties": {"command_id": {"type": "string"}, "test_selector": {"type": "string"}, "expected_exit": {"enum": ["zero", "nonzero"]}, "expected_failure_family": {"type": "string"}, "expected_failure_ids": {"$ref": "#/$defs/stringArray"}}
+    },
+    "greenExpectation": {
+      "type": "object", "additionalProperties": false, "required": ["command_id", "expected_exit"],
+      "properties": {"command_id": {"type": "string"}, "expected_exit": {"enum": ["zero", "nonzero"]}}
+    },
+    "stageInvocation": {
+      "type": "object", "additionalProperties": false, "required": ["command_id", "expected_exit"],
+      "properties": {"command_id": {"type": "string"}, "expected_exit": {"enum": ["zero", "nonzero"]}}
+    },
+    "tddContract": {
+      "type": "object", "additionalProperties": false, "required": ["red", "green", "refactor"],
+      "properties": {"red": {"$ref": "#/$defs/redExpectation"}, "green": {"$ref": "#/$defs/greenExpectation"}, "refactor": {"type": "object", "additionalProperties": false, "required": ["invocations"], "properties": {"invocations": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/stageInvocation"}}}}}
+    },
+    "reviewContract": {
+      "type": "object", "additionalProperties": false, "required": ["profile"], "properties": {"profile": {"enum": ["bootstrap-upstream-plan", "bootstrap-implementation-conformance", "bootstrap-skill-route", "bootstrap-focused-change"]}}
+    },
+    "slice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slice_id", "title", "phase_id", "requirement_ids", "acceptance_ids", "source_refs", "depends_on", "allowed_changes", "forbidden_changes", "execution_read_set", "dependency_closure", "tdd", "review", "exit_predicate"],
+      "properties": {
+        "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"}, "title": {"type": "string"}, "phase_id": {"enum": ["P0", "P1", "P2", "P3"]}, "requirement_ids": {"$ref": "#/$defs/stringArray"}, "acceptance_ids": {"$ref": "#/$defs/stringArray"}, "source_refs": {"$ref": "#/$defs/stringArray"}, "depends_on": {"$ref": "#/$defs/stringArray"}, "allowed_changes": {"$ref": "#/$defs/writeSet"}, "forbidden_changes": {"$ref": "#/$defs/stringArray"}, "execution_read_set": {"$ref": "#/$defs/stringArray"}, "dependency_closure": {"$ref": "#/$defs/stringArray"}, "tdd": {"$ref": "#/$defs/tddContract"}, "review": {"$ref": "#/$defs/reviewContract"}, "exit_predicate": {"enum": ["slice-ready", "implementation-candidate", "implementation-accepted"]}
+      }
+    }
   }
 }

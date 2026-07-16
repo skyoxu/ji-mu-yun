@@ -11,10 +11,11 @@ The plan succeeds when a repository-owned adapter can consume one implementation
 | Source | Role | Bound revision |
 | --- | --- | --- |
 | `agentbuild.txt` | Original intent and proposed P0-P4 sequence | `sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807` |
-| Closed VDD clarification state | User-approved boundary decisions | `sha256:21da9212cdeb767c579dcdad6e374cba01d81d63563064724335e7016a85a0ec` |
+| Durable clarification projection | User-approved creation and repair boundary decisions | `schemas/clarification-decisions.v1.json` |
 | `AGENTS.md` | Repository routing, evidence, protected paths, and architecture rules | `sha256:304d18663634225834f6724073eef77979d138548b7af75a74c4615e8d68a68e` |
 | VDD strict standard | Verification authority and plan contract | `sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140` |
 | 7-12 Bootstrap plan and CLI | Current semantic-review extension boundary | Directory authority frozen by the implementation slice baseline |
+| Round 3 blocking projection | Current semantic-review disposition and re-entry boundary | `schemas/review-blocking-state.v1.json` |
 
 `agentbuild.txt` remains byte-preserved source history. It must be included in the eventual plan commit; this directory does not copy it into a second authority.
 
@@ -46,6 +47,7 @@ Ordinary execution plans cite this ADR. They do not create one ADR per plan. Onl
 - The VDD Skill baseline passed 46 tests.
 - The Bootstrap baseline passed 62 tests, and the 7-12 Whole-directory validator passed.
 - No BMAD `SPEC.md`, `.memlog.md`, or `ARCHITECTURE-SPINE.md` package applies to this intent.
+- The finalized Round 3 Bootstrap result is `blocked` with eight confirmed P1 findings, and the review cycle is `manual_pause_after_round_3`. Deterministic repair cannot clear that semantic disposition.
 
 ## Confirmed Scope
 

@@ -43,19 +43,21 @@ Only additive contract instances and shadow fixtures may change. Existing books,
 
 Exit: all three shadow runs are current and non-authoritative; none changes a plan state.
 
-## P3: Bootstrap Review And Implementation Acceptance
+## P3: Final Candidate, External Bootstrap, And Implementation Acceptance
 
 Owner: change owner plus Bootstrap operator.
 
 Work:
 
-- produce a current implementation candidate;
+- produce a current implementation candidate after all P2 shadow changes;
 - bind plan-mandated checks through existing Bootstrap extension points;
 - perform semantic review only with explicit authorization;
 - repair all accepted P0/P1 and dispose every accepted P2;
 - run the plan-local `implementation-accepted` predicate.
 
 Exit: no open accepted P0/P1, all accepted P2 are fixed or validly deferred, no high-risk/expired deferral remains, and the fresh plan-local envelope authorizes only implementation acceptance.
+
+Current state: blocked before P0 by `manual_pause_after_round_3`. A new policy revision and independent semantic closure decision are required before any phase can start.
 
 ## Deferred P4
 

@@ -6,25 +6,231 @@
       "path": "../../agentbuild.txt",
       "sha256": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807",
       "sections": [
-        {"id":"AGENT-SRC-I","lines":"1-70","requirements":["RMAP-001","RMAP-002","RMAP-005","RMAP-011","RMAP-012","RMAP-020","RMAP-024"]},
-        {"id":"AGENT-SRC-II","lines":"74-199","requirements":["RMAP-002","RMAP-003","RMAP-004","RMAP-006","RMAP-013","RMAP-017","RMAP-019","RMAP-021","RMAP-022"]},
-        {"id":"AGENT-SRC-III","lines":"203-221","requirements":["RMAP-005","RMAP-006","RMAP-010","RMAP-011","RMAP-012","RMAP-024"]},
-        {"id":"AGENT-SRC-IV","lines":"225-360","requirements":["RMAP-004","RMAP-006","RMAP-007","RMAP-008","RMAP-009","RMAP-010","RMAP-013","RMAP-014","RMAP-015","RMAP-016","RMAP-021","RMAP-023"]},
-        {"id":"AGENT-SRC-V","lines":"364-416","requirements":["RMAP-005","RMAP-010","RMAP-011","RMAP-012","RMAP-019","RMAP-024"]},
-        {"id":"AGENT-SRC-VI","lines":"420-432","requirements":["RMAP-003","RMAP-004","RMAP-005","RMAP-007","RMAP-008","RMAP-009","RMAP-010","RMAP-011","RMAP-014","RMAP-015","RMAP-018"]},
-        {"id":"AGENT-SRC-VII","lines":"436-464","requirements":["RMAP-004","RMAP-005","RMAP-006","RMAP-007","RMAP-008","RMAP-009","RMAP-010","RMAP-011","RMAP-012","RMAP-013","RMAP-014","RMAP-015","RMAP-016","RMAP-017","RMAP-018","RMAP-020","RMAP-023"]},
-        {"id":"AGENT-SRC-VIII","lines":"468-513","requirements":["RMAP-001","RMAP-002","RMAP-003","RMAP-004","RMAP-005","RMAP-006","RMAP-010","RMAP-013","RMAP-017","RMAP-021","RMAP-022","RMAP-023","RMAP-024"]},
-        {"id":"AGENT-SRC-IX","lines":"517-597","requirements":["RMAP-001","RMAP-002","RMAP-003","RMAP-004","RMAP-005","RMAP-006","RMAP-007","RMAP-008","RMAP-009","RMAP-010","RMAP-011","RMAP-012","RMAP-013","RMAP-014","RMAP-015","RMAP-016","RMAP-017","RMAP-018","RMAP-019","RMAP-021","RMAP-022","RMAP-023","RMAP-024"]}
+        {
+          "id": "AGENT-SRC-I",
+          "lines": "1-70",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-005",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-020",
+            "RMAP-024"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-II",
+          "lines": "74-199",
+          "requirements": [
+            "RMAP-002",
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-006",
+            "RMAP-013",
+            "RMAP-017",
+            "RMAP-019",
+            "RMAP-021",
+            "RMAP-022"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-III",
+          "lines": "203-221",
+          "requirements": [
+            "RMAP-005",
+            "RMAP-006",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-024"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-IV",
+          "lines": "225-360",
+          "requirements": [
+            "RMAP-004",
+            "RMAP-006",
+            "RMAP-007",
+            "RMAP-008",
+            "RMAP-009",
+            "RMAP-010",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-021",
+            "RMAP-023"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-V",
+          "lines": "364-416",
+          "requirements": [
+            "RMAP-005",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-019",
+            "RMAP-024"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-VI",
+          "lines": "420-432",
+          "requirements": [
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-007",
+            "RMAP-008",
+            "RMAP-009",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-018"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-VII",
+          "lines": "436-464",
+          "requirements": [
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-006",
+            "RMAP-007",
+            "RMAP-008",
+            "RMAP-009",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-017",
+            "RMAP-018",
+            "RMAP-020",
+            "RMAP-023"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-VIII",
+          "lines": "468-513",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-006",
+            "RMAP-010",
+            "RMAP-013",
+            "RMAP-017",
+            "RMAP-021",
+            "RMAP-022",
+            "RMAP-023",
+            "RMAP-024"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-IX",
+          "lines": "517-597",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-006",
+            "RMAP-007",
+            "RMAP-008",
+            "RMAP-009",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-017",
+            "RMAP-018",
+            "RMAP-019",
+            "RMAP-021",
+            "RMAP-022",
+            "RMAP-023",
+            "RMAP-024"
+          ]
+        }
       ]
     },
     {
-      "source_id": "clarification",
-      "path": "../../logs/vdd-clarifications/2026-07-15-repository-maintenance-tdd-adapter-f6d1143a/clarification-20260715T094322Z/state.json",
-      "sha256": "sha256:21da9212cdeb767c579dcdad6e374cba01d81d63563064724335e7016a85a0ec",
+      "source_id": "clarification-projection",
+      "path": "schemas/clarification-decisions.v1.json",
+      "sha256": "sha256:3aecb12d2ea4fbb03be354d99c6140236791f377408fd89f97aa760042ffe74d",
       "sections": [
-        {"id":"CQ-001-005","lines":"questions:CQ-001..CQ-005","requirements":["RMAP-001","RMAP-002","RMAP-003","RMAP-005","RMAP-011","RMAP-012","RMAP-017","RMAP-019","RMAP-024"]},
-        {"id":"CQ-006-012","lines":"questions:CQ-006..CQ-012","requirements":["RMAP-004","RMAP-005","RMAP-010","RMAP-013","RMAP-014","RMAP-017","RMAP-020","RMAP-022","RMAP-023"]},
-        {"id":"CQ-013-017","lines":"questions:CQ-013..CQ-017","requirements":["RMAP-003","RMAP-014","RMAP-015","RMAP-016","RMAP-017","RMAP-021"]}
+        {
+          "id": "CREATE-CQ-001-005",
+          "lines": "creation:CQ-001..CQ-005",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-003",
+            "RMAP-005",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-017",
+            "RMAP-019",
+            "RMAP-024"
+          ]
+        },
+        {
+          "id": "CREATE-CQ-006-012",
+          "lines": "creation:CQ-006..CQ-012",
+          "requirements": [
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-010",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-017",
+            "RMAP-020",
+            "RMAP-022",
+            "RMAP-023"
+          ]
+        },
+        {
+          "id": "CREATE-CQ-013-017",
+          "lines": "creation:CQ-013..CQ-017",
+          "requirements": [
+            "RMAP-003",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-017",
+            "RMAP-021"
+          ]
+        },
+        {
+          "id": "REPAIR-CQ-001-005",
+          "lines": "repair:CQ-001..CQ-005",
+          "requirements": [
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-006",
+            "RMAP-007",
+            "RMAP-010",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-016",
+            "RMAP-017",
+            "RMAP-018",
+            "RMAP-021",
+            "RMAP-023"
+          ]
+        }
       ]
     }
   ]

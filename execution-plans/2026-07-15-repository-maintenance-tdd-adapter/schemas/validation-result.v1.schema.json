@@ -2,20 +2,21 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "rmap.validation-result.v1",
   "type": "object",
+  "additionalProperties": false,
   "required": ["schema_version", "run_id", "predicate", "status", "candidate_hash", "current_candidate_hash", "source_hash", "validator_version", "authorizes", "does_not_authorize", "checks", "diagnostics", "generated_at"],
   "properties": {
     "schema_version": {"const": "rmap.validation-result.v1"},
-    "run_id": {"type": "string"},
-    "predicate": {"enum": ["plan-ready", "slice-ready", "implementation-candidate", "implementation-accepted"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "predicate": {"enum": ["plan-repair-verified", "plan-ready", "slice-ready", "implementation-candidate", "implementation-accepted"]},
     "status": {"enum": ["pass", "fail", "blocked", "incomplete"]},
     "candidate_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "current_candidate_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "source_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
-    "validator_version": {"type": "string"},
-    "authorizes": {"type": "array"},
-    "does_not_authorize": {"type": "array"},
-    "checks": {"type": "array"},
-    "diagnostics": {"type": "array"},
-    "generated_at": {"type": "string"}
+    "validator_version": {"type": "string", "minLength": 1},
+    "authorizes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "does_not_authorize": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "checks": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["rule_id", "status", "evidence"], "properties": {"rule_id": {"type": "string", "minLength": 1}, "status": {"enum": ["pass", "fail", "blocked", "skip"]}, "evidence": {"type": "array", "items": {"type": "string"}}}}},
+    "diagnostics": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["rule_id", "target", "message"], "properties": {"rule_id": {"type": "string", "minLength": 1}, "target": {"type": "string"}, "message": {"type": "string", "minLength": 1}}}},
+    "generated_at": {"type": "string", "minLength": 1}
   }
 }

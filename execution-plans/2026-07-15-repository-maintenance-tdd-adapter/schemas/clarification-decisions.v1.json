@@ -1,0 +1,187 @@
+{
+  "schema_version": "rmap.clarification-decisions.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "sources": [
+    {
+      "kind": "creation",
+      "run_id": "clarification-20260715T094322Z",
+      "state_sha256": "sha256:21da9212cdeb767c579dcdad6e374cba01d81d63563064724335e7016a85a0ec",
+      "authority_hash": "sha256:5adf2a04270b546bf695078761bde3cb92c620971ef2b8fe493d9866e72baa56",
+      "status": "closed",
+      "write_disposition": "normal"
+    },
+    {
+      "kind": "repair",
+      "run_id": "repair-20260716T081500Z",
+      "state_sha256": "sha256:5c4a34f3044db6697ac2afdf2493b77ed7626ea8496ada4c0b4a264093f0b820",
+      "authority_hash": "sha256:cc9f3fb16206cb902bf73b60b2b7c52bfdbe52d2d4d58d3e78be335fe3342bf2",
+      "status": "closed",
+      "write_disposition": "normal"
+    }
+  ],
+  "decision_sets": {
+    "creation": [
+      {
+        "id": "CQ-001",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide whether this plan owns P0-P3 only or also the future removal of BMAD in P4.",
+        "decision": "Keep P0-P3 in this plan and make P4 a separately authorized future plan after backend neutrality is proven."
+      },
+      {
+        "id": "CQ-002",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide the first adoption and migration scope for implementation-contract.v1.json.",
+        "decision": "Require it for this new VDD plan and future VDD plans, then pilot one approved non-protected slice; do not retrofit every historical execution plan in the first rollout."
+      },
+      {
+        "id": "CQ-003",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide the durable ownership split for the standard, schema, adapter, and per-plan instance.",
+        "decision": "Own durable policy in docs/standards, protocol/schema/runtime tooling in the repository-owned adapter Skill, and only the instance plus plan-specific predicates inside each execution-plan directory; require an accepted ADR before implementation changes workflow authority."
+      },
+      {
+        "id": "CQ-004",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide how the first implementation backend handles stock BMAD Quick Dev, which currently reviews, marks done, and commits.",
+        "decision": "Use a repository-owned capsule executor as backend v1 and keep BMAD Quick Dev optional until an official implementation-only entry exists; never invoke the stock end-to-end workflow as an authoritative backend."
+      },
+      {
+        "id": "CQ-005",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide whether the first adapter release modifies the existing Bootstrap CLI or consumes its current extension points.",
+        "decision": "Do not modify the 7-12 Bootstrap CLI initially; bind TDD evidence through existing scope, context-class, preflight, and required-check contracts, and open an explicit delta only if executable evidence proves a missing capability."
+      },
+      {
+        "id": "CQ-006",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Decide whether the requested confidence score can authorize plan or implementation state.",
+        "decision": "Keep the score advisory, allow at most three internal improvement rounds below 90, and let only machine validation authorize plan-ready or implementation-accepted."
+      },
+      {
+        "id": "CQ-007",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide the durable custody of the currently untracked agentbuild.txt intent source.",
+        "decision": "Preserve agentbuild.txt byte-for-byte as original source history, hash-bind it from 98/99, include it in the eventual plan commit, and do not create a duplicate source copy inside the plan."
+      },
+      {
+        "id": "CQ-008",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide how executable commands are represented in implementation contracts.",
+        "decision": "Use stable command IDs plus structured argv, cwd, timeout, expected exit semantics, and expected failure IDs; resolve them through a repository-owned registry and forbid arbitrary raw shell strings."
+      },
+      {
+        "id": "CQ-009",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide how baseline and candidate identity work with a dirty Windows worktree.",
+        "decision": "Do not require or create commits; freeze HEAD plus tracked diff, untracked manifest, relevant file hashes, plan/source/contract/validator/test hashes, reject overlap with pre-existing user edits, and never let the backend commit."
+      },
+      {
+        "id": "CQ-010",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide the backfill and canary order for the three existing refactor plans.",
+        "decision": "Self-host the new plan first, then backfill 7-12 as the validator-rich canary, 7-07 next, and 7-11 last because it depends on 7-07; backfill must not authorize implementation or remove paused states."
+      },
+      {
+        "id": "CQ-011",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide whether adapter v1 launches external implementation processes or remains an explicit in-session protocol.",
+        "decision": "Keep v1 in-session and stateless: prepare and validate a Slice Capsule, enforce write/evidence boundaries, and consume a candidate response without spawning provider or Codex subprocesses; automate launch only through a later explicit delta."
+      },
+      {
+        "id": "CQ-012",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Decide the exact predicate and authority ladder exposed by each plan-local validator.",
+        "decision": "Support plan-ready, slice-ready, implementation-candidate, and implementation-accepted; candidate authorizes Bootstrap review only, accepted requires current deterministic evidence plus a finalized Bootstrap result with no accepted P0/P1, and none of these predicates authorizes release."
+      },
+      {
+        "id": "CQ-013",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Define what read-only backfill means when each old plan must own a contract instance.",
+        "decision": "Treat it as additive metadata backfill: add only contract instance and shadow-fixture files to each old plan, leave existing books, status, validators, and historical evidence byte-unchanged, and keep all shadow results non-authoritative."
+      },
+      {
+        "id": "CQ-014",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Define the evidence-based recovery state and storage boundary for adapter runs.",
+        "decision": "Use append-only logs/tdd-adapter/<plan-id>/<slice-id>/<run-id>/ state and evidence, record predecessor and supersession lineage, resume only when all bound hashes match, and create a new stale-linked run after drift."
+      },
+      {
+        "id": "CQ-015",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Define which P2 dispositions satisfy implementation-accepted.",
+        "decision": "Require every accepted P2 to be fixed with fresh evidence or explicitly deferred with owner, non-impact proof, expiry or recheck trigger, and exact closure test; open or unowned P2 blocks acceptance."
+      },
+      {
+        "id": "CQ-016",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Define exactly which concurrent Git drift blocks a run.",
+        "decision": "Block any Git index drift, any authority/contract/validator/command-registry hash drift, and any write-set overlap; record and allow unrelated worktree drift outside those sets."
+      },
+      {
+        "id": "CQ-017",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Resolve current-plan evidence ownership against the repository rule that runtime evidence belongs under logs.",
+        "decision": "Let each execution-plan own evidence schemas, fixtures, predicates, expected evidence intent, and immutable references, while logs owns append-only run evidence and result envelopes; never store mutable runtime state in the plan directory."
+      }
+    ],
+    "repair": [
+      {
+        "id": "CQ-001",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Confirm whether the repair is limited to the named execution-plan directory and its version-controlled plan artifacts.",
+        "decision": "Repair the complete named directory, but do not modify Bootstrap policy, Phase protected paths, product code, or historical evidence in this change."
+      },
+      {
+        "id": "CQ-002",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Confirm how the Round 3 hard-limit disposition is represented after repair.",
+        "decision": "Represent the plan as blocked by a hash-bound manual-pause disposition and fail closed for plan-ready and all implementation predicates until a new external policy decision supersedes it."
+      },
+      {
+        "id": "CQ-003",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Confirm the candidate, Bootstrap review, and acceptance sequence.",
+        "decision": "Make S2 lifecycle-only, make S6 finalize the current implementation candidate without consuming Bootstrap output, run Bootstrap externally, and let S7 consume the bound candidate and finalized review for implementation acceptance."
+      },
+      {
+        "id": "CQ-004",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Confirm how ignored clarification and repair evidence becomes reproducible from a clean checkout.",
+        "decision": "Add minimized immutable version-controlled projections for clarification decisions and protected shadow baselines while retaining raw logs as append-only historical evidence outside the plan authority chain."
+      },
+      {
+        "id": "CQ-005",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Confirm the repair acceptance boundary and final status claim.",
+        "decision": "Require composite, unit, schema, mutation, explicit slice-evidence, and clean-checkout validation, but retain blocked/manual-pause status and make no semantic-closure or implementation-authorization claim."
+      }
+    ]
+  },
+  "non_goals": [
+    "No product or Phase protected-path implementation is authorized by this projection.",
+    "No Bootstrap round or semantic closure is authorized by this projection.",
+    "Raw conversations and personal data are excluded."
+  ]
+}
