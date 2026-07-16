@@ -1,0 +1,597 @@
+一、三层职责重新定义
+1. VDD：vdd-execution-plan
+
+它继续负责生成和维护：
+
+意图与权威来源；
+规范增量；
+架构约束；
+行为切片；
+验收身份；
+validator、negative/mutation fixture；
+诊断、修复、重新进入；
+plan-ready 与 implementation-accepted 的权威分离。
+
+当前 Skill 已经要求“没有有效证据就不能授权状态变化”，并要求每个行为切片包含 requirements、contracts、tests-first、evidence、rollback 和 exit predicate。
+
+所以 VDD 部分基本不缺方法论，缺的是向实现 Agent 提供一个足够小、稳定、机器可读的消费面。
+另外需要在作业结束后自评一个信心分，低于90/100要进入循环优化，但是不要超过三轮。
+
+2. SDD：计划目录里的轻量执行合同
+
+SDD 不再是另一个写大量文档的 Skill。
+
+你的编号 execution-plan 目录已经拥有：
+
+01  意图、权威、非目标
+02  合同与不变量
+03  validator、fixture 和 gate
+04  行为切片
+05  诊断、修复、重新进入
+06  测试、证据、可观测性
+07  实施阶段
+97  requirement ledger
+98  来源审计
+99  覆盖关系
+
+仓库也明确把 execution-plans/ 视为 durable intent，把日志视为运行证据而不是长期设计真相。
+
+因此 SDD 的正确形态不是再次总结这些文件，而是增加一个薄的机器执行连接层。
+
+3. TDD：quick-dev-tdd-adapter（需要新增的skill）
+
+它负责消费一个明确的行为切片并强制：
+
+读取计划与合同
+→ 冻结计划/源码/baseline hash
+→ 写测试
+→ 观察预期 RED
+→ 调用实现后端
+→ 最小 GREEN
+→ REFACTOR
+→ 新鲜完整验证
+→ 生成实现候选证据
+
+bmad-quick-dev 可以暂时作为实现后端，但不能成为长期架构依赖。
+
+4. Review：run-phase-bootstrap-review
+
+它只负责：
+
+独立语义审查；
+Blind、Edge、Acceptance 三个视角；
+finding 候选；
+P0/P1 独立验证；
+deterministic gateway；
+review evidence。
+
+它不负责 TDD，也不负责最终 acceptance。
+
+Bootstrap Guide 已经规定：同一个 change cycle 选择 Bootstrap 后，Quick Dev 或其他 BMAD Review 不能再作为第二套语义 finding authority；Quick Dev 只负责实现、测试、build 和确定性 validator。
+
+---
+
+二、重新设计轻量 SDD Companion
+推荐名称：implementation-contract.v1.json
+
+它位于每个 execution-plan 目录中：
+
+execution-plans/<plan>/
+  00-index.md
+  01-...
+  02-...
+  03-...
+  04-...
+  ...
+  97-...
+  98-...
+  99-...
+  implementation-contract.v1.json
+
+它不是第二套需求文档，而是：
+
+编号文档集面向实现 Agent 的机器可读投影。
+
+权威边界
+内容	权威来源
+为什么改	01
+系统应该表现成什么样	02、97
+架构决定与约束	01、02、ADR/standards
+validator 和 acceptance	03、06
+行为切片与顺序	04、07
+来源覆盖	98、99
+实现 Agent 可改哪些文件、运行什么命令、预期什么 RED	implementation-contract.v1.json
+
+Companion 不复制长段需求文本，只引用稳定 ID 和来源位置。
+
+建议结构
+{
+  "schema_version": "jimuyun.implementation-contract.v1",
+  "plan_id": "phase-frontend-boundary-hardening",
+  "plan_revision": "sha256:...",
+  "protocol_version": "1.0",
+  "authority": {
+    "index": "00-index.md",
+    "requirements": "97-requirements-ledger.md",
+    "coverage": "99-source-coverage.md",
+    "source_hashes": {
+      "01-scope.md": "sha256:...",
+      "02-contracts.md": "sha256:...",
+      "04-behavior-slices.md": "sha256:..."
+    }
+  },
+  "slices": [
+    {
+      "slice_id": "BH-SF1",
+      "title": "建立前端边界合同",
+      "requirement_ids": ["BH-REQ-001", "BH-REQ-002"],
+      "acceptance_ids": ["BH-ACC-001"],
+      "source_refs": [
+        "04-behavior-slices.md#bh-sf1",
+        "02-contracts.md#frontend-boundary"
+      ],
+      "depends_on": [],
+      "allowed_changes": {
+        "production": [
+          "PhaseA.Platform/..."
+        ],
+        "tests": [
+          "PhaseA.Platform.Tests/..."
+        ],
+        "documentation": [
+          "docs/..."
+        ]
+      },
+      "forbidden_changes": [
+        "logs/phase-a-innernet/data/**",
+        "runtime/phase-a/**"
+      ],
+      "tdd": {
+        "red": {
+          "test_targets": [
+            "PhaseA.Platform.Tests/..."
+          ],
+          "command": "...",
+          "expected_failure_family": "missing_behavior",
+          "expected_failure_ids": ["BH-ACC-001"]
+        },
+        "green": {
+          "command": "..."
+        },
+        "refactor": {
+          "commands": ["...", "..."]
+        }
+      },
+      "review": {
+        "profile": "bootstrap-implementation-conformance"
+      },
+      "exit_predicate": "slice-implementation-accepted"
+    }
+  ]
+}
+为什么选择这种形式
+吸收 OpenSpec
+
+OpenSpec 的价值是明确 artifact 依赖：
+
+proposal → specs → design → tasks → apply
+
+并使用 ADDED / MODIFIED / REMOVED / RENAMED 表达规范增量，而不是每次重写完整项目说明。
+
+你的实现合同可以采用这种稳定依赖关系，但不需要引入 OpenSpec CLI、Store、Archive 或另一套目录。
+
+吸收 Spec Kit
+
+Spec Kit 最有价值的是：
+
+每个切片可独立实现；
+可独立测试；
+可独立展示；
+task 映射到明确 story；
+开始实现前做跨工件一致性检查。
+
+但不要继承它的“测试可选”规则。其任务模板明确把测试描述为可选，这不符合你的严格 VDD/TDD 目标。
+
+避免 BMAD 的重量
+
+BMAD 将 PRD、Architecture、Epic、Story、Sprint Status、Dev Story 等组合成完整产品开发体系，这对新产品规划有价值，但作为 ji-mu-yun 长期维护协议过重。
+
+你的 execution-plan 已经具备比普通 Story 更完整的权威、合同、验证和恢复信息，因此不应再复制一套 Epic/Story 层。
+
+---
+
+三、quick-dev-tdd-adapter 应该是什么
+
+它应当是一个无状态、后端可替换的协议适配器。
+
+quick-dev-tdd-adapter
+  ├── 读取 implementation-contract
+  ├── 验证 plan/slice/source hash
+  ├── 管理 RED/GREEN/REFACTOR 写入边界
+  ├── 调用一个 implementation backend
+  ├── 运行计划声明的验证命令
+  └── 输出标准 result envelope
+它不应该负责
+创建完整需求架构计划；
+判断使用哪个 execution-plan；
+做最终 Bootstrap Review；
+自己将计划标记完成；
+自动修改 requirement ledger；
+直接宣布 release-ready；
+绑定 BMAD 的 sprint 状态。
+
+---
+
+四、TDD 执行协议
+1. Prepare
+
+Adapter 首先验证：
+
+plan composite validator 已通过；
+implementation contract schema 正确；
+slice 存在且 predecessor 已满足；
+source hashes 当前；
+Git baseline 已记录；
+protected paths 已获得必要授权；
+test target 和验证命令明确；
+当前没有更晚的 blocker。
+
+输出：
+
+prepare-result.json
+
+状态只能是：
+
+ready
+blocked
+stale
+2. RED
+
+这一阶段只允许修改：
+
+合同声明的测试文件；
+test fixture；
+本轮 evidence sidecar。
+
+禁止修改生产文件。
+
+必须实际执行测试，并区分：
+
+结果	判定
+测试按预期 assertion 失败	RED 通过
+测试立即通过	unexpected_green
+编译失败	test_compile_error
+测试基础设施失败	test_harness_failure
+其他既有测试失败	unrelated_regression
+生产代码已提前修改	implementation_before_red
+
+Superpowers 的关键纪律正是：没有实际观察测试因缺失行为而失败，就不能认为测试有效。
+
+RED 结果必须绑定：
+
+plan hash
+contract hash
+slice ID
+baseline commit
+test diff hash
+test file hashes
+command
+exit code
+expected/observed failure
+3. GREEN
+
+只有当前 RED evidence 有效时，才开放合同声明的生产代码路径。
+
+实现后端收到的不是整个仓库和所有计划文档，而是一个紧凑的 Slice Capsule：
+
+slice intent
+requirement IDs
+acceptance IDs
+architecture refs
+allowed write paths
+forbidden paths
+current RED evidence
+targeted GREEN command
+
+实现目标是：
+
+写出使当前失败测试通过的最小实现。
+
+不能顺便实现下一个 slice，也不能修改 validator 来适配实现。
+
+4. REFACTOR
+
+只有 GREEN 后执行：
+
+结构整理；
+命名改进；
+重复消除；
+边界修正；
+必要的文档同步。
+
+所有目标测试必须保持绿色，并运行合同声明的回归和架构检查。
+
+Hermes 的计划模式值得借鉴的是每个任务都明确：
+
+精确文件；
+失败测试；
+失败命令和预期；
+最小实现；
+通过命令。
+
+但它将任务建议为 2–5 分钟、提供完整代码示例和频繁 commit，对大型 brownfield 重构可能过细。应该保留“每步可验证”，而不是机械采用时间颗粒度。
+
+5. Finalize Candidate
+
+Adapter 重新运行完整的 slice proof commands，并读取：
+
+exit code；
+test count；
+failure count；
+warning/error；
+current hashes；
+diff；
+-未覆盖的 acceptance。
+
+Superpowers 的 completion discipline 要求完成声明前识别并重新运行完整证明命令，旧结果、部分测试或 Agent 报告都不足以证明完成。
+
+输出：
+
+{
+  "schema_version": "jimuyun.tdd-result.v1",
+  "predicate": "implementation-candidate",
+  "status": "pass",
+  "plan_hash": "...",
+  "contract_hash": "...",
+  "slice_id": "BH-SF1",
+  "baseline_commit": "...",
+  "candidate_commit_or_tree_hash": "...",
+  "red_evidence": "...",
+  "green_evidence": "...",
+  "refactor_evidence": "...",
+  "checks": [],
+  "authorizes": [
+    "bootstrap-review"
+  ],
+  "does_not_authorize": [
+    "implementation-accepted",
+    "release-ready"
+  ]
+}
+
+---
+
+五、BMad Quick Dev 的短期与长期位置
+当前问题
+
+Stock bmad-quick-dev 的实现阶段只是把 spec 交给实现 Agent，然后检查任务和 AC；它没有强制证明真实 RED。
+
+它还内建自己的 Blind/Edge Review，并最终直接把 spec 标为 done。
+
+这与 Bootstrap 的单一语义 Review authority 发生冲突。
+
+短期使用方式
+
+Adapter 可以把 BMad Quick Dev 当作：
+
+implementation backend v1
+
+但必须满足：
+
+Adapter 在外部控制 RED/GREEN/REFACTOR；
+Quick Dev 的 done 不是权威；
+Quick Dev 自带 Review 不进入最终 finding 链；
+Adapter 独立重跑验证；
+Bootstrap 才是唯一语义 Review；
+最终计划 validator 决定 implementation acceptance。
+长期替换方式
+
+定义一个后端中立接口：
+
+{
+  "backend_request": {
+    "slice_contract": "...",
+    "allowed_write_paths": [],
+    "forbidden_write_paths": [],
+    "red_evidence": "...",
+    "goal": "make-red-green"
+  },
+  "backend_response": {
+    "changed_files": [],
+    "commands_attempted": [],
+    "blockers": [],
+    "self_reported_status": "candidate"
+  }
+}
+
+以后可以替换为：
+
+纯 Codex 实现器；
+Hermes 风格实现器；
+Superpowers TDD Agent；
+自建轻量实现 Skill。
+
+计划格式、TDD evidence 和 Bootstrap Review 均不需要改变。
+
+这才是摆脱 BMAD 长期依赖的关键。
+
+---
+
+六、从其他框架具体吸收什么
+框架	吸收	不吸收
+BMAD	intent freeze、根因分类、spec defect 回退、有限 repair loop	Epic/Sprint 全套状态、self-review readiness、自带最终 done
+OpenSpec	artifact dependency、显式 delta、机器 diagnostics	CLI Store、Archive、完整目录复制
+Spec Kit	独立 vertical slice、constitution check、跨工件分析	测试可选、大量通用模板
+Superpowers	真实 observed RED、最小 GREEN、新鲜完成证明	纯 prompt 纪律作为唯一保障
+Hermes	精确路径、精确命令、每步可验证、渐进加载	2–5 分钟机械切片、每个任务完整代码模板
+OpenClaw	proposal、hash-bound、stale、apply、rollback	Workshop 服务、数据库、自学习系统
+Everything Claude Code	supportive/neutral/competing 合规测试、tool-call 时序	LLM 分类直接作为权威
+
+OpenClaw 的高价值机制是 proposal 不直接覆盖 active state、目标 hash 变化后 proposal 变 stale、apply 前重新扫描、写入前保留 rollback。
+
+Everything Claude Code 的 skill-comply 则验证 Agent 在 supportive、neutral、competing 三类提示下是否仍按顺序执行 Skill，并对工具时序做确定性检查。
+
+---
+
+七、Adapter 自身也必须被测试
+
+这部分不需要每次仓库维护都运行昂贵多模型测试，只在 Adapter 修改或发布时运行。
+
+至少准备这些 fixture：
+
+compliant-red-green-refactor
+implementation-before-red
+red-test-passes-immediately
+red-is-compile-error
+green-uses-stale-red
+production-path-outside-allowlist
+plan-changed-after-prepare
+validator-weakened-by-same-slice
+quick-dev-claims-done-without-proof
+bootstrap-started-before-deterministic-pass
+
+再设置三类压力场景：
+
+Supportive
+用户明确要求严格 TDD。
+Neutral
+用户只说“实现这个 slice”。
+Competing
+用户说“赶快实现，测试之后再补”。
+
+只有三种场景都保持正确时序，才能证明 Adapter 的 Skill 规则具有一定稳定性。
+
+最终门禁仍然检查实际文件变更和 result envelope，不能只依赖模型对 trace 的语义分类。
+
+---
+
+八、最小目录结构
+
+.agents/skills/
+  quick-dev-tdd-adapter/
+    SKILL.md
+    references/
+      implementation-backend-contract.md
+      tdd-run-protocol.md
+      evidence-and-freshness.md
+    tools/
+      validate_adapter_contract.py
+      tests/
+      fixtures/
+
+docs/standards/
+  repository-maintenance-agent-protocol.md
+
+execution-plans/<numbered-refactor-plan>/
+  00-index.md
+  01-...
+  02-...
+  03-...
+  04-...
+  05-...
+  06-...
+  07-...
+  08-...
+  96-...
+  97-...
+  98-...
+  99-...
+  implementation-contract.v1.json
+  schemas/
+    implementation-contract.v1.schema.json
+    tdd-result.v1.schema.json
+  tools/
+    validate_all.py
+
+validate_all.py 建议支持不同 predicate，而不是继续增加多个互相重叠的 validator：
+
+--predicate plan-ready
+--predicate slice-ready --slice BH-SF1
+--predicate implementation-candidate --slice BH-SF1
+--predicate implementation-accepted --slice BH-SF1
+
+同一工具可以输出不同权威等级，但绝不能从 plan-ready 推导代码已完成。严格 VDD 标准本身已经要求这些权威等级保持分离。
+
+---
+
+九、推荐实施顺序
+P0：定义协议，不接 Agent
+
+先完成：
+
+implementation-contract.v1 schema；
+一个真实 execution-plan 的 contract fixture；
+plan/source hash；
+slice、acceptance、write set、test command；
+validate_all.py --predicate slice-ready；
+stale、缺 acceptance、非法路径等负例。
+
+这一阶段不调用 Quick Dev。
+
+P1：实现 RED/GREEN/REFACTOR Adapter
+
+选一个中等规模、非 protected 的重构 slice：
+
+prepare；
+RED write boundary；
+expected failure 分类；
+GREEN write boundary；
+REFACTOR；
+fresh candidate result。
+
+先让 Adapter 能手工驱动，不必自动调用 BMad。
+
+P2：接入 BMad Quick Dev 后端
+
+只把它作为临时 implementation backend。
+
+验证：
+
+不能提前写 production；
+不能越界修改；
+它的 done 不产生 authority；
+它的 Review 不进入 Bootstrap finding；
+Adapter 能独立判断真实状态。
+P3：接入 Bootstrap
+
+Bootstrap 的 deterministic preflight 消费：
+
+execution-plan；
+implementation contract；
+implementation diff；
+RED/GREEN/REFACTOR evidence；
+targeted/full tests；
+current hashes。
+
+Review clean 后再由 plan-local validate_all.py --predicate implementation-accepted 授权。
+
+P4：移除 BMad 依赖
+
+当 Adapter 和后端合同稳定后，实现一个仓库自有的轻量 implementation backend，再将 BMad 降级为可选适配器。
+
+最终架构
+VDD execution-plan
+  定义为什么改、改什么、如何证明
+
+Implementation Contract
+  把固定编号文档投影成机器可消费的行为切片
+
+Quick-Dev TDD Adapter
+  强制真实 RED → GREEN → REFACTOR
+  并屏蔽具体实现 Agent 差异
+
+Implementation Backend
+  当前是 BMad Quick Dev
+  未来可以替换
+
+Bootstrap Review
+  独立发现语义和边界问题
+
+Plan-local Validator
+  唯一授权 implementation-accepted
+
+最关键的设计原则是：
+
+不要长期维护一个会越来越聪明的总控 Agent；长期维护一套越来越稳定、越来越难被绕过的文件合同和验证协议。
+
+这比顶层 Router 更符合 jimuyun 的长期演进目标，也能让你未来移除 BMAD，而不需要重写 VDD、SDD、TDD 和 Review 整条链。

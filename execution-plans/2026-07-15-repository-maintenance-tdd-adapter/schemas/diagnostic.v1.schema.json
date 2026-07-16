@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rmap.diagnostic.v1",
+  "type": "object",
+  "required": ["diagnostic_id", "rule_id", "requirement_ids", "acceptance_ids", "failure_family", "severity", "candidate_hash", "source_hash", "validator_version", "trigger", "required_state", "observed_outcome", "repair_owner", "rerun_command_id", "next_allowed_state", "status"],
+  "properties": {
+    "diagnostic_id": {"type": "string"},
+    "rule_id": {"type": "string"},
+    "requirement_ids": {"type": "array"},
+    "acceptance_ids": {"type": "array"},
+    "failure_family": {"type": "string"},
+    "severity": {"enum": ["P0", "P1", "P2"]},
+    "candidate_hash": {"type": "string"},
+    "source_hash": {"type": "string"},
+    "validator_version": {"type": "string"},
+    "trigger": {"type": "string"},
+    "required_state": {"type": "string"},
+    "observed_outcome": {"type": "string"},
+    "repair_owner": {"type": "string"},
+    "rerun_command_id": {"type": "string"},
+    "next_allowed_state": {"type": "string"},
+    "status": {"enum": ["open", "fixed", "deferred", "superseded"]}
+  }
+}

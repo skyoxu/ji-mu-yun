@@ -1,0 +1,27 @@
+{
+  "schema_version": "rmap.shadow-protected-baseline.v1",
+  "baseline_id": "round3-p1-repair-pre-shadow-backfill",
+  "captured_from_review": "repo-maint-tdd-final-r3-20260716-110837",
+  "evidence_path": "../../logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-p1-r3-repair-baseline/shadow-protected-baseline.json",
+  "evidence_sha256": "sha256:90227e2019964fc3d20ed41eb0d1885033d08387818007bd0e231365158368fd",
+  "plans": [
+    {
+      "plan_id": "llm-review-evidence-gate-hardening",
+      "path": "../2026-07-12-llm-review-evidence-gate-hardening",
+      "protected_tree_sha256": "sha256:3db6a0cefe33c9a03a285c1701a1a7d2ec9ea4963367ce548d13bc8528806b44",
+      "protected_file_count": 28
+    },
+    {
+      "plan_id": "phase-a-frontend-gdd-to-module-workflow-hardening",
+      "path": "../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening",
+      "protected_tree_sha256": "sha256:db18e10f8e6ca73f2c27a6e531a8fb42682339023e477b94bc40dbb592b5007f",
+      "protected_file_count": 32
+    },
+    {
+      "plan_id": "phase-frontend-boundary-hardening",
+      "path": "../2026-07-11-phase-frontend-boundary-hardening-execution-plan",
+      "protected_tree_sha256": "sha256:dc7a03532fbe2cffb923781e937d8e13343c5884b2b1b4a999b7f09b12cfe79b",
+      "protected_file_count": 29
+    }
+  ]
+}

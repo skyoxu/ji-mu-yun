@@ -1,0 +1,44 @@
+{
+  "schema_version": "rmap.plan-state.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "status": "plan-ready",
+  "source": {
+    "path": "../../agentbuild.txt",
+    "sha256": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807"
+  },
+  "clarification": {
+    "state_path": "../../logs/vdd-clarifications/2026-07-15-repository-maintenance-tdd-adapter-f6d1143a/clarification-20260715T094322Z/state.json",
+    "sha256": "sha256:21da9212cdeb767c579dcdad6e374cba01d81d63563064724335e7016a85a0ec",
+    "status": "closed",
+    "write_disposition": "normal",
+    "confidence": 96
+  },
+  "predicates": {
+    "plan-ready": {
+      "authorizes": ["plan-ready"],
+      "does_not_authorize": ["slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+    },
+    "slice-ready": {
+      "authorizes": ["slice-ready"],
+      "does_not_authorize": ["bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+    },
+    "implementation-candidate": {
+      "authorizes": ["bootstrap-review"],
+      "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]
+    },
+    "implementation-accepted": {
+      "authorizes": ["implementation-accepted"],
+      "does_not_authorize": ["protected-handoff", "release-ready"]
+    }
+  },
+  "phases": ["P0", "P1", "P2", "P3"],
+  "out_of_scope_phase": "P4",
+  "open_blockers": [],
+  "current_capabilities": {
+    "adapter_operational": false,
+    "common_schema_skill_owned": false,
+    "old_plan_backfill_complete": false,
+    "implementation_accepted": false,
+    "release_ready": false
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": "rmap.requirement-quality.v1",
+  "checks": [
+    {"requirement_id":"RMAP-001","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-002","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-003","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-004","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-005","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-006","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-007","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-008","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-009","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-010","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-011","observable":true,"normative_strength":"must_not","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-012","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-013","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-014","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-015","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-016","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-017","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-018","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-019","observable":true,"normative_strength":"must_not","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-020","observable":true,"normative_strength":"must_not","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-021","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-022","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-023","observable":true,"normative_strength":"must","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true},
+    {"requirement_id":"RMAP-024","observable":true,"normative_strength":"must_not","executable_acceptance":true,"negative_or_boundary":true,"no_implementation_leakage":true,"single_owner":true}
+  ]
+}

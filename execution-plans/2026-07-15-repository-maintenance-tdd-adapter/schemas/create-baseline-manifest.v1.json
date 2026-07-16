@@ -1,0 +1,21 @@
+{
+  "schema_version": "vdd.create-baseline.v1",
+  "target": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter",
+  "target_state": "absent",
+  "target_hash": "sha256:8d3dd70352be7127c579eb9d5ffc26b449e496f347df1734672f7d7c0ff3a234",
+  "source_path": "agentbuild.txt",
+  "source_hash": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807",
+  "authority_hash": "sha256:5adf2a04270b546bf695078761bde3cb92c620971ef2b8fe493d9866e72baa56",
+  "clarification_state_hash": "sha256:21da9212cdeb767c579dcdad6e374cba01d81d63563064724335e7016a85a0ec",
+  "git_head": "48e7b21e6cf33f30aca7c8ac2f3b2fa63b784fe7",
+  "git_index_tree": "27317fd610bcd5f044815436c0de6c023ab34321",
+  "preexisting_dirty_paths": ["agentbuild.txt"],
+  "baseline_validators": [
+    {"id": "vdd-skill-contract", "exit_code": 0, "result": "pass"},
+    {"id": "vdd-skill-tests", "exit_code": 0, "test_count": 46, "result": "pass"},
+    {"id": "bootstrap-whole-directory", "exit_code": 0, "result": "pass"},
+    {"id": "bootstrap-tests", "exit_code": 0, "test_count": 62, "result": "pass"}
+  ],
+  "baseline_failures": [],
+  "captured_at": "2026-07-15T09:43:22Z"
+}
