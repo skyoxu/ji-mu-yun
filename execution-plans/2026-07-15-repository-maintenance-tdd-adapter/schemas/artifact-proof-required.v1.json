@@ -1,0 +1,52 @@
+{
+  "schema_version": "jimuyun.artifact-proof-required.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "authority_source": "02-executable-contracts-and-invariants.md#uniform-artifact-proof-contract",
+  "contract_artifacts": [
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-evidence-result.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-owner-authority.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-slice-effect.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-supersession-proof.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py"
+  ],
+  "runtime_types": [
+    "bootstrap-finalized-run-instance",
+    "bootstrap-p2-disposition-instance",
+    "bootstrap-successor-authorization-instance",
+    "candidate-lineage-instance",
+    "review-policy-reentry-instance"
+  ],
+  "registered_consumers": ["Bootstrap finalize", "S6 candidate validator", "S7 acceptance validator", "plan reentry validator", "plan-state validator"],
+  "predicate_authority": {
+    "bootstrap-finalized-run-validation": {"authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]},
+    "p2-disposition": {"authorizes": [], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]},
+    "successor-policy-authorization": {"authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]},
+    "implementation-candidate": {"authorizes": ["bootstrap-review"], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]},
+    "plan-ready": {"authorizes": ["plan-ready"], "does_not_authorize": ["slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]}
+  },
+  "registered_rules": {
+    "bootstrap-finalized-run-validator.v2": {"validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"},
+    "bootstrap-p2-disposition-evidence.v2": {"validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"},
+    "bootstrap-successor-policy-authorization.v1": {"validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "negative_test": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py"},
+    "RMAP-CANDIDATE-LINEAGE": {"validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py", "negative_test": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py"},
+    "RMAP-CANDIDATE-LEDGER-FOLD": {"validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py", "negative_test": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py"},
+    "RMAP-REVIEW-REENTRY": {"validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py", "negative_test": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py"}
+  },
+  "authorizes": [],
+  "does_not_authorize": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+}

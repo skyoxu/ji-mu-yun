@@ -1944,13 +1944,50 @@ class BootstrapReviewCliTests(unittest.TestCase):
         finding_id = self.read_json("review-candidates.json")["findings"][0]["findingId"]
         self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
         manifest = self.read_json("review-input.json")
+        exclusions = ["implementation-acceptance", "protected-handoff", "release", "commit", "done"]
+        identity = {
+            "findingId": finding_id, "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"], "candidateHash": manifest["authorityContextHash"],
+            "authorityRevision": manifest["authorityRevision"],
+        }
+        registry = {
+            "schemaVersion": "bootstrap-p2-command-registry.v1", "registryId": "registry-001",
+            "reviewId": manifest["reviewId"], "inputHash": manifest["inputHash"],
+            "candidateHash": manifest["authorityContextHash"], "policyRevision": manifest["policyRevision"],
+            "authorityRevision": manifest["authorityRevision"],
+            "commands": [
+                {"commandId": "recheck-command", "commandClass": "p2-recheck"},
+                {"commandId": "closure-command", "commandClass": "p2-closure"},
+            ],
+            "authorizes": [], "doesNotAuthorize": exclusions,
+        }
+        registry_path = self.repo / "command-registry.json"
+        registry_path.write_text(json.dumps(registry), encoding="utf-8", newline="\n")
+        registry_hash = bootstrap.file_hash(registry_path)
+        recheck_process = {
+            "schemaVersion": "bootstrap-p2-process-result.v1", "resultId": "recheck-result-001", **identity,
+            "commandId": "recheck-command", "commandClass": "p2-recheck", "registryHash": registry_hash,
+            "exitCode": 0, "observedAt": "2020-01-01T00:00:00Z", "authorizes": [],
+            "doesNotAuthorize": exclusions,
+        }
+        closure_process = {
+            "schemaVersion": "bootstrap-p2-process-result.v1", "resultId": "closure-result-001", **identity,
+            "commandId": "closure-command", "commandClass": "p2-closure", "registryHash": registry_hash,
+            "exitCode": 0, "observedAt": "2020-01-01T00:00:00Z", "authorizes": [],
+            "doesNotAuthorize": exclusions,
+        }
         evidence_paths = {}
         for name, payload in {
-            "non-impact.json": {"status": "bounded", "findingId": finding_id},
-            "recheck.json": {"status": "pending", "findingId": finding_id},
-            "owner-authority.json": {"owner": "owner", "allowed": True},
-            "command-registry.json": {"commands": ["test-command"]},
-            "closure-process.json": {"commandId": "test-command", "exitCode": 0},
+            "owner-authority.json": {
+                "schemaVersion": "bootstrap-p2-owner-authority.v1", "receiptId": "owner-receipt-001",
+                "owner": "owner", **identity, "policyRevision": manifest["policyRevision"],
+                "scope": "expiry-or-authority-change", "status": "active",
+                "issuedAt": "2020-01-01T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z",
+                "authorizes": [], "doesNotAuthorize": exclusions,
+            },
+            "command-registry.json": registry,
+            "recheck-process.json": recheck_process,
+            "closure-process.json": closure_process,
         }.items():
             path = self.repo / name
             path.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
@@ -1958,13 +1995,35 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 "path": path.relative_to(self.repo).as_posix(),
                 "sha256": bootstrap.file_hash(path),
             }
+        for name, payload in {
+            "non-impact.json": {
+                "schemaVersion": "bootstrap-p2-evidence-result.v1", "resultId": "non-impact-001",
+                "evidenceType": "non-impact", **identity, "scope": "expiry-or-authority-change",
+                "result": "bounded", "observedAt": "2020-01-01T00:00:00Z",
+                "expiresAt": "2099-01-01T00:00:00Z", "processResultRef": None,
+                "authorizes": [], "doesNotAuthorize": exclusions,
+            },
+            "recheck.json": {
+                "schemaVersion": "bootstrap-p2-evidence-result.v1", "resultId": "recheck-evidence-001",
+                "evidenceType": "recheck", **identity, "scope": "expiry-or-authority-change",
+                "result": "passed", "observedAt": "2020-01-01T00:00:00Z",
+                "expiresAt": "2099-01-01T00:00:00Z",
+                "processResultRef": evidence_paths["recheck-process.json"],
+                "authorizes": [], "doesNotAuthorize": exclusions,
+            },
+        }.items():
+            path = self.repo / name
+            path.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            evidence_paths[name] = {"path": path.relative_to(self.repo).as_posix(), "sha256": bootstrap.file_hash(path)}
         p2 = {
             "schemaVersion": "bootstrap-p2-dispositions.v1", "reviewId": manifest["reviewId"],
-            "inputHash": manifest["inputHash"], "findingIds": [finding_id],
+            "inputHash": manifest["inputHash"], "candidateHash": manifest["authorityContextHash"],
+            "policyRevision": manifest["policyRevision"], "authorityRevision": manifest["authorityRevision"],
+            "findingIds": [finding_id],
             "dispositions": [{
                 "findingId": finding_id, "status": "deferred", "risk": "high",
                 "reason": "Deferred for later", "owner": "owner",
-                "expiry": "2099-01-01T00:00:00Z", "closureCommandId": "test-command",
+                "expiry": "2099-01-01T00:00:00Z", "closureCommandId": "recheck-command",
                 "closureCommandRegistryRef": evidence_paths["command-registry.json"],
                 "ownerAuthorityRef": evidence_paths["owner-authority.json"],
                 "nonImpactEvidenceRef": evidence_paths["non-impact.json"],
@@ -1980,7 +2039,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
         p2["dispositions"][0] = {
             "findingId": finding_id, "status": "fixed", "risk": "normal",
-            "reason": "Targeted validation proves closure", "closureCommandId": "test-command",
+            "reason": "Targeted validation proves closure", "closureCommandId": "closure-command",
             "closureCommandRegistryRef": evidence_paths["command-registry.json"],
             "closureProcessResultRef": evidence_paths["closure-process.json"],
         }
@@ -1999,7 +2058,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
         reference = {"path": evidence.relative_to(self.repo).as_posix(), "sha256": "sha256:" + "0" * 64}
         self.write_json("p2-dispositions.json", {
             "schemaVersion": "bootstrap-p2-dispositions.v1", "reviewId": manifest["reviewId"],
-            "inputHash": manifest["inputHash"], "findingIds": [finding_id],
+            "inputHash": manifest["inputHash"], "candidateHash": manifest["authorityContextHash"],
+            "policyRevision": manifest["policyRevision"], "authorityRevision": manifest["authorityRevision"],
+            "findingIds": [finding_id],
             "dispositions": [{
                 "findingId": finding_id, "status": "deferred", "risk": "normal", "reason": "bounded",
                 "owner": "owner", "expiry": "2099-01-01T00:00:00Z", "closureCommandId": "test-command",
@@ -2009,6 +2070,28 @@ class BootstrapReviewCliTests(unittest.TestCase):
             }],
         })
         self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+
+    def test_successor_authorization_rejects_untrusted_actor_lineage_and_time(self) -> None:
+        exclusions = ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+        policy_revision = "sha256:" + "1" * 64
+        authority_path = self.repo / "successor-authority.json"
+        authority = {"schemaVersion": "bootstrap-successor-policy-authority.v1", "authorityId": "authority-001", "policyRevision": policy_revision, "authorizedActors": [{"actorId": "operator-001", "role": "successor-policy-authorizer", "consumers": ["repository-maintenance-tdd-adapter-plan-reentry"], "scopes": ["plan-reentry"]}], "status": "active", "issuedAt": "2026-01-01T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z", "predecessorAuthorityRef": None, "authorizes": [], "doesNotAuthorize": exclusions}
+        authority_path.write_text(json.dumps(authority), encoding="utf-8", newline="\n")
+        event_path = self.repo / "successor-event.json"
+        event = {"schemaVersion": "bootstrap-successor-policy-authorization.v1", "eventId": "event-001", "decisionId": "decision-001", "actorId": "operator-001", "authoritySourceRef": {"path": "successor-authority.json", "sha256": bootstrap.file_hash(authority_path)}, "supersededReviewId": "review-old", "supersededChangeId": "change-old", "successorChangeId": "change-new", "policyRevision": policy_revision, "authorityRevision": "authority-new", "consumer": "repository-maintenance-tdd-adapter-plan-reentry", "scope": "plan-reentry", "status": "active", "issuedAt": "2026-01-02T00:00:00Z", "expiresAt": "2098-01-01T00:00:00Z", "predecessorEventRef": None, "revocationEventRef": None, "authorizes": [], "doesNotAuthorize": exclusions}
+        event_path.write_text(json.dumps(event), encoding="utf-8", newline="\n")
+        decision = {"schemaVersion": "bootstrap-successor-policy-decision.v1", "decisionId": "decision-001", "supersededReviewId": "review-old", "supersededChangeId": "change-old", "successorChangeId": "change-new", "policyRevision": policy_revision, "authorityRevision": "authority-new", "authorizationEventRef": {"path": "successor-event.json", "sha256": bootstrap.file_hash(event_path)}, "authorizationEventId": "event-001", "consumer": "repository-maintenance-tdd-adapter-plan-reentry", "authorizes": [], "doesNotAuthorize": exclusions, "decidedAt": "2026-01-03T00:00:00Z"}
+        self.assertEqual(event, bootstrap.validate_successor_policy_authorization(self.repo, decision))
+        for field, value in (("actorId", "intruder-001"), ("successorChangeId", "other-change"), ("revocationEventRef", {"path": "successor-authority.json", "sha256": bootstrap.file_hash(authority_path)}), ("expiresAt", "2020-01-01T00:00:00Z")):
+            mutated = dict(event); mutated[field] = value
+            event_path.write_text(json.dumps(mutated), encoding="utf-8", newline="\n")
+            candidate = dict(decision); candidate["authorizationEventRef"] = {"path": "successor-event.json", "sha256": bootstrap.file_hash(event_path)}
+            with self.subTest(field=field), self.assertRaises(bootstrap.BootstrapError):
+                bootstrap.validate_successor_policy_authorization(self.repo, candidate)
+        event_path.write_text(json.dumps(event), encoding="utf-8", newline="\n")
+        candidate = dict(decision); candidate["authorizationEventRef"] = {"path": "successor-event.json", "sha256": bootstrap.file_hash(event_path)}; candidate["decidedAt"] = "2025-01-01T00:00:00Z"
+        with self.assertRaises(bootstrap.BootstrapError):
+            bootstrap.validate_successor_policy_authorization(self.repo, candidate)
 
     def test_list_inspect_and_seal_are_additive_lifecycle_views(self) -> None:
         self.prepare()

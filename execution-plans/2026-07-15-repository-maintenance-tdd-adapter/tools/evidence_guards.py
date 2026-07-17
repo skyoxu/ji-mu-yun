@@ -50,38 +50,39 @@ def validate_bootstrap_envelope_projection(
     repository_root: Path,
     envelope: dict[str, Any],
     authority_revision: str | None = None,
+    review_dir: Path | None = None,
 ) -> list[dict[str, str]]:
-    profile_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "references" / "review-profiles.v1.json"
-    validator_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "scripts" / "bootstrap_review.py"
     try:
-        profile = json.loads(profile_path.read_text(encoding="utf-8"))["profiles"]["bootstrap-implementation-conformance"]
-    except (OSError, UnicodeError, ValueError, KeyError, json.JSONDecodeError):
-        profile = {}
-    required = {
-        "schemaVersion", "validationStatus", "reviewId", "changeId", "fullReviewRound",
-        "profileName", "reviewProfile", "routeVersion", "controlPlaneRevision", "policyRevision",
-        "profileHash", "authorityRevision", "inputHash", "authorityContextHash", "artifactHashes",
-        "finalStatus", "findingClosure", "validatorRevision", "validatorHash", "authorizes",
-        "doesNotAuthorize", "generatedAt",
-    }
-    invalid = (
-        set(envelope) != required
-        or envelope.get("schemaVersion") != "bootstrap-finalized-run-validation.v1"
-        or envelope.get("validationStatus") != "passed"
-        or envelope.get("profileName") != "bootstrap-implementation-conformance"
-        or envelope.get("profileHash") != _value_hash(profile)
-        or envelope.get("reviewProfile") != profile.get("reviewProfile")
-        or envelope.get("routeVersion") != profile.get("routeVersion")
-        or envelope.get("controlPlaneRevision") != profile.get("controlPlaneRevision")
-        or envelope.get("policyRevision") != profile.get("policyRevision")
-        or (authority_revision is not None and envelope.get("authorityRevision") != authority_revision)
-        or envelope.get("validatorRevision") != "bootstrap-finalized-run-validator.v1"
-        or not validator_path.is_file()
-        or envelope.get("validatorHash") != _sha256(validator_path)
-        or envelope.get("authorizes") != []
-        or not {"plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"}.issubset(set(envelope.get("doesNotAuthorize", [])))
-    )
-    return [_finding("RMAP-REVIEW-ENVELOPE", "finalized-run-validation", "finalized-run envelope profile, validator, or authority boundary is stale")] if invalid else []
+        runtime = _bootstrap_runtime(repository_root)
+        schema_errors = runtime.schema_validation_errors(
+            "bootstrap-finalized-run-validation.v1.schema.json", envelope
+        )
+        if schema_errors:
+            raise ValueError("; ".join(schema_errors))
+        if review_dir is None:
+            if (
+                envelope.get("validatorRevision") != runtime.FINALIZED_VALIDATOR_REVISION
+                or envelope.get("validatorHash") != _sha256(Path(runtime.__file__).resolve())
+            ):
+                raise ValueError("finalized validator identity is stale")
+        else:
+            manifest = runtime.read_json(review_dir / "review-input.json")
+            recomputed = runtime.validate_finalized_run_evidence(review_dir, manifest, repository_root)
+            saved = {key: value for key, value in envelope.items() if key != "generatedAt"}
+            current = {key: value for key, value in recomputed.items() if key != "generatedAt"}
+            if saved != current:
+                raise ValueError("saved envelope differs from repository producer recomputation")
+        if authority_revision is not None and envelope.get("authorityRevision") != authority_revision:
+            raise ValueError("authority revision is stale")
+        if envelope.get("profileName") != "bootstrap-implementation-conformance":
+            raise ValueError("wrong Bootstrap review profile")
+        if envelope.get("authorizes") != [] or not {
+            "plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"
+        }.issubset(set(envelope.get("doesNotAuthorize", []))):
+            raise ValueError("invalid authorization boundary")
+    except (OSError, UnicodeError, ValueError, KeyError, json.JSONDecodeError, RuntimeError):
+        return [_finding("RMAP-REVIEW-ENVELOPE", "finalized-run-validation", "finalized-run envelope fails repository producer recomputation or authority binding")]
+    return []
 
 
 def validate_runtime_disposition_sources(review_dir: Path, envelope: dict[str, Any], findings_by_id: dict[str, dict[str, Any]], disposition_items: list[dict[str, Any]], candidate_path: str) -> list[dict[str, str]]:
@@ -238,7 +239,7 @@ def validate_candidate_review_documents(
 ) -> list[dict[str, str]]:
     findings = validate_candidate_document(plan_root, candidate_path, candidate, current, None)
     repository_root = plan_root.parents[1]
-    findings.extend(validate_bootstrap_envelope_projection(repository_root, envelope, current.get("head")))
+    findings.extend(validate_bootstrap_envelope_projection(repository_root, envelope, current.get("head"), review_dir))
     path = (repository_root / candidate_path).resolve()
     try:
         relative = path.relative_to(repository_root).as_posix()
@@ -260,57 +261,16 @@ def validate_candidate_review_documents(
             candidate,
             repository_root,
         ))
-    profile_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "references" / "review-profiles.v1.json"
-    validator_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "scripts" / "bootstrap_review.py"
-    try:
-        profiles = json.loads(profile_path.read_text(encoding="utf-8")).get("profiles", {})
-    except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
-        profiles = {}
     profile_name = "bootstrap-implementation-conformance"
-    profile = profiles.get(profile_name, {}) if isinstance(profiles, dict) else {}
-    required_envelope_fields = {
-        "schemaVersion", "validationStatus", "reviewId", "changeId", "fullReviewRound",
-        "profileName", "reviewProfile", "routeVersion", "controlPlaneRevision",
-        "policyRevision", "profileHash", "authorityRevision", "inputHash",
-        "authorityContextHash", "artifactHashes", "finalStatus", "findingClosure",
-        "validatorRevision", "validatorHash", "authorizes", "doesNotAuthorize", "generatedAt",
-    }
     if (
-        set(envelope) != required_envelope_fields
-        or envelope.get("schemaVersion") != "bootstrap-finalized-run-validation.v1"
-        or envelope.get("validationStatus") != "passed"
+        envelope.get("validationStatus") != "passed"
         or envelope.get("profileName") != profile_name
-        or envelope.get("profileHash") != _value_hash(profile)
-        or envelope.get("reviewProfile") != profile.get("reviewProfile")
-        or envelope.get("routeVersion") != profile.get("routeVersion")
-        or envelope.get("controlPlaneRevision") != profile.get("controlPlaneRevision")
-        or envelope.get("policyRevision") != profile.get("policyRevision")
-        or envelope.get("authorityRevision") != current.get("head")
-        or envelope.get("validatorRevision") != "bootstrap-finalized-run-validator.v1"
-        or not validator_path.is_file()
-        or envelope.get("validatorHash") != _sha256(validator_path)
         or envelope.get("authorizes") != []
         or not {"plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"}.issubset(set(envelope.get("doesNotAuthorize", [])))
     ):
         findings.append(_finding("RMAP-REVIEW-ENVELOPE", candidate_path, "finalized-run envelope is stale, partial, or authoritative"))
     if candidate.get("authority_revision") != envelope.get("authorityRevision"):
         findings.append(_finding("RMAP-REVIEW-EVIDENCE-BINDING", candidate_path, "candidate authority revision differs from finalized review authority"))
-    if review_dir is None:
-        findings.append(_finding("RMAP-REVIEW-ENVELOPE", candidate_path, "Bootstrap run directory is required"))
-    else:
-        paths = {
-            "reviewInput": review_dir / "review-input.json",
-            "preflightResult": review_dir / "preflight-result.json",
-            "gateState": review_dir / "review-gate-state.json",
-            "candidates": review_dir / "review-candidates.json",
-            "rejections": review_dir / "review-rejections.json",
-            "finalResult": review_dir / "review-gate-result.json",
-            "dispositions": review_dir / "review-dispositions.json",
-            "metrics": review_dir / "review-metrics.json",
-        }
-        hashes = envelope.get("artifactHashes", {})
-        if set(hashes) != set(paths) or any(not target.is_file() or hashes.get(name) != _sha256(target) for name, target in paths.items()):
-            findings.append(_finding("RMAP-REVIEW-ENVELOPE", candidate_path, "finalized-run envelope does not bind current Bootstrap artifact bytes"))
     unhashed = dict(review_input); unhashed.pop("inputHash", None)
     if (
         review_input.get("profileName") != profile_name

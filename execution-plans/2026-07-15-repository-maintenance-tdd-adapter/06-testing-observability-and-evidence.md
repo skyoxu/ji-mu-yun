@@ -38,7 +38,9 @@
 34. Per-slice full run-bundle recomputation against cached effects and cumulative cross-slice hash chain.
 35. First-add/new-path baseline semantics and retry-safe separation of cross-slice versus recovery lineage.
 36. Predicate-derived capability projection.
-37. Seven-dimensional artifact proof registry exact-set, byte identity, staleness, recovery, and authorization tests.
+37. Independent artifact-proof inventory exact-set, static-contract zero-authority, runtime-type identity/derivation/recomputation/staleness/recovery, registered consumer/rule/negative-test, and exact predicate-permission tests.
+38. Successor authorization rejects arbitrary JSON, wrong actor/change/policy, revoked or expired events, decision-before-event, stale bytes, and event reuse across decision identity.
+39. P2 typed evidence rejects wrong candidate/input/finding/scope, missing command registration, wrong command class or registry hash, nonzero process exit, and expired owner/non-impact/recheck evidence.
 
 ## Required Adapter Fixtures
 

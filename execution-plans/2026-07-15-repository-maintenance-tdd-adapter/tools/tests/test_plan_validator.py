@@ -1,8 +1,6 @@
 from __future__ import annotations
-import copy
-import hashlib
-import json
-import shutil
+import copy, hashlib
+import json, shutil
 import sys
 import unittest
 import uuid
@@ -15,7 +13,7 @@ if str(TOOLS) not in sys.path:
 from authority_guards import validate_acceptance_contracts, validate_authority_manifest, validate_clarification_projection  # noqa: E402
 from contract_guards import junction_escape_is_rejected, schema_error  # noqa: E402
 from candidate_diff_guards import fold_accepted_attempts, manifest_root_hash  # noqa: E402
-from evidence_guards import validate_candidate_document, validate_candidate_review_documents  # noqa: E402
+from evidence_guards import _bootstrap_runtime, validate_candidate_document, validate_candidate_review_documents  # noqa: E402
 from fixture_checks import apply_mutations, evaluate_fixture  # noqa: E402
 from protocol_guards import hydrate_protocol_fixture, load_protocol_run, value_hash  # noqa: E402
 from rmap_checks import (  # noqa: E402
@@ -349,9 +347,9 @@ class PlanValidatorTests(unittest.TestCase):
             "reviewId": "review-a", "changeId": "change-a", "fullReviewRound": 1,
             "profileName": "bootstrap-implementation-conformance", "reviewProfile": profile["reviewProfile"], "routeVersion": profile["routeVersion"], "controlPlaneRevision": profile["controlPlaneRevision"], "policyRevision": profile["policyRevision"], "profileHash": value_hash(profile),
             "authorityRevision": current["head"], "inputHash": review_input["inputHash"], "authorityContextHash": review_input["authorityContextHash"],
-            "artifactHashes": {key: "sha256:" + hashlib.sha256((review_dir / name).read_bytes()).hexdigest() for key, name in artifact_names.items()},
+            "artifactHashes": {**{key: "sha256:" + hashlib.sha256((review_dir / name).read_bytes()).hexdigest() for key, name in artifact_names.items()}, "verifierOutput": "sha256:" + "8" * 64, "p2Dispositions": None},
             "finalStatus": "clean", "findingClosure": {"candidateCount": 0, "visibleFindingCount": 0, "confirmedCount": 0, "advisoryCount": 0, "unverifiedCount": 0, "refutedCount": 0, "p2FixedCount": 0, "p2DeferredCount": 0, "p2RefutedCount": 0},
-            "validatorRevision": "bootstrap-finalized-run-validator.v1", "validatorHash": "sha256:" + hashlib.sha256((repository_root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py").read_bytes()).hexdigest(), "authorizes": [], "doesNotAuthorize": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"], "generatedAt": "2026-07-17T00:00:00Z",
+            "validatorRevision": "bootstrap-finalized-run-validator.v2", "validatorHash": "sha256:" + hashlib.sha256((repository_root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py").read_bytes()).hexdigest(), "authorizes": [], "doesNotAuthorize": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"], "generatedAt": "2026-07-17T00:00:00Z",
         }
         (review_dir / "finalized-run-validation.json").write_text(json.dumps(envelope), encoding="utf-8")
         try:
@@ -370,7 +368,9 @@ class PlanValidatorTests(unittest.TestCase):
             candidate_ref_path = candidate_ref_dir / "candidate-result-ref.json"; candidate_ref_path.write_text(json.dumps(candidate_ref), encoding="utf-8")
             candidate_ref_relative = candidate_ref_path.relative_to(repository_root).as_posix()
             folded = [{key: item.get(key) for key in ("change_type", "baseline_path", "candidate_path", "before_sha256", "after_sha256")} for item in expected_diff]
-            with patch("candidate_diff_guards.derive_candidate_snapshot", return_value=(expected_diff, b"")), patch("candidate_diff_guards.load_candidate_lineage", return_value=(folded, value_hash(folded), [])):
+            runtime = _bootstrap_runtime(repository_root)
+            runtime.validate_finalized_run_evidence = lambda *_args: envelope
+            with patch("candidate_diff_guards.derive_candidate_snapshot", return_value=(expected_diff, b"")), patch("candidate_diff_guards.load_candidate_lineage", return_value=(folded, value_hash(folded), [])), patch("evidence_guards._bootstrap_runtime", return_value=runtime):
                 self.assertEqual([], validate_candidate_document(PLAN_ROOT, relative, candidate, current, stages))
                 self.assertEqual([], validate_candidate_review_documents(PLAN_ROOT, relative, candidate, envelope, review_input, review_result, dispositions, current, stages, review_dir, candidate_ref, candidate_ref_relative))
         finally:

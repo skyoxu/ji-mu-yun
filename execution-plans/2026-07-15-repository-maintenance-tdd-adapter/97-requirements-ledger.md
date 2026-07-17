@@ -32,6 +32,6 @@ Executable acceptance owner: [`schemas/acceptance-contracts.v1.json`](schemas/ac
 | RMAP-024 | Prevent a new Router or expansion of historical script directories without an ADR delta. | workflow architect | P0 | RMAP-ACC-024 | active |
 | RMAP-025 | Persist immutable Capsules with typed refs and an exact byte-verified artifact union. | context protocol maintainer | P0 | RMAP-ACC-025 | active |
 | RMAP-026 | Attempts form a complete RED-GREEN-REFACTOR prefix whose real decisions, diffs, events, stage results, and ledger roots independently derive every slice and candidate projection. | attempt protocol maintainer | P0 | RMAP-ACC-026 | active |
-| RMAP-027 | Every artifact introduced for a review finding satisfies the seven-dimensional artifact proof contract before it can participate in any predicate. | artifact proof maintainer | P0 | RMAP-ACC-027 | active |
+| RMAP-027 | Every finding-added artifact is covered by an independent required inventory and a seven-dimensional static/runtime proof with exact consumer and predicate authority before it can participate in any predicate. | artifact proof maintainer | P0 | RMAP-ACC-027 | active |
 
 Each acceptance identity is executable intent. The machine registry owns source refs, evidence intent, consumers, failure family, and quality-check status.

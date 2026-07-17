@@ -1,0 +1,58 @@
+{
+  "schema_version": "jimuyun.runtime-artifact-type-proof.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "proofs": [
+    {
+      "type_id": "bootstrap-finalized-run-instance",
+      "schema_producer_authority": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "immutable_identity_fields": ["reviewId", "changeId", "inputHash", "authorityRevision", "artifactHashes"],
+      "source_of_truth_derivation": ["review-input.json", "reviewer-outputs", "review-gate-state.json", "verifier-output.json", "p2-dispositions.json"],
+      "independent_recomputation": {"validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "rule_ids": ["bootstrap-finalized-run-validator.v2"]},
+      "staleness_propagation": ["finalized-envelope", "plan-reentry", "implementation-accepted"],
+      "recovery_supersession": ["reviewId", "changeId", "inputHash", "authorityRevision"],
+      "consumer_authorization_boundary": {"consumers": ["S7 acceptance validator", "plan reentry validator"], "predicate": "bootstrap-finalized-run-validation", "authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "type_id": "bootstrap-p2-disposition-instance",
+      "schema_producer_authority": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "immutable_identity_fields": ["reviewId", "inputHash", "candidateHash", "policyRevision", "authorityRevision", "findingIds"],
+      "source_of_truth_derivation": ["review-candidates.json", "ownerAuthorityRef", "closureCommandRegistryRef", "nonImpactEvidenceRef", "recheckEvidenceRef", "closureProcessResultRef"],
+      "independent_recomputation": {"validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "rule_ids": ["bootstrap-p2-disposition-evidence.v2"]},
+      "staleness_propagation": ["review-metrics", "finalized-envelope", "implementation-accepted"],
+      "recovery_supersession": ["reviewId", "inputHash", "candidateHash", "findingIds"],
+      "consumer_authorization_boundary": {"consumers": ["Bootstrap finalize", "S7 acceptance validator"], "predicate": "p2-disposition", "authorizes": [], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "type_id": "bootstrap-successor-authorization-instance",
+      "schema_producer_authority": "docs/standards/bootstrap-review-control-plane.md",
+      "immutable_identity_fields": ["eventId", "decisionId", "supersededReviewId", "supersededChangeId", "successorChangeId", "policyRevision", "authorityRevision"],
+      "source_of_truth_derivation": ["authoritySourceRef", "predecessorEventRef", "revocationEventRef"],
+      "independent_recomputation": {"validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "rule_ids": ["bootstrap-successor-policy-authorization.v1"]},
+      "staleness_propagation": ["successor-policy-decision", "plan-reentry"],
+      "recovery_supersession": ["predecessorEventRef", "supersededReviewId", "successorChangeId"],
+      "consumer_authorization_boundary": {"consumers": ["plan reentry validator"], "predicate": "successor-policy-authorization", "authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "type_id": "candidate-lineage-instance",
+      "schema_producer_authority": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+      "immutable_identity_fields": ["root_hash", "cumulative_fold_hash", "slice_runs"],
+      "source_of_truth_derivation": ["baseline-file-manifest", "diff-manifest", "adapter-decision", "run-events"],
+      "independent_recomputation": {"validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py", "rule_ids": ["RMAP-CANDIDATE-LINEAGE", "RMAP-CANDIDATE-LEDGER-FOLD"]},
+      "staleness_propagation": ["candidate-lineage", "implementation-candidate"],
+      "recovery_supersession": ["previous_slice_id", "previous_slice_run_id", "previous_slice_effect_hash"],
+      "consumer_authorization_boundary": {"consumers": ["S6 candidate validator"], "predicate": "implementation-candidate", "authorizes": ["bootstrap-review"], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "type_id": "review-policy-reentry-instance",
+      "schema_producer_authority": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+      "immutable_identity_fields": ["supersedes_blocker", "successor_policy", "semantic_closure"],
+      "source_of_truth_derivation": ["review-blocking-state", "successor-policy-decision", "finalized-run-validation"],
+      "independent_recomputation": {"validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py", "rule_ids": ["RMAP-REVIEW-REENTRY"]},
+      "staleness_propagation": ["plan-state", "plan-ready"],
+      "recovery_supersession": ["review_id", "change_id", "policy_revision", "authority_revision", "input_hash"],
+      "consumer_authorization_boundary": {"consumers": ["plan-state validator"], "predicate": "plan-ready", "authorizes": ["plan-ready"], "does_not_authorize": ["slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]}
+    }
+  ],
+  "authorizes": [],
+  "does_not_authorize": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+}

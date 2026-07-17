@@ -117,11 +117,17 @@ class CandidateDiffGuardTests(unittest.TestCase):
         try:
             blocker = json.loads((PLAN_ROOT / "schemas" / "review-blocking-state.v1.json").read_text(encoding="utf-8"))
             reentry = json.loads((PLAN_ROOT / "schemas" / "review-policy-reentry.v1.json").read_text(encoding="utf-8"))
-            event_path = run_dir / "authorization-event.json"; event_path.write_text('{"authorized":true}', encoding="utf-8")
             policy_revision = "sha256:" + "9" * 64; authority_revision = "successor-authority"; input_hash = "sha256:" + "8" * 64
             exclusions = ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+            authority_path = run_dir / "successor-authority.json"
+            authority = {"schemaVersion": "bootstrap-successor-policy-authority.v1", "authorityId": "successor-authority-001", "policyRevision": policy_revision, "authorizedActors": [{"actorId": "operator-001", "role": "successor-policy-authorizer", "consumers": ["repository-maintenance-tdd-adapter-plan-reentry"], "scopes": ["plan-reentry"]}], "status": "active", "issuedAt": "2026-07-17T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z", "predecessorAuthorityRef": None, "authorizes": [], "doesNotAuthorize": exclusions}
+            authority_path.write_text(json.dumps(authority), encoding="utf-8")
+            authority_ref = {"path": authority_path.relative_to(repository_root).as_posix(), "sha256": "sha256:" + hashlib.sha256(authority_path.read_bytes()).hexdigest()}
+            event_path = run_dir / "authorization-event.json"
+            event = {"schemaVersion": "bootstrap-successor-policy-authorization.v1", "eventId": "successor-event-001", "decisionId": "successor-decision", "actorId": "operator-001", "authoritySourceRef": authority_ref, "supersededReviewId": blocker["review_id"], "supersededChangeId": blocker["change_id"], "successorChangeId": "successor-change", "policyRevision": policy_revision, "authorityRevision": authority_revision, "consumer": "repository-maintenance-tdd-adapter-plan-reentry", "scope": "plan-reentry", "status": "active", "issuedAt": "2026-07-17T00:01:00Z", "expiresAt": "2098-01-01T00:00:00Z", "predecessorEventRef": None, "revocationEventRef": None, "authorizes": [], "doesNotAuthorize": exclusions}
+            event_path.write_text(json.dumps(event), encoding="utf-8")
             decision_path = run_dir / "policy-decision.json"
-            decision = {"schemaVersion": "bootstrap-successor-policy-decision.v1", "decisionId": "successor-decision", "supersededReviewId": blocker["review_id"], "supersededChangeId": blocker["change_id"], "successorChangeId": "successor-change", "policyRevision": policy_revision, "authorityRevision": authority_revision, "authorizationEventRef": {"path": event_path.relative_to(repository_root).as_posix(), "sha256": "sha256:" + hashlib.sha256(event_path.read_bytes()).hexdigest()}, "consumer": "repository-maintenance-tdd-adapter-plan-reentry", "authorizes": [], "doesNotAuthorize": exclusions, "decidedAt": "2026-07-17T00:00:00Z"}
+            decision = {"schemaVersion": "bootstrap-successor-policy-decision.v1", "decisionId": "successor-decision", "supersededReviewId": blocker["review_id"], "supersededChangeId": blocker["change_id"], "successorChangeId": "successor-change", "policyRevision": policy_revision, "authorityRevision": authority_revision, "authorizationEventRef": {"path": event_path.relative_to(repository_root).as_posix(), "sha256": "sha256:" + hashlib.sha256(event_path.read_bytes()).hexdigest()}, "authorizationEventId": "successor-event-001", "consumer": "repository-maintenance-tdd-adapter-plan-reentry", "authorizes": [], "doesNotAuthorize": exclusions, "decidedAt": "2026-07-17T00:02:00Z"}
             decision_path.write_text(json.dumps(decision), encoding="utf-8")
             envelope_path = run_dir / "finalized-run-validation.json"
             envelope = {"schemaVersion": "bootstrap-finalized-run-validation.v1", "validationStatus": "passed", "reviewId": "successor-review", "changeId": "successor-change", "fullReviewRound": 1, "profileName": "bootstrap-implementation-conformance", "reviewProfile": "review-policy://implementation-conformance/v1", "routeVersion": "route-v1", "controlPlaneRevision": "control-v2", "policyRevision": policy_revision, "profileHash": "sha256:" + "7" * 64, "authorityRevision": authority_revision, "inputHash": input_hash, "authorityContextHash": "sha256:" + "6" * 64, "artifactHashes": {key: "sha256:" + "5" * 64 for key in ("reviewInput", "preflightResult", "gateState", "candidates", "rejections", "finalResult", "dispositions", "metrics", "verifierOutput")}, "finalStatus": "clean", "findingClosure": {key: 0 for key in ("candidateCount", "visibleFindingCount", "confirmedCount", "advisoryCount", "unverifiedCount", "refutedCount", "p2FixedCount", "p2DeferredCount", "p2RefutedCount")}, "validatorRevision": "bootstrap-finalized-run-validator.v2", "validatorHash": "sha256:" + "4" * 64, "authorizes": [], "doesNotAuthorize": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"], "generatedAt": "2026-07-17T00:00:00Z"}
@@ -140,6 +146,12 @@ class CandidateDiffGuardTests(unittest.TestCase):
                 name == "bootstrap-finalized-run-validation.v1.schema.json" and document.get("schemaVersion") == "bootstrap-finalized-run-validation.v1" and "artifactHashes" in document
             ) else ["schema invalid"]
             fake.read_json.return_value = {}
+            def validate_event(_root: Path, candidate: dict) -> dict:
+                reference = candidate["authorizationEventRef"]
+                if reference["sha256"] != digest(event_path):
+                    raise ValueError("stale successor authorization event")
+                return event
+            fake.validate_successor_policy_authorization.side_effect = validate_event
             fake.validate_finalized_run_evidence.return_value = envelope
             with mock.patch("authority_guards._load_bootstrap_runtime", return_value=fake):
                 self.assertEqual([], validate_review_reentry(PLAN_ROOT, blocker, reentry))
@@ -218,7 +230,7 @@ class CandidateDiffGuardTests(unittest.TestCase):
             findings = {"P2-TEST": {"findingId": "P2-TEST", "proposedSeverity": "P2", "status": "advisory"}}
             dispositions = [{"findingId": "P2-TEST", "status": "p2_deferred"}]
             ref = {"path": "logs/evidence.json", "sha256": "sha256:" + "2" * 64}
-            p2 = {"schemaVersion": "bootstrap-p2-dispositions.v1", "reviewId": "review-p2", "inputHash": envelope["inputHash"], "findingIds": ["P2-TEST"], "dispositions": [{"findingId": "P2-TEST", "status": "deferred", "risk": "normal", "reason": "bounded", "owner": "owner", "expiry": "2099-01-01T00:00:00Z", "closureCommandId": "test-p2", "closureCommandRegistryRef": ref, "ownerAuthorityRef": ref, "nonImpactEvidenceRef": ref, "recheckEvidenceRef": ref, "recheckTrigger": "expiry"}]}
+            p2 = {"schemaVersion": "bootstrap-p2-dispositions.v1", "reviewId": "review-p2", "inputHash": envelope["inputHash"], "candidateHash": "sha256:" + "3" * 64, "policyRevision": "sha256:" + "4" * 64, "authorityRevision": "authority-p2", "findingIds": ["P2-TEST"], "dispositions": [{"findingId": "P2-TEST", "status": "deferred", "risk": "normal", "reason": "bounded", "owner": "owner", "expiry": "2099-01-01T00:00:00Z", "closureCommandId": "test-p2", "closureCommandRegistryRef": ref, "ownerAuthorityRef": ref, "nonImpactEvidenceRef": ref, "recheckEvidenceRef": ref, "recheckTrigger": "expiry"}]}
             p2_path = review_dir / "p2-dispositions.json"; p2_path.write_text(json.dumps(p2), encoding="utf-8")
             metrics = {"p2DispositionHash": "sha256:" + hashlib.sha256(p2_path.read_bytes()).hexdigest()}
             (review_dir / "review-metrics.json").write_text(json.dumps(metrics), encoding="utf-8")

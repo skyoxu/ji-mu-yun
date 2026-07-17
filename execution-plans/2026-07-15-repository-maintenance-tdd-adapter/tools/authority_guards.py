@@ -69,10 +69,7 @@ def validate_review_reentry(plan_root: Path, review_blocker: dict[str, Any], ree
         decision_errors = bootstrap.schema_validation_errors("bootstrap-successor-policy-decision.v1.schema.json", decision)
         if decision_errors:
             raise ValueError("; ".join(decision_errors))
-        event_ref = decision["authorizationEventRef"]
-        event_path = contained_file(repository_root, event_ref.get("path"))
-        if event_path is None or event_ref.get("sha256") != _sha256_file(event_path):
-            raise ValueError("successor authorization event is missing or stale")
+        bootstrap.validate_successor_policy_authorization(repository_root, decision)
         envelope = json.loads(envelope_path.read_text(encoding="utf-8"))
         manifest = bootstrap.read_json(bootstrap_run_path / "review-input.json")
         recomputed = bootstrap.validate_finalized_run_evidence(bootstrap_run_path, manifest, repository_root)
@@ -208,7 +205,13 @@ def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> li
         ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
         ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
         ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json",
         ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-evidence-result.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-owner-authority.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
         ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
         ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json",
         ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-preflight-result.v1.schema.json",
@@ -237,7 +240,7 @@ def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> li
         "schemas/candidate-diff-manifest.v1.schema.json", "schemas/candidate-result-ref.v1.schema.json",
         "schemas/candidate-lineage-manifest.v1.schema.json", "schemas/candidate-slice-effect.v1.schema.json", "schemas/candidate-supersession-proof.v1.schema.json",
         "schemas/review-policy-reentry.v1.schema.json", "schemas/review-policy-reentry.v1.json",
-        "schemas/artifact-proof.v1.schema.json", "schemas/artifact-proof-registry.v1.json",
+        "schemas/artifact-proof.v1.schema.json", "schemas/artifact-proof-required.v1.json", "schemas/artifact-proof-registry.v1.json", "schemas/runtime-artifact-type-proof.v1.json",
         "fixtures/fixture-cases.v1.json", "fixtures/capsule-attempt-cases.v1.json", "fixtures/candidate-diff-cases.v1.json", "tools/validate_all.py",
         "tools/rmap_checks.py", "tools/authority_guards.py", "tools/contract_guards.py",
         "tools/evidence_guards.py", "tools/candidate_diff_guards.py", "tools/candidate_lineage_guards.py", "tools/current_state_guards.py", "tools/fixture_checks.py", "tools/shadow_guards.py",

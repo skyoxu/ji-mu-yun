@@ -32,7 +32,7 @@ REQUIRED_FILES = {
     "schemas/acceptance-contracts.v1.json", "schemas/authority-manifest.v1.json",
     "schemas/clarification-decisions.v1.json", "schemas/review-blocking-state.v1.json",
     "schemas/review-policy-reentry.v1.json", "schemas/review-policy-reentry.v1.schema.json",
-    "schemas/artifact-proof.v1.schema.json", "schemas/artifact-proof-registry.v1.json", "tools/artifact_proof_guards.py",
+    "schemas/artifact-proof.v1.schema.json", "schemas/artifact-proof-required.v1.json", "schemas/artifact-proof-registry.v1.json", "schemas/runtime-artifact-type-proof.v1.json", "tools/artifact_proof_guards.py",
     "schemas/candidate-diff-manifest.v1.schema.json", "schemas/candidate-result-ref.v1.schema.json",
     "schemas/candidate-lineage-manifest.v1.schema.json", "schemas/candidate-slice-effect.v1.schema.json", "schemas/candidate-supersession-proof.v1.schema.json",
     "schemas/context-manifest.v1.schema.json", "schemas/slice-capsule.v1.schema.json", "schemas/backend-request.v1.schema.json", "schemas/backend-response.v1.schema.json",

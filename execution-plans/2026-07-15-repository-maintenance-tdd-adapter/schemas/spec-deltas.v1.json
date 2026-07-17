@@ -13,7 +13,7 @@
       ],
       "summary": "Backfill all three existing refactor plans rather than one pilot.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "7-12",
         "7-07",
@@ -50,7 +50,7 @@
       ],
       "summary": "Use a repository-owned capsule executor instead of stock Quick Dev backend v1.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "adapter",
         "backend"
@@ -87,7 +87,7 @@
       ],
       "summary": "Reuse accepted ADR-0041 for the shared ownership pattern, keep Bootstrap execution scope explicit, and assign TDD Adapter semantics to its standard and Skill.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "standards",
         "Skill",
@@ -129,7 +129,7 @@
       ],
       "summary": "Replace baseline and candidate identity with an existing-file global baseline, first-add derivation, complete protocol-bundle recomputation, and separate previous-slice effect hash lineage.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "command registry",
         "adapter"
@@ -187,7 +187,7 @@
       ],
       "summary": "Add append-only recovery with stale predecessor and normally initialized successor.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "recovery",
         "logs"
@@ -225,7 +225,7 @@
       ],
       "summary": "Require authoritative S7 supersession proof, runtime Bootstrap dispositions, and immutable successor-policy reentry.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "implementation-accepted"
       ],
@@ -268,7 +268,7 @@
       ],
       "summary": "Replace partial Bootstrap consumption with the repository v2 finalized producer, direct verifier/P2 hashes, formal successor policy authorization, and fresh re-entry recomputation.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "7-12 Bootstrap CLI"
       ],
@@ -309,7 +309,7 @@
       ],
       "summary": "Remove P4 BMAD elimination from this plan.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "future plan"
       ],
@@ -342,7 +342,7 @@
       ],
       "summary": "Rename quick-dev-tdd-adapter architecture concept to Repository Maintenance TDD Adapter while retaining the stateless adapter identity.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "plan",
         "future Skill"
@@ -386,7 +386,7 @@
       ],
       "summary": "Add the remaining executable contract, lifecycle, cumulative candidate-diff, validation, test, confidence, and source-custody requirements needed for a complete VDD control chain.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "plan validator",
         "adapter",
@@ -461,7 +461,7 @@
       ],
       "summary": "Replace self-asserted cross-slice effects with complete run-bundle validation and independently derived accepted decisions, diffs, events, stage results, and ledger roots.",
       "prior_revision": "sha256:5d318a8e9198faa85dba1df97308006900c82fb0210f7e827ca6c71d0dba28e0",
-      "proposed_contract_hash": "sha256:32ea4cb0fb087a4832ec676641ff3b6cc1bfc2ef2e15e004ce2c1292927fe729",
+      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
       "consumers": [
         "adapter prepare",
         "backend adapter",

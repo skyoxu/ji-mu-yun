@@ -29,7 +29,7 @@
 21. Shadow backfill exact population, order, additive-only policy, and non-authoritative status.
 22. Recovery initial/stale/successor rules, append-only lineage, and successor-policy re-entry exactness.
 23. P0/P1 closure, runtime P2 disposition, high-risk deferral rejection, and expiry blocking.
-24. Seven-dimensional artifact proof closure for every review-added normative, projection, evidence, lineage, or validator artifact.
+24. Seven-dimensional artifact proof closure from an independent required inventory, with static contract zero-authority, separate runtime type proof, current authority hashes, registered consumer/rule/negative-test mappings, and exact predicate permissions.
 25. Full protocol-bundle recomputation rejects fabricated slice effects, omitted accepted attempts, self-asserted final events, and effects not derived from real diffs.
 26. The global baseline rejects predicted future paths while a first accepted add is valid and becomes part of the derived cross-slice state.
 27. Cross-slice effect hashes are separate from same-slice recovery/supersession lineage.
@@ -103,7 +103,7 @@ The minimum cases are:
 - future path predeclared with a null baseline hash, cross-slice use of recovery predecessor fields, or broken previous-slice effect hash;
 - empty/malformed verifier evidence, stale P2 transitive evidence, or missing direct finalized-envelope hashes;
 - manual capability Boolean that conflicts with current predicate evidence;
-- missing or self-inconsistent seven-dimensional artifact proof.
+- missing or self-inconsistent seven-dimensional artifact proof, inventory omission, static-contract authority escalation, unregistered consumer/rule, or runtime predicate permission mismatch.
 - real Git for Windows add/modify/delete/binary-patch behavior and junction escape.
 
 ## RED Before Implementation

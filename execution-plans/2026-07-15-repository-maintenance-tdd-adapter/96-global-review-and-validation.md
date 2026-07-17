@@ -63,7 +63,7 @@ Future `implementation-accepted` requires:
 - exact authority exclusion for handoff and release.
 - a candidate-bound final context/Capsule, immutable S0-S6 lineage, and authoritative non-supersession proof;
 - runtime Bootstrap P2 dispositions and verifier output schema-valid and directly hash-bound by the v2 finalized envelope;
-- every review-added artifact covered by the exact seven-dimensional proof registry.
+- every review-added artifact covered by the independent required inventory, static contract proof, runtime artifact type proof, current authority hash, registered validator/negative test, consumer registry, and exact predicate permission lattice.
 
 ## Bounded Review Cycle
 

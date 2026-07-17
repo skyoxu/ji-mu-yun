@@ -3266,6 +3266,125 @@ def validate_verifier(
     return decisions
 
 
+def load_typed_repository_reference(
+    repository_root: Path,
+    reference: Any,
+    label: str,
+    schema_name: str,
+) -> tuple[dict[str, Any], Path]:
+    if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+        raise BootstrapError(f"{label} must be an exact path/hash reference")
+    path = ensure_within(repository_root / str(reference.get("path", "")), repository_root, label)
+    if not path.is_file() or file_hash(path) != reference.get("sha256"):
+        raise BootstrapError(f"{label} is missing or stale")
+    document = read_json(path)
+    errors = schema_validation_errors(schema_name, document)
+    if errors:
+        raise BootstrapError(f"{label} violates {schema_name}: " + "; ".join(errors))
+    return document, path
+
+
+def validate_successor_policy_authorization(
+    repository_root: Path,
+    decision: dict[str, Any],
+) -> dict[str, Any]:
+    decision_errors = schema_validation_errors(
+        "bootstrap-successor-policy-decision.v1.schema.json", decision
+    )
+    if decision_errors:
+        raise BootstrapError(
+            "Successor policy decision is invalid: " + "; ".join(decision_errors)
+        )
+    event, _ = load_typed_repository_reference(
+        repository_root,
+        decision["authorizationEventRef"],
+        "Successor policy authorization event",
+        "bootstrap-successor-policy-authorization.v1.schema.json",
+    )
+    authority, _ = load_typed_repository_reference(
+        repository_root,
+        event["authoritySourceRef"],
+        "Successor policy authority source",
+        "bootstrap-successor-policy-authority.v1.schema.json",
+    )
+    exclusions = {
+        "plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted",
+        "protected-handoff", "release-ready",
+    }
+    exact_bindings = {
+        "supersededReviewId": decision["supersededReviewId"],
+        "supersededChangeId": decision["supersededChangeId"],
+        "successorChangeId": decision["successorChangeId"],
+        "policyRevision": decision["policyRevision"],
+        "authorityRevision": decision["authorityRevision"],
+        "consumer": decision["consumer"],
+    }
+    if (
+        decision["authorizationEventId"] != event.get("eventId")
+        or decision["decisionId"] != event.get("decisionId")
+        or any(
+        event.get(key) != value for key, value in exact_bindings.items()
+        )
+    ):
+        raise BootstrapError("Successor authorization event does not bind the exact decision lineage")
+    if event.get("scope") != "plan-reentry" or event.get("status") != "active" or event.get("revocationEventRef") is not None:
+        raise BootstrapError("Successor authorization event is inactive, revoked, or out of scope")
+    if (
+        event.get("authorizes") != []
+        or decision.get("authorizes") != []
+        or authority.get("authorizes") != []
+        or set(event.get("doesNotAuthorize", [])) != exclusions
+        or set(decision.get("doesNotAuthorize", [])) != exclusions
+        or set(authority.get("doesNotAuthorize", [])) != exclusions
+    ):
+        raise BootstrapError("Successor policy artifacts have an invalid authorization boundary")
+    if authority.get("status") != "active" or authority.get("policyRevision") != event.get("policyRevision"):
+        raise BootstrapError("Successor policy authority is inactive or bound to another policy")
+    actors = [item for item in authority.get("authorizedActors", []) if item.get("actorId") == event.get("actorId")]
+    if len(actors) != 1:
+        raise BootstrapError("Successor policy actor is not uniquely authorized")
+    actor = actors[0]
+    if (
+        actor.get("role") != "successor-policy-authorizer"
+        or event.get("consumer") not in actor.get("consumers", [])
+        or event.get("scope") not in actor.get("scopes", [])
+    ):
+        raise BootstrapError("Successor policy actor role, consumer, or scope is unauthorized")
+
+    def parse_time(value: Any, label: str) -> datetime:
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise BootstrapError(f"{label} is invalid") from exc
+        if parsed.tzinfo is None:
+            raise BootstrapError(f"{label} must be timezone-aware")
+        return parsed
+
+    authority_issued = parse_time(authority["issuedAt"], "Authority issuedAt")
+    authority_expires = parse_time(authority["expiresAt"], "Authority expiresAt")
+    event_issued = parse_time(event["issuedAt"], "Authorization issuedAt")
+    event_expires = parse_time(event["expiresAt"], "Authorization expiresAt")
+    decided = parse_time(decision["decidedAt"], "Decision decidedAt")
+    now = datetime.now(timezone.utc)
+    if not (authority_issued <= event_issued <= decided < event_expires <= authority_expires):
+        raise BootstrapError("Successor policy authority, event, and decision timestamps are inconsistent")
+    if event_expires <= now or authority_expires <= now:
+        raise BootstrapError("Successor policy authority or event has expired")
+
+    for label, reference in (
+        ("Predecessor authority", authority.get("predecessorAuthorityRef")),
+        ("Predecessor authorization event", event.get("predecessorEventRef")),
+    ):
+        if reference is None:
+            continue
+        if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+            raise BootstrapError(f"{label} reference is invalid")
+        predecessor = ensure_within(repository_root / str(reference.get("path", "")), repository_root, label)
+        if not predecessor.is_file() or file_hash(predecessor) != reference.get("sha256"):
+            raise BootstrapError(f"{label} is missing or stale")
+    return event
+
+
 def validate_p2_dispositions(
     run_dir: Path,
     manifest: dict[str, Any],
@@ -3279,10 +3398,14 @@ def validate_p2_dispositions(
     path = run_dir / "p2-dispositions.json"
     value = read_json(path)
     errors = schema_validation_errors("bootstrap-p2-dispositions.v1.schema.json", value)
+    candidate_hash = manifest["authorityContextHash"]
     expected = {
         "schemaVersion": "bootstrap-p2-dispositions.v1",
         "reviewId": manifest["reviewId"],
         "inputHash": manifest["inputHash"],
+        "candidateHash": candidate_hash,
+        "policyRevision": manifest["policyRevision"],
+        "authorityRevision": manifest["authorityRevision"],
         "findingIds": p2_ids,
     }
     if isinstance(value, dict):
@@ -3290,10 +3413,10 @@ def validate_p2_dispositions(
     entries = value.get("dispositions") if isinstance(value, dict) else None
     mapped: dict[str, dict[str, Any]] = {}
 
-    def validate_evidence_ref(reference: Any, label: str) -> None:
+    def load_evidence_ref(reference: Any, label: str, schema_name: str) -> tuple[dict[str, Any] | None, Path | None]:
         if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
             errors.append(f"{label} must be an exact path/hash reference")
-            return
+            return None, None
         try:
             evidence_path = ensure_within(
                 Path(manifest["repositoryRoot"]) / str(reference.get("path", "")),
@@ -3302,9 +3425,86 @@ def validate_p2_dispositions(
             )
         except BootstrapError as exc:
             errors.append(str(exc))
-            return
+            return None, None
         if not evidence_path.is_file() or file_hash(evidence_path) != reference.get("sha256"):
             errors.append(f"{label} is missing or stale")
+            return None, None
+        try:
+            document = read_json(evidence_path)
+        except (BootstrapError, OSError, UnicodeError, ValueError):
+            errors.append(f"{label} is not readable JSON")
+            return None, None
+        schema_errors = schema_validation_errors(schema_name, document)
+        if schema_errors:
+            errors.append(f"{label} violates {schema_name}: " + "; ".join(schema_errors))
+            return None, None
+        return document, evidence_path
+
+    exclusions = {"implementation-acceptance", "protected-handoff", "release", "commit", "done"}
+
+    def validate_common(document: dict[str, Any], finding_id: str, label: str) -> None:
+        expected_identity = {
+            "findingId": finding_id,
+            "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"],
+            "candidateHash": candidate_hash,
+            "authorityRevision": manifest["authorityRevision"],
+        }
+        if any(document.get(key) != expected_value for key, expected_value in expected_identity.items()):
+            errors.append(f"{label} does not bind the current finding and review identity")
+        if document.get("authorizes") != [] or not exclusions.issubset(set(document.get("doesNotAuthorize", []))):
+            errors.append(f"{label} has an invalid authorization boundary")
+
+    def parse_time(value: Any, label: str) -> datetime | None:
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError:
+            errors.append(f"{label} has an invalid timestamp")
+            return None
+        if parsed.tzinfo is None:
+            errors.append(f"{label} timestamp must be timezone-aware")
+            return None
+        return parsed
+
+    def validate_registry(entry: dict[str, Any], finding_id: str) -> tuple[dict[str, Any] | None, Path | None, dict[str, Any] | None]:
+        registry, registry_path = load_evidence_ref(
+            entry.get("closureCommandRegistryRef"),
+            f"P2 closure command registry for {finding_id}",
+            "bootstrap-p2-command-registry.v1.schema.json",
+        )
+        if registry is None:
+            return None, None, None
+        expected_identity = {
+            "reviewId": manifest["reviewId"], "inputHash": manifest["inputHash"],
+            "candidateHash": candidate_hash, "policyRevision": manifest["policyRevision"],
+            "authorityRevision": manifest["authorityRevision"],
+        }
+        if any(registry.get(key) != expected_value for key, expected_value in expected_identity.items()):
+            errors.append(f"P2 closure command registry for {finding_id} does not bind the current review identity")
+        if registry.get("authorizes") != [] or not exclusions.issubset(set(registry.get("doesNotAuthorize", []))):
+            errors.append(f"P2 closure command registry for {finding_id} has an invalid authorization boundary")
+        commands = [item for item in registry.get("commands", []) if item.get("commandId") == entry.get("closureCommandId")]
+        if len(commands) != 1:
+            errors.append(f"P2 closure command is not uniquely registered: {finding_id}")
+            return registry, registry_path, None
+        return registry, registry_path, commands[0]
+
+    def validate_process_ref(reference: Any, finding_id: str, registry_path: Path, command: dict[str, Any], required_class: str, label: str) -> None:
+        process, _ = load_evidence_ref(reference, label, "bootstrap-p2-process-result.v1.schema.json")
+        if process is None:
+            return
+        validate_common(process, finding_id, label)
+        if (
+            process.get("commandId") != command.get("commandId")
+            or process.get("commandClass") != required_class
+            or command.get("commandClass") != required_class
+            or process.get("registryHash") != file_hash(registry_path)
+            or process.get("exitCode") != 0
+        ):
+            errors.append(f"{label} does not prove the registered successful {required_class} command")
+        observed = parse_time(process.get("observedAt"), label)
+        if observed is not None and observed > datetime.now(timezone.utc):
+            errors.append(f"{label} observation is in the future")
 
     if isinstance(entries, list):
         for entry in entries:
@@ -3325,13 +3525,37 @@ def validate_p2_dispositions(
                 else:
                     if expiry <= datetime.now(timezone.utc):
                         errors.append(f"deferred P2 has expired and is blocking: {finding_id}")
-                validate_evidence_ref(entry.get("nonImpactEvidenceRef"), f"P2 non-impact evidence for {finding_id}")
-                validate_evidence_ref(entry.get("recheckEvidenceRef"), f"P2 recheck evidence for {finding_id}")
-                validate_evidence_ref(entry.get("ownerAuthorityRef"), f"P2 owner authority for {finding_id}")
-                validate_evidence_ref(entry.get("closureCommandRegistryRef"), f"P2 closure command registry for {finding_id}")
+                owner, _ = load_evidence_ref(entry.get("ownerAuthorityRef"), f"P2 owner authority for {finding_id}", "bootstrap-p2-owner-authority.v1.schema.json")
+                if owner is not None:
+                    validate_common(owner, finding_id, f"P2 owner authority for {finding_id}")
+                    if owner.get("owner") != entry.get("owner") or owner.get("scope") != entry.get("recheckTrigger") or owner.get("policyRevision") != manifest["policyRevision"] or owner.get("status") != "active":
+                        errors.append(f"P2 owner authority does not authorize the declared owner and scope: {finding_id}")
+                    owner_expiry = parse_time(owner.get("expiresAt"), f"P2 owner authority for {finding_id}")
+                    if owner_expiry is not None and owner_expiry <= datetime.now(timezone.utc):
+                        errors.append(f"P2 owner authority has expired: {finding_id}")
+                registry, registry_path, command = validate_registry(entry, finding_id)
+                non_impact, _ = load_evidence_ref(entry.get("nonImpactEvidenceRef"), f"P2 non-impact evidence for {finding_id}", "bootstrap-p2-evidence-result.v1.schema.json")
+                if non_impact is not None:
+                    validate_common(non_impact, finding_id, f"P2 non-impact evidence for {finding_id}")
+                    if non_impact.get("evidenceType") != "non-impact" or non_impact.get("scope") != entry.get("recheckTrigger") or non_impact.get("result") != "bounded" or non_impact.get("processResultRef") is not None:
+                        errors.append(f"P2 non-impact evidence is not a bounded current-scope result: {finding_id}")
+                    non_impact_expiry = parse_time(non_impact.get("expiresAt"), f"P2 non-impact evidence for {finding_id}")
+                    if non_impact_expiry is not None and non_impact_expiry <= datetime.now(timezone.utc):
+                        errors.append(f"P2 non-impact evidence has expired: {finding_id}")
+                recheck, _ = load_evidence_ref(entry.get("recheckEvidenceRef"), f"P2 recheck evidence for {finding_id}", "bootstrap-p2-evidence-result.v1.schema.json")
+                if recheck is not None:
+                    validate_common(recheck, finding_id, f"P2 recheck evidence for {finding_id}")
+                    if recheck.get("evidenceType") != "recheck" or recheck.get("scope") != entry.get("recheckTrigger") or recheck.get("result") != "passed":
+                        errors.append(f"P2 recheck evidence is not a passed current-scope result: {finding_id}")
+                    recheck_expiry = parse_time(recheck.get("expiresAt"), f"P2 recheck evidence for {finding_id}")
+                    if recheck_expiry is not None and recheck_expiry <= datetime.now(timezone.utc):
+                        errors.append(f"P2 recheck evidence has expired: {finding_id}")
+                    if registry_path is not None and command is not None:
+                        validate_process_ref(recheck.get("processResultRef"), finding_id, registry_path, command, "p2-recheck", f"P2 recheck process for {finding_id}")
             elif entry.get("status") in {"fixed", "refuted"}:
-                validate_evidence_ref(entry.get("closureCommandRegistryRef"), f"P2 closure command registry for {finding_id}")
-                validate_evidence_ref(entry.get("closureProcessResultRef"), f"P2 closure process result for {finding_id}")
+                registry, registry_path, command = validate_registry(entry, finding_id)
+                if registry_path is not None and command is not None:
+                    validate_process_ref(entry.get("closureProcessResultRef"), finding_id, registry_path, command, "p2-closure", f"P2 closure process result for {finding_id}")
         if sorted(mapped) != p2_ids:
             errors.append("P2 dispositions must cover the exact accepted P2 set")
     if errors:

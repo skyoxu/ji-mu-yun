@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+  "title": "Bootstrap Successor Policy Authority v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "authorityId", "policyRevision", "authorizedActors", "status", "issuedAt", "expiresAt", "predecessorAuthorityRef", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-successor-policy-authority.v1"},
+    "authorityId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "policyRevision": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorizedActors": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["actorId", "role", "consumers", "scopes"],
+        "properties": {
+          "actorId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+          "role": {"const": "successor-policy-authorizer"},
+          "consumers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"const": "repository-maintenance-tdd-adapter-plan-reentry"}},
+          "scopes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"const": "plan-reentry"}}
+        }
+      }
+    },
+    "status": {"const": "active"},
+    "issuedAt": {"type": "string", "format": "date-time"},
+    "expiresAt": {"type": "string", "format": "date-time"},
+    "predecessorAuthorityRef": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/evidenceRef"}]},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {"$ref": "#/$defs/exclusions"}
+  },
+  "$defs": {
+    "evidenceRef": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}},
+    "exclusions": {"type": "array", "uniqueItems": true, "minItems": 6, "items": {"enum": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]}}
+  }
+}

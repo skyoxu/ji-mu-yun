@@ -78,12 +78,20 @@ def refresh_authority_manifest() -> None:
     manifest = read_json(path)
     additions = {
         "review_policy_authority": [
+            ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+            ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
             ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+            ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-owner-authority.v1.schema.json",
+            ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json",
+            ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+            ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-evidence-result.v1.schema.json",
             ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json",
         ],
         "machine_owners": [
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
         ],
         "execution_dependencies": [
@@ -104,6 +112,33 @@ def refresh_authority_manifest() -> None:
         for entry in entries:
             entry["sha256"] = sha256_file(REPOSITORY_ROOT / entry["path"])
     write_json(path, manifest)
+
+
+def refresh_artifact_proofs() -> None:
+    inventory = read_json(PLAN_ROOT / "schemas" / "artifact-proof-required.v1.json")
+    path = PLAN_ROOT / "schemas" / "artifact-proof-registry.v1.json"
+    existing = read_json(path)
+    by_path = {item["artifact_path"]: item for item in existing.get("proofs", [])}
+    exclusions = inventory["does_not_authorize"]
+    proofs = []
+    for artifact_path in inventory["contract_artifacts"]:
+        item = by_path.get(artifact_path, {})
+        bootstrap_owned = artifact_path.startswith(".agents/skills/run-phase-bootstrap-review/")
+        producer = ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py" if bootstrap_owned else "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md"
+        validator = "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py"
+        proofs.append({
+            "artifact_path": artifact_path,
+            "artifact_kind": item.get("artifact_kind", "normative" if artifact_path.endswith((".json", ".schema.json")) else "validator"),
+            "finding_ids": sorted(set(item.get("finding_ids", [])) | {"RMAP-1400-UNIFORM-ARTIFACT-PROOF"}),
+            "schema_producer_authority": {"producer_path": producer, "authority_owner": "Bootstrap control-plane owner" if bootstrap_owned else "repository-maintenance plan contract owner"},
+            "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+            "source_of_truth_derivation": {"source_paths": [producer], "projection_only": artifact_path.endswith(".v1.json") and "schema.json" not in artifact_path},
+            "independent_recomputation": {"validator_path": validator, "rule_ids": ["RMAP-ARTIFACT-PROOF"]},
+            "staleness_propagation": {"input_paths": [producer], "invalidates": ["artifact-proof-registry", "plan-repair-verified"]},
+            "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["artifact_path", "finding_ids"]},
+            "consumer_authorization_boundary": {"consumers": ["composite plan validator"], "predicate": "artifact-contract-proof", "authorizes": [], "does_not_authorize": exclusions},
+        })
+    write_json(path, {"schema_version": "jimuyun.artifact-proof-registry.v1", "plan_id": "repository-maintenance-tdd-adapter", "proof_schema": "schemas/artifact-proof.v1.schema.json", "proofs": proofs})
 
 
 def value_hash(value: Any) -> str:
@@ -160,6 +195,10 @@ def main() -> int:
     refresh_deltas()
     refresh_quality()
     refresh_candidate_lineage_fixture()
+    refresh_artifact_proofs()
+    refresh_authority_manifest()
+    refresh_contract()
+    refresh_deltas()
     refresh_authority_manifest()
     print("Refreshed repository-maintenance plan projections")
     return 0

@@ -665,14 +665,20 @@
         "rmap-s0-slice-validate"
       ],
       "negative_fixture_ids": [
-        "artifact-proof-missing-dimension"
+        "artifact-proof-missing-dimension",
+        "artifact-proof-static-authority-escalation",
+        "artifact-proof-required-item-omitted"
       ],
       "expected_failure_ids": [
         "RMAP-ARTIFACT-PROOF"
       ],
       "evidence_required": [
         "artifact-proof-schema",
-        "exact-proved-artifact-set",
+        "independent-proof-required-inventory",
+        "static-contract-zero-authority",
+        "runtime-artifact-type-proof",
+        "exact-predicate-permission-lattice",
+        "registered-consumer-and-negative-test",
         "authority-manifest-hashes",
         "independent-validator",
         "stable-rule-id"

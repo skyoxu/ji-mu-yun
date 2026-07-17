@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schemaVersion", "decisionId", "supersededReviewId", "supersededChangeId",
-    "successorChangeId", "policyRevision", "authorityRevision", "authorizationEventRef",
+    "successorChangeId", "policyRevision", "authorityRevision", "authorizationEventRef", "authorizationEventId",
     "consumer", "authorizes", "doesNotAuthorize", "decidedAt"
   ],
   "properties": {
@@ -18,6 +18,7 @@
     "policyRevision": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "authorityRevision": {"type": "string", "minLength": 1},
     "authorizationEventRef": {"$ref": "#/$defs/evidenceRef"},
+    "authorizationEventId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
     "consumer": {"const": "repository-maintenance-tdd-adapter-plan-reentry"},
     "authorizes": {"type": "array", "maxItems": 0},
     "doesNotAuthorize": {

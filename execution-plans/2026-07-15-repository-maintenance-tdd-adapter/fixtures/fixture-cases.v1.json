@@ -483,6 +483,24 @@
       ],
       "expected_rule": "RMAP-ARTIFACT-PROOF",
       "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-static-authority-escalation",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "add", "path": "/proofs/0/consumer_authorization_boundary/authorizes/-", "value": "plan-ready"}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-required-item-omitted",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "remove", "path": "/proofs/0"}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF",
+      "expected_valid": false
     }
   ]
 }

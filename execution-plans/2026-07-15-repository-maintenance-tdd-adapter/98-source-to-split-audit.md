@@ -50,6 +50,8 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `MODIFIED`: cumulative slice effects are derived from complete validated protocol runs and real diff manifests; first-add paths are distinct from existing-file baseline identity.
 - `MODIFIED`: cross-slice predecessor fields are separated from same-slice recovery and supersession fields, and stale transitive inputs invalidate downstream projections.
 - `ADDED`: `RMAP-027` applies one exact seven-dimensional proof template to every review-added normative, projection, evidence, lineage, and validator artifact before a predicate may consume it.
+- `MODIFIED`: `RMAP-027` derives its exact required set from an independent machine owner, separates static zero-authority contract proof from runtime instance-type proof, and validates registered consumers, rule/negative-test mappings, and exact predicate permissions.
+- `MODIFIED`: S7 delegates finalized-run validation to the repository Bootstrap v2 producer; successor authorization and P2 evidence are typed, current-identity-bound, expiry/revocation-aware, and independently recomputed.
 - `REMOVED`: mutable single-Capsule overwrite, standalone adapter-decision authority, and any need for a Router or S8.
 
 No requirement is silently dropped. Machine-level delta details live in `schemas/spec-deltas.v1.json`.
