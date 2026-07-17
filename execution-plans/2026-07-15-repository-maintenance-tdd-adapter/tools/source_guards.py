@@ -18,13 +18,15 @@ def _expected_locations(source_id: str, source_path: Path) -> list[tuple[str, st
     decision_sets = document.get("decision_sets", {})
     creation = [item.get("id") for item in decision_sets.get("creation", []) if item.get("status") == "accepted"]
     repair = [item.get("id") for item in decision_sets.get("repair", []) if item.get("status") == "accepted"]
-    if creation != [f"CQ-{index:03d}" for index in range(1, 18)] or repair != [f"CQ-{index:03d}" for index in range(1, 6)]:
+    repair_20260717 = [item.get("id") for item in decision_sets.get("repair_20260717", []) if item.get("status") == "accepted"]
+    if creation != [f"CQ-{index:03d}" for index in range(1, 18)] or repair != [f"CQ-{index:03d}" for index in range(1, 6)] or repair_20260717 != [f"CQ-{index:03d}" for index in range(1, 8)]:
         return []
     return [
         ("CREATE-CQ-001-005", "creation:CQ-001..CQ-005"),
         ("CREATE-CQ-006-012", "creation:CQ-006..CQ-012"),
         ("CREATE-CQ-013-017", "creation:CQ-013..CQ-017"),
         ("REPAIR-CQ-001-005", "repair:CQ-001..CQ-005"),
+        ("REPAIR-20260717-CQ-001-007", "repair-20260717:CQ-001..CQ-007"),
     ]
 
 
@@ -53,7 +55,7 @@ def validate_coverage(
         if not source_path.is_file() or sha256_file(source_path) != source.get("sha256"):
             findings.append(_finding("RMAP-HASH-SOURCE", source_id, "source is missing or stale"))
         sections = source.get("sections")
-        expected_count = 9 if source_id == "agentbuild" else 4
+        expected_count = 9 if source_id == "agentbuild" else 5
         if not isinstance(sections, list) or len(sections) != expected_count:
             findings.append(_finding("RMAP-REQ-COVERAGE", source_id, "section coverage is incomplete")); continue
         if source_path.is_file() and not _locations_are_exact(source_id, sections, source_path):

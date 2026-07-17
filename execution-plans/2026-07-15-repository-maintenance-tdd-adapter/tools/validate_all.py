@@ -13,6 +13,7 @@ from typing import Any
 
 from contract_guards import schema_error
 from fixture_checks import evaluate_fixture, validate_fixture_suite
+from protocol_guards import evaluate_protocol_fixture
 from evidence_guards import validate_candidate_review_documents
 from slice_guards import validate_slice_outputs
 from rmap_checks import (
@@ -31,7 +32,7 @@ REPOSITORY_ROOT = PLAN_ROOT.parents[1]
 
 def validator_identity() -> str:
     digest = hashlib.sha256()
-    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py"]
+    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py"]
     for path in (Path(__file__).with_name(name) for name in names):
         digest.update(path.name.encode("utf-8"))
         digest.update(b"\0")
@@ -282,7 +283,8 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
 
 def run_fixture(fixture_id: str) -> tuple[dict[str, Any], int]:
     data, load_findings = load_machine(PLAN_ROOT)
-    findings = load_findings or evaluate_fixture(PLAN_ROOT, fixture_id, data)
+    protocol_ids = {item.get("id") for item in data.get("protocol_fixtures", {}).get("cases", []) if isinstance(item, dict)}
+    findings = load_findings or (evaluate_protocol_fixture(PLAN_ROOT, fixture_id, data["protocol_fixtures"]) if fixture_id in protocol_ids else evaluate_fixture(PLAN_ROOT, fixture_id, data))
     check = {
         "rule_id": "RMAP-FIXTURE-OBSERVATION",
         "status": "fail" if findings else "pass",

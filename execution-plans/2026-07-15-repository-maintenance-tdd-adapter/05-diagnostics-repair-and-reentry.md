@@ -46,6 +46,10 @@ On relevant drift:
 
 Unrelated worktree changes outside all closures are appended as observations and do not restart the run.
 
+Within one run, Capsule and attempt bytes are also immutable. Capsule revisions link by predecessor Capsule hash. `ATTEMPT-001`, `ATTEMPT-002`, and later IDs are monotonic; each request and decision names the previous attempt, and each decision binds the previous decision hash. The decision is written last. A crash before that write leaves an `incomplete` attempt that cannot satisfy a stage predicate.
+
+Retry creates a new attempt directory and new event records instead of repairing old bytes. Only one lineage may be accepted for a represented RED, GREEN, or REFACTOR stage. Later rejected or superseding attempts remain visible, and recovery consumes the newest deterministic blocker plus the complete hash chain rather than backend prose or a mutable summary ledger.
+
 ## P2 Re-Entry
 
 A P2 disposition is valid only when:
@@ -61,6 +65,7 @@ Security, data-loss, authority-bypass, evidence-integrity, irreversible-mutation
 - Three advisory confidence-improvement rounds are the maximum; confidence never changes authority.
 - Bootstrap full semantic review follows its own two-round default and three-round hard limit.
 - Historical evidence is never rewritten to make a later run pass.
+- Capsule overwrite, attempt-ID reuse, raw sensitive-content persistence, or transition authority in `adapter-decision` stops the run.
 
 The current stop-loss owner is [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json). It records `manual_pause_after_round_3`, forbids Round 4 under the current policy revision, and requires a new external policy decision for semantic re-entry.
 

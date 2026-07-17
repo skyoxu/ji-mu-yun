@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-repair-closure.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "predecessorRun", "predecessorInputHash", "predecessorResultHash", "findingIds", "items", "currentBindings", "gitIndexHash", "writeSetHash", "executionReadSetHash", "dependencyClosureHash"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-repair-closure.v1"},
+    "predecessorRun": {"type": "string", "minLength": 1},
+    "predecessorInputHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "predecessorResultHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "findingIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "disposition", "risk", "proofFamily", "reason", "fixRefs", "validationCommands", "evidence"],
+        "properties": {
+          "findingId": {"type": "string", "minLength": 1},
+          "disposition": {"enum": ["fixed", "refuted", "deferred"]},
+          "risk": {"enum": ["normal", "high"]},
+          "proofFamily": {"enum": ["regression", "negative-fixture", "mutation", "authority-predicate", "restricted-context", "p2-deferral"]},
+          "reason": {"type": "string", "minLength": 1},
+          "fixRefs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "validationCommands": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "evidence": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}}},
+          "owner": {"type": "string", "minLength": 1},
+          "expiry": {"type": "string", "minLength": 1},
+          "closureTest": {"type": "string", "minLength": 1}
+        },
+        "allOf": [{"if": {"properties": {"disposition": {"const": "deferred"}}, "required": ["disposition"]}, "then": {"required": ["owner", "expiry", "closureTest"]}}]
+      }
+    },
+    "currentBindings": {"type": "object", "additionalProperties": false, "required": ["candidateHash", "sourceHash", "validatorHash"], "properties": {"candidateHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "sourceHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "validatorHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}},
+    "gitIndexHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "writeSetHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "executionReadSetHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "dependencyClosureHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

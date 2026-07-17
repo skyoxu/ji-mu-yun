@@ -1,0 +1,572 @@
+{
+  "schema_version": "rmap.capsule-attempt-fixtures.v1",
+  "valid_bundle": {
+    "schema_version": "rmap.capsule-attempt-bundle.v1",
+    "context_manifest": {
+      "schema_version": "jimuyun.context-manifest.v1",
+      "plan_id": "repository-maintenance-tdd-adapter",
+      "slice_id": "RMAP-S2",
+      "run_id": "RUN-001",
+      "capsule_id": "CAP-001",
+      "stage": "green",
+      "capsule_ref": {
+        "role": "slice-capsule",
+        "path": "context/CAP-001/slice-capsule.v1.json",
+        "sha256": "sha256:7c2e2b177a62c19aab39d7be5912097e2545d1afe2e9e4f42fc21e5fe19f3b72"
+      },
+      "artifact_refs": [
+        {
+          "role": "implementation-contract",
+          "path": "implementation-contract.v1.json",
+          "sha256": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e"
+        },
+        {
+          "role": "authority-manifest",
+          "path": "schemas/authority-manifest.v1.json",
+          "sha256": "sha256:6ee8ae115b05aa9119f70a25232e7beb693a4fecabec78226d373cc3d9bda3f6"
+        },
+        {
+          "role": "red-result",
+          "path": "red-result.json",
+          "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      ],
+      "context_hash": "sha256:55620eb95c555fdb87a655e525cf13a2854b300a300ff7e6e99bcca5a1509782",
+      "predecessor_capsule_hash": null,
+      "immutable": true,
+      "contains_sensitive_data": false
+    },
+    "slice_capsule": {
+      "schema_version": "jimuyun.slice-capsule.v1",
+      "plan_id": "repository-maintenance-tdd-adapter",
+      "slice_id": "RMAP-S2",
+      "run_id": "RUN-001",
+      "capsule_id": "CAP-001",
+      "stage": "green",
+      "authority_refs": [
+        {
+          "role": "authority-manifest",
+          "path": "schemas/authority-manifest.v1.json",
+          "sha256": "sha256:6ee8ae115b05aa9119f70a25232e7beb693a4fecabec78226d373cc3d9bda3f6"
+        }
+      ],
+      "implementation_contract": {
+        "role": "implementation-contract",
+        "path": "implementation-contract.v1.json",
+        "sha256": "sha256:fec9fbdd31d2d474900ad95e58f06b828eb6dcb164c179d947ee2da2709ca85e"
+      },
+      "requirement_ids": [
+        "RMAP-005",
+        "RMAP-007",
+        "RMAP-025",
+        "RMAP-026"
+      ],
+      "acceptance_ids": [
+        "RMAP-ACC-005",
+        "RMAP-ACC-007",
+        "RMAP-ACC-025",
+        "RMAP-ACC-026"
+      ],
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md#rmap-s2-stateless-capsule-and-recovery-adapter"
+      ],
+      "baseline_ref": {
+        "role": "baseline",
+        "path": "baseline-manifest.json",
+        "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "stage_evidence_refs": [
+        {
+          "role": "red-result",
+          "path": "red-result.json",
+          "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      ],
+      "boundaries": {
+        "allowed_write_set": [
+          ".agents/skills/quick-dev-tdd-adapter/**"
+        ],
+        "forbidden_write_set": [
+          "PhaseA.Platform/**"
+        ],
+        "execution_read_set": [
+          "AGENTS.md"
+        ],
+        "dependency_closure": [
+          "implementation-contract.v1.json"
+        ]
+      },
+      "target_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "exit_predicate": "slice-ready",
+      "latest_blocker_ref": null,
+      "predecessor_capsule_hash": null,
+      "immutable": true,
+      "authorizes": [],
+      "does_not_authorize": [
+        "bootstrap-review",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    },
+    "attempts": [
+      {
+        "backend_request": {
+          "schema_version": "jimuyun.backend-request.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S2",
+          "run_id": "RUN-001",
+          "attempt_id": "ATTEMPT-001",
+          "stage": "green",
+          "actor": {
+            "role": "slice-capsule-executor",
+            "backend_protocol_version": "1.0",
+            "actor_instance_id": "session-local-001",
+            "identity_authoritative": false
+          },
+          "capsule_ref": {
+            "path": "context/CAP-001/slice-capsule.v1.json",
+            "sha256": "sha256:7c2e2b177a62c19aab39d7be5912097e2545d1afe2e9e4f42fc21e5fe19f3b72"
+          },
+          "goal": "make-red-green",
+          "allowed_command_ids": [
+            "rmap-s2-slice-validate"
+          ],
+          "request_payload_hash": "sha256:2905fe626fd65d2451d1161593e91a8e0c4c7e50f4fc7144cd2ff0b7421660ce",
+          "raw_body_persisted": false,
+          "contains_sensitive_data": false,
+          "previous_attempt_id": null
+        },
+        "backend_response": {
+          "schema_version": "jimuyun.backend-response.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S2",
+          "run_id": "RUN-001",
+          "attempt_id": "ATTEMPT-001",
+          "stage": "green",
+          "backend_protocol_version": "1.0",
+          "self_reported_status": "candidate",
+          "changed_files": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py"
+          ],
+          "commands_attempted": [
+            "rmap-s2-slice-validate"
+          ],
+          "blockers": [],
+          "response_summary": "candidate produced",
+          "raw_response_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "raw_body_persisted": false,
+          "contains_sensitive_data": false,
+          "untrusted": true
+        },
+        "diff_manifest": {
+          "schema_version": "jimuyun.diff-manifest.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S2",
+          "run_id": "RUN-001",
+          "attempt_id": "ATTEMPT-001",
+          "stage": "green",
+          "baseline_worktree_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "result_worktree_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "files": [
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "change_type": "modify",
+              "before_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+              "after_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "scope": "allowed"
+            }
+          ],
+          "actual_diff_hash": "sha256:397c381053919e27fdeae96fd336ef7d6dd432cfc5e1e5c43cb753f2cbb624ec",
+          "generated_by": "adapter",
+          "canonical": true,
+          "contains_forbidden_change": false
+        },
+        "adapter_decision": {
+          "schema_version": "jimuyun.adapter-decision.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S2",
+          "run_id": "RUN-001",
+          "attempt_id": "ATTEMPT-001",
+          "stage": "green",
+          "actor": {
+            "role": "repository-maintenance-tdd-adapter",
+            "adapter_protocol_version": "1.0"
+          },
+          "input_context_hash": "sha256:55620eb95c555fdb87a655e525cf13a2854b300a300ff7e6e99bcca5a1509782",
+          "backend_request_hash": "sha256:f3c6efff199275e4f32104e8ea0a1e416cd6ce1019107bf8c9dae41dd4fcbf22",
+          "backend_response_hash": "sha256:737b723ea2cbb4b20e2aa405d92276ff9f2afe6b45601c3b9d374f76a7c9ca3c",
+          "actual_diff_hash": "sha256:397c381053919e27fdeae96fd336ef7d6dd432cfc5e1e5c43cb753f2cbb624ec",
+          "decision": "accepted_for_validation",
+          "failure_ids": [],
+          "evidence_refs": [
+            {
+              "path": "green-result.json",
+              "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+            }
+          ],
+          "previous_attempt_id": null,
+          "previous_decision_hash": null,
+          "next_allowed_state": "green-observed",
+          "authorizes": [],
+          "does_not_authorize": [
+            "bootstrap-review",
+            "implementation-accepted",
+            "release-ready"
+          ],
+          "finalized": true,
+          "written_last": true
+        }
+      }
+    ],
+    "events": [
+      {
+        "schema_version": "jimuyun.agent-attempt-event.v1",
+        "plan_id": "repository-maintenance-tdd-adapter",
+        "slice_id": "RMAP-S2",
+        "run_id": "RUN-001",
+        "sequence": 1,
+        "attempt_id": "ATTEMPT-001",
+        "stage": "green",
+        "event_type": "attempt-started",
+        "artifact_refs": [
+          {
+            "path": "attempts/ATTEMPT-001/backend-request.v1.json",
+            "sha256": "sha256:f3c6efff199275e4f32104e8ea0a1e416cd6ce1019107bf8c9dae41dd4fcbf22"
+          }
+        ],
+        "previous_event_hash": null,
+        "observed_at": "2026-07-17T00:00:01Z",
+        "append_only": true
+      },
+      {
+        "schema_version": "jimuyun.agent-attempt-event.v1",
+        "plan_id": "repository-maintenance-tdd-adapter",
+        "slice_id": "RMAP-S2",
+        "run_id": "RUN-001",
+        "sequence": 2,
+        "attempt_id": "ATTEMPT-001",
+        "stage": "green",
+        "event_type": "request-recorded",
+        "artifact_refs": [
+          {
+            "path": "attempts/ATTEMPT-001/backend-request.v1.json",
+            "sha256": "sha256:f3c6efff199275e4f32104e8ea0a1e416cd6ce1019107bf8c9dae41dd4fcbf22"
+          }
+        ],
+        "previous_event_hash": "sha256:c9aa2df2a225420131481dc3b17b227688b860562d3665ef9f9f26ffed0691c0",
+        "observed_at": "2026-07-17T00:00:02Z",
+        "append_only": true
+      },
+      {
+        "schema_version": "jimuyun.agent-attempt-event.v1",
+        "plan_id": "repository-maintenance-tdd-adapter",
+        "slice_id": "RMAP-S2",
+        "run_id": "RUN-001",
+        "sequence": 3,
+        "attempt_id": "ATTEMPT-001",
+        "stage": "green",
+        "event_type": "response-recorded",
+        "artifact_refs": [
+          {
+            "path": "attempts/ATTEMPT-001/backend-response.v1.json",
+            "sha256": "sha256:737b723ea2cbb4b20e2aa405d92276ff9f2afe6b45601c3b9d374f76a7c9ca3c"
+          }
+        ],
+        "previous_event_hash": "sha256:2146c63f2f1e751f8b41b514bd874084d84a14753ee46c3ef126d10cd6931ede",
+        "observed_at": "2026-07-17T00:00:03Z",
+        "append_only": true
+      },
+      {
+        "schema_version": "jimuyun.agent-attempt-event.v1",
+        "plan_id": "repository-maintenance-tdd-adapter",
+        "slice_id": "RMAP-S2",
+        "run_id": "RUN-001",
+        "sequence": 4,
+        "attempt_id": "ATTEMPT-001",
+        "stage": "green",
+        "event_type": "diff-recorded",
+        "artifact_refs": [
+          {
+            "path": "attempts/ATTEMPT-001/diff-manifest.v1.json",
+            "sha256": "sha256:b6d73ebd45842da28b94c3645edbcf721bae2b24c4158d406f968ca0091d936d"
+          }
+        ],
+        "previous_event_hash": "sha256:97f55189387ff0fdbd18ccdf98645b5a67cbefcb50d1994c20cf740303f023c3",
+        "observed_at": "2026-07-17T00:00:04Z",
+        "append_only": true
+      },
+      {
+        "schema_version": "jimuyun.agent-attempt-event.v1",
+        "plan_id": "repository-maintenance-tdd-adapter",
+        "slice_id": "RMAP-S2",
+        "run_id": "RUN-001",
+        "sequence": 5,
+        "attempt_id": "ATTEMPT-001",
+        "stage": "green",
+        "event_type": "decision-finalized",
+        "artifact_refs": [
+          {
+            "path": "attempts/ATTEMPT-001/adapter-decision.v1.json",
+            "sha256": "sha256:5c1a7a3a0bf093e956eced0ce59518e523b3c2a67d32ae0bf5cc27ee9421b59c"
+          }
+        ],
+        "previous_event_hash": "sha256:25795355ce6768327893e35fc4d682c482dae0cab596b9f67be42808ba220816",
+        "observed_at": "2026-07-17T00:00:05Z",
+        "append_only": true
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "capsule-context-hash-stale",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/context_manifest/context_hash",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-CAPSULE-CONTEXT"
+    },
+    {
+      "id": "capsule-s2-predicate-escalation",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/slice_capsule/exit_predicate",
+          "value": "implementation-candidate"
+        },
+        {
+          "op": "replace",
+          "path": "/context_manifest/capsule_ref/sha256",
+          "value": "sha256:2f0b4c96b20bb580536c38eb136bb2050599fa6a6940464009196bc996417b0f"
+        },
+        {
+          "op": "replace",
+          "path": "/context_manifest/context_hash",
+          "value": "sha256:6d44eb21b8f5eb2f58667a7d6cd8f1ded778135ad3b7c12d8e7a946900c6fef6"
+        }
+      ],
+      "expected_rule": "RMAP-CAPSULE-PREDICATE"
+    },
+    {
+      "id": "capsule-path-escape",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/context_manifest/capsule_ref/path",
+          "value": "../outside.json"
+        }
+      ],
+      "expected_rule": "RMAP-PROTOCOL-PATH"
+    },
+    {
+      "id": "attempt-request-capsule-stale",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/backend_request/capsule_ref/sha256",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-REQUEST-BINDING"
+    },
+    {
+      "id": "attempt-response-raw-body",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/backend_response/raw_body_persisted",
+          "value": true
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-SENSITIVE-EVIDENCE"
+    },
+    {
+      "id": "attempt-diff-forbidden",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/diff_manifest/contains_forbidden_change",
+          "value": true
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-DIFF-BINDING"
+    },
+    {
+      "id": "attempt-decision-stale-response",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/adapter_decision/backend_response_hash",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-DECISION-BINDING"
+    },
+    {
+      "id": "attempt-decision-authority-escalation",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/attempts/0/adapter_decision/authorizes/-",
+          "value": "start-refactor"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-AUTHORITY"
+    },
+    {
+      "id": "attempt-next-state-mismatch",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/adapter_decision/next_allowed_state",
+          "value": "refactor-verified"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-STAGE"
+    },
+    {
+      "id": "attempt-decision-missing",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/attempts/0/adapter_decision"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-PARTIAL"
+    },
+    {
+      "id": "attempt-duplicate-accepted-stage",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/attempts/-",
+          "value": {
+            "backend_request": {
+              "schema_version": "jimuyun.backend-request.v1",
+              "plan_id": "repository-maintenance-tdd-adapter",
+              "slice_id": "RMAP-S2",
+              "run_id": "RUN-001",
+              "attempt_id": "ATTEMPT-001",
+              "stage": "green",
+              "actor": {
+                "role": "slice-capsule-executor",
+                "backend_protocol_version": "1.0",
+                "actor_instance_id": "session-local-001",
+                "identity_authoritative": false
+              },
+              "capsule_ref": {
+                "path": "context/CAP-001/slice-capsule.v1.json",
+                "sha256": "sha256:7c2e2b177a62c19aab39d7be5912097e2545d1afe2e9e4f42fc21e5fe19f3b72"
+              },
+              "goal": "make-red-green",
+              "allowed_command_ids": [
+                "rmap-s2-slice-validate"
+              ],
+              "request_payload_hash": "sha256:2905fe626fd65d2451d1161593e91a8e0c4c7e50f4fc7144cd2ff0b7421660ce",
+              "raw_body_persisted": false,
+              "contains_sensitive_data": false,
+              "previous_attempt_id": null
+            },
+            "backend_response": {
+              "schema_version": "jimuyun.backend-response.v1",
+              "plan_id": "repository-maintenance-tdd-adapter",
+              "slice_id": "RMAP-S2",
+              "run_id": "RUN-001",
+              "attempt_id": "ATTEMPT-001",
+              "stage": "green",
+              "backend_protocol_version": "1.0",
+              "self_reported_status": "candidate",
+              "changed_files": [
+                ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py"
+              ],
+              "commands_attempted": [
+                "rmap-s2-slice-validate"
+              ],
+              "blockers": [],
+              "response_summary": "candidate produced",
+              "raw_response_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+              "raw_body_persisted": false,
+              "contains_sensitive_data": false,
+              "untrusted": true
+            },
+            "diff_manifest": {
+              "schema_version": "jimuyun.diff-manifest.v1",
+              "plan_id": "repository-maintenance-tdd-adapter",
+              "slice_id": "RMAP-S2",
+              "run_id": "RUN-001",
+              "attempt_id": "ATTEMPT-001",
+              "stage": "green",
+              "baseline_worktree_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+              "result_worktree_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "files": [
+                {
+                  "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+                  "change_type": "modify",
+                  "before_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+                  "after_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                  "scope": "allowed"
+                }
+              ],
+              "actual_diff_hash": "sha256:397c381053919e27fdeae96fd336ef7d6dd432cfc5e1e5c43cb753f2cbb624ec",
+              "generated_by": "adapter",
+              "canonical": true,
+              "contains_forbidden_change": false
+            },
+            "adapter_decision": {
+              "schema_version": "jimuyun.adapter-decision.v1",
+              "plan_id": "repository-maintenance-tdd-adapter",
+              "slice_id": "RMAP-S2",
+              "run_id": "RUN-001",
+              "attempt_id": "ATTEMPT-001",
+              "stage": "green",
+              "actor": {
+                "role": "repository-maintenance-tdd-adapter",
+                "adapter_protocol_version": "1.0"
+              },
+              "input_context_hash": "sha256:55620eb95c555fdb87a655e525cf13a2854b300a300ff7e6e99bcca5a1509782",
+              "backend_request_hash": "sha256:f3c6efff199275e4f32104e8ea0a1e416cd6ce1019107bf8c9dae41dd4fcbf22",
+              "backend_response_hash": "sha256:737b723ea2cbb4b20e2aa405d92276ff9f2afe6b45601c3b9d374f76a7c9ca3c",
+              "actual_diff_hash": "sha256:397c381053919e27fdeae96fd336ef7d6dd432cfc5e1e5c43cb753f2cbb624ec",
+              "decision": "accepted_for_validation",
+              "failure_ids": [],
+              "evidence_refs": [
+                {
+                  "path": "green-result.json",
+                  "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+                }
+              ],
+              "previous_attempt_id": null,
+              "previous_decision_hash": null,
+              "next_allowed_state": "green-observed",
+              "authorizes": [],
+              "does_not_authorize": [
+                "bootstrap-review",
+                "implementation-accepted",
+                "release-ready"
+              ],
+              "finalized": true,
+              "written_last": true
+            }
+          }
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-STAGE-UNIQUENESS"
+    },
+    {
+      "id": "attempt-event-chain-stale",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/events/4/previous_event_hash",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-LINEAGE"
+    }
+  ]
+}

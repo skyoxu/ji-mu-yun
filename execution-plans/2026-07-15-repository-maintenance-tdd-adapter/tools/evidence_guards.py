@@ -6,13 +6,16 @@ import re
 from pathlib import Path
 from typing import Any
 
+from protocol_guards import load_protocol_run, value_hash
+
 
 HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 IDENTITY_FIELDS = {
     "head", "index_tree", "tracked_diff_hash", "untracked_manifest_hash", "contract_hash",
     "command_registry_hash", "validator_hash", "authority_manifest_hash",
     "changed_file_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id",
-    "refactor_run_id", "candidate_worktree_hash",
+    "refactor_run_id", "candidate_worktree_hash", "final_context_manifest_hash",
+    "final_capsule_hash", "accepted_attempt_id", "accepted_attempt_decision_hash",
 }
 
 
@@ -76,6 +79,21 @@ def validate_candidate_document(
         key = f"{stage}_run_id"
         if not isinstance(identity.get(key), str) or not identity[key] or identity.get(key) != by_stage.get(stage, {}).get("run_id"):
             findings.append(_finding("RMAP-HASH-CANDIDATE-IDENTITY", candidate_path, f"candidate {key} does not bind supplied stage evidence"))
+    bundle, protocol_findings = load_protocol_run(plan_root, evidence_dir)
+    findings.extend(protocol_findings)
+    accepted_id = identity.get("accepted_attempt_id")
+    attempt = next((item for item in bundle.get("attempts", []) if item.get("adapter_decision", {}).get("attempt_id") == accepted_id), None)
+    contexts = bundle.get("contexts", [])
+    final_context = contexts[-1] if contexts else None
+    context_path = evidence_dir / "context" / str(final_context.get("context_manifest", {}).get("capsule_id")) / "context-manifest.v1.json" if final_context else None
+    capsule_path = evidence_dir / "context" / str(final_context.get("slice_capsule", {}).get("capsule_id")) / "slice-capsule.v1.json" if final_context else None
+    decision_path = evidence_dir / "attempts" / str(accepted_id) / "adapter-decision.v1.json"
+    if context_path is None or capsule_path is None or not context_path.is_file() or not capsule_path.is_file() or identity.get("final_context_manifest_hash") != _sha256(context_path) or identity.get("final_capsule_hash") != _sha256(capsule_path):
+        findings.append(_finding("RMAP-HASH-CANDIDATE-IDENTITY", candidate_path, "candidate does not bind the final persisted context capsule"))
+    if attempt is None or attempt.get("adapter_decision", {}).get("stage") != "refactor" or attempt.get("adapter_decision", {}).get("decision") != "accepted_for_validation" or not decision_path.is_file() or identity.get("accepted_attempt_decision_hash") != _sha256(decision_path):
+        findings.append(_finding("RMAP-HASH-CANDIDATE-IDENTITY", candidate_path, "candidate does not bind the accepted refactor attempt decision"))
+    elif final_context and attempt["backend_request"].get("capsule_ref", {}).get("sha256") != value_hash(final_context["slice_capsule"]):
+        findings.append(_finding("RMAP-HASH-CANDIDATE-IDENTITY", candidate_path, "accepted attempt is not bound to the final capsule"))
     return findings
 
 
@@ -118,7 +136,12 @@ def validate_candidate_review_documents(
         findings.append(_finding("RMAP-REVIEW-EVIDENCE-BINDING", candidate_path, "dispositions identity differs from review input"))
     profile_path = repository_root / "execution-plans" / "2026-07-12-llm-review-evidence-gate-hardening" / "bootstrap" / "review-profiles.v1.json"
     try:
-        profiles = json.loads(profile_path.read_text(encoding="utf-8")).get("profiles", {})
+        profile_document = json.loads(profile_path.read_text(encoding="utf-8"))
+        authority_path = profile_document.get("authority") if isinstance(profile_document, dict) else None
+        if authority_path:
+            resolved = (repository_root / authority_path).resolve(); resolved.relative_to(repository_root)
+            profile_document = json.loads(resolved.read_text(encoding="utf-8"))
+        profiles = profile_document.get("profiles", {})
     except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
         profiles = {}
     profile_name = "bootstrap-implementation-conformance"

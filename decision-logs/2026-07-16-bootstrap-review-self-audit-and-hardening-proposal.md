@@ -2,18 +2,18 @@
 
 - Title: bootstrap-review-self-audit-and-hardening-proposal
 - Date: 2026-07-16
-- Status: proposed
+- Status: accepted
 - Supersedes: none
 - Superseded by: none
 - Branch: main
-- Git Head: 28d31b5fa602eab8ad831ea59d1756ffbdd16095
+- Git Head: 6adab7f
 - Why now: 2026-07-13 至 2026-07-16 已累计产生 45 个真实 Bootstrap Review run；多轮 Review 证明事实门禁能发现高价值问题，但 Windows ACL、受限 token 访问、重复 reviewer、悬空 lease、非终态 run 和失真的成本估算造成了可观的时间与 token 消耗，需要在继续扩大使用范围前先修复控制面。
 - Context: 本次只读自检覆盖 `logs/ci/**/review-gateway-bootstrap-*` 下全部真实 run，并以当前 `run-phase-bootstrap-review` Skill、operator guide、profile registry 和 `run_bootstrap_review.py --help` 为运行权威。`logs/ci/2026-07-16/synthetic-rmap-binding-clean/` 仅是合成绑定证据，不计为真实 Review run。
-- Decision: 提议保留三层独立 reviewer、完整 artifact 覆盖、P0/P1 独立 verifier 和三轮硬上限。实施前必须先接受 Bootstrap Review Execution Control Plane Ownership ADR 并建立 durable standard；随后由仓库自有 Skill 拥有 Codex Exec runner、Artifact View、attempt/event、repair closure 和恢复协议，7-12 目录仅保留迁移期兼容入口，外部全局 Skill 只做 revision-bound 薄路由。
+- Decision: 接受并保留三层独立 reviewer、完整 artifact 覆盖、P0/P1 独立 verifier 和三轮硬上限。实施前先接受 Bootstrap Review Execution Control Plane Ownership ADR 并建立 durable standard；随后由仓库自有 Skill 拥有 Codex Exec runner、Artifact View、attempt/event、repair closure 和恢复协议，7-12 目录仅保留迁移期兼容入口，外部全局 Skill 只做 revision-bound 薄路由。本文件直接作为 approved intent source，不再创建新的 VDD execution-plan。
 - Consequences: Review 的语义强度不下降；启动前失败会更早、更便宜；历史 run 可以被确定性归类而不改写原始 evidence；后续完整 Review 需要额外的 access proof 和 repair closure，但能显著降低无效 reviewer 消耗。
 - Recovery impact: 后续会话应先读取本文件，再读取 `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md` 和待新增的 run index/inspect 输出。任何优化都必须新增 sidecar 或新 run，不得重写 45 个历史目录。
 - Validation: `py -3 scripts/python/bootstrap_review_self_audit.py --audit-id bootstrap-self-audit-20260716-proposal-r2 --out-dir logs/ci/bootstrap-self-audit/bootstrap-self-audit-20260716-proposal-r2` 已通过；`audit-result.json` 为 `sha256:ccad4469eaf4c39992c63d6493d7726d6729de6bad342fd52764bae426323010`。审计解析了 45 份真实 input、31 份 gate result、26 份 final metrics/dispositions、17 份 process lease 和全部符合声明规则的 token 记录，未修改历史 Review evidence。
-- Related ADRs: required before implementation: `Bootstrap Review Execution Control Plane Ownership`；该 ADR 必须明确 durable standard、仓库自有 Skill、7-12 compatibility layer、logs evidence 和外部薄 Skill 的所有权。
+- Related ADRs: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`；该 ADR 明确 durable standard、仓库自有 Skill、7-12 compatibility layer、logs evidence 和外部薄 Skill 的所有权。
 - Related execution plans: `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/`; `execution-plans/2026-07-15-repository-maintenance-tdd-adapter/`
 - Related task id(s): n/a; Bootstrap Review run 当前不绑定 Taskmaster task id。
 - Related run id: 2026-07-13 至 2026-07-16 的 45 个 `review-gateway-bootstrap-*` run；重点包括 `vdd-clarification-quick-20260715-004024`、`repo-maint-tdd-final-20260716-0129`、`repo-maint-tdd-final-r2-20260716-024940`、`repo-maint-tdd-final-r3-20260716-110837`。
@@ -629,4 +629,4 @@ logs/
 
 ## 12. 下一步
 
-本提案修订完成后仍保持 `proposed`。下一步必须先接受框架级 `Bootstrap Review Execution Control Plane Ownership` ADR 和对应 durable standard，再把本文件作为 approved intent source 创建独立 VDD execution-plan。不要直接在现有 7-12 plan、模糊顶层 `tools/` 或历史 run 目录中追加未规划能力。
+本提案已由用户接受，并直接作为本轮优化的 approved intent source。下一步先接受框架级 `Bootstrap Review Execution Control Plane Ownership` ADR 和对应 durable standard，再直接更新仓库自有 Skill、外部薄路由和 7-12 compatibility adapter；不创建新的 VDD execution-plan，不向模糊顶层 `tools/` 或历史 run 目录追加权威能力。

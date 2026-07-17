@@ -13,6 +13,7 @@ Scope: Current scope is Phase service standards; future cross-cutting repository
 5. `docs/standards/godot-ui-style-closure.md` for style-aware UI closure, style repair prompt inputs, and final-readiness style gates.
 6. `docs/standards/godot-ui-style-schema-acceptance.md` for deterministic style snapshot schema acceptance gates.
 7. `docs/standards/godot-diagnostics-quality-gates.md` for Godot/Phase diagnostics, project diagnostic spool, failure-family taxonomy, preview/package quality gates, interaction-region evidence, and resource lifecycle rules.
+8. `docs/standards/bootstrap-review-control-plane.md` for Bootstrap Review ownership, execution boundaries, evidence recovery, lifecycle, and repair closure.
 
 ## Current Standards
 
@@ -23,6 +24,7 @@ Scope: Current scope is Phase service standards; future cross-cutting repository
 - [Godot UI Style Closure Standard](godot-ui-style-closure.md)
 - [Godot UI Style Schema Acceptance Standard](godot-ui-style-schema-acceptance.md)
 - [Godot Diagnostics And Quality Gates](godot-diagnostics-quality-gates.md)
+- [Bootstrap Review Control Plane Standard](bootstrap-review-control-plane.md)
 
 ## Maintenance Rules
 

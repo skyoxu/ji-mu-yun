@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.agent-attempt-event.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "slice_id", "run_id", "sequence", "attempt_id", "stage", "event_type", "artifact_refs", "previous_event_hash", "observed_at", "append_only"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.agent-attempt-event.v1"},
+    "plan_id": {"type": "string", "minLength": 1},
+    "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"},
+    "run_id": {"type": "string", "minLength": 1},
+    "sequence": {"type": "integer"},
+    "attempt_id": {"type": "string", "pattern": "^ATTEMPT-[0-9]{3,}$"},
+    "stage": {"enum": ["red", "green", "refactor"]},
+    "event_type": {"enum": ["attempt-started", "request-recorded", "response-recorded", "diff-recorded", "decision-finalized", "attempt-incomplete", "attempt-superseded"]},
+    "artifact_refs": {"type": "array", "items": {"$ref": "#/$defs/artifactRef"}},
+    "previous_event_hash": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
+    "observed_at": {"type": "string", "minLength": 1},
+    "append_only": {"const": true}
+  },
+  "$defs": {
+    "artifactRef": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}
+  }
+}

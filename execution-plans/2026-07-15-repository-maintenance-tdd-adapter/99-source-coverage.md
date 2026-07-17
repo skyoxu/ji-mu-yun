@@ -9,8 +9,8 @@ Machine owner: [`schemas/source-coverage.v1.json`](schemas/source-coverage.v1.js
 | AGENT-SRC-I | RMAP-001, 002, 005, 011, 012, 020, 024 |
 | AGENT-SRC-II | RMAP-003, 004, 006, 013, 017, 019, 021, 022 |
 | AGENT-SRC-III | RMAP-005, 006, 010, 011, 012, 024 |
-| AGENT-SRC-IV | RMAP-004, 006-010, 013-016, 021, 023 |
-| AGENT-SRC-V | RMAP-005, 010-012, 019, 024 |
+| AGENT-SRC-IV | RMAP-004, 006-010, 013-016, 021, 023, 025 |
+| AGENT-SRC-V | RMAP-005, 010-012, 019, 024, 026 |
 | AGENT-SRC-VI | RMAP-003-005, 007-011, 014, 015, 018 |
 | AGENT-SRC-VII | RMAP-004-018, 020, 023 |
 | AGENT-SRC-VIII | RMAP-001-006, 010, 013, 017, 021-024 |
@@ -26,6 +26,7 @@ The machine owner declares ranges and exact arrays. The validator independently 
 | CQ-006 to CQ-012 | RMAP-004, 005, 010, 013, 014, 017, 020, 022, 023 |
 | CQ-013 to CQ-017 | RMAP-003, 014-017, 021 |
 | Repair CQ-001 to CQ-005 | RMAP-003, 004, 006, 007, 010, 013, 014, 016-018, 021, 023 |
+| Repair 20260717 CQ-001 to CQ-007 | RMAP-005, 010, 014, 015, 021, 024-026 |
 
 The machine source is `schemas/clarification-decisions.v1.json`, not the ignored raw clarification run under `logs/**`.
 

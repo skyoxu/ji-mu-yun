@@ -14,24 +14,26 @@
 
 ## RMAP-S1: Common Contract And Self-Hosted Plan Instance
 
-- Requirements: `RMAP-003`, `RMAP-004`, `RMAP-013`, `RMAP-022`.
+- Requirements: `RMAP-003`, `RMAP-004`, `RMAP-013`, `RMAP-022`, `RMAP-025`, `RMAP-026`.
 - Phase: `P0`.
-- Create the repository-owned Skill package, migrate the proposed common schema into it, and keep this plan's `implementation-contract.v1.json` as the first live instance.
+- Create the repository-owned Skill package, migrate the proposed common schema plus public Capsule/attempt schemas into it, and keep this plan's `implementation-contract.v1.json` as the first live instance.
 - Tests first: schema, raw-shell, env, placeholder, predicate escalation, stale source, and missing acceptance fixtures.
 - RED: deliberate `shell=true` fixture produces `RMAP-CMD-SHELL`.
 - GREEN: `rmap-s1-slice-validate` proves the self-hosted Skill/schema outputs under `slice-ready`.
-- Exit: no duplicate live common schema owner remains; source hash and predicate authority are current.
+- Exit: no duplicate live common schema owner remains; implementation, Capsule, and attempt schemas pass; source hash and predicate authority are current.
 - Rollback: quarantine the Skill candidate and retain this plan at `plan-ready` only.
 
 ## RMAP-S2: Stateless Capsule And Recovery Adapter
 
 - Phase: `P1`.
-- Requirements: `RMAP-005`, `RMAP-006`, `RMAP-007`, `RMAP-008`, `RMAP-009`, `RMAP-010`, `RMAP-011`, `RMAP-014`, `RMAP-015`, `RMAP-018`, `RMAP-021`, `RMAP-023`.
+- Requirements: `RMAP-005`, `RMAP-006`, `RMAP-007`, `RMAP-008`, `RMAP-009`, `RMAP-010`, `RMAP-011`, `RMAP-014`, `RMAP-015`, `RMAP-018`, `RMAP-021`, `RMAP-023`, `RMAP-025`, `RMAP-026`.
 - Implement prepare, RED, GREEN, REFACTOR, finalize-candidate, status, and resume actions.
 - Tests first: implementation-before-RED, unexpected GREEN, compile/harness failure, stale RED, write-set violation, index drift, read-set drift, dependency drift, stale successor state, and unrelated drift allowance.
 - The adapter has no provider scheduler and no hidden state; every transition is reconstructed from append-only evidence.
+- Every backend invocation consumes a new immutable Capsule revision. S2 persists minimized request/response envelopes, independently generates the diff manifest, writes the decision last, appends event lineage, and rejects partial or duplicate accepted stage histories.
+- Capsule and adapter-decision are observations only. The registered RED/GREEN/REFACTOR predicate result owns state transition.
 - GREEN: `rmap-s2-slice-validate` proves the adapter lifecycle and explicit RED/GREEN/REFACTOR evidence under `slice-ready`.
-- Exit: a non-protected repository-maintenance slice completes observed RED -> GREEN -> REFACTOR. Its lifecycle proof does not become the final implementation candidate because S3-S5 still change the candidate tree.
+- Exit: a non-protected repository-maintenance slice completes observed RED -> GREEN -> REFACTOR with valid Capsule and attempt lineage. Its lifecycle proof does not become the final implementation candidate because S3-S5 still change the candidate tree.
 - Rollback: mark the run failed or stale, preserve evidence, and remove only the candidate Skill files.
 
 ## RMAP-S3: 7-12 Shadow Canary
@@ -67,10 +69,10 @@
 
 ## RMAP-S6: Finalize Current Implementation Candidate
 
-- Requirements: `RMAP-010`, `RMAP-012`, `RMAP-016`.
+- Requirements: `RMAP-010`, `RMAP-012`, `RMAP-016`, `RMAP-025`, `RMAP-026`.
 - Phase: `P3`.
 - Recompute the complete current diff and exact candidate identity after S3-S5.
-- Require current RED/GREEN/REFACTOR lineage, deterministic tests, authority manifest, contract, command registry, validator, Git index, tracked diff, untracked manifest, changed-file manifest, and test-diff hashes.
+- Require current RED/GREEN/REFACTOR lineage, deterministic tests, authority manifest, contract, command registry, validator, Git index, tracked diff, untracked manifest, changed-file manifest, test-diff hashes, final context-manifest and Capsule hashes, accepted attempt ID, and accepted decision hash.
 - Candidate authorizes Bootstrap review only.
 - GREEN: `rmap-s6-candidate-validate` consumes explicit TDD evidence and candidate result only. It does not consume Bootstrap output.
 - Exit: current candidate envelope authorizes only an external Bootstrap review.

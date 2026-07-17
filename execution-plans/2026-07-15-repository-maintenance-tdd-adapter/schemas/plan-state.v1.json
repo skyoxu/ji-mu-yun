@@ -9,7 +9,11 @@
   "clarification": {
     "projection_path": "schemas/clarification-decisions.v1.json",
     "creation_run_id": "clarification-20260715T094322Z",
-    "repair_run_id": "repair-20260716T081500Z",
+    "repair_run_ids": [
+      "repair-20260716T081500Z",
+      "repair-20260717T013023Z"
+    ],
+    "current_repair_run_id": "repair-20260717T013023Z",
     "status": "closed",
     "write_disposition": "normal",
     "confidence": 96

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from shadow_guards import validate_shadow_protected_trees
+from protocol_guards import load_protocol_run
 
 
 def _finding(rule_id: str, target: str, message: str) -> dict[str, str]:
@@ -103,6 +104,9 @@ def _validate_stage_evidence(repository_root: Path, slice_id: str, evidence: dic
         supersedes = recovery.get("supersedes_run_id")
         if (predecessor is None) != (supersedes is None) or (predecessor is not None and (predecessor != supersedes or predecessor == run_id)):
             findings.append(_finding("RMAP-RECOVERY-NEW-RUN-STATE", slice_id, "successor lineage is incomplete or self-referential"))
+    if slice_id in {"RMAP-S2", "RMAP-S6"}:
+        _, protocol_findings = load_protocol_run(Path(__file__).resolve().parents[1], run_dir)
+        findings.extend(protocol_findings)
     return findings
 
 

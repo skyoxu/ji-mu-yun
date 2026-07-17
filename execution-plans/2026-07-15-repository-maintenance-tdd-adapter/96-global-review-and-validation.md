@@ -2,7 +2,7 @@
 
 ## Review Scope
 
-A complete plan review reads every Markdown file, root contract instance, `schemas/**`, `fixtures/**`, `tools/**`, `agentbuild.txt`, the closed clarification state, repository rules, VDD strict standard, stock Quick Dev implementation/review/present steps, and the 7-12 Bootstrap authority used by this plan.
+A complete plan review reads every Markdown file, root contract instance, `schemas/**`, both fixture registries, `tools/**` including `protocol_guards.py`, `agentbuild.txt`, all projected closed clarification runs, repository rules, VDD strict standard, stock Quick Dev implementation/review/present steps, and the current 7-12 Bootstrap profile authority used by this plan.
 
 Sampling is not allowed.
 
@@ -16,6 +16,7 @@ Before semantic review:
 4. run the 7-12 Whole-directory validator and Bootstrap regression suite when reviewing integration claims;
 5. verify Git status and current source/validator hashes;
 6. confirm no old plan or historical evidence changed during plan creation.
+7. observe at least one Capsule and one attempt-ledger counterexample with the expected stable rule ID.
 
 A deterministic failure stops semantic review.
 
@@ -57,6 +58,7 @@ Future `implementation-accepted` requires:
 - every accepted P2 fixed or validly deferred;
 - no high-risk or expired P2 deferral;
 - exact authority exclusion for handoff and release.
+- a candidate-bound final context/Capsule and accepted refactor attempt decision whose persisted run passes the protocol validator.
 
 ## Bounded Review Cycle
 

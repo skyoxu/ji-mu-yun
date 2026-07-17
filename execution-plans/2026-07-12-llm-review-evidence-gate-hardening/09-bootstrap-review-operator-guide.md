@@ -1,4 +1,6 @@
-# Bootstrap Review 手工操作指南
+# Bootstrap Review 操作与兼容迁移指南
+
+当前通用权威位于 `.agents/skills/run-phase-bootstrap-review/`，control-plane revision 为 `bootstrap-control-plane.v2`。本文保留 7-12 计划的迁移示例；`tools/run_bootstrap_review.py` 只是 revision-bound 无状态 adapter，通用 runner、profile、schema、Artifact View、attempt/event、repair closure 和恢复命令均归仓库自有 Skill。长期语义见 `docs/standards/bootstrap-review-control-plane.md`，所有权决策见 `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`。
 
 ## 1. 适用范围
 
@@ -8,7 +10,7 @@
 - `execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/`；
 - 用户显式声明的相关实现 diff 或文件 scope。
 
-工具本身不调用 reviewer；用户可以手工运行，也可以明确授权 Codex 主会话编排 Blind Hunter、Edge Case Hunter、Acceptance Auditor。编排时每个角色必须使用相互隔离的 agent/session，主会话不得代写或修补 finding。独立 verifier 只能在 gate 产生 P0/P1 blocker 后运行，且不得复用 discovery reviewer。工具和编排会话均不得修改目标 scope、更新上游 ledger，也不得替代 7-11 BH-HANDOFF verifier。
+manual 与 specialized-agent 模式不调用 reviewer；`codex-exec` 模式可以在用户显式授权后通过仓库自有 `run-layer` 启动单个指定角色。每个角色必须使用相互隔离的 session/process，主会话不得代写或修补 finding。独立 verifier 只能在 gate 产生 P0/P1 blocker 后运行，且不得复用 discovery reviewer。runner 不拥有 finding 接受、severity、review/done、commit、handoff 或 release；工具和编排会话均不得修改目标 scope、更新上游 ledger，也不得替代 7-11 BH-HANDOFF verifier。
 
 ## 2. Review 对象与 profile
 
@@ -77,13 +79,17 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
 
 98/99 的 source coverage 以原单体计划为 authority；缺少第二个 scope 时 reviewer 必须 fail closed。每次 review 使用新目录，不覆盖旧 evidence。
 
-`prepare` 还必须绑定 `changeId`、`fullReviewRound`、`executionMode` 和固定 attestation `no-other-semantic-review-in-cycle`。同一 change 的 round 1 在语义执行开始后只能存在一次；`codex-exec` 以首条 reviewer role lease 作为 round 开始，只有模型探针的失败 run 可替换且不消耗 round；round 2/3 必须用 `--predecessor-run-dir` 指向相邻已 finalized run。换 review ID 不能重开 round 1，round 4 永远拒绝，round 3 仅在 predecessor 有 P0/P1 或 authority/context graph 改变时允许。
+`prepare` 还必须绑定 `changeId`、`fullReviewRound`、`executionMode` 和固定 attestation `no-other-semantic-review-in-cycle`。同一 change 的 round 1 在语义执行开始后只能存在一次；`codex-exec` 以首条 reviewer `attempt-started` event 作为 round 开始，只有 access/model probe 的失败 run 可替换且不消耗 round；round 2/3 必须用 `--predecessor-run-dir` 指向相邻已 finalized run，并提供 `--repair-closure`。换 review ID 不能重开 round 1，round 4 永远拒绝，round 3 仅在 predecessor 有 P0/P1 或 authority/context graph 改变时允许。
+
+`--write-set` 声明本次变更可能写入的路径；`--execution-read-set` 与 `--dependency` 必须已经纳入 scope。并发只阻断 write-set 重叠，但 authorize-launch 会冻结 Git index，并对 reviewed artifacts、execution read-set、dependency closure、profile、schema、validator 与 preflight 漂移 fail closed。
 
 `bootstrap-implementation-conformance` 还必须用重复 `--required-check <check-id>=<authority-scope>` 绑定实施计划要求的完整 .NET、Whole-directory 或其他必跑检查。映射 scope 必须已由 `--scope` 纳入；这些 check ID 会被追加到 preflight requiredChecks。缺少任何 plan-bound check 时 prepare fail closed。
 
 `prepare` 必须生成：
 
 - `review-input.json`：commit、dirty state、scope file hashes、profile 和 authority revision；
+- `artifact-view/manifest.json` 与 `artifact-view/tree/**`：仅 `codex-exec` 使用的冻结只读视图，保持原仓库相对路径、bytes、line 与 context-class 投影；
+- `process-events.jsonl` 与 `attempts/<attempt-id>/`：append-only 执行事实和每次 request/process/stdout/stderr/token/candidate evidence；
 - `preflight-result.json`：required check 的 pending 模板，完成后记录 command、exitCode、`preflight/**` evidence path/hash；
 - `reviewer-prompts/blind_hunter.md`；
 - `reviewer-prompts/edge_case_hunter.md`；
@@ -111,7 +117,19 @@ Windows 上，CLI 必须对 reviewer 输出模板显式授予当前用户 Modify
 
 任一 required check 失败、缺失或无法证明时，停止在 reviewer 启动前，不生成语义 finding，也不把失败解释成 clean。每个成功 check 必须把 `status=passed`、实际 command、`exitCode=0`、run-relative `evidencePath` 和当前 `evidenceHash` 写入 `preflight-result.json`，全部成功后才把顶层 status 改为 `passed`。gate/finalize 会验证 check 集合、路径边界和 evidence hash。preflight 只负责机器可判定问题；通过后仍须完整读取 manifest 并运行三个 reviewer。
 
-Preflight 全部通过后、任何 reviewer 启动前，必须冻结 authority：
+Preflight 全部通过后，`codex-exec` 必须先用相同 executable identity、model route、sandbox、环境类别和 Artifact View 合同运行 identity-equivalent access proof：
+
+```powershell
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prove-access `
+  --run-dir <run-dir> `
+  --codex-command <codex-executable> `
+  --model <profile-allowed-model> `
+  --ack-high-cost
+```
+
+该 proof 不缓存 artifact access、preflight 或 authority。high-cost run 必须在 access probe 启动任何模型前显示估算并取得 `--ack-high-cost`；不能把确认推迟到 probe 已消耗 token 之后。每个真实 reviewer/verifier child 还必须在同一 Codex session 内先运行 hash-bound `access-handshake`；失败时 formal reviewer/verifier output 保持原状，candidate 数量为零。
+
+随后、任何 reviewer 启动前，必须冻结 authority：
 
 ```powershell
 py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bootstrap_review.py authorize-launch `
@@ -119,7 +137,7 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
   --ack-high-cost
 ```
 
-CLI 会重验 Git revision、artifact hashes、profile/context graph、preflight hash、review lineage 和成本估算，并生成 `review-launch-authorization.json`。仅当 manifest 的 `reviewCostEstimate.highCost=true` 时才需要 `--ack-high-cost`；未确认时命令输出 artifact count、bytes 与 relative work units 后停止。授权后任一 authority/preflight 漂移都会使 validate/gate/finalize 失败，必须创建新 run。
+CLI 会重验 Git revision、Git index、artifact hashes、Artifact View、access proof、repair closure、write-set、execution read-set、dependency closure、profile/context graph、preflight hash、review lineage 和成本估算，并生成 `review-launch-authorization.json`。仅当 manifest 的 `reviewCostEstimate.highCost=true` 时才需要 `--ack-high-cost`；未确认时命令还应展示 token/wall-time P50/P90、basis sample count、confidence、verifier likelihood 和 retry risk。授权后任一 authority/preflight 漂移都会使 validate/gate/finalize 失败，必须创建新 run；旧 run 标 stale，新 run 基于新快照开始，不能以 stale 状态出生。
 
 ## 4. 运行三个 reviewer
 
@@ -132,19 +150,17 @@ CLI 会重验 Git revision、artifact hashes、profile/context graph、preflight
 - 三层都完成后，用户要求完整 review 时可以继续执行 gate；仅要求 prepare 或 reviewer 输出时应在对应阶段停止；
 - 每个 prompt 必须包含本角色 rubric、profile 专用误报抑制清单和 untrusted-content boundary；缺少任一项时拒绝启动；
 - 每个 reviewer 保存输出后必须重新读取自己的 JSON，并执行 `validate-layer --run-dir <run-dir> --layer <role>`；只有命令零退出才算该层完成。失败时由同一 reviewer 修正自己的输出或将该层保留为失败，主会话不得代修。
-- 使用 `codex exec` 时，每个 probe/reviewer/verifier 必须先用 `process-lease --action acquire` 记录稳定 operation ID、role 与真实且当前存活的子进程 PID；CLI 在 acquire 时捕获 OS process identity。结束后必须携带同一 PID 执行 `--action release --state completed|failed`：省略 PID、PID 不同或该 PID 仍存活但 identity 已变化时 fail closed；原进程正常退出后允许以已记录的原 PID 收口。reviewer operation 固定为 `reviewer:<role>`，verifier 固定为 `verifier`。工具等待超时但 PID 仍 alive 时只能 inspect/reattach/poll，不得启动第二个相同 operation；已退出 lease 由 inspect/后续 acquire 标 stale 后才允许重新 acquire。 Release with completed, failed, or stale is rejected while the recorded PID remains alive; reattach or poll until it exits.
-- 使用 `codex exec` 时，通过 UTF-8 stdin 传入 prompt（`codex exec ... -`），每个角色使用独立 ephemeral 进程；启动审查前必须用相同 provider/model/reasoning 做一次终端与 workspace-write 探针。正常命令必须显式传入 `-m gpt-5.6-terra -c model_reasoning_effort=<manifest-role-value>`，不能依赖全局默认值。首选探针失败后才可依次尝试 `gpt-5.5`、`gpt-5.4`，并保存失败模型及原因；`gpt-5.6-sol` 禁止用于 reviewer/verifier。探针失败、超时、认证失败、非零退出或缺少输出均按该层 incomplete 处理，主会话不得代修 JSON。
+- 使用仓库自有 `run-layer` 时，runner 通过 UTF-8 stdin 启动显式指定的单个模型，使用参数数组、`shell=False`、环境白名单和类型化占位符。它不隐藏 provider 调度、不自动循环 fallback；首选失败后若要使用 `gpt-5.5` 或 `gpt-5.4`，必须由 operator 发起新命令并保留上一 attempt evidence。`gpt-5.6-sol` 禁止用于 reviewer/verifier。
+- `process-events.jsonl` 是执行事实权威；`process-leases.json` 由 event 重建，仅为 7-12 compatibility view。工具等待超时但 PID 仍 alive 时只能 inspect/reattach/poll，不得启动相同 operation。失败 attempt 不得覆盖 formal role output。
 
-Process lease 示例：
+仓库 runner 示例：
 
 ```powershell
-py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bootstrap_review.py process-lease `
-  --run-dir <run-dir> --action acquire `
-  --operation-id reviewer:blind_hunter --role blind_hunter --pid <child-pid>
-
-py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bootstrap_review.py process-lease `
-  --run-dir <run-dir> --action release `
-  --operation-id reviewer:blind_hunter --pid <child-pid> --state completed
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py run-layer `
+  --run-dir <run-dir> `
+  --role blind_hunter `
+  --codex-command <codex-executable> `
+  --model gpt-5.6-terra
 ```
 
 Reviewer 示例：
@@ -177,7 +193,7 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
 
 该命令不运行 gate、不生成 candidate/rejection sidecar，也不修改 reviewer JSON；它只接受 `status=completed`。`pending`/`failed` 必须非零退出，`completed` 还必须满足 `missingArtifacts=[]` 且 required/read artifact 集合完全相等。
 
-本工具不规定用户或编排会话使用哪个 Codex/BMAD/GDS 命令；prompt 和 JSON 输出文件是唯一交换边界。
+manual/specialized-agent 仍使用 prompt 与 JSON 外部交换边界；`codex-exec` 的正式交换边界是 child structured candidate -> runner schema/binding validation -> atomic formal role output。模型不得直接覆盖正式 reviewer/verifier JSON。
 
 ## 5. 执行事实门禁
 
@@ -223,6 +239,8 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
   --run-dir logs/ci/2026-07-12/review-gateway-bootstrap-gdd-to-module-manual-001
 ```
 
+存在 accepted P2 时，finalize 前必须提供 `p2-dispositions.json`，对 exact P2 set 逐项声明 `fixed|refuted|deferred`。高风险 P2 不得延期；延期必须提供 owner、未来 expiry、reason 和 closure test，到期后自动阻断。最终结果不得存在开放 accepted P0/P1，P2 必须全部处置。
+
 最终输出：
 
 - `review-gate-result.json`；
@@ -244,16 +262,19 @@ Bootstrap manifest、gate 中间结果、candidate/rejection/disposition/metrics
 5. 默认完整轮次上限为两轮；最终轮出现新的 P0/P1 或 authority/context graph 改变时，最多允许第三轮；
 6. P2-only 不自动触发完整复审；达到三轮仍未闭合时进入 `manual_pause`，不得继续自动循环。
 
+Round 2/3 的 `repair-closure.json` 是当前计划的 implementation-contract 实例；通用 schema 归仓库 Skill。prepare 校验 predecessor identity、finalized finding exact set、evidence path 和 proof-family，authorize-launch 再校验 evidence/current source/validator hash、Git index、write-set、execution read-set、dependency closure 与 context freshness。遗漏任何 finalized finding 或 evidence 漂移时，reviewer event/lease 数量必须保持为零。
+
 用户可以显式要求新的 Review，但普通授权不能绕过 profile 的三轮硬上限；继续需要新的 policy decision，而不是沿用旧 run。
 
 ## 8. 验收与排错
 
 ```powershell
-py -3 -m unittest discover `
-  -s execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/tests `
-  -p "test_*.py"
+py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py
 
 py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py
+
+py -3 C:/Users/Administrator/.codex/skills/.system/skill-creator/scripts/quick_validate.py `
+  .agents/skills/run-phase-bootstrap-review
 ```
 
 - `prepare` 失败：先检查 scope/out-dir 边界；
@@ -279,3 +300,7 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/valida
 - Given同一 operation 的 PID 仍 alive，When工具等待超时后再次 acquire，Then拒绝重复启动并要求 reattach/poll；Given dead PID acquire、release 缺/错 PID 或 live PID identity 漂移，Then不得形成 completed lease。
 - Given implementation profile 未声明 plan-bound required check，When prepare，Then在写 manifest 前失败。
 - Given同一 change 已有 round 1，When换 review ID 再 prepare round 1，Then失败；round 4 永远失败。
+- Given codex-exec 父进程可读但 child access handshake 失败，When prove-access/run-layer，Then语义阶段不形成正式 candidate，formal output 保持 pending。
+- Given两个 active attempt 的 write-set 不重叠，When并发运行，Then允许；Given formal write-set 重叠，Then第二个 attempt 在启动 child 前失败。
+- Given Git index、execution read-set 或 dependency closure 漂移，When authorize-launch/run-layer/gate/finalize，Then旧 run fail closed。
+- Given run 需要恢复，When执行 `list-runs`/`inspect-run`，Then分别输出 run execution、run relationship、change-cycle state 和 nextAction，不依赖 hidden state。

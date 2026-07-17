@@ -12,7 +12,7 @@ Current review blocker: [`schemas/review-blocking-state.v1.json`](schemas/review
 
 ## Outcome
 
-Create a repository-owned, stateless TDD adapter protocol that projects VDD plans into compact implementation contracts, proves an observed RED before production writes, constrains GREEN and REFACTOR work, recovers from append-only evidence, and produces an implementation candidate for the existing Bootstrap semantic-review route. The implementation backend never owns review, `done`, commit, acceptance, or release authority.
+Create a repository-owned, stateless TDD adapter protocol that projects VDD plans into compact implementation contracts and immutable persisted Slice Capsule revisions, proves an observed RED before production writes, constrains GREEN and REFACTOR work, records every backend attempt in an append-only hash chain, and produces an implementation candidate for the existing Bootstrap semantic-review route. The implementation backend, Capsule, and adapter decision never own review, `done`, commit, acceptance, or release authority.
 
 ## Current-State Truth
 
@@ -52,6 +52,9 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 - Source coverage: [`schemas/source-coverage.v1.json`](schemas/source-coverage.v1.json)
 - Spec deltas: [`schemas/spec-deltas.v1.json`](schemas/spec-deltas.v1.json)
 - Proposed common contract schema: [`schemas/implementation-contract.v1.schema.json`](schemas/implementation-contract.v1.schema.json)
+- Persisted context schemas: [`schemas/context-manifest.v1.schema.json`](schemas/context-manifest.v1.schema.json) and [`schemas/slice-capsule.v1.schema.json`](schemas/slice-capsule.v1.schema.json)
+- Attempt ledger schemas: [`schemas/backend-request.v1.schema.json`](schemas/backend-request.v1.schema.json), [`schemas/backend-response.v1.schema.json`](schemas/backend-response.v1.schema.json), [`schemas/diff-manifest.v1.schema.json`](schemas/diff-manifest.v1.schema.json), [`schemas/adapter-decision.v1.schema.json`](schemas/adapter-decision.v1.schema.json), and [`schemas/agent-attempt-event.v1.schema.json`](schemas/agent-attempt-event.v1.schema.json)
+- Capsule and attempt mutation fixtures: [`fixtures/capsule-attempt-cases.v1.json`](fixtures/capsule-attempt-cases.v1.json)
 - Self-hosted contract instance: [`implementation-contract.v1.json`](implementation-contract.v1.json)
 - Command registry: [`schemas/command-registry.v1.json`](schemas/command-registry.v1.json)
 - Executable acceptance registry: [`schemas/acceptance-contracts.v1.json`](schemas/acceptance-contracts.v1.json)
@@ -60,6 +63,7 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 - Bootstrap blocking disposition: [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json)
 - Shadow migration registry: [`schemas/shadow-backfill.v1.json`](schemas/shadow-backfill.v1.json)
 - Composite validator: [`tools/validate_all.py`](tools/validate_all.py)
+- Capsule and attempt validator: [`tools/protocol_guards.py`](tools/protocol_guards.py)
 
 ## Validation Commands
 

@@ -11,8 +11,8 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 | I. Three responsibilities | 1-70 | 01, 02, 04, 97 | Preserved; confidence made advisory and bounded |
 | II. Lightweight SDD companion | 74-199 | 02, 03, contract/schema, 97 | Preserved as machine projection; no duplicate prose authority |
 | III. Adapter definition | 203-221 | 02, 04, 05 | Preserved; backend v1 changed from stock Quick Dev to repository capsule executor by clarification |
-| IV. TDD protocol | 225-360 | 02-07, fixtures | Preserved and strengthened with shell/env/path/drift/recovery rules |
-| V. BMAD position | 364-416 | 01, 02, 04, 07 | P0-P3 preserved; BMAD removal deferred to separate plan |
+| IV. TDD protocol | 225-360 | 02-07, schemas, fixtures | Preserved and strengthened with shell/env/path/drift/recovery rules plus immutable Capsule context |
+| V. BMAD position | 364-416 | 01, 02, 04-07, schemas, fixtures | P0-P3 preserved; backend attempts gain append-only evidence while BMAD removal remains deferred |
 | VI. External framework lessons | 420-432 | 01, 02, 08 | Preserved as rationale, not imported runtime dependencies |
 | VII. Adapter tests | 436-464 | 03, 06, fixtures | Preserved and expanded with neutral/supportive/competing cases |
 | VIII. Minimum layout | 468-513 | 00, 01, 03, schemas/tools | Normalized to three-layer ownership and logs evidence boundary |
@@ -39,5 +39,7 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `MODIFIED`: every slice consumes explicit run and stage evidence; repository-wide `logs/**` discovery is removed.
 - `ADDED`: executable acceptance registry, complete authority manifest, clarification projection, and review blocking projection.
 - `ADDED`: clean-checkout shadow baseline projection, derived requirement-quality hashes, exact earliest-phase validation, and complete candidate identity policy.
+- `ADDED`: `RMAP-025` immutable persisted Capsule revisions and `RMAP-026` append-only Agent Attempt Ledger with minimized envelopes, canonical diff, decision-last finalization, and S6 candidate binding.
+- `REMOVED`: mutable single-Capsule overwrite, standalone adapter-decision authority, and any need for a Router or S8.
 
 No requirement is silently dropped. Machine-level delta details live in `schemas/spec-deltas.v1.json`.

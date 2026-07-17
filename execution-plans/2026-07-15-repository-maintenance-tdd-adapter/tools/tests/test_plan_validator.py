@@ -20,6 +20,7 @@ from authority_guards import validate_acceptance_contracts, validate_authority_m
 from contract_guards import junction_escape_is_rejected, schema_error  # noqa: E402
 from evidence_guards import validate_candidate_document, validate_candidate_review_documents  # noqa: E402
 from fixture_checks import apply_mutations, evaluate_fixture  # noqa: E402
+from protocol_guards import value_hash  # noqa: E402
 from rmap_checks import (  # noqa: E402
     PREDICATE_AUTHORITY,
     load_machine,
@@ -49,6 +50,10 @@ class PlanValidatorTests(unittest.TestCase):
             "changed_file_manifest_hash": "sha256:" + "1" * 64,
             "test_diff_hash": "sha256:" + "2" * 64,
             "red_run_id": "red-a", "green_run_id": "green-a", "refactor_run_id": "refactor-a",
+            "final_context_manifest_hash": "sha256:" + "3" * 64,
+            "final_capsule_hash": "sha256:" + "4" * 64,
+            "accepted_attempt_id": "ATTEMPT-001",
+            "accepted_attempt_decision_hash": "sha256:" + "5" * 64,
         })
         return {
             "schema_version": "jimuyun.tdd-result.v1", "predicate": "implementation-candidate", "status": "pass",
@@ -86,7 +91,41 @@ class PlanValidatorTests(unittest.TestCase):
             stages.append(document); paths[f"{stage}_result"] = path.relative_to(repository_root).as_posix()
         recovery = {"schema_version": "rmap.recovery-state.v1", "run_id": "run-a", "state": "complete", "contract_hash": current["contract_hash"], "validator_hash": current["validator_hash"], "predecessor_run_id": None, "supersedes_run_id": None}
         (run_dir / "recovery-state.json").write_text(json.dumps(recovery), encoding="utf-8")
+        self._write_protocol_run(run_dir)
         return run_dir, stages, paths
+
+    def _write_protocol_run(self, run_dir: Path) -> None:
+        bundle = copy.deepcopy(self.data["protocol_fixtures"]["valid_bundle"])
+        context, capsule = bundle["context_manifest"], bundle["slice_capsule"]
+        for document in (context, capsule):
+            document["slice_id"] = "RMAP-S6"; document["run_id"] = "run-a"
+        context["stage"] = "finalize-candidate"; capsule["stage"] = "finalize-candidate"
+        capsule["exit_predicate"] = "implementation-candidate"
+        attempt = bundle["attempts"][0]
+        for document in attempt.values():
+            document["slice_id"] = "RMAP-S6"; document["run_id"] = "run-a"; document["stage"] = "refactor"
+        request, response, diff, decision = (attempt[key] for key in ("backend_request", "backend_response", "diff_manifest", "adapter_decision"))
+        request["goal"] = "preserve-green-refactor"
+        capsule_hash = value_hash(capsule)
+        context["capsule_ref"]["sha256"] = capsule_hash
+        context["context_hash"] = value_hash({"capsule_hash": capsule_hash, "artifact_refs": context["artifact_refs"]})
+        request["capsule_ref"]["sha256"] = capsule_hash
+        request["request_payload_hash"] = value_hash({"capsule_hash": capsule_hash, "goal": request["goal"], "allowed_command_ids": request["allowed_command_ids"]})
+        diff["actual_diff_hash"] = value_hash(diff["files"])
+        decision["input_context_hash"] = context["context_hash"]
+        decision["backend_request_hash"] = value_hash(request); decision["backend_response_hash"] = value_hash(response)
+        decision["actual_diff_hash"] = diff["actual_diff_hash"]; decision["next_allowed_state"] = "refactor-verified"
+        previous = None
+        for event in bundle["events"]:
+            event["slice_id"] = "RMAP-S6"; event["run_id"] = "run-a"; event["stage"] = "refactor"; event["previous_event_hash"] = previous
+            previous = value_hash(event)
+        context_dir = run_dir / "context" / capsule["capsule_id"]; context_dir.mkdir(parents=True)
+        (context_dir / "context-manifest.v1.json").write_text(json.dumps(context), encoding="utf-8")
+        (context_dir / "slice-capsule.v1.json").write_text(json.dumps(capsule), encoding="utf-8")
+        attempt_dir = run_dir / "attempts" / request["attempt_id"]; attempt_dir.mkdir(parents=True)
+        for key, name in (("backend_request", "backend-request.v1.json"), ("backend_response", "backend-response.v1.json"), ("diff_manifest", "diff-manifest.v1.json"), ("adapter_decision", "adapter-decision.v1.json")):
+            (attempt_dir / name).write_text(json.dumps(attempt[key]), encoding="utf-8")
+        (run_dir / "run-events.jsonl").write_text("\n".join(json.dumps(event) for event in bundle["events"]) + "\n", encoding="utf-8")
 
     def _candidate_run(self, current: dict[str, str]) -> tuple[Path, dict[str, object], list[dict[str, object]], dict[str, str]]:
         run_dir, stages, paths = self._stage_run(current)
@@ -98,6 +137,11 @@ class PlanValidatorTests(unittest.TestCase):
         identity["test_diff_hash"] = "sha256:" + hashlib.sha256(test_diff.read_bytes()).hexdigest()
         for stage in ("red", "green", "refactor"):
             identity[f"{stage}_run_id"] = "run-a"
+        context_dir = run_dir / "context" / "CAP-001"
+        identity["final_context_manifest_hash"] = "sha256:" + hashlib.sha256((context_dir / "context-manifest.v1.json").read_bytes()).hexdigest()
+        identity["final_capsule_hash"] = "sha256:" + hashlib.sha256((context_dir / "slice-capsule.v1.json").read_bytes()).hexdigest()
+        identity["accepted_attempt_id"] = "ATTEMPT-001"
+        identity["accepted_attempt_decision_hash"] = "sha256:" + hashlib.sha256((run_dir / "attempts" / "ATTEMPT-001" / "adapter-decision.v1.json").read_bytes()).hexdigest()
         path = run_dir / "candidate-result.json"; path.write_text(json.dumps(candidate), encoding="utf-8")
         return path, candidate, stages, paths
 
@@ -205,7 +249,7 @@ class PlanValidatorTests(unittest.TestCase):
 
     def test_validator_identity_binds_all_authorizing_helpers(self) -> None:
         digest = hashlib.sha256()
-        names = ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py")
+        names = ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py")
         for name in names:
             path = TOOLS / name
             digest.update(path.name.encode("utf-8")); digest.update(b"\0"); digest.update(path.read_bytes()); digest.update(b"\0")
@@ -251,9 +295,9 @@ class PlanValidatorTests(unittest.TestCase):
 
     def test_requirements_quality_and_acceptance_are_current(self) -> None:
         self.assertEqual([], validate_requirements(PLAN_ROOT, self.data["requirements"], self.data["quality"], self.data["acceptance"]))
-        self.assertEqual([], validate_acceptance_contracts(self.data["acceptance"], self.data["requirements"], self.data["contract"], self.data["commands"], self.data["fixtures"]))
+        self.assertEqual([], validate_acceptance_contracts(self.data["acceptance"], self.data["requirements"], self.data["contract"], self.data["commands"], self.data["fixtures"], self.data["protocol_fixtures"]))
         acceptance = copy.deepcopy(self.data["acceptance"]); acceptance["acceptances"][0]["expected_failure_ids"] = ["NOT-A-RULE"]
-        self.assertIn("RMAP-REQ-ACCEPTANCE-CONTRACT", {item["rule_id"] for item in validate_acceptance_contracts(acceptance, self.data["requirements"], self.data["contract"], self.data["commands"], self.data["fixtures"])})
+        self.assertIn("RMAP-REQ-ACCEPTANCE-CONTRACT", {item["rule_id"] for item in validate_acceptance_contracts(acceptance, self.data["requirements"], self.data["contract"], self.data["commands"], self.data["fixtures"], self.data["protocol_fixtures"])})
 
     def test_earliest_slice_phase_mismatch_is_rejected(self) -> None:
         contract = copy.deepcopy(self.data["contract"]); contract["slices"][2]["phase_id"] = "P2"
@@ -266,9 +310,11 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertEqual("implementation-accepted", predicates["RMAP-S7"])
 
     def test_candidate_identity_incomplete_is_rejected(self) -> None:
-        current = current_candidate_identity(); candidate = self._candidate(current)
-        del candidate["candidate_identity"]["test_diff_hash"]
-        self.assertIn("RMAP-HASH-CANDIDATE-IDENTITY", {item["rule_id"] for item in validate_candidate_document(PLAN_ROOT, "logs/tdd-adapter/run/candidate-result.json", candidate, current)})
+        current = current_candidate_identity()
+        for field in ("test_diff_hash", "accepted_attempt_decision_hash"):
+            with self.subTest(field=field):
+                candidate = self._candidate(current); del candidate["candidate_identity"][field]
+                self.assertIn("RMAP-HASH-CANDIDATE-IDENTITY", {item["rule_id"] for item in validate_candidate_document(PLAN_ROOT, "logs/tdd-adapter/run/candidate-result.json", candidate, current)})
 
     def test_unrelated_untracked_file_does_not_change_candidate_identity(self) -> None:
         repository_root = PLAN_ROOT.parents[1]; path = repository_root / f"rmap-unrelated-{uuid.uuid4().hex}.txt"
@@ -306,7 +352,8 @@ class PlanValidatorTests(unittest.TestCase):
         digest = "sha256:" + hashlib.sha256(candidate_path.read_bytes()).hexdigest()
         review_dir = repository_root / "logs" / "ci" / f"synthetic-{uuid.uuid4().hex}"; review_dir.mkdir(parents=True)
         evidence_path = review_dir / "preflight" / "plan-check.txt"; evidence_path.parent.mkdir(); evidence_path.write_text("pass", encoding="utf-8")
-        profiles = json.loads((repository_root / "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json").read_text(encoding="utf-8"))["profiles"]
+        pointer = json.loads((repository_root / "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json").read_text(encoding="utf-8"))
+        profiles = json.loads((repository_root / pointer["authority"]).read_text(encoding="utf-8"))["profiles"]
         profile = profiles["bootstrap-implementation-conformance"]
         review_input = {"schemaVersion": "bootstrap-review-input.v1", "authorityClass": "supplemental_bootstrap", "profileName": "bootstrap-implementation-conformance", "reviewId": "review-a", "authorityRevision": current["head"], "artifacts": [{"artifact": relative, "sha256": digest}], "deterministicPreflightPolicy": {"requiredChecks": ["plan-check"]}, "planBoundRequiredChecks": []}
         for field in ("reviewProfile", "policyRevision", "routeVersion", "requiredLayers", "codexExecPolicy", "requiredContextClasses", "completenessPolicy"):
@@ -346,7 +393,6 @@ class PlanValidatorTests(unittest.TestCase):
     def test_mutation_helper_supports_list_append_and_remove(self) -> None:
         self.assertEqual({"items": ["x"]}, apply_mutations({"items": []}, [{"op": "add", "path": "/items/-", "value": "x"}]))
         self.assertEqual({}, apply_mutations({"value": "x"}, [{"op": "remove", "path": "/value"}]))
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -25,6 +25,18 @@ Every contract instance binds:
 
 The instance is a projection, not a second requirements document. Long prose remains in the owning books; the instance cites stable IDs and source references.
 
+## Persisted Slice Context Capsule
+
+Each backend invocation consumes one immutable `context/<capsule-id>/` revision containing `context-manifest.v1.json` and `slice-capsule.v1.json`. The Capsule contains references, stable IDs, boundaries, predicates, and hashes only; it cannot rewrite requirements or carry mutable stage state. Later revisions bind `predecessor_capsule_hash` and never overwrite earlier bytes.
+
+The context manifest binds the Capsule hash plus all referenced artifacts. The Capsule has `authorizes=[]`; S2 Capsules expose only `slice-ready`, while S6 may project `implementation-candidate` without authorizing that transition itself. A deterministic registered predicate result remains the only transition authority.
+
+## Agent Attempt Ledger
+
+Each `attempts/<attempt-id>/` directory contains a minimized backend request envelope, untrusted backend response envelope, adapter-generated canonical diff manifest, and adapter decision written last. Raw request or response bodies, secrets, personal data, and authoritative actor identity claims are forbidden. Raw content is represented only by approved hashes.
+
+Attempts use monotonic IDs, request and decision predecessor links, and a previous decision hash. `run-events.jsonl` supplies the append-only event sequence and predecessor-event chain. Missing decision, partial write, stale hash, forbidden diff, multiple accepted lineages for one stage, or authority escalation fails closed. `adapter-decision` may record `accepted_for_validation`; it never authorizes a state change, and S6 alone may bind the final accepted attempt into the candidate envelope.
+
 ## Command Execution Contract
 
 - `shell` is always `false`.
@@ -96,7 +108,7 @@ The same command-to-exit rule applies to every slice. Each S0-S7 GREEN command h
 
 The junction regression creates one uniquely named junction directly under `logs/`, points it at an existing outside directory, verifies resolved containment rejection, and removes it in `finally`. It does not depend on host `%TEMP%` or on creating a writable grandchild under a restricted token. Disposable test state never becomes plan authority.
 
-Every slice command receives an explicit run directory plus RED, GREEN, and REFACTOR result paths. Stage results bind the current contract and validator hashes, one nonempty run ID, increasing observation timestamps, a predecessor-file hash chain, the declared command/selector/failure IDs, and observed exit codes. `recovery-state.json` binds the same run and current hashes. S6 additionally receives the current candidate result and does not consume Bootstrap output. Its candidate binds sibling `changed-files.json` and `test-diff.patch` bytes plus the supplied stage run IDs. S7 consumes the S6 candidate plus an explicit Bootstrap run and checks the trusted profile, recomputed input hash, review/preflight/disposition identity, preflight evidence bytes, and final layer closure before acceptance.
+Every slice command receives an explicit run directory plus RED, GREEN, and REFACTOR result paths. Stage results bind the current contract and validator hashes, one nonempty run ID, increasing observation timestamps, a predecessor-file hash chain, the declared command/selector/failure IDs, and observed exit codes. `recovery-state.json` binds the same run and current hashes. S2 and S6 also require a valid persisted Capsule and attempt event chain. S6 does not consume Bootstrap output; its candidate binds sibling `changed-files.json`, `test-diff.patch`, final context-manifest and Capsule hashes, stage run IDs, accepted attempt ID, and accepted decision hash. S7 consumes that candidate plus an explicit Bootstrap run and checks the trusted profile, recomputed input hash, review/preflight/disposition identity, preflight evidence bytes, and final layer closure before acceptance.
 
 ## Confidence Contract
 

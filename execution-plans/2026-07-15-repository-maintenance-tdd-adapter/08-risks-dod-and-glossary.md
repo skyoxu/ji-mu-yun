@@ -9,6 +9,8 @@
 | Plan validator self-authorizes weakened rules | Mutation fixtures and independent Bootstrap review | Same slice weakens its authorizer |
 | Dirty tree loses user work | Freeze index/closures and block write overlap only | Overlap or unexplained drift |
 | Recovery mutates failed history | Append-only run directories and stale successors | Prior evidence changes bytes |
+| Capsule becomes mutable hidden state | One immutable revision per invocation plus predecessor hash | Capsule overwrite or unbound revision |
+| Attempt ledger leaks prompts or authority | Minimized envelopes, raw hashes, decision `authorizes=[]` | Raw sensitive body or transition authority persisted |
 | Old plans are accidentally promoted | Additive metadata and shadow-only predicates | Existing plan status/book changes |
 | P2 deferrals hide material risk | Non-deferrable risk families and expiry blocking | Missing owner, proof, expiry, or closure test |
 | Adapter grows into a Router | No provider scheduler or hidden state | New central intent/plan selection logic |
@@ -21,6 +23,7 @@
 - Every active requirement maps once to source, owner, first phase, acceptance ID, evidence intent, and status.
 - Source coverage includes all nine `agentbuild.txt` sections and every clarification decision.
 - Deliberate invalid and mutation cases fail with their expected stable rule IDs.
+- Capsule and attempt fixtures prove stale context, authority, partial-write, binding, sensitive-content, and lineage failures.
 - Validator unit tests and the fresh composite command pass.
 - The current result envelope has matching candidate/source/validator hashes and exact authority sets.
 - `plan-repair-verified` may pass only after the blocked candidate produces fresh deterministic evidence; it does not promote status.
@@ -32,6 +35,7 @@
 - Framework ADR accepted.
 - Common schema has one Skill owner.
 - Self-hosted TDD lifecycle and recovery evidence pass.
+- Persisted Capsule revisions and accepted attempt lineage are current and candidate-bound.
 - Three shadow backfills pass without authority changes.
 - Bootstrap review is finalized under current hashes.
 - No open accepted P0/P1; every accepted P2 is disposed; high-risk and expired deferrals are absent.
@@ -39,7 +43,10 @@
 
 ## Glossary
 
-- **Slice Capsule**: compact, hash-bound input given to an implementation-only backend.
+- **Slice Capsule**: immutable, compact, hash-bound consumption view for one backend invocation; it references plan authority and cannot rewrite it.
+- **Context manifest**: immutable manifest binding one Capsule hash, referenced artifacts, predecessor Capsule, and minimized context hash.
+- **Agent Attempt Ledger**: append-only attempt directories plus event chain; it preserves request, response, canonical diff, decision, retry, and supersession history without a mutable ledger file.
+- **Adapter decision**: decision-last, non-authorizing observation that accepts an attempt only for deterministic stage validation.
 - **Implementation contract**: per-plan machine projection of slice IDs, paths, commands, evidence, and predicates.
 - **Execution read set**: files whose content influences execution but is not necessarily modified.
 - **Dependency closure**: transitive files/contracts required to interpret or validate the slice.

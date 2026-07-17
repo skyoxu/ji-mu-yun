@@ -1,31 +1,24 @@
 # Repository Guide
 
-This file is the repository map. It routes you to the right source document by task stage, problem type, and durable run state. Do not turn it back into a 600-line encyclopedia.
+This file is the Phase-service-first repository map. It routes agents to current product, architecture, standards, runtime, and recovery authority. Keep detailed procedures in their source documents instead of expanding this file into a general template manual.
 
 ## Purpose
-- Windows-only Godot + C# game template evolved into the Ji Mu Yun Phase A/B cloud prototype generation and hosting platform.
-- `AGENTS.md` is the routing layer.
-- `README.md` is the product-facing overview, phase status, stack summary, and startup entry.
-- `docs/agents/` holds agent workflow, recovery, and navigation docs.
-- `docs/architecture/**`, `docs/adr/**`, `docs/testing-framework.md`, and `DELIVERY_PROFILE.md` remain the deep source documents.
+- The root repository is the Ji Mu Yun Phase A/B cloud prototype platform, not a specific game project.
+- `AGENTS.md` is the concise agent routing and non-negotiable change-contract layer.
+- `README.md` is the product overview, phase status, stack summary, and startup entry.
+- Game-specific identity, genre, route profile, and execution state belong to each hosted project workspace and metadata records, not to root-level placeholder fields.
+- `docs/architecture/phase-service/**`, `docs/architecture/ADR_INDEX_PHASE.md`, and `docs/standards/**` are the deep sources for Phase service decisions and conventions.
 
 ## Phase Service Scope
-This AGENTS.md prioritizes Phase A/B platform service work before broader template or delivery-routing concerns. Treat the following as in-scope for Phase service changes:
+Treat the following as in-scope for Phase service changes:
 - `PhaseA.Platform/**` and `PhaseA.Platform.Tests/**`.
 - `runtime/phase-a/**`, including startup, recovery, watchdog, and Caddy configuration.
 - `scripts/python/phase_a_*.py`, `scripts/python/phase_b_*.py`, and Phase-facing smoke or drill scripts.
 - `logs/phase-a-innernet/**` as runtime state, live metadata, hosted workspaces, and evidence.
 - Account isolation, admin/user auth, token hashing, audit exports, hosted workspace/artifact readback, and browser/API behavior.
-- Phase browser-consumed prototype routes, including prototype creation, iteration, repair, GDD, asset, package, preview, and related route recovery state.
+- Phase browser-consumed prototype routes, including project creation, GDD, prototype generation, iteration, repair, asset, package, preview, and route recovery state.
 - Shared LLM/Codex execution entrypoints used by Phase routes and scripts.
-- Phase service architecture rationale lives in `docs/architecture/phase-service/_index.md`; read it before changing Phase service boundaries.
-- Phase service ADRs live in `docs/architecture/ADR_INDEX_PHASE.md`; read them before changing Phase service decisions.
-- Phase service standards index lives in `docs/standards/_index.md`.
-- Phase service standards live in `docs/standards/phase-service.md`; read them before changing API, DB, errors, logs, security, tests, or readback status contracts.
-- Godot runtime semantic standards live in `docs/standards/godot-engine-semantics.md`; read them before changing hosted Godot UI, input, physics, camera, TileMap, rendering, visual evidence, preview, package, or repair routes.
-- Godot UI capability standards live in `docs/standards/godot-ui-capability-contract.md`; read them before changing GDD-to-module UI capability classification, UI closure, visible surface evidence, UI profiles, or no-UI exemptions.
-- Godot UI style standards live in `docs/standards/godot-ui-style-contract.md`; read them before changing style catalog selection, style snapshots, component coverage, drift taxonomy, or style-not-applicable exemptions.
-- Godot diagnostics and quality-gate standards live in `docs/standards/godot-diagnostics-quality-gates.md`; read them before changing diagnostic spool, failure families, preview/package readiness, interaction-region evidence, lifecycle cleanup, admin triage, or deleted-project diagnostic retention.
+- Godot runtime, UI capability, UI style, diagnostics, preview, package, and acceptance rules consumed by hosted routes.
 
 ## Planned Frontend Boundary Hardening
 - `execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan.md` is a `paused` downstream plan. It starts only after `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/` is fully complete and the protected BH-HANDOFF succeeds.
@@ -34,141 +27,69 @@ This AGENTS.md prioritizes Phase A/B platform service work before broader templa
 - Update this routing file in the same change that makes a planned rule operational: BH-SF2 for Platform/Hosted Codex routing and Preflight, BH-SF3 for mutation/acceptance recovery entrypoints, BH-RP1 for version projection, BH-REACT1/BH-REACT2 for `/ui-v2`, session and legacy-route behavior, and BH-RELEASE for final SemVer/release authority. Never document a future phase as active before its exit evidence exists.
 
 ## Start Here
+1. Read `README.md` for current product status and startup.
+2. Read `docs/architecture/phase-service/_index.md` before changing Phase service boundaries.
+3. Read `docs/architecture/ADR_INDEX_PHASE.md` before changing Phase service decisions.
+4. Read `docs/standards/_index.md` and `docs/standards/phase-service.md` before changing API, DB, errors, logs, security, tests, or status contracts.
+5. Read the relevant Godot standard before changing hosted Godot behavior:
+   - `docs/standards/godot-engine-semantics.md`
+   - `docs/standards/godot-ui-capability-contract.md`
+   - `docs/standards/godot-ui-style-contract.md`
+   - `docs/standards/godot-diagnostics-quality-gates.md`
+6. Read the relevant file in `execution-plans/` and `decision-logs/` when the change is plan-scoped or decision-scoped.
 
-1. For Phase service work, read `Phase Service Scope`, `Phase Service Change Contract`, `Phase Runtime Recovery Order`, `docs/standards/_index.md`, and `docs/standards/phase-service.md` before editing.
-2. [Agents Docs Index](docs/agents/00-index.md)
-3. [Session Recovery](docs/agents/01-session-recovery.md)
-4. [RAG Sources And Session SSoT](docs/agents/13-rag-sources-and-session-ssot.md)
-5. [Repo Map](docs/agents/02-repo-map.md)
-6. [README](README.md)
-7. If a task-scoped run already exists, `logs/ci/active-tasks/task-<id>.active.md`
-8. Newest file in `execution-plans/`
-9. Newest file in `decision-logs/`
-10. If a local review pipeline already ran, `logs/ci/<date>/sc-review-pipeline-task-<task>/latest.json`
-
-
-## Game Project Metadata
-- Game Name: TBD
-- Game Type: TBD
-- Game Type Source: TBD
-- Game Type Guide: TBD
-
-## Task Navigation
-- New session or resume failed work:
-  - [RAG Sources And Session SSoT](docs/agents/13-rag-sources-and-session-ssot.md)
-  - [Session Recovery](docs/agents/01-session-recovery.md)
-  - `logs/ci/active-tasks/task-<id>.active.md` for the shortest local recovery summary when it exists
-  - `py -3 scripts/python/dev_cli.py resume-task --task-id <id>` when a task-scoped local run already exists
-  - `py -3 scripts/python/dev_cli.py chapter6-route --task-id <id> --recommendation-only` before paying for another `6.7` or `6.8`
-  - `py -3 scripts/python/dev_cli.py inspect-run --kind pipeline --task-id <id>` when resume and route are still not enough
-  - [Persistent Harness](docs/agents/03-persistent-harness.md)
-  - [Harness Run Protocol](docs/workflows/run-protocol.md)
-  - [Harness Boundary Matrix](docs/workflows/harness-boundary-matrix.md)
-  - [Agent-to-Agent Review](docs/agents/07-agent-to-agent-review.md)
-- Check repo readiness or view the live local dashboard:
-  - [Project Health Dashboard](docs/workflows/project-health-dashboard.md)
-  - `py -3 scripts/python/dev_cli.py project-health-scan`
-  - `logs/ci/project-health/latest.html`
-- Understand the project, startup path, or stack:
-  - [Startup, Stack, And Template Structure](docs/agents/14-startup-stack-and-template-structure.md)
-  - [README](README.md)
-  - [Project Documentation Index](docs/PROJECT_DOCUMENTATION_INDEX.md)
-- Implement a Phase service feature or touch Phase service contracts:
-  - [Standards Index](docs/standards/_index.md)
-  - [Phase Service Standards](docs/standards/phase-service.md)
-  - [Godot Engine Semantics Standard](docs/standards/godot-engine-semantics.md)
-  - [Godot UI Capability Contract](docs/standards/godot-ui-capability-contract.md)
-  - [Godot UI Style Contract](docs/standards/godot-ui-style-contract.md)
-  - [Godot Diagnostics And Quality Gates](docs/standards/godot-diagnostics-quality-gates.md)
-  - [GDD-To-Module Implementation Phases](docs/workflows/phase-a-gdd-to-module-implementation-phases.md)
-  - [GDD-To-Module Risks, DoD, And Open Questions](docs/workflows/phase-a-gdd-to-module-risk-dod-open-questions.md)
-  - [GDD-To-Module Recommended First Slice](docs/workflows/phase-a-gdd-to-module-first-slice.md)
-  - [GDD-To-Module Global Review Standard](docs/workflows/phase-a-gdd-to-module-global-review-standard.md)
-  - [GDD-To-Module Split-Added Requirements](docs/workflows/phase-a-gdd-to-module-split-added-requirements.md)
-  - [GDD-To-Module Original Split Audit](docs/workflows/phase-a-gdd-to-module-original-split-audit.md)
-  - [GDD-To-Module Source Coverage Map](docs/workflows/phase-a-gdd-to-module-source-coverage-map.md)
-  - [Phase ADR Index](docs/architecture/ADR_INDEX_PHASE.md)
-  - [Phase Service Architecture](docs/architecture/phase-service/_index.md)
-- Implement a feature or touch architecture:
-  - [ADR Index](docs/architecture/ADR_INDEX_GODOT.md)
-  - [Architecture Guardrails](docs/agents/05-architecture-guardrails.md)
-  - [Execution Rules](docs/agents/12-execution-rules.md)
+## Change Routing
+- Platform API, browser behavior, DTOs, or readback:
+  - `docs/standards/phase-service.md`
+  - `docs/architecture/phase-service/system-overview.md`
+  - `PhaseA.Platform/Program.cs`
+  - `PhaseA.Platform/Browser/**`
+  - `PhaseA.Platform.Tests/Browser/**`
+- Auth, accounts, tokens, isolation, limits, or audit:
+  - `docs/architecture/phase-service/auth-and-accounts.md`
+  - `docs/adr/ADR-0034-phase-account-scoped-token-auth.md`
+  - `PhaseA.Platform/Security/**`
+  - `PhaseA.Platform/Data/**`
+- Metadata DB, migrations, restore, or persistence:
+  - `docs/architecture/phase-service/metadata-db.md`
+  - `docs/adr/ADR-0033-phase-metadata-sqlite-local-disk.md`
+  - `PhaseA.Platform/Data/**`
+- Hosted workspace, artifacts, packages, assets, or previews:
+  - `docs/architecture/phase-service/hosted-workspaces-and-artifacts.md`
+  - `PhaseA.Platform/Workspaces/**`
+  - `PhaseA.Platform/Readback/**`
+- Prototype, GDD, iteration, repair, UI closure, or route recovery:
+  - `docs/architecture/phase-service/prototype-routes-and-recovery.md`
+  - the relevant Godot standards under `docs/standards/`
+  - the GDD-to-module source documents under `docs/workflows/phase-a-gdd-to-module-*.md`
+  - `PhaseA.Platform/Runs/**`
+- Shared LLM/Codex execution:
+  - `docs/architecture/phase-service/llm-codex-execution.md`
+  - `docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md`
+  - the shared entrypoints listed below
+- Runtime, Caddy, watchdog, or public health:
+  - `docs/architecture/phase-service/runtime-caddy-and-recovery.md`
+  - `runtime/phase-a/**`
+  - the recovery order below
+- Tests, smoke, or evidence:
+  - `docs/standards/phase-service.md`
+  - `PhaseA.Platform.Tests/**`
+  - Phase-facing smoke and drill scripts under `scripts/python/`
+- Hosted Godot execution kernel, contracts, or engine-side tests:
+  - `docs/architecture/ADR_INDEX_GODOT.md`
   - `docs/architecture/base/00-README.md`
-  - [Template Customization](docs/agents/10-template-customization.md)
-- Write tests, acceptance, or quality gates:
-  - [Testing Framework](docs/testing-framework.md)
-  - [Closed-Loop Testing](docs/agents/04-closed-loop-testing.md)
-  - [Quality Gates And DoD](docs/agents/09-quality-gates-and-done.md)
-  - `scripts/sc/README.md`
-- Run or repair the local harness and reviews:
-  - [Persistent Harness](docs/agents/03-persistent-harness.md)
-  - [Harness Run Protocol](docs/workflows/run-protocol.md)
-  - [Agent-to-Agent Review](docs/agents/07-agent-to-agent-review.md)
-  - [DELIVERY_PROFILE](DELIVERY_PROFILE.md)
-  - `scripts/sc/README.md`
-- Tighten release or CI posture:
-  - [Security, Release Health, And Runtime Ops Rules](docs/agents/15-security-release-health-and-runtime-ops.md)
-- [Template Upgrade Protocol](docs/workflows/template-upgrade-protocol.md)
-- [Workflow Rule Feedback Protocol](docs/workflows/workflow-rule-feedback-protocol.md)
-- [Prototype Lane](docs/workflows/prototype-lane.md)
-- [Prototype Lane Playbook](docs/workflows/prototype-lane-playbook.md)
-- [Prototype TDD](docs/workflows/prototype-tdd.md)
-- [Chapter 7 UI Wiring GDD](docs/gdd/ui-gdd-flow.md)
-- [Chapter 7 Profile Guide](docs/workflows/chapter7-profile-guide.md)
-- [Prototype Workspace](docs/prototypes/README.md)
-  - [Quality Gates And DoD](docs/agents/09-quality-gates-and-done.md)
-  - [DELIVERY_PROFILE](DELIVERY_PROFILE.md)
-  - `docs/workflows/`
-- Copy this template into a new project:
-  - [Template Customization](docs/agents/10-template-customization.md)
-  - [Template Bootstrap Checklist](docs/workflows/template-bootstrap-checklist.md)
-  - [README](README.md)
-  - [DELIVERY_PROFILE](DELIVERY_PROFILE.md)
+  - `docs/testing-framework.md`
+  - the relevant Godot standard under `docs/standards/`
+  - keep shared contracts in `Game.Core/Contracts/**` and keep them Godot-free
 
-## Problem Navigation
-- Need project background, use cases, startup, or stack:
-  - [Startup, Stack, And Template Structure](docs/agents/14-startup-stack-and-template-structure.md)
-  - [README](README.md)
-- Need repository directories or entry files:
-  - [Repo Map](docs/agents/02-repo-map.md)
-  - [Directory Responsibilities](docs/agents/16-directory-responsibilities.md)
-  - [Project Documentation Index](docs/PROJECT_DOCUMENTATION_INDEX.md)
-- Need ADR, Base, Overlay, or contract placement rules:
-  - [ADR Index](docs/architecture/ADR_INDEX_GODOT.md)
-  - [Architecture Guardrails](docs/agents/05-architecture-guardrails.md)
-  - [Template Customization](docs/agents/10-template-customization.md)
-- Need Phase service API, DB, errors, logs, security, tests, or status standards:
-  - [Standards Index](docs/standards/_index.md)
-  - [Phase Service Standards](docs/standards/phase-service.md)
-- Need Godot runtime semantics, viewport mode, feature-family reading gates, or reference example rules for hosted routes:
-  - [Godot Engine Semantics Standard](docs/standards/godot-engine-semantics.md)
-  - [Godot Official Examples Index](docs/reference/godot-official-examples-index.md)
-- Need Godot UI capability domains, profiles, workflow injection, UI closure, or no-UI exemption rules:
-  - [Godot UI Capability Contract](docs/standards/godot-ui-capability-contract.md)
-- Need Godot UI style catalog, component coverage, drift taxonomy, or style-not-applicable rules:
-  - [Godot UI Style Contract](docs/standards/godot-ui-style-contract.md)
-- Need security posture, release health, logs, or runtime ops rules:
-  - [Security, Release Health, And Runtime Ops Rules](docs/agents/15-security-release-health-and-runtime-ops.md)
-- [Template Upgrade Protocol](docs/workflows/template-upgrade-protocol.md)
-- [Workflow Rule Feedback Protocol](docs/workflows/workflow-rule-feedback-protocol.md)
-- [Prototype Lane](docs/workflows/prototype-lane.md)
-- [Prototype Lane Playbook](docs/workflows/prototype-lane-playbook.md)
-- [Prototype TDD](docs/workflows/prototype-tdd.md)
-- Need tests, logs, artifacts, Test-Refs, or DoD:
-  - [Testing Framework](docs/testing-framework.md)
-  - [Quality Gates And DoD](docs/agents/09-quality-gates-and-done.md)
-- Need RAG source discipline, overlay source selection, or session source SSoT:
-  - [RAG Sources And Session SSoT](docs/agents/13-rag-sources-and-session-ssot.md)
-- Need delivery strictness or profile behavior:
-  - [DELIVERY_PROFILE](DELIVERY_PROFILE.md)
-  - [Prototype Lane](docs/workflows/prototype-lane.md)
-  - [Prototype Workspace](docs/prototypes/README.md)
-- Need planning discipline, implementation stop-loss, or script size rules:
-  - [Execution Rules](docs/agents/12-execution-rules.md)
-- Need AGENTS structure or maintenance rules:
-  - [AGENTS Construction Principles](docs/agents/11-agents-construction-principles.md)
-  - [Directory Responsibilities](docs/agents/16-directory-responsibilities.md)
-
+## Repository Workflow Kernel Boundary
+- `workflow.md` defines the repository-local formal delivery workflow. It is not the default Phase browser/API path.
+- `workflow.example.md` is onboarding for a game repository copied from the original template. It is not onboarding for this root platform repository.
+- Phase routes reuse selected repository scripts, validators, profiles, Godot assets, and route contracts as internal execution dependencies.
+- Do not route ordinary Phase service work into business-repository Taskmaster triplets, formal Chapter 3-7 orchestration, Chapter 4 overlay-generator commands, local Chapter 6 review recovery, or game-template release steps unless the task explicitly targets that internal toolchain.
+- Phase architecture overlays and ADRs must still be updated when a Phase boundary, threshold, contract, security posture, or release decision changes.
+- Prototype routes use their project-local contracts, route profiles, latest state, ledgers, and acceptance evidence. They must not infer authority from root-level game metadata.
+- `DELIVERY_PROFILE` is an internal hosted-workflow configuration with allowed values `playable-ea`, `fast-ship`, and `standard`; the platform default is `fast-ship`, and hosted Chapter 2 bootstrap consumes it. Detailed local formal-delivery behavior remains in `DELIVERY_PROFILE.md` and `workflow.md`.
 
 ## Highest Encoding Rule
 - All Chinese text reads and writes must use Python with explicit UTF-8, for example `Path(path).read_text(encoding="utf-8")` and `Path(path).write_text(text, encoding="utf-8", newline="\n")`.
@@ -179,19 +100,14 @@ This AGENTS.md prioritizes Phase A/B platform service work before broader templa
 
 ## Core Rules
 - Communicate with the user in Chinese.
-- Default environment is Windows.
-- Use Windows-compatible commands and paths.
-- Read and write docs with Python and UTF-8.
-- Do not use PowerShell text pipelines for doc edits.
+- Default environment is Windows; use Windows-compatible commands and paths.
 - Keep code, scripts, tests, comments, and printed messages in English.
 - Do not use emoji.
 - Write logs and evidence under `logs/`.
 - Do not revert user changes unless explicitly requested.
 - Prefer small, deterministic, testable changes.
 - Code or test changes should cite at least one accepted ADR; if thresholds, contracts, security posture, or release policy change, update or supersede the ADR set.
-
 - Route architecture work in arc42 order: irreversible decisions -> cross-cutting rules -> runtime backbone -> feature slices.
-- For overlay work, prefer generated shard or index sources when present; otherwise use the current repo indexes and do not blind-scan `docs/`.
 - Ask before high-risk actions and never disable tests to get green.
 
 ## Phase Service Change Contract
@@ -233,7 +149,7 @@ A Phase service change is not done until:
 - Public and browser-consumed APIs must remain backward-compatible by default. Do not remove or rename routes, fields, status codes, auth behavior, or artifact paths without explicit approval and a documented compatibility plan.
 
 ### Prototype Route Recovery
-Phase service browser flows use prototype routes. For file-changing hosted game-project routes, consume the project-level recovery sources in authority order before editing:
+For file-changing hosted game-project routes, consume project-level recovery sources in authority order before editing:
 1. Parsed game-type route profile and selected route skill prompt block.
 2. `meta/project-execution-guide.md`.
 3. `routes/prototype-contract/latest.json`.
@@ -244,34 +160,15 @@ Phase service browser flows use prototype routes. For file-changing hosted game-
 
 Missing required recovery sources must fail closed. Route state and repair ledger are continuity memory, not current acceptance authority. Do not mark steps complete based only on assistant text.
 
-## Template Reality Checks
-- Legacy references such as `architecture_base.index`, `prd_chunks.index`, `shards/flattened-*.xml`, and `tasks/tasks.json` may not exist in this template.
-- Current equivalents are routed by `docs/agents/13-rag-sources-and-session-ssot.md`.
-- In the bare template, use `docs/PROJECT_DOCUMENTATION_INDEX.md`, `docs/architecture/base/00-README.md`, `docs/architecture/ADR_INDEX_GODOT.md`, and `docs/prd/**/*.md` first.
-- Use `.taskmaster/tasks/*.json` only after the copied project has generated real triplet files.
-
-## Hard Architecture Invariants
-- Base chapter 08 stays a template only; concrete feature slices belong in `docs/architecture/overlays/<PRD-ID>/08/`.
-- Overlay text should reference base chapters and ADRs instead of copying thresholds or policy text.
-- Contracts stay in `Game.Core/Contracts/**`; do not duplicate contract definitions across docs and code.
-- Route architectural change in arc42 order: irreversible decisions -> cross-cutting rules -> runtime backbone -> feature slices.
-
-## Delivery And Security Quick Map
-- `DELIVERY_PROFILE=playable-ea` -> default `SECURITY_PROFILE=host-safe`
-- `DELIVERY_PROFILE=fast-ship` -> default `SECURITY_PROFILE=host-safe`
-- `DELIVERY_PROFILE=standard` -> default `SECURITY_PROFILE=strict`
-- CI should emit both `DeliveryProfile: <...>` and `SecurityProfile: <...>` in Step Summary.
-- Host boundary rules stay hard in all profiles: `res://` and `user://` only, HTTPS only, `ALLOWED_EXTERNAL_HOSTS`, `GD_OFFLINE_MODE`, no dynamic external code loading.
-
-## LLM Engine And Invocation Protocol Index
-- New Phase A routes, services, scripts, and workflow helpers must use the shared LLM/Codex entrypoints below instead of constructing provider calls or `codex exec` commands locally.
-- C# structured/read-only LLM calls must use `PhaseA.Platform/Llm/LlmRouteEngine.cs` through `ILlmRouteEngine`. Current callers include chat, draft import/coverage, asset inventory judgement, iteration planning/evaluation, repair-plan generation, and skill-action read-only output.
-- C# executable Codex workflows must use `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`. This is the only place that should construct executable Codex `HostedProcessCommand` arguments, resolve `PHASEA_CODEX_COMMAND`, set `PHASEA_CODEX_DEFAULT_MODEL` / `PHASEA_CODEX_REASONING_EFFORT`, choose `read-only` vs `workspace-write`, and attach stdin prompts.
-- Python LLM/Codex scripts must use `scripts/sc/_llm_backend.py::run_llm_exec` or a thin wrapper that delegates to it. This includes `scripts/python/run_prototype_workflow.py` and `scripts/sc/**` LLM helpers.
-- Prompt transport protocol is stdin-first: use `codex exec ... -` with UTF-8 stdin, never append large prompts as command-line arguments. For output, use the shared helper options for `--output-last-message` or `-o`.
-- Pure analysis or JSON-only decisions should remain read-only and schema/JSON parsed through the route engine or script backend. File-changing workflows must stay on explicit executable routes with `workspace-write` and existing acceptance/smoke validation.
-- If a new route needs model, reasoning effort, sandbox, output path, billing, credential, or retry behavior that the shared entrypoint cannot express, extend the shared entrypoint and its tests first; do not fork local subprocess logic.
-- Required regression coverage for protocol changes: `PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs`, `PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs`, `scripts/sc/tests/test_llm_backend.py`, and the route-specific tests for the caller being changed.
+## LLM Engine And Invocation Protocol
+- New Phase routes, services, scripts, and workflow helpers must use the shared LLM/Codex entrypoints instead of constructing provider calls or `codex exec` commands locally.
+- C# structured/read-only LLM calls must use `PhaseA.Platform/Llm/LlmRouteEngine.cs` through `ILlmRouteEngine`.
+- C# executable Codex workflows must use `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`.
+- Python LLM/Codex scripts must use `scripts/sc/_llm_backend.py::run_llm_exec` or a thin wrapper that delegates to it.
+- Prompt transport is stdin-first: use `codex exec ... -` with UTF-8 stdin, never append large prompts as command-line arguments.
+- Pure analysis or JSON-only decisions remain read-only and schema/JSON parsed. File-changing workflows require an explicit executable route, `workspace-write`, and acceptance/smoke validation.
+- If the shared entrypoint cannot express a required model, reasoning, sandbox, output, billing, credential, or retry behavior, extend the shared entrypoint and its tests first.
+- Required regression coverage: `PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs`, `PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs`, `scripts/sc/tests/test_llm_backend.py`, and route-specific tests.
 
 ## Phase Runtime Recovery Order
 1. Check `http://127.0.0.1:18080/healthz`.
@@ -282,126 +179,97 @@ Missing required recovery sources must fail closed. Route state and repair ledge
 6. Record recovery evidence under `logs/phase-a-innernet/runtime/`.
 
 ## Phase A Runtime Ops
-- Stable local app bind for the live Phase A console is `http://127.0.0.1:18080`.
-- Canonical external `PUBLIC_BASE_URL` is `https://47.86.160.138:8080`; platform config and `phase_a_ops_check.py` require an absolute HTTPS URL.
-- Current direct public health probe for the Caddy listener is `http://47.86.160.138:8080/healthz`. Do not replace `PUBLIC_BASE_URL` with this HTTP health-probe URL.
-- Current IP-only deployment validation may pass HTTP direct public smoke while HTTPS public smoke is still failing. Do not claim public HTTPS reachability until `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080` passes without `--allow-http`.
-- Current direct HTTP public smoke command: `py -3 scripts/python/phase_a_public_smoke.py --base-url http://47.86.160.138:8080 --allow-http`.
-- HTTPS public closure smoke command: `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080`.
-- Canonical Phase A runtime config file is `runtime/phase-a/start-phasea.ps1`.
-- Canonical Caddy config file is `runtime/phase-a/Caddyfile`.
-- Important runtime configuration files must not live under `log/` or `logs/`. Logs stay under `logs/`; checked-in startup/config files stay under a stable source directory such as `runtime/phase-a/`.
+- Stable local app bind: `http://127.0.0.1:18080`.
+- Canonical external `PUBLIC_BASE_URL`: `https://47.86.160.138:8080`.
+- Current direct public health probe: `http://47.86.160.138:8080/healthz`.
+- Do not claim public HTTPS reachability until `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080` passes without `--allow-http`.
+- Canonical runtime config: `runtime/phase-a/start-phasea.ps1`.
+- Canonical Caddy config: `runtime/phase-a/Caddyfile`.
 - Caddy must listen on `0.0.0.0:8080` and reverse proxy to `127.0.0.1:18080`.
-- Do not run Phase A with `dotnet run` against the default repo `obj/bin` paths for the live server. Use the checked-in startup script.
-- The startup script must keep build outputs outside the repo source tree. Current stable build root is `C:\Users\Administrator\.codex\memories\phasea-runtime-build`.
-- The startup script must explicitly set both `APP_BIND_URL` and `ASPNETCORE_URLS` to `http://127.0.0.1:18080` before starting `PhaseA.Platform.exe`.
-- Repo-wide MSBuild default item excludes must keep generated `logs/**`, `obj/**`, and `bin/**` content out of compile inputs. This prevents duplicate assembly attribute failures during live server recovery.
-- Recovery-grade runtime variable map for the live server. `runtime/phase-a/start-phasea.ps1` is the operational source of truth; keep this map aligned with that script:
-  - `APP_BIND_URL=http://127.0.0.1:18080`
-  - `ASPNETCORE_URLS=http://127.0.0.1:18080`
-  - `HTTPS_TERMINATION=caddy`
-  - `PUBLIC_BASE_URL=https://47.86.160.138:8080`
-  - `HOSTED_WORKSPACE_ROOT=C:\jimuyun\logs\phase-a-innernet\workspaces`
-  - `HOSTED_PROJECT_LIMIT=2`
-  - `PHASEA_MAX_CONCURRENT_CHATS=8`
-  - `PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT=1`
-  - `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS=4`
-  - `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS_PER_ACCOUNT=1`
-  - `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS=3`
-  - `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT=1`
-  - `PHASEA_MAX_CONCURRENT_OTHER_RUNS=3`
-  - `PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS=2`
-  - `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS=3`
-  - `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT=1`
-  - `PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT=1`
-  - `PHASEA_METADATA_DB_PATH=C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3`
-  - `PHASEA_REPOSITORY_ROOT=C:\jimuyun`
-  - `PHASEA_CODEX_COMMAND=C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd`
-  - `GODOT_BIN=C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe`
-- Sensitive runtime variables must not store real values in git-tracked docs:
-  - `PHASEA_ADMIN_TOKEN_HASH`: required for live auth; load from the host secret store or service environment only; never commit the real value into `AGENTS.md`, `README.md`, scripts, or workflow docs.
-  - If future user/admin token hashes are added, document the variable names and source-of-truth only, never the real hash values.
-- Recovery order when public `502` appears:
-  - Verify `PhaseA.Platform` health on `127.0.0.1:18080` first.
-  - Only after the app is healthy should `caddy` on `8080` be restarted or validated.
-  - If the app fails to start, inspect bind-port conflicts and build-path contamination before touching Caddy again.
-- Phase A local self-recovery scripts:
-  - `runtime/phase-a/ensure-phasea.ps1`: one-shot health check and restart recovery for `127.0.0.1:18080` and public `8080`.
-  - `runtime/phase-a/watch-phasea.ps1`: background watchdog loop that runs `ensure-phasea.ps1` every 30 seconds and writes runtime evidence under `logs/phase-a-innernet/runtime/`.
-  - Watchdog pid file: `logs/phase-a-innernet/phasea-watchdog.pid`
-  - Watchdog log: `logs/phase-a-innernet/runtime/phasea-watchdog.log`
+- Live build outputs must stay outside the repository source tree. Current stable build root: `C:\Users\Administrator\.codex\memories\phasea-runtime-build`.
+- Startup must set both `APP_BIND_URL` and `ASPNETCORE_URLS` to `http://127.0.0.1:18080`.
+- Repo-wide MSBuild excludes must keep generated `logs/**`, `obj/**`, and `bin/**` out of compile inputs.
+- `PHASEA_ADMIN_TOKEN_HASH` must come from the host secret store or service environment; never commit real token material or hashes.
+- Recovery from public `502` always starts with local PhaseA health, then Caddy/public health.
+- Watchdog PID: `logs/phase-a-innernet/phasea-watchdog.pid`.
+- Watchdog log: `logs/phase-a-innernet/runtime/phasea-watchdog.log`.
+
+### Minimum Recovery-Grade Runtime Variables
+`runtime/phase-a/start-phasea.ps1` is the complete operational source of truth. This list records stable non-secret recovery defaults and is intentionally not an exhaustive environment manifest:
+- `APP_BIND_URL=http://127.0.0.1:18080`
+- `ASPNETCORE_URLS=http://127.0.0.1:18080`
+- `HTTPS_TERMINATION=caddy`
+- `PUBLIC_BASE_URL=https://47.86.160.138:8080`
+- `HOSTED_WORKSPACE_ROOT=C:\jimuyun\logs\phase-a-innernet\workspaces`
+- `HOSTED_PROJECT_LIMIT=2`
+- `PHASEA_MAX_CONCURRENT_CHATS=8`
+- `PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT=1`
+- `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS=4`
+- `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS_PER_ACCOUNT=1`
+- `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS=3`
+- `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT=1`
+- `PHASEA_MAX_CONCURRENT_OTHER_RUNS=3`
+- `PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS=2`
+- `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS=3`
+- `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT=1`
+- `PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS=180`
+- `PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS=45`
+- `PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT=1`
+- `PHASEA_METADATA_DB_PATH=C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3`
+- `PHASEA_REPOSITORY_ROOT=C:\jimuyun`
+- `GODOT_BIN=C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe`
+- `PHASEA_GODOT3_BIN=C:\Godot\3.6.2\Godot_v3.6.2-stable_win64.exe`
+- `DOTNET_ROOT=C:\jimuyun\.dotnet`
+
+The startup script also resolves dynamic or secret-backed variables including `PHASEA_CODEX_COMMAND`, `PHASEA_RIPGREP_DIR`, `PHASEA_ADMIN_TOKEN_HASH`, `PHASEA_TICKET_SIGNING_SECRET`, `PHASEA_WEB_PREVIEW_SIGNING_SECRET`, and optional `AICODEMIRROR_*` integration values. Document names and sources only; never commit real secret values.
 
 ## Repo Map
-- Detailed per-directory responsibilities and stop-loss rules: [Directory Responsibilities](docs/agents/16-directory-responsibilities.md)
-- `Game.Core/`: pure C# domain logic and contract-adjacent code.
-- `Game.Core.Tests/`: xUnit tests for core logic.
-- `Game.Godot/`: shipped Godot runtime project and real runtime assets.
-- `Tests.Godot/`: Godot-side tests and headless evidence.
-- `docs/`: project, architecture, workflow, testing, and agents docs.
-- `scripts/sc/`: task-facing orchestration, review pipeline, and recovery-aware automation.
-- `scripts/python/`: deterministic validators, gates, sync tools, reporting, and recovery utilities.
-- `.github/workflows/`: CI entry points.
-- `.taskmaster/`: task triplet data.
-- `execution-plans/` and `decision-logs/`: durable intent and decisions.
-- `logs/`: runtime, CI, review artifacts, and `active-task` summaries.
+- `PhaseA.Platform/`: ASP.NET Core Web/API, browser UI, route services, security, metadata, workspaces, LLM integration, and readback.
+- `PhaseA.Platform.Tests/`: Phase service unit and integration tests.
+- `runtime/phase-a/`: stable startup, recovery, watchdog, and Caddy configuration.
+- `logs/phase-a-innernet/`: live metadata, hosted workspaces, runtime state, and evidence; protected runtime data, not source configuration.
+- `scripts/python/phase_a_*.py` and `scripts/python/phase_b_*.py`: Phase operations, smoke, drill, and recovery utilities.
+- `Game.Core/`, `Game.Godot/`, `Game.Core.Tests/`, and `Tests.Godot/`: hosted Godot prototype execution kernel and its tests.
+- `scripts/sc/` and other `scripts/python/` tools: internal execution and validation infrastructure; not automatically public Phase entrypoints.
+- `docs/architecture/phase-service/`, `docs/adr/`, and `docs/standards/`: Phase architecture, decisions, and standards.
+- `execution-plans/` and `decision-logs/`: durable scoped intent and decisions.
+- `logs/`: generated runtime, smoke, review, and evidence artifacts.
 
-## Main Commands
-- Full local review: `py -3 scripts/sc/run_review_pipeline.py --task-id <id> --godot-bin "$env:GODOT_BIN"` (auto-writes `agent-review.*` unless `--dry-run`, `--skip-agent-review`, or the active profile sets `agent_review.mode=skip`)
-- Task-scoped execution entry: `py -3 scripts/sc/run_review_pipeline.py --task-id <id> --godot-bin "$env:GODOT_BIN"`
-- Targeted test / acceptance / review checks are internal pipeline stages behind `run_review_pipeline.py`; do not document them as standalone task-level commands.
-- First recovery entry: read `logs/ci/active-tasks/task-<id>.active.md` if present, then run `py -3 scripts/python/dev_cli.py resume-task --task-id <id>` for the full task-scoped summary.
-- Before paying for another Chapter 6 rerun, use `py -3 scripts/python/dev_cli.py chapter6-route --task-id <id> --recommendation-only` to decide whether the right lane is `6.7`, `6.8`, residual recording, or inspection-first.
-- If deeper inspection is still needed, run `py -3 scripts/python/dev_cli.py inspect-run --kind pipeline --task-id <id>` or inspect `execution-context.json`, `repair-guide.json`, and `agent-review.json` under the task run directory.
-- Single-task Chapter 6 orchestrator: `py -3 scripts/python/dev_cli.py run-single-task-chapter6 --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile <profile>`
-- Chapter 7 UI wiring orchestrator: `py -3 scripts/python/dev_cli.py run-chapter7-ui-wiring --delivery-profile <profile>`
-- Chapter 7 profile guide: `docs/workflows/chapter7-profile-guide.md`
-- Prototype-lane TDD entry: `py -3 scripts/python/dev_cli.py run-prototype-tdd --slug <slug> --stage <red|green|refactor> ...`
-- Prototype top-level router: `py -3 scripts/python/dev_cli.py run-prototype-workflow --prototype-file docs/prototypes/<your-file>.md`
-- Agent-to-agent review rebuild: `py -3 scripts/sc/agent_to_agent_review.py --task-id <id>`
+## Main Phase Commands
+- One-shot local recovery: `powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1`
+- Watchdog: `powershell -ExecutionPolicy Bypass -File runtime/phase-a/watch-phasea.ps1`
+- Local operations check: `py -3 scripts/python/phase_a_ops_check.py`
+- Local account/auth smoke: `py -3 scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080`
+- Direct HTTP public smoke: `py -3 scripts/python/phase_a_public_smoke.py --base-url http://47.86.160.138:8080 --allow-http`
+- HTTPS closure smoke: `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080`
+- Platform tests: `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`
 
-## Recovery Files
-- `logs/ci/<date>/sc-review-pipeline-task-<task>-<run_id>/summary.json`
-- `logs/ci/<date>/sc-review-pipeline-task-<task>-<run_id>/execution-context.json`
-- `logs/ci/<date>/sc-review-pipeline-task-<task>-<run_id>/repair-guide.json`
-- `logs/ci/<date>/sc-review-pipeline-task-<task>-<run_id>/repair-guide.md`
-- `logs/ci/<date>/sc-review-pipeline-task-<task>-<run_id>/agent-review.json`
-- `logs/ci/<date>/sc-review-pipeline-task-<task>-<run_id>/agent-review.md`
-- `logs/ci/<date>/sc-review-pipeline-task-<task>-<run_id>/run-events.jsonl`
-- `logs/ci/<date>/sc-review-pipeline-task-<task>-<run_id>/harness-capabilities.json`
-- `logs/ci/<date>/sc-review-pipeline-task-<task>/latest.json`
-- `logs/ci/active-tasks/task-<task>.active.json`
-- `logs/ci/active-tasks/task-<task>.active.md`
+## Evidence Locations
+- Runtime recovery and watchdog evidence: `logs/phase-a-innernet/runtime/`.
+- Live metadata DB: `logs/phase-a-innernet/data/phase-a-platform.sqlite3` (protected; do not edit manually).
+- Hosted workspaces and project-local route state: `logs/phase-a-innernet/workspaces/**` (protected).
+- Phase smoke, drill, and test evidence: write under `logs/` without rewriting historical failures.
+- Project-local route authority: `meta/**`, `routes/**`, route ledgers, acceptance evidence, diagnostics, and database-bound artifacts inside the hosted workspace.
 
 ## Docs Index
-
-- [README](README.md)
-- [Project Documentation Index](docs/PROJECT_DOCUMENTATION_INDEX.md)
-- [Testing Framework](docs/testing-framework.md)
-- [Standards Index](docs/standards/_index.md)
-- [Phase Service Standards](docs/standards/phase-service.md)
-- [Godot Engine Semantics Standard](docs/standards/godot-engine-semantics.md)
-- [Godot UI Capability Contract](docs/standards/godot-ui-capability-contract.md)
-- [Godot UI Style Contract](docs/standards/godot-ui-style-contract.md)
-- [Godot Official Examples Index](docs/reference/godot-official-examples-index.md)
-- [DELIVERY_PROFILE](DELIVERY_PROFILE.md)
-- [ADR Index](docs/architecture/ADR_INDEX_GODOT.md)
-- [Agents Docs Index](docs/agents/00-index.md)
-- [Directory Responsibilities](docs/agents/16-directory-responsibilities.md)
-- [Execution Rules](docs/agents/12-execution-rules.md)
-- [RAG Sources And Session SSoT](docs/agents/13-rag-sources-and-session-ssot.md)
-- [Startup, Stack, And Template Structure](docs/agents/14-startup-stack-and-template-structure.md)
-- [Security, Release Health, And Runtime Ops Rules](docs/agents/15-security-release-health-and-runtime-ops.md)
-- [Template Upgrade Protocol](docs/workflows/template-upgrade-protocol.md)
-- [Workflow Rule Feedback Protocol](docs/workflows/workflow-rule-feedback-protocol.md)
-- [Prototype Lane](docs/workflows/prototype-lane.md)
-- [Prototype Lane Playbook](docs/workflows/prototype-lane-playbook.md)
-- [Prototype TDD](docs/workflows/prototype-tdd.md)
+- `README.md`
+- `docs/architecture/phase-service/_index.md`
+- `docs/architecture/ADR_INDEX_PHASE.md`
+- `docs/standards/_index.md`
+- `docs/standards/phase-service.md`
+- `docs/standards/godot-engine-semantics.md`
+- `docs/standards/godot-ui-capability-contract.md`
+- `docs/standards/godot-ui-style-contract.md`
+- `docs/standards/godot-diagnostics-quality-gates.md`
+- `docs/reference/godot-official-examples-index.md`
+- `docs/PROJECT_DOCUMENTATION_INDEX.md`
+- `workflow.md` only when maintaining the repository-local formal delivery toolchain.
+- `workflow.example.md` only when maintaining template-derived game-repository onboarding.
 
 ## Change Policy
-- Keep `summary.json` schema stable.
-- Add new recovery data as sidecar files.
-- Keep `AGENTS.md` as a Phase-service-first routing map with concise non-negotiable change contracts, not a duplicate rules catalog.
-- Put detailed guidance into `docs/agents/`, `README.md`, or the relevant source doc.
-- Put durable intent in git-tracked markdown under `execution-plans/` and `decision-logs/`.
-- Store durable business-repo workflow rule feedback under `decision-logs/workflow-rule-feedback/`.
-- Put high-frequency evidence in `logs/`.
+- Keep `AGENTS.md` Phase-service-first and concise.
+- Keep public and browser-consumed contracts backward-compatible by default.
+- Add recovery data as structured sidecars instead of rewriting historical evidence.
+- Put detailed guidance in the relevant architecture, standard, workflow, or operations document.
+- Put durable intent in `execution-plans/` and durable decisions in `decision-logs/`.
+- Put high-frequency generated evidence in `logs/`.

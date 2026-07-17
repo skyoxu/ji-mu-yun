@@ -61,7 +61,8 @@
             "RMAP-015",
             "RMAP-016",
             "RMAP-021",
-            "RMAP-023"
+            "RMAP-023",
+            "RMAP-025"
           ]
         },
         {
@@ -73,7 +74,8 @@
             "RMAP-011",
             "RMAP-012",
             "RMAP-019",
-            "RMAP-024"
+            "RMAP-024",
+            "RMAP-026"
           ]
         },
         {
@@ -169,7 +171,7 @@
     {
       "source_id": "clarification-projection",
       "path": "schemas/clarification-decisions.v1.json",
-      "sha256": "sha256:3aecb12d2ea4fbb03be354d99c6140236791f377408fd89f97aa760042ffe74d",
+      "sha256": "sha256:d9035f3b3bf811248382bbeca4515dc57497390a30fbfd2e6d592631a9de89ae",
       "sections": [
         {
           "id": "CREATE-CQ-001-005",
@@ -229,6 +231,20 @@
             "RMAP-018",
             "RMAP-021",
             "RMAP-023"
+          ]
+        },
+        {
+          "id": "REPAIR-20260717-CQ-001-007",
+          "lines": "repair-20260717:CQ-001..CQ-007",
+          "requirements": [
+            "RMAP-005",
+            "RMAP-010",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-021",
+            "RMAP-024",
+            "RMAP-025",
+            "RMAP-026"
           ]
         }
       ]

@@ -10,6 +10,7 @@ Work:
 - add the durable standard and indexes;
 - create the repository Skill skeleton;
 - migrate the common schema candidate into its single live owner;
+- define public persisted Capsule and append-only attempt schemas;
 - keep this plan's contract instance and predicates self-hosted;
 - observe negative fixture RED.
 
@@ -25,6 +26,8 @@ Work:
 - enforce shell/env/placeholder/path policies;
 - enforce Git and closure drift;
 - implement append-only recovery and stale successor rules;
+- materialize immutable per-invocation Capsule revisions and decision-last attempt histories;
+- reject raw sensitive evidence, partial attempts, stale bindings, and duplicate accepted stage lineages;
 - run the non-protected self-hosted slice.
 
 Exit: current candidate evidence proves the complete lifecycle and every negative/mutation test passes.
@@ -49,7 +52,7 @@ Owner: change owner plus Bootstrap operator.
 
 Work:
 
-- produce a current implementation candidate after all P2 shadow changes;
+- produce a current implementation candidate after all P2 shadow changes and bind the final Capsule plus accepted attempt decision;
 - bind plan-mandated checks through existing Bootstrap extension points;
 - perform semantic review only with explicit authorization;
 - repair all accepted P0/P1 and dispose every accepted P2;

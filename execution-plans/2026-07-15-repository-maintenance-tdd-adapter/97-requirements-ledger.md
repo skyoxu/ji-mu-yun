@@ -30,5 +30,7 @@ Executable acceptance owner: [`schemas/acceptance-contracts.v1.json`](schemas/ac
 | RMAP-022 | Preserve and hash-bind agentbuild.txt without duplicating source authority. | source custodian | P0 | RMAP-ACC-022 | active |
 | RMAP-023 | Enforce Windows containment, case normalization, protected paths, and reparse-point safety. | path-security maintainer | P1 | RMAP-ACC-023 | active |
 | RMAP-024 | Prevent a new Router or expansion of historical script directories without an ADR delta. | workflow architect | P0 | RMAP-ACC-024 | active |
+| RMAP-025 | Persist one immutable predecessor-linked Slice Capsule revision per backend invocation. | context protocol maintainer | P0 | RMAP-ACC-025 | active |
+| RMAP-026 | Preserve minimized, hash-bound, decision-finalized attempt lineage with one accepted lineage per stage. | attempt protocol maintainer | P0 | RMAP-ACC-026 | active |
 
 Each acceptance identity is executable intent. The machine registry owns source refs, evidence intent, consumers, failure family, and quality-check status.

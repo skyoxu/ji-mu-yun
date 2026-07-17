@@ -1,9 +1,9 @@
 {
   "schema_version": "rmap.requirement-quality.v2",
-  "requirements_hash": "sha256:c6890efce9e172334f51003cc39f1055938d64ef46855a422aa749ba577ef830",
-  "acceptance_contracts_hash": "sha256:c30367241436cff6b8d3e1c16a942bda95c6f54c5011fd19aff4eeebef478fff",
+  "requirements_hash": "sha256:7cf59c2068f7919db0cc985f38617d8518393df0b5888c36e2e645936c0aa1be",
+  "acceptance_contracts_hash": "sha256:4f1afd79fff01fa5bccd002f916b9aa10427535389b41e6cbe9d056f87f8aeb1",
   "validator_version": "rmap-plan-validator.v2",
-  "generated_at": "2026-07-16T09:20:00Z",
+  "generated_at": "2026-07-17T02:28:52.887500Z",
   "requirements": [
     {
       "requirement_id": "RMAP-001",
@@ -100,6 +100,14 @@
     {
       "requirement_id": "RMAP-024",
       "normative_strength": "must_not"
+    },
+    {
+      "requirement_id": "RMAP-025",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-026",
+      "normative_strength": "must"
     }
   ]
 }

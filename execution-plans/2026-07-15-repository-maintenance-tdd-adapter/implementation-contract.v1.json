@@ -10,21 +10,22 @@
     "deltas": "schemas/spec-deltas.v1.json",
     "source_hashes": {
       "../../agentbuild.txt": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807",
-      "../../AGENTS.md": "sha256:8a17ea49f3311f45aa65ea2cda9fedcf6ebfc2b7118749a9d17fab20c3cbefd5",
+      "../../AGENTS.md": "sha256:dc675dc913ecf918f20fa19a7d8082b7fe18b6db21ae5ae5f5d56f2f67ef0d12",
       "../../.agents/skills/vdd-execution-plan/references/strict-vdd-standard.md": "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140",
-      "../2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md": "sha256:80c9b9f8a60fae34586b34dfaa1a9d52198a10aed2db595f5beae13f2e647155",
-      "../2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json": "sha256:6d7623e848949e8c9f86dcc3533c0b4d91250ab686c0f605b145e1299ec77ca8",
-      "00-index.md": "sha256:975285ed745177660545fadd49c179010d6dfdf4591e3cf69b98682e0e1b5b6c",
-      "01-intent-authority-and-non-goals.md": "sha256:d879022368a6c1164640ea07c93c113cd0d7fde401c5e11990227a90f11980e1",
-      "02-executable-contracts-and-invariants.md": "sha256:cfe5adbd30aee67f25a57ba29301e76a4665c6055b66e92bc41b593dd62a1767",
-      "03-validators-fixtures-and-control-gates.md": "sha256:10bb85914802af1fc7ebd24bbafc14e6a953d76e58ecda9f18d604ce8c12976c",
-      "04-behavior-slices-and-implementation-order.md": "sha256:fc53c2ee3f20e9f9e9133ca4a55cbfb50f882a8dda5640efdb2487d9284f936f",
-      "05-diagnostics-repair-and-reentry.md": "sha256:a90c267f00ee120ec94430a7a07b769a4807c3440b4a4eddd9cfaecdcf01a17d",
-      "06-testing-observability-and-evidence.md": "sha256:96413aa93a878cfc5982111dc91f6f93b5e9cde2497e1c748331a346c13ae762",
-      "96-global-review-and-validation.md": "sha256:7f381b5b36f0fd2b1291b49223552fa75d9d1b2a90cd439cc811037b919b6613",
-      "schemas/clarification-decisions.v1.json": "sha256:3aecb12d2ea4fbb03be354d99c6140236791f377408fd89f97aa760042ffe74d",
+      "../2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md": "sha256:b6c840acd67ee64fe4092baba7061cd61bb5b669b6ec8f00db8e5f9f12180efb",
+      "../2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json": "sha256:ca42e682cd6077a13b61d261ca75f70d98b1717547324c71c40b92c16de4048a",
+      "00-index.md": "sha256:79ddbf278c79ee6addabd7a8bf0352992b702a32e0457aa6ce62a723d8a95ba7",
+      "01-intent-authority-and-non-goals.md": "sha256:1055b88ecbe760193e4dcaf70839b5e194ee8be0d6434e9760093bdb4606c14b",
+      "02-executable-contracts-and-invariants.md": "sha256:5a0b065f4b7ff20bba057e2966a899edaa5a04d0a5f244b7e0a251b7844abae6",
+      "03-validators-fixtures-and-control-gates.md": "sha256:c91b09b5d375e2a1d50b343799654a04ed457ab99458a9b8416bfb8cc40526d7",
+      "04-behavior-slices-and-implementation-order.md": "sha256:aafd5f25dc9b5a8b38b9203fe6bdf51533468dc5be956659c27c5f44fcea8745",
+      "05-diagnostics-repair-and-reentry.md": "sha256:ef77be2ab4f8a204dda84e2d6e9abc9d72243ebeed1f1919583a40715551ebdd",
+      "06-testing-observability-and-evidence.md": "sha256:995b01a203d10232f5abd05c4d5c6bb8ea257cf1d9020df3572c26bc22a1949c",
+      "96-global-review-and-validation.md": "sha256:550786377cebb471d3bdc4593f5178c86eff30f50c1e9ba2a75dc8eea37e9754",
+      "schemas/clarification-decisions.v1.json": "sha256:d9035f3b3bf811248382bbeca4515dc57497390a30fbfd2e6d592631a9de89ae",
       "schemas/review-blocking-state.v1.json": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
-      "schemas/acceptance-contracts.v1.json": "sha256:c30367241436cff6b8d3e1c16a942bda95c6f54c5011fd19aff4eeebef478fff"
+      "schemas/acceptance-contracts.v1.json": "sha256:4f1afd79fff01fa5bccd002f916b9aa10427535389b41e6cbe9d056f87f8aeb1",
+      "../../.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json": "sha256:ab7263698123b5af20e47f6ae771e5ebf652537169efcd7ce839d8aa0299d16d"
     },
     "acceptance_contracts": "schemas/acceptance-contracts.v1.json",
     "authority_manifest": "schemas/authority-manifest.v1.json",
@@ -58,6 +59,36 @@
       "release-ready"
     ]
   },
+  "protocol_artifacts": {
+    "context_layout": "context/<capsule-id>",
+    "attempt_layout": "attempts/<attempt-id>",
+    "schemas": {
+      "context_manifest": "schemas/context-manifest.v1.schema.json",
+      "slice_capsule": "schemas/slice-capsule.v1.schema.json",
+      "backend_request": "schemas/backend-request.v1.schema.json",
+      "backend_response": "schemas/backend-response.v1.schema.json",
+      "diff_manifest": "schemas/diff-manifest.v1.schema.json",
+      "adapter_decision": "schemas/adapter-decision.v1.schema.json",
+      "attempt_event": "schemas/agent-attempt-event.v1.schema.json"
+    },
+    "capsule_policy": {
+      "immutable_revisions": true,
+      "predecessor_hash_required_after_first": true,
+      "references_and_hashes_only": true,
+      "mutable_stage_evidence_forbidden": true,
+      "standalone_authority": false
+    },
+    "attempt_policy": {
+      "append_only": true,
+      "monotonic_sequence": true,
+      "decision_written_last": true,
+      "partial_attempt_fails_closed": true,
+      "one_accepted_lineage_per_stage": true,
+      "adapter_decision_authoritative": false,
+      "raw_body_persisted": false,
+      "sensitive_data_allowed": false
+    }
+  },
   "recovery": {
     "evidence_root_template": "logs/tdd-adapter/<plan-id>/<slice-id>/<run-id>",
     "initial_state": "initialized",
@@ -68,6 +99,15 @@
       "predecessor_run_id",
       "supersedes_run_id"
     ],
+    "attempt_lineage_fields": [
+      "attempt_id",
+      "attempt_sequence",
+      "previous_attempt_id",
+      "previous_decision_hash"
+    ],
+    "partial_attempt_state": "incomplete",
+    "decision_written_last": true,
+    "one_accepted_attempt_per_stage": true,
     "append_only": true
   },
   "drift_policy": {
@@ -202,13 +242,17 @@
         "RMAP-003",
         "RMAP-004",
         "RMAP-013",
-        "RMAP-022"
+        "RMAP-022",
+        "RMAP-025",
+        "RMAP-026"
       ],
       "acceptance_ids": [
         "RMAP-ACC-003",
         "RMAP-ACC-004",
         "RMAP-ACC-013",
-        "RMAP-ACC-022"
+        "RMAP-ACC-022",
+        "RMAP-ACC-025",
+        "RMAP-ACC-026"
       ],
       "source_refs": [
         "04-behavior-slices-and-implementation-order.md#rmap-s1-common-contract-and-self-hosted-plan-instance"
@@ -288,7 +332,9 @@
         "RMAP-010",
         "RMAP-011",
         "RMAP-018",
-        "RMAP-006"
+        "RMAP-006",
+        "RMAP-025",
+        "RMAP-026"
       ],
       "acceptance_ids": [
         "RMAP-ACC-005",
@@ -302,7 +348,9 @@
         "RMAP-ACC-010",
         "RMAP-ACC-011",
         "RMAP-ACC-018",
-        "RMAP-ACC-006"
+        "RMAP-ACC-006",
+        "RMAP-ACC-025",
+        "RMAP-ACC-026"
       ],
       "source_refs": [
         "04-behavior-slices-and-implementation-order.md#rmap-s2-stateless-capsule-and-recovery-adapter"
@@ -584,12 +632,16 @@
       "requirement_ids": [
         "RMAP-010",
         "RMAP-012",
-        "RMAP-016"
+        "RMAP-016",
+        "RMAP-025",
+        "RMAP-026"
       ],
       "acceptance_ids": [
         "RMAP-ACC-010",
         "RMAP-ACC-012",
-        "RMAP-ACC-016"
+        "RMAP-ACC-016",
+        "RMAP-ACC-025",
+        "RMAP-ACC-026"
       ],
       "source_refs": [
         "04-behavior-slices-and-implementation-order.md#rmap-s6-finalize-current-implementation-candidate"
@@ -739,7 +791,14 @@
       "red-result.json",
       "green-result.json",
       "refactor-result.json",
-      "recovery-state.json"
+      "recovery-state.json",
+      "context-manifest.v1.json",
+      "slice-capsule.v1.json",
+      "backend-request.v1.json",
+      "backend-response.v1.json",
+      "diff-manifest.v1.json",
+      "adapter-decision.v1.json",
+      "run-events.jsonl"
     ],
     "stage_binding": {
       "contract_and_validator_hashes_current": true,
@@ -747,6 +806,12 @@
       "strict_observation_order": true,
       "predecessor_hash_chain": true,
       "command_selector_failure_and_exit_checked": true
+    },
+    "attempt_binding": {
+      "final_context_manifest_hash": true,
+      "final_capsule_hash": true,
+      "accepted_attempt_id": true,
+      "accepted_attempt_decision_hash": true
     },
     "required_fields": [
       "head",
@@ -762,7 +827,11 @@
       "red_run_id",
       "green_run_id",
       "refactor_run_id",
-      "candidate_worktree_hash"
+      "candidate_worktree_hash",
+      "final_context_manifest_hash",
+      "final_capsule_hash",
+      "accepted_attempt_id",
+      "accepted_attempt_decision_hash"
     ]
   }
 }

@@ -4,7 +4,7 @@
   "title": "Ji Mu Yun Implementation Contract",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "plan_id", "source_revision", "protocol_version", "authority", "ownership", "command_registry", "backend", "recovery", "drift_policy", "acceptance_policy", "candidate_identity_policy", "shadow_backfills", "slices"],
+  "required": ["schema_version", "plan_id", "source_revision", "protocol_version", "authority", "ownership", "command_registry", "backend", "protocol_artifacts", "recovery", "drift_policy", "acceptance_policy", "candidate_identity_policy", "shadow_backfills", "slices"],
   "properties": {
     "schema_version": {"const": "jimuyun.implementation-contract.v1"},
     "plan_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
@@ -14,6 +14,7 @@
     "ownership": {"$ref": "#/$defs/ownership"},
     "command_registry": {"type": "string", "pattern": "^schemas/[a-z0-9.-]+\\.json$"},
     "backend": {"$ref": "#/$defs/backendPolicy"},
+    "protocol_artifacts": {"$ref": "#/$defs/protocolArtifacts"},
     "recovery": {"$ref": "#/$defs/recoveryPolicy"},
     "drift_policy": {"$ref": "#/$defs/driftPolicy"},
     "acceptance_policy": {"$ref": "#/$defs/acceptancePolicy"},
@@ -55,12 +56,39 @@
         "mode": {"const": "in-session-slice-capsule"}, "hidden_state": {"const": false}, "provider_scheduling": {"const": false}, "subprocess_ownership": {"const": false}, "authorities": {"$ref": "#/$defs/stringArray"}, "forbidden_authorities": {"$ref": "#/$defs/stringArray"}
       }
     },
+    "protocolArtifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["context_layout", "attempt_layout", "schemas", "capsule_policy", "attempt_policy"],
+      "properties": {
+        "context_layout": {"const": "context/<capsule-id>"},
+        "attempt_layout": {"const": "attempts/<attempt-id>"},
+        "schemas": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["context_manifest", "slice_capsule", "backend_request", "backend_response", "diff_manifest", "adapter_decision", "attempt_event"],
+          "properties": {
+            "context_manifest": {"type": "string"}, "slice_capsule": {"type": "string"}, "backend_request": {"type": "string"}, "backend_response": {"type": "string"}, "diff_manifest": {"type": "string"}, "adapter_decision": {"type": "string"}, "attempt_event": {"type": "string"}
+          }
+        },
+        "capsule_policy": {
+          "type": "object", "additionalProperties": false,
+          "required": ["immutable_revisions", "predecessor_hash_required_after_first", "references_and_hashes_only", "mutable_stage_evidence_forbidden", "standalone_authority"],
+          "properties": {"immutable_revisions": {"const": true}, "predecessor_hash_required_after_first": {"const": true}, "references_and_hashes_only": {"const": true}, "mutable_stage_evidence_forbidden": {"const": true}, "standalone_authority": {"const": false}}
+        },
+        "attempt_policy": {
+          "type": "object", "additionalProperties": false,
+          "required": ["append_only", "monotonic_sequence", "decision_written_last", "partial_attempt_fails_closed", "one_accepted_lineage_per_stage", "adapter_decision_authoritative", "raw_body_persisted", "sensitive_data_allowed"],
+          "properties": {"append_only": {"const": true}, "monotonic_sequence": {"const": true}, "decision_written_last": {"const": true}, "partial_attempt_fails_closed": {"const": true}, "one_accepted_lineage_per_stage": {"const": true}, "adapter_decision_authoritative": {"const": false}, "raw_body_persisted": {"const": false}, "sensitive_data_allowed": {"const": false}}
+        }
+      }
+    },
     "recoveryPolicy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["evidence_root_template", "initial_state", "stale_state", "successor_initial_state", "resume_requires_hash_match", "lineage_fields", "append_only"],
+      "required": ["evidence_root_template", "initial_state", "stale_state", "successor_initial_state", "resume_requires_hash_match", "lineage_fields", "attempt_lineage_fields", "partial_attempt_state", "decision_written_last", "one_accepted_attempt_per_stage", "append_only"],
       "properties": {
-        "evidence_root_template": {"type": "string"}, "initial_state": {"enum": ["initialized", "stale"]}, "stale_state": {"const": "stale"}, "successor_initial_state": {"enum": ["initialized", "stale"]}, "resume_requires_hash_match": {"const": true}, "lineage_fields": {"$ref": "#/$defs/stringArray"}, "append_only": {"const": true}
+        "evidence_root_template": {"type": "string"}, "initial_state": {"enum": ["initialized", "stale"]}, "stale_state": {"const": "stale"}, "successor_initial_state": {"enum": ["initialized", "stale"]}, "resume_requires_hash_match": {"const": true}, "lineage_fields": {"$ref": "#/$defs/stringArray"}, "attempt_lineage_fields": {"$ref": "#/$defs/stringArray"}, "partial_attempt_state": {"const": "incomplete"}, "decision_written_last": {"const": true}, "one_accepted_attempt_per_stage": {"const": true}, "append_only": {"const": true}
       }
     },
     "driftPolicy": {
@@ -88,7 +116,7 @@
     "candidateIdentityPolicy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["exact_match_required", "worktree_scope", "unrelated_worktree_drift", "required_run_artifacts", "stage_binding", "required_fields"],
+      "required": ["exact_match_required", "worktree_scope", "unrelated_worktree_drift", "required_run_artifacts", "stage_binding", "attempt_binding", "required_fields"],
       "properties": {
         "exact_match_required": {"const": true},
         "worktree_scope": {"const": "declared-slice-closure-through-candidate"},
@@ -105,6 +133,11 @@
             "predecessor_hash_chain": {"const": true},
             "command_selector_failure_and_exit_checked": {"const": true}
           }
+        },
+        "attempt_binding": {
+          "type": "object", "additionalProperties": false,
+          "required": ["final_context_manifest_hash", "final_capsule_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"],
+          "properties": {"final_context_manifest_hash": {"const": true}, "final_capsule_hash": {"const": true}, "accepted_attempt_id": {"const": true}, "accepted_attempt_decision_hash": {"const": true}}
         },
         "required_fields": {"$ref": "#/$defs/stringArray"}
       }

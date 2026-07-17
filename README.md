@@ -1,5 +1,3 @@
-[![Windows Export Slim](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-export-slim.yml/badge.svg)](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-export-slim.yml) [![Windows Release](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-release.yml/badge.svg)](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-release.yml) [![Windows Quality Gate](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-quality-gate.yml/badge.svg)](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-quality-gate.yml)
-
 # Ji Mu Yun（积木云）Phase A/B Cloud Prototype Platform
 
 本仓已经从单纯的 Godot Windows-only C# 游戏模板，演进为一个 Windows 单机云端 Godot 原型生成与托管平台。
@@ -11,14 +9,14 @@
 | 问题 | 答案 |
 | --- | --- |
 | 产品解决什么问题 | 把 Godot 原型创建、迭代、修复、打包、审计和运行证据查看，从本地脚本流程包装成浏览器/API 可用的平台。 |
-| 用户是谁 | 平台管理员、原型创建者、AI/自动化 agent、维护这个 Godot+C# 模板和 Phase A/B 平台的开发者。 |
-| 核心模块 | Godot 模板内核、Phase A 云端平台层、Phase B 账号和运营层、仓库脚本与质量门禁、运行时恢复和证据体系。 |
+| 用户是谁 | 平台管理员、原型创建者、AI/自动化 agent、以及维护 Phase A/B 平台和托管执行内核的开发者。 |
+| 核心模块 | Phase A 云端平台层、Phase B 账号和运营层、托管 Godot 原型执行内核、运行时恢复和证据体系。 |
 | 当前阶段 | Phase A 已成型；Phase B 账号隔离 / 运营审计切片已完成；完整生产多租户隔离仍在后续 Phase C 或预生产加固范围。 |
 | 主要技术栈 | Godot 4.5 .NET/mono、C#/.NET 8、ASP.NET Core 8、SQLite、Caddy、Python、PowerShell、xUnit、GdUnit4。 |
 | 本地入口 | `http://127.0.0.1:18080` |
 | 公网反代入口 | `http://47.86.160.138:8080` |
 | 快速启动 / 恢复 | `powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1` |
-| 继续了解 | 先读本 README，再按 `AGENTS.md`、`docs/agents/00-index.md`、`docs/PROJECT_DOCUMENTATION_INDEX.md` 进入细节。 |
+| 继续了解 | 先读本 README，再按 `AGENTS.md`、`docs/architecture/phase-service/_index.md`、`docs/PROJECT_DOCUMENTATION_INDEX.md` 进入细节。 |
 
 
 ## 当前阶段结论
@@ -53,7 +51,7 @@
 
 ## 系统分层
 
-### 1. Godot 模板内核
+### 1. 托管原型执行内核
 
 - `Game.Core/`：纯 C# 领域逻辑和契约相邻代码。
 - `Game.Godot/`：Godot 运行时项目、场景、Autoload、适配层和原型资源。
@@ -71,6 +69,13 @@
 - GDD 创建流程先收集用户策划表单，再生成并让用户确认场景路由草案，最后把两份输入一起交给 GDD 路由生成大纲。
 
 Phase A 的原则是：平台负责 hosting、workspace、runner、artifact readback、browser/API 和恢复；仓库脚本继续拥有 workflow decision authority。
+
+## Phase 服务与仓库执行内核边界
+
+- `workflow.md` 描述仓库本地的正式交付流程，不是 Phase 浏览器/API 入口。
+- `workflow.example.md` 面向从原模板复制出的游戏业务仓，不适用于根平台仓。
+- Phase 路由只把其中选定的脚本、验证器、profile、Godot 资产和 route contract 作为内部执行依赖。
+- Taskmaster triplet、正式 Chapter 3-7 编排、本地 Chapter 6 review recovery、模板 feature flag 和游戏模板发布不是 Phase 默认产品路径。
 
 ### 3. Phase B 账号和运营层
 
@@ -139,6 +144,7 @@ caddy run --config runtime/phase-a/Caddyfile
 - live server 使用 `runtime/phase-a/start-phasea.ps1`。
 - 启动脚本把 build output 放到仓库外的稳定目录。
 - `PHASEA_ADMIN_TOKEN_HASH` 必须来自 host secret store 或服务环境，不得写入 git 跟踪文件。
+- `DELIVERY_PROFILE` 默认为 `fast-ship`，可选 `playable-ea`、`fast-ship` 或 `standard`；它是 hosted workflow 和 Chapter 2 bootstrap 的内部配置，不是 Phase 用户操作流程。详见 `DELIVERY_PROFILE.md`。
 
 常用检查：
 
@@ -196,98 +202,6 @@ Phase A 前端触发的 hosted game-project route 必须先读项目级恢复源
 - `scripts/sc/tests/test_llm_backend.py`
 - 调用方自己的 route-specific tests
 
-## Godot 模板能力
-
-模板内核仍然支持从 0 到导出 Windows 桌面游戏。下面示例使用与当前 Phase A runtime 一致的 Godot 4.5.1 .NET/mono console 路径：
-
-1. 安装 Godot .NET mono，并设置 `GODOT_BIN`。
-2. 运行最小测试和 headless smoke。
-3. 在 Godot Editor 安装 Windows Desktop Export Templates。
-4. 运行 Windows export 和 exe smoke。
-
-示例：
-
-```powershell
-$env:GODOT_BIN='C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe'
-./scripts/ci/smoke_headless.ps1 -GodotBin "$env:GODOT_BIN"
-./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe
-./scripts/ci/smoke_exe.ps1 -ExePath build\Game.exe
-```
-
-模板内容包括：
-
-- Autoload 适配层：EventBus、DataStore、Logger、Audio、Time、Input、SqlDb。
-- 场景分层：ScreenRoot、Overlays、ScreenNavigator、HUD、SettingsPanel。
-- 安全基线：`res://` / `user://` 边界、HTTP 白名单、SQLite 路径校验、审计 JSONL。
-- 可观测性：本地 JSONL、性能指标、run/artifact evidence。
-- 测试体系：xUnit、GdUnit4、headless smoke、quality gates。
-- 导出与发布：Windows-only export、smoke、tag release workflow。
-
-## Delivery Profiles
-
-- `DELIVERY_PROFILE=playable-ea`：最快可玩性校验档位，安全默认派生到 `host-safe`。
-- `DELIVERY_PROFILE=fast-ship`：模板默认档位，保留基本主机安全、核心测试和必要发版约束。
-- `DELIVERY_PROFILE=standard`：收口档位，ADR、验收、语义门禁更严格，安全默认派生到 `strict`。
-
-生效优先级：CLI `--delivery-profile` > 环境变量 `DELIVERY_PROFILE` > 仓库默认 `fast-ship`。
-
-`prototype lane` 是探索通道，不是新的 `DELIVERY_PROFILE`。它决定工作是否进入正式任务流，不替代正式交付门禁。
-
-## 稳定公共入口
-
-本节列出的是仓库本地 / 自动化脚本入口；它们不表示 Phase A 浏览器 UI 已开放所有对应能力。尤其 Chapter 3-7 正式交付路由不属于当前 Phase A 浏览器范围。
-
-### 仓库 bootstrap / 恢复
-
-```powershell
-py -3 scripts/python/dev_cli.py run-local-hard-checks
-py -3 scripts/python/dev_cli.py project-health-scan
-py -3 scripts/python/dev_cli.py serve-project-health
-py -3 scripts/python/dev_cli.py resume-task --task-id <id>
-py -3 scripts/python/dev_cli.py inspect-run --kind <kind> [--task-id <id>]
-py -3 scripts/python/dev_cli.py chapter6-route --task-id <id> --recommendation-only
-```
-
-### 原型通道
-
-```powershell
-py -3 scripts/python/dev_cli.py run-prototype-workflow --prototype-file docs/prototypes/<your-file>.md
-py -3 scripts/python/dev_cli.py run-prototype-tdd --slug <slug> --stage <red|green|refactor> ...
-```
-
-### 任务交付主环
-
-```powershell
-py -3 scripts/python/dev_cli.py run-single-task-chapter6 --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile <profile>
-py -3 scripts/sc/run_review_pipeline.py --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile <profile>
-```
-
-### 架构 / 任务 / 契约一致性
-
-```powershell
-py -3 scripts/python/task_links_validate.py
-py -3 scripts/python/check_tasks_all_refs.py
-py -3 scripts/python/validate_task_master_triplet.py
-py -3 scripts/python/validate_contracts.py
-py -3 scripts/python/check_domain_contracts.py
-py -3 scripts/python/sync_task_overlay_refs.py --prd-id <PRD-ID> --write
-```
-
-完整入口索引：
-
-- `docs/workflows/stable-public-entrypoints.md`
-- `docs/workflows/script-entrypoints-index.md`
-
-## Recovery First
-
-任务在 context reset、跨会话或隔天恢复时，先走恢复链，不要直接重开完整 Chapter 6。
-
-1. 读 `docs/agents/01-session-recovery.md`。
-2. 执行 `py -3 scripts/python/dev_cli.py resume-task --task-id <id>`。
-3. 如果 summary 仍然不够，再执行 `py -3 scripts/python/dev_cli.py inspect-run --kind pipeline --task-id <id>`。
-4. 在重开完整 `6.7` 前，先执行 `py -3 scripts/python/dev_cli.py chapter6-route --task-id <id> --recommendation-only`。
-
-如果恢复链显示 `planned-only`、`artifact_integrity`、`rerun_guard`、`llm_retry_stop_loss`、`sc_test_retry_stop_loss` 或 `needs-fix-fast`，先按恢复建议做窄修复或回退。
 
 ## 关键文档
 
@@ -313,22 +227,8 @@ py -3 scripts/python/sync_task_overlay_refs.py --prd-id <PRD-ID> --write
 ### 仓库和 Agent 导航
 
 - `AGENTS.md`
-- `docs/agents/00-index.md`
-- `docs/agents/01-session-recovery.md`
-- `docs/agents/13-rag-sources-and-session-ssot.md`
-- `docs/agents/16-directory-responsibilities.md`
 - `docs/PROJECT_DOCUMENTATION_INDEX.md`
 
-### Godot 模板和交付
-
-- `docs/testing-framework.md`
-- `DELIVERY_PROFILE.md`
-- `docs/architecture/ADR_INDEX_GODOT.md`
-- `docs/architecture/base/00-README.md`
-- `docs/workflows/prototype-lane.md`
-- `docs/workflows/prototype-lane-playbook.md`
-- `docs/workflows/prototype-tdd.md`
-- `docs/TEMPLATE_GODOT_GETTING_STARTED.md`
 
 ## 贡献者编码规则
 
@@ -339,50 +239,3 @@ py -3 scripts/python/sync_task_overlay_refs.py --prd-id <PRD-ID> --write
 - If a command script must contain Chinese literals, write it as a Python file or use ASCII-only Python source with Unicode escapes, then write the target file as UTF-8.
 - This rule applies to `AGENTS.md`, `README.md`, `workflow.md`, `docs/**/*.md`, `.agents/skills/**/SKILL.md`, prototype records, and project-health documentation.
 - Code, tests, logs, and machine output remain English unless the file is explicitly user-facing documentation.
-
-## Feature Flags
-
-- Autoload：`/root/FeatureFlags`
-- 文件：`Game.Godot/Scripts/Config/FeatureFlags.cs`
-- 单项环境变量：`setx FEATURE_demo_screens 1`
-- 多项环境变量：`setx GAME_FEATURES "demo_screens,perf_overlay"`
-- 文件配置：`user://config/features.json`
-
-代码示例：
-
-```csharp
-if (FeatureFlags.IsEnabled("demo_screens"))
-{
-    // ...
-}
-```
-
-## Godot 模板发版和应用元数据
-
-本节是 Godot 游戏模板的导出和发版入口，不是 Phase A 平台服务的 live 部署流程。
-
-创建版本标签触发发布：
-
-```powershell
-git status
-git push
-git tag v0.1.1 -m "v0.1.1 release"
-git push origin v0.1.1
-```
-
-Windows Release workflow 会导出并把 `build/Game.exe` 附加到 GitHub Release。
-
-应用元数据在 `export_presets.cfg` 的 `[preset.0.options]` 段维护：
-
-- `application/product_name`
-- `application/company_name`
-- `application/file_description`
-- `application/*_version`
-- `application/icon`
-
-## Game Project Metadata
-
-- Game Name: TBD
-- Game Type: TBD
-- Game Type Source: TBD
-- Game Type Guide: TBD

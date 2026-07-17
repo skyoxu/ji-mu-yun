@@ -572,6 +572,64 @@
         "stable-rule-id"
       ],
       "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-025",
+      "requirement_id": "RMAP-025",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [
+        "RMAP-S1",
+        "RMAP-S6"
+      ],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "capsule-context-hash-stale"
+      ],
+      "expected_failure_ids": [
+        "RMAP-CAPSULE-CONTEXT"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "immutable-context-manifest",
+        "immutable-slice-capsule",
+        "predecessor-capsule-hash",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-026",
+      "requirement_id": "RMAP-026",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [
+        "RMAP-S1",
+        "RMAP-S6"
+      ],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "attempt-decision-missing"
+      ],
+      "expected_failure_ids": [
+        "RMAP-ATTEMPT-PARTIAL"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "backend-request-hash",
+        "backend-response-hash",
+        "actual-diff-hash",
+        "adapter-decision-hash",
+        "attempt-predecessor-hash",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
     }
   ]
 }

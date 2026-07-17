@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.diff-manifest.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "slice_id", "run_id", "attempt_id", "stage", "baseline_worktree_hash", "result_worktree_hash", "files", "actual_diff_hash", "generated_by", "canonical", "contains_forbidden_change"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.diff-manifest.v1"},
+    "plan_id": {"type": "string", "minLength": 1},
+    "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"},
+    "run_id": {"type": "string", "minLength": 1},
+    "attempt_id": {"type": "string", "pattern": "^ATTEMPT-[0-9]{3,}$"},
+    "stage": {"enum": ["red", "green", "refactor"]},
+    "baseline_worktree_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "result_worktree_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "files": {"type": "array", "items": {"$ref": "#/$defs/fileChange"}},
+    "actual_diff_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "generated_by": {"const": "adapter"},
+    "canonical": {"const": true},
+    "contains_forbidden_change": {"type": "boolean"}
+  },
+  "$defs": {
+    "fileChange": {"type": "object", "additionalProperties": false, "required": ["path", "change_type", "before_sha256", "after_sha256", "scope"], "properties": {"path": {"type": "string", "minLength": 1}, "change_type": {"enum": ["add", "modify", "delete"]}, "before_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}, "after_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}, "scope": {"enum": ["allowed", "forbidden", "unrelated"]}}}
+  }
+}

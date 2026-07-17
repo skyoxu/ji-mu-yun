@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-process-leases.v1.schema.json",
+  "title": "Bootstrap Process Leases v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewId", "inputHash", "leases"],
+  "properties": {
+    "schemaVersion": { "const": "bootstrap-process-leases.v1" },
+    "reviewId": { "type": "string", "minLength": 3 },
+    "inputHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "leases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operationId", "role", "pid", "processIdentity", "state", "acquiredAt", "updatedAt"],
+        "properties": {
+          "operationId": { "type": "string", "pattern": "^[a-z][a-z0-9:._-]{2,95}$" },
+          "role": {
+            "enum": [
+              "blind_hunter",
+              "edge_case_hunter",
+              "acceptance_auditor",
+              "independent_verifier",
+              "preflight",
+              "model_probe"
+            ]
+          },
+          "pid": { "type": "integer", "minimum": 1 },
+          "processIdentity": { "type": "string", "minLength": 3 },
+          "state": { "enum": ["acquired", "completed", "failed", "stale"] },
+          "acquiredAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "note": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

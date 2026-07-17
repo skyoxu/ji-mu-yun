@@ -10,6 +10,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = ROOT.parents[1]
+SKILL_ROOT = REPOSITORY_ROOT / ".agents/skills/run-phase-bootstrap-review"
+SCHEMA_ROOT = SKILL_ROOT / "schemas"
 REQUIRED_BOOKS = [
     "00-index.md",
     "01-scope-authority-and-non-goals.md",
@@ -357,7 +360,7 @@ def result_semantic_errors(
 
 
 def validate_fixture_intent(errors: list[str]) -> None:
-    path = ROOT / "schemas/review-validation-fixtures.v1.json"
+    path = SCHEMA_ROOT / "review-validation-fixtures.v1.json"
     if not path.is_file():
         return
     data = strict_json_loads(path.read_text(encoding="utf-8"))
@@ -398,9 +401,8 @@ def validate_fixture_intent(errors: list[str]) -> None:
     if set(ids) != required or len(ids) != len(set(ids)):
         fail(errors, f"fixture case IDs mismatch: {ids}")
     registry = {
-        Path(relative).name: strict_json_loads((ROOT / relative).read_text(encoding="utf-8"))
-        for relative in REQUIRED_JSON
-        if relative.endswith(".schema.json")
+        path.name: strict_json_loads(path.read_text(encoding="utf-8"))
+        for path in SCHEMA_ROOT.glob("*.schema.json")
     }
     for case in cases:
         schema_name = case.get("schema")
@@ -441,13 +443,13 @@ def validate_fixture_intent(errors: list[str]) -> None:
 
 def validate_semantic_contracts(errors: list[str]) -> None:
     finding_schema = strict_json_loads(
-        (ROOT / "schemas/review-finding.v1.schema.json").read_text(encoding="utf-8")
+        (SCHEMA_ROOT / "review-finding.v1.schema.json").read_text(encoding="utf-8")
     )
     rejection_schema = strict_json_loads(
-        (ROOT / "schemas/review-rejection.v1.schema.json").read_text(encoding="utf-8")
+        (SCHEMA_ROOT / "review-rejection.v1.schema.json").read_text(encoding="utf-8")
     )
     result_schema = strict_json_loads(
-        (ROOT / "schemas/review-result.v1.schema.json").read_text(encoding="utf-8")
+        (SCHEMA_ROOT / "review-result.v1.schema.json").read_text(encoding="utf-8")
     )
     if finding_schema["properties"]["confidence"].get("minimum") != 0.8:
         fail(errors, "finding confidence minimum must be 0.8")
@@ -553,16 +555,17 @@ def validate_semantic_contracts(errors: list[str]) -> None:
 
 
 def validate_bootstrap_contracts(errors: list[str]) -> None:
-    profile_path = ROOT / "bootstrap/review-profiles.v1.json"
-    reviewer_schema_path = ROOT / "schemas/bootstrap-reviewer-output.v1.schema.json"
-    verifier_schema_path = ROOT / "schemas/bootstrap-verifier-output.v1.schema.json"
-    preflight_schema_path = ROOT / "schemas/bootstrap-preflight-result.v1.schema.json"
-    gate_schema_path = ROOT / "schemas/bootstrap-review-gate-result.v1.schema.json"
-    tool_path = ROOT / "tools/run_bootstrap_review.py"
-    test_path = ROOT / "tools/tests/test_run_bootstrap_review.py"
+    profile_path = SKILL_ROOT / "references/review-profiles.v1.json"
+    reviewer_schema_path = SCHEMA_ROOT / "bootstrap-reviewer-output.v1.schema.json"
+    verifier_schema_path = SCHEMA_ROOT / "bootstrap-verifier-output.v1.schema.json"
+    preflight_schema_path = SCHEMA_ROOT / "bootstrap-preflight-result.v1.schema.json"
+    gate_schema_path = SCHEMA_ROOT / "bootstrap-review-gate-result.v1.schema.json"
+    tool_path = SKILL_ROOT / "scripts/bootstrap_review.py"
+    helper_path = SKILL_ROOT / "scripts/_control_plane.py"
+    test_path = SKILL_ROOT / "tests/test_bootstrap_review.py"
     if not all(path.is_file() for path in [
         profile_path, reviewer_schema_path, verifier_schema_path, preflight_schema_path,
-        gate_schema_path, tool_path, test_path,
+        gate_schema_path, tool_path, helper_path, test_path,
     ]):
         return
 
@@ -635,8 +638,10 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             fail(errors, f"{name} must require all three reviewer layers")
         if profile.get("readOnly") is not True or profile.get("automaticInvocation") is not False:
             fail(errors, f"{name} must be read-only with automatic invocation disabled")
-        if profile.get("reviewProfile") != uri or profile.get("routeVersion") != "bootstrap-review-route.v1":
+        if profile.get("reviewProfile") != uri or profile.get("routeVersion") != "bootstrap-review-route.v2":
             fail(errors, f"{name} profile or route identity is invalid")
+        if profile.get("controlPlaneRevision") != "bootstrap-control-plane.v2":
+            fail(errors, f"{name} control-plane revision is invalid")
         if profile.get("reviewObjectType") != object_type or profile.get("reviewDepth") != depth:
             fail(errors, f"{name} review object type or depth is invalid")
         if profile.get("requiredContextClasses") != contexts:
@@ -691,7 +696,7 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
 
     registry = {
         path.name: strict_json_loads(path.read_text(encoding="utf-8"))
-        for path in (ROOT / "schemas").glob("*.schema.json")
+        for path in SCHEMA_ROOT.glob("*.schema.json")
     }
     reviewer_template = {
         "schemaVersion": "bootstrap-reviewer-output.v1",
@@ -764,9 +769,13 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             fail(errors, f"bootstrap template violates {schema_name}: {'; '.join(contract_errors)}")
 
     source = tool_path.read_text(encoding="utf-8")
-    tree = ast.parse(source, filename=str(tool_path))
+    helper_source = helper_path.read_text(encoding="utf-8")
+    trees = [
+        ast.parse(source, filename=str(tool_path)),
+        ast.parse(helper_source, filename=str(helper_path)),
+    ]
     forbidden_import_roots = {"urllib", "requests", "httpx", "openai", "anthropic"}
-    for node in ast.walk(tree):
+    for node in (node for tree in trees for node in ast.walk(tree)):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name.split(".", 1)[0] in forbidden_import_roots:
@@ -775,17 +784,10 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             if node.module.split(".", 1)[0] in forbidden_import_roots:
                 fail(errors, f"bootstrap tool imports forbidden network/LLM module: {node.module}")
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            if isinstance(node.func.value, ast.Name) and node.func.value.id == "subprocess":
-                valid_local_run = (
-                    node.func.attr == "run"
-                    and bool(node.args)
-                    and isinstance(node.args[0], (ast.List, ast.Tuple))
-                    and bool(node.args[0].elts)
-                    and isinstance(node.args[0].elts[0], ast.Constant)
-                    and node.args[0].elts[0].value in {"git", "icacls"}
-                )
-                if not valid_local_run:
-                    fail(errors, "bootstrap tool subprocess is limited to deterministic Git metadata reads and Windows template ACL grants")
+            if isinstance(node.func.value, ast.Name) and node.func.value.id == "subprocess" and node.func.attr == "Popen":
+                shell_keywords = [item for item in node.keywords if item.arg == "shell"]
+                if not shell_keywords or not isinstance(shell_keywords[0].value, ast.Constant) or shell_keywords[0].value.value is not False:
+                    fail(errors, "Bootstrap runner Popen must set shell=False explicitly")
     required_source_markers = [
         'AUTHORITY_CLASS = "supplemental_bootstrap"',
         '"bootstrap-reviewer-output.v1.schema.json"',
@@ -803,10 +805,24 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
         "Refusing to gate an already finalized review",
         "validate_scope_references(candidate.get(\"contextRead\")",
         "validate_scope_references(checked, manifest, \"evidenceChecked\")",
+        'CONTROL_PLANE_REVISION = "bootstrap-control-plane.v2"',
+        "create_artifact_view",
+        "validate_repair_closure",
+        "command_run_layer",
+        "command_list_runs",
+        "command_inspect_run",
+        "command_seal_run",
     ]
     for marker in required_source_markers:
         if marker not in source:
             fail(errors, f"bootstrap tool is missing required guard: {marker}")
+    for marker in ["ENVIRONMENT_ALLOWLIST", "TYPED_PLACEHOLDERS", "shell=False", "process-events.jsonl"]:
+        if marker not in helper_source and marker not in source:
+            fail(errors, f"bootstrap control plane is missing execution guard: {marker}")
+    adapter_source = (ROOT / "tools/run_bootstrap_review.py").read_text(encoding="utf-8")
+    for marker in ["EXPECTED_CONTROL_PLANE_REVISION", "CORE_PATH", "revision mismatch"]:
+        if marker not in adapter_source:
+            fail(errors, f"bootstrap compatibility adapter is missing revision binding: {marker}")
     test_source = test_path.read_text(encoding="utf-8")
     for marker in [
         "test_prepare_records_binary_artifacts_without_decoding_them",

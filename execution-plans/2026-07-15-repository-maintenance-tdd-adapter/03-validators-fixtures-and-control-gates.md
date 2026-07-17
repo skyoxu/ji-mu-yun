@@ -22,6 +22,8 @@
 13. Every slice consumes explicit run/RED/GREEN/REFACTOR paths and verifies current hashes, observed exits, strict time/order, predecessor hashes, and recovery lineage; S6 consumes candidate only, while S7 cross-binds candidate, trusted review profile, preflight evidence, final result, and dispositions.
 14. Every active requirement maps to one executable acceptance contract whose expected failure IDs equal the referenced negative fixtures' actual stable rules.
 15. Validation snapshots the plan, source, and validator before and after all checks; drift forces a non-authorizing failure envelope with distinct candidate/current hashes.
+16. Persisted Capsule schemas, predecessor hashes, context hashes, path containment, and non-authorizing predicate boundaries.
+17. Attempt request/response/diff/decision bindings, sensitive-content exclusions, monotonic lineage, decision-last finalization, event chain, and one accepted lineage per represented stage.
 9. Predicate-to-authority exactness and release exclusion.
 10. Shadow backfill exact population, order, additive-only policy, and non-authoritative status.
 11. Recovery initial/stale/successor state rules and append-only lineage.
@@ -46,6 +48,8 @@
 ## Fixture Contract
 
 [`fixtures/fixture-cases.v1.json`](fixtures/fixture-cases.v1.json) owns deliberate counterexamples. Each case applies one bounded mutation to the valid self-hosted contract and names exactly one expected failure rule. A case that fails for another rule is invalid.
+
+[`fixtures/capsule-attempt-cases.v1.json`](fixtures/capsule-attempt-cases.v1.json) owns protocol counterexamples for stale context, S2 predicate escalation, path escape, stale request binding, raw response persistence, forbidden diff, stale decision hashes, adapter authority escalation, invalid next state, missing decision, duplicate accepted stage, and stale event lineage. [`tools/protocol_guards.py`](tools/protocol_guards.py) validates both the fixture bundle and persisted run directories.
 
 The minimum cases are:
 

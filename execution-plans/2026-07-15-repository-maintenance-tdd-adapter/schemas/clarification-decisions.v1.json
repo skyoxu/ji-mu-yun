@@ -17,6 +17,14 @@
       "authority_hash": "sha256:cc9f3fb16206cb902bf73b60b2b7c52bfdbe52d2d4d58d3e78be335fe3342bf2",
       "status": "closed",
       "write_disposition": "normal"
+    },
+    {
+      "kind": "repair",
+      "run_id": "repair-20260717T013023Z",
+      "state_sha256": "sha256:53e0670f9546f767b06e5254aab38ccf7b87e563aad0a5aaeecf2552375d60c0",
+      "authority_hash": "sha256:75b1dc6ea8319a36d9d52229ce9d1f05598b31c6c2a5353dafae5e4cbe29bc2a",
+      "status": "closed",
+      "write_disposition": "normal"
     }
   ],
   "decision_sets": {
@@ -176,6 +184,57 @@
         "blocking": false,
         "summary": "Confirm the repair acceptance boundary and final status claim.",
         "decision": "Require composite, unit, schema, mutation, explicit slice-evidence, and clean-checkout validation, but retain blocked/manual-pause status and make no semantic-closure or implementation-authorization claim."
+      }
+    ],
+    "repair_20260717": [
+      {
+        "id": "CQ-001",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Confirm the authority treatment for stabilized but uncommitted upstream bytes.",
+        "decision": "Use the current upstream bytes for repair discovery and hash binding, but keep their commit ownership outside the 7-15 repair and require an authority commit or equivalent clean snapshot for clean-checkout proof."
+      },
+      {
+        "id": "CQ-002",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Choose requirement identities for persisted context and attempt lineage.",
+        "decision": "Add RMAP-025 and RMAP-026 with S1 schema support, S2 ownership of runtime behavior, and S6 support for final binding."
+      },
+      {
+        "id": "CQ-003",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Choose capsule revision and predecessor semantics.",
+        "decision": "Create one immutable context capsule revision per backend invocation, link later revisions by predecessor capsule hash, and never overwrite a capsule as stage evidence changes."
+      },
+      {
+        "id": "CQ-004",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Define minimized backend request and response persistence.",
+        "decision": "Persist normalized minimized envelopes and raw hashes only; prohibit secrets, personal data, and unauthorized raw request or response bodies."
+      },
+      {
+        "id": "CQ-005",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Define adapter-decision authority and accepted-candidate ownership.",
+        "decision": "Adapter decisions are non-authorizing observations consumed by deterministic stage predicates; accepted_candidate belongs only to S6 candidate finalization."
+      },
+      {
+        "id": "CQ-006",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Define attempt ordering, partial failure, retry, and stage uniqueness.",
+        "decision": "Use monotonic attempt sequence, predecessor decision hash, decision-last finalization, fail-closed partial attempts, and exactly one accepted lineage per represented stage."
+      },
+      {
+        "id": "CQ-007",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Confirm the repair remains inside the existing architecture boundary.",
+        "decision": "Do not add a Router, S8, Phase service changes, 7-12 CLI changes, or historical evidence rewrites."
       }
     ]
   },

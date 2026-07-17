@@ -12,7 +12,7 @@ The plan succeeds when a repository-owned adapter can consume one implementation
 | --- | --- | --- |
 | `agentbuild.txt` | Original intent and proposed P0-P4 sequence | `sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807` |
 | Durable clarification projection | User-approved creation and repair boundary decisions | `schemas/clarification-decisions.v1.json` |
-| `AGENTS.md` | Repository routing, evidence, protected paths, and architecture rules | `sha256:304d18663634225834f6724073eef77979d138548b7af75a74c4615e8d68a68e` |
+| `AGENTS.md` | Repository routing, evidence, protected paths, and architecture rules | Current hash in `schemas/authority-manifest.v1.json` |
 | VDD strict standard | Verification authority and plan contract | `sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140` |
 | 7-12 Bootstrap plan and CLI | Current semantic-review extension boundary | Directory authority frozen by the implementation slice baseline |
 | Round 3 blocking projection | Current semantic-review disposition and re-entry boundary | `schemas/review-blocking-state.v1.json` |
@@ -42,8 +42,8 @@ Ordinary execution plans cite this ADR. They do not create one ADR per plan. Onl
 
 ## Current-State Boundary
 
-- Git baseline at clarification exit: HEAD `48e7b21e6cf33f30aca7c8ac2f3b2fa63b784fe7`, index tree `27317fd610bcd5f044815436c0de6c023ab34321`.
-- The only pre-existing dirty item was untracked `agentbuild.txt`.
+- Current repair baseline: HEAD `6adab7f741b9080a7e14758a815d02403d13a7b2`; the original 7-15 candidate hash before this repair was `sha256:5d318a8e9198faa85dba1df97308006900c82fb0210f7e827ca6c71d0dba28e0`.
+- The stabilized 7-12 Bootstrap control-plane bytes and their AGENTS/README/ADR/standard projections remain separate uncommitted upstream changes. This repair may hash-bind them for discovery but does not absorb their commit ownership; clean-checkout proof still requires those bytes to exist in their owning commit or equivalent clean snapshot.
 - The VDD Skill baseline passed 46 tests.
 - The Bootstrap baseline passed 62 tests, and the 7-12 Whole-directory validator passed.
 - No BMAD `SPEC.md`, `.memlog.md`, or `ARCHITECTURE-SPINE.md` package applies to this intent.
@@ -55,6 +55,7 @@ Ordinary execution plans cite this ADR. They do not create one ADR per plan. Onl
 - Formal self-hosting in this new plan.
 - Additive metadata backfill and non-authoritative shadow validation for exactly three existing plans, in this order: 7-12, 7-07, 7-11.
 - A repository-owned Slice Capsule executor as backend v1.
+- Immutable per-invocation persisted Capsule revisions and an append-only Agent Attempt Ledger.
 - Existing Bootstrap extension points before any Bootstrap CLI delta.
 
 ## Non-Goals
@@ -65,4 +66,5 @@ Ordinary execution plans cite this ADR. They do not create one ADR per plan. Onl
 - Changing existing old-plan books, status, validators, historical evidence, or handoff authority during shadow backfill.
 - Modifying Phase protected paths, shared LLM/Codex entrypoints, runtime state, auth, Caddy, or live metadata.
 - Automatically launching a provider or Codex subprocess in adapter v1.
+- Adding a Router, another slice, or mutable `ledger.json` state.
 - Treating confidence, assistant text, process exit, plan validation, or Bootstrap supplemental evidence as release authority.
