@@ -59,6 +59,15 @@ HASH_PREFIX = "sha256:"
 AUTHORITY_CLASS = "supplemental_bootstrap"
 REVIEW_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}")
 CHECK_ID_PATTERN = re.compile(r"[a-z][a-z0-9-]{2,63}")
+FINALIZED_VALIDATOR_REVISION = "bootstrap-finalized-run-validator.v1"
+FINALIZED_DOES_NOT_AUTHORIZE = [
+    "plan-acceptance",
+    "implementation-acceptance",
+    "protected-handoff",
+    "release",
+    "commit",
+    "done",
+]
 
 ACCESS_HANDSHAKE_HELPER = r'''#!/usr/bin/env python3
 from __future__ import annotations
@@ -3306,6 +3315,255 @@ def validate_p2_dispositions(
     return mapped
 
 
+def validate_finalized_run_evidence(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    repository_root: Path,
+) -> dict[str, Any]:
+    validate_launch_authorization(run_dir, manifest)
+    gate = read_json(run_dir / "review-gate-state.json")
+    validate_gate_state(gate, manifest)
+    preflight_result_hash = validate_preflight_result(run_dir, manifest)
+    if gate.get("preflightResultHash") != preflight_result_hash:
+        raise BootstrapError("preflight-result.json changed after gate")
+    if gate.get("failedLayers"):
+        raise BootstrapError("Finalized run retains incomplete reviewer layers")
+
+    candidate_path = run_dir / "review-candidates.json"
+    rejection_path = run_dir / "review-rejections.json"
+    candidate_doc = read_json(candidate_path)
+    rejections_doc = read_json(rejection_path)
+    if gate.get("candidatesHash") != value_hash(candidate_doc):
+        raise BootstrapError("review-candidates.json changed after gate")
+    if gate.get("rejectionsHash") != value_hash(rejections_doc):
+        raise BootstrapError("review-rejections.json changed after gate")
+    reevaluated = evaluate_reviewer_outputs(
+        run_dir, manifest, repository_root, preflight_result_hash
+    )
+    if reevaluated["candidatesDoc"] != candidate_doc:
+        raise BootstrapError("Reviewer outputs no longer reproduce review-candidates.json")
+    if reevaluated["rejectionsDoc"] != rejections_doc:
+        raise BootstrapError("Reviewer outputs no longer reproduce review-rejections.json")
+    if reevaluated["gateState"] != gate:
+        raise BootstrapError("Reviewer outputs no longer reproduce review-gate-state.json")
+
+    findings = candidate_doc.get("findings") if isinstance(candidate_doc, dict) else None
+    if not isinstance(findings, list):
+        raise BootstrapError("review-candidates.json is invalid")
+    finding_map = {
+        finding.get("findingId"): finding
+        for finding in findings
+        if isinstance(finding, dict) and isinstance(finding.get("findingId"), str)
+    }
+    if len(finding_map) != len(findings):
+        raise BootstrapError("review-candidates.json has duplicate or invalid finding IDs")
+
+    disposition_path = run_dir / "review-dispositions.json"
+    disposition_doc = read_json(disposition_path)
+    expected_disposition_keys = set(bootstrap_sidecar_binding(manifest)) | {
+        "schemaVersion", "dispositions"
+    }
+    if (
+        not isinstance(disposition_doc, dict)
+        or set(disposition_doc) != expected_disposition_keys
+        or disposition_doc.get("schemaVersion") != "bootstrap-review-dispositions.v1"
+        or any(
+            disposition_doc.get(field) != value
+            for field, value in bootstrap_sidecar_binding(manifest).items()
+        )
+        or not isinstance(disposition_doc.get("dispositions"), list)
+    ):
+        raise BootstrapError("review-dispositions.json has an invalid binding or shape")
+    disposition_map: dict[str, dict[str, Any]] = {}
+    for disposition in disposition_doc["dispositions"]:
+        if not isinstance(disposition, dict):
+            raise BootstrapError("review-dispositions.json contains a non-object disposition")
+        finding_id = disposition.get("findingId")
+        if finding_id not in finding_map or finding_id in disposition_map:
+            raise BootstrapError("review-dispositions.json has an unknown or duplicate finding ID")
+        if not isinstance(disposition.get("reason"), str) or not disposition["reason"].strip():
+            raise BootstrapError(f"Disposition reason is required for {finding_id}")
+        disposition_map[finding_id] = disposition
+    if set(disposition_map) != set(finding_map):
+        raise BootstrapError("review-dispositions.json must cover the exact candidate finding set")
+
+    visible: list[dict[str, Any]] = []
+    has_blocking = False
+    has_manual_pause = False
+    p2_status_counts = {"p2_fixed": 0, "p2_deferred": 0, "p2_refuted": 0}
+    for finding in findings:
+        finding_id = finding["findingId"]
+        disposition = disposition_map[finding_id]
+        status = disposition.get("status")
+        current = dict(finding)
+        if finding.get("proposedSeverity") == "P2":
+            if status not in p2_status_counts or set(disposition) != {"findingId", "status", "reason"}:
+                raise BootstrapError(f"Invalid finalized P2 disposition for {finding_id}")
+            p2_status_counts[status] += 1
+            if status == "p2_deferred":
+                current["status"] = "advisory"
+                visible.append(current)
+            continue
+        if status not in {"confirmed", "refuted", "unverified"}:
+            raise BootstrapError(f"Invalid finalized blocker disposition for {finding_id}")
+        required_keys = {"findingId", "status", "reason"}
+        if status == "unverified":
+            required_keys |= {"unverifiedClass", "unverifiedDisposition"}
+        if set(disposition) != required_keys:
+            raise BootstrapError(f"Invalid finalized disposition shape for {finding_id}")
+        if status == "refuted":
+            continue
+        current["status"] = status
+        if status == "confirmed":
+            has_blocking = True
+        else:
+            classification = disposition.get("unverifiedClass")
+            machine_disposition = disposition.get("unverifiedDisposition")
+            if classification not in {"security", "data_loss", "other"}:
+                raise BootstrapError(f"Invalid unverified class for {finding_id}")
+            expected_machine = "blocking" if classification in {"security", "data_loss"} else "manual_pause"
+            if machine_disposition != expected_machine:
+                raise BootstrapError(f"Invalid unverified disposition for {finding_id}")
+            current["unverifiedClass"] = classification
+            current["unverifiedDisposition"] = machine_disposition
+            has_blocking |= machine_disposition == "blocking"
+            has_manual_pause |= machine_disposition == "manual_pause"
+        visible.append(current)
+    if has_blocking and has_manual_pause:
+        raise BootstrapError("Blocking and manual-pause dispositions cannot be mixed")
+    if has_blocking:
+        expected_status = "blocked"
+    elif has_manual_pause:
+        expected_status = "incomplete"
+    elif any(item.get("status") == "advisory" for item in visible):
+        expected_status = "advisory"
+    else:
+        expected_status = "clean"
+
+    result_path = run_dir / "review-gate-result.json"
+    result = read_json(result_path)
+    result_errors = schema_validation_errors("review-result.v1.schema.json", result)
+    expected_result_fields = {
+        "schemaVersion": "review-result.v1",
+        "authorityClass": AUTHORITY_CLASS,
+        "reviewId": manifest["reviewId"],
+        "routeVersion": manifest["routeVersion"],
+        "reviewProfile": manifest["reviewProfile"],
+        "policyRevision": manifest["policyRevision"],
+        "requiredLayers": manifest["requiredLayers"],
+        "completedLayers": manifest["requiredLayers"],
+        "scope": manifest["scope"],
+        "authorityRevision": manifest["authorityRevision"],
+        "inputHash": manifest["inputHash"],
+        "status": expected_status,
+        "failedLayers": [],
+        "skippedLayers": [],
+        "findings": visible,
+    }
+    if isinstance(result, dict):
+        result_errors.extend(
+            f"{field} does not match finalized evidence"
+            for field, value in expected_result_fields.items()
+            if result.get(field) != value
+        )
+        result_errors.extend(
+            f"unexpected final result field: {field}"
+            for field in set(result) - set(expected_result_fields)
+        )
+    runtime = load_schema_runtime()
+    profile_key = (manifest["reviewProfile"], manifest["policyRevision"])
+    runtime.TRUSTED_REVIEW_POLICIES[profile_key] = set(manifest["requiredLayers"])
+    result_errors.extend(runtime.result_semantic_errors(result, profile_key))
+    for finding in visible:
+        result_errors.extend(runtime.finding_semantic_errors(finding))
+    if result_errors:
+        raise BootstrapError("Final result violates finalized evidence: " + "; ".join(result_errors))
+
+    rejection_count = len(rejections_doc.get("rejections", [])) if isinstance(rejections_doc, dict) else 0
+    p2_count = sum(item.get("proposedSeverity") == "P2" for item in findings)
+    p2_hash = file_hash(run_dir / "p2-dispositions.json") if p2_count else None
+    expected_metrics = {
+        "schemaVersion": "bootstrap-review-metrics.v1",
+        **bootstrap_sidecar_binding(manifest),
+        "status": expected_status,
+        "preflightResultHash": preflight_result_hash,
+        "reviewCyclePolicy": manifest["reviewCyclePolicy"],
+        "rawCandidateCount": len(findings) + rejection_count,
+        "acceptedUniqueCount": len(findings),
+        "rejectedCount": rejection_count,
+        "confirmedCount": sum(item.get("status") == "confirmed" for item in visible),
+        "advisoryCount": sum(item.get("status") == "advisory" for item in visible),
+        "unverifiedCount": sum(item.get("status") == "unverified" for item in visible),
+        "refutedCount": sum(item.get("status") == "refuted" for item in disposition_doc["dispositions"]),
+        "p2DispositionHash": p2_hash,
+    }
+    metrics_path = run_dir / "review-metrics.json"
+    if read_json(metrics_path) != expected_metrics:
+        raise BootstrapError("review-metrics.json does not reproduce finalized evidence")
+
+    profile = load_profile(manifest["profileName"])
+    closure = {
+        "candidateCount": len(findings),
+        "visibleFindingCount": len(visible),
+        "confirmedCount": expected_metrics["confirmedCount"],
+        "advisoryCount": expected_metrics["advisoryCount"],
+        "unverifiedCount": expected_metrics["unverifiedCount"],
+        "refutedCount": expected_metrics["refutedCount"],
+        "p2FixedCount": p2_status_counts["p2_fixed"],
+        "p2DeferredCount": p2_status_counts["p2_deferred"],
+        "p2RefutedCount": p2_status_counts["p2_refuted"],
+    }
+    return {
+        "schemaVersion": "bootstrap-finalized-run-validation.v1",
+        "validationStatus": "passed",
+        "reviewId": manifest["reviewId"],
+        "changeId": manifest["changeId"],
+        "fullReviewRound": manifest["fullReviewRound"],
+        "profileName": manifest["profileName"],
+        "reviewProfile": manifest["reviewProfile"],
+        "routeVersion": manifest["routeVersion"],
+        "controlPlaneRevision": manifest["controlPlaneRevision"],
+        "policyRevision": manifest["policyRevision"],
+        "profileHash": value_hash(profile),
+        "authorityRevision": manifest["authorityRevision"],
+        "inputHash": manifest["inputHash"],
+        "authorityContextHash": manifest["authorityContextHash"],
+        "artifactHashes": {
+            "reviewInput": file_hash(run_dir / "review-input.json"),
+            "preflightResult": preflight_result_hash,
+            "gateState": file_hash(run_dir / "review-gate-state.json"),
+            "candidates": file_hash(candidate_path),
+            "rejections": file_hash(rejection_path),
+            "finalResult": file_hash(result_path),
+            "dispositions": file_hash(disposition_path),
+            "metrics": file_hash(metrics_path),
+        },
+        "finalStatus": expected_status,
+        "findingClosure": closure,
+        "validatorRevision": FINALIZED_VALIDATOR_REVISION,
+        "validatorHash": file_hash(Path(__file__).resolve()),
+        "authorizes": [],
+        "doesNotAuthorize": FINALIZED_DOES_NOT_AUTHORIZE,
+        "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+    }
+
+
+def command_validate_finalized_run(args: argparse.Namespace) -> int:
+    run_dir, manifest, repository_root = load_run(args.run_dir)
+    envelope = validate_finalized_run_evidence(run_dir, manifest, repository_root)
+    errors = schema_validation_errors(
+        "bootstrap-finalized-run-validation.v1.schema.json", envelope
+    )
+    if errors:
+        raise BootstrapError("Finalized-run validation envelope is invalid: " + "; ".join(errors))
+    output_path = ensure_within(
+        Path(args.output).resolve(), repository_root, "Finalized-run validation output"
+    )
+    write_json(output_path, envelope)
+    print(f"Validated finalized Bootstrap run: {envelope['finalStatus']}")
+    return 0
+
+
 def command_finalize(args: argparse.Namespace) -> int:
     run_dir, manifest, repository_root = load_run(args.run_dir)
     validate_launch_authorization(run_dir, manifest)
@@ -3795,6 +4053,13 @@ def build_parser() -> argparse.ArgumentParser:
     finalize = subparsers.add_parser("finalize", help="Apply manually saved verifier decisions")
     finalize.add_argument("--run-dir", required=True)
     finalize.set_defaults(handler=command_finalize)
+    validate_finalized = subparsers.add_parser(
+        "validate-finalized-run",
+        help="Recompute a finalized run and emit a plan-consumable validation envelope",
+    )
+    validate_finalized.add_argument("--run-dir", required=True)
+    validate_finalized.add_argument("--output", required=True)
+    validate_finalized.set_defaults(handler=command_validate_finalized_run)
     list_runs = subparsers.add_parser("list-runs", help="Rebuild the repository Bootstrap run index")
     list_runs.add_argument("--repository-root", required=True)
     list_runs.add_argument("--change-id")

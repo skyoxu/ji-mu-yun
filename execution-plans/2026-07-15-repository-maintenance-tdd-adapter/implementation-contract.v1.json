@@ -15,17 +15,23 @@
       "../2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md": "sha256:b6c840acd67ee64fe4092baba7061cd61bb5b669b6ec8f00db8e5f9f12180efb",
       "../2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json": "sha256:ca42e682cd6077a13b61d261ca75f70d98b1717547324c71c40b92c16de4048a",
       "00-index.md": "sha256:79ddbf278c79ee6addabd7a8bf0352992b702a32e0457aa6ce62a723d8a95ba7",
-      "01-intent-authority-and-non-goals.md": "sha256:1055b88ecbe760193e4dcaf70839b5e194ee8be0d6434e9760093bdb4606c14b",
-      "02-executable-contracts-and-invariants.md": "sha256:5a0b065f4b7ff20bba057e2966a899edaa5a04d0a5f244b7e0a251b7844abae6",
-      "03-validators-fixtures-and-control-gates.md": "sha256:c91b09b5d375e2a1d50b343799654a04ed457ab99458a9b8416bfb8cc40526d7",
-      "04-behavior-slices-and-implementation-order.md": "sha256:aafd5f25dc9b5a8b38b9203fe6bdf51533468dc5be956659c27c5f44fcea8745",
-      "05-diagnostics-repair-and-reentry.md": "sha256:ef77be2ab4f8a204dda84e2d6e9abc9d72243ebeed1f1919583a40715551ebdd",
-      "06-testing-observability-and-evidence.md": "sha256:995b01a203d10232f5abd05c4d5c6bb8ea257cf1d9020df3572c26bc22a1949c",
-      "96-global-review-and-validation.md": "sha256:550786377cebb471d3bdc4593f5178c86eff30f50c1e9ba2a75dc8eea37e9754",
+      "01-intent-authority-and-non-goals.md": "sha256:a57468dfb0c6c4c2ad93ed935e3a76ea5e528148599c8839825dda3780b569fa",
+      "02-executable-contracts-and-invariants.md": "sha256:9cc2a752b3532fd42c005886e5324e209961aebb0b5b91db6ce9c5216e1330e9",
+      "03-validators-fixtures-and-control-gates.md": "sha256:16c97e4e6d7119ece45f88f9c72e1e43905f4f455cff7c761f486bc9468eb3f6",
+      "04-behavior-slices-and-implementation-order.md": "sha256:c9a84235b1b7033101d84722a0981b5506b80c8f2a6d7a8ba251d3fc4c8c4595",
+      "05-diagnostics-repair-and-reentry.md": "sha256:f67670bab725c3d8b31ad63c0fe8f6b4f2c13acbbe1608e8765e144e06d85256",
+      "06-testing-observability-and-evidence.md": "sha256:ee9cf17ee392be5f77e1888885bde165e9fb3ffd4d23f1af5297a864ddd01249",
+      "96-global-review-and-validation.md": "sha256:1e2965ccfc7c1d0f4f006083b8da5a5d4ef091b3647a9c3cae35bfb82862f733",
       "schemas/clarification-decisions.v1.json": "sha256:d9035f3b3bf811248382bbeca4515dc57497390a30fbfd2e6d592631a9de89ae",
       "schemas/review-blocking-state.v1.json": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
-      "schemas/acceptance-contracts.v1.json": "sha256:4f1afd79fff01fa5bccd002f916b9aa10427535389b41e6cbe9d056f87f8aeb1",
-      "../../.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json": "sha256:ab7263698123b5af20e47f6ae771e5ebf652537169efcd7ce839d8aa0299d16d"
+      "schemas/acceptance-contracts.v1.json": "sha256:09b7d749fd311adbea41b36e4ee88e91001a7e2022ca40500c88b62a04681e88",
+      "../../.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json": "sha256:ab7263698123b5af20e47f6ae771e5ebf652537169efcd7ce839d8aa0299d16d",
+      "../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+      "../../docs/standards/bootstrap-review-control-plane.md": "sha256:542a5661e750e9708b4fc9acd939f00d6e6e240bf299fa49062bdaec04e08382",
+      "../../.agents/skills/run-phase-bootstrap-review/SKILL.md": "sha256:3503c24568f28bbb968c302dd18f741ed6f45b4ef12c98d8ab8ca5d1f2eb64d9",
+      "../../.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py": "sha256:d97983fa9b5319ed5a0646bc5bbeea30e4f68f1bed7fb848a0bbd2ab807635cb",
+      "../../.agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py": "sha256:afbe840b25c016c14a3be98178b30a21ef668fb328b98977ad6d693fcfa36623",
+      "../../.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json": "sha256:ded7cbf124ba4db155ecd125c6f487ab940317e0db883dda6660924eaa085781"
     },
     "acceptance_contracts": "schemas/acceptance-contracts.v1.json",
     "authority_manifest": "schemas/authority-manifest.v1.json",
@@ -33,7 +39,7 @@
     "review_blocking_state": "schemas/review-blocking-state.v1.json"
   },
   "ownership": {
-    "framework_adr": "docs/adr/ADR-0041-repository-maintenance-agent-protocol-ownership.md",
+    "framework_adr": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
     "standard_owner": "docs/standards/repository-maintenance-agent-protocol.md",
     "common_protocol_owner": ".agents/skills/quick-dev-tdd-adapter",
     "plan_instance_owner": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
@@ -69,7 +75,9 @@
       "backend_response": "schemas/backend-response.v1.schema.json",
       "diff_manifest": "schemas/diff-manifest.v1.schema.json",
       "adapter_decision": "schemas/adapter-decision.v1.schema.json",
-      "attempt_event": "schemas/agent-attempt-event.v1.schema.json"
+      "attempt_event": "schemas/agent-attempt-event.v1.schema.json",
+      "baseline_file_manifest": "schemas/baseline-file-manifest.v1.schema.json",
+      "attempt_ledger_manifest": "schemas/attempt-ledger-manifest.v1.schema.json"
     },
     "capsule_policy": {
       "immutable_revisions": true,
@@ -154,7 +162,7 @@
   "slices": [
     {
       "slice_id": "RMAP-S0",
-      "title": "Framework ADR and ownership standard",
+      "title": "Existing framework ADR and ownership standard",
       "requirement_ids": [
         "RMAP-001",
         "RMAP-002",
@@ -172,7 +180,7 @@
         "RMAP-ACC-021"
       ],
       "source_refs": [
-        "04-behavior-slices-and-implementation-order.md#rmap-s0-framework-adr-and-ownership-standard"
+        "04-behavior-slices-and-implementation-order.md#rmap-s0-existing-framework-adr-and-ownership-standard"
       ],
       "depends_on": [],
       "allowed_changes": {
@@ -181,7 +189,6 @@
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/**"
         ],
         "documentation": [
-          "docs/adr/ADR-0041-repository-maintenance-agent-protocol-ownership.md",
           "docs/standards/repository-maintenance-agent-protocol.md",
           "docs/standards/_index.md",
           "docs/PROJECT_DOCUMENTATION_INDEX.md"
@@ -194,6 +201,7 @@
       ],
       "execution_read_set": [
         "AGENTS.md",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "docs/standards/_index.md",
         "docs/architecture/ADR_INDEX_PHASE.md",
         "docs/architecture/ADR_INDEX_GODOT.md"
@@ -281,7 +289,7 @@
         ".agents/skills/bmad-quick-dev/**"
       ],
       "dependency_closure": [
-        "docs/adr/ADR-0041-repository-maintenance-agent-protocol-ownership.md",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "docs/standards/repository-maintenance-agent-protocol.md"
       ],
       "tdd": {
@@ -798,7 +806,9 @@
       "backend-response.v1.json",
       "diff-manifest.v1.json",
       "adapter-decision.v1.json",
-      "run-events.jsonl"
+      "run-events.jsonl",
+      "baseline-file-manifest.v1.json",
+      "attempt-ledger-manifest.v1.json"
     ],
     "stage_binding": {
       "contract_and_validator_hashes_current": true,
@@ -810,6 +820,9 @@
     "attempt_binding": {
       "final_context_manifest_hash": true,
       "final_capsule_hash": true,
+      "attempt_ledger_manifest_hash": true,
+      "run_events_hash": true,
+      "final_attempt_event_hash": true,
       "accepted_attempt_id": true,
       "accepted_attempt_decision_hash": true
     },
@@ -830,6 +843,9 @@
       "candidate_worktree_hash",
       "final_context_manifest_hash",
       "final_capsule_hash",
+      "attempt_ledger_manifest_hash",
+      "run_events_hash",
+      "final_attempt_event_hash",
       "accepted_attempt_id",
       "accepted_attempt_decision_hash"
     ]

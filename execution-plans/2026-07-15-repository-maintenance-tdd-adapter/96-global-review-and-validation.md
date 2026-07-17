@@ -64,7 +64,7 @@ Future `implementation-accepted` requires:
 
 Use one complete review, batch repair, then one final complete review. A third review is allowed only for a new P0/P1 or changed authority/context graph. P2-only repair uses targeted deterministic validation and does not trigger another full semantic review.
 
-The finalized `repo-maint-tdd-final-20260716-0129` Bootstrap run confirmed five P1 findings and blocked implementation. Their batch repair uses the preserved VDD baseline and targeted counterexamples first. A new complete semantic review may start only after the repaired candidate receives fresh deterministic `plan-ready` evidence.
+The finalized Round 3 Bootstrap run remains blocking under `manual_pause_after_round_3`. This deterministic repair uses the preserved VDD baseline and targeted counterexamples first, but cannot clear that disposition. Semantic re-entry requires a new durable review-policy decision and authority cycle after the repaired candidate receives fresh deterministic evidence; it cannot be labelled Round 4.
 
 Round 2 `repo-maint-tdd-final-r2-20260716-024940` confirmed three new P1 findings covering controlled test temp, all-slice exit-proof reachability, and exact source-location validation. They are repaired as one deterministic VDD batch. Because Round 2 introduced new P1 findings, policy permits one Round 3 review; Round 3 is the hard-limit final semantic round and any remaining blocker enters manual pause.
 

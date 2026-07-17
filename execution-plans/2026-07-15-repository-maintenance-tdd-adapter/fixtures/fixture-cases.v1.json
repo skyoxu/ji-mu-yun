@@ -193,6 +193,19 @@
       "expected_rule": "RMAP-OWNERSHIP-DUPLICATE"
     },
     {
+      "id": "adr-id-collision",
+      "target": "contract",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/ownership/framework_adr",
+          "value": "docs/adr/ADR-0041-repository-maintenance-agent-protocol-ownership.md"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-OWNERSHIP-ADR-ID-COLLISION"
+    },
+    {
       "id": "shadow-protected-tree-drift",
       "target": "shadow",
       "mutations": [
@@ -443,6 +456,19 @@
       ],
       "expected_valid": false,
       "expected_rule": "RMAP-TDD-PHASE"
+    },
+    {
+      "id": "bootstrap-finalized-envelope-stale-profile",
+      "target": "bootstrap_envelope",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/profileHash",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_valid": false,
+      "expected_rule": "RMAP-REVIEW-ENVELOPE"
     }
   ]
 }

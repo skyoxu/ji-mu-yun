@@ -113,7 +113,7 @@ def _validate_stage_evidence(repository_root: Path, slice_id: str, evidence: dic
 def _validate_declared_outputs(repository_root: Path, slice_id: str) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     required = {
-        "RMAP-S0": ["docs/adr/ADR-0041-repository-maintenance-agent-protocol-ownership.md", "docs/standards/repository-maintenance-agent-protocol.md", "docs/standards/_index.md", "docs/PROJECT_DOCUMENTATION_INDEX.md"],
+        "RMAP-S0": ["docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md", "docs/standards/repository-maintenance-agent-protocol.md", "docs/standards/_index.md", "docs/PROJECT_DOCUMENTATION_INDEX.md"],
         "RMAP-S1": [".agents/skills/quick-dev-tdd-adapter/SKILL.md", ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md", ".agents/skills/quick-dev-tdd-adapter/references/tdd-run-protocol.md", ".agents/skills/quick-dev-tdd-adapter/references/evidence-and-freshness.md"],
         "RMAP-S2": [".agents/skills/quick-dev-tdd-adapter/tools/validate_adapter_contract.py"],
         "RMAP-S3": ["execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json", "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/fixtures/tdd-adapter-shadow.v1.json"],
@@ -128,7 +128,8 @@ def _validate_declared_outputs(repository_root: Path, slice_id: str) -> list[dic
         adr = (repository_root / required[slice_id][0]).read_text(encoding="utf-8")
         standard = (repository_root / required[slice_id][1]).read_text(encoding="utf-8")
         indexes = [(repository_root / path).read_text(encoding="utf-8") for path in required[slice_id][2:]]
-        if "Status: Accepted" not in adr or "Three-Layer Ownership" not in standard or any("repository-maintenance-agent-protocol" not in text for text in indexes):
+        collision = repository_root / "docs/adr/ADR-0041-repository-maintenance-agent-protocol-ownership.md"
+        if collision.exists() or "Status: Accepted" not in adr or "Three-Layer Ownership" not in standard or any("repository-maintenance-agent-protocol" not in text for text in indexes):
             findings.append(_finding("RMAP-AUTH-SLICE-BEHAVIOR", slice_id, "S0 ownership authority is not semantically closed"))
     if slice_id in {"RMAP-S3", "RMAP-S4", "RMAP-S5"} and not findings:
         for relative in required[slice_id]:

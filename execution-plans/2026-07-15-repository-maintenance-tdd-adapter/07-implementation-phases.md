@@ -6,7 +6,7 @@ Owner: repository workflow architect.
 
 Work:
 
-- accept the framework ADR;
+- cite the existing Accepted ADR-0041 and reject any colliding ADR-0041 path;
 - add the durable standard and indexes;
 - create the repository Skill skeleton;
 - migrate the common schema candidate into its single live owner;
@@ -14,7 +14,7 @@ Work:
 - keep this plan's contract instance and predicates self-hosted;
 - observe negative fixture RED.
 
-Exit: ADR accepted, ownership unique, common schema has one live owner, plan instance passes `slice-ready`, and no runtime capability is claimed.
+Exit: existing ADR-0041 remains Accepted, ownership is unique, the collision fixture is rejected, the common schema has one live owner, the plan instance passes `slice-ready`, and no runtime capability is claimed.
 
 ## P1: Stateless Adapter And TDD Lifecycle
 
@@ -53,7 +53,7 @@ Owner: change owner plus Bootstrap operator.
 Work:
 
 - produce a current implementation candidate after all P2 shadow changes and bind the final Capsule plus accepted attempt decision;
-- bind plan-mandated checks through existing Bootstrap extension points;
+- bind plan-mandated checks through existing Bootstrap extension points and consume only the repository Skill's finalized-run validation envelope;
 - perform semantic review only with explicit authorization;
 - repair all accepted P0/P1 and dispose every accepted P2;
 - run the plan-local `implementation-accepted` predicate.

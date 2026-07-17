@@ -32,7 +32,7 @@ REPOSITORY_ROOT = PLAN_ROOT.parents[1]
 
 def validator_identity() -> str:
     digest = hashlib.sha256()
-    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py"]
+    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
     for path in (Path(__file__).with_name(name) for name in names):
         digest.update(path.name.encode("utf-8"))
         digest.update(b"\0")
@@ -255,7 +255,7 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
                             review_relative = review_dir.relative_to(REPOSITORY_ROOT).as_posix()
                             if not review_relative.startswith("logs/ci/"):
                                 raise ValueError("Bootstrap evidence path must stay in logs/ci")
-                            documents = [strict_load(review_dir / "review-input.json"), strict_load(review_dir / "preflight-result.json"), strict_load(review_dir / "review-gate-result.json"), strict_load(review_dir / "review-dispositions.json")]
+                            documents = [strict_load(review_dir / "finalized-run-validation.json"), strict_load(review_dir / "review-input.json"), strict_load(review_dir / "review-gate-result.json"), strict_load(review_dir / "review-dispositions.json")]
                             slice_findings.extend(validate_candidate_review_documents(PLAN_ROOT, candidate_relative, candidate, *documents, data["contract"].get("acceptance_policy", {}).get("p2_deferrals", []), current, stage_documents, review_dir))
                     except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
                         slice_findings.append({"rule_id": "RMAP-REVIEW-EVIDENCE-BINDING", "target": slice_id, "message": str(exc)})

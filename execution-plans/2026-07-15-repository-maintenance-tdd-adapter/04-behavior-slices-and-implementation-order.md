@@ -1,15 +1,15 @@
 # Behavior Slices And Implementation Order
 
-## RMAP-S0: Framework ADR And Ownership Standard
+## RMAP-S0: Existing Framework ADR And Ownership Standard
 
 - Phase: `P0`.
 - Requirements: `RMAP-001`, `RMAP-002`, `RMAP-019`, `RMAP-020`, `RMAP-021`, `RMAP-024`.
-- Produce one accepted framework ADR and `docs/standards/repository-maintenance-agent-protocol.md`.
+- Cite the existing Accepted `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md` and produce `docs/standards/repository-maintenance-agent-protocol.md`.
 - Update standards and documentation indexes in the same change.
-- Tests first: ownership registry rejects duplicate schema or evidence owners.
-- RED: deliberate duplicate owner fixture produces `RMAP-OWNERSHIP-DUPLICATE`.
+- Tests first: ownership registry rejects duplicate schema/evidence owners and an ADR-ID collision path.
+- RED: deliberate conflicting `ADR-0041-repository-maintenance-agent-protocol-ownership.md` fixture produces `RMAP-OWNERSHIP-ADR-ID-COLLISION`; the duplicate-owner fixture still produces `RMAP-OWNERSHIP-DUPLICATE`.
 - GREEN: `rmap-s0-slice-validate` checks the ADR, standard, standards index, and project documentation index under `slice-ready`.
-- Exit: GREEN proof passes, ADR is accepted, ownership validator passes, and no current-capability claim is introduced. `plan-ready` alone cannot satisfy this exit.
+- Exit: GREEN proof passes, the existing ADR remains Accepted, ownership validator passes, and no current-capability claim is introduced. `plan-ready` alone cannot satisfy this exit.
 - Rollback: remove only the new proposed standard/index links before any dependent slice starts.
 
 ## RMAP-S1: Common Contract And Self-Hosted Plan Instance
@@ -87,10 +87,10 @@
 
 - Requirements: `RMAP-011`, `RMAP-013`, `RMAP-016`, `RMAP-020`.
 - Phase: `P3`.
-- Run fresh deterministic proof against current hashes and consume finalized Bootstrap evidence.
+- Run fresh deterministic proof against current hashes and consume the repository Skill's `bootstrap-finalized-run-validation.v1` envelope.
 - Reject high-risk or expired P2 deferrals.
 - Produce `implementation-accepted` only from the plan-local validator.
-- GREEN: `rmap-s7-acceptance-validate` consumes the same explicitly bound evidence set, requires a non-blocking final review, rejects open accepted P0/P1, and requires a current valid disposition for every accepted P2 under `implementation-accepted`.
+- GREEN: `rmap-s7-acceptance-validate` validates the envelope schema, complete profile hash, control-plane and validator identity, all finalized artifact hashes, non-authorizing boundary, and candidate binding; it then requires a non-blocking final review, rejects open accepted P0/P1, and requires a current valid disposition for every accepted P2 under `implementation-accepted`.
 - Exit explicitly excludes protected handoff and release.
 
 ## Dependency Order

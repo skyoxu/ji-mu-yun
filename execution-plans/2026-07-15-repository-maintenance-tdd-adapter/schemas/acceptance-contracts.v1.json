@@ -12,10 +12,10 @@
         "rmap-s0-slice-validate"
       ],
       "negative_fixture_ids": [
-        "duplicate-ownership"
+        "adr-id-collision"
       ],
       "expected_failure_ids": [
-        "RMAP-OWNERSHIP-DUPLICATE"
+        "RMAP-OWNERSHIP-ADR-ID-COLLISION"
       ],
       "evidence_required": [
         "current-contract-hash",
@@ -586,16 +586,18 @@
         "rmap-s2-slice-validate"
       ],
       "negative_fixture_ids": [
-        "capsule-context-hash-stale"
+        "capsule-reference-omitted-from-manifest"
       ],
       "expected_failure_ids": [
-        "RMAP-CAPSULE-CONTEXT"
+        "RMAP-CAPSULE-ARTIFACT-CLOSURE"
       ],
       "evidence_required": [
         "current-contract-hash",
         "current-validator-hash",
         "immutable-context-manifest",
         "immutable-slice-capsule",
+        "typed-artifact-ref-union",
+        "actual-artifact-byte-hashes",
         "predecessor-capsule-hash",
         "stable-rule-id"
       ],
@@ -614,10 +616,10 @@
         "rmap-s2-slice-validate"
       ],
       "negative_fixture_ids": [
-        "attempt-decision-missing"
+        "attempt-event-lifecycle-missing"
       ],
       "expected_failure_ids": [
-        "RMAP-ATTEMPT-PARTIAL"
+        "RMAP-ATTEMPT-EVENT-LIFECYCLE"
       ],
       "evidence_required": [
         "current-contract-hash",
@@ -626,6 +628,10 @@
         "backend-response-hash",
         "actual-diff-hash",
         "adapter-decision-hash",
+        "stage-result-decision-binding",
+        "attempt-ledger-manifest-hash",
+        "run-events-byte-hash",
+        "final-event-hash",
         "attempt-predecessor-hash",
         "stable-rule-id"
       ],

@@ -28,6 +28,7 @@
 24. Command descriptor versus RED/GREEN/REFACTOR invocation expectation separation.
 25. Immutable Capsule context, predecessor chain, path, and predicate authority.
 26. Minimized attempt evidence, request/response/diff/decision binding, partial failure, stage uniqueness, and event lineage.
+27. Bootstrap finalized-run envelope success, stale profile/control-plane/validator/artifact rejection, and empty authorization set.
 
 ## Required Adapter Fixtures
 
@@ -71,14 +72,18 @@ Persisted protocol layout:
 ```text
 context/<capsule-id>/context-manifest.v1.json
 context/<capsule-id>/slice-capsule.v1.json
+baseline-file-manifest.v1.json
+baseline/files/<repository-relative-snapshot>
 attempts/<attempt-id>/backend-request.v1.json
 attempts/<attempt-id>/backend-response.v1.json
 attempts/<attempt-id>/diff-manifest.v1.json
 attempts/<attempt-id>/adapter-decision.v1.json
+attempts/<attempt-id>/result-files/<repository-relative-snapshot>
 run-events.jsonl
+attempt-ledger-manifest.v1.json
 ```
 
-Every file binds the same run, plan, contract, slice, source, validator, command registry, and candidate identities. Stage files also record command identity, observed exit, timestamp, and predecessor-stage hash; RED records the declared selector and stable failures. The candidate directory contains hash-bound `changed-files.json`, `test-diff.patch`, final context/Capsule, and the accepted attempt decision.
+Every file binds the same run, plan, contract, slice, source, validator, command registry, and candidate identities. Stage files also bind the accepted attempt decision and Capsule/context identities while recording command identity, observed exit, timestamp, and predecessor-stage hash; RED records the declared selector and stable failures. The candidate directory contains hash-bound `changed-files.json`, `test-diff.patch`, final context/Capsule, attempt-ledger manifest, raw event-log hash, final canonical event hash, and the accepted attempt decision.
 
 Every slice command receives `--run-dir`, `--red-result`, `--green-result`, and `--refactor-result`; implicit latest selection and repository-wide evidence scans are forbidden. S6 additionally receives `--candidate-result`. Only S7 receives `--bootstrap-run`.
 
@@ -86,7 +91,7 @@ Raw clarification and repair evidence remains under `logs/**`, but clean-checkou
 
 ## Candidate Envelope
 
-The candidate result authorizes only `bootstrap-review`. It explicitly excludes `implementation-accepted`, protected handoff, and release. It binds the final context-manifest hash, final Capsule hash, accepted refactor attempt ID, and accepted decision hash. Its worktree identity covers only declared slice write/read/dependency/authority closure through S6, so unrelated unstaged or untracked work does not invalidate it; Git index drift remains blocking.
+The candidate result authorizes only `bootstrap-review`. It explicitly excludes `implementation-accepted`, protected handoff, and release. It binds the final context-manifest hash, final Capsule hash, attempt-ledger manifest hash, raw `run-events.jsonl` hash, final canonical event hash, accepted refactor attempt ID, and accepted decision hash. Its worktree identity covers only declared slice write/read/dependency/authority closure through S6, so unrelated unstaged or untracked work does not invalidate it; Git index drift remains blocking.
 
 ## Plan Validation Evidence
 

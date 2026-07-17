@@ -106,7 +106,19 @@ def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> li
         ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
         "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
         "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "docs/standards/bootstrap-review-control-plane.md",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
         ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-preflight-result.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-gate-result.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/review-finding.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/schemas/review-result.v1.schema.json",
     }
     prefix = "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/"
     expected.update(prefix + name for name in (
@@ -125,10 +137,16 @@ def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> li
         "schemas/slice-capsule.v1.schema.json", "schemas/backend-request.v1.schema.json",
         "schemas/backend-response.v1.schema.json", "schemas/diff-manifest.v1.schema.json",
         "schemas/adapter-decision.v1.schema.json", "schemas/agent-attempt-event.v1.schema.json",
+        "schemas/baseline-file-manifest.v1.schema.json", "schemas/attempt-ledger-manifest.v1.schema.json",
         "fixtures/fixture-cases.v1.json", "fixtures/capsule-attempt-cases.v1.json", "tools/validate_all.py",
         "tools/rmap_checks.py", "tools/authority_guards.py", "tools/contract_guards.py",
         "tools/evidence_guards.py", "tools/fixture_checks.py", "tools/shadow_guards.py",
-        "tools/slice_guards.py", "tools/source_guards.py", "tools/protocol_guards.py", "tools/tests/test_plan_validator.py", "tools/tests/test_protocol_guards.py",
+        "tools/slice_guards.py", "tools/source_guards.py", "tools/protocol_guards.py",
+        "tools/protocol_validation_guards.py", "tools/protocol_fixture_support.py",
+        "tools/protocol_fixture_cases.py",
+        "tools/protocol_fixture_mutations.py", "tools/protocol_artifact_guards.py",
+        "tools/attempt_lineage_guards.py", "tools/refresh_projections.py",
+        "tools/tests/test_plan_validator.py", "tools/tests/test_protocol_guards.py",
     ))
     if seen != expected:
         findings.append(_finding("RMAP-HASH-AUTHORITY-MANIFEST", "authority-manifest", "authority inventory differs from the closed required path set"))

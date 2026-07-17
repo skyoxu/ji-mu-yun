@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import hashlib
 import json
 import re
@@ -11,7 +10,6 @@ from source_guards import validate_coverage as validate_source_coverage
 from shadow_guards import validate_shadow_protected_trees, validate_shadow_registry as validate_shadow_registry_guard
 from authority_guards import validate_acceptance_contracts, validate_authority_manifest, validate_clarification_projection, validate_plan_state as validate_plan_state_guard, validate_script_sizes
 from protocol_guards import validate_protocol_contract, validate_protocol_fixture_suite
-
 VALIDATOR_VERSION = "rmap-plan-validator.v2"
 HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 REQ_RE = re.compile(r"^RMAP-(\d{3})$")
@@ -45,24 +43,18 @@ PREDICATE_AUTHORITY = {
     "implementation-candidate": (["bootstrap-review"], ["implementation-accepted", "protected-handoff", "release-ready"]),
     "implementation-accepted": (["implementation-accepted"], ["protected-handoff", "release-ready"]),
 }
-
 def finding(rule_id: str, target: str, message: str) -> dict[str, str]:
     return {"rule_id": rule_id, "target": target, "message": message}
-
 def validate_plan_state(state: dict[str, Any], review_blocker: dict[str, Any]) -> list[dict[str, str]]:
     return validate_plan_state_guard(state, review_blocker, PREDICATE_AUTHORITY)
-
 def validate_shadow_registry(shadow: dict[str, Any]) -> list[dict[str, str]]:
     return validate_shadow_registry_guard(Path(__file__).resolve().parents[1], shadow)
-
 def strict_json(path: Path) -> Any:
     def reject_constant(value: str) -> None:
         raise ValueError(f"non-standard JSON constant: {value}")
     return json.loads(path.read_text(encoding="utf-8"), parse_constant=reject_constant)
-
 def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
-
 def candidate_hash(plan_root: Path) -> str:
     digest = hashlib.sha256()
     for path in sorted(plan_root.rglob("*"), key=lambda item: item.as_posix().lower()):
@@ -72,11 +64,9 @@ def candidate_hash(plan_root: Path) -> str:
         digest.update(rel.encode("utf-8")); digest.update(b"\0")
         digest.update(path.read_bytes()); digest.update(b"\0")
     return "sha256:" + digest.hexdigest()
-
 def validate_required_files(plan_root: Path) -> list[dict[str, str]]:
     missing = sorted(rel for rel in REQUIRED_FILES if not (plan_root / rel).is_file())
     return [finding("RMAP-STRUCT-MISSING", rel, "required artifact is missing") for rel in missing]
-
 def load_machine(plan_root: Path) -> tuple[dict[str, Any], list[dict[str, str]]]:
     names = {
         "state": "schemas/plan-state.v1.json", "requirements": "schemas/requirements.v1.json",
@@ -99,7 +89,6 @@ def load_machine(plan_root: Path) -> tuple[dict[str, Any], list[dict[str, str]]]
         except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
             findings.append(finding("RMAP-STRUCT-JSON", rel, str(exc)))
     return data, findings
-
 def validate_links(plan_root: Path) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     pattern = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
@@ -112,7 +101,6 @@ def validate_links(plan_root: Path) -> list[dict[str, str]]:
             if not (path.parent / target).resolve().exists():
                 findings.append(finding("RMAP-STRUCT-LINK", path.name, f"missing link target: {target}"))
     return findings
-
 def validate_requirements(plan_root: Path, registry: dict[str, Any], quality: dict[str, Any], acceptance: dict[str, Any]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     items = registry.get("requirements")
@@ -160,10 +148,8 @@ def validate_requirements(plan_root: Path, registry: dict[str, Any], quality: di
         if set(contract) != required_acceptance or contract.get("acceptance_id") != item["acceptance_id"] or not contract.get("positive_command_ids") or not contract.get("negative_fixture_ids") or not contract.get("evidence_required"):
             findings.append(finding("RMAP-REQ-ACCEPTANCE-CONTRACT", item["id"], "acceptance contract is incomplete or mismatched"))
     return findings
-
 def validate_coverage(plan_root: Path, coverage: dict[str, Any], requirement_ids: set[str]) -> list[dict[str, str]]:
     return validate_source_coverage(plan_root, coverage, requirement_ids, sha256_file)
-
 def validate_deltas(plan_root: Path, deltas: dict[str, Any], requirement_ids: set[str]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     items = deltas.get("deltas")
@@ -189,7 +175,6 @@ def validate_deltas(plan_root: Path, deltas: dict[str, Any], requirement_ids: se
     if sorted(mapped) != sorted(requirement_ids) or len(mapped) != len(set(mapped)):
         findings.append(finding("RMAP-REQ-DELTA", "spec-deltas", "each requirement must map exactly once"))
     return findings
-
 def validate_commands(registry: dict[str, Any], plan_root: Path | None = None) -> list[dict[str, str]]:
     plan_root = plan_root or Path(__file__).resolve().parents[1]; findings: list[dict[str, str]] = []
     if registry.get("shell") is not False:
@@ -247,7 +232,6 @@ def validate_commands(registry: dict[str, Any], plan_root: Path | None = None) -
             if not required_flags.issubset({item for item in argv if isinstance(item, str)}):
                 findings.append(finding("RMAP-CMD-STAGE-PROTOCOL", str(cid), "slice proof command omits required explicit evidence arguments"))
     return findings
-
 def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[str, Any], commands: dict[str, Any]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     schema = strict_json(plan_root / "schemas" / "implementation-contract.v1.schema.json")
@@ -269,6 +253,9 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
     owner_values = [ownership.get(key) for key in ("framework_adr", "standard_owner", "common_protocol_owner", "plan_instance_owner", "runtime_evidence_owner")]
     if any(not isinstance(value, str) or not value for value in owner_values) or len(owner_values) != len(set(owner_values)):
         findings.append(finding("RMAP-OWNERSHIP-DUPLICATE", "ownership", "ownership paths must be nonempty and unique"))
+    expected_framework_adr = "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md"
+    if ownership.get("framework_adr") != expected_framework_adr:
+        findings.append(finding("RMAP-OWNERSHIP-ADR-ID-COLLISION", "ownership.framework_adr", "framework ADR must cite the existing Accepted ADR-0041 without allocating a colliding path"))
     backend = contract.get("backend", {})
     if backend.get("hidden_state") is not False or backend.get("provider_scheduling") is not False or backend.get("subprocess_ownership") is not False:
         findings.append(finding("RMAP-BACKEND-STATE", "backend", "backend must be stateless and scheduler-free"))
@@ -320,11 +307,11 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
     if slice_ids != [f"RMAP-S{index}" for index in range(8)]:
         findings.append(finding("RMAP-TDD-SLICE", "slices", "slice sequence mismatch"))
     identity_policy = contract.get("candidate_identity_policy", {})
-    required_identity = {"head", "index_tree", "tracked_diff_hash", "untracked_manifest_hash", "contract_hash", "command_registry_hash", "validator_hash", "authority_manifest_hash", "changed_file_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id", "refactor_run_id", "candidate_worktree_hash", "final_context_manifest_hash", "final_capsule_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"}
-    expected_artifacts = {"changed-files.json", "test-diff.patch", "red-result.json", "green-result.json", "refactor-result.json", "recovery-state.json", "context-manifest.v1.json", "slice-capsule.v1.json", "backend-request.v1.json", "backend-response.v1.json", "diff-manifest.v1.json", "adapter-decision.v1.json", "run-events.jsonl"}
+    required_identity = {"head", "index_tree", "tracked_diff_hash", "untracked_manifest_hash", "contract_hash", "command_registry_hash", "validator_hash", "authority_manifest_hash", "changed_file_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id", "refactor_run_id", "candidate_worktree_hash", "final_context_manifest_hash", "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash", "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"}
+    expected_artifacts = {"changed-files.json", "test-diff.patch", "red-result.json", "green-result.json", "refactor-result.json", "recovery-state.json", "context-manifest.v1.json", "slice-capsule.v1.json", "backend-request.v1.json", "backend-response.v1.json", "diff-manifest.v1.json", "adapter-decision.v1.json", "run-events.jsonl", "baseline-file-manifest.v1.json", "attempt-ledger-manifest.v1.json"}
     stage_binding = identity_policy.get("stage_binding", {})
     attempt_binding = identity_policy.get("attempt_binding", {})
-    if identity_policy.get("exact_match_required") is not True or identity_policy.get("worktree_scope") != "declared-slice-closure-through-candidate" or identity_policy.get("unrelated_worktree_drift") != "excluded-from-candidate-hash" or set(identity_policy.get("required_run_artifacts", [])) != expected_artifacts or not stage_binding or any(value is not True for value in stage_binding.values()) or set(attempt_binding) != {"final_context_manifest_hash", "final_capsule_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"} or any(value is not True for value in attempt_binding.values()) or set(identity_policy.get("required_fields", [])) != required_identity:
+    if identity_policy.get("exact_match_required") is not True or identity_policy.get("worktree_scope") != "declared-slice-closure-through-candidate" or identity_policy.get("unrelated_worktree_drift") != "excluded-from-candidate-hash" or set(identity_policy.get("required_run_artifacts", [])) != expected_artifacts or not stage_binding or any(value is not True for value in stage_binding.values()) or set(attempt_binding) != {"final_context_manifest_hash", "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash", "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"} or any(value is not True for value in attempt_binding.values()) or set(identity_policy.get("required_fields", [])) != required_identity:
         findings.append(finding("RMAP-HASH-CANDIDATE-IDENTITY", "candidate-identity-policy", "candidate identity contract is incomplete"))
     phase_order = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
     seen: set[str] = set()
@@ -370,7 +357,6 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
     if by_id.get("RMAP-S2", {}).get("exit_predicate") != "slice-ready" or by_id.get("RMAP-S6", {}).get("exit_predicate") != "implementation-candidate" or by_id.get("RMAP-S7", {}).get("exit_predicate") != "implementation-accepted":
         findings.append(finding("RMAP-TDD-CANDIDATE-SEQUENCE", "S2-S7", "candidate, Bootstrap, and acceptance sequence is inverted"))
     return findings
-
 def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, str]], dict[str, Any]]:
     checks: list[dict[str, Any]] = []
     findings = validate_required_files(plan_root)

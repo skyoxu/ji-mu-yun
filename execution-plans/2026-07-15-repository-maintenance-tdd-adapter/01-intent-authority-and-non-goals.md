@@ -14,7 +14,9 @@ The plan succeeds when a repository-owned adapter can consume one implementation
 | Durable clarification projection | User-approved creation and repair boundary decisions | `schemas/clarification-decisions.v1.json` |
 | `AGENTS.md` | Repository routing, evidence, protected paths, and architecture rules | Current hash in `schemas/authority-manifest.v1.json` |
 | VDD strict standard | Verification authority and plan contract | `sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140` |
-| 7-12 Bootstrap plan and CLI | Current semantic-review extension boundary | Directory authority frozen by the implementation slice baseline |
+| Accepted ADR-0041 and Bootstrap standard | Durable review control-plane ownership and semantics | Hash-bound in `schemas/authority-manifest.v1.json` |
+| Repository-owned Bootstrap Skill | Executable semantic-review protocol and finalized-run validation envelope | Hash-bound implementation, schemas, profiles, and tests in `schemas/authority-manifest.v1.json` |
+| 7-12 Bootstrap plan and CLI | Revision-bound compatibility adapter and migration examples only | Directory authority frozen by the implementation slice baseline |
 | Round 3 blocking projection | Current semantic-review disposition and re-entry boundary | `schemas/review-blocking-state.v1.json` |
 
 `agentbuild.txt` remains byte-preserved source history. It must be included in the eventual plan commit; this directory does not copy it into a second authority.
@@ -29,23 +31,16 @@ Mutable run state and result envelopes belong under `logs/tdd-adapter/**`, never
 
 ## Framework ADR Gate
 
-Before implementation, one framework-level ADR named `Repository Maintenance Agent Protocol Ownership` must be accepted. It records:
+The existing Accepted [`ADR-0041 Bootstrap Review Execution Control Plane Ownership`](../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md) owns the irreversible control-plane boundary used by this plan: durable semantics live in standards, executable review protocol lives in the repository-owned Skill, plan-local validation owns business acceptance, and compatibility adapters do not acquire durable behavior.
 
-- why a top-level Router is rejected;
-- why document protocols and a stateless adapter are selected;
-- the three-layer ownership model;
-- why plan-local validation owns implementation acceptance;
-- why an implementation backend cannot own review, `done`, commit, acceptance, or release;
-- why new capability is not added to historical script directories.
-
-Ordinary execution plans cite this ADR. They do not create one ADR per plan. Only a change to these framework decisions requires supersession.
+S0 cites ADR-0041 and creates only the repository-maintenance adapter standard. It must not allocate another ADR-0041 path or duplicate Bootstrap ownership. A new ADR is permitted only if implementation discovers a distinct irreversible decision not covered by ADR-0041; that decision requires a new unused ID and cannot silently replace this plan's current authority.
 
 ## Current-State Boundary
 
-- Current repair baseline: HEAD `6adab7f741b9080a7e14758a815d02403d13a7b2`; the original 7-15 candidate hash before this repair was `sha256:5d318a8e9198faa85dba1df97308006900c82fb0210f7e827ca6c71d0dba28e0`.
+- Current 555 repair baseline: HEAD `6adab7f741b9080a7e14758a815d02403d13a7b2`; the pre-repair 7-15 target hash was `sha256:784b515d72a573427544e71c06587ddecf362ad8a3ffe14cc599540ec203450d`.
 - The stabilized 7-12 Bootstrap control-plane bytes and their AGENTS/README/ADR/standard projections remain separate uncommitted upstream changes. This repair may hash-bind them for discovery but does not absorb their commit ownership; clean-checkout proof still requires those bytes to exist in their owning commit or equivalent clean snapshot.
 - The VDD Skill baseline passed 46 tests.
-- The Bootstrap baseline passed 62 tests, and the 7-12 Whole-directory validator passed.
+- The pre-repair Bootstrap baseline passed 84 tests, the repaired control plane passes 87 tests, and the 7-12 Whole-directory validator passes.
 - No BMAD `SPEC.md`, `.memlog.md`, or `ARCHITECTURE-SPINE.md` package applies to this intent.
 - The finalized Round 3 Bootstrap result is `blocked` with eight confirmed P1 findings, and the review cycle is `manual_pause_after_round_3`. Deterministic repair cannot clear that semantic disposition.
 

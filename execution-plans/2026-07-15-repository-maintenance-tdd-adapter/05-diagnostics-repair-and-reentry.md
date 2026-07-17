@@ -69,6 +69,8 @@ Security, data-loss, authority-bypass, evidence-integrity, irreversible-mutation
 
 The current stop-loss owner is [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json). It records `manual_pause_after_round_3`, forbids Round 4 under the current policy revision, and requires a new external policy decision for semantic re-entry.
 
+Deterministic repair may produce new plan-local validation evidence and a corrected candidate, but it cannot mutate the Round 3 disposition. After repair, semantic re-entry begins only through a separately recorded durable policy decision and a new authority cycle; it must not be represented as Round 4 of the existing `changeId` policy cycle.
+
 ## Confirmed P1 Repair Lineage
 
 The repair baseline is `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-p1-repair-baseline/baseline-manifest.json`. It preserves Bootstrap findings `BSR-06FAE36E33FCD8DF`, `BSR-074B1DAA968AF43B`, `BSR-592AAB6881E55672`, `BSR-83E672E6803298AD`, and `BSR-9CAF6A01EDF7AAA7`. Closure requires the matching schema, authority-hash, typed-path, nested-glob, and S0-exit fixtures plus a fresh composite result; this section is not closure evidence by itself.

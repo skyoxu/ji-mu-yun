@@ -144,6 +144,16 @@ Before finalizing accepted P2 findings, provide `p2-dispositions.json` covering 
 
 Finalize only after independent P0/P1 decisions and complete P2 dispositions. A final result cannot contain an open accepted P0/P1.
 
+After finalization, emit a plan-consumable validation envelope by recomputing the frozen profile, preflight, gate, candidates, rejections, final result, dispositions, metrics, and artifact hashes:
+
+```text
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py validate-finalized-run \
+  --run-dir <run> \
+  --output <validation-envelope.json>
+```
+
+The envelope is validation evidence only. It always has `authorizes=[]` and explicitly excludes plan acceptance, implementation acceptance, protected handoff, release, commit, and done authority. A plan-local validator may consume the envelope, but must independently apply its own acceptance predicate.
+
 ## Repair Rounds
 
 Repair all accepted findings as one batch outside the read-only review run. Use deterministic targeted checks during repair; do not launch another full review after each finding.

@@ -558,6 +558,195 @@
       "expected_rule": "RMAP-ATTEMPT-STAGE-UNIQUENESS"
     },
     {
+      "id": "capsule-artifact-bytes-stale",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/contexts/0/context_manifest/artifact_refs/0/sha256",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-PROTOCOL-ARTIFACT"
+    },
+    {
+      "id": "capsule-reference-omitted-from-manifest",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/contexts/0/context_manifest/artifact_refs/0"
+        }
+      ],
+      "expected_rule": "RMAP-CAPSULE-ARTIFACT-CLOSURE"
+    },
+    {
+      "id": "capsule-reference-extra-in-manifest",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/contexts/0/context_manifest/artifact_refs/-",
+          "value": {
+            "role": "extra",
+            "path_type": "run_path",
+            "path": "extra.json",
+            "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        }
+      ],
+      "expected_rule": "RMAP-CAPSULE-ARTIFACT-CLOSURE"
+    },
+    {
+      "id": "capsule-reference-duplicate-role-path",
+      "mutations": [],
+      "expected_rule": "RMAP-CAPSULE-ARTIFACT-CLOSURE"
+    },
+    {
+      "id": "capsule-reference-root-ambiguous",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/contexts/0/context_manifest/capsule_ref/path_type"
+        }
+      ],
+      "expected_rule": "RMAP-PROTOCOL-PATH"
+    },
+    {
+      "id": "capsule-blocker-payload-not-reference",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/contexts/0/slice_capsule/latest_blocker_ref",
+          "value": {
+            "message": "raw blocker payload"
+          }
+        }
+      ],
+      "expected_rule": "RMAP-CAPSULE-BLOCKER-REF"
+    },
+    {
+      "id": "attempt-stage-set-incomplete",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/attempts/2"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-STAGE-ORDER"
+    },
+    {
+      "id": "attempt-stage-order-invalid",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/1/adapter_decision/stage",
+          "value": "refactor"
+        },
+        {
+          "op": "replace",
+          "path": "/attempts/2/adapter_decision/stage",
+          "value": "green"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-STAGE-ORDER"
+    },
+    {
+      "id": "attempt-stage-result-binding-stale",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/adapter_decision/stage_binding_id",
+          "value": "STAGE-GREEN"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-STAGE-RESULT-BINDING"
+    },
+    {
+      "id": "attempt-event-lifecycle-missing",
+      "mutations": [],
+      "expected_rule": "RMAP-ATTEMPT-EVENT-LIFECYCLE"
+    },
+    {
+      "id": "attempt-event-artifact-stale",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/events/0/artifact_refs/0/sha256",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-EVENT-ARTIFACT"
+    },
+    {
+      "id": "attempt-forbidden-path-labelled-allowed",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/backend_response/changed_files/0",
+          "value": "PhaseA.Platform/Unsafe.cs"
+        },
+        {
+          "op": "replace",
+          "path": "/attempts/0/diff_manifest/files/0/path",
+          "value": "PhaseA.Platform/Unsafe.cs"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-DIFF-SCOPE"
+    },
+    {
+      "id": "attempt-response-diff-file-set-mismatch",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/backend_response/changed_files/0",
+          "value": ".agents/skills/quick-dev-tdd-adapter/tools/other.py"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-RESPONSE-DIFF"
+    },
+    {
+      "id": "attempt-unapproved-command",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/attempts/0/backend_response/commands_attempted/-",
+          "value": "unapproved-command"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-COMMAND"
+    },
+    {
+      "id": "attempt-before-hash-stale",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/diff_manifest/files/0/before_sha256",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-BEFORE-HASH"
+    },
+    {
+      "id": "attempt-after-hash-stale",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempts/0/diff_manifest/files/0/after_sha256",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-AFTER-HASH"
+    },
+    {
+      "id": "candidate-ledger-root-stale",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/attempt_ledger_manifest/root_hash",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-ATTEMPT-LEDGER"
+    },
+    {
       "id": "attempt-event-chain-stale",
       "mutations": [
         {

@@ -20,6 +20,6 @@
     "contains_forbidden_change": {"type": "boolean"}
   },
   "$defs": {
-    "fileChange": {"type": "object", "additionalProperties": false, "required": ["path", "change_type", "before_sha256", "after_sha256", "scope"], "properties": {"path": {"type": "string", "minLength": 1}, "change_type": {"enum": ["add", "modify", "delete"]}, "before_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}, "after_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}, "scope": {"enum": ["allowed", "forbidden", "unrelated"]}}}
+    "fileChange": {"type": "object", "additionalProperties": false, "required": ["path", "change_type", "before_sha256", "after_sha256", "result_snapshot_ref", "scope"], "properties": {"path": {"type": "string", "minLength": 1}, "change_type": {"enum": ["add", "modify", "delete"]}, "before_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}, "after_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}, "result_snapshot_ref": {"type": ["object", "null"], "additionalProperties": false, "required": ["path_type", "path", "sha256"], "properties": {"path_type": {"const": "run_path"}, "path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}, "scope": {"enum": ["allowed", "forbidden", "unrelated"]}}}
   }
 }

@@ -22,9 +22,10 @@
     "artifactRef": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["role", "path", "sha256"],
+      "required": ["role", "path_type", "path", "sha256"],
       "properties": {
         "role": {"type": "string", "minLength": 1},
+        "path_type": {"enum": ["repo_path", "plan_path", "run_path"]},
         "path": {"type": "string", "minLength": 1},
         "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
       }

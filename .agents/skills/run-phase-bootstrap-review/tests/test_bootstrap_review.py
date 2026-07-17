@@ -1079,6 +1079,93 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
         self.assertEqual(before, (self.run_dir / "review-gate-result.json").read_bytes())
 
+    def test_validate_finalized_run_emits_non_authorizing_envelope(self) -> None:
+        self.prepare()
+        self.complete_layers()
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        output = self.repo / "finalized-validation.json"
+
+        self.assertEqual(
+            0,
+            bootstrap.main(
+                [
+                    "validate-finalized-run",
+                    "--run-dir",
+                    str(self.run_dir),
+                    "--output",
+                    str(output),
+                ]
+            ),
+        )
+
+        envelope = json.loads(output.read_text(encoding="utf-8"))
+        manifest = self.read_json("review-input.json")
+        self.assertEqual("bootstrap-finalized-run-validation.v1", envelope["schemaVersion"])
+        self.assertEqual("passed", envelope["validationStatus"])
+        self.assertEqual("clean", envelope["finalStatus"])
+        self.assertEqual([], envelope["authorizes"])
+        self.assertIn("plan-acceptance", envelope["doesNotAuthorize"])
+        self.assertIn("protected-handoff", envelope["doesNotAuthorize"])
+        self.assertEqual(manifest["controlPlaneRevision"], envelope["controlPlaneRevision"])
+        self.assertEqual(
+            bootstrap.value_hash(bootstrap.load_profile(manifest["profileName"])),
+            envelope["profileHash"],
+        )
+        self.assertEqual(
+            bootstrap.file_hash(self.run_dir / "review-gate-result.json"),
+            envelope["artifactHashes"]["finalResult"],
+        )
+
+    def test_validate_finalized_run_rejects_stale_metrics(self) -> None:
+        self.prepare()
+        self.complete_layers()
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        metrics = self.read_json("review-metrics.json")
+        metrics["acceptedUniqueCount"] = 99
+        self.write_json("review-metrics.json", metrics)
+        output = self.repo / "finalized-validation.json"
+
+        self.assertEqual(
+            1,
+            bootstrap.main(
+                [
+                    "validate-finalized-run",
+                    "--run-dir",
+                    str(self.run_dir),
+                    "--output",
+                    str(output),
+                ]
+            ),
+        )
+        self.assertFalse(output.exists())
+
+    def test_validate_finalized_run_rejects_stale_profile_projection(self) -> None:
+        self.prepare()
+        self.complete_layers()
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        manifest = self.read_json("review-input.json")
+        manifest["controlPlaneRevision"] = "bootstrap-control-plane.stale"
+        unhashed = dict(manifest)
+        unhashed.pop("inputHash", None)
+        manifest["inputHash"] = bootstrap.value_hash(unhashed)
+        self.write_json("review-input.json", manifest)
+
+        self.assertEqual(
+            1,
+            bootstrap.main(
+                [
+                    "validate-finalized-run",
+                    "--run-dir",
+                    str(self.run_dir),
+                    "--output",
+                    str(self.repo / "finalized-validation.json"),
+                ]
+            ),
+        )
+
     def test_gate_refuses_to_reopen_finalized_result(self) -> None:
         self.prepare()
         self.complete_layers()

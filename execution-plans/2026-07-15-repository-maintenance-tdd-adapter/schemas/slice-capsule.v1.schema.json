@@ -21,7 +21,7 @@
     "boundaries": {"$ref": "#/$defs/boundaries"},
     "target_command_ids": {"$ref": "#/$defs/stringArray"},
     "exit_predicate": {"enum": ["slice-ready", "implementation-candidate", "implementation-accepted"]},
-    "latest_blocker_ref": {"type": ["object", "null"]},
+    "latest_blocker_ref": {"type": ["object", "null"], "additionalProperties": false, "required": ["role", "path_type", "path", "sha256"], "properties": {"role": {"type": "string", "minLength": 1}, "path_type": {"enum": ["repo_path", "plan_path", "run_path"]}, "path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
     "predecessor_capsule_hash": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
     "immutable": {"const": true},
     "authorizes": {"const": []},
@@ -29,7 +29,7 @@
   },
   "$defs": {
     "stringArray": {"type": "array", "items": {"type": "string", "minLength": 1}},
-    "artifactRef": {"type": "object", "additionalProperties": false, "required": ["role", "path", "sha256"], "properties": {"role": {"type": "string", "minLength": 1}, "path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
+    "artifactRef": {"type": "object", "additionalProperties": false, "required": ["role", "path_type", "path", "sha256"], "properties": {"role": {"type": "string", "minLength": 1}, "path_type": {"enum": ["repo_path", "plan_path", "run_path"]}, "path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
     "boundaries": {"type": "object", "additionalProperties": false, "required": ["allowed_write_set", "forbidden_write_set", "execution_read_set", "dependency_closure"], "properties": {"allowed_write_set": {"$ref": "#/$defs/stringArray"}, "forbidden_write_set": {"$ref": "#/$defs/stringArray"}, "execution_read_set": {"$ref": "#/$defs/stringArray"}, "dependency_closure": {"$ref": "#/$defs/stringArray"}}}
   }
 }

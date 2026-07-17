@@ -89,6 +89,14 @@ Round 2 and Round 3 require an implementation-contract instance named `repair-cl
 - Authorize-launch revalidates all evidence hashes, Git index, write set, execution read set, dependency closure, and authority graph freshness.
 - Missing or stale repair closure prevents any reviewer lease from starting.
 
+## Finalized-Run Validation Envelope
+
+The repository-owned Skill exposes `validate-finalized-run` as the only durable plan-consumption surface for a finalized Bootstrap run. The command reloads the current profile and run authority, revalidates preflight and gate evidence, reproduces candidate/rejection projection from reviewer outputs, and recomputes final result, disposition, metrics, and byte hashes.
+
+The `bootstrap-finalized-run-validation.v1` envelope binds review/change/round identity, the complete canonical profile hash, route and control-plane revisions, policy and authority identity, final status, finding closure, validator identity, and hashes of every consumed final artifact. It always carries `authorizes=[]` and explicitly excludes plan acceptance, implementation acceptance, protected handoff, release, commit, and done.
+
+Plans consume this envelope instead of reimplementing a partial Bootstrap profile or lifecycle validator. A plan-local validator remains solely responsible for its own candidate and acceptance predicates. Envelope validation cannot clear a review-cycle manual pause or create a new semantic-review round.
+
 ## Migration
 
 - New plans bootstrap this protocol and own only their contract instances, predicates, fixtures, and evidence.
@@ -104,6 +112,7 @@ Protocol changes require:
 - Repository-owned Skill quick validation.
 - Bootstrap CLI regression tests.
 - Generic schema and fixture tests.
+- Finalized-run envelope success, stale-profile, stale-artifact, and non-authorizing boundary tests.
 - 2026-07-12 Whole-directory compatibility validation.
 - Targeted Windows access, case-collision, reparse, atomic-write, event-rebuild, drift, repair-closure, and stale-replacement tests.
 - A fresh `bootstrap-skill-route` review after deterministic checks pass.

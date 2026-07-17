@@ -19,7 +19,7 @@
 10. Source section IDs and selectors are derived from the hash-bound source structure and must match the coverage machine owner exactly.
 11. The union of all slice requirement IDs equals the complete active requirement registry.
 12. Shadow slices compare protected-tree hashes and file counts against an independent pre-backfill baseline.
-13. Every slice consumes explicit run/RED/GREEN/REFACTOR paths and verifies current hashes, observed exits, strict time/order, predecessor hashes, and recovery lineage; S6 consumes candidate only, while S7 cross-binds candidate, trusted review profile, preflight evidence, final result, and dispositions.
+13. Every slice consumes explicit run/RED/GREEN/REFACTOR paths and verifies current hashes, observed exits, strict time/order, predecessor hashes, and recovery lineage; S6 consumes candidate only, while S7 consumes the repository Skill's finalized-run validation envelope and verifies its complete profile/control-plane/validator/artifact closure.
 14. Every active requirement maps to one executable acceptance contract whose expected failure IDs equal the referenced negative fixtures' actual stable rules.
 15. Validation snapshots the plan, source, and validator before and after all checks; drift forces a non-authorizing failure envelope with distinct candidate/current hashes.
 16. Persisted Capsule schemas, predecessor hashes, context hashes, path containment, and non-authorizing predicate boundaries.
@@ -44,12 +44,15 @@
 | `RMAP-RECOVERY-*` | Stale, successor, lineage, and resumability |
 | `RMAP-REVIEW-*` | Bootstrap boundary and P0/P1/P2 dispositions |
 | `RMAP-AUTH-*` | Predicate and release-authority separation |
+| `RMAP-OWNERSHIP-*` | Durable owner uniqueness and ADR identifier collision |
 
 ## Fixture Contract
 
 [`fixtures/fixture-cases.v1.json`](fixtures/fixture-cases.v1.json) owns deliberate counterexamples. Each case applies one bounded mutation to the valid self-hosted contract and names exactly one expected failure rule. A case that fails for another rule is invalid.
 
 [`fixtures/capsule-attempt-cases.v1.json`](fixtures/capsule-attempt-cases.v1.json) owns protocol counterexamples for stale context, S2 predicate escalation, path escape, stale request binding, raw response persistence, forbidden diff, stale decision hashes, adapter authority escalation, invalid next state, missing decision, duplicate accepted stage, and stale event lineage. [`tools/protocol_guards.py`](tools/protocol_guards.py) validates both the fixture bundle and persisted run directories.
+
+The valid protocol fixture materializes three immutable Capsule revisions and three accepted attempts in exact RED, GREEN, REFACTOR order. Its virtual artifact store supplies actual bytes, baseline snapshots, per-attempt result snapshots, stage results, event-log bytes, and ledger manifest bytes; fixture hashes are recomputed before each bounded mutation.
 
 The minimum cases are:
 
@@ -78,6 +81,12 @@ The minimum cases are:
 - high-risk P2 deferral;
 - expired P2 deferral;
 - predicate authority escalation.
+- ADR-0041 identifier collision;
+- stale Capsule artifact bytes, omitted/extra/duplicate manifest refs, ambiguous typed root, or raw blocker payload;
+- incomplete or reordered accepted stage set and stale stage-result binding;
+- missing lifecycle event or stale event artifact bytes;
+- response/diff file mismatch, unapproved command, self-labelled forbidden path, or stale before/after hash;
+- stale attempt-ledger root or stale finalized Bootstrap profile envelope.
 
 ## RED Before Implementation
 

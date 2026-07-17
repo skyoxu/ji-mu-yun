@@ -3,7 +3,7 @@
   "$id": "jimuyun.adapter-decision.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "plan_id", "slice_id", "run_id", "attempt_id", "stage", "actor", "input_context_hash", "backend_request_hash", "backend_response_hash", "actual_diff_hash", "decision", "failure_ids", "evidence_refs", "previous_attempt_id", "previous_decision_hash", "next_allowed_state", "authorizes", "does_not_authorize", "finalized", "written_last"],
+  "required": ["schema_version", "plan_id", "slice_id", "run_id", "attempt_id", "stage", "stage_binding_id", "stage_result_path", "actor", "input_context_hash", "backend_request_hash", "backend_response_hash", "actual_diff_hash", "decision", "failure_ids", "evidence_refs", "previous_attempt_id", "previous_decision_hash", "next_allowed_state", "authorizes", "does_not_authorize", "finalized", "written_last"],
   "properties": {
     "schema_version": {"const": "jimuyun.adapter-decision.v1"},
     "plan_id": {"type": "string", "minLength": 1},
@@ -11,6 +11,8 @@
     "run_id": {"type": "string", "minLength": 1},
     "attempt_id": {"type": "string", "pattern": "^ATTEMPT-[0-9]{3,}$"},
     "stage": {"enum": ["red", "green", "refactor"]},
+    "stage_binding_id": {"type": "string", "pattern": "^STAGE-(RED|GREEN|REFACTOR)$"},
+    "stage_result_path": {"type": "string", "pattern": "^(red|green|refactor)-result\\.json$"},
     "actor": {"type": "object", "additionalProperties": false, "required": ["role", "adapter_protocol_version"], "properties": {"role": {"const": "repository-maintenance-tdd-adapter"}, "adapter_protocol_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"}}},
     "input_context_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "backend_request_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
@@ -28,6 +30,6 @@
     "written_last": {"const": true}
   },
   "$defs": {
-    "artifactRef": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}
+    "artifactRef": {"type": "object", "additionalProperties": false, "required": ["path_type", "path", "sha256"], "properties": {"path_type": {"enum": ["repo_path", "plan_path", "run_path"]}, "path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}
   }
 }

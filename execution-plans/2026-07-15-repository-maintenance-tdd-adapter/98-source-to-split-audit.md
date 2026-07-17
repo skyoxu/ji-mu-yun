@@ -39,7 +39,8 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `MODIFIED`: every slice consumes explicit run and stage evidence; repository-wide `logs/**` discovery is removed.
 - `ADDED`: executable acceptance registry, complete authority manifest, clarification projection, and review blocking projection.
 - `ADDED`: clean-checkout shadow baseline projection, derived requirement-quality hashes, exact earliest-phase validation, and complete candidate identity policy.
-- `ADDED`: `RMAP-025` immutable persisted Capsule revisions and `RMAP-026` append-only Agent Attempt Ledger with minimized envelopes, canonical diff, decision-last finalization, and S6 candidate binding.
+- `ADDED`: `RMAP-025` immutable persisted Capsule revisions with typed, exact-union, actual-byte artifact closure and `RMAP-026` complete ordered stage attempts with exact event lifecycle, recomputed diff facts, decision/stage-result binding, ledger-root closure, and S6 candidate binding.
+- `MODIFIED`: `RMAP-001/002` reuse the existing Accepted ADR-0041 and preserve 7-12 as a compatibility adapter; `RMAP-012/016` consume the repository-owned Bootstrap finalized-run validation envelope; `RMAP-014` adds byte-verifiable baseline and per-attempt result snapshots.
 - `REMOVED`: mutable single-Capsule overwrite, standalone adapter-decision authority, and any need for a Router or S8.
 
 No requirement is silently dropped. Machine-level delta details live in `schemas/spec-deltas.v1.json`.

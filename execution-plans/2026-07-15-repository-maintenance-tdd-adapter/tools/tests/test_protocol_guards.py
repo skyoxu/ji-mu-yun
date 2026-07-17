@@ -37,6 +37,33 @@ class ProtocolGuardTests(unittest.TestCase):
     def test_duplicate_accepted_stage_is_rejected(self) -> None:
         self.assertEqual({"RMAP-ATTEMPT-STAGE-UNIQUENESS"}, self._rules("attempt-duplicate-accepted-stage"))
 
+    def test_single_green_attempt_cannot_satisfy_complete_slice_exit(self) -> None:
+        self.assertEqual({"RMAP-ATTEMPT-STAGE-ORDER"}, self._rules("attempt-stage-set-incomplete"))
+
+    def test_capsule_manifest_must_equal_actual_reference_union(self) -> None:
+        self.assertEqual(
+            {"RMAP-CAPSULE-ARTIFACT-CLOSURE"},
+            self._rules("capsule-reference-omitted-from-manifest"),
+        )
+
+    def test_event_lifecycle_requires_response_recorded(self) -> None:
+        self.assertEqual(
+            {"RMAP-ATTEMPT-EVENT-LIFECYCLE"},
+            self._rules("attempt-event-lifecycle-missing"),
+        )
+
+    def test_forbidden_path_cannot_be_self_labelled_allowed(self) -> None:
+        self.assertEqual(
+            {"RMAP-ATTEMPT-DIFF-SCOPE"},
+            self._rules("attempt-forbidden-path-labelled-allowed"),
+        )
+
+    def test_candidate_binds_attempt_ledger_root(self) -> None:
+        self.assertEqual(
+            {"RMAP-ATTEMPT-LEDGER"},
+            self._rules("candidate-ledger-root-stale"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -13,7 +13,7 @@
       ],
       "summary": "Backfill all three existing refactor plans rather than one pilot.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "7-12",
         "7-07",
@@ -50,7 +50,7 @@
       ],
       "summary": "Use a repository-owned capsule executor instead of stock Quick Dev backend v1.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "adapter",
         "backend"
@@ -87,7 +87,7 @@
       ],
       "summary": "Add one framework ADR and exact three-layer ownership.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "standards",
         "Skill",
@@ -127,7 +127,7 @@
       ],
       "summary": "Add shell, environment, placeholder, Windows path, index, read-set, and dependency-closure controls.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "command registry",
         "adapter"
@@ -169,7 +169,7 @@
       ],
       "summary": "Add append-only recovery with stale predecessor and normally initialized successor.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "recovery",
         "logs"
@@ -207,7 +207,7 @@
       ],
       "summary": "Require no open P0/P1 and full P2 disposition with non-deferrable high-risk families and expiry blocking.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "implementation-accepted"
       ],
@@ -241,7 +241,7 @@
       ],
       "summary": "Remove first-release Bootstrap CLI modification unless a deterministic gap proves it necessary.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "7-12 Bootstrap CLI"
       ],
@@ -274,7 +274,7 @@
       ],
       "summary": "Remove P4 BMAD elimination from this plan.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "future plan"
       ],
@@ -307,7 +307,7 @@
       ],
       "summary": "Rename quick-dev-tdd-adapter architecture concept to Repository Maintenance TDD Adapter while retaining the stateless adapter identity.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "plan",
         "future Skill"
@@ -350,7 +350,7 @@
       ],
       "summary": "Add the remaining executable contract, lifecycle, validation, test, confidence, and source-custody requirements needed for a complete VDD control chain.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "plan validator",
         "adapter",
@@ -415,7 +415,7 @@
       ],
       "summary": "Add immutable persisted Slice Capsule revisions and an append-only Agent Attempt Ledger without adding routing or transition authority.",
       "prior_revision": "sha256:5d318a8e9198faa85dba1df97308006900c82fb0210f7e827ca6c71d0dba28e0",
-      "proposed_contract_hash": "sha256:740e286c141acabd14c2e7dcdba02005c6e7ad0ac3c62ee0049e5ce271295fb8",
+      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
       "consumers": [
         "adapter prepare",
         "backend adapter",

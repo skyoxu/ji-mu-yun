@@ -3,7 +3,7 @@
   "$id": "jimuyun.backend-request.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "plan_id", "slice_id", "run_id", "attempt_id", "stage", "actor", "capsule_ref", "goal", "allowed_command_ids", "request_payload_hash", "raw_body_persisted", "contains_sensitive_data", "previous_attempt_id"],
+  "required": ["schema_version", "plan_id", "slice_id", "run_id", "attempt_id", "stage", "stage_binding_id", "actor", "capsule_ref", "goal", "allowed_command_ids", "request_payload_hash", "raw_body_persisted", "contains_sensitive_data", "previous_attempt_id"],
   "properties": {
     "schema_version": {"const": "jimuyun.backend-request.v1"},
     "plan_id": {"type": "string", "minLength": 1},
@@ -11,6 +11,7 @@
     "run_id": {"type": "string", "minLength": 1},
     "attempt_id": {"type": "string", "pattern": "^ATTEMPT-[0-9]{3,}$"},
     "stage": {"enum": ["red", "green", "refactor"]},
+    "stage_binding_id": {"type": "string", "pattern": "^STAGE-(RED|GREEN|REFACTOR)$"},
     "actor": {"$ref": "#/$defs/actor"},
     "capsule_ref": {"$ref": "#/$defs/artifactRef"},
     "goal": {"enum": ["observe-red", "make-red-green", "preserve-green-refactor"]},
@@ -22,6 +23,6 @@
   },
   "$defs": {
     "actor": {"type": "object", "additionalProperties": false, "required": ["role", "backend_protocol_version", "actor_instance_id", "identity_authoritative"], "properties": {"role": {"const": "slice-capsule-executor"}, "backend_protocol_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"}, "actor_instance_id": {"type": "string", "minLength": 1}, "identity_authoritative": {"const": false}}},
-    "artifactRef": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}
+    "artifactRef": {"type": "object", "additionalProperties": false, "required": ["path_type", "path", "sha256"], "properties": {"path_type": {"enum": ["repo_path", "plan_path", "run_path"]}, "path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}
   }
 }
