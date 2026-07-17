@@ -3,15 +3,15 @@
 - Title: `run-refactor-implementation-acceptance` Skill 需求规格
 - Status: draft
 - Branch: 当前工作树
-- Reviewed baseline commit: `efd0fa6`
+- Reviewed baseline commit: `7243a2a`
 - Goal: 定义一个以验收条款为单位、按阶段顺序判断重构实施完成度的只读 Skill
 - Scope: Skill 的触发、输入、验收矩阵、阶段门禁、DoD 层级、输出和验证场景
-- Current step: 条件Bootstrap时序与授权模式合同修订完成，等待实施
-- Last completed step: 已统一decision/binding/attestation顺序、evidence-only边界、条件工件和S0 durable authority projection
+- Current step: 不可变Bootstrap状态与跨阶段投影合同修订完成，等待实施
+- Last completed step: 已拆分requirement decision、launch authorization、execution state、base matrix、impact projection和条件Action DAG
 - Stop-loss: 本文件不创建或修改 Skill，不修改被验收重构目录，不执行 Bootstrap reviewer
 - Next action: 按第12节change set门禁实施；S0与deterministic core可独立推进，但S4 semantic integration和S5完整发布必须等待S0通过
 - Recovery command: `py -3 -c "from pathlib import Path; print(Path(r'execution-plans/2026-07-15-refactor-implementation-acceptance-skill-requirements.md').read_text(encoding='utf-8'))"`
-- Open questions: 见“待确认项”
+- Open questions: none；见“已确认默认项”
 - Exit criteria: 本文件中的功能需求、状态规则、阶段门禁和负例成为后续 Skill 创建的对照基准
 - Related ADRs: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`
 - Related decision logs: n/a - 尚未创建独立决策日志
@@ -149,7 +149,10 @@ baseline manifest是baseline快照，每个当时存在的受审文件至少包�
 ```json
 {
   "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete|partial|unavailable",
   "revision": "...",
+  "coverageGaps": [],
+  "authorizes": [],
   "files": [
     {
       "path": "...",
@@ -166,8 +169,11 @@ candidate manifest表达baseline到candidate的完整受审集合与diff，包�
 ```json
 {
   "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete|partial|unavailable",
   "baseline_revision": "...",
   "candidate_revision": "...",
+  "coverageGaps": [],
+  "authorizes": [],
   "files": [
     {
       "change_type": "unchanged|added|modified|deleted|renamed|untracked",
@@ -190,11 +196,13 @@ candidate manifest表达baseline到candidate的完整受审集合与diff，包�
 - `deleted`：baseline path/hash存在，candidate path/hash为`null`，且baseline manifest中存在相同旧路径与hash；
 - `renamed`：两侧path和hash都存在且path不同；允许rename同时修改内容，因此两侧hash可以相同或不同。
 
+manifest文件始终必须存在且通过schema；不得用空文件、缺文件或跳过schema表达“不知道”。`status=complete`时`coverageGaps=[]`且完整满足上述文件、角色、diff和tombstone合同；`partial|unavailable`时必须给出结构化`coverageGaps`、已尝试来源、缺失范围、诊断和recheck条件，并强制`authorizes=[]`。任何一个required manifest不是`complete`时，candidate completeness为`incomplete`，只能继续`evidence_only`诊断，不得进入任何授权路径。
+
 manifest hash必须对规范化后的完整manifest内容计算，不能只对路径列表或Git revision计算。`dirty_worktree`和`proposed_commit_set`必须绑定每个文件的角色、路径变化、两侧适用的内容hash和纳入原因；仅记录HEAD无效。任何候选文件、删除tombstone、计划权威、adapter或validator变化都会使旧结果stale。
 
 Phase 0B或其他按需能力是否被触及，必须依据baseline到candidate diff、当前phase/slice声明和route/capability dependency map共同计算，不能只扫描当前目录或依赖关键词猜测。
 
-缺少可信baseline或candidate manifest时可以运行evidence-only盘点，但不得产生实施验收授权。
+缺少可信baseline或candidate覆盖时，`prepare`仍必须生成`partial|unavailable` manifest及诊断，然后可以运行evidence-only盘点；不得省略manifest文件或产生实施验收授权。
 
 ### 4.2 输入权威顺序
 
@@ -279,7 +287,7 @@ source inventory至少记录：
 
 `overallCompleteness`由所有partition按最弱结果计算；任何`incomplete`使整体为`incomplete`，任何未完成审计的`candidate`使整体最多为`candidate`。阶段授权只检查该阶段`consumed_partition_ids`实际消费的partitions，不能因无关partition仍为candidate而阻断，也不能用一个complete partition覆盖另一个candidate partition。
 
-当当前授权范围消费的partitions全部为`deterministic_complete`时，后续`bootstrap-decision.json.inventoryAttestationRequirement=not_required`，不得为了流程整齐而要求正向companion。只有至少一个被消费partition为`semantic_candidate`时，该机器状态才为`required`并启用以下正向证明合同。
+当当前授权范围消费的partitions全部为`deterministic_complete`时，后续`bootstrap-requirement-decision.json.inventoryAttestationRequirement=not_required`，不得为了流程整齐而要求正向companion。只有至少一个被消费partition为`semantic_candidate`时，该机器状态才为`required`并启用以下正向证明合同。
 
 初始`acceptance-run-input.json`只能冻结`bootstrap-capability-binding.json`的expected path和新Skill-owned binding schema hash，不得无条件冻结尚未存在的Bootstrap companion/profile/schema身份，也不得保存尚不存在的actual scope hash。`decide-bootstrap`完成后：
 
@@ -295,7 +303,7 @@ source inventory至少记录：
   "schemaVersion": "bootstrap-capability-binding.v1",
   "acceptanceRunId": "...",
   "acceptanceRunInputHash": "sha256:...",
-  "bootstrapDecisionHash": "sha256:...",
+  "bootstrapRequirementDecisionHash": "sha256:...",
   "controlPlaneRevision": "bootstrap-control-plane.v2",
   "routeVersion": "bootstrap-review-route.v2",
   "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
@@ -542,9 +550,8 @@ split时旧ID变为tombstone并指向全部新ID；merge时全部旧ID变为tomb
 | `evidence_requirements` | 当前check必须满足的证据种类、数量、新鲜度和豁免合同 |
 | `disposition` | 实施事实分类 |
 | `evaluation_state` | 是否已针对当前候选完成评估 |
-| `gate_state` | 是否有资格参与阶段授权 |
-| `blocking_predecessors` | 阻断该行授权的阶段、gate或finding |
-| `finding_refs` | 与该check绑定的当前Bootstrap finding IDs |
+| `deterministic_gate_state` | 仅由阶段前置、基础权威和确定性证据计算的资格状态 |
+| `deterministic_blocking_predecessors` | 阻断基础矩阵行的阶段、确定性gate或缺失authority；不得写入Bootstrap finding |
 | `gap` | 未满足项或特殊分类依据 |
 
 `requirement_refs` 使用通用namespace，例如`requirement`、`capability`、`pbr`、`adr`、`acceptance`或`split_added`。7-07 adapter可以额外渲染`split_added_ids`，但该字段不得成为通用schema的必填项。
@@ -614,7 +621,7 @@ applicability.status = not_applicable
 applicability.status = undetermined
   -> disposition = null
   -> evaluation_state in not_evaluated | stale
-  -> gate_state = blocked
+  -> deterministic_gate_state = blocked
   -> 不得参与任何授权
 ```
 
@@ -626,7 +633,7 @@ applicability.status = undetermined
 - `evaluated`：已完成当前candidate评估；
 - `stale`：来源、candidate、evidence、adapter或validator变化后失效。
 
-`gate_state`只允许：
+`deterministic_gate_state`只允许：
 
 - `eligible`：该行具备参与当前阶段授权的资格；
 - `blocked`：被前置阶段、外部gate、缺失authority或finding阻断。
@@ -637,8 +644,8 @@ applicability.status = undetermined
 {
   "disposition": "verified",
   "evaluation_state": "evaluated",
-  "gate_state": "blocked",
-  "blocking_predecessors": ["Phase 2"]
+  "deterministic_gate_state": "blocked",
+  "deterministic_blocking_predecessors": ["Phase 2"]
 }
 ```
 
@@ -652,9 +659,17 @@ applicability.status = undetermined
 {
   "evidence_id": "EVID-...",
   "kind": "test_run|build|smoke|readback|schema_validation|document_validation|static_analysis|visual|migration|rollback|audit_export|protected_attestation",
+  "origin": "controlled_invocation|imported_existing",
   "path": "logs/...",
   "sha256": "sha256:...",
-  "command": "...",
+  "commandId": "plan-7-07-targeted-tests",
+  "commandRegistryHash": "sha256:...",
+  "commandInvocationHash": "sha256:...",
+  "processResultPath": "actions/.../process-result.json",
+  "processResultHash": "sha256:...",
+  "importSourcePath": null,
+  "importSourceHash": null,
+  "importAuthorityRefs": [],
   "exit_code": 0,
   "started_utc": "...",
   "completed_utc": "...",
@@ -668,17 +683,52 @@ applicability.status = undetermined
 }
 ```
 
+`origin=controlled_invocation`时command ID、registry/invocation hash和process result path/hash全部必填，且必须能回查结构化resolved argv；自由command字符串不得成为机器身份。`origin=imported_existing`时这些command字段为`null`，必须提供import source path/hash、authority refs、custody/freshness验证和只读导入receipt；它只能支持当前运行模式允许的candidate结论，不能绕过`evidence_only`授权边界。
+
 `test_definition_refs`证明测试或validator定义存在，`test_run_evidence_ids`和`runtime_evidence_ids`引用当前执行结果，两者不能互相替代。每个check必须逐项核对`evidence_requirements.required_kinds`、最小数量和freshness policy；相同路径但hash、candidate、validator或environment不匹配时必须拒绝并标记stale。
 
 ### 6.4 状态判定硬规则
 
 - `verified`必须具有有效`implementation_refs`、`test_definition_refs`，并完整满足当前行的`evidence_requirements`；仅文档类要求可以用明确的非代码交付物替代生产代码，但仍必须有可执行校验和当前证据。
 - `evaluation_state!=evaluated`时不得产生`verified`授权效果。
-- `gate_state=blocked`不改变真实`disposition`，但阻止对应阶段授权。
+- `deterministic_gate_state=blocked`不改变真实`disposition`，但阻止对应candidate阶段判定；Bootstrap finding和external/protected gate影响由后续projection拥有。
 - `not_applicable`必须满足适用性不变量，记录未触发的谓词、权威和证明该结论的证据ID。
 - `explicitly_deferred`必须满足全部条件必填机器字段，不得只依赖`gap`；它不计入`verified`数量，也不得自动满足Program DoD。
 - `partial`和`missing`不能通过对应阶段；`not_evaluated`、`stale`或`blocked`不能授权对应阶段。
 - `gap`对非`verified`行必须非空；对`verified`行应为空或只包含无阻断说明。
+
+### 6.5 Base Matrix、Impact Projection与结果保管
+
+`implementation-acceptance-matrix.json`是Bootstrap前冻结的base matrix，只表达requirement、implementation、evidence、applicability、disposition、evaluation和deterministic gate facts。Bootstrap findings、人工approval、external/protected gate及最终effective状态不得回写base matrix。
+
+`project-acceptance-impact`必须基于当前工件生成：
+
+```json
+{
+  "schemaVersion": "acceptance-impact-projection.v1",
+  "acceptanceRunId": "...",
+  "baseMatrixPath": "implementation-acceptance-matrix.json",
+  "baseMatrixHash": "sha256:...",
+  "bootstrapRequirementDecisionHash": "sha256:...",
+  "bootstrapImportEnvelopeHash": null,
+  "findingMapHash": null,
+  "approvalImportReceiptHashes": [],
+  "externalAndProtectedGateResultHashes": ["sha256:..."],
+  "checkImpacts": [
+    {
+      "checkId": "GTM-AC-P1-017",
+      "effectiveGateState": "eligible|blocked|incomplete|stale",
+      "effectiveFindingRefs": [],
+      "effectiveBlockingReasons": []
+    }
+  ],
+  "status": "current|incomplete|stale"
+}
+```
+
+deterministic-only路径使用`bootstrapImportEnvelopeHash=null`、`findingMapHash=null`和空approval receipts，但仍投影external/protected gates；semantic路径必须绑定当前Bootstrap import、finding map和全部required approval receipts。projection不复制base matrix实施事实，只投影effective影响；任一输入hash变化使旧projection stale。
+
+`evaluate`原子发布`phase-acceptance-candidate.json`和`program-dod-candidate.json`，两者必须绑定base matrix hash并固定`authorizes=[]`，明确不授权Phase/Program完成。`finalize`只读取immutable candidate结果、当前impact projection、Bootstrap import和gate evidence，另行发布`phase-acceptance-result.json`与`program-dod-result.json`。candidate与final result不得共用路径、覆盖或原地升级；失败attempt不得替换上一份formal结果。
 
 ## 7. 阶段验收控制
 
@@ -720,16 +770,22 @@ Phase 0A -> Phase 0B -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> P
 
 ### 7.3 阶段通过条件
 
-阶段只有同时满足以下条件才能通过：
+`evaluate`先生成`phase-acceptance-candidate.json`，只根据base matrix、partition completeness、实现和确定性证据计算候选结论：
 
 - 当前阶段全部`consumed_partition_ids`分别达到`deterministic_complete`或`semantically_attested_complete`，且没有`candidate`或`incomplete`分区；
 - 全部exit criteria已原子化进入矩阵并有合法结论；
 - 对应 `01-*` 至 `07-*` 局部 acceptance criteria 已覆盖；
 - 相关 `97-*` 条目全部分类；
-- 所有适用行均为`evaluation_state=evaluated`且`gate_state=eligible`；
+- 所有适用行均为`evaluation_state=evaluated`且`deterministic_gate_state=eligible`；
 - 所有应当`verified`的条目均有实现、测试或validator定义，并满足逐check声明的全部`evidence_requirements`；
 - 所有 `not_applicable` 和 `explicitly_deferred` 均满足严格字段合同，且目标计划明确允许该延期通过当前阶段出口；
-- 没有`partial`、`missing`、`not_evaluated`、`stale`或`gate_state=blocked`行；
+- 没有`partial`、`missing`、`not_evaluated`、`stale`或`deterministic_gate_state=blocked`行。
+
+`finalize`只有在候选条件满足，并同时满足以下投影条件时，才能生成通过的`phase-acceptance-result.json`：
+
+- `acceptance-impact-projection.json`绑定当前base matrix、finding map、approval receipts及external/protected gate hashes；
+- 所有适用check的`effective_gate_state=eligible`且不存在未解决effective blocker；
+- 当前阶段消费的semantic partition在required路径达到`semantically_attested_complete`；
 - 没有目标计划`finding_policy.blocking_severities`中的未解决finding；
 - 计划声明的 predecessor、external 或 protected gate 已通过。
 
@@ -782,27 +838,41 @@ Bootstrap v2要求每个accepted P2在finalize前具有`fixed|refuted|deferred`�
   "capabilityActivationMap": {},
   "externalAndProtectedGates": [],
   "authorizationScope": {},
-  "actionOrder": [
-    "prepare",
-    "inventory",
-    "collect-evidence",
-    "evaluate",
-    "render",
-    "decide-bootstrap",
-    "bind-bootstrap-capabilities",
-    "prepare-attestation",
-    "prepare-bootstrap",
-    "import-bootstrap",
-    "map-findings",
-    "import-mapping-approval",
-    "finalize"
-  ],
+  "actionGraph": {
+    "actions": [
+      {"actionId": "prepare", "order": 10, "dependsOn": [], "dependsOnAny": [], "activationPredicate": "always", "readinessPredicate": "inputs.available", "notApplicableReasonCode": null, "formalWriteSet": ["acceptance-run-input.json", "baseline-content-manifest.json", "candidate-content-manifest.json"], "reactivationTriggers": ["candidate_or_authority_changed"], "allowMultipleAttempts": false, "invalidatesOnSuccess": []},
+      {"actionId": "inventory", "order": 20, "dependsOn": ["prepare"], "dependsOnAny": [], "activationPredicate": "always", "readinessPredicate": "manifests.present", "notApplicableReasonCode": null, "formalWriteSet": ["acceptance-source-inventory.json", "acceptance-source-clauses.json"], "reactivationTriggers": ["manifest_or_source_changed"], "allowMultipleAttempts": false, "invalidatesOnSuccess": []},
+      {"actionId": "collect-evidence", "order": 30, "dependsOn": ["inventory"], "dependsOnAny": [], "activationPredicate": "always", "readinessPredicate": "command_or_import_sources_resolved", "notApplicableReasonCode": null, "formalWriteSet": ["acceptance-evidence-records.json"], "reactivationTriggers": ["candidate_command_or_evidence_changed"], "allowMultipleAttempts": true, "invalidatesOnSuccess": ["evaluate", "project-acceptance-impact", "finalize"]},
+      {"actionId": "evaluate", "order": 40, "dependsOn": ["collect-evidence"], "dependsOnAny": [], "activationPredicate": "always", "readinessPredicate": "inventory_and_evidence_available", "notApplicableReasonCode": null, "formalWriteSet": ["implementation-acceptance-matrix.json", "phase-acceptance-candidate.json", "program-dod-candidate.json"], "reactivationTriggers": ["inventory_evidence_adapter_or_validator_changed"], "allowMultipleAttempts": true, "invalidatesOnSuccess": ["decide-bootstrap", "project-acceptance-impact", "finalize"]},
+      {"actionId": "render", "order": 50, "dependsOn": ["evaluate"], "dependsOnAny": [], "activationPredicate": "always", "readinessPredicate": "candidate_results_current", "notApplicableReasonCode": null, "formalWriteSet": ["implementation-acceptance-matrix.md"], "reactivationTriggers": ["base_matrix_changed"], "allowMultipleAttempts": true, "invalidatesOnSuccess": []},
+      {"actionId": "decide-bootstrap", "order": 60, "dependsOn": ["evaluate"], "dependsOnAny": [], "activationPredicate": "always", "readinessPredicate": "candidate_results_current", "notApplicableReasonCode": null, "formalWriteSet": ["bootstrap-requirement-decision.json"], "reactivationTriggers": ["new_run_required_when_decision_inputs_change"], "allowMultipleAttempts": false, "invalidatesOnSuccess": []},
+      {"actionId": "bind-bootstrap-capabilities", "order": 70, "dependsOn": ["decide-bootstrap"], "dependsOnAny": [], "activationPredicate": "bootstrap.required", "readinessPredicate": "bootstrap_profile_registry_available", "notApplicableReasonCode": "BOOTSTRAP_NOT_REQUIRED", "formalWriteSet": ["bootstrap-capability-binding.json"], "reactivationTriggers": ["new_run_required_when_binding_inputs_change"], "allowMultipleAttempts": false, "invalidatesOnSuccess": []},
+      {"actionId": "prepare-attestation", "order": 80, "dependsOn": ["bind-bootstrap-capabilities"], "dependsOnAny": [], "activationPredicate": "inventory_attestation.required", "readinessPredicate": "binding_and_semantic_scope_available", "notApplicableReasonCode": "INVENTORY_ATTESTATION_NOT_REQUIRED", "formalWriteSet": ["inventory-attestation-scope.json", "inventory-attestation-scope-result.json"], "reactivationTriggers": ["new_run_required_when_scope_inputs_change"], "allowMultipleAttempts": false, "invalidatesOnSuccess": []},
+      {"actionId": "prepare-bootstrap", "order": 90, "dependsOn": ["bind-bootstrap-capabilities"], "dependsOnAny": [], "activationPredicate": "bootstrap.required", "readinessPredicate": "attestation_not_required_or_scope_prepared", "notApplicableReasonCode": "BOOTSTRAP_NOT_REQUIRED", "formalWriteSet": ["bootstrap-review-request.json"], "reactivationTriggers": ["new_run_required_when_request_inputs_change"], "allowMultipleAttempts": false, "invalidatesOnSuccess": []},
+      {"actionId": "import-bootstrap-launch-authorization", "order": 100, "dependsOn": ["prepare-bootstrap"], "dependsOnAny": [], "activationPredicate": "bootstrap.required", "readinessPredicate": "bootstrap_launch_authorization_sidecar_available", "notApplicableReasonCode": "BOOTSTRAP_NOT_REQUIRED", "formalWriteSet": ["bootstrap-launch-authorization-import.json"], "reactivationTriggers": ["authorization_expired_revoked_or_replaced"], "allowMultipleAttempts": true, "invalidatesOnSuccess": ["import-bootstrap", "finalize"]},
+      {"actionId": "import-bootstrap", "order": 110, "dependsOn": ["import-bootstrap-launch-authorization"], "dependsOnAny": [], "activationPredicate": "bootstrap.required", "readinessPredicate": "bootstrap.finalized", "notApplicableReasonCode": "BOOTSTRAP_NOT_REQUIRED", "formalWriteSet": ["bootstrap-import-envelope.json"], "reactivationTriggers": ["bootstrap_run_replaced_or_final_result_changed"], "allowMultipleAttempts": true, "invalidatesOnSuccess": ["map-findings", "project-acceptance-impact", "finalize"]},
+      {"actionId": "map-findings", "order": 120, "dependsOn": ["import-bootstrap"], "dependsOnAny": [], "activationPredicate": "bootstrap_import.valid", "readinessPredicate": "finding_and_lineage_inputs_available", "notApplicableReasonCode": "BOOTSTRAP_NOT_REQUIRED", "formalWriteSet": ["bootstrap-finding-acceptance-map.json"], "reactivationTriggers": ["bootstrap_import_mapping_schema_or_approval_changed"], "allowMultipleAttempts": true, "invalidatesOnSuccess": ["project-acceptance-impact", "finalize"]},
+      {"actionId": "import-mapping-approval", "order": 130, "dependsOn": ["map-findings"], "dependsOnAny": [], "activationPredicate": "mapping.requires_external_approval", "readinessPredicate": "external_approval_input_available", "notApplicableReasonCode": "MAPPING_APPROVAL_NOT_REQUIRED", "formalWriteSet": ["finding-mapping-approvals.json", "finding-mapping-approval-import.json"], "reactivationTriggers": ["approval_expired_revoked_or_replaced"], "allowMultipleAttempts": true, "invalidatesOnSuccess": ["map-findings", "project-acceptance-impact", "finalize"]},
+      {"actionId": "project-acceptance-impact", "order": 140, "dependsOn": ["evaluate"], "dependsOnAny": ["deterministic_inputs_ready", "semantic_mapping_closed"], "activationPredicate": "always", "readinessPredicate": "active_branch_inputs_and_external_gates_current", "notApplicableReasonCode": null, "formalWriteSet": ["acceptance-impact-projection.json"], "reactivationTriggers": ["base_matrix_finding_map_approval_or_gate_changed"], "allowMultipleAttempts": true, "invalidatesOnSuccess": ["finalize"]},
+      {"actionId": "finalize", "order": 150, "dependsOn": ["project-acceptance-impact"], "dependsOnAny": ["deterministic_branch_closed", "semantic_branch_closed"], "activationPredicate": "always", "readinessPredicate": "active_branch_closed_and_projection_current", "notApplicableReasonCode": null, "formalWriteSet": ["phase-acceptance-result.json", "program-dod-result.json", "acceptance-report.md"], "reactivationTriggers": ["any_authority_candidate_projection_or_gate_changed"], "allowMultipleAttempts": true, "invalidatesOnSuccess": []}
+    ],
+    "branchPredicates": {
+      "deterministic_inputs_ready": "bootstrap.not_required && candidates.current && manifests.complete && controlled_validation.complete && external_gates.current",
+      "semantic_mapping_closed": "bootstrap_import.valid && finding_map.current && (mapping.approval_not_required || mapping.approval_imported)",
+      "deterministic_branch_closed": "deterministic_inputs_ready && impact_projection.current",
+      "semantic_branch_closed": "semantic_mapping_closed && impact_projection.current && external_gates.current"
+    }
+  },
   "commandRegistryRefs": [],
   "checkIdPolicy": {},
   "fixtureRefs": [],
   "validatorRefs": []
 }
 ```
+
+`actionGraph.actions`中的`dependsOn`、`dependsOnAny`、`activationPredicate`、`readinessPredicate`、`notApplicableReasonCode`、`formalWriteSet`、`reactivationTriggers`、`allowMultipleAttempts`和`invalidatesOnSuccess`均为schema必填。`dependsOn`只能引用action ID；`dependsOnAny`可以引用action ID或同一adapter注册的`branchPredicates`，未知引用失败关闭。activation为false时生成hash-bound`action-not-applicable`；activation为true但readiness缺外部输入时为`waiting_external`，不得错误关闭为not-applicable。deterministic-only路径必须把binding、attestation、prepare-bootstrap、launch-authorization import、Bootstrap import、finding map和mapping approval全部合法关闭为not-applicable；semantic路径没有需人工批准的mapping时，`import-mapping-approval`必须以`MAPPING_APPROVAL_NOT_REQUIRED`关闭。
+
+`deterministic_inputs_ready`至少要求not-required decision、complete manifests、当前candidate结果、controlled validation evidence和external/protected gates齐全；`semantic_mapping_closed`至少要求current Bootstrap import、finding map和全部required approval dispositions闭合。`project-acceptance-impact`完成后才能分别派生`deterministic_branch_closed|semantic_branch_closed`；`finalize`不得在active branch和projection闭合前进入ready。
 
 `mappingApprovalPolicy.identityVerificationMode`只允许`repository-authority|signed-artifact|explicit-user-authorization`。其中`explicit-user-authorization`必须绑定可信交互事件或控制面授权sidecar及其hash，不能只保存模型转述或自由文本身份。
 
@@ -833,7 +903,13 @@ Program DoD 默认要求所有适用要求达到终态闭合。任何仍未关�
 
 ```json
 {
+  "schemaVersion": "phase-acceptance-result.v1",
+  "resultKind": "final",
   "phase_id": "Phase 1",
+  "phaseAcceptanceCandidateHash": "sha256:...",
+  "baseMatrixHash": "sha256:...",
+  "acceptanceImpactProjectionHash": "sha256:...",
+  "bootstrapImportEnvelopeHash": null,
   "deterministic_result": "not_run|passed|failed|incomplete|stale",
   "semantic_review_result": "not_required|not_run|clean|advisory|blocked|incomplete|stale",
   "external_gate_result": "not_required|not_run|passed|failed|blocked|incomplete|stale",
@@ -845,6 +921,8 @@ Program DoD 默认要求所有适用要求达到终态闭合。任何仍未关�
 ```
 
 `deterministic_result`、`semantic_review_result`、`external_gate_result`、`effective_result`和`authorization_basis`都必须由schema枚举约束。
+
+对应candidate schema使用`resultKind=candidate`，不得包含impact projection或最终authorization basis，`effective_result`最多为`candidate_pass|failed|blocked|incomplete|stale`且`authorizes=[]`。final schema必须绑定当前candidate、base matrix和impact projection；semantic路径还必须绑定Bootstrap import envelope。两类schema和路径不得互换。
 
 - 当Bootstrap为`not_required`、当前DoD层级具有明确deterministic-only authority、所有消费partition均为`deterministic_complete`且external/protected gates满足时，`candidate_pass`可以转为`deterministically_authorized`；
 - 当Bootstrap为`required`时，只有`execution_mode=controlled_validation`、当前hash绑定的Bootstrap finalized结果、按需positive attestation、finding映射和external/protected gates全部满足，才能转为`bootstrap_authorized`；
@@ -870,17 +948,16 @@ Program DoD 默认要求所有适用要求达到终态闭合。任何仍未关�
 
 ## 9. Bootstrap 协作流程
 
-### 9.1 Bootstrap调用决策状态
+### 9.1 Bootstrap不可变Requirement Decision与派生Execution State
 
-新Skill必须生成`bootstrap-decision.json`，不能只用自由文本决定是否调用语义审查：
+`decide-bootstrap`必须原子生成不可变`bootstrap-requirement-decision.json`，它只决定需求和候选授权路径，不承载后续运行状态：
 
 ```json
 {
-  "schemaVersion": "bootstrap-decision.v1",
+  "schemaVersion": "bootstrap-requirement-decision.v1",
   "acceptanceRunId": "...",
   "acceptanceRunInputHash": "sha256:...",
   "requirement": "required|not_required",
-  "executionState": "not_applicable|awaiting_authorization|prepared|running|finalized|blocked|stale",
   "requirementSources": [
     {
       "source": "plan|adapter|semantic_partition|dod_policy|finding_policy|risk_policy|user_request",
@@ -903,16 +980,11 @@ Program DoD 默认要求所有适用要求达到终态闭合。任何仍未关�
     "authorizationScopes": ["first_slice", "phase_exit", "program_dod"],
     "requiredExecutionMode": "controlled_validation"
   },
-  "authorizationEffect": "candidate_only|deterministic_authorization_eligible|bootstrap_authorization_pending|bootstrap_authorized",
+  "authorizationEffect": "candidate_only|deterministic_authorization_eligible|bootstrap_authorization_pending",
   "requiredEntrySkill": "run-phase-bootstrap-review",
   "requiredControlPlaneRevision": "bootstrap-control-plane.v2",
   "requiredProfile": "bootstrap-implementation-conformance",
-  "authorization": {
-    "status": "not_required|pending|granted|denied",
-    "recordedUtc": null
-  },
-  "bootstrapRunDir": null,
-  "bootstrapReviewId": null
+  "generatedUtc": "..."
 }
 ```
 
@@ -924,41 +996,57 @@ Program DoD 默认要求所有适用要求达到终态闭合。任何仍未关�
 - 仓库risk policy要求语义审查；
 - 用户明确要求完整finding review。
 
-多个条件可以同时成立，必须全部记录到`requirementSources`；任一required来源优先于deterministic-only许可。用户可以通过`user_request`把`not_required`升级为`required`，不能删除其他required来源或降级。
+多个条件可以同时成立，必须全部记录到`requirementSources`；任一required来源优先于deterministic-only许可。用户可以通过`user_request`把`not_required`升级为`required`，不能删除其他required来源或降级。`requirementSources`只记录required来源；当且仅当它为空时，`requirement=not_required`。
 
-`requirementSources`只记录使Bootstrap成为`required`的来源；当且仅当不存在任何required来源时，它可以为空并令`requirement=not_required`。此时`executionState=not_applicable`且`authorization.status=not_required`，后续是否可最终授权完全由`deterministicAuthorization`、当前`authorizationScopes`和external/protected gates共同决定。
+当`inventoryAttestationRequirement=required`时，decision的`requiredCompanionCapabilityExpectations`必须包含唯一的`acceptance-inventory-attestation@1.0`及`producerRole=acceptance_auditor`；`not_required`时该数组必须为空。decision只声明机器需求，不读取或冻结尚未存在的profile companion policy/schema hash；实际能力和authority hashes由后续`bind-bootstrap-capabilities`验证并冻结。
 
-当`inventoryAttestationRequirement=required`时，decision的`requiredCompanionCapabilityExpectations`必须包含唯一的`acceptance-inventory-attestation@1.0`及`producerRole=acceptance_auditor`；`not_required`时该数组必须为空。decision只声明机器需求，不读取或冻结尚未存在的profile companion policy/schema hash；实际能力和authority hashes必须由后续`bind-bootstrap-capabilities`验证并冻结。只匹配`bootstrap-control-plane.v2`或profile名称不足以证明能力可用。
+`requirement=not_required`不等于candidate-only。只有所有被消费partition均为`deterministic_complete`、目标计划或adapter对当前DoD层级明确允许deterministic-only、`execution_mode=controlled_validation`、没有semantic review gate且所有external/protected gates满足时，`authorizationEffect=deterministic_authorization_eligible`；否则为`candidate_only`。`requirement=required`时为`bootstrap_authorization_pending`。`bootstrap_authorized`只允许出现在最终Phase/Program result，不得写回预审decision。
 
-`requirement=not_required`不等于candidate-only。只有同时满足以下条件时，`authorizationEffect=deterministic_authorization_eligible`：
+decision一经发布不得修改、替换或追加运行状态。用户授权、Bootstrap run identity、prepared/running/finalized、import和stale状态必须分别来自正式sidecar、append-only events和派生投影。`bootstrap-capability-binding.json.bootstrapRequirementDecisionHash`只能引用这份初始immutable decision。
 
-- 所有被消费partition均为`deterministic_complete`；
-- 目标计划或匹配adapter明确声明`deterministicAuthorization.allowed=true`；
-- `authorizationScopes`明确包含当前First-slice、Phase exit或Program DoD层级；
-- 当前run满足`execution_mode=controlled_validation`；
-- 没有plan、DoD、finding或risk policy要求的semantic review gate；
-- 所有external/protected gates均已满足。
+`bootstrap-execution-state.json`是从events、decision、binding、Bootstrap-owned launch authorization、local authorization import receipt和Bootstrap import envelope确定性重建的派生视图，不是事实权威：
 
-`not_required`但缺少上述明确authority时，`authorizationEffect=candidate_only`。`required`时必须取得用户reviewer授权，`executionState`按`awaiting_authorization -> prepared -> running -> finalized`推进，完成前为`bootstrap_authorization_pending`，finalized并通过导入后才为`bootstrap_authorized`。拒绝授权、缺依赖或控制面能力不足为`blocked`，任一绑定hash或authority变化为`stale`。不得从旧日志、Bootstrap `clean`文本或assistant总结跳转状态。
+```json
+{
+  "schemaVersion": "bootstrap-execution-state.v1",
+  "acceptanceRunId": "...",
+  "bootstrapRequirementDecisionHash": "sha256:...",
+  "bootstrapCapabilityBindingHash": null,
+  "bootstrapReviewRequestHash": null,
+  "bootstrapLaunchAuthorizationImportHash": null,
+  "bootstrapImportEnvelopeHash": null,
+  "bootstrapRunDir": null,
+  "bootstrapReviewId": null,
+  "executionState": "not_applicable|awaiting_authorization|awaiting_external|prepared|running|finalized|blocked|stale",
+  "authorizationStatus": "not_required|pending|granted|denied|expired|revoked",
+  "importStatus": "not_required|not_run|imported|incomplete|stale",
+  "derivedFromEventHash": "sha256:...",
+  "generatedUtc": "..."
+}
+```
+
+`requirement=not_required`时派生`executionState=not_applicable`、`authorizationStatus=not_required`和`importStatus=not_required`。required但尚未获得当前launch authorization时为`awaiting_authorization`；外部Bootstrap尚未finalized时为`awaiting_external`。任何输入或authority漂移必须通过新event使投影为`stale`，不得回写decision。
 
 ### 9.2 推荐完整流程
 
 ```text
 实施验收 Skill
   -> prepare冻结run input、expected paths和schema hashes
-  -> 生成source inventory、原子条款和候选矩阵
+  -> 生成source inventory、原子条款、base matrix和Phase/Program candidate结果
   -> 运行确定性测试、编译、smoke/readback检查
   -> 计算候选阶段与DoD结果
-  -> decide-bootstrap写bootstrap-decision.json
+  -> decide-bootstrap写bootstrap-requirement-decision.json
   -> 若not_required且deterministic_authorization_eligible
-       -> bind-bootstrap-capabilities、prepare-attestation和prepare-bootstrap记录not_applicable action result，不生成Bootstrap/attestation工件
-       -> finalize确定性授权，记录authorization_basis=deterministic_only
+       -> 全部Bootstrap-only import/map/approval动作记录not_applicable，不生成Bootstrap/attestation工件
+       -> project-acceptance-impact绑定base matrix和external/protected gates
+       -> finalize消费candidate+projection，记录authorization_basis=deterministic_only
   -> 若required
        -> bind-bootstrap-capabilities冻结profile/capability/schema/policy身份
        -> semantic partition存在时prepare-attestation生成actual scope和scope-result；否则记录not_applicable
-       -> 生成bootstrap-review-request.json
-       -> 经用户授权后调用同名$run-phase-bootstrap-review入口
-       -> bootstrap-control-plane.v2 / bootstrap-implementation-conformance
+       -> prepare-bootstrap生成bootstrap-review-request.json
+       -> 经用户授权后调用同名$run-phase-bootstrap-review入口完成preflight/authorize-launch
+       -> import-bootstrap-launch-authorization验证Bootstrap-owned review-launch-authorization.json
+       -> bootstrap-control-plane.v2 / bootstrap-implementation-conformance启动reviewers
        -> Blind Hunter
        -> Edge Case Hunter
        -> Acceptance Auditor审计矩阵并按需产生positive-attestation companion candidate
@@ -966,9 +1054,10 @@ Program DoD 默认要求所有适用要求达到终态闭合。任何仍未关�
        -> gate/verifier/P2 dispositions/finalize
        -> import-bootstrap生成hash-bound bootstrap-import-envelope.json
        -> map-findings确定性生成finding-to-acceptance mapping companion
-       -> 存在需人工映射的finding时执行import-mapping-approval
-       -> 重新运行map-findings，只消费合法approval receipt
-       -> finalize校验import envelope、attestation、mapping和外部gate
+       -> 存在需人工映射的finding时执行import-mapping-approval；否则该action记录not_applicable
+       -> approval导入后重新运行map-findings，只消费合法receipt
+       -> project-acceptance-impact绑定base matrix、mapping、approval和external/protected gates
+       -> finalize消费candidate+projection并校验import envelope、attestation、mapping和外部gate
        -> 记录authorization_basis=bootstrap
   -> 按目标finding policy写入最终阶段判定
   -> 输出最终验收报告
@@ -989,6 +1078,7 @@ Program DoD 默认要求所有适用要求达到终态闭合。任何仍未关�
   "candidate_content_manifest_hash": "sha256:...",
   "matrix_path": "...",
   "matrix_hash": "sha256:...",
+  "bootstrap_requirement_decision_hash": "sha256:...",
   "bootstrap_capability_binding_path": "bootstrap-capability-binding.json",
   "bootstrap_capability_binding_hash": "sha256:...",
   "inventory_attestation_requirement": "required|not_required",
@@ -1022,6 +1112,54 @@ Program DoD 默认要求所有适用要求达到终态闭合。任何仍未关�
 ```
 
 示例表示`inventory_attestation_requirement=required`路径。该字段为`not_required`时，scope-result、output、attestation schema相关字段必须为`null`，`required_companion_capabilities=[]`；不得为了保持对象形状而填写伪路径、伪hash或空sidecar。
+
+#### 9.3.1 Reviewer launch authorization
+
+新Skill不得创建竞争性的launch authorization权威。S0必须扩展或supersede仓库级`bootstrap-review-launch-authorization.v1` schema，由Bootstrap控制面继续拥有并生成`review-launch-authorization.json`。该formal sidecar除现有preflight、Artifact View、cost、write/read set和profile绑定外，还必须绑定：
+
+```json
+{
+  "acceptanceRunId": "...",
+  "bootstrapRequirementDecisionHash": "sha256:...",
+  "bootstrapCapabilityBindingHash": "sha256:...",
+  "bootstrapReviewRequestHash": "sha256:...",
+  "candidateContentManifestHash": "sha256:...",
+  "matrixHash": "sha256:...",
+  "profilePolicyRevision": "sha256:...",
+  "authorizationStatus": "granted|denied",
+  "authorizationEventRef": "...",
+  "authorizationEventHash": "sha256:...",
+  "authorizedScope": ["launch-reviewers", "launch-verifier"],
+  "grantedUtc": "...",
+  "expiresUtc": null,
+  "predecessorAuthorizationHash": null,
+  "revocationEventRef": null,
+  "revocationEventHash": null
+}
+```
+
+授权事件必须来自可信用户交互或仓库批准的外部authority，不能由assistant总结、旧session文本或mutable decision代替。授权仅对当前request、candidate、matrix、binding、profile和scope有效；hash漂移、过期、拒绝或撤回后不得启动reviewer/verifier。
+
+新Skill通过`import-bootstrap-launch-authorization`只读校验Bootstrap-owned formal sidecar，并原子生成本地`bootstrap-launch-authorization-import.json` receipt：
+
+```json
+{
+  "schemaVersion": "bootstrap-launch-authorization-import.v1",
+  "acceptanceRunId": "...",
+  "bootstrapRequirementDecisionHash": "sha256:...",
+  "bootstrapCapabilityBindingHash": "sha256:...",
+  "bootstrapReviewRequestHash": "sha256:...",
+  "bootstrapRunDir": "logs/ci/...",
+  "bootstrapReviewLaunchAuthorizationPath": "review-launch-authorization.json",
+  "bootstrapReviewLaunchAuthorizationHash": "sha256:...",
+  "authorizationEventHash": "sha256:...",
+  "authorizedScope": ["launch-reviewers", "launch-verifier"],
+  "status": "imported|denied|expired|revoked|stale",
+  "actionEventHash": "sha256:..."
+}
+```
+
+receipt只证明当前acceptance run已验证Bootstrap控制面授权，不替代Bootstrap自己的launch gate。实际reviewer/verifier启动必须同时消费`status=imported`且当前有效的Bootstrap-owned sidecar。结构/schema/hash验证失败时保留attempt evidence但不得发布formal receipt；合法的denied/expired/revoked状态应发布非授权receipt用于恢复和审计，但不得启动高成本进程。
 
 `target_acceptance_finding_policy_ref/hash`只作为hash-bound目标验收上下文进入request和import lineage。Bootstrap父控制面不得消费它来改变自己的severity、independent verifier、P2 disposition或finalize规则；新Skill只在导入合法Bootstrap结果后使用它计算当前阶段或DoD是否仍被finding阻断。
 
@@ -1071,11 +1209,14 @@ S0至少必须包含以下稳定fixture/test identity，并断言预期status、
   "schemaVersion": "bootstrap-import-envelope.v1",
   "acceptanceRunId": "...",
   "acceptanceRunInputHash": "sha256:...",
+  "bootstrapRequirementDecisionHash": "sha256:...",
   "candidateContentManifestHash": "sha256:...",
   "matrixHash": "sha256:...",
   "inventoryAttestationRequirement": "required|not_required",
   "bootstrapCapabilityBindingPath": "bootstrap-capability-binding.json",
   "bootstrapCapabilityBindingHash": "sha256:...",
+  "bootstrapLaunchAuthorizationImportHash": "sha256:...",
+  "bootstrapReviewLaunchAuthorizationHash": "sha256:...",
   "bootstrapRunDir": "logs/ci/...",
   "controlPlaneRevision": "bootstrap-control-plane.v2",
   "routeVersion": "bootstrap-review-route.v2",
@@ -1112,7 +1253,7 @@ S0至少必须包含以下稳定fixture/test identity，并断言预期status、
 
 示例表示required companion路径。`inventoryAttestationRequirement=not_required`时，companion capability、schema和attestation path/hash字段必须为`null`，但Acceptance Auditor role bundle仍必须绑定合法reviewer output并明确记录companions为空。
 
-envelope必须验证run已finalized、capability binding path/hash与decision/request一致、control-plane/profile/policy/route与binding一致、required companion capability身份和policy/schema/producer role均匹配、Acceptance Auditor role bundle schema hash一致且formal bundle原子完整、Artifact View和所有formal sidecar hash有效、required layers完成、P0/P1核验闭合、每个accepted P2有合法处置，并且candidate/matrix/scope-result/target acceptance finding policy与当前acceptance run一致。`review-result.v1`本身不含全部控制面身份，因此缺少review input、Artifact View、role bundle、disposition、verifier或required attestation时不得导入。
+envelope必须验证run已finalized、immutable requirement decision、capability binding、request、Bootstrap-owned launch authorization和local import receipt全部一致，control-plane/profile/policy/route与binding一致、required companion capability身份和policy/schema/producer role均匹配、Acceptance Auditor role bundle schema hash一致且formal bundle原子完整、Artifact View和所有formal sidecar hash有效、required layers完成、P0/P1核验闭合、每个accepted P2有合法处置，并且candidate/base matrix/scope-result/target acceptance finding policy与当前acceptance run一致。`review-result.v1`本身不含全部控制面身份，因此缺少launch authorization、review input、Artifact View、role bundle、disposition、verifier或required attestation时不得导入。
 
 ### 9.5 Finding映射与人工approval
 
@@ -1176,6 +1317,8 @@ finding映射sidecar至少包含：
       "mappingType": "check|cross_cutting_gate",
       "checkIds": ["GTM-AC-P1-017"],
       "gateId": null,
+      "affectedPhaseIds": [],
+      "checkIdLineageHash": "sha256:...",
       "approverIdentity": "...",
       "approvalAuthorityRef": "...",
       "approvalAuthorityPolicyHash": "sha256:...",
@@ -1197,7 +1340,29 @@ finding映射sidecar至少包含：
 
 approval必须覆盖当前finding hash、matrix、lineage和import envelope，由有权角色明确提供；过期、身份/权限不可验证、目标check已tombstoned或只给语义相似理由时无效。`explicit-user-authorization`必须提供可信授权事件ref/hash；模型转述、聊天摘要或任意字符串不构成身份验证。使用approval的mapping必须记录`mappingMethod=manual-approved`和`approvalId`。无法映射的阻断finding使finalize为`incomplete`；非阻断unmapped finding仍必须显示，不能静默丢弃。
 
-`import-mapping-approval`是接收人工approval的唯一正式动作。它只能读取用户或外部authority提供的文件，不得生成或补写approval内容；必须按adapter `mappingApprovalPolicy`验证authority policy、approver role、identity evidence、finding/matrix/lineage/import envelope绑定和expiry，然后把原始输入及hash原子复制为run-scoped formal input，生成`finding-mapping-approval-import.json` receipt并追加action event。成功导入会把此前不含该receipt的mapping结果标记为stale，并令`map-findings`重新成为唯一next action；验证失败时保留attempt evidence但不得发布formal input。`map-findings`只能消费已成功导入且当前hash有效的approval receipt。
+approval schema必须条件验证：`mappingType=check`时`checkIds`非空、`checkIdLineageHash`必填且`gateId/affectedPhaseIds`为空；`mappingType=cross_cutting_gate`时`gateId`和`affectedPhaseIds`非空、`checkIds`为空，lineage hash仍绑定当前check/gate registry revision。不得让同一approval同时表达两类mapping。
+
+`import-mapping-approval`是接收人工approval的唯一正式动作。它只能读取用户或外部authority提供的文件，不得生成或补写approval内容；必须按adapter `mappingApprovalPolicy`验证authority policy、approver role、identity evidence、finding/matrix/lineage/import envelope绑定和expiry，然后把原始输入及hash原子复制为run-scoped formal input，生成`finding-mapping-approval-import.json` receipt并追加action event：
+
+```json
+{
+  "schemaVersion": "finding-mapping-approval-import.v1",
+  "acceptanceRunId": "...",
+  "inputPath": "incoming/finding-mapping-approvals.json",
+  "inputHash": "sha256:...",
+  "acceptedApprovalIds": ["MAP-APPROVAL-001"],
+  "rejectedApprovals": [],
+  "adapterApprovalPolicyHash": "sha256:...",
+  "identityEvidenceHashes": ["sha256:..."],
+  "checkIdLineageHash": "sha256:...",
+  "formalInputPath": "finding-mapping-approvals.json",
+  "formalInputHash": "sha256:...",
+  "actionEventHash": "sha256:...",
+  "status": "imported|partial|rejected|stale"
+}
+```
+
+成功导入会把此前不含该receipt的mapping结果标记为stale，并令`map-findings`重新成为唯一next action；验证失败时保留attempt evidence但不得发布formal input。`map-findings`只能消费已成功导入且当前hash有效的approval receipt；`partial`只有在rejected approvals全部为非阻断且policy明确允许时才能继续，否则阻断projection/finalize。
 
 当机器判定`requirement=required`且用户尚未授权reviewer时，Skill只能输出候选完成层级，并明确Bootstrap语义审查尚未执行。当`requirement=not_required`、当前DoD层级具有明确deterministic-only authority、`execution_mode=controlled_validation`且其他门禁满足时，可以输出`deterministically_authorized`，不得因reviewer未运行而降级。
 
@@ -1217,13 +1382,18 @@ logs/ci/<date>/refactor-implementation-acceptance-<run-id>/
 ├── implementation-acceptance-matrix.json             [always]
 ├── implementation-acceptance-matrix.md               [always]
 ├── phase-graph.json                                   [always]
-├── phase-acceptance-result.json                       [always]
-├── program-dod-result.json                            [always]
-├── bootstrap-decision.json                            [always]
+├── phase-acceptance-candidate.json                    [after evaluate]
+├── program-dod-candidate.json                         [after evaluate]
+├── acceptance-impact-projection.json                  [after impact projection]
+├── phase-acceptance-result.json                       [after finalize]
+├── program-dod-result.json                            [after finalize]
+├── bootstrap-requirement-decision.json                [always]
+├── bootstrap-execution-state.json                     [always, derived]
 ├── bootstrap-capability-binding.json                  [if Bootstrap required]
 ├── inventory-attestation-scope.json                   [if attestation required]
 ├── inventory-attestation-scope-result.json            [if attestation required]
 ├── bootstrap-review-request.json                      [if Bootstrap required]
+├── bootstrap-launch-authorization-import.json          [if launch authorization imported]
 ├── bootstrap-import-envelope.json                     [after valid Bootstrap import]
 ├── bootstrap-finding-acceptance-map.json              [after valid Bootstrap import]
 ├── finding-mapping-approvals.json                     [if approval imported]
@@ -1232,11 +1402,11 @@ logs/ci/<date>/refactor-implementation-acceptance-<run-id>/
 ├── acceptance-events.jsonl                            [always]
 ├── recovery-state.json                                [always]
 ├── actions/                                           [always]
-├── acceptance-report.md                               [always]
+├── acceptance-report.md                               [after finalize]
 └── evidence/                                          [always]
 ```
 
-`[always]`是正式run最小闭包；条件工件只有在对应action合法完成后才存在。schema validator必须按`bootstrap-decision.json`、binding和action events计算required artifact set，不得要求空文件占位，也不得把条件工件缺失误报为deterministic-only run不完整。`finding-mapping-approvals.json`保存成功导入后的formal approval input，receipt单独记录导入验证结果和hash lineage。
+`[always]`是完成基础盘点后的正式run最小闭包；条件工件只有在对应action合法完成后才存在。schema validator必须按`bootstrap-requirement-decision.json`、conditional action DAG和action events计算required artifact set，不得要求空文件占位，也不得把条件工件缺失误报为deterministic-only run不完整。`bootstrap-execution-state.json`可以随events重建，不得成为新的事实权威。candidate结果、impact projection和final result必须使用不同路径；`finding-mapping-approvals.json`保存成功导入后的formal approval input，receipt单独记录导入验证结果和hash lineage。
 
 ### 10.1 运行模式
 
@@ -1318,7 +1488,7 @@ logs/ci/<date>/refactor-implementation-acceptance-<run-id>/
 
 - JSON 是机器权威，Markdown 是派生视图。
 - 输出必须绑定run input、baseline/candidate content manifest、目标目录、源文件hashes、adapter、validator、验证命令和运行时间。
-- companion在Bootstrap尚未运行时不存在；初始run input只冻结capability binding expected path/schema。`bootstrap-decision.requirement=required`时由`bind-bootstrap-capabilities`冻结profile/capability/schema/policy身份；其中`inventoryAttestationRequirement=required`时，binding再冻结scope expected path、formal attestation artifact name和schema hash，`prepare-attestation`必须产生actual scope result，实际formal attestation路径由import envelope绑定。`not_required`时相关action记录`not_applicable`且不得生成伪binding、scope或attestation。finding map的预期路径和schema hash始终由run input冻结。
+- companion在Bootstrap尚未运行时不存在；初始run input只冻结capability binding expected path/schema。`bootstrap-requirement-decision.requirement=required`时由`bind-bootstrap-capabilities`冻结profile/capability/schema/policy身份；其中`inventoryAttestationRequirement=required`时，binding再冻结scope expected path、formal attestation artifact name和schema hash，`prepare-attestation`必须产生actual scope result，实际formal attestation路径由import envelope绑定。`not_required`时相关action记录`not_applicable`且不得生成伪binding、scope或attestation。finding map的预期路径和schema hash始终由run input冻结。
 - 目标、权威或验证器变更后，旧结果必须标记为 stale，不能继续授权。
 - 运行目录不得位于被审查的重构目录内。
 - “只读”指不得修改被验收源文件、计划权威、live状态、97台账、历史日志或Bootstrap findings；controlled validation只能写manifest声明的隔离输出路径。
@@ -1334,6 +1504,7 @@ action-started
 action-completed
 action-failed
 action-not-applicable
+action-waiting-external
 action-stale
 run-superseded
 ```
@@ -1342,9 +1513,11 @@ run-superseded
 
 `action-not-applicable`必须绑定决定其不适用的decision/binding hash、稳定reason code、禁止生成的formal write set和重新适用触发条件；它是可恢复终态，不等于跳过或未运行。
 
-`recovery-state.json`是由events和formal artifact hashes确定性重建的派生视图，不是事实源。首版action workflow严格串行；`inspect-run`先排除依赖未满足、已完成且fresh、已合法not-applicable、正在被合法owner执行或已被阻断的action，再从ready集合按以下稳定顺序选出唯一`nextAction`：action dependency拓扑层级 -> adapter `actionOrder`位置 -> command registry显式`order` -> `commandId`字典序。未声明adapter位置或command order时可以使用后续兜底，但同一排序键碰撞、未知action或无法产生唯一结果必须失败关闭。`collect-evidence`展开多个`run-command`时也使用同一排序，不得依赖文件枚举、JSON object顺序或进程完成时序。
+`action-waiting-external`只用于activation已成立但readiness依赖尚未满足的外部状态，例如Bootstrap尚未finalized或授权sidecar尚未出现；它必须记录等待的predicate、当前external identity/hash、recheck命令和唤醒事件，不得被finalize当作已关闭。
 
-`inspect-run`必须报告每个action的completed/failed/not_applicable/running/stale状态、缺失依赖、ready集合、排序依据和唯一`nextAction`；`resume`只能执行该nextAction，已完成或合法not-applicable且hash仍有效的action必须幂等跳过。输入、adapter、validator、command registry、authority或candidate漂移时追加`action-stale`，不得修改旧事件；跨run修复使用新run并以`run-superseded`和`predecessor_run_id`建立关系。
+`recovery-state.json`是由events和formal artifact hashes确定性重建的派生视图，不是事实源。首版action workflow严格串行；`inspect-run`先按action DAG计算activation、dependency和readiness，排除已完成且fresh、已合法not-applicable、正在被合法owner执行或被阻断的action，再从ready集合按以下稳定顺序选出唯一`nextAction`：dependency拓扑层级 -> action graph显式`order` -> command registry显式`order` -> `commandId`字典序。activation为false才可not-applicable；activation为true但readiness缺外部输入时必须waiting_external。同一排序键碰撞、未知action或无法产生唯一结果必须失败关闭。`collect-evidence`展开多个`run-command`时也使用同一排序，不得依赖文件枚举、JSON object顺序或进程完成时序。
+
+`inspect-run`必须报告每个action的completed/failed/not_applicable/waiting_external/blocked/running/stale状态、activation/readiness结论、缺失依赖、ready集合、排序依据和唯一`nextAction`；`resume`只能执行该nextAction，已完成或合法not-applicable且hash仍有效的action必须幂等跳过。外部条件满足后waiting action重新进入ready；输入、adapter、validator、command registry、authority或candidate漂移时追加`action-stale`，不得修改旧事件。跨run修复使用新run并以`run-superseded`和`predecessor_run_id`建立关系。
 
 同一run必须使用owner-bound并发锁，绑定PID、process creation identity、token、acquired UTC和formal write set。活锁或重叠write set阻止第二个session；PID已退出、复用或锁未完成提交时可以记录恢复事件后清理。不得仅删除锁文件来宣称恢复，也不得同时启动相同action的两个formal attempt。
 
@@ -1352,7 +1525,7 @@ run-superseded
 
 遇到以下情况不得产生通过结论：
 
-- 缺少统一run input、可展开的baseline/candidate content manifest或changed-path/consumer范围，或manifest path/hash不匹配；
+- 缺少统一run input或manifest文件、manifest未通过schema、任一required manifest不是`complete`、changed-path/consumer范围不闭合，或manifest path/hash不匹配；
 - 初始run input无条件冻结Bootstrap-owned companion/profile/schema身份、保存尚未生成的actual attestation scope hash，后续action回写run input，或scope-result未绑定decision/binding/inventory/clauses/matrix当前hash；
 - candidate manifest存在空`roles`、非法change type、缺少删除tombstone、两侧path/hash条件不成立，或deleted旧hash无法在baseline manifest中闭合；
 - 找不到阶段权威或 DoD 权威；
@@ -1362,6 +1535,8 @@ run-superseded
 - 无法把复合条款原子化或建立稳定source clause/check身份，check-ID lineage断裂、碰撞、非法复用tombstone或split/merge无双向关系；
 - 97、98、99 或原始来源存在未解释的覆盖缺口；
 - 矩阵存在重复、孤立或无来源的 `check_id`；
+- Bootstrap后回写base matrix的finding/effective gate字段，base matrix hash与request/import不一致，或impact projection未绑定当前matrix/finding/approval/external gate hashes；
+- `evaluate`与`finalize`共用或覆盖Phase/Program result路径，candidate错误产生授权，或final result缺candidate/projection绑定；
 - applicability/disposition/evaluation组合违反第6.2节不变量；
 - 任一check缺少`evidence_requirements`，或`verified`未满足其required kinds、最小数量、freshness或豁免合同；
 - 证据路径、hash、candidate、validator、environment或运行范围不匹配；
@@ -1369,22 +1544,22 @@ run-superseded
 - 缺少目标计划finding阻断策略；
 - `10-*` 被用于授权 Program DoD；
 - `finding_policy.blocking_severities`中的未解决finding被隐藏在`clean`、`advisory`或文本总结下；
-- Bootstrap `requirement`与`requirementSources`矛盾、遗漏任一required来源、用deterministic-only许可覆盖required来源，或`executionState`非法跳转；
-- `requirement=required`时缺用户授权、controlPlaneRevision/profile capability不匹配，或Bootstrap结果未finalize、hash不匹配、scope不完整、required layer未完成；
+- immutable Bootstrap requirement decision与`requirementSources`矛盾、遗漏required来源、被binding后修改、写入finalized/authorization状态，或派生execution state与events/sidecars不一致；
+- `requirement=required`时缺当前Bootstrap-owned launch authorization、local authorization import receipt或可信authorization event，授权scope/hash过期/撤回，controlPlaneRevision/profile capability不匹配，或Bootstrap结果未finalize、hash不匹配、scope不完整、required layer未完成；
 - `requirement=not_required`时semantic result不是`not_required`，或缺少当前DoD层级的明确deterministic-only authority、`execution_mode=controlled_validation`、scope匹配或external/protected gate，却声明`deterministically_authorized`；
 - `evidence_only`产生`deterministically_authorized`或`bootstrap_authorized`，或required Bootstrap尚未运行却使用`semantic_review_result=not_required`；
 - required Bootstrap缺少当前immutable capability binding，binding与decision/profile/schema registry不一致，或not-required路径生成binding/scope/request条件工件；
 - required companion capability ID/version、profile companion policy hash、schema hash或producer role缺失/不匹配，或仅凭control plane/profile名称宣称能力存在；
 - Acceptance Auditor required companion缺失、schema非法、attempt/scope不匹配、formal role bundle非原子发布，或只发布finding output后仍finalize；
-- `bootstrap-import-envelope.json`缺失或未绑定review input、Artifact View、Acceptance Auditor role bundle、companion capability、final result、verifier、P2 dispositions、formal attestation和当前candidate/matrix；
+- `bootstrap-import-envelope.json`缺失或未绑定immutable requirement decision、launch authorization及receipt、review input、Artifact View、Acceptance Auditor role bundle、companion capability、final result、verifier、P2 dispositions、formal attestation和当前candidate/base matrix；
 - Bootstrap finding映射sidecar缺失或stale，阻断finding无法稳定映射到check或cross-cutting gate；
-- 人工finding mapping approval未通过`import-mapping-approval`正式导入，缺身份/权限/authority policy/finding hash/lineage/matrix/import envelope绑定，已过期，或映射到tombstoned check；
+- 人工finding mapping approval未通过`import-mapping-approval`正式导入，缺身份/权限/authority policy/finding hash/check-ID lineage/matrix/import envelope绑定，cross-cutting mapping缺`affectedPhaseIds`，已过期，或映射到tombstoned check；
 - Bootstrap使用target acceptance finding policy改变自身severity、verifier、P2 disposition或finalize规则，或导入后policy ref/hash与当前acceptance run不一致；
 - companion schema path/hash与capability binding不一致，或把Bootstrap v2 formal attestation误报为新Skill自行生成；
-- required artifact set与decision/binding/action events不一致、合法条件工件缺失被空文件伪装，或approval导入后缺formal input/receipt；
+- required artifact set与requirement decision/conditional action DAG/action events不一致、合法条件工件缺失被空文件伪装，或approval导入后缺formal input/receipt；
 - required deterministic、semantic或external gate为`not_run`、`incomplete`或`stale`却声明authorized；
-- controlled validation使用未知command ID、shell字符串、未类型化path、非allowlist环境、缺timeout/process-tree收口、缺pre/post write manifest，或写入未声明路径、live DB/workspace或历史证据；
-- action event缺失/重写、partial attempt覆盖formal输出、同action并发运行、锁身份不明、recovery state无法从events重建、ready actions排序不确定/碰撞、`decide -> bind -> attestation -> prepare`顺序被绕过，或resume跳过唯一nextAction；
+- evidence record使用自由command字符串冒充机器身份、controlled invocation缺command ID/registry/invocation/process-result绑定，imported evidence缺来源/custody/freshness receipt，或controlled validation使用未知command、shell字符串、未类型化path、非allowlist环境、缺timeout/process-tree收口/写manifest；
+- action event缺失/重写、partial attempt覆盖formal输出、同action并发运行、锁身份不明、conditional DAG activation/readiness/not-applicable/waiting-external计算错误、approval导入未使mapping/projection stale、active branch未闭合就finalize，或resume跳过唯一nextAction；
 - S0代码/profile/schema已变更但durable standard、Skill/reference、operator docs、schema registry或ADR-0041复核未同步，却声明`bootstrap_companion_ready`；
 - protected authority 尚未通过却声明其授权层级。
 
@@ -1397,15 +1572,15 @@ run-superseded
 | Change set | 内容 | 前置 | Exit predicate | 仅授权 |
 | --- | --- | --- | --- | --- |
 | S0 Bootstrap v2 companion prerequisite | profile capability、companion/role-bundle schemas、Acceptance Auditor双输出、Artifact View绑定、父控制面校验、原子role bundle、生命周期测试、durable standard/Skill/operator projection、ADR-0041复核和`bootstrap-skill-route`复审 | 无；可与S1-S3在写集隔离时独立推进 | `bootstrap_companion_ready` | S4 semantic integration可以开始，不授权新Skill发布 |
-| S1 新Skill deterministic core | schemas、adapter、run input、baseline/candidate manifests、inventory和check lineage | 无 | `deterministic_core_ready` | S2可以开始，不授权semantic partition或DoD |
-| S2 矩阵与阶段计算 | evidence records、正交状态、phase DAG、DoD计算和7-07 adapter fixture | S1 | `matrix_phase_ready` | deterministic candidate计算，不授权执行或最终DoD |
-| S3 执行控制 | command registry、action events、locking、deterministic nextAction、inspect/resume/stale | S1、S2 | `execution_control_ready` | controlled validation可以使用，不授权Bootstrap集成 |
-| S4 Bootstrap集成 | decision、request、capability binding、import envelope、finding map和approval import | S0、S1、S2、S3 | `bootstrap_integration_ready` | semantic path和Bootstrap授权候选，不授权完整发布 |
-| S5 Finalize与验收 | report、positive/negative/mutation fixtures、7-07真实fixture、fresh-context观察和完整包验证 | S0-S4 | `skill_release_ready` | 新Skill完整发布候选；仍不替代目标计划protected/release authority |
+| S1 新Skill deterministic core | schemas、adapter、run input、complete/partial/unavailable manifests、inventory、check lineage和command-ID evidence | 无 | `deterministic_core_ready` | S2可以开始，不授权semantic partition或DoD |
+| S2 矩阵与阶段计算 | base matrix、candidate results、deterministic impact projection、正交状态、phase DAG、DoD计算和7-07 adapter fixture | S1 | `matrix_phase_ready` | deterministic candidate计算，不授权最终DoD |
+| S3 执行控制 | conditional action DAG、action events、waiting/not-applicable、locking、deterministic nextAction、inspect/resume/stale | S1、S2 | `execution_control_ready` | controlled validation可以使用，不授权Bootstrap集成 |
+| S4 Bootstrap集成 | immutable requirement decision、capability binding、request、Bootstrap-owned launch authorization扩展及receipt、execution projection、import envelope、finding map、approval import和semantic impact projection | S0、S1、S2、S3 | `bootstrap_integration_ready` | semantic path和Bootstrap授权候选，不授权完整发布 |
+| S5 Finalize与验收 | candidate/final custody、report、positive/negative/mutation fixtures、7-07真实fixture、fresh-context观察和完整包验证 | S0-S4 | `skill_release_ready` | 新Skill完整发布候选；仍不替代目标计划protected/release authority |
 
 S0未完成时可以开发和验证S1-S3 deterministic core，但必须把所有semantic partition结果保持为candidate，不能通过需要positive attestation的RA，不能进入S4 semantic integration，也不能声明`skill_release_ready`。每个predicate必须输出当前candidate/source/validator hashes、required checks、failed rule IDs、`authorizes`和`does_not_authorize`；低层predicate不得推导高层完成。
 
-`bootstrap_companion_ready`的required outputs必须至少绑定：`docs/standards/bootstrap-review-control-plane.md`、仓库级`run-phase-bootstrap-review/SKILL.md`及相关reference、`review-profiles.v1.json`、companion/role-bundle schema registry、operator documentation、测试/fixture evidence和`bootstrap-skill-route`复审结果。S0必须复核`docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`：若通用协议变化影响其决策或边界，更新或supersede现有ADR集合；若所有权决策不变，也必须生成hash-bound no-change rationale。不得无依据宣称“一定不需要ADR更新”。
+`bootstrap_companion_ready`的required outputs必须至少绑定：`docs/standards/bootstrap-review-control-plane.md`、仓库级`run-phase-bootstrap-review/SKILL.md`及相关reference、`review-profiles.v1.json`、companion/role-bundle schema registry、扩展或supersede后的Bootstrap-owned launch authorization schema、operator documentation、测试/fixture evidence和`bootstrap-skill-route`复审结果。S0必须复核`docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`：若通用协议变化影响其决策或边界，更新或supersede现有ADR集合；若所有权决策不变，也必须生成hash-bound no-change rationale。不得无依据宣称“一定不需要ADR更新”。
 
 ### 12.2 新 Skill 的最小包结构
 
@@ -1427,9 +1602,12 @@ S0未完成时可以开发和验证S1-S3 deterministic core，但必须把所有
 │   ├── acceptance-source-clauses.v1.schema.json
 │   ├── check-id-lineage.v1.schema.json
 │   ├── implementation-acceptance-matrix.v1.schema.json
+│   ├── acceptance-impact-projection.v1.schema.json
 │   ├── acceptance-evidence-record.v1.schema.json
-│   ├── phase-graph-and-result.v1.schema.json
+│   ├── phase-graph.v1.schema.json
+│   ├── phase-acceptance-candidate.v1.schema.json
 │   ├── phase-acceptance-result.v1.schema.json
+│   ├── program-dod-candidate.v1.schema.json
 │   ├── program-dod-result.v1.schema.json
 │   ├── acceptance-adapter.v1.schema.json
 │   ├── acceptance-command-registry.v1.schema.json
@@ -1437,8 +1615,10 @@ S0未完成时可以开发和验证S1-S3 deterministic core，但必须把所有
 │   ├── acceptance-action-result.v1.schema.json
 │   ├── acceptance-recovery-state.v1.schema.json
 │   ├── acceptance-run-lock.v1.schema.json
-│   ├── bootstrap-decision.v1.schema.json
+│   ├── bootstrap-requirement-decision.v1.schema.json
+│   ├── bootstrap-execution-state.v1.schema.json
 │   ├── bootstrap-capability-binding.v1.schema.json
+│   ├── bootstrap-launch-authorization-import.v1.schema.json
 │   ├── bootstrap-review-request.v1.schema.json
 │   ├── bootstrap-import-envelope.v1.schema.json
 │   ├── bootstrap-finding-acceptance-map.v1.schema.json
@@ -1467,13 +1647,15 @@ prepare
   -> bind-bootstrap-capabilities
   -> prepare-attestation
   -> prepare-bootstrap
+  -> import-bootstrap-launch-authorization
   -> import-bootstrap
   -> map-findings
   -> import-mapping-approval
+  -> project-acceptance-impact
   -> finalize
 ```
 
-CLI还必须提供`run-command`、`inspect-run`和`resume`。只提供`validate_acceptance.py`不足以说明矩阵如何生成、证据如何执行、candidate如何冻结以及Bootstrap结果如何导入。`decide-bootstrap`先写机器状态；`bind-bootstrap-capabilities`只在`requirement=required`时冻结当前profile/capability/schema/policy身份；`prepare-attestation`只在attestation required时消费该binding并生成actual scope/result，不回写run input；`import-bootstrap`只接受有效v2 import envelope；`map-findings`保持确定性且把无法稳定映射的finding写为`unmapped`；`import-mapping-approval`只验证并导入外部approval，不生成approval内容。每个子命令都必须通过action lifecycle读取前序机器工件、验证hash并只原子发布新的run-scoped输出。
+CLI还必须提供`run-command`、`inspect-run`和`resume`。只提供`validate_acceptance.py`不足以说明矩阵如何生成、证据如何执行、candidate如何冻结以及Bootstrap结果如何导入。`decide-bootstrap`只写immutable requirement decision；`bind-bootstrap-capabilities`条件冻结profile/capability/schema/policy身份；`prepare-attestation`按需生成actual scope/result；`import-bootstrap-launch-authorization`只导入Bootstrap-owned launch sidecar；`import-bootstrap`只接受有效v2 import envelope；`map-findings`保持确定性；`import-mapping-approval`只验证并导入外部approval；`project-acceptance-impact`生成审后effective投影；`finalize`只发布final result，不覆盖candidate或base matrix。每个子命令都必须通过conditional action DAG读取前序机器工件、验证hash并只原子发布新的run-scoped输出。
 
 不要求为该 Skill 创建单独的严格 VDD 00-99执行计划目录。
 
@@ -1533,7 +1715,7 @@ phase graph存在环、未知前置、未满足汇合gate，或前置阶段未�
 
 ### RA-SKILL-014：状态正交性
 
-后续阶段要求已实现但predecessor未通过时，必须保持`disposition=verified`、`evaluation_state=evaluated`和`gate_state=blocked`，不得丢失实施事实。
+后续阶段要求已实现但predecessor未通过时，base matrix必须保持`disposition=verified`、`evaluation_state=evaluated`和`deterministic_gate_state=blocked`，不得丢失实施事实；finding或外部门禁只能改变impact projection中的effective state。
 
 ### RA-SKILL-015：证据绑定
 
@@ -1589,7 +1771,7 @@ HEAD未变但任一受审文件内容改变时，旧结果必须stale；未纳�
 
 ### RA-SKILL-028：内容manifest可重放性
 
-run input必须引用实际存在且hash匹配的baseline和candidate manifest。baseline必须保存存在文件的path、roles和hash；candidate必须保存`change_type`、非空多重`roles`、两侧path/hash和inclusion reason。删除必须有tombstone并能回查baseline旧hash，rename必须同时记录旧、新路径；仅有聚合hash、Git revision或单值classification时不得授权。
+run input必须引用实际存在、schema合法且hash匹配的baseline和candidate manifest。`complete`状态必须保存完整path/roles/hash和candidate diff；`partial|unavailable`必须保存coverage gaps并固定`authorizes=[]`。删除必须有tombstone并能回查baseline旧hash，rename必须同时记录旧、新路径；缺文件、空占位、仅有聚合hash/Git revision或非complete manifest时不得授权。
 
 ### RA-SKILL-029：Gate和DoD状态词汇
 
@@ -1601,7 +1783,7 @@ deterministic、semantic、external和effective结果只能使用本规格枚举
 
 ### RA-SKILL-031：Action恢复协议
 
-每个subcommand必须产生append-only action events和immutable attempt evidence；partial attempt不得覆盖formal输出。`inspect-run`和`resume`必须从events重建ready集合，按`decide-bootstrap -> bind-bootstrap-capabilities -> prepare-attestation -> prepare-bootstrap`及其他冻结排序规则选择唯一next action，并正确处理`not_applicable`、stale、supersession和并发锁。
+每个subcommand必须产生append-only action events和immutable attempt evidence；partial attempt不得覆盖formal输出。`inspect-run`和`resume`必须按conditional action DAG从events重建activation/readiness、ready集合和唯一next action，并正确处理`not_applicable`、`waiting_external`、stale、reactivation、supersession和并发锁。
 
 ### RA-SKILL-032：安全Command Registry
 
@@ -1609,7 +1791,7 @@ deterministic、semantic、external和effective结果只能使用本规格枚举
 
 ### RA-SKILL-033：Adapter Schema
 
-每个adapter必须通过正式schema、plan fingerprint、fixture和validator验证，并完整声明source partitions、extraction、phase graph、DoD、finding/evidence policy、mapping approval policy、capability activation、external/protected gates、authorization scope、action order、command refs和check-ID policy。
+每个adapter必须通过正式schema、plan fingerprint、fixture和validator验证，并完整声明source partitions、extraction、phase graph、DoD、finding/evidence policy、mapping approval policy、capability activation、external/protected gates、authorization scope、conditional action graph、command refs和check-ID policy。
 
 ### RA-SKILL-034：Check ID Lineage
 
@@ -1617,15 +1799,15 @@ deterministic、semantic、external和effective结果只能使用本规格枚举
 
 ### RA-SKILL-035：Bootstrap决策状态
 
-Bootstrap requirement与执行状态必须正交验证。`requirement`只能由全部`requirementSources`确定；`not_required`时`executionState=not_applicable`，`required`时只能按`awaiting_authorization -> prepared -> running -> finalized`推进，并允许按合同进入`blocked`或`stale`。不得跳过用户授权、control-plane capability或hash freshness门禁。
+Bootstrap requirement decision必须immutable且只由全部`requirementSources`确定；launch authorization由Bootstrap-owned sidecar及local import receipt拥有，execution state由events/binding/import确定性派生。`not_required`投影为`not_applicable`；required路径按`awaiting_authorization -> awaiting_external|prepared -> running -> finalized`推进，并允许进入`blocked|stale`。不得修改decision推进状态或跳过授权、control-plane capability和hash freshness门禁。
 
 ### RA-SKILL-036：Bootstrap Import Envelope
 
-只有同时绑定`bootstrap-control-plane.v2`、profile/policy/route、companion capability、Acceptance Auditor role bundle、review input、Artifact View、final result、verifier、P2 dispositions、formal attestation、target acceptance finding policy和当前candidate/matrix的import envelope才能参与授权。
+只有同时绑定immutable requirement decision、capability binding、Bootstrap-owned launch authorization及local receipt、`bootstrap-control-plane.v2`、profile/policy/route、companion capability、Acceptance Auditor role bundle、review input、Artifact View、final result、verifier、P2 dispositions、formal attestation、target acceptance finding policy和当前candidate/base matrix的import envelope才能参与授权。
 
 ### RA-SKILL-037：人工Mapping Approval
 
-语义相似不能自动映射finding。人工approval必须通过`import-mapping-approval`按adapter policy验证并绑定有权身份、finding hash、mapping目标、matrix、lineage和import envelope；过期、无权、未经正式导入或目标已tombstone时必须拒绝。
+语义相似不能自动映射finding。人工approval必须通过`import-mapping-approval`按adapter policy验证并绑定有权身份、finding hash、mapping目标、matrix、check-ID lineage和import envelope；check mapping与cross-cutting mapping条件字段必须互斥完整，过期、无权、未经正式导入或目标已tombstone时必须拒绝。
 
 ### RA-SKILL-038：单一语义权威
 
@@ -1657,7 +1839,7 @@ Bootstrap request和import lineage必须绑定target acceptance finding policy r
 
 ### RA-SKILL-045：Deterministic Next Action
 
-ready actions必须按dependency拓扑、adapter action order、command registry显式order和command ID字典序确定唯一`nextAction`。排序碰撞、未知action或依赖文件枚举/完成时序时必须失败关闭；`inspect-run`必须报告ready集合和选择依据，`resume`只能执行该动作。
+ready actions必须按conditional DAG dependency拓扑、action显式order、command registry order和command ID字典序确定唯一`nextAction`。排序碰撞、未知action或依赖文件枚举/完成时序时必须失败关闭；activation false与readiness未满足必须分别投影为not-applicable和waiting-external，`inspect-run`报告依据，`resume`只能执行唯一ready动作。
 
 ### RA-SKILL-046：Change Set授权边界
 
@@ -1669,7 +1851,7 @@ S0-S5必须分别产生hash-bound predicate结果及精确`authorizes/does_not_a
 
 ### RA-SKILL-048：条件工件闭包
 
-validator必须根据Bootstrap decision、capability binding和action events计算required artifact set。Bootstrap request/binding、attestation scope、import envelope、finding map、approval input和approval receipt只能在对应条件成立时要求存在；不得创建空文件占位，也不得因合法条件工件不存在而判定deterministic-only run失败。
+validator必须根据Bootstrap requirement decision、capability binding、conditional action DAG和action events计算required artifact set。Bootstrap request/binding、launch authorization receipt、attestation scope、import envelope、finding map、approval input/receipt、impact projection及final result只能在对应条件成立时要求存在；不得创建空文件占位，也不得因合法条件工件不存在而判定deterministic-only run失败。
 
 ### RA-SKILL-049：条件Capability Binding
 
@@ -1681,7 +1863,39 @@ validator必须根据Bootstrap decision、capability binding和action events计�
 
 ### RA-SKILL-051：Bootstrap Action顺序
 
-action DAG必须强制`decide-bootstrap -> bind-bootstrap-capabilities -> prepare-attestation -> prepare-bootstrap`。Bootstrap not-required时后三个动作必须有可恢复的`not_applicable`结果且不生成条件工件；任何提前attestation、跳过binding或not-required仍生成scope/request的路径必须拒绝。
+conditional action DAG必须覆盖所有Bootstrap-only action、mapping approval、impact projection和finalize branch closure。Bootstrap not-required时全部Bootstrap-only action合法not-applicable；required但外部结果未就绪时相关action waiting-external；无approval需求时approval action合法not-applicable。任何active branch未闭合便finalize、approval导入未重开mapping/projection或action缺少必填控制字段时必须拒绝。
+
+### RA-SKILL-052：Immutable Bootstrap工件分权
+
+`bootstrap-requirement-decision.json`必须永久不可变且不得包含mutable execution/review identity；Bootstrap-owned launch authorization和local import receipt拥有授权事实；`bootstrap-execution-state.json`只能从events及sidecars重建。binding引用非初始decision revision、decision被修改或派生state反向成为权威时必须拒绝。
+
+### RA-SKILL-053：Reviewer Launch Authorization
+
+reviewer/verifier只能在仓库级Bootstrap-owned launch authorization与local import receipt均绑定当前request、candidate、base matrix、binding、profile、scope和可信authorization event且未过期/撤回时启动。新Skill复制授权schema、旧session文本授权或无receipt恢复启动必须拒绝。
+
+### RA-SKILL-054：Base Matrix与Impact Projection
+
+base matrix不得包含或回写Bootstrap finding/effective gate状态。`acceptance-impact-projection.json`必须绑定当前base matrix、finding map、approval receipts及external/protected gate hashes，并独立拥有effective finding refs、blocking reasons和gate state；任一输入漂移使projection stale。
+
+### RA-SKILL-055：Candidate与Final Result保管
+
+`evaluate`只能发布hash-bound Phase/Program candidate并固定`authorizes=[]`；`finalize`必须消费candidate和current projection后发布不同路径的final result。共用路径、原地升级、candidate授权或失败attempt覆盖formal final result必须拒绝。
+
+### RA-SKILL-056：Manifest可用性状态
+
+baseline/candidate manifest文件始终必须存在并通过schema。`complete`要求零coverage gap；`partial|unavailable`必须有结构化缺口和`authorizes=[]`，使candidate completeness为incomplete且仅允许evidence-only诊断。缺文件、空占位或非complete manifest进入授权路径必须拒绝。
+
+### RA-SKILL-057：Approval Lineage与Receipt
+
+check mapping approval必须绑定非空check IDs和check-ID lineage hash；cross-cutting approval必须绑定gate ID和affected phase IDs且check IDs为空。导入receipt必须记录输入/正式工件hash、accepted/rejected IDs、adapter policy、identity evidence、lineage和action event；字段混用、receipt不完整或partial rejection非法放行必须拒绝。
+
+### RA-SKILL-058：Evidence Invocation Identity
+
+controlled invocation evidence必须绑定stable command ID、command registry hash、invocation hash和process-result path/hash，不得使用自由command字符串。imported evidence必须绑定source/custody/freshness receipt且不能越过运行模式授权边界；两种origin条件字段混用或缺失必须拒绝。
+
+### RA-SKILL-059：Conditional Branch Closure
+
+deterministic和semantic branch必须分别由DAG谓词闭合，并在current impact projection完成后才允许finalize。not-required Bootstrap import/map action保持ready、无approval需求阻断finalize、waiting-external被误报not-applicable、或finalize先于active branch closure时必须拒绝。
 
 ## 14. 必测反例
 
@@ -1738,6 +1952,14 @@ action DAG必须强制`decide-bootstrap -> bind-bootstrap-capabilities -> prepar
 49. S0 companion schema尚不存在时，初始run input仍要求其path/hash导致S1 prepare失败；或decision后回写run input补入schema以掩盖时序循环。
 50. 代码、profile和测试已支持companion，但`docs/standards/bootstrap-review-control-plane.md`、仓库级Skill/reference、operator docs或ADR-0041复核缺失，仍声明`bootstrap_companion_ready`。
 51. adapter/CLI在`decide-bootstrap`前执行`prepare-attestation`，或Bootstrap not-required时仍生成binding、scope、scope-result或review request。
+52. 分别验证`bootstrap-requirement-decision-mutated-after-binding`、`binding-consumes-noninitial-decision-revision`、`finalized-state-written-into-frozen-decision`和`authorization-status-changed-without-sidecar`均失败，且immutable decision保持不变。
+53. Bootstrap reviewers依据旧session文本或过期授权启动，缺少绑定当前request/candidate/base-matrix/binding/profile的Bootstrap-owned launch authorization及local import receipt。
+54. Bootstrap完成后把finding refs或effective gate state回写base matrix，导致request/import matrix hash stale；或projection使用旧finding/approval/external gate hash仍被接受。
+55. `evaluate`把candidate写入final result路径，`finalize`原地升级candidate，或失败attempt覆盖上一份合法Phase/Program final result。
+56. 分别验证`not-required-import-bootstrap-remains-ready`、`not-required-map-findings-remains-ready`、`no-approval-import-action-blocks-finalize`、`approval-import-does-not-reactivate-map-findings`和`finalize-selected-before-active-branch-closure`均失败。
+57. baseline或candidate覆盖不可获得时省略manifest/创建空文件，或`status=partial|unavailable`仍进入deterministic/Bootstrap授权路径。
+58. check approval缺`checkIdLineageHash`，cross-cutting approval缺`affectedPhaseIds`，或approval receipt缺policy/identity/lineage/formal input/action event hash仍参与projection。
+59. controlled evidence只保存自由`command`字符串，或缺command registry/invocation/process-result绑定；imported evidence缺source/custody/freshness receipt却被当作当前执行证据。
 
 ## 15. 非目标
 
@@ -1753,9 +1975,9 @@ action DAG必须强制`decide-bootstrap -> bind-bootstrap-capabilities -> prepar
 - 不用固定 finding 数量或固定覆盖率百分比判断质量。
 - 不将计划一致性验证等同于运行时实现完成。
 
-## 16. 待确认项
+## 16. 已确认默认项
 
-当前建议默认值如下，若无新的决策，创建 Skill 时按此执行：
+以下默认值已确认，创建Skill时按此执行；后续变更必须作为新的authority delta记录：
 
 1. Skill 名称使用 `run-refactor-implementation-acceptance`。
 2. Skill 放在仓库 `.agents/skills/` 下。
@@ -1764,4 +1986,4 @@ action DAG必须强制`decide-bootstrap -> bind-bootstrap-capabilities -> prepar
 5. 任一`semantic_partition`、plan/adapter、DoD/finding policy、risk policy或`user_request` required来源成立时，必须等待用户reviewer授权并通过同名`$run-phase-bootstrap-review`入口调用Bootstrap v2；只有全部被消费partition均为`deterministic_complete`、目标DoD层级明确允许deterministic-only acceptance、没有semantic review gate且external/protected gates已满足时，Bootstrap才可为`not_required`并产生最终授权。存在被消费的`semantic_candidate` partition时还必须取得positive-attestation companion；缺少任一所需语义步骤时只输出candidate结论。
 6. 通用Skill从目标计划解析phase DAG；7-07规则作为首个线性adapter和回归fixture。
 7. 现有7-07 `100-*`与机器矩阵作为兼容输入和真实测试样本，不作为无需重验的完成证明。
-8. 首版按S0-S5谓词实施：统一run input、双schema baseline/candidate manifests、partitioned source inventory、structured evidence、orthogonal state、phase graph、adapter/command/lineage合同、deterministic action recovery、Bootstrap decision/capability-binding/request/import、冻结inventory attestation scope、条件工件闭包、确定性`map-findings`和`import-mapping-approval`；同时把带独立capability ID/version、profile policy hash和原子Acceptance Auditor role bundle的positive-attestation能力加入仓库级Bootstrap v2控制面，并同步durable standard、仓库级Skill/reference、operator docs、profile/schema registry和ADR-0041复核结果。S0未完成不阻止S1-S3 deterministic core迭代，但阻止S4 semantic integration与S5完整发布。跨模型稳定性属于发布级独立证据，不阻止本地开发迭代。
+8. 首版按S0-S5谓词实施：统一run input、带complete/partial/unavailable状态的双manifest、partitioned source inventory、command-ID-bound evidence、base matrix、candidate结果、impact projection、final结果、conditional action DAG、Bootstrap immutable requirement decision/capability binding/request/launch-authorization import/execution projection/import envelope、冻结inventory attestation scope、确定性`map-findings`和`import-mapping-approval`；同时把positive-attestation与扩展launch authorization能力加入仓库级Bootstrap v2控制面，并同步durable standard、仓库级Skill/reference、operator docs、profile/schema registry和ADR-0041复核结果。S0未完成不阻止S1-S3 deterministic core迭代，但阻止S4 semantic integration与S5完整发布。跨模型稳定性属于发布级独立证据，不阻止本地开发迭代。
