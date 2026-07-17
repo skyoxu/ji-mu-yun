@@ -13,6 +13,7 @@ from typing import Any
 
 from contract_guards import schema_error
 from fixture_checks import evaluate_fixture, validate_fixture_suite
+from candidate_diff_guards import validate_candidate_fixture_suite
 from protocol_guards import evaluate_protocol_fixture
 from evidence_guards import validate_candidate_review_documents
 from slice_guards import validate_slice_outputs
@@ -32,7 +33,7 @@ REPOSITORY_ROOT = PLAN_ROOT.parents[1]
 
 def validator_identity() -> str:
     digest = hashlib.sha256()
-    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
+    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
     for path in (Path(__file__).with_name(name) for name in names):
         digest.update(path.name.encode("utf-8"))
         digest.update(b"\0")
@@ -177,7 +178,7 @@ def current_candidate_identity(slice_id: str = "RMAP-S6") -> dict[str, str]:
     patterns: set[str] = set()
     for item in slices[: selected + 1]:
         allowed = item.get("allowed_changes", {})
-        raw_patterns = [*allowed.get("production", []), *allowed.get("tests", []), *allowed.get("documentation", []), *item.get("execution_read_set", []), *item.get("dependency_closure", [])]
+        raw_patterns = [*allowed.get("production", []), *allowed.get("tests", []), *allowed.get("documentation", []), *item.get("execution_read_set", []), *item.get("dependency_closure", []), *item.get("forbidden_changes", [])]
         patterns.update(filter(None, (_normalize_scope_pattern(pattern) for pattern in raw_patterns)))
     tracked_names = _git_bytes("diff", "--name-only", "HEAD").decode("utf-8").splitlines()
     tracked_names = [name for name in tracked_names if _matches_scope(name, patterns)]
@@ -210,10 +211,11 @@ def strict_load(path: Path) -> dict[str, Any]:
     return value
 
 
-def run_predicate(predicate: str, slice_id: str | None = None, candidate_result: str | None = None, bootstrap_run: str | None = None, run_dir: str | None = None, red_result: str | None = None, green_result: str | None = None, refactor_result: str | None = None) -> tuple[dict[str, Any], int]:
+def run_predicate(predicate: str, slice_id: str | None = None, candidate_result: str | None = None, candidate_ref: str | None = None, bootstrap_run: str | None = None, run_dir: str | None = None, red_result: str | None = None, green_result: str | None = None, refactor_result: str | None = None) -> tuple[dict[str, Any], int]:
     validated_snapshot = validation_snapshot()
     checks, findings, data = validate_static(PLAN_ROOT)
     fixture_findings = validate_fixture_suite(PLAN_ROOT, data) if data else []
+    fixture_findings.extend(validate_candidate_fixture_suite(PLAN_ROOT) if data else [])
     findings.extend(fixture_findings)
     checks.append({"rule_id": "RMAP-FIXTURES", "status": "pass" if not fixture_findings else "fail", "evidence": ["positive, negative, boundary, stale, and mutation cases"]})
     blocked_predicates = set(data.get("review_blocker", {}).get("blocks_predicates", []))
@@ -237,7 +239,7 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
                     except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
                         pass
             if slice_id in {"RMAP-S6", "RMAP-S7"}:
-                if not candidate_result or (slice_id == "RMAP-S7" and not bootstrap_run):
+                if not candidate_result or (slice_id == "RMAP-S7" and (not bootstrap_run or not candidate_ref)):
                     slice_findings.append({"rule_id": "RMAP-REVIEW-EVIDENCE-BINDING", "target": slice_id, "message": "explicit candidate result and required review evidence are missing"})
                 else:
                     try:
@@ -255,8 +257,13 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
                             review_relative = review_dir.relative_to(REPOSITORY_ROOT).as_posix()
                             if not review_relative.startswith("logs/ci/"):
                                 raise ValueError("Bootstrap evidence path must stay in logs/ci")
+                            candidate_ref_path = (REPOSITORY_ROOT / str(candidate_ref)).resolve()
+                            candidate_ref_relative = candidate_ref_path.relative_to(REPOSITORY_ROOT).as_posix()
+                            if not candidate_ref_relative.startswith("logs/tdd-adapter/"):
+                                raise ValueError("candidate reference must stay in logs/tdd-adapter")
                             documents = [strict_load(review_dir / "finalized-run-validation.json"), strict_load(review_dir / "review-input.json"), strict_load(review_dir / "review-gate-result.json"), strict_load(review_dir / "review-dispositions.json")]
-                            slice_findings.extend(validate_candidate_review_documents(PLAN_ROOT, candidate_relative, candidate, *documents, data["contract"].get("acceptance_policy", {}).get("p2_deferrals", []), current, stage_documents, review_dir))
+                            candidate_ref_document = strict_load(candidate_ref_path)
+                            slice_findings.extend(validate_candidate_review_documents(PLAN_ROOT, candidate_relative, candidate, *documents, data["contract"].get("acceptance_policy", {}).get("p2_deferrals", []), current, stage_documents, review_dir, candidate_ref_document, candidate_ref_relative))
                     except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
                         slice_findings.append({"rule_id": "RMAP-REVIEW-EVIDENCE-BINDING", "target": slice_id, "message": str(exc)})
             slice_check["status"] = "pass" if not slice_findings else "fail"
@@ -323,6 +330,7 @@ def main() -> int:
     parser.add_argument("--slice-id")
     parser.add_argument("--fixture")
     parser.add_argument("--candidate-result")
+    parser.add_argument("--candidate-ref")
     parser.add_argument("--bootstrap-run")
     parser.add_argument("--run-dir")
     parser.add_argument("--red-result")
@@ -330,7 +338,7 @@ def main() -> int:
     parser.add_argument("--refactor-result")
     parser.add_argument("--output")
     args = parser.parse_args()
-    result, exit_code = run_fixture(args.fixture) if args.fixture else run_predicate(args.predicate, args.slice_id, args.candidate_result, args.bootstrap_run, args.run_dir, args.red_result, args.green_result, args.refactor_result)
+    result, exit_code = run_fixture(args.fixture) if args.fixture else run_predicate(args.predicate, args.slice_id, args.candidate_result, args.candidate_ref, args.bootstrap_run, args.run_dir, args.red_result, args.green_result, args.refactor_result)
     write_output(args.output, result)
     return exit_code
 

@@ -14,9 +14,10 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 from authority_guards import validate_acceptance_contracts, validate_authority_manifest, validate_clarification_projection  # noqa: E402
 from contract_guards import junction_escape_is_rejected, schema_error  # noqa: E402
+from candidate_diff_guards import fold_accepted_attempts, manifest_root_hash  # noqa: E402
 from evidence_guards import validate_candidate_document, validate_candidate_review_documents  # noqa: E402
 from fixture_checks import apply_mutations, evaluate_fixture  # noqa: E402
-from protocol_guards import hydrate_protocol_fixture, value_hash  # noqa: E402
+from protocol_guards import hydrate_protocol_fixture, load_protocol_run, value_hash  # noqa: E402
 from rmap_checks import (  # noqa: E402
     PREDICATE_AUTHORITY,
     load_machine,
@@ -40,7 +41,7 @@ class PlanValidatorTests(unittest.TestCase):
             "command_registry_hash", "validator_hash", "authority_manifest_hash", "candidate_worktree_hash",
         )}
         identity.update({
-            "changed_file_manifest_hash": "sha256:" + "1" * 64,
+            "candidate_diff_manifest_hash": "sha256:" + "1" * 64,
             "test_diff_hash": "sha256:" + "2" * 64,
             "red_run_id": "red-a", "green_run_id": "green-a", "refactor_run_id": "refactor-a",
             "final_context_manifest_hash": "sha256:" + "3" * 64,
@@ -53,14 +54,14 @@ class PlanValidatorTests(unittest.TestCase):
         })
         return {
             "schema_version": "jimuyun.tdd-result.v1", "predicate": "implementation-candidate", "status": "pass",
-            "plan_hash": current["plan_hash"], "source_hash": current["source_hash"], "slice_id": "RMAP-S6",
+            "plan_hash": current["plan_hash"], "source_hash": current["source_hash"], "slice_id": "RMAP-S6", "run_id": "run-a",
             "authority_revision": authority_revision or current["head"], "candidate_identity": identity,
             "authorizes": ["bootstrap-review"],
             "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"],
         }
     def _stage_run(self, current: dict[str, str]) -> tuple[Path, list[dict[str, object]], dict[str, str]]:
         repository_root = PLAN_ROOT.parents[1]
-        run_dir = repository_root / "logs" / "tdd-adapter" / f"test-{uuid.uuid4().hex}"
+        run_dir = repository_root / "logs" / "tdd-adapter" / "repository-maintenance-tdd-adapter" / "RMAP-S6" / f"test-{uuid.uuid4().hex}"
         run_dir.mkdir(parents=True)
         contract_slice = next(item for item in self.data["contract"]["slices"] if item["slice_id"] == "RMAP-S6")
         stages: list[dict[str, object]] = []
@@ -120,11 +121,23 @@ class PlanValidatorTests(unittest.TestCase):
         (repository_root / target).write_bytes(file_versions[("ATTEMPT-003", "after", target)] or b"")
     def _candidate_run(self, current: dict[str, str]) -> tuple[Path, dict[str, object], list[dict[str, object]], dict[str, str]]:
         run_dir, stages, paths = self._stage_run(current)
-        changed = run_dir / "changed-files.json"; changed.write_text(json.dumps({"schema_version": "rmap.changed-files.v1", "files": []}), encoding="utf-8")
         test_diff = run_dir / "test-diff.patch"; test_diff.write_text("", encoding="utf-8")
+        bundle, protocol_findings = load_protocol_run(PLAN_ROOT, run_dir); self.assertEqual([], protocol_findings)
+        folded, fold_hash, fold_findings = fold_accepted_attempts(bundle); self.assertEqual([], fold_findings)
+        files = [{**entry, "roles": ["test"], "scope": "allowed"} for entry in folded]
+        changed_document = {
+            "schema_version": "jimuyun.candidate-diff-manifest.v1", "plan_id": "repository-maintenance-tdd-adapter",
+            "slice_id": "RMAP-S6", "run_id": "run-a", "rename_policy": "delete-add-no-renames",
+            "baseline_identity": {"head": current["head"], "index_tree": current["index_tree"]},
+            "candidate_identity": {key: current[key] for key in ("tracked_diff_hash", "untracked_manifest_hash", "candidate_worktree_hash")},
+            "files": files, "accepted_attempt_fold_hash": fold_hash,
+            "test_diff_ref": {"path_type": "run_path", "path": "test-diff.patch", "sha256": "sha256:" + hashlib.sha256(test_diff.read_bytes()).hexdigest()},
+            "root_hash": ""}
+        changed_document["root_hash"] = manifest_root_hash(changed_document); changed = run_dir / "changed-files.json"
+        changed.write_text(json.dumps(changed_document), encoding="utf-8")
         candidate = self._candidate(current)
         identity = candidate["candidate_identity"]
-        identity["changed_file_manifest_hash"] = "sha256:" + hashlib.sha256(changed.read_bytes()).hexdigest()
+        identity["candidate_diff_manifest_hash"] = "sha256:" + hashlib.sha256(changed.read_bytes()).hexdigest()
         identity["test_diff_hash"] = "sha256:" + hashlib.sha256(test_diff.read_bytes()).hexdigest()
         for stage in ("red", "green", "refactor"):
             identity[f"{stage}_run_id"] = "run-a"
@@ -224,7 +237,7 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertTrue(result)
     def test_validator_identity_binds_all_authorizing_helpers(self) -> None:
         digest = hashlib.sha256()
-        names = ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py")
+        names = ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py")
         for name in names:
             path = TOOLS / name
             digest.update(path.name.encode("utf-8")); digest.update(b"\0"); digest.update(path.read_bytes()); digest.update(b"\0")
@@ -262,9 +275,9 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertEqual({"RMAP-REQ-COVERAGE-LOCATION"}, {item["rule_id"] for item in validate_coverage(PLAN_ROOT, coverage, ids)})
     def test_requirements_quality_and_acceptance_are_current(self) -> None:
         self.assertEqual([], validate_requirements(PLAN_ROOT, self.data["requirements"], self.data["quality"], self.data["acceptance"]))
-        self.assertEqual([], validate_acceptance_contracts(self.data["acceptance"], self.data["requirements"], self.data["contract"], self.data["commands"], self.data["fixtures"], self.data["protocol_fixtures"]))
+        self.assertEqual([], validate_acceptance_contracts(self.data["acceptance"], self.data["requirements"], self.data["contract"], self.data["commands"], self.data["fixtures"], self.data["protocol_fixtures"], self.data["candidate_fixtures"]))
         acceptance = copy.deepcopy(self.data["acceptance"]); acceptance["acceptances"][0]["expected_failure_ids"] = ["NOT-A-RULE"]
-        self.assertIn("RMAP-REQ-ACCEPTANCE-CONTRACT", {item["rule_id"] for item in validate_acceptance_contracts(acceptance, self.data["requirements"], self.data["contract"], self.data["commands"], self.data["fixtures"], self.data["protocol_fixtures"])})
+        self.assertIn("RMAP-REQ-ACCEPTANCE-CONTRACT", {item["rule_id"] for item in validate_acceptance_contracts(acceptance, self.data["requirements"], self.data["contract"], self.data["commands"], self.data["fixtures"], self.data["protocol_fixtures"], self.data["candidate_fixtures"])})
     def test_earliest_slice_phase_mismatch_is_rejected(self) -> None:
         contract = copy.deepcopy(self.data["contract"]); contract["slices"][2]["phase_id"] = "P2"
         self.assertIn("RMAP-TDD-PHASE", {item["rule_id"] for item in validate_contract(PLAN_ROOT, contract, self.data["requirements"], self.data["commands"])})
@@ -347,10 +360,20 @@ class PlanValidatorTests(unittest.TestCase):
         }
         (review_dir / "finalized-run-validation.json").write_text(json.dumps(envelope), encoding="utf-8")
         try:
-            self.assertEqual([], validate_candidate_document(PLAN_ROOT, relative, candidate, current, stages))
-            self.assertEqual([], validate_candidate_review_documents(PLAN_ROOT, relative, candidate, envelope, review_input, review_result, dispositions, [], current, stages, review_dir))
+            expected_diff = json.loads((candidate_path.parent / "changed-files.json").read_text(encoding="utf-8"))["files"]
+            candidate_ref_dir = repository_root / "logs" / "tdd-adapter" / "repository-maintenance-tdd-adapter" / "RMAP-S7" / f"ref-{uuid.uuid4().hex}"
+            candidate_ref_dir.mkdir(parents=True)
+            candidate_ref = {"schema_version": "jimuyun.candidate-result-ref.v1", "slice_id": "RMAP-S6", "run_id": "run-a",
+                             "path": relative, "sha256": digest, "candidate_hash": value_hash(candidate),
+                             "predicate": "implementation-candidate", "superseded": False}
+            candidate_ref_path = candidate_ref_dir / "candidate-result-ref.json"
+            candidate_ref_path.write_text(json.dumps(candidate_ref), encoding="utf-8")
+            candidate_ref_relative = candidate_ref_path.relative_to(repository_root).as_posix()
+            with patch("candidate_diff_guards.derive_candidate_snapshot", return_value=(expected_diff, b"")):
+                self.assertEqual([], validate_candidate_document(PLAN_ROOT, relative, candidate, current, stages))
+                self.assertEqual([], validate_candidate_review_documents(PLAN_ROOT, relative, candidate, envelope, review_input, review_result, dispositions, [], current, stages, review_dir, candidate_ref, candidate_ref_relative))
         finally:
-            shutil.rmtree(candidate_path.parent); shutil.rmtree(review_dir)
+            shutil.rmtree(candidate_path.parent); shutil.rmtree(review_dir); shutil.rmtree(candidate_ref_dir)
     def test_acceptance_rejects_open_p1(self) -> None:
         repository_root = PLAN_ROOT.parents[1]
         current = current_candidate_identity(); candidate = self._candidate(current)

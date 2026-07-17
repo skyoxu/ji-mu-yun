@@ -14,17 +14,17 @@
       "../../.agents/skills/vdd-execution-plan/references/strict-vdd-standard.md": "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140",
       "../2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md": "sha256:b6c840acd67ee64fe4092baba7061cd61bb5b669b6ec8f00db8e5f9f12180efb",
       "../2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json": "sha256:ca42e682cd6077a13b61d261ca75f70d98b1717547324c71c40b92c16de4048a",
-      "00-index.md": "sha256:79ddbf278c79ee6addabd7a8bf0352992b702a32e0457aa6ce62a723d8a95ba7",
-      "01-intent-authority-and-non-goals.md": "sha256:a57468dfb0c6c4c2ad93ed935e3a76ea5e528148599c8839825dda3780b569fa",
-      "02-executable-contracts-and-invariants.md": "sha256:9cc2a752b3532fd42c005886e5324e209961aebb0b5b91db6ce9c5216e1330e9",
-      "03-validators-fixtures-and-control-gates.md": "sha256:16c97e4e6d7119ece45f88f9c72e1e43905f4f455cff7c761f486bc9468eb3f6",
-      "04-behavior-slices-and-implementation-order.md": "sha256:c9a84235b1b7033101d84722a0981b5506b80c8f2a6d7a8ba251d3fc4c8c4595",
-      "05-diagnostics-repair-and-reentry.md": "sha256:f67670bab725c3d8b31ad63c0fe8f6b4f2c13acbbe1608e8765e144e06d85256",
-      "06-testing-observability-and-evidence.md": "sha256:ee9cf17ee392be5f77e1888885bde165e9fb3ffd4d23f1af5297a864ddd01249",
-      "96-global-review-and-validation.md": "sha256:1e2965ccfc7c1d0f4f006083b8da5a5d4ef091b3647a9c3cae35bfb82862f733",
-      "schemas/clarification-decisions.v1.json": "sha256:d9035f3b3bf811248382bbeca4515dc57497390a30fbfd2e6d592631a9de89ae",
+      "00-index.md": "sha256:2e16a61f84edb0b74eab08dadcfab584e202f3a54fe1568f814c66222fa46192",
+      "01-intent-authority-and-non-goals.md": "sha256:a8eb319a9717943466c424335dbd03ccffa5d741def945ad261e29d476209a97",
+      "02-executable-contracts-and-invariants.md": "sha256:fa9894a53745f2e74575360ac80e596375e3be7d8aa3d98625a7d2bb4a87d8ca",
+      "03-validators-fixtures-and-control-gates.md": "sha256:5a9db566826b11ef5dc6910facfb3f303f4ac16f486467aa591ec9ebdad709b1",
+      "04-behavior-slices-and-implementation-order.md": "sha256:0444980f6e5e9d6842972506084cf144aff269d78521bf12d130feb05f6bcef6",
+      "05-diagnostics-repair-and-reentry.md": "sha256:748f4f082ad632f1c451221d351ffb82bb446e9a686740165d0832eb4338afc7",
+      "06-testing-observability-and-evidence.md": "sha256:1dbe3921fd361de9caa84d2648bb4fdc9a6c9fcf529356bf1be27a23839f7f20",
+      "96-global-review-and-validation.md": "sha256:04e9138766ca860c12bbd4281cc47dab99ce2febc1725462d9e0d6455eda9ee2",
+      "schemas/clarification-decisions.v1.json": "sha256:6a8583dfe8194c36894c77931a962db4d60513a82d22a376e2644ce3189dad4d",
       "schemas/review-blocking-state.v1.json": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
-      "schemas/acceptance-contracts.v1.json": "sha256:09b7d749fd311adbea41b36e4ee88e91001a7e2022ca40500c88b62a04681e88",
+      "schemas/acceptance-contracts.v1.json": "sha256:14a62d03da73cb829ce19ef29ea62e27c357803167e86716ae324d2d3883afd2",
       "../../.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json": "sha256:ab7263698123b5af20e47f6ae771e5ebf652537169efcd7ce839d8aa0299d16d",
       "../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
       "../../docs/standards/bootstrap-review-control-plane.md": "sha256:542a5661e750e9708b4fc9acd939f00d6e6e240bf299fa49062bdaec04e08382",
@@ -677,7 +677,8 @@
       "dependency_closure": [
         "implementation-contract.v1.json",
         "schemas/authority-manifest.v1.json",
-        "schemas/acceptance-contracts.v1.json"
+        "schemas/acceptance-contracts.v1.json",
+        "schemas/candidate-diff-manifest.v1.schema.json"
       ],
       "tdd": {
         "red": {
@@ -753,6 +754,7 @@
       "dependency_closure": [
         "implementation-contract.v1.json",
         "schemas/plan-state.v1.json",
+        "schemas/candidate-result-ref.v1.schema.json",
         ".agents/skills/quick-dev-tdd-adapter/**"
       ],
       "tdd": {
@@ -793,6 +795,11 @@
     "exact_match_required": true,
     "worktree_scope": "declared-slice-closure-through-candidate",
     "unrelated_worktree_drift": "excluded-from-candidate-hash",
+    "rename_policy": "delete-add-no-renames",
+    "candidate_artifact_schemas": {
+      "candidate_diff_manifest": "schemas/candidate-diff-manifest.v1.schema.json",
+      "candidate_result_ref": "schemas/candidate-result-ref.v1.schema.json"
+    },
     "required_run_artifacts": [
       "changed-files.json",
       "test-diff.patch",
@@ -824,7 +831,8 @@
       "run_events_hash": true,
       "final_attempt_event_hash": true,
       "accepted_attempt_id": true,
-      "accepted_attempt_decision_hash": true
+      "accepted_attempt_decision_hash": true,
+      "accepted_attempt_fold_hash": true
     },
     "required_fields": [
       "head",
@@ -835,7 +843,7 @@
       "command_registry_hash",
       "validator_hash",
       "authority_manifest_hash",
-      "changed_file_manifest_hash",
+      "candidate_diff_manifest_hash",
       "test_diff_hash",
       "red_run_id",
       "green_run_id",

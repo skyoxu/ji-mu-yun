@@ -16,6 +16,9 @@
 12. Concrete authority-book hash freshness and RMAP-S0 predicate-proof reachability.
 13. Controlled repository-local temporary workspace when host `%TEMP%` is unavailable.
 14. Exact predicate/slice proof reachability for every S0-S7 GREEN command.
+15. Exact cumulative candidate diff equality across Git, accepted attempt fold, and candidate manifest.
+16. Binary-safe deterministic test-patch reproduction, including new untracked tests and deletions.
+17. Explicit S7-to-S6 candidate reference with independent run IDs and supersession rejection.
 15. Source section identity and line/question selector drift with unchanged coverage union.
 16. Active requirement removed from every slice while remaining in the registry.
 17. Restricted-token junction creation without nested writable-directory assumptions.
@@ -83,15 +86,15 @@ run-events.jsonl
 attempt-ledger-manifest.v1.json
 ```
 
-Every file binds the same run, plan, contract, slice, source, validator, command registry, and candidate identities. Stage files also bind the accepted attempt decision and Capsule/context identities while recording command identity, observed exit, timestamp, and predecessor-stage hash; RED records the declared selector and stable failures. The candidate directory contains hash-bound `changed-files.json`, `test-diff.patch`, final context/Capsule, attempt-ledger manifest, raw event-log hash, final canonical event hash, and the accepted attempt decision.
+Every file binds the same run, plan, contract, slice, source, validator, command registry, and candidate identities. Stage files also bind the accepted attempt decision and Capsule/context identities while recording command identity, observed exit, timestamp, and predecessor-stage hash; RED records the declared selector and stable failures. The S6 candidate directory contains a schema-valid cumulative `changed-files.json`, reproducible `test-diff.patch`, final context/Capsule, attempt-ledger manifest, raw event-log hash, final canonical event hash, accepted-attempt fold hash, and accepted attempt decision. The S7 run contains `candidate-result-ref.json`; it never infers an S6 run from its own run ID.
 
-Every slice command receives `--run-dir`, `--red-result`, `--green-result`, and `--refactor-result`; implicit latest selection and repository-wide evidence scans are forbidden. S6 additionally receives `--candidate-result`. Only S7 receives `--bootstrap-run`.
+Every slice command receives `--run-dir`, `--red-result`, `--green-result`, and `--refactor-result`; implicit latest selection and repository-wide evidence scans are forbidden. S6 additionally receives `--candidate-result`. Only S7 receives both `--candidate-ref` and `--bootstrap-run`; its `--candidate-result` uses an explicit independent `<candidate-run-id>`.
 
 Raw clarification and repair evidence remains under `logs/**`, but clean-checkout authorization consumes only the minimized projections in `schemas/clarification-decisions.v1.json`, `schemas/review-blocking-state.v1.json`, and `schemas/shadow-protected-baseline.v1.json`.
 
 ## Candidate Envelope
 
-The candidate result authorizes only `bootstrap-review`. It explicitly excludes `implementation-accepted`, protected handoff, and release. It binds the final context-manifest hash, final Capsule hash, attempt-ledger manifest hash, raw `run-events.jsonl` hash, final canonical event hash, accepted refactor attempt ID, and accepted decision hash. Its worktree identity covers only declared slice write/read/dependency/authority closure through S6, so unrelated unstaged or untracked work does not invalidate it; Git index drift remains blocking.
+The candidate result authorizes only `bootstrap-review`. It explicitly excludes `implementation-accepted`, protected handoff, and release. It binds its S6 run ID, cumulative candidate diff manifest, test patch, final context-manifest hash, final Capsule hash, attempt-ledger manifest hash, raw `run-events.jsonl` hash, final canonical event hash, accepted-attempt fold, accepted refactor attempt ID, and accepted decision hash. Its worktree identity covers declared write, forbidden, read, dependency, and authority closure through S6; unrelated work outside that closure remains excluded, while Git index or monitored dependency drift blocks.
 
 ## Plan Validation Evidence
 

@@ -13,7 +13,7 @@
       ],
       "summary": "Backfill all three existing refactor plans rather than one pilot.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "7-12",
         "7-07",
@@ -50,7 +50,7 @@
       ],
       "summary": "Use a repository-owned capsule executor instead of stock Quick Dev backend v1.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "adapter",
         "backend"
@@ -85,9 +85,9 @@
         "RMAP-002",
         "RMAP-024"
       ],
-      "summary": "Add one framework ADR and exact three-layer ownership.",
+      "summary": "Reuse accepted ADR-0041 for the shared ownership pattern, keep Bootstrap execution scope explicit, and assign TDD Adapter semantics to its standard and Skill.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "standards",
         "Skill",
@@ -104,7 +104,8 @@
         "tools/validate_all.py",
         "tools/rmap_checks.py",
         "tools/authority_guards.py",
-        "tools/fixture_checks.py"
+        "tools/fixture_checks.py",
+        "tools/current_state_guards.py"
       ],
       "affected_fixtures": [
         "duplicate-ownership"
@@ -114,7 +115,8 @@
       ],
       "revalidation_command": "rmap-plan-repair-validate",
       "expected_rule_ids": [
-        "RMAP-OWNERSHIP-DUPLICATE"
+        "RMAP-OWNERSHIP-DUPLICATE",
+        "RMAP-DOC-CURRENT-STATE"
       ]
     },
     {
@@ -125,9 +127,9 @@
         "RMAP-014",
         "RMAP-023"
       ],
-      "summary": "Add shell, environment, placeholder, Windows path, index, read-set, and dependency-closure controls.",
+      "summary": "Add shell, environment, placeholder, Windows path, index, read-set, dependency-closure, and baseline-to-candidate diff controls.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "command registry",
         "adapter"
@@ -142,12 +144,15 @@
         "tools/validate_all.py",
         "tools/rmap_checks.py",
         "tools/authority_guards.py",
-        "tools/fixture_checks.py"
+        "tools/fixture_checks.py",
+        "tools/candidate_diff_guards.py"
       ],
       "affected_fixtures": [
         "authority-manifest-missing-agents",
         "shell-true",
-        "typed-plan-path-escape"
+        "typed-plan-path-escape",
+        "candidate-after-hash-stale",
+        "candidate-test-patch-not-reproducible"
       ],
       "affected_slices": [
         "RMAP-S1",
@@ -157,7 +162,9 @@
       "expected_rule_ids": [
         "RMAP-CMD-PATH-CONTAINMENT",
         "RMAP-CMD-SHELL",
-        "RMAP-HASH-AUTHORITY-MANIFEST"
+        "RMAP-HASH-AUTHORITY-MANIFEST",
+        "RMAP-CANDIDATE-DIFF-EXACT",
+        "RMAP-CANDIDATE-TEST-PATCH"
       ]
     },
     {
@@ -169,7 +176,7 @@
       ],
       "summary": "Add append-only recovery with stale predecessor and normally initialized successor.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "recovery",
         "logs"
@@ -205,9 +212,9 @@
       "requirements": [
         "RMAP-016"
       ],
-      "summary": "Require no open P0/P1 and full P2 disposition with non-deferrable high-risk families and expiry blocking.",
+      "summary": "Require exact S7 reference to one non-superseded S6 candidate plus no open P0/P1 and complete P2 disposition.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "implementation-accepted"
       ],
@@ -219,10 +226,12 @@
         "tools/validate_all.py",
         "tools/rmap_checks.py",
         "tools/authority_guards.py",
-        "tools/fixture_checks.py"
+        "tools/fixture_checks.py",
+        "tools/candidate_diff_guards.py"
       ],
       "affected_fixtures": [
-        "manual-pause-cleared"
+        "manual-pause-cleared",
+        "candidate-result-ref-stale"
       ],
       "affected_slices": [
         "RMAP-S6",
@@ -230,7 +239,8 @@
       ],
       "revalidation_command": "rmap-plan-repair-validate",
       "expected_rule_ids": [
-        "RMAP-REVIEW-MANUAL-PAUSE"
+        "RMAP-REVIEW-MANUAL-PAUSE",
+        "RMAP-CANDIDATE-REF"
       ]
     },
     {
@@ -241,7 +251,7 @@
       ],
       "summary": "Remove first-release Bootstrap CLI modification unless a deterministic gap proves it necessary.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "7-12 Bootstrap CLI"
       ],
@@ -274,7 +284,7 @@
       ],
       "summary": "Remove P4 BMAD elimination from this plan.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "future plan"
       ],
@@ -307,7 +317,7 @@
       ],
       "summary": "Rename quick-dev-tdd-adapter architecture concept to Repository Maintenance TDD Adapter while retaining the stateless adapter identity.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "plan",
         "future Skill"
@@ -348,9 +358,9 @@
         "RMAP-020",
         "RMAP-022"
       ],
-      "summary": "Add the remaining executable contract, lifecycle, validation, test, confidence, and source-custody requirements needed for a complete VDD control chain.",
+      "summary": "Add the remaining executable contract, lifecycle, cumulative candidate-diff, validation, test, confidence, and source-custody requirements needed for a complete VDD control chain.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "plan validator",
         "adapter",
@@ -374,7 +384,9 @@
         "tools/validate_all.py",
         "tools/rmap_checks.py",
         "tools/authority_guards.py",
-        "tools/fixture_checks.py"
+        "tools/fixture_checks.py",
+        "tools/candidate_diff_guards.py",
+        "tools/current_state_guards.py"
       ],
       "affected_fixtures": [
         "candidate-identity-incomplete",
@@ -383,7 +395,9 @@
         "red-stage-exit-conflict",
         "schema-missing-plan-id",
         "shadow-protected-tree-drift",
-        "stale-source-hash"
+        "stale-source-hash",
+        "candidate-changed-file-omitted",
+        "candidate-test-patch-empty-with-test-change"
       ],
       "affected_slices": [
         "RMAP-S0",
@@ -403,7 +417,9 @@
         "RMAP-SHADOW-PROTECTED-DRIFT",
         "RMAP-STRUCT-SCHEMA",
         "RMAP-TDD-DEPENDENCY",
-        "RMAP-TDD-STAGE-EXPECTATION"
+        "RMAP-TDD-STAGE-EXPECTATION",
+        "RMAP-CANDIDATE-DIFF-EXACT",
+        "RMAP-CANDIDATE-TEST-PATCH"
       ]
     },
     {
@@ -413,9 +429,9 @@
         "RMAP-025",
         "RMAP-026"
       ],
-      "summary": "Add immutable persisted Slice Capsule revisions and an append-only Agent Attempt Ledger without adding routing or transition authority.",
+      "summary": "Add immutable persisted Slice Capsule revisions, an append-only Agent Attempt Ledger, and exact accepted-attempt folding into the cumulative candidate without adding transition authority.",
       "prior_revision": "sha256:5d318a8e9198faa85dba1df97308006900c82fb0210f7e827ca6c71d0dba28e0",
-      "proposed_contract_hash": "sha256:50458b79f14478b2f094758dc9ec05698c7458f7e16c3061c3f7da5d464ec9c6",
+      "proposed_contract_hash": "sha256:5bf1f4da309dca4b754354710f41afdd5f5f544a396f849bc588435c8fb94d5d",
       "consumers": [
         "adapter prepare",
         "backend adapter",
@@ -434,7 +450,8 @@
         "tools/authority_guards.py",
         "tools/evidence_guards.py",
         "tools/slice_guards.py",
-        "tools/protocol_guards.py"
+        "tools/protocol_guards.py",
+        "tools/candidate_diff_guards.py"
       ],
       "affected_fixtures": [
         "capsule-context-hash-stale",
@@ -448,7 +465,8 @@
         "attempt-next-state-mismatch",
         "attempt-decision-missing",
         "attempt-duplicate-accepted-stage",
-        "attempt-event-chain-stale"
+        "attempt-event-chain-stale",
+        "candidate-ledger-fold-mismatch"
       ],
       "affected_slices": [
         "RMAP-S1",
@@ -468,7 +486,8 @@
         "RMAP-ATTEMPT-DECISION-BINDING",
         "RMAP-ATTEMPT-LINEAGE",
         "RMAP-ATTEMPT-STAGE",
-        "RMAP-ATTEMPT-STAGE-UNIQUENESS"
+        "RMAP-ATTEMPT-STAGE-UNIQUENESS",
+        "RMAP-CANDIDATE-LEDGER-FOLD"
       ]
     }
   ]

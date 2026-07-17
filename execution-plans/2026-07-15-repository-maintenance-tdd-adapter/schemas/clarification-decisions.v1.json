@@ -25,6 +25,14 @@
       "authority_hash": "sha256:75b1dc6ea8319a36d9d52229ce9d1f05598b31c6c2a5353dafae5e4cbe29bc2a",
       "status": "closed",
       "write_disposition": "normal"
+    },
+    {
+      "kind": "repair",
+      "run_id": "clarification-20260717T063016Z",
+      "state_sha256": "sha256:f888e0ad3091100a6ac07903aa6d8ae488fa8aa9a9538fe123efd489085c1c3d",
+      "authority_hash": "sha256:64b5e7a9df63004d748d3a3586f9547ae29e60679bf141d048140233aaed0cb2",
+      "status": "closed",
+      "write_disposition": "normal"
     }
   ],
   "decision_sets": {
@@ -235,6 +243,57 @@
         "blocking": false,
         "summary": "Confirm the repair remains inside the existing architecture boundary.",
         "decision": "Do not add a Router, S8, Phase service changes, 7-12 CLI changes, or historical evidence rewrites."
+      }
+    ],
+    "repair_20260717_999": [
+      {
+        "id": "CQ-001",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Define the final candidate changed-file manifest as an independently recomputed cumulative fact.",
+        "decision": "Use a versioned cumulative candidate diff manifest derived from the frozen baseline and current scoped tracked plus untracked worktree, with exact path, status, byte hashes, roles, identity, and root-hash equality."
+      },
+      {
+        "id": "CQ-002",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Define how the final candidate diff relates to the append-only accepted attempt lineage.",
+        "decision": "Fold accepted RED, GREEN, and REFACTOR attempt effects by path from baseline to final state and require exact equality with the independently recomputed candidate manifest."
+      },
+      {
+        "id": "CQ-003",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Freeze deterministic rename and test-patch behavior on Windows.",
+        "decision": "Disable rename inference, represent renames as delete plus add, and derive one binary-safe test patch from the same cumulative manifest."
+      },
+      {
+        "id": "CQ-004",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Freeze the S7 reference to one explicit S6 candidate run without sharing implicit run IDs.",
+        "decision": "Keep S6 and S7 run IDs independent and bind one non-superseded S6 candidate by path, bytes, candidate hash, predicate, and run ID."
+      },
+      {
+        "id": "CQ-005",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Remove volatile current-state prose that becomes stale after unrelated commits.",
+        "decision": "Use immutable historical repair revisions, run-scoped observations, and deterministic semantic projection rules instead of a mutable current HEAD claim."
+      },
+      {
+        "id": "CQ-006",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Align the S0 observed RED and narrow ADR-0041 ownership language.",
+        "decision": "Keep duplicate ownership as the S0 observed RED, ADR collision as a separate negative fixture, and limit ADR-0041 to the shared ownership pattern and Bootstrap execution boundary."
+      },
+      {
+        "id": "CQ-007",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Preserve manual-pause authority during deterministic repair and define later re-entry.",
+        "decision": "Keep the blocker byte-stable; require a later durable policy revision, new authority cycle, and independent semantic closure before requesting plan-ready."
       }
     ]
   },

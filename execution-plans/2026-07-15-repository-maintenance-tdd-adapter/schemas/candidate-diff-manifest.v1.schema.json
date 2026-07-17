@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.candidate-diff-manifest.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "slice_id",
+    "run_id",
+    "rename_policy",
+    "baseline_identity",
+    "candidate_identity",
+    "files",
+    "accepted_attempt_fold_hash",
+    "test_diff_ref",
+    "root_hash"
+  ],
+  "properties": {
+    "schema_version": {"const": "jimuyun.candidate-diff-manifest.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "slice_id": {"const": "RMAP-S6"},
+    "run_id": {"type": "string", "minLength": 1},
+    "rename_policy": {"const": "delete-add-no-renames"},
+    "baseline_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["head", "index_tree"],
+      "properties": {
+        "head": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "index_tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "candidate_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tracked_diff_hash", "untracked_manifest_hash", "candidate_worktree_hash"],
+      "properties": {
+        "tracked_diff_hash": {"$ref": "#/$defs/hash"},
+        "untracked_manifest_hash": {"$ref": "#/$defs/hash"},
+        "candidate_worktree_hash": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/file_change"}
+    },
+    "accepted_attempt_fold_hash": {"$ref": "#/$defs/hash"},
+    "test_diff_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_type", "path", "sha256"],
+      "properties": {
+        "path_type": {"const": "run_path"},
+        "path": {"const": "test-diff.patch"},
+        "sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "root_hash": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullable_hash": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullable_path": {"type": ["string", "null"], "minLength": 1},
+    "file_change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "change_type",
+        "baseline_path",
+        "candidate_path",
+        "before_sha256",
+        "after_sha256",
+        "roles",
+        "scope"
+      ],
+      "properties": {
+        "change_type": {"enum": ["add", "modify", "delete"]},
+        "baseline_path": {"$ref": "#/$defs/nullable_path"},
+        "candidate_path": {"$ref": "#/$defs/nullable_path"},
+        "before_sha256": {"$ref": "#/$defs/nullable_hash"},
+        "after_sha256": {"$ref": "#/$defs/nullable_hash"},
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["production", "test", "documentation", "execution_read", "dependency", "forbidden"]}
+        },
+        "scope": {"enum": ["allowed", "forbidden", "unrelated"]}
+      }
+    }
+  }
+}

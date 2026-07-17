@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from candidate_diff_guards import validate_candidate_diff, validate_candidate_result_ref
 from protocol_guards import load_protocol_run, value_hash
 
 
@@ -13,7 +14,7 @@ HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 IDENTITY_FIELDS = {
     "head", "index_tree", "tracked_diff_hash", "untracked_manifest_hash", "contract_hash",
     "command_registry_hash", "validator_hash", "authority_manifest_hash",
-    "changed_file_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id",
+    "candidate_diff_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id",
     "refactor_run_id", "candidate_worktree_hash", "final_context_manifest_hash",
     "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash",
     "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash",
@@ -79,8 +80,8 @@ def validate_candidate_document(
     stage_documents: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
-    required = {"schema_version", "predicate", "status", "plan_hash", "source_hash", "slice_id", "authority_revision", "candidate_identity", "authorizes", "does_not_authorize"}
-    if set(candidate) != required or candidate.get("schema_version") != "jimuyun.tdd-result.v1" or candidate.get("predicate") != "implementation-candidate" or candidate.get("status") != "pass" or candidate.get("slice_id") != "RMAP-S6":
+    required = {"schema_version", "predicate", "status", "plan_hash", "source_hash", "slice_id", "run_id", "authority_revision", "candidate_identity", "authorizes", "does_not_authorize"}
+    if set(candidate) != required or candidate.get("schema_version") != "jimuyun.tdd-result.v1" or candidate.get("predicate") != "implementation-candidate" or candidate.get("status") != "pass" or candidate.get("slice_id") != "RMAP-S6" or not isinstance(candidate.get("run_id"), str) or not candidate.get("run_id"):
         findings.append(_finding("RMAP-REVIEW-EVIDENCE-BINDING", candidate_path, "candidate result shape, predicate, or owner slice is invalid"))
     if candidate.get("authorizes") != ["bootstrap-review"] or set(candidate.get("does_not_authorize", [])) != {"implementation-accepted", "protected-handoff", "release-ready"}:
         findings.append(_finding("RMAP-REVIEW-EVIDENCE-BINDING", candidate_path, "candidate authority set is invalid"))
@@ -100,19 +101,17 @@ def validate_candidate_document(
     evidence_dir = (repository_root / candidate_path).resolve().parent
     changed_manifest = evidence_dir / "changed-files.json"
     test_diff = evidence_dir / "test-diff.patch"
-    expected_files = {"changed_file_manifest_hash": changed_manifest, "test_diff_hash": test_diff}
+    expected_files = {"candidate_diff_manifest_hash": changed_manifest, "test_diff_hash": test_diff}
     for key, path in expected_files.items():
         if not path.is_file() or identity.get(key) != _sha256(path):
             findings.append(_finding("RMAP-HASH-CANDIDATE-IDENTITY", candidate_path, f"candidate {key} does not bind its run artifact"))
-    if changed_manifest.is_file():
-        try:
-            manifest = json.loads(changed_manifest.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
-            manifest = None
-        files = manifest.get("files") if isinstance(manifest, dict) else None
-        if not isinstance(manifest, dict) or manifest.get("schema_version") != "rmap.changed-files.v1" or not isinstance(files, list) or any(not isinstance(item, dict) or set(item) != {"path", "sha256"} or not HASH_RE.fullmatch(str(item.get("sha256"))) for item in files):
-            findings.append(_finding("RMAP-HASH-CANDIDATE-IDENTITY", candidate_path, "changed-file manifest shape is invalid"))
-    stage_documents = stage_documents or []
+    if stage_documents is None:
+        stage_documents = []
+        for stage in ("red", "green", "refactor"):
+            try:
+                stage_documents.append(json.loads((evidence_dir / f"{stage}-result.json").read_text(encoding="utf-8")))
+            except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+                pass
     by_stage = {item.get("stage"): item for item in stage_documents if isinstance(item, dict)}
     for stage in ("red", "green", "refactor"):
         key = f"{stage}_run_id"
@@ -120,6 +119,22 @@ def validate_candidate_document(
             findings.append(_finding("RMAP-HASH-CANDIDATE-IDENTITY", candidate_path, f"candidate {key} does not bind supplied stage evidence"))
     bundle, protocol_findings = load_protocol_run(plan_root, evidence_dir)
     findings.extend(protocol_findings)
+    try:
+        manifest = json.loads(changed_manifest.read_text(encoding="utf-8"))
+        contract = json.loads((plan_root / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+        findings.extend(validate_candidate_diff(
+            plan_root,
+            repository_root,
+            contract,
+            manifest,
+            changed_manifest.relative_to(repository_root).as_posix(),
+            test_diff.read_bytes(),
+            bundle,
+            current,
+            str(candidate.get("run_id")),
+        ))
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
+        findings.append(_finding("RMAP-CANDIDATE-DIFF-EXACT", candidate_path, str(exc)))
     accepted_id = identity.get("accepted_attempt_id")
     attempt = next((item for item in bundle.get("attempts", []) if item.get("adapter_decision", {}).get("attempt_id") == accepted_id), None)
     contexts = bundle.get("contexts", [])
@@ -160,8 +175,10 @@ def validate_candidate_review_documents(
     current: dict[str, str],
     stage_documents: list[dict[str, Any]] | None = None,
     review_dir: Path | None = None,
+    candidate_ref: dict[str, Any] | None = None,
+    candidate_ref_path: str | None = None,
 ) -> list[dict[str, str]]:
-    findings = validate_candidate_document(plan_root, candidate_path, candidate, current, stage_documents)
+    findings = validate_candidate_document(plan_root, candidate_path, candidate, current, None)
     repository_root = plan_root.parents[1]
     findings.extend(validate_bootstrap_envelope_projection(repository_root, envelope, current.get("head")))
     path = (repository_root / candidate_path).resolve()
@@ -173,6 +190,17 @@ def validate_candidate_review_documents(
     actual_hash = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
     if not relative.startswith("logs/tdd-adapter/") or artifacts.get(relative) != actual_hash:
         findings.append(_finding("RMAP-REVIEW-EVIDENCE-BINDING", candidate_path, "review input does not hash-bind candidate result"))
+    if candidate_ref is None or candidate_ref_path is None or not path.is_file():
+        findings.append(_finding("RMAP-CANDIDATE-REF", candidate_path, "S7 requires an explicit S6 candidate result reference"))
+    else:
+        findings.extend(validate_candidate_result_ref(
+            plan_root,
+            candidate_ref,
+            candidate_ref_path,
+            candidate_path,
+            path.read_bytes(),
+            candidate,
+        ))
     profile_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "references" / "review-profiles.v1.json"
     validator_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "scripts" / "bootstrap_review.py"
     try:

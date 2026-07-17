@@ -409,7 +409,12 @@
         "--candidate-result",
         {
           "type": "run_path",
-          "value": "tdd-adapter/<plan-id>/RMAP-S6/<run-id>/candidate-result.json"
+          "value": "tdd-adapter/<plan-id>/RMAP-S6/<candidate-run-id>/candidate-result.json"
+        },
+        "--candidate-ref",
+        {
+          "type": "run_path",
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>/candidate-result-ref.json"
         },
         "--bootstrap-run",
         {

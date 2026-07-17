@@ -7,7 +7,7 @@
 - Cite the existing Accepted `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md` and produce `docs/standards/repository-maintenance-agent-protocol.md`.
 - Update standards and documentation indexes in the same change.
 - Tests first: ownership registry rejects duplicate schema/evidence owners and an ADR-ID collision path.
-- RED: deliberate conflicting `ADR-0041-repository-maintenance-agent-protocol-ownership.md` fixture produces `RMAP-OWNERSHIP-ADR-ID-COLLISION`; the duplicate-owner fixture still produces `RMAP-OWNERSHIP-DUPLICATE`.
+- RED: deliberate duplicate ownership produces `RMAP-OWNERSHIP-DUPLICATE`. The ADR-ID collision remains an independent negative fixture that must produce `RMAP-OWNERSHIP-ADR-ID-COLLISION`.
 - GREEN: `rmap-s0-slice-validate` checks the ADR, standard, standards index, and project documentation index under `slice-ready`.
 - Exit: GREEN proof passes, the existing ADR remains Accepted, ownership validator passes, and no current-capability claim is introduced. `plan-ready` alone cannot satisfy this exit.
 - Rollback: remove only the new proposed standard/index links before any dependent slice starts.
@@ -71,8 +71,9 @@
 
 - Requirements: `RMAP-010`, `RMAP-012`, `RMAP-016`, `RMAP-025`, `RMAP-026`.
 - Phase: `P3`.
-- Recompute the complete current diff and exact candidate identity after S3-S5.
-- Require current RED/GREEN/REFACTOR lineage, deterministic tests, authority manifest, contract, command registry, validator, Git index, tracked diff, untracked manifest, changed-file manifest, test-diff hashes, final context-manifest and Capsule hashes, accepted attempt ID, and accepted decision hash.
+- Recompute the complete current diff and exact candidate identity after S3-S5. Rename inference is disabled; a rename is represented as deterministic delete plus add.
+- Require current RED/GREEN/REFACTOR lineage, deterministic tests, authority manifest, contract, command registry, validator, Git index, tracked diff, untracked manifest, cumulative candidate diff manifest, reproducible binary-safe test patch, final context-manifest and Capsule hashes, accepted attempt fold, accepted attempt ID, and accepted decision hash.
+- Independently prove that the candidate manifest exactly equals the scoped tracked-plus-untracked Git change set and the baseline-to-final fold of every accepted attempt. Omitted, extra, deleted, stale-hash, misclassified, or add-then-delete paths fail closed.
 - Candidate authorizes Bootstrap review only.
 - GREEN: `rmap-s6-candidate-validate` consumes explicit TDD evidence and candidate result only. It does not consume Bootstrap output.
 - Exit: current candidate envelope authorizes only an external Bootstrap review.
@@ -88,6 +89,7 @@
 - Requirements: `RMAP-011`, `RMAP-013`, `RMAP-016`, `RMAP-020`.
 - Phase: `P3`.
 - Run fresh deterministic proof against current hashes and consume the repository Skill's `bootstrap-finalized-run-validation.v1` envelope.
+- Consume an explicit `candidate-result-ref.json` that binds one non-superseded S6 run ID, repository-relative candidate path, candidate bytes, candidate hash, and predicate. S6 and S7 run IDs are independent; no implicit latest or same-string lookup is allowed.
 - Reject high-risk or expired P2 deferrals.
 - Produce `implementation-accepted` only from the plan-local validator.
 - GREEN: `rmap-s7-acceptance-validate` validates the envelope schema, complete profile hash, control-plane and validator identity, all finalized artifact hashes, non-authorizing boundary, and candidate binding; it then requires a non-blocking final review, rejects open accepted P0/P1, and requires a current valid disposition for every accepted P2 under `implementation-accepted`.

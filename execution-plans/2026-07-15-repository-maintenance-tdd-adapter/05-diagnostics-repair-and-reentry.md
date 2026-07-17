@@ -25,6 +25,8 @@ Every failure record contains:
 | Valid RED but wrong implementation | backend candidate |
 | Semantic P0/P1 | implementation repair before acceptance |
 | Stale hash or concurrent closure drift | run recovery and re-entry |
+| Candidate diff, test patch, or accepted-attempt fold incomplete | candidate evidence validator and evidence maintainer |
+| S7 references a stale or superseded S6 candidate | acceptance predecessor contract |
 
 Never weaken a validator to match a candidate without an explicit contract delta and regression counterexample.
 

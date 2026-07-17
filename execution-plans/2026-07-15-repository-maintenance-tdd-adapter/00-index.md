@@ -54,7 +54,9 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 - Proposed common contract schema: [`schemas/implementation-contract.v1.schema.json`](schemas/implementation-contract.v1.schema.json)
 - Persisted context schemas: [`schemas/context-manifest.v1.schema.json`](schemas/context-manifest.v1.schema.json) and [`schemas/slice-capsule.v1.schema.json`](schemas/slice-capsule.v1.schema.json)
 - Attempt ledger schemas: [`schemas/backend-request.v1.schema.json`](schemas/backend-request.v1.schema.json), [`schemas/backend-response.v1.schema.json`](schemas/backend-response.v1.schema.json), [`schemas/diff-manifest.v1.schema.json`](schemas/diff-manifest.v1.schema.json), [`schemas/adapter-decision.v1.schema.json`](schemas/adapter-decision.v1.schema.json), and [`schemas/agent-attempt-event.v1.schema.json`](schemas/agent-attempt-event.v1.schema.json)
+- Final candidate schemas: [`schemas/candidate-diff-manifest.v1.schema.json`](schemas/candidate-diff-manifest.v1.schema.json) and [`schemas/candidate-result-ref.v1.schema.json`](schemas/candidate-result-ref.v1.schema.json)
 - Capsule and attempt mutation fixtures: [`fixtures/capsule-attempt-cases.v1.json`](fixtures/capsule-attempt-cases.v1.json)
+- Candidate diff and predecessor mutation fixtures: [`fixtures/candidate-diff-cases.v1.json`](fixtures/candidate-diff-cases.v1.json)
 - Self-hosted contract instance: [`implementation-contract.v1.json`](implementation-contract.v1.json)
 - Command registry: [`schemas/command-registry.v1.json`](schemas/command-registry.v1.json)
 - Executable acceptance registry: [`schemas/acceptance-contracts.v1.json`](schemas/acceptance-contracts.v1.json)
@@ -64,6 +66,7 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 - Shadow migration registry: [`schemas/shadow-backfill.v1.json`](schemas/shadow-backfill.v1.json)
 - Composite validator: [`tools/validate_all.py`](tools/validate_all.py)
 - Capsule and attempt validator: [`tools/protocol_guards.py`](tools/protocol_guards.py)
+- Candidate diff and predecessor validator: [`tools/candidate_diff_guards.py`](tools/candidate_diff_guards.py)
 
 ## Validation Commands
 

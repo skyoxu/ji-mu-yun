@@ -116,11 +116,21 @@
     "candidateIdentityPolicy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["exact_match_required", "worktree_scope", "unrelated_worktree_drift", "required_run_artifacts", "stage_binding", "attempt_binding", "required_fields"],
+      "required": ["exact_match_required", "worktree_scope", "unrelated_worktree_drift", "rename_policy", "candidate_artifact_schemas", "required_run_artifacts", "stage_binding", "attempt_binding", "required_fields"],
       "properties": {
         "exact_match_required": {"const": true},
         "worktree_scope": {"const": "declared-slice-closure-through-candidate"},
         "unrelated_worktree_drift": {"const": "excluded-from-candidate-hash"},
+        "rename_policy": {"const": "delete-add-no-renames"},
+        "candidate_artifact_schemas": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["candidate_diff_manifest", "candidate_result_ref"],
+          "properties": {
+            "candidate_diff_manifest": {"const": "schemas/candidate-diff-manifest.v1.schema.json"},
+            "candidate_result_ref": {"const": "schemas/candidate-result-ref.v1.schema.json"}
+          }
+        },
         "required_run_artifacts": {"$ref": "#/$defs/stringArray"},
         "stage_binding": {
           "type": "object",
@@ -136,8 +146,8 @@
         },
         "attempt_binding": {
           "type": "object", "additionalProperties": false,
-          "required": ["final_context_manifest_hash", "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash", "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"],
-          "properties": {"final_context_manifest_hash": {"const": true}, "final_capsule_hash": {"const": true}, "attempt_ledger_manifest_hash": {"const": true}, "run_events_hash": {"const": true}, "final_attempt_event_hash": {"const": true}, "accepted_attempt_id": {"const": true}, "accepted_attempt_decision_hash": {"const": true}}
+          "required": ["final_context_manifest_hash", "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash", "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash", "accepted_attempt_fold_hash"],
+          "properties": {"final_context_manifest_hash": {"const": true}, "final_capsule_hash": {"const": true}, "attempt_ledger_manifest_hash": {"const": true}, "run_events_hash": {"const": true}, "final_attempt_event_hash": {"const": true}, "accepted_attempt_id": {"const": true}, "accepted_attempt_decision_hash": {"const": true}, "accepted_attempt_fold_hash": {"const": true}}
         },
         "required_fields": {"$ref": "#/$defs/stringArray"}
       }

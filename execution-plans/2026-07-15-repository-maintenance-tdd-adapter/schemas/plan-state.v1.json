@@ -11,12 +11,13 @@
     "creation_run_id": "clarification-20260715T094322Z",
     "repair_run_ids": [
       "repair-20260716T081500Z",
-      "repair-20260717T013023Z"
+      "repair-20260717T013023Z",
+      "clarification-20260717T063016Z"
     ],
-    "current_repair_run_id": "repair-20260717T013023Z",
+    "current_repair_run_id": "clarification-20260717T063016Z",
     "status": "closed",
     "write_disposition": "normal",
-    "confidence": 96
+    "confidence": 97
   },
   "blocking_disposition": {
     "path": "schemas/review-blocking-state.v1.json",
@@ -26,27 +27,67 @@
   },
   "predicates": {
     "plan-repair-verified": {
-      "authorizes": ["plan-repair-verified"],
-      "does_not_authorize": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+      "authorizes": [
+        "plan-repair-verified"
+      ],
+      "does_not_authorize": [
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
     },
     "plan-ready": {
-      "authorizes": ["plan-ready"],
-      "does_not_authorize": ["slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+      "authorizes": [
+        "plan-ready"
+      ],
+      "does_not_authorize": [
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
     },
     "slice-ready": {
-      "authorizes": ["slice-ready"],
-      "does_not_authorize": ["bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+      "authorizes": [
+        "slice-ready"
+      ],
+      "does_not_authorize": [
+        "bootstrap-review",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
     },
     "implementation-candidate": {
-      "authorizes": ["bootstrap-review"],
-      "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]
+      "authorizes": [
+        "bootstrap-review"
+      ],
+      "does_not_authorize": [
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
     },
     "implementation-accepted": {
-      "authorizes": ["implementation-accepted"],
-      "does_not_authorize": ["protected-handoff", "release-ready"]
+      "authorizes": [
+        "implementation-accepted"
+      ],
+      "does_not_authorize": [
+        "protected-handoff",
+        "release-ready"
+      ]
     }
   },
-  "phases": ["P0", "P1", "P2", "P3"],
+  "phases": [
+    "P0",
+    "P1",
+    "P2",
+    "P3"
+  ],
   "out_of_scope_phase": "P4",
   "open_blockers": [
     {

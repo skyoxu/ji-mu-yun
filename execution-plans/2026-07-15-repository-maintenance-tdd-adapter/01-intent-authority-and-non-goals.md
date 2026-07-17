@@ -19,7 +19,7 @@ The plan succeeds when a repository-owned adapter can consume one implementation
 | 7-12 Bootstrap plan and CLI | Revision-bound compatibility adapter and migration examples only | Directory authority frozen by the implementation slice baseline |
 | Round 3 blocking projection | Current semantic-review disposition and re-entry boundary | `schemas/review-blocking-state.v1.json` |
 
-`agentbuild.txt` remains byte-preserved source history. It must be included in the eventual plan commit; this directory does not copy it into a second authority.
+`agentbuild.txt` remains byte-preserved, committed source history. This directory hash-binds it instead of copying it into a second authority.
 
 ## Three-Layer Ownership
 
@@ -31,16 +31,15 @@ Mutable run state and result envelopes belong under `logs/tdd-adapter/**`, never
 
 ## Framework ADR Gate
 
-The existing Accepted [`ADR-0041 Bootstrap Review Execution Control Plane Ownership`](../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md) owns the irreversible control-plane boundary used by this plan: durable semantics live in standards, executable review protocol lives in the repository-owned Skill, plan-local validation owns business acceptance, and compatibility adapters do not acquire durable behavior.
+The existing Accepted [`ADR-0041 Bootstrap Review Execution Control Plane Ownership`](../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md) owns the shared repository control-plane ownership pattern and Bootstrap-specific execution boundary: durable semantics live in standards, executable protocol lives in a repository-owned Skill, plan-local validation owns business acceptance, and compatibility adapters do not acquire durable behavior. It does not define this TDD Adapter's RED/GREEN/REFACTOR, Capsule, attempt-ledger, candidate-diff, or S7 predecessor semantics; the new repository-maintenance standard and adapter Skill own those details.
 
 S0 cites ADR-0041 and creates only the repository-maintenance adapter standard. It must not allocate another ADR-0041 path or duplicate Bootstrap ownership. A new ADR is permitted only if implementation discovers a distinct irreversible decision not covered by ADR-0041; that decision requires a new unused ID and cannot silently replace this plan's current authority.
 
 ## Current-State Boundary
 
-- Current 555 repair baseline: HEAD `6adab7f741b9080a7e14758a815d02403d13a7b2`; the pre-repair 7-15 target hash was `sha256:784b515d72a573427544e71c06587ddecf362ad8a3ffe14cc599540ec203450d`.
-- The stabilized 7-12 Bootstrap control-plane bytes and their AGENTS/README/ADR/standard projections remain separate uncommitted upstream changes. This repair may hash-bind them for discovery but does not absorb their commit ownership; clean-checkout proof still requires those bytes to exist in their owning commit or equivalent clean snapshot.
-- The VDD Skill baseline passed 46 tests.
-- The pre-repair Bootstrap baseline passed 84 tests, the repaired control plane passes 87 tests, and the 7-12 Whole-directory validator passes.
+- The 555 repair started from HEAD `6adab7f741b9080a7e14758a815d02403d13a7b2` against target hash `sha256:784b515d72a573427544e71c06587ddecf362ad8a3ffe14cc599540ec203450d` and landed in commit `3d9868dc464284ecb4f6793b51fef7874002f4ed`.
+- The stabilized Bootstrap control plane, ADR, standard, and compatibility projections are committed repository-owned authority. The authority manifest binds their current bytes; 7-12 remains a revision-bound compatibility adapter only.
+- Test counts are run-scoped observations, not mutable current-state authority: the 555 closure evidence recorded 48 plan tests, 87 Bootstrap Skill tests, and a passing 7-12 Whole-directory validator. Fresh commands and current envelopes supersede those historical observations.
 - No BMAD `SPEC.md`, `.memlog.md`, or `ARCHITECTURE-SPINE.md` package applies to this intent.
 - The finalized Round 3 Bootstrap result is `blocked` with eight confirmed P1 findings, and the review cycle is `manual_pause_after_round_3`. Deterministic repair cannot clear that semantic disposition.
 

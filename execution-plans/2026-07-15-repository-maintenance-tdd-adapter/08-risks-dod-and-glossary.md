@@ -11,6 +11,9 @@
 | Recovery mutates failed history | Append-only run directories and stale successors | Prior evidence changes bytes |
 | Capsule becomes mutable hidden state | One immutable revision per invocation plus predecessor hash | Capsule overwrite or unbound revision |
 | Attempt ledger leaks prompts or authority | Minimized envelopes, raw hashes, decision `authorizes=[]` | Raw sensitive body or transition authority persisted |
+| Candidate manifest omits a real change | Recompute scoped tracked/untracked Git state and accepted-attempt fold independently | Manifest, Git set, fold, role, or byte hash differs |
+| Test patch is decorative or stale | Generate binary-safe patch bytes from the cumulative candidate manifest | Patch cannot be reproduced or omits a changed test |
+| S7 consumes the wrong S6 candidate | Explicit non-superseded path/hash/run/predicate reference | Same-string run inference, latest lookup, or stale candidate bytes |
 | Old plans are accidentally promoted | Additive metadata and shadow-only predicates | Existing plan status/book changes |
 | P2 deferrals hide material risk | Non-deferrable risk families and expiry blocking | Missing owner, proof, expiry, or closure test |
 | Adapter grows into a Router | No provider scheduler or hidden state | New central intent/plan selection logic |
@@ -36,6 +39,8 @@
 - Common schema has one Skill owner.
 - Self-hosted TDD lifecycle and recovery evidence pass.
 - Persisted Capsule revisions and accepted attempt lineage are current and candidate-bound.
+- Cumulative candidate diff, accepted-attempt fold, and test patch are exact and reproducible.
+- S7 binds one explicit non-superseded S6 candidate reference independently of its own run ID.
 - Three shadow backfills pass without authority changes.
 - Bootstrap review is finalized under current hashes.
 - No open accepted P0/P1; every accepted P2 is disposed; high-risk and expired deferrals are absent.

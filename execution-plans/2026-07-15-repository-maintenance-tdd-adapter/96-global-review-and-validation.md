@@ -17,6 +17,7 @@ Before semantic review:
 5. verify Git status and current source/validator hashes;
 6. confirm no old plan or historical evidence changed during plan creation.
 7. observe at least one Capsule and one attempt-ledger counterexample with the expected stable rule ID.
+8. observe candidate omission, accepted-attempt fold mismatch, test-patch mismatch, and stale S7 candidate reference counterexamples with their stable rule IDs.
 
 A deterministic failure stops semantic review.
 

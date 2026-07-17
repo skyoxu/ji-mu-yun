@@ -9,6 +9,7 @@ from contract_guards import glob_patterns_overlap, schema_error, typed_path_is_s
 from source_guards import validate_coverage as validate_source_coverage
 from shadow_guards import validate_shadow_protected_trees, validate_shadow_registry as validate_shadow_registry_guard
 from authority_guards import validate_acceptance_contracts, validate_authority_manifest, validate_clarification_projection, validate_plan_state as validate_plan_state_guard, validate_script_sizes
+from current_state_guards import validate_current_state_projection
 from protocol_guards import validate_protocol_contract, validate_protocol_fixture_suite
 VALIDATOR_VERSION = "rmap-plan-validator.v2"
 HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -29,12 +30,13 @@ REQUIRED_FILES = {
     "schemas/validation-result.v1.schema.json", "schemas/diagnostic.v1.schema.json",
     "schemas/acceptance-contracts.v1.json", "schemas/authority-manifest.v1.json",
     "schemas/clarification-decisions.v1.json", "schemas/review-blocking-state.v1.json",
+    "schemas/candidate-diff-manifest.v1.schema.json", "schemas/candidate-result-ref.v1.schema.json",
     "schemas/context-manifest.v1.schema.json", "schemas/slice-capsule.v1.schema.json", "schemas/backend-request.v1.schema.json", "schemas/backend-response.v1.schema.json",
     "schemas/diff-manifest.v1.schema.json", "schemas/adapter-decision.v1.schema.json", "schemas/agent-attempt-event.v1.schema.json",
-    "fixtures/fixture-cases.v1.json", "tools/validate_all.py", "tools/rmap_checks.py",
-    "tools/contract_guards.py", "tools/evidence_guards.py", "tools/authority_guards.py", "tools/shadow_guards.py", "tools/source_guards.py", "tools/slice_guards.py",
+    "fixtures/fixture-cases.v1.json", "fixtures/candidate-diff-cases.v1.json", "tools/validate_all.py", "tools/rmap_checks.py",
+    "tools/contract_guards.py", "tools/evidence_guards.py", "tools/candidate_diff_guards.py", "tools/current_state_guards.py", "tools/authority_guards.py", "tools/shadow_guards.py", "tools/source_guards.py", "tools/slice_guards.py",
     "fixtures/capsule-attempt-cases.v1.json", "tools/protocol_guards.py",
-    "tools/fixture_checks.py", "tools/tests/test_plan_validator.py", "tools/tests/test_protocol_guards.py",
+    "tools/fixture_checks.py", "tools/tests/test_plan_validator.py", "tools/tests/test_protocol_guards.py", "tools/tests/test_candidate_diff_guards.py",
 }
 PREDICATE_AUTHORITY = {
     "plan-repair-verified": (["plan-repair-verified"], ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]),
@@ -74,7 +76,7 @@ def load_machine(plan_root: Path) -> tuple[dict[str, Any], list[dict[str, str]]]
         "quality": "schemas/requirement-quality.v1.json", "baseline": "schemas/create-baseline-manifest.v1.json",
         "shadow": "schemas/shadow-backfill.v1.json", "commands": "schemas/command-registry.v1.json",
         "contract": "implementation-contract.v1.json", "fixtures": "fixtures/fixture-cases.v1.json",
-        "protocol_fixtures": "fixtures/capsule-attempt-cases.v1.json",
+        "protocol_fixtures": "fixtures/capsule-attempt-cases.v1.json", "candidate_fixtures": "fixtures/candidate-diff-cases.v1.json",
         "acceptance": "schemas/acceptance-contracts.v1.json", "authority_manifest": "schemas/authority-manifest.v1.json",
         "clarification": "schemas/clarification-decisions.v1.json", "review_blocker": "schemas/review-blocking-state.v1.json",
     }
@@ -228,7 +230,7 @@ def validate_commands(registry: dict[str, Any], plan_root: Path | None = None) -
             argv = command.get("argv", [])
             required_flags = {"--predicate", "--slice-id", "--run-dir", "--red-result", "--green-result", "--refactor-result"}
             required_flags.update({"--candidate-result"} if declared_predicate == "implementation-candidate" else set())
-            required_flags.update({"--candidate-result", "--bootstrap-run"} if declared_predicate == "implementation-accepted" else set())
+            required_flags.update({"--candidate-result", "--candidate-ref", "--bootstrap-run"} if declared_predicate == "implementation-accepted" else set())
             if not required_flags.issubset({item for item in argv if isinstance(item, str)}):
                 findings.append(finding("RMAP-CMD-STAGE-PROTOCOL", str(cid), "slice proof command omits required explicit evidence arguments"))
     return findings
@@ -307,11 +309,12 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
     if slice_ids != [f"RMAP-S{index}" for index in range(8)]:
         findings.append(finding("RMAP-TDD-SLICE", "slices", "slice sequence mismatch"))
     identity_policy = contract.get("candidate_identity_policy", {})
-    required_identity = {"head", "index_tree", "tracked_diff_hash", "untracked_manifest_hash", "contract_hash", "command_registry_hash", "validator_hash", "authority_manifest_hash", "changed_file_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id", "refactor_run_id", "candidate_worktree_hash", "final_context_manifest_hash", "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash", "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"}
+    required_identity = {"head", "index_tree", "tracked_diff_hash", "untracked_manifest_hash", "contract_hash", "command_registry_hash", "validator_hash", "authority_manifest_hash", "candidate_diff_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id", "refactor_run_id", "candidate_worktree_hash", "final_context_manifest_hash", "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash", "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"}
     expected_artifacts = {"changed-files.json", "test-diff.patch", "red-result.json", "green-result.json", "refactor-result.json", "recovery-state.json", "context-manifest.v1.json", "slice-capsule.v1.json", "backend-request.v1.json", "backend-response.v1.json", "diff-manifest.v1.json", "adapter-decision.v1.json", "run-events.jsonl", "baseline-file-manifest.v1.json", "attempt-ledger-manifest.v1.json"}
     stage_binding = identity_policy.get("stage_binding", {})
     attempt_binding = identity_policy.get("attempt_binding", {})
-    if identity_policy.get("exact_match_required") is not True or identity_policy.get("worktree_scope") != "declared-slice-closure-through-candidate" or identity_policy.get("unrelated_worktree_drift") != "excluded-from-candidate-hash" or set(identity_policy.get("required_run_artifacts", [])) != expected_artifacts or not stage_binding or any(value is not True for value in stage_binding.values()) or set(attempt_binding) != {"final_context_manifest_hash", "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash", "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"} or any(value is not True for value in attempt_binding.values()) or set(identity_policy.get("required_fields", [])) != required_identity:
+    candidate_schemas = {"candidate_diff_manifest": "schemas/candidate-diff-manifest.v1.schema.json", "candidate_result_ref": "schemas/candidate-result-ref.v1.schema.json"}
+    if identity_policy.get("exact_match_required") is not True or identity_policy.get("worktree_scope") != "declared-slice-closure-through-candidate" or identity_policy.get("unrelated_worktree_drift") != "excluded-from-candidate-hash" or identity_policy.get("rename_policy") != "delete-add-no-renames" or identity_policy.get("candidate_artifact_schemas") != candidate_schemas or set(identity_policy.get("required_run_artifacts", [])) != expected_artifacts or not stage_binding or any(value is not True for value in stage_binding.values()) or set(attempt_binding) != {"final_context_manifest_hash", "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash", "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash", "accepted_attempt_fold_hash"} or any(value is not True for value in attempt_binding.values()) or set(identity_policy.get("required_fields", [])) != required_identity:
         findings.append(finding("RMAP-HASH-CANDIDATE-IDENTITY", "candidate-identity-policy", "candidate identity contract is incomplete"))
     phase_order = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
     seen: set[str] = set()
@@ -367,6 +370,7 @@ def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[st
     requirement_ids = {item["id"] for item in data["requirements"].get("requirements", []) if isinstance(item, dict) and "id" in item}
     groups = [
         ("RMAP-STRUCT-LINKS", validate_links(plan_root)),
+        ("RMAP-DOC-CURRENT-STATE", validate_current_state_projection(plan_root)),
         ("RMAP-REQ-REGISTRY", validate_requirements(plan_root, data["requirements"], data["quality"], data["acceptance"])),
         ("RMAP-REQ-COVERAGE", validate_coverage(plan_root, data["coverage"], requirement_ids)),
         ("RMAP-REQ-DELTAS", validate_deltas(plan_root, data["deltas"], requirement_ids)),
@@ -376,7 +380,7 @@ def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[st
         ("RMAP-SHADOW", validate_shadow_registry(data["shadow"])),
         ("RMAP-AUTH-MANIFEST", validate_authority_manifest(plan_root, data["authority_manifest"])),
         ("RMAP-REQ-CLARIFICATION", validate_clarification_projection(data["clarification"], data["state"])),
-        ("RMAP-REQ-ACCEPTANCE", validate_acceptance_contracts(data["acceptance"], data["requirements"], data["contract"], data["commands"], data["fixtures"], data["protocol_fixtures"])),
+        ("RMAP-REQ-ACCEPTANCE", validate_acceptance_contracts(data["acceptance"], data["requirements"], data["contract"], data["commands"], data["fixtures"], data["protocol_fixtures"], data["candidate_fixtures"])),
         ("RMAP-PROTOCOL-FIXTURES", validate_protocol_fixture_suite(plan_root, data["protocol_fixtures"])),
         ("RMAP-SCRIPT-SIZE", validate_script_sizes(plan_root)),
     ]

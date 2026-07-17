@@ -138,15 +138,16 @@ def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> li
         "schemas/backend-response.v1.schema.json", "schemas/diff-manifest.v1.schema.json",
         "schemas/adapter-decision.v1.schema.json", "schemas/agent-attempt-event.v1.schema.json",
         "schemas/baseline-file-manifest.v1.schema.json", "schemas/attempt-ledger-manifest.v1.schema.json",
-        "fixtures/fixture-cases.v1.json", "fixtures/capsule-attempt-cases.v1.json", "tools/validate_all.py",
+        "schemas/candidate-diff-manifest.v1.schema.json", "schemas/candidate-result-ref.v1.schema.json",
+        "fixtures/fixture-cases.v1.json", "fixtures/capsule-attempt-cases.v1.json", "fixtures/candidate-diff-cases.v1.json", "tools/validate_all.py",
         "tools/rmap_checks.py", "tools/authority_guards.py", "tools/contract_guards.py",
-        "tools/evidence_guards.py", "tools/fixture_checks.py", "tools/shadow_guards.py",
+        "tools/evidence_guards.py", "tools/candidate_diff_guards.py", "tools/current_state_guards.py", "tools/fixture_checks.py", "tools/shadow_guards.py",
         "tools/slice_guards.py", "tools/source_guards.py", "tools/protocol_guards.py",
         "tools/protocol_validation_guards.py", "tools/protocol_fixture_support.py",
         "tools/protocol_fixture_cases.py",
         "tools/protocol_fixture_mutations.py", "tools/protocol_artifact_guards.py",
         "tools/attempt_lineage_guards.py", "tools/refresh_projections.py",
-        "tools/tests/test_plan_validator.py", "tools/tests/test_protocol_guards.py",
+        "tools/tests/test_plan_validator.py", "tools/tests/test_protocol_guards.py", "tools/tests/test_candidate_diff_guards.py",
     ))
     if seen != expected:
         findings.append(_finding("RMAP-HASH-AUTHORITY-MANIFEST", "authority-manifest", "authority inventory differs from the closed required path set"))
@@ -159,10 +160,16 @@ def validate_clarification_projection(projection: dict[str, Any], state: dict[st
         return [_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "projection schema is invalid")]
     sources = projection.get("sources", [])
     source_fields = {"kind", "run_id", "state_sha256", "authority_hash", "status", "write_disposition"}
-    if [item.get("kind") for item in sources if isinstance(item, dict)] != ["creation", "repair", "repair"] or any(set(item) != source_fields or item.get("status") != "closed" for item in sources):
+    if [item.get("kind") for item in sources if isinstance(item, dict)] != ["creation", "repair", "repair", "repair"] or any(set(item) != source_fields or item.get("status") != "closed" for item in sources):
         findings.append(_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "source lineage is incomplete"))
     sets = projection.get("decision_sets", {})
-    if [item.get("id") for item in sets.get("creation", [])] != [f"CQ-{index:03d}" for index in range(1, 18)] or [item.get("id") for item in sets.get("repair", [])] != [f"CQ-{index:03d}" for index in range(1, 6)] or [item.get("id") for item in sets.get("repair_20260717", [])] != [f"CQ-{index:03d}" for index in range(1, 8)]:
+    expected_sets = {
+        "creation": [f"CQ-{index:03d}" for index in range(1, 18)],
+        "repair": [f"CQ-{index:03d}" for index in range(1, 6)],
+        "repair_20260717": [f"CQ-{index:03d}" for index in range(1, 8)],
+        "repair_20260717_999": [f"CQ-{index:03d}" for index in range(1, 8)],
+    }
+    if set(sets) != set(expected_sets) or any([item.get("id") for item in sets.get(name, [])] != ids for name, ids in expected_sets.items()):
         findings.append(_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "decision identity set is incomplete"))
     if any(item.get("status") != "accepted" or not item.get("summary") or not item.get("decision") for group in sets.values() for item in group):
         findings.append(_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "decision projection is incomplete"))
@@ -175,12 +182,12 @@ def validate_clarification_projection(projection: dict[str, Any], state: dict[st
     return findings
 
 
-def validate_acceptance_contracts(acceptance: dict[str, Any], requirements: dict[str, Any], contract: dict[str, Any], commands: dict[str, Any], fixtures: dict[str, Any], protocol_fixtures: dict[str, Any] | None = None) -> list[dict[str, str]]:
+def validate_acceptance_contracts(acceptance: dict[str, Any], requirements: dict[str, Any], contract: dict[str, Any], commands: dict[str, Any], fixtures: dict[str, Any], protocol_fixtures: dict[str, Any] | None = None, candidate_fixtures: dict[str, Any] | None = None) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     requirement_map = {item.get("id"): item for item in requirements.get("requirements", []) if isinstance(item, dict)}
     slice_map = {item.get("slice_id"): item for item in contract.get("slices", []) if isinstance(item, dict)}
     command_ids = {item.get("id") for item in commands.get("commands", []) if isinstance(item, dict)}
-    fixture_cases = [*fixtures.get("cases", []), *(protocol_fixtures or {}).get("cases", [])]
+    fixture_cases = [*fixtures.get("cases", []), *(protocol_fixtures or {}).get("cases", []), *(candidate_fixtures or {}).get("cases", [])]
     fixture_ids = {item.get("id") for item in fixture_cases if isinstance(item, dict)}
     entries = acceptance.get("acceptances")
     if acceptance.get("schema_version") != "rmap.acceptance-contracts.v1" or not isinstance(entries, list):

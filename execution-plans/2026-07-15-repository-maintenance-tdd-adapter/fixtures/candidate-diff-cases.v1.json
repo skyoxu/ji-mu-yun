@@ -1,0 +1,290 @@
+{
+  "schema_version": "rmap.candidate-diff-cases.v1",
+  "base": {
+    "current_identity": {
+      "head": "1111111111111111111111111111111111111111",
+      "index_tree": "2222222222222222222222222222222222222222",
+      "tracked_diff_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "untracked_manifest_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "candidate_worktree_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    },
+    "candidate_run_id": "RMAP-S6-RUN-001",
+    "test_patch": "canonical-test-patch\n",
+    "expected_test_patch": "canonical-test-patch\n",
+    "expected_files": [
+      {
+        "change_type": "add",
+        "baseline_path": null,
+        "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+        "before_sha256": null,
+        "after_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "roles": [
+          "test"
+        ],
+        "scope": "allowed"
+      },
+      {
+        "change_type": "modify",
+        "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+        "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+        "before_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "after_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "roles": [
+          "production"
+        ],
+        "scope": "allowed"
+      },
+      {
+        "change_type": "delete",
+        "baseline_path": "docs/standards/old-adapter-note.md",
+        "candidate_path": null,
+        "before_sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "after_sha256": null,
+        "roles": [
+          "documentation"
+        ],
+        "scope": "allowed"
+      }
+    ],
+    "folded_files": [
+      {
+        "change_type": "add",
+        "baseline_path": null,
+        "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+        "before_sha256": null,
+        "after_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "change_type": "modify",
+        "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+        "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+        "before_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "after_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      {
+        "change_type": "delete",
+        "baseline_path": "docs/standards/old-adapter-note.md",
+        "candidate_path": null,
+        "before_sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "after_sha256": null
+      }
+    ],
+    "manifest": {
+      "schema_version": "jimuyun.candidate-diff-manifest.v1",
+      "plan_id": "repository-maintenance-tdd-adapter",
+      "slice_id": "RMAP-S6",
+      "run_id": "RMAP-S6-RUN-001",
+      "rename_policy": "delete-add-no-renames",
+      "baseline_identity": {
+        "head": "1111111111111111111111111111111111111111",
+        "index_tree": "2222222222222222222222222222222222222222"
+      },
+      "candidate_identity": {
+        "tracked_diff_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "untracked_manifest_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "candidate_worktree_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      "files": [
+        {
+          "change_type": "add",
+          "baseline_path": null,
+          "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+          "before_sha256": null,
+          "after_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "roles": [
+            "test"
+          ],
+          "scope": "allowed"
+        },
+        {
+          "change_type": "modify",
+          "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+          "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+          "before_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "after_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "roles": [
+            "production"
+          ],
+          "scope": "allowed"
+        },
+        {
+          "change_type": "delete",
+          "baseline_path": "docs/standards/old-adapter-note.md",
+          "candidate_path": null,
+          "before_sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "after_sha256": null,
+          "roles": [
+            "documentation"
+          ],
+          "scope": "allowed"
+        }
+      ],
+      "accepted_attempt_fold_hash": "sha256:b69a91ed0c8dc9123aaf2f93d6408f56decbe9b53965c98b957090032e4f0a5b",
+      "test_diff_ref": {
+        "path_type": "run_path",
+        "path": "test-diff.patch",
+        "sha256": "sha256:df76510f2f40ffec6cfea1943b1b0ebe34bd8b8461c1deb28e677c57347ab01e"
+      },
+      "root_hash": "sha256:58fea34d065dedcee7c6bfc19ec7fd74ebee78441d273541ffa1aa81b3e6223f"
+    },
+    "candidate_document": {
+      "schema_version": "jimuyun.tdd-result.v1",
+      "predicate": "implementation-candidate",
+      "run_id": "RMAP-S6-RUN-001"
+    },
+    "candidate_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RMAP-S6-RUN-001/candidate-result.json",
+    "candidate_ref": {
+      "schema_version": "jimuyun.candidate-result-ref.v1",
+      "slice_id": "RMAP-S6",
+      "run_id": "RMAP-S6-RUN-001",
+      "path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RMAP-S6-RUN-001/candidate-result.json",
+      "sha256": "sha256:409019b5fa18d02c4951d9c0984d9b7c74bf570c9195582fccc0dc0b452a2d9f",
+      "candidate_hash": "sha256:409019b5fa18d02c4951d9c0984d9b7c74bf570c9195582fccc0dc0b452a2d9f",
+      "predicate": "implementation-candidate",
+      "superseded": false
+    }
+  },
+  "cases": [
+    {
+      "id": "candidate-changed-file-omitted",
+      "target": "manifest",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/files/1"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-DIFF-EXACT"
+    },
+    {
+      "id": "candidate-untracked-file-omitted",
+      "target": "manifest",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/files/0"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-DIFF-EXACT"
+    },
+    {
+      "id": "candidate-deleted-file-missing",
+      "target": "manifest",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/files/2"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-DIFF-EXACT"
+    },
+    {
+      "id": "candidate-extra-changed-file",
+      "target": "manifest",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/files/-",
+          "value": {
+            "change_type": "add",
+            "baseline_path": null,
+            "candidate_path": "docs/extra.md",
+            "before_sha256": null,
+            "after_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "roles": [
+              "documentation"
+            ],
+            "scope": "allowed"
+          }
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-DIFF-EXACT"
+    },
+    {
+      "id": "candidate-rename-not-closed",
+      "target": "manifest",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/files/1/change_type",
+          "value": "rename"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-DIFF-EXACT"
+    },
+    {
+      "id": "candidate-after-hash-stale",
+      "target": "manifest",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/files/1/after_sha256",
+          "value": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-DIFF-EXACT"
+    },
+    {
+      "id": "candidate-role-misclassified",
+      "target": "manifest",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/files/0/roles",
+          "value": [
+            "production"
+          ]
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-DIFF-EXACT"
+    },
+    {
+      "id": "candidate-test-patch-empty-with-test-change",
+      "target": "test_patch",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/",
+          "value": ""
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-TEST-PATCH"
+    },
+    {
+      "id": "candidate-test-patch-not-reproducible",
+      "target": "test_patch",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/",
+          "value": "different-patch\n"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-TEST-PATCH"
+    },
+    {
+      "id": "candidate-ledger-fold-mismatch",
+      "target": "folded_files",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/1/after_sha256",
+          "value": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-LEDGER-FOLD"
+    },
+    {
+      "id": "candidate-result-ref-stale",
+      "target": "candidate_ref",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/sha256",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-REF"
+    }
+  ]
+}

@@ -221,16 +221,19 @@
         "rmap-s6-candidate-validate"
       ],
       "negative_fixture_ids": [
-        "candidate-identity-incomplete"
+        "candidate-changed-file-omitted"
       ],
       "expected_failure_ids": [
-        "RMAP-HASH-CANDIDATE-IDENTITY"
+        "RMAP-CANDIDATE-DIFF-EXACT"
       ],
       "evidence_required": [
         "current-contract-hash",
         "current-validator-hash",
         "stage-result",
-        "stable-rule-id"
+        "stable-rule-id",
+        "candidate-diff-manifest-hash",
+        "scoped-git-exact-set",
+        "reproducible-test-patch"
       ],
       "exit_predicate": "implementation-candidate"
     },
@@ -269,16 +272,18 @@
         "rmap-s6-candidate-validate"
       ],
       "negative_fixture_ids": [
-        "manual-pause-cleared"
+        "candidate-changed-file-omitted"
       ],
       "expected_failure_ids": [
-        "RMAP-REVIEW-MANUAL-PAUSE"
+        "RMAP-CANDIDATE-DIFF-EXACT"
       ],
       "evidence_required": [
         "current-contract-hash",
         "current-validator-hash",
         "stage-result",
-        "stable-rule-id"
+        "stable-rule-id",
+        "candidate-result-ref",
+        "bootstrap-input-candidate-byte-binding"
       ],
       "exit_predicate": "implementation-candidate"
     },
@@ -317,16 +322,18 @@
         "rmap-s2-slice-validate"
       ],
       "negative_fixture_ids": [
-        "authority-manifest-missing-agents"
+        "candidate-after-hash-stale"
       ],
       "expected_failure_ids": [
-        "RMAP-HASH-AUTHORITY-MANIFEST"
+        "RMAP-CANDIDATE-DIFF-EXACT"
       ],
       "evidence_required": [
         "current-contract-hash",
         "current-validator-hash",
         "stage-result",
-        "stable-rule-id"
+        "stable-rule-id",
+        "baseline-and-candidate-byte-hashes",
+        "candidate-worktree-identity"
       ],
       "exit_predicate": "slice-ready"
     },
@@ -365,16 +372,18 @@
         "rmap-s7-acceptance-validate"
       ],
       "negative_fixture_ids": [
-        "manual-pause-cleared"
+        "candidate-result-ref-stale"
       ],
       "expected_failure_ids": [
-        "RMAP-REVIEW-MANUAL-PAUSE"
+        "RMAP-CANDIDATE-REF"
       ],
       "evidence_required": [
         "current-contract-hash",
         "current-validator-hash",
         "stage-result",
-        "stable-rule-id"
+        "stable-rule-id",
+        "candidate-result-ref",
+        "non-superseded-predecessor-run"
       ],
       "exit_predicate": "implementation-accepted"
     },
@@ -616,10 +625,10 @@
         "rmap-s2-slice-validate"
       ],
       "negative_fixture_ids": [
-        "attempt-event-lifecycle-missing"
+        "candidate-ledger-fold-mismatch"
       ],
       "expected_failure_ids": [
-        "RMAP-ATTEMPT-EVENT-LIFECYCLE"
+        "RMAP-CANDIDATE-LEDGER-FOLD"
       ],
       "evidence_required": [
         "current-contract-hash",
@@ -633,7 +642,9 @@
         "run-events-byte-hash",
         "final-event-hash",
         "attempt-predecessor-hash",
-        "stable-rule-id"
+        "stable-rule-id",
+        "accepted-attempt-fold-hash",
+        "cumulative-candidate-exactness"
       ],
       "exit_predicate": "slice-ready"
     }

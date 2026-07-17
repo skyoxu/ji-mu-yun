@@ -1,0 +1,379 @@
+from __future__ import annotations
+
+import fnmatch
+import hashlib
+import json
+import subprocess
+from pathlib import Path
+from typing import Any
+
+from contract_guards import schema_error
+
+
+HASH_RE = "sha256:"
+FILE_KEYS = {
+    "change_type", "baseline_path", "candidate_path", "before_sha256",
+    "after_sha256", "roles", "scope",
+}
+
+
+def _finding(rule_id: str, target: str, message: str) -> dict[str, str]:
+    return {"rule_id": rule_id, "target": target, "message": message}
+
+
+def bytes_hash(value: bytes) -> str:
+    return HASH_RE + hashlib.sha256(value).hexdigest()
+
+
+def value_hash(value: Any) -> str:
+    payload = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return bytes_hash(payload)
+
+
+def manifest_root_hash(document: dict[str, Any]) -> str:
+    value = dict(document)
+    value.pop("root_hash", None)
+    return value_hash(value)
+
+
+def _git(repository_root: Path, *args: str, accepted: set[int] | None = None) -> bytes:
+    result = subprocess.run(
+        ["git", "-c", "core.autocrlf=false", *args],
+        cwd=repository_root,
+        capture_output=True,
+        check=False,
+    )
+    allowed = accepted or {0}
+    if result.returncode not in allowed:
+        raise ValueError(result.stderr.decode("utf-8", errors="replace"))
+    return result.stdout
+
+
+def _normalize_pattern(plan_root: Path, repository_root: Path, pattern: str) -> str | None:
+    normalized = pattern.replace("\\", "/").strip("/")
+    if not normalized or "<" in normalized or normalized.casefold().startswith("logs/"):
+        return None
+    prefixes = (".agents/", ".github/", "docs/", "execution-plans/", "scripts/", "runtime/", "PhaseA.Platform/", "Game.", "Tests.")
+    if normalized in {"AGENTS.md", "README.md", "agentbuild.txt"} or normalized.startswith(prefixes):
+        return normalized
+    return f"{plan_root.relative_to(repository_root).as_posix()}/{normalized}"
+
+
+def _matches(path: str, patterns: set[str]) -> bool:
+    folded = path.replace("\\", "/").casefold()
+    for pattern in patterns:
+        candidate = pattern.casefold()
+        if candidate.endswith("/**") and (folded == candidate[:-3] or folded.startswith(candidate[:-2])):
+            return True
+        if fnmatch.fnmatchcase(folded, candidate):
+            return True
+    return False
+
+
+def scope_policy(plan_root: Path, repository_root: Path, contract: dict[str, Any], slice_id: str) -> dict[str, set[str]]:
+    slices = contract.get("slices", [])
+    selected = next((index for index, item in enumerate(slices) if item.get("slice_id") == slice_id), None)
+    if selected is None:
+        raise ValueError(f"unknown candidate scope: {slice_id}")
+    policy = {key: set() for key in ("production", "test", "documentation", "execution_read", "dependency", "forbidden")}
+    for item in slices[: selected + 1]:
+        allowed = item.get("allowed_changes", {})
+        raw = {
+            "production": allowed.get("production", []),
+            "test": allowed.get("tests", []),
+            "documentation": allowed.get("documentation", []),
+            "execution_read": item.get("execution_read_set", []),
+            "dependency": item.get("dependency_closure", []),
+            "forbidden": item.get("forbidden_changes", []),
+        }
+        for role, patterns in raw.items():
+            policy[role].update(filter(None, (_normalize_pattern(plan_root, repository_root, value) for value in patterns)))
+    return policy
+
+
+def _classify(path: str, policy: dict[str, set[str]]) -> tuple[list[str], str]:
+    roles = [role for role in ("production", "test", "documentation", "execution_read", "dependency", "forbidden") if _matches(path, policy[role])]
+    if "forbidden" in roles:
+        return roles, "forbidden"
+    if any(role in roles for role in ("production", "test", "documentation")):
+        return roles, "allowed"
+    return roles or ["dependency"], "unrelated"
+
+
+def _head_blob(repository_root: Path, path: str) -> bytes | None:
+    listing = _git(repository_root, "ls-tree", "-z", "HEAD", "--", path)
+    if not listing:
+        return None
+    header = listing.split(b"\t", 1)[0].decode("ascii")
+    object_id = header.split()[2]
+    return _git(repository_root, "cat-file", "blob", object_id)
+
+
+def _file_entry(repository_root: Path, path: str, policy: dict[str, set[str]]) -> dict[str, Any]:
+    before = _head_blob(repository_root, path)
+    current_path = repository_root / path
+    after = current_path.read_bytes() if current_path.is_file() else None
+    change_type = "add" if before is None else "delete" if after is None else "modify"
+    roles, scope = _classify(path, policy)
+    return {
+        "change_type": change_type,
+        "baseline_path": None if change_type == "add" else path,
+        "candidate_path": None if change_type == "delete" else path,
+        "before_sha256": None if before is None else bytes_hash(before),
+        "after_sha256": None if after is None else bytes_hash(after),
+        "roles": roles,
+        "scope": scope,
+    }
+
+
+def _entry_path(entry: dict[str, Any]) -> str:
+    return str(entry.get("candidate_path") or entry.get("baseline_path") or "")
+
+
+def _canonical_test_patch(repository_root: Path, entries: list[dict[str, Any]]) -> bytes:
+    tests = [entry for entry in entries if "test" in entry.get("roles", []) and entry.get("scope") == "allowed"]
+    tracked = [_entry_path(entry) for entry in tests if entry.get("change_type") != "add"]
+    added = [_entry_path(entry) for entry in tests if entry.get("change_type") == "add"]
+    flags = ["--binary", "--full-index", "--no-renames", "--no-ext-diff", "--no-textconv"]
+    chunks: list[bytes] = []
+    if tracked:
+        chunks.append(_git(repository_root, "diff", *flags, "HEAD", "--", *sorted(tracked, key=str.casefold)))
+    for path in sorted(added, key=str.casefold):
+        chunks.append(_git(repository_root, "diff", "--no-index", *flags, "--", "/dev/null", path, accepted={0, 1}))
+    return b"".join(chunks)
+
+
+def derive_candidate_snapshot(plan_root: Path, repository_root: Path, contract: dict[str, Any], slice_id: str = "RMAP-S6") -> tuple[list[dict[str, Any]], bytes]:
+    policy = scope_policy(plan_root, repository_root, contract, slice_id)
+    monitored = set().union(*policy.values())
+    tracked = _git(repository_root, "diff", "--no-renames", "--name-only", "-z", "HEAD", "--").decode("utf-8").split("\0")
+    untracked = _git(repository_root, "ls-files", "--others", "--exclude-standard", "-z").decode("utf-8").split("\0")
+    paths = sorted({path for path in [*tracked, *untracked] if path and _matches(path, monitored)}, key=str.casefold)
+    entries = [_file_entry(repository_root, path, policy) for path in paths]
+    return entries, _canonical_test_patch(repository_root, entries)
+
+
+def fold_accepted_attempts(bundle: dict[str, Any]) -> tuple[list[dict[str, Any]], str, list[dict[str, str]]]:
+    baseline = {entry.get("path"): entry.get("sha256") for entry in bundle.get("baseline_file_manifest", {}).get("files", [])}
+    current = dict(baseline)
+    touched: set[str] = set()
+    findings: list[dict[str, str]] = []
+    for attempt in bundle.get("attempts", []):
+        decision = attempt.get("adapter_decision", {})
+        if decision.get("decision") != "accepted_for_validation":
+            continue
+        attempt_id = str(decision.get("attempt_id"))
+        for entry in attempt.get("diff_manifest", {}).get("files", []):
+            path = entry.get("path")
+            if path not in baseline:
+                findings.append(_finding("RMAP-CANDIDATE-LEDGER-FOLD", attempt_id, f"baseline manifest omits {path}"))
+                continue
+            if entry.get("before_sha256") != current.get(path):
+                findings.append(_finding("RMAP-CANDIDATE-LEDGER-FOLD", attempt_id, f"before hash does not continue accepted state for {path}"))
+            current[path] = entry.get("after_sha256")
+            touched.add(str(path))
+    folded: list[dict[str, Any]] = []
+    for path in sorted(touched, key=str.casefold):
+        before, after = baseline.get(path), current.get(path)
+        if before == after:
+            continue
+        change_type = "add" if before is None else "delete" if after is None else "modify"
+        folded.append({
+            "change_type": change_type,
+            "baseline_path": None if change_type == "add" else path,
+            "candidate_path": None if change_type == "delete" else path,
+            "before_sha256": before,
+            "after_sha256": after,
+        })
+    return folded, value_hash(folded), findings
+
+
+def _core(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    keys = ("change_type", "baseline_path", "candidate_path", "before_sha256", "after_sha256")
+    return [{key: entry.get(key) for key in keys} for entry in entries]
+
+
+def validate_candidate_diff(
+    plan_root: Path,
+    repository_root: Path,
+    contract: dict[str, Any],
+    manifest: dict[str, Any],
+    manifest_path: str,
+    test_patch: bytes,
+    bundle: dict[str, Any],
+    current: dict[str, str],
+    candidate_run_id: str,
+) -> list[dict[str, str]]:
+    expected, expected_patch = derive_candidate_snapshot(plan_root, repository_root, contract)
+    folded, fold_hash, fold_findings = fold_accepted_attempts(bundle)
+    if fold_findings:
+        return fold_findings
+    return validate_candidate_model(
+        plan_root,
+        manifest,
+        manifest_path,
+        test_patch,
+        expected,
+        expected_patch,
+        folded,
+        fold_hash,
+        current,
+        candidate_run_id,
+    )
+
+
+def validate_candidate_model(
+    plan_root: Path,
+    manifest: dict[str, Any],
+    manifest_path: str,
+    test_patch: bytes,
+    expected: list[dict[str, Any]],
+    expected_patch: bytes,
+    folded: list[dict[str, Any]],
+    fold_hash: str,
+    current: dict[str, str],
+    candidate_run_id: str,
+) -> list[dict[str, str]]:
+    schema = json.loads((plan_root / "schemas" / "candidate-diff-manifest.v1.schema.json").read_text(encoding="utf-8"))
+    error = schema_error(manifest, schema)
+    if error:
+        return [_finding("RMAP-CANDIDATE-DIFF-EXACT", manifest_path, error)]
+    baseline = manifest.get("baseline_identity", {})
+    identity = manifest.get("candidate_identity", {})
+    if baseline != {"head": current.get("head"), "index_tree": current.get("index_tree")}:
+        return [_finding("RMAP-CANDIDATE-DIFF-EXACT", manifest_path, "candidate diff baseline identity is stale")]
+    expected_identity = {key: current.get(key) for key in ("tracked_diff_hash", "untracked_manifest_hash", "candidate_worktree_hash")}
+    if identity != expected_identity or manifest.get("run_id") != candidate_run_id:
+        return [_finding("RMAP-CANDIDATE-DIFF-EXACT", manifest_path, "candidate diff run or worktree identity is stale")]
+    if _core(expected) != folded:
+        return [_finding("RMAP-CANDIDATE-LEDGER-FOLD", manifest_path, "accepted-attempt fold differs from the independently recomputed candidate")]
+    files = manifest.get("files", [])
+    if files != expected:
+        return [_finding("RMAP-CANDIDATE-DIFF-EXACT", manifest_path, "manifest differs from the scoped Git candidate diff")]
+    if manifest.get("accepted_attempt_fold_hash") != fold_hash:
+        return [_finding("RMAP-CANDIDATE-LEDGER-FOLD", manifest_path, "accepted-attempt fold hash is stale")]
+    if any(entry.get("scope") != "allowed" for entry in expected):
+        return [_finding("RMAP-CANDIDATE-DIFF-SCOPE", manifest_path, "candidate includes forbidden or dependency drift")]
+    patch_ref = manifest.get("test_diff_ref", {})
+    if test_patch != expected_patch or patch_ref.get("sha256") != bytes_hash(test_patch):
+        return [_finding("RMAP-CANDIDATE-TEST-PATCH", manifest_path, "test patch is empty, stale, or not reproducible")]
+    if manifest.get("root_hash") != manifest_root_hash(manifest):
+        return [_finding("RMAP-CANDIDATE-DIFF-EXACT", manifest_path, "candidate diff root hash is stale")]
+    return []
+
+
+def _mutate(value: Any, mutation: dict[str, Any]) -> Any:
+    result = json.loads(json.dumps(value))
+    parts = mutation["path"].strip("/").split("/")
+    parent = result
+    for part in parts[:-1]:
+        parent = parent[int(part)] if isinstance(parent, list) else parent[part]
+    key = parts[-1]
+    if mutation["op"] == "remove":
+        if isinstance(parent, list):
+            del parent[int(key)]
+        else:
+            del parent[key]
+    elif mutation["op"] == "replace":
+        if isinstance(parent, list):
+            parent[int(key)] = mutation["value"]
+        else:
+            parent[key] = mutation["value"]
+    elif mutation["op"] == "add":
+        if isinstance(parent, list):
+            parent.append(mutation["value"]) if key == "-" else parent.insert(int(key), mutation["value"])
+        else:
+            parent[key] = mutation["value"]
+    return result
+
+
+def validate_candidate_fixture_suite(plan_root: Path) -> list[dict[str, str]]:
+    fixture_path = plan_root / "fixtures" / "candidate-diff-cases.v1.json"
+    document = json.loads(fixture_path.read_text(encoding="utf-8"))
+    base = document["base"]
+    findings: list[dict[str, str]] = []
+    base_observed = validate_candidate_model(
+        plan_root,
+        base["manifest"],
+        "valid-candidate-diff",
+        base["test_patch"].encode("utf-8"),
+        base["expected_files"],
+        base["expected_test_patch"].encode("utf-8"),
+        base["folded_files"],
+        value_hash(base["folded_files"]),
+        base["current_identity"],
+        base["candidate_run_id"],
+    )
+    if base_observed:
+        findings.append(_finding("RMAP-STRUCT-FIXTURE", "valid-candidate-diff", f"valid fixture failed: {sorted({item['rule_id'] for item in base_observed})}"))
+    for case in document["cases"]:
+        if case["target"] == "candidate_ref":
+            candidate = base["candidate_document"]
+            candidate_bytes = json.dumps(candidate, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            candidate_ref = json.loads(json.dumps(base["candidate_ref"]))
+            for mutation in case.get("mutations", []):
+                candidate_ref = _mutate(candidate_ref, mutation)
+            observed = validate_candidate_result_ref(
+                plan_root,
+                candidate_ref,
+                case["id"],
+                base["candidate_path"],
+                candidate_bytes,
+                candidate,
+            )
+            rules = {item["rule_id"] for item in observed}
+            if rules != {case["expected_rule"]}:
+                findings.append(_finding("RMAP-STRUCT-FIXTURE", case["id"], f"expected {case['expected_rule']}, observed {sorted(rules)}"))
+            continue
+        manifest = json.loads(json.dumps(base["manifest"]))
+        expected = json.loads(json.dumps(base["expected_files"]))
+        folded = json.loads(json.dumps(base["folded_files"]))
+        test_patch = base["test_patch"].encode("utf-8")
+        expected_patch = base["expected_test_patch"].encode("utf-8")
+        target = case["target"]
+        for mutation in case.get("mutations", []):
+            if target == "manifest":
+                manifest = _mutate(manifest, mutation)
+            elif target == "expected_files":
+                expected = _mutate(expected, mutation)
+            elif target == "folded_files":
+                folded = _mutate(folded, mutation)
+            elif target == "test_patch":
+                test_patch = mutation["value"].encode("utf-8")
+        observed = validate_candidate_model(
+            plan_root,
+            manifest,
+            case["id"],
+            test_patch,
+            expected,
+            expected_patch,
+            folded,
+            value_hash(folded),
+            base["current_identity"],
+            base["candidate_run_id"],
+        )
+        rules = {item["rule_id"] for item in observed}
+        if rules != {case["expected_rule"]}:
+            findings.append(_finding("RMAP-STRUCT-FIXTURE", case["id"], f"expected {case['expected_rule']}, observed {sorted(rules)}"))
+    return findings
+
+
+def validate_candidate_result_ref(
+    plan_root: Path,
+    candidate_ref: dict[str, Any],
+    ref_path: str,
+    candidate_path: str,
+    candidate_bytes: bytes,
+    candidate: dict[str, Any],
+) -> list[dict[str, str]]:
+    schema = json.loads((plan_root / "schemas" / "candidate-result-ref.v1.schema.json").read_text(encoding="utf-8"))
+    error = schema_error(candidate_ref, schema)
+    if error:
+        return [_finding("RMAP-CANDIDATE-REF", ref_path, error)]
+    invalid = (
+        candidate_ref.get("path") != candidate_path
+        or candidate_ref.get("sha256") != bytes_hash(candidate_bytes)
+        or candidate_ref.get("candidate_hash") != value_hash(candidate)
+        or candidate_ref.get("run_id") != candidate.get("run_id")
+    )
+    return [_finding("RMAP-CANDIDATE-REF", ref_path, "S7 candidate reference is stale, superseded, or points to different bytes")] if invalid else []

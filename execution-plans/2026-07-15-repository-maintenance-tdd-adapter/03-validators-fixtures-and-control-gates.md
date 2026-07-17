@@ -19,7 +19,7 @@
 10. Source section IDs and selectors are derived from the hash-bound source structure and must match the coverage machine owner exactly.
 11. The union of all slice requirement IDs equals the complete active requirement registry.
 12. Shadow slices compare protected-tree hashes and file counts against an independent pre-backfill baseline.
-13. Every slice consumes explicit run/RED/GREEN/REFACTOR paths and verifies current hashes, observed exits, strict time/order, predecessor hashes, and recovery lineage; S6 consumes candidate only, while S7 consumes the repository Skill's finalized-run validation envelope and verifies its complete profile/control-plane/validator/artifact closure.
+13. Every slice consumes explicit run/RED/GREEN/REFACTOR paths and verifies current hashes, observed exits, strict time/order, predecessor hashes, and recovery lineage; S6 proves exact Git/candidate/attempt-fold equality and reproducible test patch bytes, while S7 consumes an explicit hash-bound S6 candidate reference plus the repository Skill's finalized-run validation envelope.
 14. Every active requirement maps to one executable acceptance contract whose expected failure IDs equal the referenced negative fixtures' actual stable rules.
 15. Validation snapshots the plan, source, and validator before and after all checks; drift forces a non-authorizing failure envelope with distinct candidate/current hashes.
 16. Persisted Capsule schemas, predecessor hashes, context hashes, path containment, and non-authorizing predicate boundaries.
@@ -87,6 +87,10 @@ The minimum cases are:
 - missing lifecycle event or stale event artifact bytes;
 - response/diff file mismatch, unapproved command, self-labelled forbidden path, or stale before/after hash;
 - stale attempt-ledger root or stale finalized Bootstrap profile envelope.
+- candidate changed-file omission, extra path, missing deletion, stale after hash, role drift, or untracked omission;
+- candidate accepted-attempt fold mismatch;
+- empty or non-reproducible test patch when test changes exist;
+- stale or superseded S7 candidate-result reference.
 
 ## RED Before Implementation
 

@@ -23,7 +23,7 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `MODIFIED`: all three existing refactor plans are backfilled, not a single pilot.
 - `MODIFIED`: backend v1 is repository-owned and implementation-only because stock Quick Dev has no compliant implementation-only route.
 - `MODIFIED`: old-plan backfill is additive metadata plus non-authoritative shadow validation.
-- `ADDED`: one framework ADR and exact three-layer ownership.
+- `MODIFIED`: reuse accepted ADR-0041 as the shared control-plane ownership precedent and Bootstrap execution authority; add the repository-maintenance adapter standard without allocating a colliding ADR.
 - `ADDED`: shell=false, env allowlist, typed placeholders, Windows containment, Git index, execution read set, and dependency closure.
 - `ADDED`: append-only recovery with stale predecessor and normally initialized successor.
 - `ADDED`: no open accepted P0/P1; every accepted P2 disposed; high-risk and expired deferrals block.
@@ -40,6 +40,8 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `ADDED`: executable acceptance registry, complete authority manifest, clarification projection, and review blocking projection.
 - `ADDED`: clean-checkout shadow baseline projection, derived requirement-quality hashes, exact earliest-phase validation, and complete candidate identity policy.
 - `ADDED`: `RMAP-025` immutable persisted Capsule revisions with typed, exact-union, actual-byte artifact closure and `RMAP-026` complete ordered stage attempts with exact event lifecycle, recomputed diff facts, decision/stage-result binding, ledger-root closure, and S6 candidate binding.
+- `MODIFIED`: S6 candidate evidence is a cumulative baseline-to-final diff manifest that must exactly equal scoped Git state and the accepted-attempt fold; test patch bytes are reproducible and rename inference is disabled.
+- `MODIFIED`: S7 uses an explicit hash-bound non-superseded S6 candidate reference with an independent run ID.
 - `MODIFIED`: `RMAP-001/002` reuse the existing Accepted ADR-0041 and preserve 7-12 as a compatibility adapter; `RMAP-012/016` consume the repository-owned Bootstrap finalized-run validation envelope; `RMAP-014` adds byte-verifiable baseline and per-attempt result snapshots.
 - `REMOVED`: mutable single-Capsule overwrite, standalone adapter-decision authority, and any need for a Router or S8.
 
