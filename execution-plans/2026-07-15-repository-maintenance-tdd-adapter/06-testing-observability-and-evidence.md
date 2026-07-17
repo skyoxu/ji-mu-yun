@@ -16,22 +16,23 @@
 12. Concrete authority-book hash freshness and RMAP-S0 predicate-proof reachability.
 13. Controlled repository-local temporary workspace when host `%TEMP%` is unavailable.
 14. Exact predicate/slice proof reachability for every S0-S7 GREEN command.
-15. Exact cumulative candidate diff equality across Git, accepted attempt fold, and candidate manifest.
-16. Binary-safe deterministic test-patch reproduction, including new untracked tests and deletions.
-17. Explicit S7-to-S6 candidate reference with independent run IDs and supersession rejection.
-15. Source section identity and line/question selector drift with unchanged coverage union.
-16. Active requirement removed from every slice while remaining in the registry.
-17. Restricted-token junction creation without nested writable-directory assumptions.
-18. S0 ownership duplicate as the behavior-specific observed RED.
-19. Protected-tree hash and count drift for all three shadow plans.
-20. Positive and negative candidate/review/preflight/disposition identity binding.
-21. Manual-pause projection, Round 4 rejection, and blocked predicate result status.
-22. Clean-checkout validation without clarification or repair logs.
-23. Executable acceptance registry, derived requirement quality, and exact earliest-phase mapping.
-24. Command descriptor versus RED/GREEN/REFACTOR invocation expectation separation.
-25. Immutable Capsule context, predecessor chain, path, and predicate authority.
-26. Minimized attempt evidence, request/response/diff/decision binding, partial failure, stage uniqueness, and event lineage.
-27. Bootstrap finalized-run envelope success, stale profile/control-plane/validator/artifact rejection, and empty authorization set.
+15. Exact cumulative candidate diff equality across Git, immutable S0-S6 lineage fold, and candidate manifest.
+16. Binary-safe deterministic test-patch reproduction in a disposable Git for Windows repository, including untracked binary add, modification, and deletion.
+17. Explicit S7-to-S6 reference with independent run IDs and recovery/event/successor-derived supersession rejection.
+18. Runtime Bootstrap P2 disposition and applicable verifier source binding.
+19. Source section identity and line/question selector drift with unchanged coverage union.
+20. Active requirement removed from every slice while remaining in the registry.
+21. Restricted-token junction creation and evidence-read containment without nested writable-directory assumptions.
+22. S0 ownership duplicate as the behavior-specific observed RED.
+23. Protected-tree hash and count drift for all three shadow plans.
+24. Positive and negative candidate/review/preflight/disposition identity binding.
+25. Immutable manual-pause blocker, successor re-entry selection, Round 4 rejection, and blocked predicate status.
+26. Clean-checkout validation without clarification or repair logs.
+27. Executable acceptance registry, derived requirement quality, and exact earliest-phase mapping.
+28. Command descriptor versus RED/GREEN/REFACTOR invocation expectation separation.
+29. Immutable Capsule context, predecessor chain, path, and predicate authority.
+30. Minimized attempt evidence, request/response/diff/decision binding, partial failure, stage uniqueness, and event lineage.
+31. Bootstrap finalized-run envelope success, stale profile/control-plane/validator/artifact rejection, and empty authorization set.
 
 ## Required Adapter Fixtures
 
@@ -66,6 +67,8 @@ Minimum run files:
 - `green-result.json`;
 - `refactor-result.json`;
 - `candidate-result.json`;
+- `candidate-lineage-manifest.json`;
+- `candidate-supersession-proof.json` for S7 predecessor consumption;
 - `diagnostics.jsonl`;
 - `run-events.jsonl`;
 - `recovery-state.json`.
@@ -75,6 +78,7 @@ Persisted protocol layout:
 ```text
 context/<capsule-id>/context-manifest.v1.json
 context/<capsule-id>/slice-capsule.v1.json
+candidate-slice-effect.v1.json
 baseline-file-manifest.v1.json
 baseline/files/<repository-relative-snapshot>
 attempts/<attempt-id>/backend-request.v1.json
@@ -86,11 +90,11 @@ run-events.jsonl
 attempt-ledger-manifest.v1.json
 ```
 
-Every file binds the same run, plan, contract, slice, source, validator, command registry, and candidate identities. Stage files also bind the accepted attempt decision and Capsule/context identities while recording command identity, observed exit, timestamp, and predecessor-stage hash; RED records the declared selector and stable failures. The S6 candidate directory contains a schema-valid cumulative `changed-files.json`, reproducible `test-diff.patch`, final context/Capsule, attempt-ledger manifest, raw event-log hash, final canonical event hash, accepted-attempt fold hash, and accepted attempt decision. The S7 run contains `candidate-result-ref.json`; it never infers an S6 run from its own run ID.
+Every file binds the same run, plan, contract, slice, source, validator, command registry, and candidate identities. Stage files also bind the accepted attempt decision and Capsule/context identities while recording command identity, observed exit, timestamp, and predecessor-stage hash; RED records the declared selector and stable failures. The S6 candidate directory contains a schema-valid cumulative `changed-files.json`, `candidate-lineage-manifest.json`, reproducible `test-diff.patch`, final context/Capsule, attempt-ledger manifest, raw event-log hash, final canonical event hash, accepted-attempt folds, and accepted decisions. The S7 run contains `candidate-result-ref.json` plus a supersession proof referencing current recovery/events/successors; it never infers activity from its own run ID.
 
 Every slice command receives `--run-dir`, `--red-result`, `--green-result`, and `--refactor-result`; implicit latest selection and repository-wide evidence scans are forbidden. S6 additionally receives `--candidate-result`. Only S7 receives both `--candidate-ref` and `--bootstrap-run`; its `--candidate-result` uses an explicit independent `<candidate-run-id>`.
 
-Raw clarification and repair evidence remains under `logs/**`, but clean-checkout authorization consumes only the minimized projections in `schemas/clarification-decisions.v1.json`, `schemas/review-blocking-state.v1.json`, and `schemas/shadow-protected-baseline.v1.json`.
+Raw clarification and repair evidence remains under `logs/**`, but clean-checkout authorization consumes only minimized projections in `schemas/clarification-decisions.v1.json`, immutable `schemas/review-blocking-state.v1.json`, `schemas/review-policy-reentry.v1.json`, and `schemas/shadow-protected-baseline.v1.json`.
 
 ## Candidate Envelope
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import fnmatch
+import os
 import re
 import subprocess
 import uuid
@@ -136,6 +137,33 @@ def typed_path_is_safe(value: Any, path_type: Any, plan_root: Path) -> bool:
     except (OSError, RuntimeError, ValueError):
         return False
     return True
+
+
+def contained_file(root: Path, relative: Any, *, must_exist: bool = True) -> Path | None:
+    if not isinstance(relative, str) or not relative or "\x00" in relative:
+        return None
+    windows_path = PureWindowsPath(relative.replace("/", "\\"))
+    if windows_path.is_absolute() or windows_path.drive or any(
+        part in {"", ".", ".."} or ":" in part for part in windows_path.parts
+    ):
+        return None
+    try:
+        resolved_root = root.resolve(strict=True)
+        candidate = resolved_root.joinpath(*windows_path.parts)
+        current = resolved_root
+        for part in windows_path.parts:
+            current = current / part
+            if current.exists() and os.path.islink(current):
+                return None
+            if current.exists() and current.resolve(strict=True) != current.absolute():
+                return None
+        resolved_candidate = candidate.resolve(strict=must_exist)
+        resolved_candidate.relative_to(resolved_root)
+        if must_exist and not resolved_candidate.is_file():
+            return None
+    except (OSError, RuntimeError, ValueError):
+        return None
+    return resolved_candidate
 
 
 def _normalize_glob(pattern: str) -> tuple[str, ...] | None:

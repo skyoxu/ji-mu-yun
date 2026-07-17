@@ -198,7 +198,7 @@
       "mutations": [
         {
           "op": "replace",
-          "path": "/ownership/framework_adr",
+          "path": "/ownership/ownership_pattern_adr",
           "value": "docs/adr/ADR-0041-repository-maintenance-agent-protocol-ownership.md"
         }
       ],
@@ -308,27 +308,6 @@
       ],
       "expected_valid": false,
       "expected_rule": "RMAP-REVIEW-P2-HIGH-RISK"
-    },
-    {
-      "id": "expired-p2-deferral",
-      "target": "contract",
-      "mutations": [
-        {
-          "op": "add",
-          "path": "/acceptance_policy/p2_deferrals/-",
-          "value": {
-            "finding_id": "P2-EXPIRED",
-            "risk": "normal",
-            "owner": "workflow owner",
-            "non_impact_proof": "No current consumer impact.",
-            "expires_at": "2000-01-01T00:00:00Z",
-            "closure_test": "rmap-adapter-tests",
-            "status": "deferred"
-          }
-        }
-      ],
-      "expected_valid": false,
-      "expected_rule": "RMAP-REVIEW-P2-EXPIRED"
     },
     {
       "id": "predicate-authority-escalation",
@@ -469,6 +448,32 @@
       ],
       "expected_valid": false,
       "expected_rule": "RMAP-REVIEW-ENVELOPE"
+    },
+    {
+      "id": "review-reentry-stale-blocker",
+      "target": "review_reentry",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/supersedes_blocker/sha256",
+          "value": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_rule": "RMAP-REVIEW-REENTRY",
+      "expected_valid": false
+    },
+    {
+      "id": "review-reentry-pending-authority",
+      "target": "review_reentry",
+      "mutations": [
+        {
+          "op": "add",
+          "path": "/authorizes/-",
+          "value": "plan-ready"
+        }
+      ],
+      "expected_rule": "RMAP-REVIEW-REENTRY",
+      "expected_valid": false
     }
   ]
 }

@@ -1,0 +1,34 @@
+{
+  "schema_version": "jimuyun.review-policy-reentry.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "state": "awaiting_successor_policy",
+  "supersedes_blocker": {
+    "path": "schemas/review-blocking-state.v1.json",
+    "sha256": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
+    "review_id": "repo-maint-tdd-final-r3-20260716-110837",
+    "policy_revision": "sha256:2d5f9f1404d4d86307b66f9729b7c6f216aaef8bdd2f0f4062d763460673a5b8"
+  },
+  "successor_policy": {
+    "change_id": "pending",
+    "policy_revision": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "authority_revision": "pending",
+    "decision_path": "pending",
+    "decision_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "semantic_closure": {
+    "review_id": "pending",
+    "run_path": "pending",
+    "envelope_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "independent": true,
+    "status": "clean"
+  },
+  "authorizes": [],
+  "does_not_authorize": [
+    "plan-ready",
+    "slice-ready",
+    "bootstrap-review",
+    "implementation-accepted",
+    "protected-handoff",
+    "release-ready"
+  ]
+}

@@ -11,7 +11,7 @@
     "sha256",
     "candidate_hash",
     "predicate",
-    "superseded"
+    "supersession_proof_ref"
   ],
   "properties": {
     "schema_version": {"const": "jimuyun.candidate-result-ref.v1"},
@@ -24,6 +24,14 @@
     "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "candidate_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "predicate": {"const": "implementation-candidate"},
-    "superseded": {"const": false}
+    "supersession_proof_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    }
   }
 }

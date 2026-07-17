@@ -17,7 +17,8 @@ Before semantic review:
 5. verify Git status and current source/validator hashes;
 6. confirm no old plan or historical evidence changed during plan creation.
 7. observe at least one Capsule and one attempt-ledger counterexample with the expected stable rule ID.
-8. observe candidate omission, accepted-attempt fold mismatch, test-patch mismatch, and stale S7 candidate reference counterexamples with their stable rule IDs.
+8. observe candidate omission, missing cross-slice lineage, test-patch mismatch, authoritative S7 supersession, runtime P2 source, and stale re-entry counterexamples with their stable rule IDs;
+9. execute the disposable Git for Windows add/modify/delete/binary-patch test and junction containment test.
 
 A deterministic failure stops semantic review.
 
@@ -46,7 +47,7 @@ Plan-ready requires:
 - plan status is `draft` or `plan-ready` and the result authorizes only transition to or confirmation of `plan-ready`;
 - `does_not_authorize` includes slice, implementation candidate, implementation acceptance, protected handoff, and release.
 
-The current Round 3 blocking projection violates the no-open-blocker condition by design, so `plan-ready` must return machine status `blocked` and nonzero exit until an external policy decision supersedes it.
+The current Round 3 blocking projection violates the no-open-blocker condition by design, so `plan-ready` must return machine status `blocked` and nonzero exit until the versioned re-entry selector validates a distinct external policy/authority decision and independent clean semantic closure envelope.
 
 ## Implementation Review Predicate
 
@@ -59,13 +60,14 @@ Future `implementation-accepted` requires:
 - every accepted P2 fixed or validly deferred;
 - no high-risk or expired P2 deferral;
 - exact authority exclusion for handoff and release.
-- a candidate-bound final context/Capsule and accepted refactor attempt decision whose persisted run passes the protocol validator.
+- a candidate-bound final context/Capsule, immutable S0-S6 lineage, and authoritative non-supersession proof;
+- runtime Bootstrap P2 dispositions hash-bound through review metrics, plus verifier source evidence when blocking findings exist.
 
 ## Bounded Review Cycle
 
 Use one complete review, batch repair, then one final complete review. A third review is allowed only for a new P0/P1 or changed authority/context graph. P2-only repair uses targeted deterministic validation and does not trigger another full semantic review.
 
-The finalized Round 3 Bootstrap run remains blocking under `manual_pause_after_round_3`. This deterministic repair uses the preserved VDD baseline and targeted counterexamples first, but cannot clear that disposition. Semantic re-entry requires a new durable review-policy decision and authority cycle after the repaired candidate receives fresh deterministic evidence; it cannot be labelled Round 4.
+The finalized Round 3 Bootstrap run remains immutable and blocking under `manual_pause_after_round_3`. The `review-policy-reentry.v1` selector currently remains `awaiting_successor_policy`; deterministic repair cannot clear it. Semantic re-entry requires a distinct durable change/policy/authority cycle and a current independent clean closure envelope, and cannot be labelled Round 4.
 
 Round 2 `repo-maint-tdd-final-r2-20260716-024940` confirmed three new P1 findings covering controlled test temp, all-slice exit-proof reachability, and exact source-location validation. They are repaired as one deterministic VDD batch. Because Round 2 introduced new P1 findings, policy permits one Round 3 review; Round 3 is the hard-limit final semantic round and any remaining blocker enters manual pause.
 

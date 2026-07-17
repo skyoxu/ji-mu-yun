@@ -141,8 +141,344 @@
       "sha256": "sha256:409019b5fa18d02c4951d9c0984d9b7c74bf570c9195582fccc0dc0b452a2d9f",
       "candidate_hash": "sha256:409019b5fa18d02c4951d9c0984d9b7c74bf570c9195582fccc0dc0b452a2d9f",
       "predicate": "implementation-candidate",
-      "superseded": false
-    }
+      "supersession_proof_ref": {
+        "path": "logs/tdd-adapter/candidate-supersession-proof.json",
+        "sha256": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      }
+    },
+    "lineage": {
+      "schema_version": "jimuyun.candidate-lineage-manifest.v1",
+      "plan_id": "repository-maintenance-tdd-adapter",
+      "candidate_run_id": "RMAP-S6-RUN-001",
+      "baseline_identity": {
+        "head": "1111111111111111111111111111111111111111",
+        "index_tree": "2222222222222222222222222222222222222222"
+      },
+      "slice_runs": [
+        {
+          "slice_id": "RMAP-S0",
+          "run_id": "RMAP-S0-RUN-001",
+          "predecessor_run_id": null,
+          "run_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S0/RMAP-S0-RUN-001/candidate-slice-effect.v1.json",
+          "run_artifact_sha256": "sha256:237798d97340c35de9e19848f1f38f6a5c804ee6801dc9d9c8ee3c5dc65fe0eb",
+          "accepted_attempt_fold_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "final_event_hash": "sha256:6c71f6424e5d59037a4e2ff6076534eecaabdc8e558b4d04412e501b6a8344d1"
+        },
+        {
+          "slice_id": "RMAP-S1",
+          "run_id": "RMAP-S1-RUN-001",
+          "predecessor_run_id": "RMAP-S0-RUN-001",
+          "run_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S1/RMAP-S1-RUN-001/candidate-slice-effect.v1.json",
+          "run_artifact_sha256": "sha256:035c118c4e4e80c7ec002e49384513b623e0f16ee073d4a4b2ba2ec065227b56",
+          "accepted_attempt_fold_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "final_event_hash": "sha256:8b8617c02e25f7dccaca1564763080e6b4e8db273c9e23f60fa5873f62994ff8"
+        },
+        {
+          "slice_id": "RMAP-S2",
+          "run_id": "RMAP-S2-RUN-001",
+          "predecessor_run_id": "RMAP-S1-RUN-001",
+          "run_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S2/RMAP-S2-RUN-001/candidate-slice-effect.v1.json",
+          "run_artifact_sha256": "sha256:00bac758dd74293a8ccf8ae0bf1c634b4baf459fe492453da843bd0e079b2a9a",
+          "accepted_attempt_fold_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "final_event_hash": "sha256:a4bfb5cdf11a03b81790ee4821e4a06437c6574398eefa516ca2d649934da3c8"
+        },
+        {
+          "slice_id": "RMAP-S3",
+          "run_id": "RMAP-S3-RUN-001",
+          "predecessor_run_id": "RMAP-S2-RUN-001",
+          "run_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S3/RMAP-S3-RUN-001/candidate-slice-effect.v1.json",
+          "run_artifact_sha256": "sha256:311a0415b366c4a7126757f1fd5fc8765fc139be8742e7db6798cbb55a840d3c",
+          "accepted_attempt_fold_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "final_event_hash": "sha256:30a7ea9398ae1923f32d2b144f04177c9493ab283b2ddec239b2edf4a5ef8eb0"
+        },
+        {
+          "slice_id": "RMAP-S4",
+          "run_id": "RMAP-S4-RUN-001",
+          "predecessor_run_id": "RMAP-S3-RUN-001",
+          "run_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S4/RMAP-S4-RUN-001/candidate-slice-effect.v1.json",
+          "run_artifact_sha256": "sha256:1868c2b188bdb35334b5bc04b12ec9a344d4a0e8d6d86841e0518faeefe2b151",
+          "accepted_attempt_fold_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "final_event_hash": "sha256:23deff5ff6c8957457bce6d2d014541e8532a4b1684fc6516569885581b39a6e"
+        },
+        {
+          "slice_id": "RMAP-S5",
+          "run_id": "RMAP-S5-RUN-001",
+          "predecessor_run_id": "RMAP-S4-RUN-001",
+          "run_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S5/RMAP-S5-RUN-001/candidate-slice-effect.v1.json",
+          "run_artifact_sha256": "sha256:cac9bf3c97be858e5917bcfc539a04bbc61bec8a5cbcda1a1a36ff07e68bded5",
+          "accepted_attempt_fold_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "final_event_hash": "sha256:eb24bfe55c0ac4a69accab24a1f523f18317314d23e98b178f9a196d1f3aeed4"
+        },
+        {
+          "slice_id": "RMAP-S6",
+          "run_id": "RMAP-S6-RUN-001",
+          "predecessor_run_id": "RMAP-S5-RUN-001",
+          "run_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RMAP-S6-RUN-001/candidate-slice-effect.v1.json",
+          "run_artifact_sha256": "sha256:f9c2b6e11b0d32e8d3fcd6f8c59ab27c5b653f93dbdfc3534e9fcebd02a98472",
+          "accepted_attempt_fold_hash": "sha256:b69a91ed0c8dc9123aaf2f93d6408f56decbe9b53965c98b957090032e4f0a5b",
+          "final_event_hash": "sha256:4843afb41b3cde9675f5aaf61ec94ca275c1c642d4ead196e658d74d6ac7bc6c"
+        }
+      ],
+      "cumulative_fold_hash": "sha256:b69a91ed0c8dc9123aaf2f93d6408f56decbe9b53965c98b957090032e4f0a5b",
+      "root_hash": "sha256:1a332828493a4852f15e4735b8aec3afc2ab4962e63326c8ce51ab63c43d18a0"
+    },
+    "lineage_runs": [
+      {
+        "document": {
+          "schema_version": "jimuyun.candidate-slice-effect.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S0",
+          "run_id": "RMAP-S0-RUN-001",
+          "baseline_files": [
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+              "sha256": null
+            },
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "path": "docs/standards/old-adapter-note.md",
+              "sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ],
+          "effects": [],
+          "accepted_attempt_ids": [],
+          "attempt_ledger_manifest_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "run_events_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "final_event_hash": "sha256:6c71f6424e5d59037a4e2ff6076534eecaabdc8e558b4d04412e501b6a8344d1",
+          "root_hash": "sha256:b997ddc1dbdf8d9b0d5554b20d7f989d46b2e6f6851b201b9ca62120688d3724"
+        },
+        "raw": "{\"accepted_attempt_ids\":[],\"attempt_ledger_manifest_hash\":\"sha256:1111111111111111111111111111111111111111111111111111111111111111\",\"baseline_files\":[{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py\",\"sha256\":null},{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/adapter.py\",\"sha256\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},{\"path\":\"docs/standards/old-adapter-note.md\",\"sha256\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}],\"effects\":[],\"final_event_hash\":\"sha256:6c71f6424e5d59037a4e2ff6076534eecaabdc8e558b4d04412e501b6a8344d1\",\"plan_id\":\"repository-maintenance-tdd-adapter\",\"root_hash\":\"sha256:b997ddc1dbdf8d9b0d5554b20d7f989d46b2e6f6851b201b9ca62120688d3724\",\"run_events_hash\":\"sha256:2222222222222222222222222222222222222222222222222222222222222222\",\"run_id\":\"RMAP-S0-RUN-001\",\"schema_version\":\"jimuyun.candidate-slice-effect.v1\",\"slice_id\":\"RMAP-S0\"}"
+      },
+      {
+        "document": {
+          "schema_version": "jimuyun.candidate-slice-effect.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S1",
+          "run_id": "RMAP-S1-RUN-001",
+          "baseline_files": [
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+              "sha256": null
+            },
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "path": "docs/standards/old-adapter-note.md",
+              "sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ],
+          "effects": [],
+          "accepted_attempt_ids": [],
+          "attempt_ledger_manifest_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "run_events_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "final_event_hash": "sha256:8b8617c02e25f7dccaca1564763080e6b4e8db273c9e23f60fa5873f62994ff8",
+          "root_hash": "sha256:056dc095a2afa7294653863231243e2cd8e4a9478348cce378855f7cd1154da3"
+        },
+        "raw": "{\"accepted_attempt_ids\":[],\"attempt_ledger_manifest_hash\":\"sha256:2222222222222222222222222222222222222222222222222222222222222222\",\"baseline_files\":[{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py\",\"sha256\":null},{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/adapter.py\",\"sha256\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},{\"path\":\"docs/standards/old-adapter-note.md\",\"sha256\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}],\"effects\":[],\"final_event_hash\":\"sha256:8b8617c02e25f7dccaca1564763080e6b4e8db273c9e23f60fa5873f62994ff8\",\"plan_id\":\"repository-maintenance-tdd-adapter\",\"root_hash\":\"sha256:056dc095a2afa7294653863231243e2cd8e4a9478348cce378855f7cd1154da3\",\"run_events_hash\":\"sha256:3333333333333333333333333333333333333333333333333333333333333333\",\"run_id\":\"RMAP-S1-RUN-001\",\"schema_version\":\"jimuyun.candidate-slice-effect.v1\",\"slice_id\":\"RMAP-S1\"}"
+      },
+      {
+        "document": {
+          "schema_version": "jimuyun.candidate-slice-effect.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S2",
+          "run_id": "RMAP-S2-RUN-001",
+          "baseline_files": [
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+              "sha256": null
+            },
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "path": "docs/standards/old-adapter-note.md",
+              "sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ],
+          "effects": [],
+          "accepted_attempt_ids": [],
+          "attempt_ledger_manifest_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "run_events_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "final_event_hash": "sha256:a4bfb5cdf11a03b81790ee4821e4a06437c6574398eefa516ca2d649934da3c8",
+          "root_hash": "sha256:626d879eeca8029ba10fa5a6fbba85c71ff0d45ecb4b7c5f3247513f5ae95123"
+        },
+        "raw": "{\"accepted_attempt_ids\":[],\"attempt_ledger_manifest_hash\":\"sha256:3333333333333333333333333333333333333333333333333333333333333333\",\"baseline_files\":[{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py\",\"sha256\":null},{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/adapter.py\",\"sha256\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},{\"path\":\"docs/standards/old-adapter-note.md\",\"sha256\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}],\"effects\":[],\"final_event_hash\":\"sha256:a4bfb5cdf11a03b81790ee4821e4a06437c6574398eefa516ca2d649934da3c8\",\"plan_id\":\"repository-maintenance-tdd-adapter\",\"root_hash\":\"sha256:626d879eeca8029ba10fa5a6fbba85c71ff0d45ecb4b7c5f3247513f5ae95123\",\"run_events_hash\":\"sha256:4444444444444444444444444444444444444444444444444444444444444444\",\"run_id\":\"RMAP-S2-RUN-001\",\"schema_version\":\"jimuyun.candidate-slice-effect.v1\",\"slice_id\":\"RMAP-S2\"}"
+      },
+      {
+        "document": {
+          "schema_version": "jimuyun.candidate-slice-effect.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S3",
+          "run_id": "RMAP-S3-RUN-001",
+          "baseline_files": [
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+              "sha256": null
+            },
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "path": "docs/standards/old-adapter-note.md",
+              "sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ],
+          "effects": [],
+          "accepted_attempt_ids": [],
+          "attempt_ledger_manifest_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "run_events_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+          "final_event_hash": "sha256:30a7ea9398ae1923f32d2b144f04177c9493ab283b2ddec239b2edf4a5ef8eb0",
+          "root_hash": "sha256:ed6aaedcd0f10a2966bb6279065151c9ce584e398e8e9dad9a71cec7c9511fb7"
+        },
+        "raw": "{\"accepted_attempt_ids\":[],\"attempt_ledger_manifest_hash\":\"sha256:4444444444444444444444444444444444444444444444444444444444444444\",\"baseline_files\":[{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py\",\"sha256\":null},{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/adapter.py\",\"sha256\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},{\"path\":\"docs/standards/old-adapter-note.md\",\"sha256\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}],\"effects\":[],\"final_event_hash\":\"sha256:30a7ea9398ae1923f32d2b144f04177c9493ab283b2ddec239b2edf4a5ef8eb0\",\"plan_id\":\"repository-maintenance-tdd-adapter\",\"root_hash\":\"sha256:ed6aaedcd0f10a2966bb6279065151c9ce584e398e8e9dad9a71cec7c9511fb7\",\"run_events_hash\":\"sha256:5555555555555555555555555555555555555555555555555555555555555555\",\"run_id\":\"RMAP-S3-RUN-001\",\"schema_version\":\"jimuyun.candidate-slice-effect.v1\",\"slice_id\":\"RMAP-S3\"}"
+      },
+      {
+        "document": {
+          "schema_version": "jimuyun.candidate-slice-effect.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S4",
+          "run_id": "RMAP-S4-RUN-001",
+          "baseline_files": [
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+              "sha256": null
+            },
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "path": "docs/standards/old-adapter-note.md",
+              "sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ],
+          "effects": [],
+          "accepted_attempt_ids": [],
+          "attempt_ledger_manifest_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+          "run_events_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "final_event_hash": "sha256:23deff5ff6c8957457bce6d2d014541e8532a4b1684fc6516569885581b39a6e",
+          "root_hash": "sha256:c92aabd028c16669aacd01c875e3be3ea1662523a2a7f71e41b76928cf3c8178"
+        },
+        "raw": "{\"accepted_attempt_ids\":[],\"attempt_ledger_manifest_hash\":\"sha256:5555555555555555555555555555555555555555555555555555555555555555\",\"baseline_files\":[{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py\",\"sha256\":null},{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/adapter.py\",\"sha256\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},{\"path\":\"docs/standards/old-adapter-note.md\",\"sha256\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}],\"effects\":[],\"final_event_hash\":\"sha256:23deff5ff6c8957457bce6d2d014541e8532a4b1684fc6516569885581b39a6e\",\"plan_id\":\"repository-maintenance-tdd-adapter\",\"root_hash\":\"sha256:c92aabd028c16669aacd01c875e3be3ea1662523a2a7f71e41b76928cf3c8178\",\"run_events_hash\":\"sha256:6666666666666666666666666666666666666666666666666666666666666666\",\"run_id\":\"RMAP-S4-RUN-001\",\"schema_version\":\"jimuyun.candidate-slice-effect.v1\",\"slice_id\":\"RMAP-S4\"}"
+      },
+      {
+        "document": {
+          "schema_version": "jimuyun.candidate-slice-effect.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S5",
+          "run_id": "RMAP-S5-RUN-001",
+          "baseline_files": [
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+              "sha256": null
+            },
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "path": "docs/standards/old-adapter-note.md",
+              "sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ],
+          "effects": [],
+          "accepted_attempt_ids": [],
+          "attempt_ledger_manifest_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "run_events_hash": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "final_event_hash": "sha256:eb24bfe55c0ac4a69accab24a1f523f18317314d23e98b178f9a196d1f3aeed4",
+          "root_hash": "sha256:52b7f48514ba7369a64bedcab4f2960da785ae27ce8f00489fa527d4f20fc4fc"
+        },
+        "raw": "{\"accepted_attempt_ids\":[],\"attempt_ledger_manifest_hash\":\"sha256:6666666666666666666666666666666666666666666666666666666666666666\",\"baseline_files\":[{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py\",\"sha256\":null},{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/adapter.py\",\"sha256\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},{\"path\":\"docs/standards/old-adapter-note.md\",\"sha256\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}],\"effects\":[],\"final_event_hash\":\"sha256:eb24bfe55c0ac4a69accab24a1f523f18317314d23e98b178f9a196d1f3aeed4\",\"plan_id\":\"repository-maintenance-tdd-adapter\",\"root_hash\":\"sha256:52b7f48514ba7369a64bedcab4f2960da785ae27ce8f00489fa527d4f20fc4fc\",\"run_events_hash\":\"sha256:7777777777777777777777777777777777777777777777777777777777777777\",\"run_id\":\"RMAP-S5-RUN-001\",\"schema_version\":\"jimuyun.candidate-slice-effect.v1\",\"slice_id\":\"RMAP-S5\"}"
+      },
+      {
+        "document": {
+          "schema_version": "jimuyun.candidate-slice-effect.v1",
+          "plan_id": "repository-maintenance-tdd-adapter",
+          "slice_id": "RMAP-S6",
+          "run_id": "RMAP-S6-RUN-001",
+          "baseline_files": [
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+              "sha256": null
+            },
+            {
+              "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "path": "docs/standards/old-adapter-note.md",
+              "sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ],
+          "effects": [
+            {
+              "change_type": "add",
+              "baseline_path": null,
+              "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py",
+              "before_sha256": null,
+              "after_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            {
+              "change_type": "modify",
+              "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+              "before_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "after_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            },
+            {
+              "change_type": "delete",
+              "baseline_path": "docs/standards/old-adapter-note.md",
+              "candidate_path": null,
+              "before_sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "after_sha256": null
+            }
+          ],
+          "accepted_attempt_ids": [
+            "ATTEMPT-S6"
+          ],
+          "attempt_ledger_manifest_hash": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "run_events_hash": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+          "final_event_hash": "sha256:4843afb41b3cde9675f5aaf61ec94ca275c1c642d4ead196e658d74d6ac7bc6c",
+          "root_hash": "sha256:2045c18ad3ec38f3dd3405cbac78178525ee9c12123fb2d1902a78fec189353a"
+        },
+        "raw": "{\"accepted_attempt_ids\":[\"ATTEMPT-S6\"],\"attempt_ledger_manifest_hash\":\"sha256:7777777777777777777777777777777777777777777777777777777777777777\",\"baseline_files\":[{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py\",\"sha256\":null},{\"path\":\".agents/skills/quick-dev-tdd-adapter/tools/adapter.py\",\"sha256\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},{\"path\":\"docs/standards/old-adapter-note.md\",\"sha256\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}],\"effects\":[{\"after_sha256\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"baseline_path\":null,\"before_sha256\":null,\"candidate_path\":\".agents/skills/quick-dev-tdd-adapter/tools/tests/test_new.py\",\"change_type\":\"add\"},{\"after_sha256\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"baseline_path\":\".agents/skills/quick-dev-tdd-adapter/tools/adapter.py\",\"before_sha256\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"candidate_path\":\".agents/skills/quick-dev-tdd-adapter/tools/adapter.py\",\"change_type\":\"modify\"},{\"after_sha256\":null,\"baseline_path\":\"docs/standards/old-adapter-note.md\",\"before_sha256\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"candidate_path\":null,\"change_type\":\"delete\"}],\"final_event_hash\":\"sha256:4843afb41b3cde9675f5aaf61ec94ca275c1c642d4ead196e658d74d6ac7bc6c\",\"plan_id\":\"repository-maintenance-tdd-adapter\",\"root_hash\":\"sha256:2045c18ad3ec38f3dd3405cbac78178525ee9c12123fb2d1902a78fec189353a\",\"run_events_hash\":\"sha256:8888888888888888888888888888888888888888888888888888888888888888\",\"run_id\":\"RMAP-S6-RUN-001\",\"schema_version\":\"jimuyun.candidate-slice-effect.v1\",\"slice_id\":\"RMAP-S6\"}"
+      }
+    ],
+    "supersession_events": [
+      {
+        "event_type": "decision-finalized",
+        "run_id": "RMAP-S6-RUN-001"
+      }
+    ],
+    "supersession_recovery": {
+      "run_id": "RMAP-S6-RUN-001",
+      "state": "accepted",
+      "predecessor_run_id": null,
+      "supersedes_run_id": null
+    },
+    "supersession_proof": {
+      "schema_version": "jimuyun.candidate-supersession-proof.v1",
+      "candidate_run_id": "RMAP-S6-RUN-001",
+      "recovery_state_ref": {
+        "path": "logs/tdd-adapter/recovery-state.json",
+        "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "event_log_ref": {
+        "path": "logs/tdd-adapter/run-events.jsonl",
+        "sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "final_event_hash": "sha256:d52ec1aca704e26a8f79d4977a0cee6ca1f334c9520bcf8bbb5f7db96b330a74",
+      "active_run_id": "RMAP-S6-RUN-001",
+      "successor_scan_root": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6"
+    },
+    "supersession_successor_run_ids": []
   },
   "cases": [
     {
@@ -285,6 +621,29 @@
         }
       ],
       "expected_rule": "RMAP-CANDIDATE-REF"
+    },
+    {
+      "id": "candidate-lineage-missing-slice",
+      "target": "lineage",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "/slice_runs/3"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-LINEAGE"
+    },
+    {
+      "id": "candidate-supersession-stale",
+      "target": "supersession",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/state",
+          "value": "superseded"
+        }
+      ],
+      "expected_rule": "RMAP-CANDIDATE-SUPERSESSION"
     }
   ]
 }

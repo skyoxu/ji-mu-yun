@@ -72,8 +72,8 @@
 - Requirements: `RMAP-010`, `RMAP-012`, `RMAP-016`, `RMAP-025`, `RMAP-026`.
 - Phase: `P3`.
 - Recompute the complete current diff and exact candidate identity after S3-S5. Rename inference is disabled; a rename is represented as deterministic delete plus add.
-- Require current RED/GREEN/REFACTOR lineage, deterministic tests, authority manifest, contract, command registry, validator, Git index, tracked diff, untracked manifest, cumulative candidate diff manifest, reproducible binary-safe test patch, final context-manifest and Capsule hashes, accepted attempt fold, accepted attempt ID, and accepted decision hash.
-- Independently prove that the candidate manifest exactly equals the scoped tracked-plus-untracked Git change set and the baseline-to-final fold of every accepted attempt. Omitted, extra, deleted, stale-hash, misclassified, or add-then-delete paths fail closed.
+- Require current deterministic tests, authority manifest, contract, command registry, validator, Git index, tracked diff, untracked manifest, cumulative candidate diff manifest, cross-slice lineage manifest, reproducible binary-safe test patch, final context-manifest and Capsule hashes, accepted attempt IDs, and accepted decision hashes.
+- Fold immutable S0-S6 run artifacts in predecessor order and independently prove that the candidate manifest exactly equals both the scoped tracked-plus-untracked Git change set and the cumulative lineage fold. Omitted slices, stale run/final-event hashes, extra/deleted paths, misclassification, or add-then-delete drift fail closed.
 - Candidate authorizes Bootstrap review only.
 - GREEN: `rmap-s6-candidate-validate` consumes explicit TDD evidence and candidate result only. It does not consume Bootstrap output.
 - Exit: current candidate envelope authorizes only an external Bootstrap review.
@@ -89,10 +89,10 @@
 - Requirements: `RMAP-011`, `RMAP-013`, `RMAP-016`, `RMAP-020`.
 - Phase: `P3`.
 - Run fresh deterministic proof against current hashes and consume the repository Skill's `bootstrap-finalized-run-validation.v1` envelope.
-- Consume an explicit `candidate-result-ref.json` that binds one non-superseded S6 run ID, repository-relative candidate path, candidate bytes, candidate hash, and predicate. S6 and S7 run IDs are independent; no implicit latest or same-string lookup is allowed.
-- Reject high-risk or expired P2 deferrals.
+- Consume an explicit `candidate-result-ref.json` that binds the S6 run, candidate bytes/hash, predicate, and `candidate-supersession-proof.json`. Recovery state, event log, final event hash, and a validator-owned scan of the canonical S6 recovery root must prove that run remains active. S6 and S7 run IDs are independent; no implicit latest, Boolean assertion, or caller-supplied empty successor list is allowed.
+- Consume runtime `p2-dispositions.json` through the Bootstrap metrics hash; require complete owner/expiry/closure-test/reason fields and verifier source evidence when blocking findings exist. Reject high-risk or expired dispositions.
 - Produce `implementation-accepted` only from the plan-local validator.
-- GREEN: `rmap-s7-acceptance-validate` validates the envelope schema, complete profile hash, control-plane and validator identity, all finalized artifact hashes, non-authorizing boundary, and candidate binding; it then requires a non-blocking final review, rejects open accepted P0/P1, and requires a current valid disposition for every accepted P2 under `implementation-accepted`.
+- GREEN: `rmap-s7-acceptance-validate` validates the envelope schema, profile/control-plane/validator identity, finalized artifact hashes, non-authorizing boundary, authoritative candidate activity, and runtime finding closure before `implementation-accepted`.
 - Exit explicitly excludes protected handoff and release.
 
 ## Dependency Order

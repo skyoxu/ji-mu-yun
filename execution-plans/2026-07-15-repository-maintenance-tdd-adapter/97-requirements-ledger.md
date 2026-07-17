@@ -19,9 +19,9 @@ Executable acceptance owner: [`schemas/acceptance-contracts.v1.json`](schemas/ac
 | RMAP-011 | Keep implementation backends neutral and without review/done/commit authority. | backend-contract maintainer | P1 | RMAP-ACC-011 | active |
 | RMAP-012 | Preserve Bootstrap as the single semantic-review authority and consume its repository-owned finalized-run envelope. | review integration maintainer | P3 | RMAP-ACC-012 | active |
 | RMAP-013 | Expose exact plan-ready, slice-ready, implementation-candidate, and implementation-accepted predicates. | plan validator maintainer | P0 | RMAP-ACC-013 | active |
-| RMAP-014 | Freeze Git/index/closure identity plus byte-verifiable baseline file snapshots. | baseline maintainer | P1 | RMAP-ACC-014 | active |
+| RMAP-014 | Freeze Git/index/closure identity and immutable S0-S6 run lineage for byte-verifiable cumulative candidate reconstruction. | baseline maintainer | P1 | RMAP-ACC-014 | active |
 | RMAP-015 | Recover from append-only evidence with stale predecessor and normally initialized successor runs. | recovery maintainer | P1 | RMAP-ACC-015 | active |
-| RMAP-016 | Consume an explicit non-superseded S6 candidate reference plus a current finalized-run envelope and block on open P0/P1 or invalid P2 disposition. | acceptance maintainer | P3 | RMAP-ACC-016 | active |
+| RMAP-016 | Consume authoritative S6 supersession proof plus current finalized Bootstrap/runtime disposition evidence. | acceptance maintainer | P3 | RMAP-ACC-016 | active |
 | RMAP-017 | Backfill 7-12, 7-07, and 7-11 additively and validate them only in shadow mode. | migration maintainer | P2 | RMAP-ACC-017 | active |
 | RMAP-018 | Test contract, lifecycle, recovery, shadow, supportive, neutral, and competing scenarios. | test maintainer | P1 | RMAP-ACC-018 | active |
 | RMAP-019 | Limit this plan to P0-P3 and move BMAD removal to a future plan. | plan owner | P0 | RMAP-ACC-019 | active |

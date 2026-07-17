@@ -16,8 +16,9 @@ The plan succeeds when a repository-owned adapter can consume one implementation
 | VDD strict standard | Verification authority and plan contract | `sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140` |
 | Accepted ADR-0041 and Bootstrap standard | Durable review control-plane ownership and semantics | Hash-bound in `schemas/authority-manifest.v1.json` |
 | Repository-owned Bootstrap Skill | Executable semantic-review protocol and finalized-run validation envelope | Hash-bound implementation, schemas, profiles, and tests in `schemas/authority-manifest.v1.json` |
-| 7-12 Bootstrap plan and CLI | Revision-bound compatibility adapter and migration examples only | Directory authority frozen by the implementation slice baseline |
-| Round 3 blocking projection | Current semantic-review disposition and re-entry boundary | `schemas/review-blocking-state.v1.json` |
+| 7-12 Bootstrap plan and profile | Revision-bound compatibility adapter and migration examples only | Hash-bound under `compatibility_inputs`; no current policy authority |
+| Round 3 blocking projection | Immutable current semantic-review disposition | `schemas/review-blocking-state.v1.json` |
+| Review-policy re-entry projection | Successor selection and semantic closure gate | `schemas/review-policy-reentry.v1.json` |
 
 `agentbuild.txt` remains byte-preserved, committed source history. This directory hash-binds it instead of copying it into a second authority.
 
@@ -42,6 +43,7 @@ S0 cites ADR-0041 and creates only the repository-maintenance adapter standard. 
 - Test counts are run-scoped observations, not mutable current-state authority: the 555 closure evidence recorded 48 plan tests, 87 Bootstrap Skill tests, and a passing 7-12 Whole-directory validator. Fresh commands and current envelopes supersede those historical observations.
 - No BMAD `SPEC.md`, `.memlog.md`, or `ARCHITECTURE-SPINE.md` package applies to this intent.
 - The finalized Round 3 Bootstrap result is `blocked` with eight confirmed P1 findings, and the review cycle is `manual_pause_after_round_3`. Deterministic repair cannot clear that semantic disposition.
+- The 1200 repair baseline is `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260717-1200-repair-baseline/baseline-manifest.json`. It preserves the pre-repair 66-file target inventory, the old 51-test local PASS, the expected blocked plan-ready envelope, and the six newly repaired control-chain gaps.
 
 ## Confirmed Scope
 
@@ -51,6 +53,7 @@ S0 cites ADR-0041 and creates only the repository-maintenance adapter standard. 
 - A repository-owned Slice Capsule executor as backend v1.
 - Immutable per-invocation persisted Capsule revisions and an append-only Agent Attempt Ledger.
 - Existing Bootstrap extension points before any Bootstrap CLI delta.
+- Cross-slice S0-S6 immutable candidate lineage, authoritative S7 supersession proof, and runtime Bootstrap disposition evidence.
 
 ## Non-Goals
 

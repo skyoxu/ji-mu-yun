@@ -171,7 +171,7 @@
     {
       "source_id": "clarification-projection",
       "path": "schemas/clarification-decisions.v1.json",
-      "sha256": "sha256:6a8583dfe8194c36894c77931a962db4d60513a82d22a376e2644ce3189dad4d",
+      "sha256": "sha256:eb6aa2000e33316d45e358fdbfc1028c51fddf27202dfc7f953017cb507321f3",
       "sections": [
         {
           "id": "CREATE-CQ-001-005",
@@ -261,6 +261,16 @@
             "RMAP-021",
             "RMAP-023",
             "RMAP-026"
+          ]
+        },
+        {
+          "id": "REPAIR-20260717-1200-CQ-001-005",
+          "lines": "repair-20260717-1200:CQ-001..CQ-005",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-014",
+            "RMAP-016"
           ]
         }
       ]

@@ -27,7 +27,7 @@
     "authority": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "requirements", "coverage", "deltas", "acceptance_contracts", "authority_manifest", "clarification_projection", "review_blocking_state", "source_hashes"],
+      "required": ["index", "requirements", "coverage", "deltas", "acceptance_contracts", "authority_manifest", "clarification_projection", "review_blocking_state", "source_hashes", "review_policy_reentry"],
       "properties": {
         "index": {"type": "string"},
         "requirements": {"type": "string"},
@@ -37,15 +37,16 @@
         "authority_manifest": {"type": "string"},
         "clarification_projection": {"type": "string"},
         "review_blocking_state": {"type": "string"},
+        "review_policy_reentry": {"const": "schemas/review-policy-reentry.v1.json"},
         "source_hashes": {"type": "object"}
       }
     },
     "ownership": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["framework_adr", "standard_owner", "common_protocol_owner", "plan_instance_owner", "runtime_evidence_owner"],
+      "required": ["ownership_pattern_adr", "standard_owner", "common_protocol_owner", "plan_instance_owner", "runtime_evidence_owner"],
       "properties": {
-        "framework_adr": {"type": "string"}, "standard_owner": {"type": "string"}, "common_protocol_owner": {"type": "string"}, "plan_instance_owner": {"type": "string"}, "runtime_evidence_owner": {"type": "string"}
+        "ownership_pattern_adr": {"type": "string"}, "standard_owner": {"type": "string"}, "common_protocol_owner": {"type": "string"}, "plan_instance_owner": {"type": "string"}, "runtime_evidence_owner": {"type": "string"}
       }
     },
     "backendPolicy": {
@@ -102,9 +103,9 @@
     "acceptancePolicy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["open_accepted_p0_p1_blocks", "p2_requires_disposition", "high_risk_p2_deferrable", "expired_p2_deferral_blocks", "p2_deferrals", "confidence_authoritative", "confidence_improvement_round_limit", "release_authorized"],
+      "required": ["open_accepted_p0_p1_blocks", "p2_requires_disposition", "high_risk_p2_deferrable", "expired_p2_deferral_blocks", "runtime_disposition_source", "confidence_authoritative", "confidence_improvement_round_limit", "release_authorized"],
       "properties": {
-        "open_accepted_p0_p1_blocks": {"const": true}, "p2_requires_disposition": {"const": true}, "high_risk_p2_deferrable": {"type": "boolean"}, "expired_p2_deferral_blocks": {"const": true}, "p2_deferrals": {"type": "array", "items": {"$ref": "#/$defs/p2Deferral"}}, "confidence_authoritative": {"const": false}, "confidence_improvement_round_limit": {"const": 3}, "release_authorized": {"const": false}
+        "open_accepted_p0_p1_blocks": {"const": true}, "p2_requires_disposition": {"const": true}, "high_risk_p2_deferrable": {"type": "boolean"}, "expired_p2_deferral_blocks": {"const": true}, "runtime_disposition_source": {"const": "bootstrap-finalized-run"}, "confidence_authoritative": {"const": false}, "confidence_improvement_round_limit": {"const": 3}, "release_authorized": {"const": false}
       }
     },
     "p2Deferral": {
@@ -125,10 +126,13 @@
         "candidate_artifact_schemas": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["candidate_diff_manifest", "candidate_result_ref"],
+          "required": ["candidate_diff_manifest", "candidate_result_ref", "candidate_lineage_manifest", "candidate_slice_effect", "candidate_supersession_proof"],
           "properties": {
             "candidate_diff_manifest": {"const": "schemas/candidate-diff-manifest.v1.schema.json"},
-            "candidate_result_ref": {"const": "schemas/candidate-result-ref.v1.schema.json"}
+            "candidate_result_ref": {"const": "schemas/candidate-result-ref.v1.schema.json"},
+            "candidate_lineage_manifest": {"const": "schemas/candidate-lineage-manifest.v1.schema.json"},
+            "candidate_slice_effect": {"const": "schemas/candidate-slice-effect.v1.schema.json"},
+            "candidate_supersession_proof": {"const": "schemas/candidate-supersession-proof.v1.schema.json"}
           }
         },
         "required_run_artifacts": {"$ref": "#/$defs/stringArray"},

@@ -7,29 +7,30 @@
 ## Required Checks
 
 1. Required books and unique ownership.
-2. Durable closed-set authority manifest, clarification projection, and fully bound Round 3 blocking disposition; no required clean-checkout authority may resolve under ignored `logs/**`.
-3. UTF-8 JSON parsing and strict validation against the declared implementation-contract and result-envelope schemas. Unsupported schema keywords fail closed.
+2. Durable closed-set authority manifest, clarification projection, immutable Round 3 blocker, and successor re-entry selector; no required clean-checkout authority may resolve under ignored `logs/**`.
+3. UTF-8 JSON parsing and strict validation against declared schemas; unsupported schema keywords fail closed.
 4. Markdown local-link closure.
-4. Requirement uniqueness, quality, owner, phase, acceptance, source, status, and evidence intent.
-5. Exact agreement among requirement registry, 97 ledger, 98 audit, and 99 coverage.
-6. Explicit `ADDED`, `MODIFIED`, `REMOVED`, and `RENAMED` delta semantics.
-7. Implementation-contract vocabulary, concrete authority-book hashes, slice dependency graph, command IDs, write/read/dependency sets, and authority policies.
-8. Command `shell=false`, environment allowlist, typed placeholders, resolved root containment including existing reparse points, and raw-shell rejection.
-9. Every slice GREEN command has an exact predicate/slice binding and its composite route checks slice-owned outputs or evidence.
-10. Source section IDs and selectors are derived from the hash-bound source structure and must match the coverage machine owner exactly.
-11. The union of all slice requirement IDs equals the complete active requirement registry.
-12. Shadow slices compare protected-tree hashes and file counts against an independent pre-backfill baseline.
-13. Every slice consumes explicit run/RED/GREEN/REFACTOR paths and verifies current hashes, observed exits, strict time/order, predecessor hashes, and recovery lineage; S6 proves exact Git/candidate/attempt-fold equality and reproducible test patch bytes, while S7 consumes an explicit hash-bound S6 candidate reference plus the repository Skill's finalized-run validation envelope.
-14. Every active requirement maps to one executable acceptance contract whose expected failure IDs equal the referenced negative fixtures' actual stable rules.
-15. Validation snapshots the plan, source, and validator before and after all checks; drift forces a non-authorizing failure envelope with distinct candidate/current hashes.
-16. Persisted Capsule schemas, predecessor hashes, context hashes, path containment, and non-authorizing predicate boundaries.
-17. Attempt request/response/diff/decision bindings, sensitive-content exclusions, monotonic lineage, decision-last finalization, event chain, and one accepted lineage per represented stage.
-9. Predicate-to-authority exactness and release exclusion.
-10. Shadow backfill exact population, order, additive-only policy, and non-authoritative status.
-11. Recovery initial/stale/successor state rules and append-only lineage.
-12. P0/P1 closure, P2 disposition, high-risk deferral rejection, and expiry blocking.
-13. Positive, negative, boundary, stale, and mutation fixtures with expected stable rule IDs.
-14. Validator unit tests executed, not inferred from source markers.
+5. Requirement uniqueness, quality, owner, phase, acceptance, source, status, and evidence intent.
+6. Exact agreement among requirement registry, 97 ledger, 98 audit, and 99 coverage.
+7. Explicit `ADDED`, `MODIFIED`, `REMOVED`, and `RENAMED` delta semantics.
+8. Implementation-contract vocabulary, concrete authority-book hashes, slice dependency graph, command IDs, write/read/dependency sets, and authority policies.
+9. Command `shell=false`, environment allowlist, typed placeholders, resolved root containment including reparse points, and raw-shell rejection.
+10. Every slice GREEN command has an exact predicate/slice binding and its composite route checks slice-owned outputs or evidence.
+11. Source section IDs and selectors are derived from the hash-bound source structure and must match the coverage machine owner exactly.
+12. The union of all slice requirement IDs equals the complete active requirement registry.
+13. Shadow slices compare protected-tree hashes and file counts against an independent pre-backfill baseline.
+14. Every slice consumes explicit stage evidence; S6 folds immutable S0-S6 run artifacts and proves exact Git/candidate/lineage equality plus reproducible patch bytes.
+15. S7 derives active-candidate status from recovery/events/successor evidence and consumes finalized Bootstrap artifacts plus runtime P2/verifier source evidence when applicable.
+16. Every active requirement maps to one executable acceptance contract whose expected failure IDs equal the referenced negative fixtures' actual stable rules.
+17. Validation snapshots plan, source, and validator before and after all checks; drift forces a non-authorizing failure envelope.
+18. Persisted Capsule schemas, predecessor hashes, context hashes, containment, and non-authorizing predicate boundaries.
+19. Attempt request/response/diff/decision bindings, sensitive-content exclusions, monotonic lineage, decision-last finalization, and one accepted lineage per represented stage.
+20. Predicate-to-authority exactness and release exclusion.
+21. Shadow backfill exact population, order, additive-only policy, and non-authoritative status.
+22. Recovery initial/stale/successor rules, append-only lineage, and successor-policy re-entry exactness.
+23. P0/P1 closure, runtime P2 disposition, high-risk deferral rejection, and expiry blocking.
+24. Positive, negative, boundary, stale, mutation, real Git for Windows, and junction containment tests.
+25. Validator unit tests executed, not inferred from source markers.
 
 ## Stable Rule Families
 
@@ -78,8 +79,7 @@ The minimum cases are:
 - backend commit/review authority;
 - authoritative old-plan shadow result;
 - successor starting as stale;
-- high-risk P2 deferral;
-- expired P2 deferral;
+- high-risk or expired runtime P2 disposition;
 - predicate authority escalation.
 - ADR-0041 identifier collision;
 - stale Capsule artifact bytes, omitted/extra/duplicate manifest refs, ambiguous typed root, or raw blocker payload;
@@ -90,7 +90,10 @@ The minimum cases are:
 - candidate changed-file omission, extra path, missing deletion, stale after hash, role drift, or untracked omission;
 - candidate accepted-attempt fold mismatch;
 - empty or non-reproducible test patch when test changes exist;
-- stale or superseded S7 candidate-result reference.
+- missing S0-S6 lineage slice or stale lineage hash;
+- stale S7 candidate-result reference or authoritative supersession proof;
+- stale blocker hash or pending re-entry artifact that gains authority;
+- real Git for Windows add/modify/delete/binary-patch behavior and junction escape.
 
 ## RED Before Implementation
 

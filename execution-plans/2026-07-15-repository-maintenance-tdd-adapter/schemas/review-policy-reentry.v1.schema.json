@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.review-policy-reentry.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "state",
+    "supersedes_blocker",
+    "successor_policy",
+    "semantic_closure",
+    "authorizes",
+    "does_not_authorize"
+  ],
+  "properties": {
+    "schema_version": {"const": "jimuyun.review-policy-reentry.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "state": {"enum": ["awaiting_successor_policy", "awaiting_semantic_closure", "reentry_authorized"]},
+    "supersedes_blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "review_id", "policy_revision"],
+      "properties": {
+        "path": {"const": "schemas/review-blocking-state.v1.json"},
+        "sha256": {"pattern": "^sha256:[0-9a-f]{64}$"},
+        "review_id": {"type": "string", "minLength": 1},
+        "policy_revision": {"pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "successor_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["change_id", "policy_revision", "authority_revision", "decision_path", "decision_sha256"],
+      "properties": {
+        "change_id": {"type": "string", "minLength": 1},
+        "policy_revision": {"pattern": "^sha256:[0-9a-f]{64}$"},
+        "authority_revision": {"type": "string", "minLength": 1},
+        "decision_path": {"type": "string", "minLength": 1},
+        "decision_sha256": {"pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "semantic_closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["review_id", "run_path", "envelope_sha256", "independent", "status"],
+      "properties": {
+        "review_id": {"type": "string", "minLength": 1},
+        "run_path": {"type": "string", "minLength": 1},
+        "envelope_sha256": {"pattern": "^sha256:[0-9a-f]{64}$"},
+        "independent": {"const": true},
+        "status": {"const": "clean"}
+      }
+    },
+    "authorizes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "does_not_authorize": {"type": "array", "items": {"type": "string"}, "uniqueItems": true, "minItems": 1}
+  }
+}

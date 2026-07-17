@@ -41,8 +41,11 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `ADDED`: clean-checkout shadow baseline projection, derived requirement-quality hashes, exact earliest-phase validation, and complete candidate identity policy.
 - `ADDED`: `RMAP-025` immutable persisted Capsule revisions with typed, exact-union, actual-byte artifact closure and `RMAP-026` complete ordered stage attempts with exact event lifecycle, recomputed diff facts, decision/stage-result binding, ledger-root closure, and S6 candidate binding.
 - `MODIFIED`: S6 candidate evidence is a cumulative baseline-to-final diff manifest that must exactly equal scoped Git state and the accepted-attempt fold; test patch bytes are reproducible and rename inference is disabled.
-- `MODIFIED`: S7 uses an explicit hash-bound non-superseded S6 candidate reference with an independent run ID.
-- `MODIFIED`: `RMAP-001/002` reuse the existing Accepted ADR-0041 and preserve 7-12 as a compatibility adapter; `RMAP-012/016` consume the repository-owned Bootstrap finalized-run validation envelope; `RMAP-014` adds byte-verifiable baseline and per-attempt result snapshots.
+- `MODIFIED`: S6 folds immutable S0-S6 run references, per-slice attempt effects, and final event hashes before comparing the cumulative result with Git.
+- `MODIFIED`: S7 replaces `superseded:false` with a hash-bound recovery/event/successor proof and consumes runtime Bootstrap P2/verifier sources.
+- `ADDED`: immutable manual-pause successor artifact binds the old blocker hash and requires a distinct policy/authority cycle plus independent semantic closure.
+- `MODIFIED`: `RMAP-001/002` reuse Accepted ADR-0041 and classify 7-12 only as a hash-bound compatibility input; `RMAP-012/016` consume repository-owned Bootstrap finalized/runtime evidence; `RMAP-014` owns cross-slice candidate lineage.
+- `MODIFIED`: ownership field `framework_adr` is renamed to `ownership_pattern_adr` without changing the accepted ADR-0041 identity.
 - `REMOVED`: mutable single-Capsule overwrite, standalone adapter-decision authority, and any need for a Router or S8.
 
 No requirement is silently dropped. Machine-level delta details live in `schemas/spec-deltas.v1.json`.

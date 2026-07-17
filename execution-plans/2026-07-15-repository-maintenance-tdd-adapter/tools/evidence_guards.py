@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,7 @@ HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 IDENTITY_FIELDS = {
     "head", "index_tree", "tracked_diff_hash", "untracked_manifest_hash", "contract_hash",
     "command_registry_hash", "validator_hash", "authority_manifest_hash",
-    "candidate_diff_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id",
+    "candidate_diff_manifest_hash", "candidate_lineage_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id",
     "refactor_run_id", "candidate_worktree_hash", "final_context_manifest_hash",
     "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash",
     "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash",
@@ -72,6 +73,37 @@ def validate_bootstrap_envelope_projection(
     return [_finding("RMAP-REVIEW-ENVELOPE", "finalized-run-validation", "finalized-run envelope profile, validator, or authority boundary is stale")] if invalid else []
 
 
+def validate_runtime_disposition_sources(review_dir: Path, envelope: dict[str, Any], findings_by_id: dict[str, dict[str, Any]], disposition_items: list[dict[str, Any]], candidate_path: str) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    open_p2 = {fid for fid, item in findings_by_id.items() if item.get("proposedSeverity") == "P2" and item.get("status") == "advisory"}
+    if open_p2:
+        p2_path = review_dir / "p2-dispositions.json"
+        metrics_path = review_dir / "review-metrics.json"
+        try:
+            p2_document = json.loads(p2_path.read_text(encoding="utf-8"))
+            metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+            runtime_p2 = {item.get("findingId"): item for item in p2_document.get("dispositions", []) if isinstance(item, dict)}
+        except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+            p2_document, metrics, runtime_p2 = {}, {}, {}
+        if not p2_path.is_file() or metrics.get("p2DispositionHash") != _sha256(p2_path):
+            findings.append(_finding("RMAP-REVIEW-P2-SOURCE", candidate_path, "Bootstrap metrics do not hash-bind runtime P2 dispositions"))
+        finalized_p2 = {item.get("findingId") for item in disposition_items if str(item.get("status", "")).startswith("p2_")}
+        if p2_document.get("schemaVersion") != "bootstrap-p2-dispositions.v1" or p2_document.get("reviewId") != envelope.get("reviewId") or p2_document.get("inputHash") != envelope.get("inputHash") or set(p2_document.get("findingIds", [])) != finalized_p2 or set(runtime_p2) != finalized_p2:
+            findings.append(_finding("RMAP-REVIEW-P2-SOURCE", candidate_path, "runtime P2 source identity differs from finalized finding closure"))
+        for finding_id in open_p2:
+            disposition = runtime_p2.get(finding_id, {})
+            required = all(disposition.get(key) for key in ("owner", "expiry", "closureTest", "reason"))
+            try:
+                expiry = datetime.fromisoformat(str(disposition.get("expiry", "")).replace("Z", "+00:00"))
+            except ValueError:
+                expiry = datetime.min.replace(tzinfo=timezone.utc)
+            if disposition.get("status") != "deferred" or disposition.get("risk") == "high" or not required or expiry <= datetime.now(timezone.utc):
+                findings.append(_finding("RMAP-REVIEW-P2-DISPOSITION", candidate_path, f"runtime P2 disposition is incomplete for {finding_id}"))
+    if any(item.get("proposedSeverity") in {"P0", "P1"} for item in findings_by_id.values()) and not (review_dir / "verifier-output.json").is_file():
+        findings.append(_finding("RMAP-REVIEW-VERIFIER-SOURCE", candidate_path, "blocking findings require runtime verifier source evidence"))
+    return findings
+
+
 def validate_candidate_document(
     plan_root: Path,
     candidate_path: str,
@@ -100,8 +132,9 @@ def validate_candidate_document(
     repository_root = plan_root.parents[1]
     evidence_dir = (repository_root / candidate_path).resolve().parent
     changed_manifest = evidence_dir / "changed-files.json"
+    lineage_manifest = evidence_dir / "candidate-lineage-manifest.json"
     test_diff = evidence_dir / "test-diff.patch"
-    expected_files = {"candidate_diff_manifest_hash": changed_manifest, "test_diff_hash": test_diff}
+    expected_files = {"candidate_diff_manifest_hash": changed_manifest, "candidate_lineage_manifest_hash": lineage_manifest, "test_diff_hash": test_diff}
     for key, path in expected_files.items():
         if not path.is_file() or identity.get(key) != _sha256(path):
             findings.append(_finding("RMAP-HASH-CANDIDATE-IDENTITY", candidate_path, f"candidate {key} does not bind its run artifact"))
@@ -121,6 +154,7 @@ def validate_candidate_document(
     findings.extend(protocol_findings)
     try:
         manifest = json.loads(changed_manifest.read_text(encoding="utf-8"))
+        lineage = json.loads(lineage_manifest.read_text(encoding="utf-8"))
         contract = json.loads((plan_root / "implementation-contract.v1.json").read_text(encoding="utf-8"))
         findings.extend(validate_candidate_diff(
             plan_root,
@@ -129,7 +163,7 @@ def validate_candidate_document(
             manifest,
             changed_manifest.relative_to(repository_root).as_posix(),
             test_diff.read_bytes(),
-            bundle,
+            lineage,
             current,
             str(candidate.get("run_id")),
         ))
@@ -171,7 +205,6 @@ def validate_candidate_review_documents(
     review_input: dict[str, Any],
     review_result: dict[str, Any],
     dispositions: dict[str, Any],
-    p2_deferrals: list[dict[str, Any]],
     current: dict[str, str],
     stage_documents: list[dict[str, Any]] | None = None,
     review_dir: Path | None = None,
@@ -200,6 +233,7 @@ def validate_candidate_review_documents(
             candidate_path,
             path.read_bytes(),
             candidate,
+            repository_root,
         ))
     profile_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "references" / "review-profiles.v1.json"
     validator_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "scripts" / "bootstrap_review.py"
@@ -281,8 +315,6 @@ def validate_candidate_review_documents(
         findings.append(_finding("RMAP-REVIEW-P2-DISPOSITION", candidate_path, "finding closure differs from finalized disposition set"))
     if any(item.get("proposedSeverity") in {"P0", "P1"} and item.get("status") in {"confirmed", "unverified"} for item in findings_by_id.values()):
         findings.append(_finding("RMAP-REVIEW-P0-P1-OPEN", candidate_path, "accepted P0/P1 remains open"))
-    deferrals = {item.get("finding_id") for item in p2_deferrals if isinstance(item, dict)}
-    open_p2 = {fid for fid, item in findings_by_id.items() if item.get("proposedSeverity") == "P2" and item.get("status") == "advisory"}
-    if open_p2 - deferrals:
-        findings.append(_finding("RMAP-REVIEW-P2-DISPOSITION", candidate_path, "accepted P2 lacks a current disposition"))
+    if review_dir is not None:
+        findings.extend(validate_runtime_disposition_sources(review_dir, envelope, findings_by_id, disposition_items, candidate_path))
     return findings

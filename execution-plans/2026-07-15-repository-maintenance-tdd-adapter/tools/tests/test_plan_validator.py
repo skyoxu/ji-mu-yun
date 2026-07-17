@@ -42,6 +42,7 @@ class PlanValidatorTests(unittest.TestCase):
         )}
         identity.update({
             "candidate_diff_manifest_hash": "sha256:" + "1" * 64,
+            "candidate_lineage_manifest_hash": "sha256:" + "9" * 64,
             "test_diff_hash": "sha256:" + "2" * 64,
             "red_run_id": "red-a", "green_run_id": "green-a", "refactor_run_id": "refactor-a",
             "final_context_manifest_hash": "sha256:" + "3" * 64,
@@ -121,8 +122,7 @@ class PlanValidatorTests(unittest.TestCase):
         (repository_root / target).write_bytes(file_versions[("ATTEMPT-003", "after", target)] or b"")
     def _candidate_run(self, current: dict[str, str]) -> tuple[Path, dict[str, object], list[dict[str, object]], dict[str, str]]:
         run_dir, stages, paths = self._stage_run(current)
-        test_diff = run_dir / "test-diff.patch"; test_diff.write_text("", encoding="utf-8")
-        bundle, protocol_findings = load_protocol_run(PLAN_ROOT, run_dir); self.assertEqual([], protocol_findings)
+        test_diff = run_dir / "test-diff.patch"; test_diff.write_text("", encoding="utf-8"); bundle, protocol_findings = load_protocol_run(PLAN_ROOT, run_dir); self.assertEqual([], protocol_findings)
         folded, fold_hash, fold_findings = fold_accepted_attempts(bundle); self.assertEqual([], fold_findings)
         files = [{**entry, "roles": ["test"], "scope": "allowed"} for entry in folded]
         changed_document = {
@@ -134,10 +134,11 @@ class PlanValidatorTests(unittest.TestCase):
             "test_diff_ref": {"path_type": "run_path", "path": "test-diff.patch", "sha256": "sha256:" + hashlib.sha256(test_diff.read_bytes()).hexdigest()},
             "root_hash": ""}
         changed_document["root_hash"] = manifest_root_hash(changed_document); changed = run_dir / "changed-files.json"
-        changed.write_text(json.dumps(changed_document), encoding="utf-8")
+        changed.write_text(json.dumps(changed_document), encoding="utf-8"); lineage = run_dir / "candidate-lineage-manifest.json"; lineage.write_text("{}", encoding="utf-8")
         candidate = self._candidate(current)
         identity = candidate["candidate_identity"]
         identity["candidate_diff_manifest_hash"] = "sha256:" + hashlib.sha256(changed.read_bytes()).hexdigest()
+        identity["candidate_lineage_manifest_hash"] = "sha256:" + hashlib.sha256(lineage.read_bytes()).hexdigest()
         identity["test_diff_hash"] = "sha256:" + hashlib.sha256(test_diff.read_bytes()).hexdigest()
         for stage in ("red", "green", "refactor"):
             identity[f"{stage}_run_id"] = "run-a"
@@ -237,7 +238,7 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertTrue(result)
     def test_validator_identity_binds_all_authorizing_helpers(self) -> None:
         digest = hashlib.sha256()
-        names = ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py")
+        names = ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py")
         for name in names:
             path = TOOLS / name
             digest.update(path.name.encode("utf-8")); digest.update(b"\0"); digest.update(path.read_bytes()); digest.update(b"\0")
@@ -346,32 +347,32 @@ class PlanValidatorTests(unittest.TestCase):
         envelope = {
             "schemaVersion": "bootstrap-finalized-run-validation.v1", "validationStatus": "passed",
             "reviewId": "review-a", "changeId": "change-a", "fullReviewRound": 1,
-            "profileName": "bootstrap-implementation-conformance", "reviewProfile": profile["reviewProfile"],
-            "routeVersion": profile["routeVersion"], "controlPlaneRevision": profile["controlPlaneRevision"],
-            "policyRevision": profile["policyRevision"], "profileHash": value_hash(profile),
-            "authorityRevision": current["head"], "inputHash": review_input["inputHash"],
-            "authorityContextHash": review_input["authorityContextHash"],
+            "profileName": "bootstrap-implementation-conformance", "reviewProfile": profile["reviewProfile"], "routeVersion": profile["routeVersion"], "controlPlaneRevision": profile["controlPlaneRevision"], "policyRevision": profile["policyRevision"], "profileHash": value_hash(profile),
+            "authorityRevision": current["head"], "inputHash": review_input["inputHash"], "authorityContextHash": review_input["authorityContextHash"],
             "artifactHashes": {key: "sha256:" + hashlib.sha256((review_dir / name).read_bytes()).hexdigest() for key, name in artifact_names.items()},
             "finalStatus": "clean", "findingClosure": {"candidateCount": 0, "visibleFindingCount": 0, "confirmedCount": 0, "advisoryCount": 0, "unverifiedCount": 0, "refutedCount": 0, "p2FixedCount": 0, "p2DeferredCount": 0, "p2RefutedCount": 0},
-            "validatorRevision": "bootstrap-finalized-run-validator.v1",
-            "validatorHash": "sha256:" + hashlib.sha256((repository_root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py").read_bytes()).hexdigest(),
-            "authorizes": [], "doesNotAuthorize": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"],
-            "generatedAt": "2026-07-17T00:00:00Z",
+            "validatorRevision": "bootstrap-finalized-run-validator.v1", "validatorHash": "sha256:" + hashlib.sha256((repository_root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py").read_bytes()).hexdigest(), "authorizes": [], "doesNotAuthorize": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"], "generatedAt": "2026-07-17T00:00:00Z",
         }
         (review_dir / "finalized-run-validation.json").write_text(json.dumps(envelope), encoding="utf-8")
         try:
             expected_diff = json.loads((candidate_path.parent / "changed-files.json").read_text(encoding="utf-8"))["files"]
             candidate_ref_dir = repository_root / "logs" / "tdd-adapter" / "repository-maintenance-tdd-adapter" / "RMAP-S7" / f"ref-{uuid.uuid4().hex}"
             candidate_ref_dir.mkdir(parents=True)
+            events = [{"event_type": "decision-finalized", "run_id": "run-a"}]
+            proof_inputs = {"recovery-state.json": {"run_id": "run-a", "state": "complete", "predecessor_run_id": None, "supersedes_run_id": None}, "run-events.jsonl": events[0]}
+            for name, document in proof_inputs.items(): (candidate_ref_dir / name).write_text(json.dumps(document) + ("\n" if name == "run-events.jsonl" else ""), encoding="utf-8")
+            artifact_ref = lambda name: {"path": (candidate_ref_dir / name).relative_to(repository_root).as_posix(), "sha256": "sha256:" + hashlib.sha256((candidate_ref_dir / name).read_bytes()).hexdigest()}
+            proof = {"schema_version": "jimuyun.candidate-supersession-proof.v1", "candidate_run_id": "run-a", "recovery_state_ref": artifact_ref("recovery-state.json"), "event_log_ref": artifact_ref("run-events.jsonl"), "successor_scan_root": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6", "final_event_hash": value_hash(events[-1]), "active_run_id": "run-a"}
+            proof_path = candidate_ref_dir / "candidate-supersession-proof.json"; proof_path.write_text(json.dumps(proof), encoding="utf-8")
             candidate_ref = {"schema_version": "jimuyun.candidate-result-ref.v1", "slice_id": "RMAP-S6", "run_id": "run-a",
                              "path": relative, "sha256": digest, "candidate_hash": value_hash(candidate),
-                             "predicate": "implementation-candidate", "superseded": False}
-            candidate_ref_path = candidate_ref_dir / "candidate-result-ref.json"
-            candidate_ref_path.write_text(json.dumps(candidate_ref), encoding="utf-8")
+                             "predicate": "implementation-candidate", "supersession_proof_ref": artifact_ref("candidate-supersession-proof.json")}
+            candidate_ref_path = candidate_ref_dir / "candidate-result-ref.json"; candidate_ref_path.write_text(json.dumps(candidate_ref), encoding="utf-8")
             candidate_ref_relative = candidate_ref_path.relative_to(repository_root).as_posix()
-            with patch("candidate_diff_guards.derive_candidate_snapshot", return_value=(expected_diff, b"")):
+            folded = [{key: item.get(key) for key in ("change_type", "baseline_path", "candidate_path", "before_sha256", "after_sha256")} for item in expected_diff]
+            with patch("candidate_diff_guards.derive_candidate_snapshot", return_value=(expected_diff, b"")), patch("candidate_diff_guards.load_candidate_lineage", return_value=(folded, value_hash(folded), [])):
                 self.assertEqual([], validate_candidate_document(PLAN_ROOT, relative, candidate, current, stages))
-                self.assertEqual([], validate_candidate_review_documents(PLAN_ROOT, relative, candidate, envelope, review_input, review_result, dispositions, [], current, stages, review_dir, candidate_ref, candidate_ref_relative))
+                self.assertEqual([], validate_candidate_review_documents(PLAN_ROOT, relative, candidate, envelope, review_input, review_result, dispositions, current, stages, review_dir, candidate_ref, candidate_ref_relative))
         finally:
             shutil.rmtree(candidate_path.parent); shutil.rmtree(review_dir); shutil.rmtree(candidate_ref_dir)
     def test_acceptance_rejects_open_p1(self) -> None:
@@ -386,13 +387,12 @@ class PlanValidatorTests(unittest.TestCase):
         dispositions = {**identity, "dispositions": [{"findingId": "P1-X"}]}
         envelope = {"finalStatus": "blocked", "findingClosure": {"candidateCount": 1, "visibleFindingCount": 1}}
         try:
-            rules = {item["rule_id"] for item in validate_candidate_review_documents(PLAN_ROOT, relative, candidate, envelope, review_input, result, dispositions, [], current)}
+            rules = {item["rule_id"] for item in validate_candidate_review_documents(PLAN_ROOT, relative, candidate, envelope, review_input, result, dispositions, current)}
             self.assertIn("RMAP-REVIEW-P0-P1-OPEN", rules)
         finally:
             path.unlink(missing_ok=True)
     def test_each_requirement_maps_to_one_complete_delta(self) -> None:
-        ids = {item["id"] for item in self.data["requirements"]["requirements"]}
-        self.assertEqual([], validate_deltas(PLAN_ROOT, self.data["deltas"], ids))
+        ids = {item["id"] for item in self.data["requirements"]["requirements"]}; self.assertEqual([], validate_deltas(PLAN_ROOT, self.data["deltas"], ids))
     def test_mutation_helper_supports_list_append_and_remove(self) -> None:
         self.assertEqual({"items": ["x"]}, apply_mutations({"items": []}, [{"op": "add", "path": "/items/-", "value": "x"}]))
         self.assertEqual({}, apply_mutations({"value": "x"}, [{"op": "remove", "path": "/value"}]))

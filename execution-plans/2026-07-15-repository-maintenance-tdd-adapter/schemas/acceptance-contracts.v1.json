@@ -322,10 +322,10 @@
         "rmap-s2-slice-validate"
       ],
       "negative_fixture_ids": [
-        "candidate-after-hash-stale"
+        "candidate-lineage-missing-slice"
       ],
       "expected_failure_ids": [
-        "RMAP-CANDIDATE-DIFF-EXACT"
+        "RMAP-CANDIDATE-LINEAGE"
       ],
       "evidence_required": [
         "current-contract-hash",
@@ -333,7 +333,8 @@
         "stage-result",
         "stable-rule-id",
         "baseline-and-candidate-byte-hashes",
-        "candidate-worktree-identity"
+        "candidate-worktree-identity",
+        "cross-slice-candidate-lineage"
       ],
       "exit_predicate": "slice-ready"
     },
@@ -372,10 +373,10 @@
         "rmap-s7-acceptance-validate"
       ],
       "negative_fixture_ids": [
-        "candidate-result-ref-stale"
+        "candidate-supersession-stale"
       ],
       "expected_failure_ids": [
-        "RMAP-CANDIDATE-REF"
+        "RMAP-CANDIDATE-SUPERSESSION"
       ],
       "evidence_required": [
         "current-contract-hash",
@@ -383,7 +384,9 @@
         "stage-result",
         "stable-rule-id",
         "candidate-result-ref",
-        "non-superseded-predecessor-run"
+        "non-superseded-predecessor-run",
+        "runtime-p2-dispositions",
+        "runtime-verifier-source-when-applicable"
       ],
       "exit_predicate": "implementation-accepted"
     },

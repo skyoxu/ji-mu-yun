@@ -56,9 +56,11 @@ def validate_fixture_document(plan_root: Path, target: str, document: dict[str, 
     if target == "command_registry":
         return validate_commands(document)
     if target == "plan_state":
-        return validate_plan_state(document, data["review_blocker"])
+        return validate_plan_state(document, data["review_blocker"], data["review_reentry"])
     if target == "review_blocker":
-        return validate_plan_state(data["state"], document)
+        return validate_plan_state(data["state"], document, data["review_reentry"])
+    if target == "review_reentry":
+        return validate_plan_state(data["state"], data["review_blocker"], document)
     if target == "authority_manifest":
         return validate_authority_manifest(plan_root, document)
     if target == "clarification_projection":
@@ -96,7 +98,7 @@ def evaluate_fixture(plan_root: Path, fixture_id: str, data: dict[str, Any]) -> 
         document["profileHash"] = "sha256:" + document["profileHash"]
         mutated = apply_mutations(document, case.get("mutations", []))
         return validate_fixture_document(plan_root, case["target"], mutated, data)
-    base_key = {"contract": "contract", "command_registry": "commands", "plan_state": "state", "review_blocker": "review_blocker", "authority_manifest": "authority_manifest", "clarification_projection": "clarification", "acceptance": "acceptance", "requirement_quality": "quality", "shadow": "shadow", "source_coverage": "coverage"}.get(case.get("target"))
+    base_key = {"contract": "contract", "command_registry": "commands", "plan_state": "state", "review_blocker": "review_blocker", "review_reentry": "review_reentry", "authority_manifest": "authority_manifest", "clarification_projection": "clarification", "acceptance": "acceptance", "requirement_quality": "quality", "shadow": "shadow", "source_coverage": "coverage"}.get(case.get("target"))
     if base_key is None:
         return [finding("RMAP-STRUCT-FIXTURE", fixture_id, "fixture target is invalid")]
     mutated = apply_mutations(data[base_key], case.get("mutations", []))

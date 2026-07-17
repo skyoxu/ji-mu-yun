@@ -7,7 +7,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from contract_guards import schema_error
+from candidate_lineage_guards import fold_accepted_attempts, load_candidate_lineage, validate_candidate_lineage_model, validate_candidate_result_ref, validate_candidate_supersession_model
+from contract_guards import contained_file, schema_error
 
 
 HASH_RE = "sha256:"
@@ -112,7 +113,10 @@ def _head_blob(repository_root: Path, path: str) -> bytes | None:
 def _file_entry(repository_root: Path, path: str, policy: dict[str, set[str]]) -> dict[str, Any]:
     before = _head_blob(repository_root, path)
     current_path = repository_root / path
-    after = current_path.read_bytes() if current_path.is_file() else None
+    safe_path = contained_file(repository_root, path) if current_path.exists() else None
+    if current_path.exists() and safe_path is None:
+        raise ValueError(f"candidate path crosses repository containment: {path}")
+    after = safe_path.read_bytes() if safe_path is not None else None
     change_type = "add" if before is None else "delete" if after is None else "modify"
     roles, scope = _classify(path, policy)
     return {
@@ -153,41 +157,6 @@ def derive_candidate_snapshot(plan_root: Path, repository_root: Path, contract: 
     return entries, _canonical_test_patch(repository_root, entries)
 
 
-def fold_accepted_attempts(bundle: dict[str, Any]) -> tuple[list[dict[str, Any]], str, list[dict[str, str]]]:
-    baseline = {entry.get("path"): entry.get("sha256") for entry in bundle.get("baseline_file_manifest", {}).get("files", [])}
-    current = dict(baseline)
-    touched: set[str] = set()
-    findings: list[dict[str, str]] = []
-    for attempt in bundle.get("attempts", []):
-        decision = attempt.get("adapter_decision", {})
-        if decision.get("decision") != "accepted_for_validation":
-            continue
-        attempt_id = str(decision.get("attempt_id"))
-        for entry in attempt.get("diff_manifest", {}).get("files", []):
-            path = entry.get("path")
-            if path not in baseline:
-                findings.append(_finding("RMAP-CANDIDATE-LEDGER-FOLD", attempt_id, f"baseline manifest omits {path}"))
-                continue
-            if entry.get("before_sha256") != current.get(path):
-                findings.append(_finding("RMAP-CANDIDATE-LEDGER-FOLD", attempt_id, f"before hash does not continue accepted state for {path}"))
-            current[path] = entry.get("after_sha256")
-            touched.add(str(path))
-    folded: list[dict[str, Any]] = []
-    for path in sorted(touched, key=str.casefold):
-        before, after = baseline.get(path), current.get(path)
-        if before == after:
-            continue
-        change_type = "add" if before is None else "delete" if after is None else "modify"
-        folded.append({
-            "change_type": change_type,
-            "baseline_path": None if change_type == "add" else path,
-            "candidate_path": None if change_type == "delete" else path,
-            "before_sha256": before,
-            "after_sha256": after,
-        })
-    return folded, value_hash(folded), findings
-
-
 def _core(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     keys = ("change_type", "baseline_path", "candidate_path", "before_sha256", "after_sha256")
     return [{key: entry.get(key) for key in keys} for entry in entries]
@@ -200,12 +169,12 @@ def validate_candidate_diff(
     manifest: dict[str, Any],
     manifest_path: str,
     test_patch: bytes,
-    bundle: dict[str, Any],
+    lineage: dict[str, Any],
     current: dict[str, str],
     candidate_run_id: str,
 ) -> list[dict[str, str]]:
     expected, expected_patch = derive_candidate_snapshot(plan_root, repository_root, contract)
-    folded, fold_hash, fold_findings = fold_accepted_attempts(bundle)
+    folded, fold_hash, fold_findings = load_candidate_lineage(plan_root, repository_root, lineage, candidate_run_id, current)
     if fold_findings:
         return fold_findings
     return validate_candidate_model(
@@ -307,6 +276,28 @@ def validate_candidate_fixture_suite(plan_root: Path) -> list[dict[str, str]]:
     if base_observed:
         findings.append(_finding("RMAP-STRUCT-FIXTURE", "valid-candidate-diff", f"valid fixture failed: {sorted({item['rule_id'] for item in base_observed})}"))
     for case in document["cases"]:
+        if case["target"] == "lineage":
+            lineage = json.loads(json.dumps(base["lineage"]))
+            for mutation in case.get("mutations", []):
+                lineage = _mutate(lineage, mutation)
+            observed = validate_candidate_lineage_model(plan_root, lineage, [(item["document"], item["raw"].encode("utf-8")) for item in base["lineage_runs"]], base["candidate_run_id"], base["current_identity"])
+            rules = {item["rule_id"] for item in observed[2]}
+            if rules != {case["expected_rule"]}:
+                findings.append(_finding("RMAP-STRUCT-FIXTURE", case["id"], f"expected {case['expected_rule']}, observed {sorted(rules)}"))
+            continue
+        if case["target"] in {"supersession", "supersession_index"}:
+            recovery = json.loads(json.dumps(base["supersession_recovery"]))
+            successor_run_ids = list(base["supersession_successor_run_ids"])
+            for mutation in case.get("mutations", []):
+                if case["target"] == "supersession":
+                    recovery = _mutate(recovery, mutation)
+                else:
+                    successor_run_ids = _mutate(successor_run_ids, mutation)
+            observed = validate_candidate_supersession_model(plan_root, base["supersession_proof"], recovery, base["supersession_events"], successor_run_ids, base["candidate_run_id"])
+            rules = {item["rule_id"] for item in observed}
+            if rules != {case["expected_rule"]}:
+                findings.append(_finding("RMAP-STRUCT-FIXTURE", case["id"], f"expected {case['expected_rule']}, observed {sorted(rules)}"))
+            continue
         if case["target"] == "candidate_ref":
             candidate = base["candidate_document"]
             candidate_bytes = json.dumps(candidate, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -356,24 +347,3 @@ def validate_candidate_fixture_suite(plan_root: Path) -> list[dict[str, str]]:
         if rules != {case["expected_rule"]}:
             findings.append(_finding("RMAP-STRUCT-FIXTURE", case["id"], f"expected {case['expected_rule']}, observed {sorted(rules)}"))
     return findings
-
-
-def validate_candidate_result_ref(
-    plan_root: Path,
-    candidate_ref: dict[str, Any],
-    ref_path: str,
-    candidate_path: str,
-    candidate_bytes: bytes,
-    candidate: dict[str, Any],
-) -> list[dict[str, str]]:
-    schema = json.loads((plan_root / "schemas" / "candidate-result-ref.v1.schema.json").read_text(encoding="utf-8"))
-    error = schema_error(candidate_ref, schema)
-    if error:
-        return [_finding("RMAP-CANDIDATE-REF", ref_path, error)]
-    invalid = (
-        candidate_ref.get("path") != candidate_path
-        or candidate_ref.get("sha256") != bytes_hash(candidate_bytes)
-        or candidate_ref.get("candidate_hash") != value_hash(candidate)
-        or candidate_ref.get("run_id") != candidate.get("run_id")
-    )
-    return [_finding("RMAP-CANDIDATE-REF", ref_path, "S7 candidate reference is stale, superseded, or points to different bytes")] if invalid else []

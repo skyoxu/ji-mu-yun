@@ -30,7 +30,7 @@ Work:
 - reject raw sensitive evidence, partial attempts, stale bindings, and duplicate accepted stage lineages;
 - run the non-protected self-hosted slice.
 
-Exit: current candidate evidence proves the complete lifecycle, cumulative Git/attempt-fold equality, reproducible test patch, explicit S7 predecessor reference, and every negative/mutation test passes.
+Exit: current candidate evidence proves the complete lifecycle, cumulative Git/S0-S6 lineage equality, reproducible test patch, authoritative S7 predecessor proof, and every negative/mutation/integration test passes.
 
 ## P2: Additive Shadow Backfill
 
@@ -52,15 +52,15 @@ Owner: change owner plus Bootstrap operator.
 
 Work:
 
-- produce a current implementation candidate after all P2 shadow changes and bind the final Capsule plus accepted attempt decision;
+- produce a current implementation candidate after all P2 shadow changes and bind the final Capsule, accepted decisions, and immutable S0-S6 lineage;
 - bind plan-mandated checks through existing Bootstrap extension points and consume only the repository Skill's finalized-run validation envelope;
 - perform semantic review only with explicit authorization;
-- repair all accepted P0/P1 and dispose every accepted P2;
+- repair all accepted P0/P1 and consume runtime Bootstrap disposition evidence for every accepted P2;
 - run the plan-local `implementation-accepted` predicate.
 
-Exit: S7 references one non-superseded S6 candidate independently of its own run ID, no open accepted P0/P1 remains, all accepted P2 are fixed or validly deferred, no high-risk/expired deferral remains, and the fresh plan-local envelope authorizes only implementation acceptance.
+Exit: S7 proves one active S6 candidate through recovery/events/successor evidence independently of its own run ID, no open accepted P0/P1 remains, runtime P2 disposition/verifier evidence is complete, no high-risk/expired deferral remains, and the fresh plan-local envelope authorizes only implementation acceptance.
 
-Current state: blocked before P0 by `manual_pause_after_round_3`. A new policy revision and independent semantic closure decision are required before any phase can start.
+Current state: blocked before P0 by `manual_pause_after_round_3`. `schemas/review-policy-reentry.v1.json` remains `awaiting_successor_policy`; a distinct successor change/policy/authority decision and independent clean semantic closure envelope are required before any phase can start.
 
 ## Deferred P4
 

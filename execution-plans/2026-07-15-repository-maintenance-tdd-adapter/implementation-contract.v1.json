@@ -14,17 +14,17 @@
       "../../.agents/skills/vdd-execution-plan/references/strict-vdd-standard.md": "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140",
       "../2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md": "sha256:b6c840acd67ee64fe4092baba7061cd61bb5b669b6ec8f00db8e5f9f12180efb",
       "../2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json": "sha256:ca42e682cd6077a13b61d261ca75f70d98b1717547324c71c40b92c16de4048a",
-      "00-index.md": "sha256:2e16a61f84edb0b74eab08dadcfab584e202f3a54fe1568f814c66222fa46192",
-      "01-intent-authority-and-non-goals.md": "sha256:a8eb319a9717943466c424335dbd03ccffa5d741def945ad261e29d476209a97",
-      "02-executable-contracts-and-invariants.md": "sha256:fa9894a53745f2e74575360ac80e596375e3be7d8aa3d98625a7d2bb4a87d8ca",
-      "03-validators-fixtures-and-control-gates.md": "sha256:5a9db566826b11ef5dc6910facfb3f303f4ac16f486467aa591ec9ebdad709b1",
-      "04-behavior-slices-and-implementation-order.md": "sha256:0444980f6e5e9d6842972506084cf144aff269d78521bf12d130feb05f6bcef6",
-      "05-diagnostics-repair-and-reentry.md": "sha256:748f4f082ad632f1c451221d351ffb82bb446e9a686740165d0832eb4338afc7",
-      "06-testing-observability-and-evidence.md": "sha256:1dbe3921fd361de9caa84d2648bb4fdc9a6c9fcf529356bf1be27a23839f7f20",
-      "96-global-review-and-validation.md": "sha256:04e9138766ca860c12bbd4281cc47dab99ce2febc1725462d9e0d6455eda9ee2",
-      "schemas/clarification-decisions.v1.json": "sha256:6a8583dfe8194c36894c77931a962db4d60513a82d22a376e2644ce3189dad4d",
+      "00-index.md": "sha256:ac84d8e345837bca5829ea68418db5384ac3bc94b45dc9d80e4818b187f23307",
+      "01-intent-authority-and-non-goals.md": "sha256:91281c80fa2c5780da2fb67811fe892567475d18117a9f025a4cbe849ad9823b",
+      "02-executable-contracts-and-invariants.md": "sha256:0460381a2dcbd82589878f4a4a57d922078ce5b5e9fcde5b395ab4593882db52",
+      "03-validators-fixtures-and-control-gates.md": "sha256:4c4013e02eb08af2b18e2f7c0b1bea13c1b6f8f960244ceca46fd2a013054a2d",
+      "04-behavior-slices-and-implementation-order.md": "sha256:e0da5e46758d19948febe83eec6b6d6735aadd3c6187c3d98e5bb49070cc7d7d",
+      "05-diagnostics-repair-and-reentry.md": "sha256:d65fca15e45a83408bf182432de8239c84001f53a6ab850f82e9b2f69fdfe2f5",
+      "06-testing-observability-and-evidence.md": "sha256:bf5bb93fdf7599f0edd94e581bb4eea64262078968bd5e9e4c2c98464458ed3e",
+      "96-global-review-and-validation.md": "sha256:b4518651763ca141a56b404612baa305a564b31c7cd6d3fed0598a7001ec83be",
+      "schemas/clarification-decisions.v1.json": "sha256:eb6aa2000e33316d45e358fdbfc1028c51fddf27202dfc7f953017cb507321f3",
       "schemas/review-blocking-state.v1.json": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
-      "schemas/acceptance-contracts.v1.json": "sha256:14a62d03da73cb829ce19ef29ea62e27c357803167e86716ae324d2d3883afd2",
+      "schemas/acceptance-contracts.v1.json": "sha256:4d7eab5832bd95bfb5794a5776b2fc43babeff1b36337874bb0217ffadb0e6d6",
       "../../.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json": "sha256:ab7263698123b5af20e47f6ae771e5ebf652537169efcd7ce839d8aa0299d16d",
       "../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
       "../../docs/standards/bootstrap-review-control-plane.md": "sha256:542a5661e750e9708b4fc9acd939f00d6e6e240bf299fa49062bdaec04e08382",
@@ -36,14 +36,15 @@
     "acceptance_contracts": "schemas/acceptance-contracts.v1.json",
     "authority_manifest": "schemas/authority-manifest.v1.json",
     "clarification_projection": "schemas/clarification-decisions.v1.json",
-    "review_blocking_state": "schemas/review-blocking-state.v1.json"
+    "review_blocking_state": "schemas/review-blocking-state.v1.json",
+    "review_policy_reentry": "schemas/review-policy-reentry.v1.json"
   },
   "ownership": {
-    "framework_adr": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
     "standard_owner": "docs/standards/repository-maintenance-agent-protocol.md",
     "common_protocol_owner": ".agents/skills/quick-dev-tdd-adapter",
     "plan_instance_owner": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
-    "runtime_evidence_owner": "logs/tdd-adapter"
+    "runtime_evidence_owner": "logs/tdd-adapter",
+    "ownership_pattern_adr": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md"
   },
   "command_registry": "schemas/command-registry.v1.json",
   "backend": {
@@ -134,10 +135,10 @@
     "p2_requires_disposition": true,
     "high_risk_p2_deferrable": false,
     "expired_p2_deferral_blocks": true,
-    "p2_deferrals": [],
     "confidence_authoritative": false,
     "confidence_improvement_round_limit": 3,
-    "release_authorized": false
+    "release_authorized": false,
+    "runtime_disposition_source": "bootstrap-finalized-run"
   },
   "shadow_backfills": [
     {
@@ -678,7 +679,10 @@
         "implementation-contract.v1.json",
         "schemas/authority-manifest.v1.json",
         "schemas/acceptance-contracts.v1.json",
-        "schemas/candidate-diff-manifest.v1.schema.json"
+        "schemas/candidate-diff-manifest.v1.schema.json",
+        "schemas/candidate-lineage-manifest.v1.schema.json",
+        "schemas/candidate-supersession-proof.v1.schema.json",
+        "schemas/candidate-slice-effect.v1.schema.json"
       ],
       "tdd": {
         "red": {
@@ -755,7 +759,11 @@
         "implementation-contract.v1.json",
         "schemas/plan-state.v1.json",
         "schemas/candidate-result-ref.v1.schema.json",
-        ".agents/skills/quick-dev-tdd-adapter/**"
+        ".agents/skills/quick-dev-tdd-adapter/**",
+        "schemas/candidate-lineage-manifest.v1.schema.json",
+        "schemas/candidate-supersession-proof.v1.schema.json",
+        "schemas/review-policy-reentry.v1.json",
+        "schemas/candidate-slice-effect.v1.schema.json"
       ],
       "tdd": {
         "red": {
@@ -798,7 +806,10 @@
     "rename_policy": "delete-add-no-renames",
     "candidate_artifact_schemas": {
       "candidate_diff_manifest": "schemas/candidate-diff-manifest.v1.schema.json",
-      "candidate_result_ref": "schemas/candidate-result-ref.v1.schema.json"
+      "candidate_result_ref": "schemas/candidate-result-ref.v1.schema.json",
+      "candidate_lineage_manifest": "schemas/candidate-lineage-manifest.v1.schema.json",
+      "candidate_supersession_proof": "schemas/candidate-supersession-proof.v1.schema.json",
+      "candidate_slice_effect": "schemas/candidate-slice-effect.v1.schema.json"
     },
     "required_run_artifacts": [
       "changed-files.json",
@@ -815,7 +826,8 @@
       "adapter-decision.v1.json",
       "run-events.jsonl",
       "baseline-file-manifest.v1.json",
-      "attempt-ledger-manifest.v1.json"
+      "attempt-ledger-manifest.v1.json",
+      "candidate-lineage-manifest.json"
     ],
     "stage_binding": {
       "contract_and_validator_hashes_current": true,
@@ -844,6 +856,7 @@
       "validator_hash",
       "authority_manifest_hash",
       "candidate_diff_manifest_hash",
+      "candidate_lineage_manifest_hash",
       "test_diff_hash",
       "red_run_id",
       "green_run_id",

@@ -57,6 +57,14 @@ def refresh_quality() -> None:
     write_json(path, document)
 
 
+def refresh_coverage() -> None:
+    path = PLAN_ROOT / "schemas" / "source-coverage.v1.json"
+    document = read_json(path)
+    for source in document["sources"]:
+        source["sha256"] = sha256_file((PLAN_ROOT / source["path"]).resolve())
+    write_json(path, document)
+
+
 def refresh_authority_manifest() -> None:
     path = PLAN_ROOT / "schemas" / "authority-manifest.v1.json"
     manifest = read_json(path)
@@ -66,8 +74,20 @@ def refresh_authority_manifest() -> None:
     write_json(path, manifest)
 
 
+def refresh_clarification() -> None:
+    path = PLAN_ROOT / "schemas" / "clarification-decisions.v1.json"
+    document = read_json(path)
+    run_id = "clarification-20260717T090544Z"
+    state_path = REPOSITORY_ROOT / "logs" / "vdd-clarifications" / "2026-07-15-repository-maintenance-tdd-adapter-f6d1143a" / run_id / "state.json"
+    source = next(item for item in document["sources"] if item["run_id"] == run_id)
+    source["state_sha256"] = sha256_file(state_path)
+    write_json(path, document)
+
+
 def main() -> int:
+    refresh_clarification()
     refresh_contract()
+    refresh_coverage()
     refresh_deltas()
     refresh_quality()
     refresh_authority_manifest()

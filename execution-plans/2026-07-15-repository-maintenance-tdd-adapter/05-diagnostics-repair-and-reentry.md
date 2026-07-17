@@ -27,6 +27,8 @@ Every failure record contains:
 | Stale hash or concurrent closure drift | run recovery and re-entry |
 | Candidate diff, test patch, or accepted-attempt fold incomplete | candidate evidence validator and evidence maintainer |
 | S7 references a stale or superseded S6 candidate | acceptance predecessor contract |
+| S0-S6 lineage omits a slice or breaks predecessor/event hashes | candidate lineage contract |
+| Runtime P2 or verifier source evidence is missing/stale | Bootstrap acceptance evidence contract |
 
 Never weaken a validator to match a candidate without an explicit contract delta and regression counterexample.
 
@@ -69,7 +71,7 @@ Security, data-loss, authority-bypass, evidence-integrity, irreversible-mutation
 - Historical evidence is never rewritten to make a later run pass.
 - Capsule overwrite, attempt-ID reuse, raw sensitive-content persistence, or transition authority in `adapter-decision` stops the run.
 
-The current stop-loss owner is [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json). It records `manual_pause_after_round_3`, forbids Round 4 under the current policy revision, and requires a new external policy decision for semantic re-entry.
+The current stop-loss owner is [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json). It remains immutable. [`schemas/review-policy-reentry.v1.json`](schemas/review-policy-reentry.v1.json) is the only successor selector: pending states authorize nothing; `reentry_authorized` requires a different change/policy/authority identity, current decision bytes, and an independent clean semantic closure envelope bound to that exact successor cycle.
 
 Deterministic repair may produce new plan-local validation evidence and a corrected candidate, but it cannot mutate the Round 3 disposition. After repair, semantic re-entry begins only through a separately recorded durable policy decision and a new authority cycle; it must not be represented as Round 4 of the existing `changeId` policy cycle.
 
@@ -82,3 +84,5 @@ Round 2 repair uses `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/202
 Round 3 repair uses `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-p1-r3-repair-baseline/baseline-manifest.json` and preserves all eight finalized Round 3 P1 dispositions. The repair covers slice requirement union, restricted-token junction testing, S0 ownership RED, independent shadow-byte baselines, and current S6/S7 evidence binding. Because the semantic review hard limit is exhausted, deterministic closure retains `manual_pause` and cannot claim the Bootstrap blockers closed.
 
 The follow-up control-chain repair baseline is `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260716-222-repair-baseline/baseline-manifest.json`. It preserves the pre-repair target hash and the local false-positive `plan-ready` PASS. Its candidate may prove only `plan-repair-verified`; it cannot rewrite any prior disposition.
+
+The 1200 repair baseline is `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260717-1200-repair-baseline/baseline-manifest.json`. It preserves the 66-file pre-repair inventory, the old 51-test self-consistent PASS, the expected manual-pause block, and the missing successor, cross-slice lineage, supersession, runtime P2, Windows containment, and compatibility-classification controls. New evidence supersedes none of the historical review dispositions.

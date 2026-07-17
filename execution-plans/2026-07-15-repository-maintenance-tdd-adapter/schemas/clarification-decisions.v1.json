@@ -33,6 +33,14 @@
       "authority_hash": "sha256:64b5e7a9df63004d748d3a3586f9547ae29e60679bf141d048140233aaed0cb2",
       "status": "closed",
       "write_disposition": "normal"
+    },
+    {
+      "kind": "repair",
+      "run_id": "clarification-20260717T090544Z",
+      "state_sha256": "sha256:2aaaeb4c040b3fbb913270dfdd6b52b55d993506c348656f5a86b585de65a486",
+      "authority_hash": "sha256:18b0352d1951e1679ac43f8f2c057089368acfc71567050334ec937243220332",
+      "status": "closed",
+      "write_disposition": "normal"
     }
   ],
   "decision_sets": {
@@ -294,6 +302,38 @@
         "blocking": true,
         "summary": "Preserve manual-pause authority during deterministic repair and define later re-entry.",
         "decision": "Keep the blocker byte-stable; require a later durable policy revision, new authority cycle, and independent semantic closure before requesting plan-ready."
+      }
+    ],
+    "repair_20260717_1200": [
+      {
+        "id": "CQ-001",
+        "status": "accepted",
+        "summary": "Prioritize reentry and cumulative lineage.",
+        "decision": "Add machine successor and S0-S6 lineage contracts."
+      },
+      {
+        "id": "CQ-002",
+        "status": "accepted",
+        "summary": "Derive supersession from authority.",
+        "decision": "Bind recovery, event, and successor evidence."
+      },
+      {
+        "id": "CQ-003",
+        "status": "accepted",
+        "summary": "Consume runtime P2 dispositions.",
+        "decision": "Remove static future finding IDs from the plan contract."
+      },
+      {
+        "id": "CQ-004",
+        "status": "accepted",
+        "summary": "Exercise real Git and containment.",
+        "decision": "Use disposable Git repositories and reparse guards."
+      },
+      {
+        "id": "CQ-005",
+        "status": "accepted",
+        "summary": "Reclassify compatibility inputs.",
+        "decision": "Hash-bind 7-12 inputs without policy authority."
       }
     ]
   },

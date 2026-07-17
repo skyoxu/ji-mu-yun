@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from pathlib import Path
 from typing import Any
+
+from contract_guards import contained_file, schema_error
 
 
 HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -18,12 +21,53 @@ def _sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def validate_plan_state(state: dict[str, Any], review_blocker: dict[str, Any], predicate_authority: dict[str, tuple[list[str], list[str]]]) -> list[dict[str, str]]:
+def validate_review_reentry(plan_root: Path, review_blocker: dict[str, Any], reentry: dict[str, Any]) -> list[dict[str, str]]:
+    schema = json.loads((plan_root / "schemas" / "review-policy-reentry.v1.schema.json").read_text(encoding="utf-8"))
+    error = schema_error(reentry, schema)
+    if error:
+        return [_finding("RMAP-REVIEW-REENTRY", "review-policy-reentry", error)]
+    blocker_path = plan_root / "schemas" / "review-blocking-state.v1.json"
+    predecessor = reentry["supersedes_blocker"]
+    if predecessor.get("sha256") != _sha256_file(blocker_path) or predecessor.get("review_id") != review_blocker.get("review_id") or predecessor.get("policy_revision") != review_blocker.get("policy_revision"):
+        return [_finding("RMAP-REVIEW-REENTRY", "review-policy-reentry", "successor does not bind the immutable Round 3 blocker")]
+    exclusions = {"plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"}
+    if reentry.get("state") != "reentry_authorized":
+        if reentry.get("authorizes") != [] or set(reentry.get("does_not_authorize", [])) != exclusions:
+            return [_finding("RMAP-REVIEW-REENTRY", "review-policy-reentry", "pending reentry artifact gained authority")]
+        return []
+    policy = reentry["successor_policy"]
+    closure = reentry["semantic_closure"]
+    repository_root = plan_root.parents[1]
+    decision_path = contained_file(repository_root, policy.get("decision_path"))
+    envelope_path = contained_file(repository_root, closure.get("run_path"))
+    decision_hash_invalid = decision_path is None or policy.get("decision_sha256") != _sha256_file(decision_path)
+    invalid = (
+        policy.get("policy_revision") == review_blocker.get("policy_revision")
+        or policy.get("change_id") == review_blocker.get("change_id")
+        or policy.get("authority_revision") == review_blocker.get("authority_revision")
+        or decision_hash_invalid
+    )
+    if invalid or envelope_path is None or closure.get("envelope_sha256") != _sha256_file(envelope_path):
+        return [_finding("RMAP-REVIEW-REENTRY", "review-policy-reentry", "successor policy or semantic closure evidence is stale")]
+    try:
+        envelope = json.loads(envelope_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+        return [_finding("RMAP-REVIEW-REENTRY", "review-policy-reentry", "semantic closure envelope is unreadable")]
+    if envelope.get("reviewId") != closure.get("review_id") or envelope.get("policyRevision") != policy.get("policy_revision") or envelope.get("authorityRevision") != policy.get("authority_revision") or envelope.get("validationStatus") != "passed" or envelope.get("finalStatus") != "clean" or reentry.get("authorizes") != ["plan-ready"] or set(reentry.get("does_not_authorize", [])) != exclusions - {"plan-ready"}:
+        return [_finding("RMAP-REVIEW-REENTRY", "review-policy-reentry", "semantic closure does not authorize exact plan reentry")]
+    return []
+
+
+def validate_plan_state(plan_root: Path, state: dict[str, Any], review_blocker: dict[str, Any], reentry: dict[str, Any], predicate_authority: dict[str, tuple[list[str], list[str]]]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
-    if state.get("status") != "blocked" or len(state.get("open_blockers", [])) != 1:
+    findings.extend(validate_review_reentry(plan_root, review_blocker, reentry))
+    reentry_authorized = reentry.get("state") == "reentry_authorized" and not findings
+    expected_status = "plan-ready" if reentry_authorized else "blocked"
+    expected_blockers = 0 if reentry_authorized else 1
+    if state.get("status") != expected_status or len(state.get("open_blockers", [])) != expected_blockers:
         findings.append(_finding("RMAP-REVIEW-MANUAL-PAUSE", "plan-state", "Round 3 manual pause is not represented as the active blocker"))
     blocking = state.get("blocking_disposition", {})
-    if blocking.get("path") != "schemas/review-blocking-state.v1.json" or blocking.get("state") != "manual_pause_after_round_3" or blocking.get("reentry") != "new_review_policy_decision_required":
+    if blocking.get("path") != "schemas/review-blocking-state.v1.json" or blocking.get("state") != "manual_pause_after_round_3" or blocking.get("reentry") != "schemas/review-policy-reentry.v1.json":
         findings.append(_finding("RMAP-REVIEW-MANUAL-PAUSE", "plan-state", "blocking disposition is missing or inconsistent"))
     required_blocker = {"schema_version": "rmap.review-blocking-state.v1", "plan_id": "repository-maintenance-tdd-adapter", "state": "manual_pause_after_round_3", "status": "blocked", "full_review_round": 3, "confirmed_p1_count": 8, "round_4_authorized": False}
     if any(review_blocker.get(key) != value for key, value in required_blocker.items()) or set(review_blocker.get("blocks_predicates", [])) != {"plan-ready", "slice-ready", "implementation-candidate", "implementation-accepted"}:
@@ -77,7 +121,7 @@ def validate_script_sizes(plan_root: Path) -> list[dict[str, str]]:
 
 def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
-    required_categories = {"intent_authority", "repository_rules", "architecture_authority", "protocol_authority", "review_policy_authority", "plan_books", "machine_owners", "execution_dependencies"}
+    required_categories = {"intent_authority", "repository_rules", "architecture_authority", "protocol_authority", "review_policy_authority", "compatibility_inputs", "plan_books", "machine_owners", "execution_dependencies"}
     categories = manifest.get("categories")
     if manifest.get("schema_version") != "rmap.authority-manifest.v1" or not isinstance(categories, dict) or set(categories) != required_categories:
         return [_finding("RMAP-HASH-AUTHORITY-MANIFEST", "authority-manifest", "authority categories are incomplete")]
@@ -139,9 +183,11 @@ def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> li
         "schemas/adapter-decision.v1.schema.json", "schemas/agent-attempt-event.v1.schema.json",
         "schemas/baseline-file-manifest.v1.schema.json", "schemas/attempt-ledger-manifest.v1.schema.json",
         "schemas/candidate-diff-manifest.v1.schema.json", "schemas/candidate-result-ref.v1.schema.json",
+        "schemas/candidate-lineage-manifest.v1.schema.json", "schemas/candidate-slice-effect.v1.schema.json", "schemas/candidate-supersession-proof.v1.schema.json",
+        "schemas/review-policy-reentry.v1.schema.json", "schemas/review-policy-reentry.v1.json",
         "fixtures/fixture-cases.v1.json", "fixtures/capsule-attempt-cases.v1.json", "fixtures/candidate-diff-cases.v1.json", "tools/validate_all.py",
         "tools/rmap_checks.py", "tools/authority_guards.py", "tools/contract_guards.py",
-        "tools/evidence_guards.py", "tools/candidate_diff_guards.py", "tools/current_state_guards.py", "tools/fixture_checks.py", "tools/shadow_guards.py",
+        "tools/evidence_guards.py", "tools/candidate_diff_guards.py", "tools/candidate_lineage_guards.py", "tools/current_state_guards.py", "tools/fixture_checks.py", "tools/shadow_guards.py",
         "tools/slice_guards.py", "tools/source_guards.py", "tools/protocol_guards.py",
         "tools/protocol_validation_guards.py", "tools/protocol_fixture_support.py",
         "tools/protocol_fixture_cases.py",
@@ -160,7 +206,7 @@ def validate_clarification_projection(projection: dict[str, Any], state: dict[st
         return [_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "projection schema is invalid")]
     sources = projection.get("sources", [])
     source_fields = {"kind", "run_id", "state_sha256", "authority_hash", "status", "write_disposition"}
-    if [item.get("kind") for item in sources if isinstance(item, dict)] != ["creation", "repair", "repair", "repair"] or any(set(item) != source_fields or item.get("status") != "closed" for item in sources):
+    if [item.get("kind") for item in sources if isinstance(item, dict)] != ["creation", "repair", "repair", "repair", "repair"] or any(set(item) != source_fields or item.get("status") != "closed" for item in sources):
         findings.append(_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "source lineage is incomplete"))
     sets = projection.get("decision_sets", {})
     expected_sets = {
@@ -168,6 +214,7 @@ def validate_clarification_projection(projection: dict[str, Any], state: dict[st
         "repair": [f"CQ-{index:03d}" for index in range(1, 6)],
         "repair_20260717": [f"CQ-{index:03d}" for index in range(1, 8)],
         "repair_20260717_999": [f"CQ-{index:03d}" for index in range(1, 8)],
+        "repair_20260717_1200": [f"CQ-{index:03d}" for index in range(1, 6)],
     }
     if set(sets) != set(expected_sets) or any([item.get("id") for item in sets.get(name, [])] != ids for name, ids in expected_sets.items()):
         findings.append(_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "decision identity set is incomplete"))

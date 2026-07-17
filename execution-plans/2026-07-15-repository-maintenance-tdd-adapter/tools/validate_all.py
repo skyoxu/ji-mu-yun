@@ -33,7 +33,7 @@ REPOSITORY_ROOT = PLAN_ROOT.parents[1]
 
 def validator_identity() -> str:
     digest = hashlib.sha256()
-    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
+    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
     for path in (Path(__file__).with_name(name) for name in names):
         digest.update(path.name.encode("utf-8"))
         digest.update(b"\0")
@@ -218,7 +218,8 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
     fixture_findings.extend(validate_candidate_fixture_suite(PLAN_ROOT) if data else [])
     findings.extend(fixture_findings)
     checks.append({"rule_id": "RMAP-FIXTURES", "status": "pass" if not fixture_findings else "fail", "evidence": ["positive, negative, boundary, stale, and mutation cases"]})
-    blocked_predicates = set(data.get("review_blocker", {}).get("blocks_predicates", []))
+    reentry_authorized = data.get("review_reentry", {}).get("state") == "reentry_authorized"
+    blocked_predicates = set() if reentry_authorized else set(data.get("review_blocker", {}).get("blocks_predicates", []))
     if predicate in blocked_predicates:
         findings.append({"rule_id": "RMAP-REVIEW-MANUAL-PAUSE", "target": predicate, "message": "Round 3 manual pause requires a new review policy decision"})
         checks.append({"rule_id": "RMAP-REVIEW-MANUAL-PAUSE", "status": "blocked", "evidence": [data.get("review_blocker", {}).get("review_id", "missing review id")]})
@@ -263,7 +264,7 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
                                 raise ValueError("candidate reference must stay in logs/tdd-adapter")
                             documents = [strict_load(review_dir / "finalized-run-validation.json"), strict_load(review_dir / "review-input.json"), strict_load(review_dir / "review-gate-result.json"), strict_load(review_dir / "review-dispositions.json")]
                             candidate_ref_document = strict_load(candidate_ref_path)
-                            slice_findings.extend(validate_candidate_review_documents(PLAN_ROOT, candidate_relative, candidate, *documents, data["contract"].get("acceptance_policy", {}).get("p2_deferrals", []), current, stage_documents, review_dir, candidate_ref_document, candidate_ref_relative))
+                            slice_findings.extend(validate_candidate_review_documents(PLAN_ROOT, candidate_relative, candidate, *documents, current, stage_documents, review_dir, candidate_ref_document, candidate_ref_relative))
                     except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
                         slice_findings.append({"rule_id": "RMAP-REVIEW-EVIDENCE-BINDING", "target": slice_id, "message": str(exc)})
             slice_check["status"] = "pass" if not slice_findings else "fail"

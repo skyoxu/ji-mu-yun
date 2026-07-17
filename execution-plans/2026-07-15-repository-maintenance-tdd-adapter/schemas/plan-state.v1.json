@@ -12,18 +12,19 @@
     "repair_run_ids": [
       "repair-20260716T081500Z",
       "repair-20260717T013023Z",
-      "clarification-20260717T063016Z"
+      "clarification-20260717T063016Z",
+      "clarification-20260717T090544Z"
     ],
-    "current_repair_run_id": "clarification-20260717T063016Z",
+    "current_repair_run_id": "clarification-20260717T090544Z",
     "status": "closed",
     "write_disposition": "normal",
-    "confidence": 97
+    "confidence": 96
   },
   "blocking_disposition": {
     "path": "schemas/review-blocking-state.v1.json",
     "state": "manual_pause_after_round_3",
     "blocker_id": "RMAP-BLOCK-BOOTSTRAP-MANUAL-PAUSE",
-    "reentry": "new_review_policy_decision_required"
+    "reentry": "schemas/review-policy-reentry.v1.json"
   },
   "predicates": {
     "plan-repair-verified": {
@@ -94,7 +95,7 @@
       "blocker_id": "RMAP-BLOCK-BOOTSTRAP-MANUAL-PAUSE",
       "source_review_id": "repo-maint-tdd-final-r3-20260716-110837",
       "reason": "round_3_p1_dispositions_not_semantically_reclosed",
-      "reentry": "new_review_policy_decision_required"
+      "reentry": "schemas/review-policy-reentry.v1.json"
     }
   ],
   "current_capabilities": {

@@ -11,11 +11,12 @@
 | Recovery mutates failed history | Append-only run directories and stale successors | Prior evidence changes bytes |
 | Capsule becomes mutable hidden state | One immutable revision per invocation plus predecessor hash | Capsule overwrite or unbound revision |
 | Attempt ledger leaks prompts or authority | Minimized envelopes, raw hashes, decision `authorizes=[]` | Raw sensitive body or transition authority persisted |
-| Candidate manifest omits a real change | Recompute scoped tracked/untracked Git state and accepted-attempt fold independently | Manifest, Git set, fold, role, or byte hash differs |
+| Candidate manifest omits an earlier slice change | Recompute scoped Git state and fold immutable S0-S6 run artifacts | Manifest, Git set, lineage, role, or byte hash differs |
 | Test patch is decorative or stale | Generate binary-safe patch bytes from the cumulative candidate manifest | Patch cannot be reproduced or omits a changed test |
-| S7 consumes the wrong S6 candidate | Explicit non-superseded path/hash/run/predicate reference | Same-string run inference, latest lookup, or stale candidate bytes |
+| S7 consumes the wrong S6 candidate | Hash-bind recovery/events/final event and scan canonical successor recovery | Same-string/latest lookup, caller-owned empty index, or superseded run |
 | Old plans are accidentally promoted | Additive metadata and shadow-only predicates | Existing plan status/book changes |
 | P2 deferrals hide material risk | Non-deferrable risk families and expiry blocking | Missing owner, proof, expiry, or closure test |
+| Old manual-pause blocker is edited in place | Immutable blocker plus successor re-entry selector | Missing predecessor hash or same policy/authority cycle |
 | Adapter grows into a Router | No provider scheduler or hidden state | New central intent/plan selection logic |
 | Historical script directories grow new authority | New Skill owns common execution | New adapter semantics added to `scripts/sc` or `scripts/python` without ADR delta |
 | Large validator becomes unmaintainable | Keep files under 400 lines where practical and split by responsibility | Unapproved oversized mixed-concern script |
@@ -40,10 +41,10 @@
 - Self-hosted TDD lifecycle and recovery evidence pass.
 - Persisted Capsule revisions and accepted attempt lineage are current and candidate-bound.
 - Cumulative candidate diff, accepted-attempt fold, and test patch are exact and reproducible.
-- S7 binds one explicit non-superseded S6 candidate reference independently of its own run ID.
+- S7 binds one explicit S6 candidate and proves active status from authoritative recovery/event/successor evidence independently of its own run ID.
 - Three shadow backfills pass without authority changes.
 - Bootstrap review is finalized under current hashes.
-- No open accepted P0/P1; every accepted P2 is disposed; high-risk and expired deferrals are absent.
+- No open accepted P0/P1; runtime Bootstrap P2/verifier source evidence is complete; high-risk and expired deferrals are absent.
 - Plan-local validator authorizes implementation acceptance and explicitly excludes release.
 
 ## Glossary
@@ -58,3 +59,6 @@
 - **Shadow backfill**: additive, non-authoritative contract and fixture projection onto an existing plan.
 - **Disposition**: fixed or validly deferred resolution of an accepted P2.
 - **High-risk P2**: advisory-severity finding in a non-deferrable security, data-loss, authority, evidence-integrity, irreversible-mutation, or release-bypass family.
+- **Candidate lineage manifest**: immutable S0-S6 run references and fold/event hashes that reconstruct cumulative candidate effects.
+- **Supersession proof**: hash-bound recovery, event, and successor evidence proving which S6 candidate run remains active.
+- **Review-policy re-entry**: successor selector that preserves the old blocker and requires a distinct policy/authority cycle plus independent semantic closure.

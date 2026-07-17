@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.candidate-slice-effect.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "slice_id", "run_id", "baseline_files", "effects", "accepted_attempt_ids", "attempt_ledger_manifest_hash", "run_events_hash", "final_event_hash", "root_hash"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.candidate-slice-effect.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "slice_id": {"pattern": "^RMAP-S[0-6]$"},
+    "run_id": {"type": "string", "minLength": 1},
+    "baseline_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["change_type", "baseline_path", "candidate_path", "before_sha256", "after_sha256"],
+        "properties": {
+          "change_type": {"enum": ["add", "modify", "delete"]},
+          "baseline_path": {"type": ["string", "null"]},
+          "candidate_path": {"type": ["string", "null"]},
+          "before_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
+          "after_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "accepted_attempt_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "attempt_ledger_manifest_hash": {"pattern": "^sha256:[0-9a-f]{64}$"},
+    "run_events_hash": {"pattern": "^sha256:[0-9a-f]{64}$"},
+    "final_event_hash": {"pattern": "^sha256:[0-9a-f]{64}$"},
+    "root_hash": {"pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}
