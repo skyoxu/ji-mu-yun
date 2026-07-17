@@ -15,6 +15,7 @@ from rmap_checks import (
     validate_requirements,
     validate_shadow_registry,
 )
+from artifact_proof_guards import validate_artifact_proofs
 from evidence_guards import validate_bootstrap_envelope_projection
 
 
@@ -76,6 +77,8 @@ def validate_fixture_document(plan_root: Path, target: str, document: dict[str, 
         return validate_coverage(plan_root, document, requirement_ids)
     if target == "bootstrap_envelope":
         return validate_bootstrap_envelope_projection(plan_root.parents[1], document)
+    if target == "artifact_proofs":
+        return validate_artifact_proofs(plan_root, document, data["authority_manifest"])
     return [finding("RMAP-STRUCT-FIXTURE", target, "unknown fixture target")]
 
 
@@ -92,13 +95,14 @@ def evaluate_fixture(plan_root: Path, fixture_id: str, data: dict[str, Any]) -> 
             "schemaVersion": "bootstrap-finalized-run-validation.v1", "validationStatus": "passed", "reviewId": "fixture-review", "changeId": "fixture-change", "fullReviewRound": 1,
             "profileName": "bootstrap-implementation-conformance", "reviewProfile": profile["reviewProfile"], "routeVersion": profile["routeVersion"], "controlPlaneRevision": profile["controlPlaneRevision"], "policyRevision": profile["policyRevision"],
             "profileHash": __import__("hashlib").sha256(__import__("json").dumps(profile, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")).hexdigest(),
-            "authorityRevision": "fixture-authority", "inputHash": "sha256:" + "1" * 64, "authorityContextHash": "sha256:" + "2" * 64, "artifactHashes": {}, "finalStatus": "clean", "findingClosure": {},
-            "validatorRevision": "bootstrap-finalized-run-validator.v1", "validatorHash": "sha256:" + __import__("hashlib").sha256(validator.read_bytes()).hexdigest(), "authorizes": [], "doesNotAuthorize": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"], "generatedAt": "2026-07-17T00:00:00Z",
+            "authorityRevision": "fixture-authority", "inputHash": "sha256:" + "1" * 64, "authorityContextHash": "sha256:" + "2" * 64, "artifactHashes": {key: "sha256:" + "3" * 64 for key in ("reviewInput", "preflightResult", "gateState", "candidates", "rejections", "finalResult", "dispositions", "metrics", "verifierOutput")}, "finalStatus": "clean", "findingClosure": {},
+            "validatorRevision": "bootstrap-finalized-run-validator.v2", "validatorHash": "sha256:" + __import__("hashlib").sha256(validator.read_bytes()).hexdigest(), "authorizes": [], "doesNotAuthorize": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"], "generatedAt": "2026-07-17T00:00:00Z",
         }
+        document["artifactHashes"]["p2Dispositions"] = None
         document["profileHash"] = "sha256:" + document["profileHash"]
         mutated = apply_mutations(document, case.get("mutations", []))
         return validate_fixture_document(plan_root, case["target"], mutated, data)
-    base_key = {"contract": "contract", "command_registry": "commands", "plan_state": "state", "review_blocker": "review_blocker", "review_reentry": "review_reentry", "authority_manifest": "authority_manifest", "clarification_projection": "clarification", "acceptance": "acceptance", "requirement_quality": "quality", "shadow": "shadow", "source_coverage": "coverage"}.get(case.get("target"))
+    base_key = {"contract": "contract", "command_registry": "commands", "plan_state": "state", "review_blocker": "review_blocker", "review_reentry": "review_reentry", "authority_manifest": "authority_manifest", "clarification_projection": "clarification", "acceptance": "acceptance", "requirement_quality": "quality", "shadow": "shadow", "source_coverage": "coverage", "artifact_proofs": "artifact_proofs"}.get(case.get("target"))
     if base_key is None:
         return [finding("RMAP-STRUCT-FIXTURE", fixture_id, "fixture target is invalid")]
     mutated = apply_mutations(data[base_key], case.get("mutations", []))

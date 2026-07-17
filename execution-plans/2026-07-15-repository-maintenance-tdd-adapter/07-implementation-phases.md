@@ -12,9 +12,10 @@ Work:
 - migrate the common schema candidate into its single live owner;
 - define public persisted Capsule and append-only attempt schemas;
 - keep this plan's contract instance and predicates self-hosted;
+- establish the exact review-added artifact registry and prove producer authority, immutable identity, source derivation, independent recomputation, staleness, supersession, and consumer authorization boundaries;
 - observe negative fixture RED.
 
-Exit: existing ADR-0041 remains Accepted, ownership is unique, the collision fixture is rejected, the common schema has one live owner, the plan instance passes `slice-ready`, and no runtime capability is claimed.
+Exit: existing ADR-0041 remains Accepted, ownership is unique, the collision fixture and incomplete artifact proof fixture are rejected, the common schema has one live owner, the plan instance passes `slice-ready`, and no runtime capability is claimed.
 
 ## P1: Stateless Adapter And TDD Lifecycle
 

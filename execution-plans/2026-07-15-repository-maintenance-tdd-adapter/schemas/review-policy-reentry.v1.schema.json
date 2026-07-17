@@ -31,11 +31,12 @@
     "successor_policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["change_id", "policy_revision", "authority_revision", "decision_path", "decision_sha256"],
+      "required": ["change_id", "policy_revision", "authority_revision", "input_hash", "decision_path", "decision_sha256"],
       "properties": {
         "change_id": {"type": "string", "minLength": 1},
         "policy_revision": {"pattern": "^sha256:[0-9a-f]{64}$"},
         "authority_revision": {"type": "string", "minLength": 1},
+        "input_hash": {"pattern": "^sha256:[0-9a-f]{64}$"},
         "decision_path": {"type": "string", "minLength": 1},
         "decision_sha256": {"pattern": "^sha256:[0-9a-f]{64}$"}
       }
@@ -43,12 +44,12 @@
     "semantic_closure": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["review_id", "run_path", "envelope_sha256", "independent", "status"],
+      "required": ["review_id", "bootstrap_run_path", "envelope_path", "envelope_sha256", "status"],
       "properties": {
         "review_id": {"type": "string", "minLength": 1},
-        "run_path": {"type": "string", "minLength": 1},
+        "bootstrap_run_path": {"type": "string", "minLength": 1},
+        "envelope_path": {"type": "string", "minLength": 1},
         "envelope_sha256": {"pattern": "^sha256:[0-9a-f]{64}$"},
-        "independent": {"const": true},
         "status": {"const": "clean"}
       }
     },

@@ -12,14 +12,15 @@
     "change_id": "pending",
     "policy_revision": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
     "authority_revision": "pending",
+    "input_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
     "decision_path": "pending",
     "decision_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
   "semantic_closure": {
     "review_id": "pending",
-    "run_path": "pending",
+    "bootstrap_run_path": "pending",
+    "envelope_path": "pending",
     "envelope_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-    "independent": true,
     "status": "clean"
   },
   "authorizes": [],

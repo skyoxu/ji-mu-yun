@@ -21,7 +21,8 @@ def _expected_locations(source_id: str, source_path: Path) -> list[tuple[str, st
     repair_20260717 = [item.get("id") for item in decision_sets.get("repair_20260717", []) if item.get("status") == "accepted"]
     repair_999 = [item.get("id") for item in decision_sets.get("repair_20260717_999", []) if item.get("status") == "accepted"]
     repair_1200 = [item.get("id") for item in decision_sets.get("repair_20260717_1200", []) if item.get("status") == "accepted"]
-    if creation != [f"CQ-{index:03d}" for index in range(1, 18)] or repair != [f"CQ-{index:03d}" for index in range(1, 6)] or repair_20260717 != [f"CQ-{index:03d}" for index in range(1, 8)] or repair_999 != [f"CQ-{index:03d}" for index in range(1, 8)] or repair_1200 != [f"CQ-{index:03d}" for index in range(1, 6)]:
+    repair_1300 = [item.get("id") for item in decision_sets.get("repair_20260717_1300", []) if item.get("status") == "accepted"]
+    if creation != [f"CQ-{index:03d}" for index in range(1, 18)] or repair != [f"CQ-{index:03d}" for index in range(1, 6)] or repair_20260717 != [f"CQ-{index:03d}" for index in range(1, 8)] or repair_999 != [f"CQ-{index:03d}" for index in range(1, 8)] or repair_1200 != [f"CQ-{index:03d}" for index in range(1, 6)] or repair_1300 != [f"CQ-{index:03d}" for index in range(1, 6)]:
         return []
     return [
         ("CREATE-CQ-001-005", "creation:CQ-001..CQ-005"),
@@ -31,6 +32,7 @@ def _expected_locations(source_id: str, source_path: Path) -> list[tuple[str, st
         ("REPAIR-20260717-CQ-001-007", "repair-20260717:CQ-001..CQ-007"),
         ("REPAIR-20260717-999-CQ-001-007", "repair-20260717-999:CQ-001..CQ-007"),
         ("REPAIR-20260717-1200-CQ-001-005", "repair-20260717-1200:CQ-001..CQ-005"),
+        ("REPAIR-20260717-1300-CQ-001-005", "repair-20260717-1300:CQ-001..CQ-005"),
     ]
 
 
@@ -59,7 +61,7 @@ def validate_coverage(
         if not source_path.is_file() or sha256_file(source_path) != source.get("sha256"):
             findings.append(_finding("RMAP-HASH-SOURCE", source_id, "source is missing or stale"))
         sections = source.get("sections")
-        expected_count = 9 if source_id == "agentbuild" else 7
+        expected_count = 9 if source_id == "agentbuild" else 8
         if not isinstance(sections, list) or len(sections) != expected_count:
             findings.append(_finding("RMAP-REQ-COVERAGE", source_id, "section coverage is incomplete")); continue
         if source_path.is_file() and not _locations_are_exact(source_id, sections, source_path):

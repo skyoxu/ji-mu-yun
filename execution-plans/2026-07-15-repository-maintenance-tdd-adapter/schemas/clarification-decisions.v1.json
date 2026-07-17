@@ -41,6 +41,14 @@
       "authority_hash": "sha256:18b0352d1951e1679ac43f8f2c057089368acfc71567050334ec937243220332",
       "status": "closed",
       "write_disposition": "normal"
+    },
+    {
+      "kind": "repair",
+      "run_id": "clarification-20260717T190000Z",
+      "state_sha256": "sha256:4a899682250f19cd3043ae77848ce99ffb96e6aefaa69cf3c12075b6183b169c",
+      "authority_hash": "sha256:89a741b5fdf49d38501d450814fcf8154fafc1832c1b9ec415ac2e8144c76bc9",
+      "status": "closed",
+      "write_disposition": "normal"
     }
   ],
   "decision_sets": {
@@ -334,6 +342,38 @@
         "status": "accepted",
         "summary": "Reclassify compatibility inputs.",
         "decision": "Hash-bind 7-12 inputs without policy authority."
+      }
+    ],
+    "repair_20260717_1300": [
+      {
+        "id": "CQ-001",
+        "status": "accepted",
+        "summary": "Confirm upstream Bootstrap producer scope.",
+        "decision": "Apply the minimal producer schema, validator, test, standard, and compatibility changes needed for transitive evidence closure."
+      },
+      {
+        "id": "CQ-002",
+        "status": "accepted",
+        "summary": "Confirm deferred P2 evidence semantics.",
+        "decision": "Require owner authority, non-impact evidence, registered closure command, current recheck evidence, expiry, and trigger; require successful process evidence only when closing."
+      },
+      {
+        "id": "CQ-003",
+        "status": "accepted",
+        "summary": "Confirm the uniform artifact proof scope.",
+        "decision": "Apply one seven-dimensional machine proof contract to every review-added normative, projection, evidence, lineage, or validator artifact."
+      },
+      {
+        "id": "CQ-004",
+        "status": "accepted",
+        "summary": "Confirm legacy evidence treatment.",
+        "decision": "Preserve weak legacy evidence as history, prohibit it from authorizing, and require regenerated successor evidence."
+      },
+      {
+        "id": "CQ-005",
+        "status": "accepted",
+        "summary": "Confirm the seventh proof dimension.",
+        "decision": "Use consumer and authorization boundary as the seventh dimension."
       }
     ]
   },

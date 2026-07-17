@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from contract_guards import contained_file, schema_error
+from protocol_guards import load_protocol_run
 
 
 def _finding(rule_id: str, target: str, message: str) -> dict[str, str]:
@@ -40,8 +41,11 @@ def fold_accepted_attempts(bundle: dict[str, Any], initial: dict[str, str | None
         for entry in attempt.get("diff_manifest", {}).get("files", []):
             path = entry.get("path")
             if path not in baseline:
-                findings.append(_finding("RMAP-CANDIDATE-LEDGER-FOLD", attempt_id, f"baseline manifest omits {path}"))
-                continue
+                if entry.get("change_type") != "add" or entry.get("before_sha256") is not None:
+                    findings.append(_finding("RMAP-CANDIDATE-LEDGER-FOLD", attempt_id, f"new path is not introduced by add with a null before hash: {path}"))
+                    continue
+                baseline[path] = None
+                current[path] = None
             if entry.get("before_sha256") != current.get(path):
                 findings.append(_finding("RMAP-CANDIDATE-LEDGER-FOLD", attempt_id, f"before hash does not continue accepted state for {path}"))
             current[path] = entry.get("after_sha256")
@@ -69,12 +73,19 @@ def validate_candidate_lineage_model(plan_root: Path, lineage: dict[str, Any], r
     current_state: dict[str, str | None] = {}
     original: dict[str, str | None] = {}
     initialized = False
+    previous_slice_id: str | None = None
     previous_run_id: str | None = None
+    previous_effect_hash: str | None = None
     findings: list[dict[str, str]] = []
     effect_schema = json.loads((plan_root / "schemas" / "candidate-slice-effect.v1.schema.json").read_text(encoding="utf-8"))
     for ref, (effect, raw_bytes) in zip(refs, run_documents, strict=True):
-        if ref.get("predecessor_run_id") != previous_run_id or ref.get("run_artifact_sha256") != bytes_hash(raw_bytes):
-            findings.append(_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), "run predecessor or artifact hash is stale"))
+        if (
+            ref.get("previous_slice_id") != previous_slice_id
+            or ref.get("previous_slice_run_id") != previous_run_id
+            or ref.get("previous_slice_effect_hash") != previous_effect_hash
+            or ref.get("run_artifact_sha256") != bytes_hash(raw_bytes)
+        ):
+            findings.append(_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), "previous-slice effect chain or artifact hash is stale"))
             continue
         run_id = str(ref.get("run_id"))
         effect_error = schema_error(effect, effect_schema)
@@ -94,12 +105,19 @@ def validate_candidate_lineage_model(plan_root: Path, lineage: dict[str, Any], r
             findings.append(_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), "accepted attempt fold hash is stale"))
         for entry in effects:
             path = str(entry.get("candidate_path") or entry.get("baseline_path"))
-            if path not in original or entry.get("before_sha256") != current_state.get(path):
+            if path not in original:
+                if entry.get("change_type") != "add" or entry.get("before_sha256") is not None or path in current_state:
+                    findings.append(_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), f"new path is not a first add for {path}"))
+                original[path] = None
+                current_state[path] = None
+            if entry.get("before_sha256") != current_state.get(path):
                 findings.append(_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), f"slice effect does not continue accepted state for {path}"))
             current_state[path] = entry.get("after_sha256")
         if ref.get("final_event_hash") != effect.get("final_event_hash"):
             findings.append(_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), "final event hash is stale"))
         previous_run_id = run_id
+        previous_slice_id = str(ref.get("slice_id"))
+        previous_effect_hash = bytes_hash(raw_bytes)
     cumulative = []
     for path in sorted(set(original) | set(current_state), key=str.casefold):
         before, after = original.get(path), current_state.get(path)
@@ -113,19 +131,91 @@ def validate_candidate_lineage_model(plan_root: Path, lineage: dict[str, Any], r
 
 
 def load_candidate_lineage(plan_root: Path, repository_root: Path, lineage: dict[str, Any], candidate_run_id: str, current: dict[str, str]) -> tuple[list[dict[str, Any]], str, list[dict[str, str]]]:
-    documents = []
-    for ref in lineage.get("slice_runs", []):
+    schema = json.loads((plan_root / "schemas" / "candidate-lineage-manifest.v1.schema.json").read_text(encoding="utf-8"))
+    error = schema_error(lineage, schema)
+    if error:
+        return [], value_hash([]), [_finding("RMAP-CANDIDATE-LINEAGE", "candidate-lineage-manifest", error)]
+    refs = lineage.get("slice_runs", [])
+    if [item.get("slice_id") for item in refs] != [f"RMAP-S{index}" for index in range(7)]:
+        return [], value_hash([]), [_finding("RMAP-CANDIDATE-LINEAGE", "candidate-lineage-manifest", "slice lineage must cover S0 through S6 exactly once")]
+    if lineage.get("candidate_run_id") != candidate_run_id or lineage.get("baseline_identity") != {key: current.get(key) for key in ("head", "index_tree")}:
+        return [], value_hash([]), [_finding("RMAP-CANDIDATE-LINEAGE", "candidate-lineage-manifest", "candidate or baseline identity is stale")]
+    effect_schema = json.loads((plan_root / "schemas" / "candidate-slice-effect.v1.schema.json").read_text(encoding="utf-8"))
+    original: dict[str, str | None] = {}
+    current_state: dict[str, str | None] = {}
+    initialized = False
+    previous_slice_id: str | None = None
+    previous_run_id: str | None = None
+    previous_effect_hash: str | None = None
+    findings: list[dict[str, str]] = []
+    for ref in refs:
         path = contained_file(repository_root, ref.get("run_path"))
         if path is None:
             return [], value_hash([]), [_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), "run artifact escapes repository or crosses a reparse point")]
         raw = path.read_bytes()
         effect = json.loads(raw.decode("utf-8"))
+        effect_error = schema_error(effect, effect_schema)
+        if effect_error:
+            return [], value_hash([]), [_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), effect_error)]
+        if (
+            ref.get("previous_slice_id") != previous_slice_id
+            or ref.get("previous_slice_run_id") != previous_run_id
+            or ref.get("previous_slice_effect_hash") != previous_effect_hash
+            or ref.get("run_artifact_sha256") != bytes_hash(raw)
+        ):
+            findings.append(_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), "previous-slice effect chain or artifact hash is stale"))
+        bundle, protocol_findings = load_protocol_run(plan_root, path.parent)
+        if protocol_findings:
+            return [], value_hash([]), protocol_findings
         ledger_path = contained_file(path.parent, "attempt-ledger-manifest.v1.json")
         events_path = contained_file(path.parent, "run-events.jsonl")
-        if ledger_path is None or events_path is None or effect.get("attempt_ledger_manifest_hash") != bytes_hash(ledger_path.read_bytes()) or effect.get("run_events_hash") != bytes_hash(events_path.read_bytes()):
-            return [], value_hash([]), [_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), "slice effect does not bind current ledger and event bytes")]
-        documents.append((effect, raw))
-    return validate_candidate_lineage_model(plan_root, lineage, documents, candidate_run_id, current)
+        events = bundle.get("events", [])
+        if ledger_path is None or events_path is None or not events:
+            return [], value_hash([]), [_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), "complete ledger and event sources are required")]
+        if not initialized:
+            baseline_entries = bundle.get("baseline_file_manifest", {}).get("files", [])
+            original = {str(entry.get("path")): entry.get("sha256") for entry in baseline_entries}
+            current_state = dict(original)
+            initialized = True
+        projected_baseline = {str(entry.get("path")): entry.get("sha256") for entry in effect.get("baseline_files", [])}
+        if projected_baseline != original:
+            findings.append(_finding("RMAP-CANDIDATE-LINEAGE", str(ref.get("slice_id")), "slice effect global baseline is stale or predicts future paths"))
+        derived_effects, derived_hash, fold_findings = fold_accepted_attempts(bundle, current_state)
+        findings.extend(fold_findings)
+        accepted_ids = [
+            str(item.get("adapter_decision", {}).get("attempt_id"))
+            for item in bundle.get("attempts", [])
+            if item.get("adapter_decision", {}).get("decision") == "accepted_for_validation"
+        ]
+        final_event_hash = value_hash(events[-1])
+        if (
+            effect.get("run_id") != ref.get("run_id")
+            or effect.get("slice_id") != ref.get("slice_id")
+            or effect.get("effects") != derived_effects
+            or effect.get("accepted_attempt_ids") != accepted_ids
+            or effect.get("attempt_ledger_manifest_hash") != bytes_hash(ledger_path.read_bytes())
+            or effect.get("run_events_hash") != bytes_hash(events_path.read_bytes())
+            or effect.get("final_event_hash") != final_event_hash
+            or effect.get("root_hash") != manifest_root_hash(effect)
+            or ref.get("accepted_attempt_fold_hash") != derived_hash
+            or ref.get("final_event_hash") != final_event_hash
+        ):
+            findings.append(_finding("RMAP-CANDIDATE-LEDGER-FOLD", str(ref.get("slice_id")), "slice effect is not the independently recomputed run projection"))
+        for entry in derived_effects:
+            current_state[str(entry.get("candidate_path") or entry.get("baseline_path"))] = entry.get("after_sha256")
+        previous_slice_id = str(ref.get("slice_id"))
+        previous_run_id = str(ref.get("run_id"))
+        previous_effect_hash = bytes_hash(raw)
+    cumulative = []
+    for path in sorted(set(original) | set(current_state), key=str.casefold):
+        before, after = original.get(path), current_state.get(path)
+        if before != after:
+            change_type = "add" if before is None else "delete" if after is None else "modify"
+            cumulative.append({"change_type": change_type, "baseline_path": None if change_type == "add" else path, "candidate_path": None if change_type == "delete" else path, "before_sha256": before, "after_sha256": after})
+    cumulative_hash = value_hash(cumulative)
+    if lineage.get("cumulative_fold_hash") != cumulative_hash or lineage.get("root_hash") != manifest_root_hash(lineage):
+        findings.append(_finding("RMAP-CANDIDATE-LINEAGE", "candidate-lineage-manifest", "cumulative or root hash is stale"))
+    return cumulative, cumulative_hash, findings
 
 
 def validate_candidate_supersession_model(plan_root: Path, proof: dict[str, Any], recovery: dict[str, Any], events: list[dict[str, Any]], successor_run_ids: list[str], candidate_run_id: str) -> list[dict[str, str]]:

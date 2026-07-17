@@ -9,6 +9,7 @@ from contract_guards import glob_patterns_overlap, schema_error, typed_path_is_s
 from source_guards import validate_coverage as validate_source_coverage
 from shadow_guards import validate_shadow_protected_trees, validate_shadow_registry as validate_shadow_registry_guard
 from authority_guards import validate_acceptance_contracts, validate_authority_manifest, validate_clarification_projection, validate_plan_state as validate_plan_state_guard, validate_script_sizes
+from artifact_proof_guards import validate_artifact_proofs
 from current_state_guards import validate_current_state_projection
 from protocol_guards import validate_protocol_contract, validate_protocol_fixture_suite
 VALIDATOR_VERSION = "rmap-plan-validator.v2"
@@ -31,6 +32,7 @@ REQUIRED_FILES = {
     "schemas/acceptance-contracts.v1.json", "schemas/authority-manifest.v1.json",
     "schemas/clarification-decisions.v1.json", "schemas/review-blocking-state.v1.json",
     "schemas/review-policy-reentry.v1.json", "schemas/review-policy-reentry.v1.schema.json",
+    "schemas/artifact-proof.v1.schema.json", "schemas/artifact-proof-registry.v1.json", "tools/artifact_proof_guards.py",
     "schemas/candidate-diff-manifest.v1.schema.json", "schemas/candidate-result-ref.v1.schema.json",
     "schemas/candidate-lineage-manifest.v1.schema.json", "schemas/candidate-slice-effect.v1.schema.json", "schemas/candidate-supersession-proof.v1.schema.json",
     "schemas/context-manifest.v1.schema.json", "schemas/slice-capsule.v1.schema.json", "schemas/backend-request.v1.schema.json", "schemas/backend-response.v1.schema.json",
@@ -83,7 +85,7 @@ def load_machine(plan_root: Path) -> tuple[dict[str, Any], list[dict[str, str]]]
         "protocol_fixtures": "fixtures/capsule-attempt-cases.v1.json", "candidate_fixtures": "fixtures/candidate-diff-cases.v1.json",
         "acceptance": "schemas/acceptance-contracts.v1.json", "authority_manifest": "schemas/authority-manifest.v1.json",
         "clarification": "schemas/clarification-decisions.v1.json", "review_blocker": "schemas/review-blocking-state.v1.json",
-        "review_reentry": "schemas/review-policy-reentry.v1.json",
+        "review_reentry": "schemas/review-policy-reentry.v1.json", "artifact_proofs": "schemas/artifact-proof-registry.v1.json",
     }
     data: dict[str, Any] = {}
     findings: list[dict[str, str]] = []
@@ -113,7 +115,7 @@ def validate_requirements(plan_root: Path, registry: dict[str, Any], quality: di
     items = registry.get("requirements")
     if not isinstance(items, list):
         return [finding("RMAP-REQ-SHAPE", "requirements", "requirements must be a list")]
-    expected = [f"RMAP-{index:03d}" for index in range(1, 27)]
+    expected = [f"RMAP-{index:03d}" for index in range(1, 28)]
     ids = [item.get("id") for item in items if isinstance(item, dict)]
     if ids != expected:
         findings.append(finding("RMAP-REQ-SEQUENCE", "requirements", f"expected exact sequence {expected}"))
@@ -373,6 +375,7 @@ def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[st
         ("RMAP-CONTRACT", validate_contract(plan_root, data["contract"], data["requirements"], data["commands"])),
         ("RMAP-SHADOW", validate_shadow_registry(data["shadow"])),
         ("RMAP-AUTH-MANIFEST", validate_authority_manifest(plan_root, data["authority_manifest"])),
+        ("RMAP-ARTIFACT-PROOF", validate_artifact_proofs(plan_root, data["artifact_proofs"], data["authority_manifest"])),
         ("RMAP-REQ-CLARIFICATION", validate_clarification_projection(data["clarification"], data["state"])),
         ("RMAP-REQ-ACCEPTANCE", validate_acceptance_contracts(data["acceptance"], data["requirements"], data["contract"], data["commands"], data["fixtures"], data["protocol_fixtures"], data["candidate_fixtures"])),
         ("RMAP-PROTOCOL-FIXTURES", validate_protocol_fixture_suite(plan_root, data["protocol_fixtures"])),

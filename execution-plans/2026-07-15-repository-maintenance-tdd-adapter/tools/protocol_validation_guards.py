@@ -265,7 +265,8 @@ def validate_protocol_bundle(
             if entry["after_sha256"] != after_hash:
                 return [_finding("RMAP-ATTEMPT-AFTER-HASH", attempt_id, "diff after hash does not match current result bytes")]
             baseline = baseline_entries.get(entry["path"])
-            if index == 0 and (baseline is None or baseline.get("sha256") != before_hash):
+            first_add = entry.get("change_type") == "add" and before_hash is None and baseline is None
+            if index == 0 and not first_add and (baseline is None or baseline.get("sha256") != before_hash):
                 return [_finding("RMAP-ATTEMPT-BEFORE-HASH", attempt_id, "first attempt is not bound to baseline file manifest")]
         expected_baseline_root = value_hash({entry["path"]: entry["before_sha256"] for entry in diff["files"]})
         expected_result_root = value_hash({entry["path"]: entry["after_sha256"] for entry in diff["files"]})

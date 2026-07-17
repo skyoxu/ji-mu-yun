@@ -55,6 +55,7 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 - Persisted context schemas: [`schemas/context-manifest.v1.schema.json`](schemas/context-manifest.v1.schema.json) and [`schemas/slice-capsule.v1.schema.json`](schemas/slice-capsule.v1.schema.json)
 - Attempt ledger schemas: [`schemas/backend-request.v1.schema.json`](schemas/backend-request.v1.schema.json), [`schemas/backend-response.v1.schema.json`](schemas/backend-response.v1.schema.json), [`schemas/diff-manifest.v1.schema.json`](schemas/diff-manifest.v1.schema.json), [`schemas/adapter-decision.v1.schema.json`](schemas/adapter-decision.v1.schema.json), and [`schemas/agent-attempt-event.v1.schema.json`](schemas/agent-attempt-event.v1.schema.json)
 - Final candidate schemas: [`schemas/candidate-diff-manifest.v1.schema.json`](schemas/candidate-diff-manifest.v1.schema.json), [`schemas/candidate-slice-effect.v1.schema.json`](schemas/candidate-slice-effect.v1.schema.json), [`schemas/candidate-lineage-manifest.v1.schema.json`](schemas/candidate-lineage-manifest.v1.schema.json), [`schemas/candidate-result-ref.v1.schema.json`](schemas/candidate-result-ref.v1.schema.json), and [`schemas/candidate-supersession-proof.v1.schema.json`](schemas/candidate-supersession-proof.v1.schema.json)
+- Review-added artifact proof contract and exact registry: [`schemas/artifact-proof.v1.schema.json`](schemas/artifact-proof.v1.schema.json) and [`schemas/artifact-proof-registry.v1.json`](schemas/artifact-proof-registry.v1.json)
 - Capsule and attempt mutation fixtures: [`fixtures/capsule-attempt-cases.v1.json`](fixtures/capsule-attempt-cases.v1.json)
 - Candidate diff and predecessor mutation fixtures: [`fixtures/candidate-diff-cases.v1.json`](fixtures/candidate-diff-cases.v1.json)
 - Self-hosted contract instance: [`implementation-contract.v1.json`](implementation-contract.v1.json)
@@ -69,6 +70,7 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 - Capsule and attempt validator: [`tools/protocol_guards.py`](tools/protocol_guards.py)
 - Candidate diff validator: [`tools/candidate_diff_guards.py`](tools/candidate_diff_guards.py)
 - Cross-slice lineage and supersession validator: [`tools/candidate_lineage_guards.py`](tools/candidate_lineage_guards.py)
+- Review-added artifact proof validator: [`tools/artifact_proof_guards.py`](tools/artifact_proof_guards.py)
 
 ## Validation Commands
 

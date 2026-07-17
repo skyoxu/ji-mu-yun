@@ -54,7 +54,9 @@
         "rejections",
         "finalResult",
         "dispositions",
-        "metrics"
+        "metrics",
+        "verifierOutput",
+        "p2Dispositions"
       ],
       "properties": {
         "reviewInput": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
@@ -64,7 +66,9 @@
         "rejections": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
         "finalResult": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
         "dispositions": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
-        "metrics": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+        "metrics": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "verifierOutput": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "p2Dispositions": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"}
       }
     },
     "finalStatus": {"enum": ["clean", "blocked", "advisory", "incomplete"]},
@@ -94,7 +98,7 @@
         "p2RefutedCount": {"type": "integer", "minimum": 0}
       }
     },
-    "validatorRevision": {"const": "bootstrap-finalized-run-validator.v1"},
+    "validatorRevision": {"const": "bootstrap-finalized-run-validator.v2"},
     "validatorHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "authorizes": {"type": "array", "maxItems": 0},
     "doesNotAuthorize": {

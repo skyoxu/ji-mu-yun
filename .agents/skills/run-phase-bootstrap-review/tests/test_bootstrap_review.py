@@ -1116,6 +1116,23 @@ class BootstrapReviewCliTests(unittest.TestCase):
             bootstrap.file_hash(self.run_dir / "review-gate-result.json"),
             envelope["artifactHashes"]["finalResult"],
         )
+        self.assertEqual(
+            bootstrap.file_hash(self.run_dir / "verifier-output.json"),
+            envelope["artifactHashes"]["verifierOutput"],
+        )
+        self.assertIsNone(envelope["artifactHashes"]["p2Dispositions"])
+        self.assertEqual("bootstrap-finalized-run-validator.v2", envelope["validatorRevision"])
+
+    def test_validate_finalized_run_rejects_stale_verifier_output(self) -> None:
+        self.prepare()
+        self.complete_layers()
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        (self.run_dir / "verifier-output.json").write_text("{}", encoding="utf-8", newline="\n")
+        self.assertEqual(1, bootstrap.main([
+            "validate-finalized-run", "--run-dir", str(self.run_dir),
+            "--output", str(self.repo / "finalized-validation.json"),
+        ]))
 
     def test_validate_finalized_run_rejects_stale_metrics(self) -> None:
         self.prepare()
@@ -1927,13 +1944,32 @@ class BootstrapReviewCliTests(unittest.TestCase):
         finding_id = self.read_json("review-candidates.json")["findings"][0]["findingId"]
         self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
         manifest = self.read_json("review-input.json")
+        evidence_paths = {}
+        for name, payload in {
+            "non-impact.json": {"status": "bounded", "findingId": finding_id},
+            "recheck.json": {"status": "pending", "findingId": finding_id},
+            "owner-authority.json": {"owner": "owner", "allowed": True},
+            "command-registry.json": {"commands": ["test-command"]},
+            "closure-process.json": {"commandId": "test-command", "exitCode": 0},
+        }.items():
+            path = self.repo / name
+            path.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            evidence_paths[name] = {
+                "path": path.relative_to(self.repo).as_posix(),
+                "sha256": bootstrap.file_hash(path),
+            }
         p2 = {
             "schemaVersion": "bootstrap-p2-dispositions.v1", "reviewId": manifest["reviewId"],
             "inputHash": manifest["inputHash"], "findingIds": [finding_id],
             "dispositions": [{
                 "findingId": finding_id, "status": "deferred", "risk": "high",
                 "reason": "Deferred for later", "owner": "owner",
-                "expiry": "2099-01-01T00:00:00Z", "closureTest": "test-command",
+                "expiry": "2099-01-01T00:00:00Z", "closureCommandId": "test-command",
+                "closureCommandRegistryRef": evidence_paths["command-registry.json"],
+                "ownerAuthorityRef": evidence_paths["owner-authority.json"],
+                "nonImpactEvidenceRef": evidence_paths["non-impact.json"],
+                "recheckEvidenceRef": evidence_paths["recheck.json"],
+                "recheckTrigger": "expiry-or-authority-change",
             }],
         }
         self.write_json("p2-dispositions.json", p2)
@@ -1944,11 +1980,35 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
         p2["dispositions"][0] = {
             "findingId": finding_id, "status": "fixed", "risk": "normal",
-            "reason": "Targeted validation proves closure",
+            "reason": "Targeted validation proves closure", "closureCommandId": "test-command",
+            "closureCommandRegistryRef": evidence_paths["command-registry.json"],
+            "closureProcessResultRef": evidence_paths["closure-process.json"],
         }
         self.write_json("p2-dispositions.json", p2)
         self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
         self.assertEqual("clean", self.read_json("review-gate-result.json")["status"])
+
+    def test_p2_rejects_stale_transitive_evidence(self) -> None:
+        self.prepare()
+        self.complete_layers({"blind_hunter": [self.candidate(severity="P2")]})
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        finding_id = self.read_json("review-candidates.json")["findings"][0]["findingId"]
+        manifest = self.read_json("review-input.json")
+        evidence = self.repo / "p2-evidence.json"
+        evidence.write_text("{}", encoding="utf-8", newline="\n")
+        reference = {"path": evidence.relative_to(self.repo).as_posix(), "sha256": "sha256:" + "0" * 64}
+        self.write_json("p2-dispositions.json", {
+            "schemaVersion": "bootstrap-p2-dispositions.v1", "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"], "findingIds": [finding_id],
+            "dispositions": [{
+                "findingId": finding_id, "status": "deferred", "risk": "normal", "reason": "bounded",
+                "owner": "owner", "expiry": "2099-01-01T00:00:00Z", "closureCommandId": "test-command",
+                "closureCommandRegistryRef": reference, "ownerAuthorityRef": reference,
+                "nonImpactEvidenceRef": reference, "recheckEvidenceRef": reference,
+                "recheckTrigger": "expiry-or-authority-change",
+            }],
+        })
+        self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
 
     def test_list_inspect_and_seal_are_additive_lifecycle_views(self) -> None:
         self.prepare()

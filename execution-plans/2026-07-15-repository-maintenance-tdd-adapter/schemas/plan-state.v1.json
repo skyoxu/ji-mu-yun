@@ -14,8 +14,9 @@
       "repair-20260717T013023Z",
       "clarification-20260717T063016Z",
       "clarification-20260717T090544Z"
+      ,"clarification-20260717T190000Z"
     ],
-    "current_repair_run_id": "clarification-20260717T090544Z",
+    "current_repair_run_id": "clarification-20260717T190000Z",
     "status": "closed",
     "write_disposition": "normal",
     "confidence": 96
@@ -98,11 +99,15 @@
       "reentry": "schemas/review-policy-reentry.v1.json"
     }
   ],
-  "current_capabilities": {
-    "adapter_operational": false,
-    "common_schema_skill_owned": false,
-    "old_plan_backfill_complete": false,
-    "implementation_accepted": false,
-    "release_ready": false
+  "capability_projection": {
+    "producer": "tools/validate_all.py",
+    "source_of_truth": "current hash-bound predicate evidence",
+    "capabilities": {
+      "common_schema_skill_owned": {"first_slice": "RMAP-S1", "predicate": "slice-ready"},
+      "adapter_operational": {"first_slice": "RMAP-S2", "predicate": "slice-ready"},
+      "old_plan_backfill_complete": {"first_slice": "RMAP-S5", "predicate": "slice-ready"},
+      "implementation_accepted": {"first_slice": "RMAP-S7", "predicate": "implementation-accepted"},
+      "release_ready": {"first_slice": null, "predicate": null}
+    }
   }
 }

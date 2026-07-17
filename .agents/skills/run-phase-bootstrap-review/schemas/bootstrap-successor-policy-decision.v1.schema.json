@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+  "title": "Bootstrap Successor Policy Decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "decisionId", "supersededReviewId", "supersededChangeId",
+    "successorChangeId", "policyRevision", "authorityRevision", "authorizationEventRef",
+    "consumer", "authorizes", "doesNotAuthorize", "decidedAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-successor-policy-decision.v1"},
+    "decisionId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "supersededReviewId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "supersededChangeId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "successorChangeId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "policyRevision": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorityRevision": {"type": "string", "minLength": 1},
+    "authorizationEventRef": {"$ref": "#/$defs/evidenceRef"},
+    "consumer": {"const": "repository-maintenance-tdd-adapter-plan-reentry"},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {
+      "type": "array", "uniqueItems": true, "minItems": 6,
+      "items": {"enum": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    "decidedAt": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "evidenceRef": {
+      "type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}
+    }
+  }
+}

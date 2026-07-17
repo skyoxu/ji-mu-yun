@@ -139,12 +139,12 @@ Before finalizing accepted P2 findings, provide `p2-dispositions.json` covering 
 
 - Every P2 is `fixed`, `refuted`, or `deferred`.
 - High-risk P2 cannot be deferred.
-- Deferral requires owner, future expiry, reason, and closure test.
+- Deferral requires a schema-valid authorized owner reference, future expiry, non-impact evidence, a registered closure command, current recheck evidence, and a recheck trigger. Successful closure-process evidence is required only when the disposition becomes fixed or refuted.
 - An expired deferral blocks automatically.
 
 Finalize only after independent P0/P1 decisions and complete P2 dispositions. A final result cannot contain an open accepted P0/P1.
 
-After finalization, emit a plan-consumable validation envelope by recomputing the frozen profile, preflight, gate, candidates, rejections, final result, dispositions, metrics, and artifact hashes:
+After finalization, emit a plan-consumable validation envelope by recomputing the frozen profile, preflight, gate, candidates, rejections, verifier decisions, P2 evidence, final result, dispositions, metrics, and artifact hashes. The envelope directly hash-binds `verifier-output.json` and, when present, `p2-dispositions.json`; a metrics-only or file-existence proof is invalid:
 
 ```text
 py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py validate-finalized-run \
@@ -153,6 +153,8 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py vali
 ```
 
 The envelope is validation evidence only. It always has `authorizes=[]` and explicitly excludes plan acceptance, implementation acceptance, protected handoff, release, commit, and done authority. A plan-local validator may consume the envelope, but must independently apply its own acceptance predicate.
+
+After a third-round manual pause, re-entry requires a schema-valid `bootstrap-successor-policy-decision.v1` bound to a trusted authorization event and a genuinely new change, policy, authority, review, and input lineage. The consumer must rerun `validate-finalized-run`; a saved minimal envelope or self-declared independence flag cannot clear the pause.
 
 ## Repair Rounds
 

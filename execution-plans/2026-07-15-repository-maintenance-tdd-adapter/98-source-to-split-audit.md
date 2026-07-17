@@ -46,6 +46,10 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `ADDED`: immutable manual-pause successor artifact binds the old blocker hash and requires a distinct policy/authority cycle plus independent semantic closure.
 - `MODIFIED`: `RMAP-001/002` reuse Accepted ADR-0041 and classify 7-12 only as a hash-bound compatibility input; `RMAP-012/016` consume repository-owned Bootstrap finalized/runtime evidence; `RMAP-014` owns cross-slice candidate lineage.
 - `MODIFIED`: ownership field `framework_adr` is renamed to `ownership_pattern_adr` without changing the accepted ADR-0041 identity.
+- `MODIFIED`: Bootstrap finalized-run evidence is producer-recomputed, directly hash-binds verifier and P2 sources, and manual-pause re-entry consumes a schema-valid successor decision plus trusted authorization-event lineage.
+- `MODIFIED`: cumulative slice effects are derived from complete validated protocol runs and real diff manifests; first-add paths are distinct from existing-file baseline identity.
+- `MODIFIED`: cross-slice predecessor fields are separated from same-slice recovery and supersession fields, and stale transitive inputs invalidate downstream projections.
+- `ADDED`: `RMAP-027` applies one exact seven-dimensional proof template to every review-added normative, projection, evidence, lineage, and validator artifact before a predicate may consume it.
 - `REMOVED`: mutable single-Capsule overwrite, standalone adapter-decision authority, and any need for a Router or S8.
 
 No requirement is silently dropped. Machine-level delta details live in `schemas/spec-deltas.v1.json`.

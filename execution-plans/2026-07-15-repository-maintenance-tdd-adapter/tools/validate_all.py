@@ -33,7 +33,7 @@ REPOSITORY_ROOT = PLAN_ROOT.parents[1]
 
 def validator_identity() -> str:
     digest = hashlib.sha256()
-    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
+    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "artifact_proof_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
     for path in (Path(__file__).with_name(name) for name in names):
         digest.update(path.name.encode("utf-8"))
         digest.update(b"\0")
@@ -96,7 +96,7 @@ def validation_snapshot() -> dict[str, str]:
     }
 
 
-def build_result(predicate: str, checks: list[dict[str, Any]], findings: list[dict[str, str]], validated: dict[str, str], current: dict[str, str], status_override: str | None = None) -> dict[str, Any]:
+def build_result(predicate: str, checks: list[dict[str, Any]], findings: list[dict[str, str]], validated: dict[str, str], current: dict[str, str], status_override: str | None = None, capabilities: dict[str, bool] | None = None) -> dict[str, Any]:
     passed = not findings and status_override is None
     authorizes, excludes = PREDICATE_AUTHORITY[predicate]
     timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -109,6 +109,7 @@ def build_result(predicate: str, checks: list[dict[str, Any]], findings: list[di
         "current_candidate_hash": current["candidate_hash"],
         "source_hash": validated["source_hash"],
         "validator_version": validated["validator_version"],
+        "capabilities": capabilities or {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_accepted", "release_ready")},
         "authorizes": authorizes if passed else [],
         "does_not_authorize": excludes if passed else all_exclusions(),
         "checks": checks,
@@ -285,7 +286,14 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
         findings.append({"rule_id": "RMAP-HASH-VALIDATION-DRIFT", "target": "validation-run", "message": "plan, source, or validator changed during validation"})
         checks.append({"rule_id": "RMAP-HASH-VALIDATION-DRIFT", "status": "fail", "evidence": ["pre/post validation snapshots differ"]})
     status_override = "blocked" if predicate in blocked_predicates and not [item for item in findings if item["rule_id"] != "RMAP-REVIEW-MANUAL-PAUSE"] else None
-    result = build_result(predicate, checks, findings, validated_snapshot, current_snapshot, status_override)
+    derived_capabilities = {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_accepted", "release_ready")}
+    if not findings and status_override is None and slice_id:
+        order = {f"RMAP-S{index}": index for index in range(8)}
+        for name, rule in data.get("state", {}).get("capability_projection", {}).get("capabilities", {}).items():
+            first_slice = rule.get("first_slice") if isinstance(rule, dict) else None
+            if first_slice in order and order[slice_id] >= order[first_slice]:
+                derived_capabilities[name] = True
+    result = build_result(predicate, checks, findings, validated_snapshot, current_snapshot, status_override, derived_capabilities)
     return result, 0 if result["status"] == "pass" else 1
 
 
@@ -307,6 +315,7 @@ def run_fixture(fixture_id: str) -> tuple[dict[str, Any], int]:
         "candidate_hash": current_hash,
         "source_hash": sha256_file(REPOSITORY_ROOT / "agentbuild.txt"),
         "validator_version": validator_identity(),
+        "capabilities": {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_accepted", "release_ready")},
         "checks": [check],
         "diagnostics": findings,
         "authorizes": [],

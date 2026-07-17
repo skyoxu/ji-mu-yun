@@ -1,0 +1,151 @@
+{
+  "schema_version": "jimuyun.artifact-proof-registry.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "proof_schema": "schemas/artifact-proof.v1.schema.json",
+  "proofs": [
+    {
+      "artifact_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+      "artifact_kind": "normative",
+      "finding_ids": ["RMAP-1300-REENTRY-PSEUDO-EVIDENCE", "RMAP-1300-P2-VERIFIER-TRANSITIVE-BINDING"],
+      "schema_producer_authority": {"producer_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "authority_owner": "Bootstrap control-plane owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["docs/standards/bootstrap-review-control-plane.md", ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"], "projection_only": false},
+      "independent_recomputation": {"validator_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "rule_ids": ["bootstrap-finalized-run-validator.v2"]},
+      "staleness_propagation": {"input_paths": [".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json", ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json", ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json"], "invalidates": ["finalized-envelope", "plan-reentry", "implementation-accepted"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["reviewId", "changeId", "inputHash", "authorityRevision"]},
+      "consumer_authorization_boundary": {"consumers": ["repository-maintenance plan validator"], "predicate": "bootstrap-finalized-run-validation", "authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+      "artifact_kind": "normative",
+      "finding_ids": ["RMAP-1300-P2-VERIFIER-TRANSITIVE-BINDING"],
+      "schema_producer_authority": {"producer_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "authority_owner": "Bootstrap control-plane owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["docs/standards/bootstrap-review-control-plane.md"], "projection_only": false},
+      "independent_recomputation": {"validator_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "rule_ids": ["bootstrap-p2-disposition-evidence"]},
+      "staleness_propagation": {"input_paths": [".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"], "invalidates": ["review-metrics", "finalized-envelope", "implementation-accepted"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["reviewId", "inputHash", "findingIds"]},
+      "consumer_authorization_boundary": {"consumers": ["Bootstrap finalize", "repository-maintenance plan validator"], "predicate": "p2-disposition", "authorizes": [], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+      "artifact_kind": "normative",
+      "finding_ids": ["RMAP-1300-REENTRY-PSEUDO-EVIDENCE"],
+      "schema_producer_authority": {"producer_path": "docs/standards/bootstrap-review-control-plane.md", "authority_owner": "Bootstrap policy owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["docs/standards/bootstrap-review-control-plane.md", "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-blocking-state.v1.json"], "projection_only": false},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py", "rule_ids": ["RMAP-REVIEW-REENTRY"]},
+      "staleness_propagation": {"input_paths": [".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json", "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-blocking-state.v1.json"], "invalidates": ["successor-policy", "plan-reentry"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["supersededReviewId", "supersededChangeId", "successorChangeId", "authorizationEventRef"]},
+      "consumer_authorization_boundary": {"consumers": ["repository-maintenance plan reentry"], "predicate": "successor-policy", "authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+      "artifact_kind": "normative",
+      "finding_ids": ["RMAP-1300-UNIFORM-ARTIFACT-PROOF"],
+      "schema_producer_authority": {"producer_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md", "authority_owner": "VDD plan owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": [".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md"], "projection_only": false},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py", "rule_ids": ["RMAP-ARTIFACT-PROOF"]},
+      "staleness_propagation": {"input_paths": [".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md"], "invalidates": ["artifact-proof-registry", "plan-repair-verified"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["finding_ids", "artifact_path"]},
+      "consumer_authorization_boundary": {"consumers": ["composite plan validator"], "predicate": "artifact-proof", "authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+      "artifact_kind": "projection",
+      "finding_ids": ["RMAP-1300-UNIFORM-ARTIFACT-PROOF"],
+      "schema_producer_authority": {"producer_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py", "authority_owner": "VDD plan projection owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json", "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py"], "projection_only": true},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py", "rule_ids": ["RMAP-ARTIFACT-PROOF"]},
+      "staleness_propagation": {"input_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py"], "invalidates": ["artifact-proof-registry", "plan-repair-verified"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["schema_version", "plan_id", "artifact_path"]},
+      "consumer_authorization_boundary": {"consumers": ["composite plan validator"], "predicate": "artifact-proof-registry", "authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+      "artifact_kind": "lineage",
+      "finding_ids": ["RMAP-1300-SLICE-EFFECT-SELF-ASSERTED", "RMAP-1300-LINEAGE-FIELD-COLLISION"],
+      "schema_producer_authority": {"producer_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py", "authority_owner": "candidate lineage owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/attempt-ledger-manifest.v1.schema.json", "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/agent-attempt-event.v1.schema.json"], "projection_only": true},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py", "rule_ids": ["RMAP-CANDIDATE-LINEAGE", "RMAP-CANDIDATE-LEDGER-FOLD"]},
+      "staleness_propagation": {"input_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py"], "invalidates": ["candidate-lineage", "implementation-candidate"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["previous_slice_id", "previous_slice_run_id", "previous_slice_effect_hash"]},
+      "consumer_authorization_boundary": {"consumers": ["S6 candidate validator"], "predicate": "implementation-candidate", "authorizes": ["bootstrap-review"], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-slice-effect.v1.schema.json",
+      "artifact_kind": "projection",
+      "finding_ids": ["RMAP-1300-SLICE-EFFECT-SELF-ASSERTED", "RMAP-1300-BASELINE-FUTURE-PATH"],
+      "schema_producer_authority": {"producer_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py", "authority_owner": "candidate lineage owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json", "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diff-manifest.v1.schema.json", "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/adapter-decision.v1.schema.json"], "projection_only": true},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py", "rule_ids": ["RMAP-CANDIDATE-LEDGER-FOLD"]},
+      "staleness_propagation": {"input_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py"], "invalidates": ["slice-effect", "candidate-lineage", "implementation-candidate"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["run_id", "final_event_hash", "root_hash"]},
+      "consumer_authorization_boundary": {"consumers": ["candidate lineage validator"], "predicate": "slice-effect-projection", "authorizes": [], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-supersession-proof.v1.schema.json",
+      "artifact_kind": "lineage",
+      "finding_ids": ["RMAP-1300-LINEAGE-FIELD-COLLISION"],
+      "schema_producer_authority": {"producer_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py", "authority_owner": "candidate recovery owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/05-diagnostics-repair-and-reentry.md"], "projection_only": true},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py", "rule_ids": ["RMAP-CANDIDATE-SUPERSESSION"]},
+      "staleness_propagation": {"input_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py"], "invalidates": ["candidate-result-ref", "implementation-accepted"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["predecessor_run_id", "supersedes_run_id", "final_event_hash"]},
+      "consumer_authorization_boundary": {"consumers": ["S7 acceptance validator"], "predicate": "candidate-active", "authorizes": [], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.schema.json",
+      "artifact_kind": "normative",
+      "finding_ids": ["RMAP-1300-REENTRY-PSEUDO-EVIDENCE"],
+      "schema_producer_authority": {"producer_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py", "authority_owner": "plan reentry owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-blocking-state.v1.json", ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json"], "projection_only": false},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py", "rule_ids": ["RMAP-REVIEW-REENTRY"]},
+      "staleness_propagation": {"input_paths": [".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"], "invalidates": ["plan-reentry", "plan-ready"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["supersedes_blocker", "successor_policy", "semantic_closure"]},
+      "consumer_authorization_boundary": {"consumers": ["plan-state validator"], "predicate": "plan-reentry", "authorizes": ["plan-ready"], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
+      "artifact_kind": "projection",
+      "finding_ids": ["RMAP-1300-REENTRY-PSEUDO-EVIDENCE"],
+      "schema_producer_authority": {"producer_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.schema.json", "authority_owner": "plan reentry owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-blocking-state.v1.json"], "projection_only": true},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py", "rule_ids": ["RMAP-REVIEW-REENTRY", "RMAP-REVIEW-MANUAL-PAUSE"]},
+      "staleness_propagation": {"input_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-blocking-state.v1.json", ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json"], "invalidates": ["plan-reentry", "plan-ready"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["supersedes_blocker", "successor_policy", "semantic_closure"]},
+      "consumer_authorization_boundary": {"consumers": ["plan-state validator"], "predicate": "manual-pause-reentry", "authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
+      "artifact_kind": "validator",
+      "finding_ids": ["RMAP-1300-UNIFORM-ARTIFACT-PROOF"],
+      "schema_producer_authority": {"producer_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md", "authority_owner": "VDD validator owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json"], "projection_only": false},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py", "rule_ids": ["RMAP-ARTIFACT-PROOF"]},
+      "staleness_propagation": {"input_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json"], "invalidates": ["plan-repair-verified"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["validator_version", "candidate_hash"]},
+      "consumer_authorization_boundary": {"consumers": ["composite plan validator"], "predicate": "artifact-proof-validation", "authorizes": [], "does_not_authorize": ["plan-ready", "implementation-accepted", "protected-handoff", "release-ready"]}
+    },
+    {
+      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+      "artifact_kind": "validator",
+      "finding_ids": ["RMAP-1300-SLICE-EFFECT-SELF-ASSERTED", "RMAP-1300-BASELINE-FUTURE-PATH", "RMAP-1300-LINEAGE-FIELD-COLLISION"],
+      "schema_producer_authority": {"producer_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md", "authority_owner": "candidate validator owner"},
+      "immutable_identity": {"algorithm": "sha256-bytes", "manifest_path": "schemas/authority-manifest.v1.json"},
+      "source_of_truth_derivation": {"source_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py", "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_support.py"], "projection_only": false},
+      "independent_recomputation": {"validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py", "rule_ids": ["RMAP-CANDIDATE-LEDGER-FOLD", "RMAP-CANDIDATE-LINEAGE"]},
+      "staleness_propagation": {"input_paths": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json", "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-slice-effect.v1.schema.json"], "invalidates": ["candidate-lineage", "implementation-candidate", "implementation-accepted"]},
+      "recovery_supersession": {"history_policy": "append-only-successor-no-rewrite", "lineage_fields": ["previous_slice_effect_hash", "predecessor_run_id", "supersedes_run_id"]},
+      "consumer_authorization_boundary": {"consumers": ["S6 candidate validator", "S7 acceptance validator"], "predicate": "candidate-lineage-recomputation", "authorizes": [], "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"]}
+    }
+  ]
+}

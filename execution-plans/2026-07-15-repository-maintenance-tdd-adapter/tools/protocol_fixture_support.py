@@ -20,6 +20,7 @@ def hydrate_protocol_fixture(
     base: dict[str, Any],
     stage_documents: dict[str, dict[str, Any]] | None = None,
     external_artifacts: dict[str, bytes] | None = None,
+    initial_bytes: bytes | None = b"baseline\n",
 ) -> tuple[
     dict[str, Any], dict[tuple[str, str], bytes], dict[tuple[str, str, str], bytes | None]
 ]:
@@ -36,15 +37,15 @@ def hydrate_protocol_fixture(
     store[("plan_path", "implementation-contract.v1.json")] = contract_bytes
     store[("plan_path", "schemas/authority-manifest.v1.json")] = authority_bytes
     target_path = template_attempt["diff_manifest"]["files"][0]["path"]
-    initial_bytes = b"baseline\n"
     snapshot_path = "baseline/files/adapter.py"
-    store[("run_path", snapshot_path)] = initial_bytes
+    if initial_bytes is not None:
+        store[("run_path", snapshot_path)] = initial_bytes
     baseline_core = {
         "schema_version": "jimuyun.baseline-file-manifest.v1",
         "plan_id": plan_id,
         "slice_id": slice_id,
         "run_id": run_id,
-        "files": [{
+        "files": [] if initial_bytes is None else [{
             "path": target_path,
             "sha256": bytes_hash(initial_bytes),
             "snapshot_ref": _unroled_ref("run_path", snapshot_path, initial_bytes),
@@ -114,15 +115,15 @@ def hydrate_protocol_fixture(
         })
         response = copy.deepcopy(template_attempt["backend_response"])
         response.update({"plan_id": plan_id, "slice_id": slice_id, "run_id": run_id, "attempt_id": attempt_id, "stage": stage, "changed_files": [target_path]})
-        after_bytes = current_bytes + f"{stage}\n".encode("ascii")
+        after_bytes = (current_bytes or b"") + f"{stage}\n".encode("ascii")
         result_snapshot_path = f"attempts/{attempt_id}/result-files/adapter.py"
         store[("run_path", result_snapshot_path)] = after_bytes
         file_versions[(attempt_id, "before", target_path)] = current_bytes
         file_versions[(attempt_id, "after", target_path)] = after_bytes
         entry = {
             "path": target_path,
-            "change_type": "modify",
-            "before_sha256": bytes_hash(current_bytes),
+            "change_type": "add" if current_bytes is None else "modify",
+            "before_sha256": None if current_bytes is None else bytes_hash(current_bytes),
             "after_sha256": bytes_hash(after_bytes),
             "result_snapshot_ref": _unroled_ref("run_path", result_snapshot_path, after_bytes),
             "scope": "allowed",

@@ -201,13 +201,22 @@ def schema_errors(
     instance: Any,
     registry: dict[str, dict[str, Any]],
     path: str = "$",
+    root_schema: dict[str, Any] | None = None,
 ) -> list[str]:
+    root_schema = schema if root_schema is None else root_schema
     result: list[str] = []
     if "$ref" in schema:
-        target = Path(schema["$ref"]).name
-        if target not in registry:
-            return [f"{path}: unresolved $ref {schema['$ref']}"]
-        result.extend(schema_errors(registry[target], instance, registry, path))
+        reference = schema["$ref"]
+        if isinstance(reference, str) and reference.startswith("#/$defs/"):
+            target_schema = root_schema.get("$defs", {}).get(reference.removeprefix("#/$defs/"))
+            if not isinstance(target_schema, dict):
+                return [f"{path}: unresolved $ref {reference}"]
+            result.extend(schema_errors(target_schema, instance, registry, path, root_schema))
+        else:
+            target = Path(reference).name
+            if target not in registry:
+                return [f"{path}: unresolved $ref {reference}"]
+            result.extend(schema_errors(registry[target], instance, registry, path, registry[target]))
     expected_type = schema.get("type")
     if expected_type and not type_matches(expected_type, instance):
         return [f"{path}: expected {expected_type}"]
@@ -234,10 +243,10 @@ def schema_errors(
             result.append(f"{path}: duplicate items")
         if "items" in schema:
             for index, item in enumerate(instance):
-                result.extend(schema_errors(schema["items"], item, registry, f"{path}[{index}]"))
+                result.extend(schema_errors(schema["items"], item, registry, f"{path}[{index}]", root_schema))
         if "contains" in schema:
             match_count = sum(
-                not schema_errors(schema["contains"], item, registry, f"{path}[{index}]")
+                not schema_errors(schema["contains"], item, registry, f"{path}[{index}]", root_schema)
                 for index, item in enumerate(instance)
             )
             if match_count < schema.get("minContains", 1):
@@ -256,18 +265,18 @@ def schema_errors(
                     result.append(f"{path}: unexpected property {key}")
         for key, child_schema in properties.items():
             if key in instance:
-                result.extend(schema_errors(child_schema, instance[key], registry, f"{path}.{key}"))
+                result.extend(schema_errors(child_schema, instance[key], registry, f"{path}.{key}", root_schema))
     for child in schema.get("allOf", []):
-        result.extend(schema_errors(child, instance, registry, path))
-    if "anyOf" in schema and all(schema_errors(child, instance, registry, path) for child in schema["anyOf"]):
+        result.extend(schema_errors(child, instance, registry, path, root_schema))
+    if "anyOf" in schema and all(schema_errors(child, instance, registry, path, root_schema) for child in schema["anyOf"]):
         result.append(f"{path}: no anyOf branch matched")
-    if "not" in schema and not schema_errors(schema["not"], instance, registry, path):
+    if "not" in schema and not schema_errors(schema["not"], instance, registry, path, root_schema):
         result.append(f"{path}: prohibited schema matched")
     if "if" in schema:
-        if not schema_errors(schema["if"], instance, registry, path):
-            result.extend(schema_errors(schema.get("then", {}), instance, registry, path))
+        if not schema_errors(schema["if"], instance, registry, path, root_schema):
+            result.extend(schema_errors(schema.get("then", {}), instance, registry, path, root_schema))
         else:
-            result.extend(schema_errors(schema.get("else", {}), instance, registry, path))
+            result.extend(schema_errors(schema.get("else", {}), instance, registry, path, root_schema))
     return result
 
 

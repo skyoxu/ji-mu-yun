@@ -18,9 +18,9 @@
         "required": ["path", "sha256", "snapshot_ref"],
         "properties": {
           "path": {"type": "string", "minLength": 1},
-          "sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
+          "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
           "snapshot_ref": {
-            "type": ["object", "null"],
+            "type": "object",
             "additionalProperties": false,
             "required": ["path_type", "path", "sha256"],
             "properties": {

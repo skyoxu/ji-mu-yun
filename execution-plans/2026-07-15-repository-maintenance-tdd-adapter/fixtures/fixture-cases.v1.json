@@ -474,6 +474,15 @@
       ],
       "expected_rule": "RMAP-REVIEW-REENTRY",
       "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-missing-dimension",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "remove", "path": "/proofs/0/source_of_truth_derivation"}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF",
+      "expected_valid": false
     }
   ]
 }

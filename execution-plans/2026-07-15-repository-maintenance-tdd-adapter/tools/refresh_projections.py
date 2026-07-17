@@ -48,12 +48,20 @@ def refresh_deltas() -> None:
 def refresh_quality() -> None:
     path = PLAN_ROOT / "schemas" / "requirement-quality.v1.json"
     document = read_json(path)
-    document["requirements_hash"] = sha256_file(PLAN_ROOT / "schemas" / "requirements.v1.json")
-    document["acceptance_contracts_hash"] = sha256_file(
+    requirements_hash = sha256_file(PLAN_ROOT / "schemas" / "requirements.v1.json")
+    acceptance_hash = sha256_file(
         PLAN_ROOT / "schemas" / "acceptance-contracts.v1.json"
     )
+    changed = (
+        document.get("requirements_hash") != requirements_hash
+        or document.get("acceptance_contracts_hash") != acceptance_hash
+        or document.get("validator_version") != "rmap-plan-validator.v2"
+    )
+    document["requirements_hash"] = requirements_hash
+    document["acceptance_contracts_hash"] = acceptance_hash
     document["validator_version"] = "rmap-plan-validator.v2"
-    document["generated_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    if changed:
+        document["generated_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     write_json(path, document)
 
 
@@ -68,16 +76,77 @@ def refresh_coverage() -> None:
 def refresh_authority_manifest() -> None:
     path = PLAN_ROOT / "schemas" / "authority-manifest.v1.json"
     manifest = read_json(path)
+    additions = {
+        "review_policy_authority": [
+            ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+            ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json",
+        ],
+        "machine_owners": [
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+        ],
+        "execution_dependencies": [
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py",
+        ],
+        "compatibility_inputs": [
+            "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+        ],
+    }
+    existing = {entry["path"] for entries in manifest["categories"].values() for entry in entries}
+    for category, paths in additions.items():
+        for relative in paths:
+            if relative not in existing:
+                manifest["categories"][category].append({"path": relative, "sha256": sha256_file(REPOSITORY_ROOT / relative)})
+                existing.add(relative)
     for entries in manifest["categories"].values():
         for entry in entries:
             entry["sha256"] = sha256_file(REPOSITORY_ROOT / entry["path"])
     write_json(path, manifest)
 
 
+def value_hash(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def refresh_candidate_lineage_fixture() -> None:
+    path = PLAN_ROOT / "fixtures" / "candidate-diff-cases.v1.json"
+    document = read_json(path)
+    base = document["base"]
+    lineage = base["lineage"]
+    prior_slice = None
+    prior_run = None
+    prior_effect_hash = None
+    for ref, run in zip(lineage["slice_runs"], base["lineage_runs"], strict=True):
+        effect = run["document"]
+        effect["baseline_files"] = [entry for entry in effect["baseline_files"] if entry["sha256"] is not None]
+        effect["root_hash"] = value_hash({key: value for key, value in effect.items() if key != "root_hash"})
+        raw = json.dumps(effect, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        run["raw"] = raw
+        effect_hash = "sha256:" + hashlib.sha256(raw.encode("utf-8")).hexdigest()
+        ref.pop("predecessor_run_id", None)
+        ref["previous_slice_id"] = prior_slice
+        ref["previous_slice_run_id"] = prior_run
+        ref["previous_slice_effect_hash"] = prior_effect_hash
+        ref["run_artifact_sha256"] = effect_hash
+        ref["accepted_attempt_fold_hash"] = value_hash(effect["effects"])
+        ref["final_event_hash"] = effect["final_event_hash"]
+        prior_slice, prior_run, prior_effect_hash = ref["slice_id"], ref["run_id"], effect_hash
+    canonical_fold = sorted(
+        base["folded_files"],
+        key=lambda item: str(item.get("candidate_path") or item.get("baseline_path")).casefold(),
+    )
+    lineage["cumulative_fold_hash"] = value_hash(canonical_fold)
+    lineage["root_hash"] = value_hash({key: value for key, value in lineage.items() if key != "root_hash"})
+    write_json(path, document)
+
+
 def refresh_clarification() -> None:
     path = PLAN_ROOT / "schemas" / "clarification-decisions.v1.json"
     document = read_json(path)
-    run_id = "clarification-20260717T090544Z"
+    run_id = "clarification-20260717T190000Z"
     state_path = REPOSITORY_ROOT / "logs" / "vdd-clarifications" / "2026-07-15-repository-maintenance-tdd-adapter-f6d1143a" / run_id / "state.json"
     source = next(item for item in document["sources"] if item["run_id"] == run_id)
     source["state_sha256"] = sha256_file(state_path)
@@ -90,6 +159,7 @@ def main() -> int:
     refresh_coverage()
     refresh_deltas()
     refresh_quality()
+    refresh_candidate_lineage_fixture()
     refresh_authority_manifest()
     print("Refreshed repository-maintenance plan projections")
     return 0

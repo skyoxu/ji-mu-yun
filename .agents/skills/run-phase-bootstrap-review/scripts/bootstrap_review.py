@@ -59,7 +59,7 @@ HASH_PREFIX = "sha256:"
 AUTHORITY_CLASS = "supplemental_bootstrap"
 REVIEW_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}")
 CHECK_ID_PATTERN = re.compile(r"[a-z][a-z0-9-]{2,63}")
-FINALIZED_VALIDATOR_REVISION = "bootstrap-finalized-run-validator.v1"
+FINALIZED_VALIDATOR_REVISION = "bootstrap-finalized-run-validator.v2"
 FINALIZED_DOES_NOT_AUTHORIZE = [
     "plan-acceptance",
     "implementation-acceptance",
@@ -3289,6 +3289,23 @@ def validate_p2_dispositions(
         errors.extend(f"{key} does not match current findings" for key, expected_value in expected.items() if value.get(key) != expected_value)
     entries = value.get("dispositions") if isinstance(value, dict) else None
     mapped: dict[str, dict[str, Any]] = {}
+
+    def validate_evidence_ref(reference: Any, label: str) -> None:
+        if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+            errors.append(f"{label} must be an exact path/hash reference")
+            return
+        try:
+            evidence_path = ensure_within(
+                Path(manifest["repositoryRoot"]) / str(reference.get("path", "")),
+                Path(manifest["repositoryRoot"]),
+                label,
+            )
+        except BootstrapError as exc:
+            errors.append(str(exc))
+            return
+        if not evidence_path.is_file() or file_hash(evidence_path) != reference.get("sha256"):
+            errors.append(f"{label} is missing or stale")
+
     if isinstance(entries, list):
         for entry in entries:
             if not isinstance(entry, dict):
@@ -3308,6 +3325,13 @@ def validate_p2_dispositions(
                 else:
                     if expiry <= datetime.now(timezone.utc):
                         errors.append(f"deferred P2 has expired and is blocking: {finding_id}")
+                validate_evidence_ref(entry.get("nonImpactEvidenceRef"), f"P2 non-impact evidence for {finding_id}")
+                validate_evidence_ref(entry.get("recheckEvidenceRef"), f"P2 recheck evidence for {finding_id}")
+                validate_evidence_ref(entry.get("ownerAuthorityRef"), f"P2 owner authority for {finding_id}")
+                validate_evidence_ref(entry.get("closureCommandRegistryRef"), f"P2 closure command registry for {finding_id}")
+            elif entry.get("status") in {"fixed", "refuted"}:
+                validate_evidence_ref(entry.get("closureCommandRegistryRef"), f"P2 closure command registry for {finding_id}")
+                validate_evidence_ref(entry.get("closureProcessResultRef"), f"P2 closure process result for {finding_id}")
         if sorted(mapped) != p2_ids:
             errors.append("P2 dispositions must cover the exact accepted P2 set")
     if errors:
@@ -3357,6 +3381,14 @@ def validate_finalized_run_evidence(
     }
     if len(finding_map) != len(findings):
         raise BootstrapError("review-candidates.json has duplicate or invalid finding IDs")
+    blockers = {
+        finding_id: finding
+        for finding_id, finding in finding_map.items()
+        if finding.get("proposedSeverity") in {"P0", "P1"}
+    }
+    verifier_path = run_dir / "verifier-output.json"
+    validate_verifier(read_json(verifier_path), manifest, blockers)
+    p2_dispositions = validate_p2_dispositions(run_dir, manifest, findings)
 
     disposition_path = run_dir / "review-dispositions.json"
     disposition_doc = read_json(disposition_path)
@@ -3480,8 +3512,7 @@ def validate_finalized_run_evidence(
         raise BootstrapError("Final result violates finalized evidence: " + "; ".join(result_errors))
 
     rejection_count = len(rejections_doc.get("rejections", [])) if isinstance(rejections_doc, dict) else 0
-    p2_count = sum(item.get("proposedSeverity") == "P2" for item in findings)
-    p2_hash = file_hash(run_dir / "p2-dispositions.json") if p2_count else None
+    p2_hash = file_hash(run_dir / "p2-dispositions.json") if p2_dispositions else None
     expected_metrics = {
         "schemaVersion": "bootstrap-review-metrics.v1",
         **bootstrap_sidecar_binding(manifest),
@@ -3537,6 +3568,8 @@ def validate_finalized_run_evidence(
             "finalResult": file_hash(result_path),
             "dispositions": file_hash(disposition_path),
             "metrics": file_hash(metrics_path),
+            "verifierOutput": file_hash(verifier_path),
+            "p2Dispositions": p2_hash,
         },
         "finalStatus": expected_status,
         "findingClosure": closure,

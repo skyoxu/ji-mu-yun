@@ -3,7 +3,7 @@
   "$id": "rmap.validation-result.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "run_id", "predicate", "status", "candidate_hash", "current_candidate_hash", "source_hash", "validator_version", "authorizes", "does_not_authorize", "checks", "diagnostics", "generated_at"],
+  "required": ["schema_version", "run_id", "predicate", "status", "candidate_hash", "current_candidate_hash", "source_hash", "validator_version", "capabilities", "authorizes", "does_not_authorize", "checks", "diagnostics", "generated_at"],
   "properties": {
     "schema_version": {"const": "rmap.validation-result.v1"},
     "run_id": {"type": "string", "minLength": 1},
@@ -13,6 +13,17 @@
     "current_candidate_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "source_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "validator_version": {"type": "string", "minLength": 1},
+    "capabilities": {
+      "type": "object", "additionalProperties": false,
+      "required": ["common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_accepted", "release_ready"],
+      "properties": {
+        "common_schema_skill_owned": {"type": "boolean"},
+        "adapter_operational": {"type": "boolean"},
+        "old_plan_backfill_complete": {"type": "boolean"},
+        "implementation_accepted": {"type": "boolean"},
+        "release_ready": {"const": false}
+      }
+    },
     "authorizes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "does_not_authorize": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "checks": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["rule_id", "status", "evidence"], "properties": {"rule_id": {"type": "string", "minLength": 1}, "status": {"enum": ["pass", "fail", "blocked", "skip"]}, "evidence": {"type": "array", "items": {"type": "string"}}}}},

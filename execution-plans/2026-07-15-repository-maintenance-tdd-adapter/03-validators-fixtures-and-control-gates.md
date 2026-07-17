@@ -29,6 +29,11 @@
 21. Shadow backfill exact population, order, additive-only policy, and non-authoritative status.
 22. Recovery initial/stale/successor rules, append-only lineage, and successor-policy re-entry exactness.
 23. P0/P1 closure, runtime P2 disposition, high-risk deferral rejection, and expiry blocking.
+24. Seven-dimensional artifact proof closure for every review-added normative, projection, evidence, lineage, or validator artifact.
+25. Full protocol-bundle recomputation rejects fabricated slice effects, omitted accepted attempts, self-asserted final events, and effects not derived from real diffs.
+26. The global baseline rejects predicted future paths while a first accepted add is valid and becomes part of the derived cross-slice state.
+27. Cross-slice effect hashes are separate from same-slice recovery/supersession lineage.
+28. Re-entry rejects empty policy decisions, partial saved envelopes, stale authorization events, and any saved envelope that differs from a fresh Bootstrap producer result.
 24. Positive, negative, boundary, stale, mutation, real Git for Windows, and junction containment tests.
 25. Validator unit tests executed, not inferred from source markers.
 
@@ -93,6 +98,12 @@ The minimum cases are:
 - missing S0-S6 lineage slice or stale lineage hash;
 - stale S7 candidate-result reference or authoritative supersession proof;
 - stale blocker hash or pending re-entry artifact that gains authority;
+- empty successor policy, five-field synthetic finalized envelope, self-declared independence, or mismatched change/input lineage;
+- fabricated slice effect with valid but unrelated ledger/event hashes, omitted accepted attempt, self-asserted final event, or effect not derived from diff manifests;
+- future path predeclared with a null baseline hash, cross-slice use of recovery predecessor fields, or broken previous-slice effect hash;
+- empty/malformed verifier evidence, stale P2 transitive evidence, or missing direct finalized-envelope hashes;
+- manual capability Boolean that conflicts with current predicate evidence;
+- missing or self-inconsistent seven-dimensional artifact proof.
 - real Git for Windows add/modify/delete/binary-patch behavior and junction escape.
 
 ## RED Before Implementation

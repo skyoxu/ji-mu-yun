@@ -33,7 +33,12 @@ def validate_shadow_protected_trees(plan_root: Path, shadow: dict[str, Any]) -> 
         return [{"rule_id": "RMAP-SHADOW-PROTECTED-DRIFT", "target": baseline_path.as_posix(), "message": "protected baseline is missing or invalid"}]
     baseline_plans = {item.get("plan_id"): item for item in baseline.get("plans", []) if isinstance(item, dict)}
     historical = baseline.get("historical_source", {})
-    if not isinstance(historical, dict) or historical.get("required_for_clean_checkout_validation") is not False:
+    if (
+        not isinstance(historical, dict)
+        or historical.get("required_for_clean_checkout_validation") is not False
+        or baseline.get("predecessor_baseline_id") != "repair-20260717-stabilized-upstream-pre-shadow-backfill"
+        or baseline.get("revision_reason") != "authorized-bootstrap-producer-and-7-12-compatibility-runtime-repair"
+    ):
         findings.append({"rule_id": "RMAP-SHADOW-PROTECTED-DRIFT", "target": "shadow-baseline-projection", "message": "durable protected baseline projection is invalid"})
     if shadow.get("protected_baseline_id") != baseline.get("baseline_id"):
         findings.append({"rule_id": "RMAP-SHADOW-PROTECTED-DRIFT", "target": "shadow-backfill", "message": "protected baseline identity differs"})

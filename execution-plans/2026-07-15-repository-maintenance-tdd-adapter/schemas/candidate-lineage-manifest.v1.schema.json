@@ -23,11 +23,13 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["slice_id", "run_id", "predecessor_run_id", "run_path", "run_artifact_sha256", "accepted_attempt_fold_hash", "final_event_hash"],
+        "required": ["slice_id", "run_id", "previous_slice_id", "previous_slice_run_id", "previous_slice_effect_hash", "run_path", "run_artifact_sha256", "accepted_attempt_fold_hash", "final_event_hash"],
         "properties": {
           "slice_id": {"pattern": "^RMAP-S[0-6]$"},
           "run_id": {"type": "string", "minLength": 1},
-          "predecessor_run_id": {"type": ["string", "null"]},
+          "previous_slice_id": {"type": ["string", "null"], "pattern": "^RMAP-S[0-6]$"},
+          "previous_slice_run_id": {"type": ["string", "null"]},
+          "previous_slice_effect_hash": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
           "run_path": {"type": "string", "minLength": 1},
           "run_artifact_sha256": {"pattern": "^sha256:[0-9a-f]{64}$"},
           "accepted_attempt_fold_hash": {"pattern": "^sha256:[0-9a-f]{64}$"},

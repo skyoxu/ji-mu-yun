@@ -31,6 +31,7 @@ Executable acceptance owner: [`schemas/acceptance-contracts.v1.json`](schemas/ac
 | RMAP-023 | Enforce Windows containment, case normalization, protected paths, and reparse-point safety. | path-security maintainer | P1 | RMAP-ACC-023 | active |
 | RMAP-024 | Prevent a new Router or expansion of historical script directories without an ADR delta. | workflow architect | P0 | RMAP-ACC-024 | active |
 | RMAP-025 | Persist immutable Capsules with typed refs and an exact byte-verified artifact union. | context protocol maintainer | P0 | RMAP-ACC-025 | active |
-| RMAP-026 | Preserve complete ordered stage attempts, exact event lifecycle, cumulative accepted-attempt folding, and ledger-root candidate binding. | attempt protocol maintainer | P0 | RMAP-ACC-026 | active |
+| RMAP-026 | Attempts form a complete RED-GREEN-REFACTOR prefix whose real decisions, diffs, events, stage results, and ledger roots independently derive every slice and candidate projection. | attempt protocol maintainer | P0 | RMAP-ACC-026 | active |
+| RMAP-027 | Every artifact introduced for a review finding satisfies the seven-dimensional artifact proof contract before it can participate in any predicate. | artifact proof maintainer | P0 | RMAP-ACC-027 | active |
 
 Each acceptance identity is executable intent. The machine registry owns source refs, evidence intent, consumers, failure family, and quality-check status.

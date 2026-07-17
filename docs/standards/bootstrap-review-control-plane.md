@@ -16,7 +16,7 @@ This standard defines the durable protocol for evidence-gated Bootstrap Review. 
 - P0/P1 candidates require an independent verifier that is not a discovery reviewer.
 - A change cycle has a three-full-round hard limit. Changing a review ID does not reset the round.
 - A final result cannot contain an open accepted P0 or P1.
-- Every accepted P2 must be fixed, refuted, or explicitly deferred. High-risk P2 cannot be deferred. A deferral requires owner, expiry, non-impact evidence, and a closure test; expiry blocks automatically.
+- Every accepted P2 must be fixed, refuted, or explicitly deferred. High-risk P2 cannot be deferred. A deferral requires a hash-bound authorized owner, expiry, non-impact evidence, registered closure command, current recheck evidence, and a recheck trigger; expiry blocks automatically. Successful closure-process evidence is required when the disposition becomes fixed or refuted, not while it remains deferred.
 - Bootstrap evidence is supplemental and never substitutes for a protected handoff, plan-local acceptance validator, production release, or commit authority.
 
 ## Ownership
@@ -93,9 +93,9 @@ Round 2 and Round 3 require an implementation-contract instance named `repair-cl
 
 The repository-owned Skill exposes `validate-finalized-run` as the only durable plan-consumption surface for a finalized Bootstrap run. The command reloads the current profile and run authority, revalidates preflight and gate evidence, reproduces candidate/rejection projection from reviewer outputs, and recomputes final result, disposition, metrics, and byte hashes.
 
-The `bootstrap-finalized-run-validation.v1` envelope binds review/change/round identity, the complete canonical profile hash, route and control-plane revisions, policy and authority identity, final status, finding closure, validator identity, and hashes of every consumed final artifact. It always carries `authorizes=[]` and explicitly excludes plan acceptance, implementation acceptance, protected handoff, release, commit, and done.
+The `bootstrap-finalized-run-validation.v1` envelope binds review/change/round identity, the complete canonical profile hash, route and control-plane revisions, policy and authority identity, final status, finding closure, validator identity, and hashes of every consumed final artifact. This includes direct hashes for `verifier-output.json` and the applicable `p2-dispositions.json`; a metrics-only transitive reference or file-existence check is insufficient. It always carries `authorizes=[]` and explicitly excludes plan acceptance, implementation acceptance, protected handoff, release, commit, and done.
 
-Plans consume this envelope instead of reimplementing a partial Bootstrap profile or lifecycle validator. A plan-local validator remains solely responsible for its own candidate and acceptance predicates. Envelope validation cannot clear a review-cycle manual pause or create a new semantic-review round.
+Plans consume this envelope instead of reimplementing a partial Bootstrap profile or lifecycle validator. A plan-local validator remains solely responsible for its own candidate and acceptance predicates. Envelope validation alone cannot clear a review-cycle manual pause or create a new semantic-review round. Re-entry after the hard limit additionally requires a schema-valid successor policy decision, a hash-bound authorization event, and a new change/policy/authority/review/input lineage. The consuming plan reruns the repository `validate-finalized-run` producer and derives independence from that lineage; it must not trust a saved minimal envelope or an `independent=true` assertion.
 
 ## Migration
 

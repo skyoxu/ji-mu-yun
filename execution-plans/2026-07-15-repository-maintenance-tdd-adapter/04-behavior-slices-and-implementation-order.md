@@ -3,18 +3,19 @@
 ## RMAP-S0: Existing Framework ADR And Ownership Standard
 
 - Phase: `P0`.
-- Requirements: `RMAP-001`, `RMAP-002`, `RMAP-019`, `RMAP-020`, `RMAP-021`, `RMAP-024`.
+- Requirements: `RMAP-001`, `RMAP-002`, `RMAP-019`, `RMAP-020`, `RMAP-021`, `RMAP-024`, `RMAP-027`.
 - Cite the existing Accepted `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md` and produce `docs/standards/repository-maintenance-agent-protocol.md`.
 - Update standards and documentation indexes in the same change.
 - Tests first: ownership registry rejects duplicate schema/evidence owners and an ADR-ID collision path.
+- Register every review-added normative, projection, evidence, lineage, and validator artifact under the seven-dimensional artifact proof contract before any predicate consumes it.
 - RED: deliberate duplicate ownership produces `RMAP-OWNERSHIP-DUPLICATE`. The ADR-ID collision remains an independent negative fixture that must produce `RMAP-OWNERSHIP-ADR-ID-COLLISION`.
 - GREEN: `rmap-s0-slice-validate` checks the ADR, standard, standards index, and project documentation index under `slice-ready`.
-- Exit: GREEN proof passes, the existing ADR remains Accepted, ownership validator passes, and no current-capability claim is introduced. `plan-ready` alone cannot satisfy this exit.
+- Exit: GREEN proof passes, the existing ADR remains Accepted, ownership validator and the exact artifact proof registry pass, and no current-capability claim is introduced. `plan-ready` alone cannot satisfy this exit.
 - Rollback: remove only the new proposed standard/index links before any dependent slice starts.
 
 ## RMAP-S1: Common Contract And Self-Hosted Plan Instance
 
-- Requirements: `RMAP-003`, `RMAP-004`, `RMAP-013`, `RMAP-022`, `RMAP-025`, `RMAP-026`.
+- Requirements: `RMAP-003`, `RMAP-004`, `RMAP-013`, `RMAP-022`, `RMAP-025`, `RMAP-026`, `RMAP-027`.
 - Phase: `P0`.
 - Create the repository-owned Skill package, migrate the proposed common schema plus public Capsule/attempt schemas into it, and keep this plan's `implementation-contract.v1.json` as the first live instance.
 - Tests first: schema, raw-shell, env, placeholder, predicate escalation, stale source, and missing acceptance fixtures.
@@ -69,7 +70,7 @@
 
 ## RMAP-S6: Finalize Current Implementation Candidate
 
-- Requirements: `RMAP-010`, `RMAP-012`, `RMAP-016`, `RMAP-025`, `RMAP-026`.
+- Requirements: `RMAP-010`, `RMAP-012`, `RMAP-016`, `RMAP-025`, `RMAP-026`, `RMAP-027`.
 - Phase: `P3`.
 - Recompute the complete current diff and exact candidate identity after S3-S5. Rename inference is disabled; a rename is represented as deterministic delete plus add.
 - Require current deterministic tests, authority manifest, contract, command registry, validator, Git index, tracked diff, untracked manifest, cumulative candidate diff manifest, cross-slice lineage manifest, reproducible binary-safe test patch, final context-manifest and Capsule hashes, accepted attempt IDs, and accepted decision hashes.
@@ -86,7 +87,7 @@
 
 ## RMAP-S7: Implementation Acceptance And Handoff
 
-- Requirements: `RMAP-011`, `RMAP-013`, `RMAP-016`, `RMAP-020`.
+- Requirements: `RMAP-011`, `RMAP-013`, `RMAP-016`, `RMAP-020`, `RMAP-027`.
 - Phase: `P3`.
 - Run fresh deterministic proof against current hashes and consume the repository Skill's `bootstrap-finalized-run-validation.v1` envelope.
 - Consume an explicit `candidate-result-ref.json` that binds the S6 run, candidate bytes/hash, predicate, and `candidate-supersession-proof.json`. Recovery state, event log, final event hash, and a validator-owned scan of the canonical S6 recovery root must prove that run remains active. S6 and S7 run IDs are independent; no implicit latest, Boolean assertion, or caller-supplied empty successor list is allowed.

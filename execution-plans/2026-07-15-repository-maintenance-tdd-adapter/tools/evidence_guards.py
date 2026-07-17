@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import re
 from datetime import datetime, timezone
@@ -33,6 +34,16 @@ def _sha256(path: Path) -> str:
 def _value_hash(value: Any) -> str:
     payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
     return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def _bootstrap_runtime(repository_root: Path) -> Any:
+    path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "scripts" / "bootstrap_review.py"
+    spec = importlib.util.spec_from_file_location("rmap_evidence_bootstrap_review", path)
+    if spec is None or spec.loader is None:
+        raise ValueError("Bootstrap schema runtime cannot be loaded")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def validate_bootstrap_envelope_projection(
@@ -88,19 +99,33 @@ def validate_runtime_disposition_sources(review_dir: Path, envelope: dict[str, A
         if not p2_path.is_file() or metrics.get("p2DispositionHash") != _sha256(p2_path):
             findings.append(_finding("RMAP-REVIEW-P2-SOURCE", candidate_path, "Bootstrap metrics do not hash-bind runtime P2 dispositions"))
         finalized_p2 = {item.get("findingId") for item in disposition_items if str(item.get("status", "")).startswith("p2_")}
-        if p2_document.get("schemaVersion") != "bootstrap-p2-dispositions.v1" or p2_document.get("reviewId") != envelope.get("reviewId") or p2_document.get("inputHash") != envelope.get("inputHash") or set(p2_document.get("findingIds", [])) != finalized_p2 or set(runtime_p2) != finalized_p2:
+        repository_root = Path(__file__).resolve().parents[3]
+        try:
+            p2_schema_error = "; ".join(_bootstrap_runtime(repository_root).schema_validation_errors("bootstrap-p2-dispositions.v1.schema.json", p2_document))
+        except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+            p2_schema_error = "Bootstrap P2 schema unavailable"
+        if p2_schema_error or p2_document.get("reviewId") != envelope.get("reviewId") or p2_document.get("inputHash") != envelope.get("inputHash") or set(p2_document.get("findingIds", [])) != finalized_p2 or set(runtime_p2) != finalized_p2:
             findings.append(_finding("RMAP-REVIEW-P2-SOURCE", candidate_path, "runtime P2 source identity differs from finalized finding closure"))
         for finding_id in open_p2:
             disposition = runtime_p2.get(finding_id, {})
-            required = all(disposition.get(key) for key in ("owner", "expiry", "closureTest", "reason"))
+            required = all(disposition.get(key) for key in ("owner", "expiry", "closureCommandId", "reason", "recheckTrigger"))
             try:
                 expiry = datetime.fromisoformat(str(disposition.get("expiry", "")).replace("Z", "+00:00"))
             except ValueError:
                 expiry = datetime.min.replace(tzinfo=timezone.utc)
             if disposition.get("status") != "deferred" or disposition.get("risk") == "high" or not required or expiry <= datetime.now(timezone.utc):
                 findings.append(_finding("RMAP-REVIEW-P2-DISPOSITION", candidate_path, f"runtime P2 disposition is incomplete for {finding_id}"))
-    if any(item.get("proposedSeverity") in {"P0", "P1"} for item in findings_by_id.values()) and not (review_dir / "verifier-output.json").is_file():
-        findings.append(_finding("RMAP-REVIEW-VERIFIER-SOURCE", candidate_path, "blocking findings require runtime verifier source evidence"))
+    if any(item.get("proposedSeverity") in {"P0", "P1"} for item in findings_by_id.values()):
+        verifier_path = review_dir / "verifier-output.json"
+        try:
+            verifier = json.loads(verifier_path.read_text(encoding="utf-8"))
+            verifier_error = "; ".join(_bootstrap_runtime(Path(__file__).resolve().parents[3]).schema_validation_errors("bootstrap-verifier-output.v1.schema.json", verifier))
+        except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+            verifier_error = "verifier evidence unavailable"
+        blocking_ids = {item.get("findingId") for item in findings_by_id.values() if item.get("proposedSeverity") in {"P0", "P1"}}
+        decision_ids = {item.get("findingId") for item in verifier.get("decisions", [])} if isinstance(locals().get("verifier"), dict) else set()
+        if verifier_error or decision_ids != blocking_ids or envelope.get("artifactHashes", {}).get("verifierOutput") != _sha256(verifier_path):
+            findings.append(_finding("RMAP-REVIEW-VERIFIER-SOURCE", candidate_path, "blocking findings require schema-valid hash-bound verifier decisions"))
     return findings
 
 

@@ -650,6 +650,34 @@
         "cumulative-candidate-exactness"
       ],
       "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-027",
+      "requirement_id": "RMAP-027",
+      "owner_slice_id": "RMAP-S0",
+      "supporting_slice_ids": [
+        "RMAP-S1",
+        "RMAP-S6",
+        "RMAP-S7"
+      ],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s0-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "artifact-proof-missing-dimension"
+      ],
+      "expected_failure_ids": [
+        "RMAP-ARTIFACT-PROOF"
+      ],
+      "evidence_required": [
+        "artifact-proof-schema",
+        "exact-proved-artifact-set",
+        "authority-manifest-hashes",
+        "independent-validator",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
     }
   ]
 }

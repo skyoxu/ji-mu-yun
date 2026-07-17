@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.artifact-proof.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact_path", "artifact_kind", "finding_ids", "schema_producer_authority", "immutable_identity", "source_of_truth_derivation", "independent_recomputation", "staleness_propagation", "recovery_supersession", "consumer_authorization_boundary"],
+  "properties": {
+    "artifact_path": {"type": "string", "minLength": 1},
+    "artifact_kind": {"enum": ["normative", "projection", "evidence", "lineage", "validator"]},
+    "finding_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "schema_producer_authority": {"$ref": "#/$defs/producer"},
+    "immutable_identity": {"$ref": "#/$defs/identity"},
+    "source_of_truth_derivation": {"$ref": "#/$defs/derivation"},
+    "independent_recomputation": {"$ref": "#/$defs/recomputation"},
+    "staleness_propagation": {"$ref": "#/$defs/staleness"},
+    "recovery_supersession": {"$ref": "#/$defs/recovery"},
+    "consumer_authorization_boundary": {"$ref": "#/$defs/consumer"}
+  },
+  "$defs": {
+    "strings": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "producer": {"type": "object", "additionalProperties": false, "required": ["producer_path", "authority_owner"], "properties": {"producer_path": {"type": "string", "minLength": 1}, "authority_owner": {"type": "string", "minLength": 1}}},
+    "identity": {"type": "object", "additionalProperties": false, "required": ["algorithm", "manifest_path"], "properties": {"algorithm": {"const": "sha256-bytes"}, "manifest_path": {"const": "schemas/authority-manifest.v1.json"}}},
+    "derivation": {"type": "object", "additionalProperties": false, "required": ["source_paths", "projection_only"], "properties": {"source_paths": {"$ref": "#/$defs/strings"}, "projection_only": {"type": "boolean"}}},
+    "recomputation": {"type": "object", "additionalProperties": false, "required": ["validator_path", "rule_ids"], "properties": {"validator_path": {"type": "string", "minLength": 1}, "rule_ids": {"$ref": "#/$defs/strings"}}},
+    "staleness": {"type": "object", "additionalProperties": false, "required": ["input_paths", "invalidates"], "properties": {"input_paths": {"$ref": "#/$defs/strings"}, "invalidates": {"$ref": "#/$defs/strings"}}},
+    "recovery": {"type": "object", "additionalProperties": false, "required": ["history_policy", "lineage_fields"], "properties": {"history_policy": {"const": "append-only-successor-no-rewrite"}, "lineage_fields": {"$ref": "#/$defs/strings"}}},
+    "consumer": {"type": "object", "additionalProperties": false, "required": ["consumers", "predicate", "authorizes", "does_not_authorize"], "properties": {"consumers": {"$ref": "#/$defs/strings"}, "predicate": {"type": "string", "minLength": 1}, "authorizes": {"$ref": "#/$defs/strings"}, "does_not_authorize": {"$ref": "#/$defs/strings"}}}
+  }
+}

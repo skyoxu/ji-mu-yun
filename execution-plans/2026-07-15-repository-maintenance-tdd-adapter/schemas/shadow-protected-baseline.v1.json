@@ -1,7 +1,9 @@
 {
   "schema_version": "rmap.shadow-protected-baseline.v1",
-  "baseline_id": "repair-20260717-stabilized-upstream-pre-shadow-backfill",
-  "captured_from_review": "repair-20260717T013023Z",
+  "baseline_id": "repair-20260717-1300-bootstrap-compatibility-successor",
+  "captured_from_review": "clarification-20260717T190000Z",
+  "predecessor_baseline_id": "repair-20260717-stabilized-upstream-pre-shadow-backfill",
+  "revision_reason": "authorized-bootstrap-producer-and-7-12-compatibility-runtime-repair",
   "historical_source": {
     "path": "logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260717-444-capsule-ledger-baseline/shadow-protected-baseline-current.json",
     "sha256": "sha256:86785c6a9d7eacd95dc49ae1dcd4c9457dc378bdb0c3668f5ff9a0237b7883bc",
@@ -11,7 +13,7 @@
     {
       "plan_id": "llm-review-evidence-gate-hardening",
       "path": "../2026-07-12-llm-review-evidence-gate-hardening",
-      "protected_tree_sha256": "sha256:9312674b63665cdb34c78c650f10c3c0fd19cc45bdc0a5b083c48b75f43f4e3d",
+      "protected_tree_sha256": "sha256:d9826d1da60bc623c5d43677b8fe263f38ebabf4f5de70d9ac974ee19880db52",
       "protected_file_count": 28
     },
     {

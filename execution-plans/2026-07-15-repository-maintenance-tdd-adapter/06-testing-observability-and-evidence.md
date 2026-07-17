@@ -33,6 +33,12 @@
 29. Immutable Capsule context, predecessor chain, path, and predicate authority.
 30. Minimized attempt evidence, request/response/diff/decision binding, partial failure, stage uniqueness, and event lineage.
 31. Bootstrap finalized-run envelope success, stale profile/control-plane/validator/artifact rejection, and empty authorization set.
+32. Direct verifier and P2 artifact hash binding in the Bootstrap v2 finalized envelope.
+33. Successor policy authorization event plus fresh finalized-run recomputation; partial saved envelopes fail.
+34. Per-slice full run-bundle recomputation against cached effects and cumulative cross-slice hash chain.
+35. First-add/new-path baseline semantics and retry-safe separation of cross-slice versus recovery lineage.
+36. Predicate-derived capability projection.
+37. Seven-dimensional artifact proof registry exact-set, byte identity, staleness, recovery, and authorization tests.
 
 ## Required Adapter Fixtures
 

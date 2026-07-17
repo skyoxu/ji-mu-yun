@@ -239,7 +239,7 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
   --run-dir logs/ci/2026-07-12/review-gateway-bootstrap-gdd-to-module-manual-001
 ```
 
-存在 accepted P2 时，finalize 前必须提供 `p2-dispositions.json`，对 exact P2 set 逐项声明 `fixed|refuted|deferred`。高风险 P2 不得延期；延期必须提供 owner、未来 expiry、reason 和 closure test，到期后自动阻断。最终结果不得存在开放 accepted P0/P1，P2 必须全部处置。
+存在 accepted P2 时，finalize 前必须提供 `p2-dispositions.json`，对 exact P2 set 逐项声明 `fixed|refuted|deferred`。高风险 P2 不得延期；延期必须提供 hash-bound owner authority、未来 expiry、non-impact evidence、registered closure command、当前 recheck evidence 和 trigger，到期后自动阻断；转为 fixed/refuted 时必须提供成功 closure-process evidence。最终结果不得存在开放 accepted P0/P1，P2 必须全部处置。
 
 最终输出：
 

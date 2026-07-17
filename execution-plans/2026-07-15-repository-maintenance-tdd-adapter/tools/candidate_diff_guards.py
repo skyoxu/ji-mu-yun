@@ -275,6 +275,15 @@ def validate_candidate_fixture_suite(plan_root: Path) -> list[dict[str, str]]:
     )
     if base_observed:
         findings.append(_finding("RMAP-STRUCT-FIXTURE", "valid-candidate-diff", f"valid fixture failed: {sorted({item['rule_id'] for item in base_observed})}"))
+    valid_lineage = validate_candidate_lineage_model(
+        plan_root,
+        base["lineage"],
+        [(item["document"], item["raw"].encode("utf-8")) for item in base["lineage_runs"]],
+        base["candidate_run_id"],
+        base["current_identity"],
+    )
+    if valid_lineage[2]:
+        findings.append(_finding("RMAP-STRUCT-FIXTURE", "valid-candidate-lineage", f"valid fixture failed: {sorted({item['rule_id'] for item in valid_lineage[2]})}"))
     for case in document["cases"]:
         if case["target"] == "lineage":
             lineage = json.loads(json.dumps(base["lineage"]))
