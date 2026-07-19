@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
 import shutil
@@ -33,6 +34,35 @@ class SkillContractTests(unittest.TestCase):
         result = self.validator.validate_skill(SKILL_ROOT)
         self.assertTrue(result["ok"], result)
         self.assertEqual([], result["findings"])
+
+    def test_artifact_proof_trust_root_dimensions_fail_independently(self) -> None:
+        contract = json.loads((SKILL_ROOT / "scripts/skill-contract.json").read_text(encoding="utf-8"))
+        mutations = {
+            "VDD-ARTIFACT-PROOF-PRODUCER": lambda root: root["schema_producer_authority"].__setitem__("authority_path", "AGENTS.md"),
+            "VDD-ARTIFACT-PROOF-IDENTITY": lambda root: root["immutable_identity"].__setitem__("authority_revision", "sha256:" + "0" * 64),
+            "VDD-ARTIFACT-PROOF-DERIVATION": lambda root: root["source_of_truth_derivation"]["rules"][0].__setitem__("source", "AGENTS.md"),
+            "VDD-ARTIFACT-PROOF-RULE": lambda root: root["independent_recomputation"].__setitem__("callable", "missing_callable"),
+            "VDD-ARTIFACT-PROOF-STALENESS": lambda root: root["staleness_propagation"].__setitem__("invalidates", ["artifact-proof-registry"]),
+            "VDD-ARTIFACT-PROOF-LINEAGE": lambda root: root["recovery_supersession"].__setitem__("predecessor_sha256", "sha256:" + "1" * 64),
+            "VDD-ARTIFACT-PROOF-CONSUMER": lambda root: root["consumer_authorization_boundary"].__setitem__("authorizes", ["plan-ready"]),
+            "VDD-ARTIFACT-PROOF-APPLICABILITY": lambda root: root["dimension_verdicts"]["immutable_identity"].__setitem__("status", "N/A"),
+        }
+        for expected_rule, mutate in mutations.items():
+            with self.subTest(expected_rule=expected_rule):
+                candidate = copy.deepcopy(contract)
+                mutate(candidate["artifact_proof_trust_roots"]["repository-maintenance-tdd-adapter"])
+                findings = self.validator.validate_artifact_proof_trust_roots(SKILL_ROOT, candidate)
+                self.assertEqual([expected_rule], [item["rule_id"] for item in findings])
+
+    def test_artifact_proof_trust_root_producer_source_hash_is_pinned(self) -> None:
+        contract = json.loads((SKILL_ROOT / "scripts/skill-contract.json").read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as tmp:
+            mutated = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, mutated)
+            standard = mutated / "references" / "strict-vdd-standard.md"
+            standard.write_bytes(standard.read_bytes() + b"\nproducer-source-mutation\n")
+            findings = self.validator.validate_artifact_proof_trust_roots(mutated, contract)
+        self.assertEqual(["VDD-ARTIFACT-PROOF-PRODUCER"], [item["rule_id"] for item in findings])
 
     def test_pass_result_fixture_is_valid(self) -> None:
         fixture = SKILL_ROOT / "scripts" / "fixtures" / "validation-result-pass.json"
@@ -808,6 +838,22 @@ class SkillContractTests(unittest.TestCase):
             target = mutated / "scripts" / "skill-contract.json"
             contract = json.loads(target.read_text(encoding="utf-8"))
             del contract["required_files"]
+            target.write_text(
+                json.dumps(contract, indent=2) + "\n", encoding="utf-8", newline="\n"
+            )
+            result = self.validator.validate_skill(mutated)
+        self.assertFalse(result["ok"])
+        self.assertEqual(
+            ["VDD-SKILL-CONTRACT"], [item["rule_id"] for item in result["findings"]]
+        )
+
+    def test_artifact_proof_trust_root_permission_escalation_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            mutated = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, mutated)
+            target = mutated / "scripts" / "skill-contract.json"
+            contract = json.loads(target.read_text(encoding="utf-8"))
+            contract["artifact_proof_trust_roots"]["repository-maintenance-tdd-adapter"]["consumer_authorization_boundary"]["authorizes"] = ["plan-ready"]
             target.write_text(
                 json.dumps(contract, indent=2) + "\n", encoding="utf-8", newline="\n"
             )

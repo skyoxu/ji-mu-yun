@@ -2,11 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://jimuyun.local/schemas/bootstrap-p2-process-result.v1.schema.json",
   "type": "object", "additionalProperties": false,
-  "required": ["schemaVersion", "resultId", "findingId", "reviewId", "inputHash", "candidateHash", "authorityRevision", "commandId", "commandClass", "registryHash", "exitCode", "observedAt", "authorizes", "doesNotAuthorize"],
+  "required": ["schemaVersion", "resultId", "findingId", "reviewId", "inputHash", "candidateHash", "authorityRevision", "commandId", "commandClass", "registryHash", "descriptorHash", "runnerIdentity", "processEventRef", "processLogRef", "stdoutHash", "stderrHash", "exitCode", "observedAt", "authorizes", "doesNotAuthorize"],
   "properties": {
     "schemaVersion": {"const": "bootstrap-p2-process-result.v1"}, "resultId": {"type": "string", "minLength": 1}, "findingId": {"type": "string", "minLength": 1}, "reviewId": {"type": "string", "minLength": 1},
     "inputHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "candidateHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "authorityRevision": {"type": "string", "minLength": 1},
-    "commandId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,63}$"}, "commandClass": {"enum": ["p2-recheck", "p2-closure"]}, "registryHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "exitCode": {"const": 0}, "observedAt": {"type": "string", "format": "date-time"},
+    "commandId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,63}$"}, "commandClass": {"enum": ["p2-recheck", "p2-closure"]}, "registryHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "descriptorHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "runnerIdentity": {"const": "bootstrap-p2-runner.v1"}, "processEventRef": {"$ref": "#/$defs/evidenceRef"}, "processLogRef": {"$ref": "#/$defs/evidenceRef"}, "stdoutHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "stderrHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "exitCode": {"const": 0}, "observedAt": {"type": "string", "format": "date-time"},
     "authorizes": {"type": "array", "maxItems": 0}, "doesNotAuthorize": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"enum": ["implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
-  }
+  },
+  "$defs": {"evidenceRef": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}}}
 }

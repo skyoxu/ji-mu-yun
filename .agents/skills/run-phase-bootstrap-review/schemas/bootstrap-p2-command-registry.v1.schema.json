@@ -2,11 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://jimuyun.local/schemas/bootstrap-p2-command-registry.v1.schema.json",
   "type": "object", "additionalProperties": false,
-  "required": ["schemaVersion", "registryId", "reviewId", "inputHash", "candidateHash", "policyRevision", "authorityRevision", "commands", "authorizes", "doesNotAuthorize"],
+  "required": ["schemaVersion", "registryId", "rootId", "authorityRootRef", "signerId", "consumer", "runnerIdentity", "reviewId", "inputHash", "candidateHash", "policyRevision", "authorityRevision", "commands", "authorizes", "doesNotAuthorize"],
   "properties": {
-    "schemaVersion": {"const": "bootstrap-p2-command-registry.v1"}, "registryId": {"type": "string", "minLength": 1}, "reviewId": {"type": "string", "minLength": 1},
+    "schemaVersion": {"const": "bootstrap-p2-command-registry.v1"}, "registryId": {"type": "string", "minLength": 1}, "rootId": {"const": "p2-command-root.v1"}, "authorityRootRef": {"$ref": "#/$defs/evidenceRef"}, "signerId": {"type": "string", "minLength": 1}, "consumer": {"const": "bootstrap-p2-disposition"}, "runnerIdentity": {"const": "bootstrap-p2-runner.v1"}, "reviewId": {"type": "string", "minLength": 1},
     "inputHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "candidateHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "policyRevision": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "authorityRevision": {"type": "string", "minLength": 1},
-    "commands": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["commandId", "commandClass"], "properties": {"commandId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,63}$"}, "commandClass": {"enum": ["p2-recheck", "p2-closure"]}}}},
+    "commands": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["commandId", "commandClass", "executable", "argv", "cwd"], "properties": {"commandId": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,63}$"}, "commandClass": {"enum": ["p2-recheck", "p2-closure"]}, "executable": {"enum": ["py", "python", "python3"]}, "argv": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "cwd": {"type": "string", "minLength": 1}}}},
     "authorizes": {"type": "array", "maxItems": 0}, "doesNotAuthorize": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"enum": ["implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
-  }
+  },
+  "$defs": {"evidenceRef": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}}}
 }

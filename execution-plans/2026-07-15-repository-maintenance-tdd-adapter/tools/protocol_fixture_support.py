@@ -77,10 +77,10 @@ def hydrate_protocol_fixture(
         capsule_bytes = canonical_bytes(capsule)
         store[("run_path", capsule_path)] = capsule_bytes
         capsule_ref = _typed_ref("slice-capsule", "run_path", capsule_path, capsule_bytes)
-        artifact_refs = [
+        artifact_refs = copy.deepcopy([
             *capsule["authority_refs"], capsule["implementation_contract"], capsule["baseline_ref"],
             *capsule["stage_evidence_refs"],
-        ]
+        ])
         context = copy.deepcopy(base["context_manifest"])
         context.update({
             "capsule_id": capsule_id,

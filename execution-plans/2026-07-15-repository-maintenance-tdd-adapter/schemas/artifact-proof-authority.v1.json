@@ -1,0 +1,1711 @@
+{
+  "schema_version": "jimuyun.artifact-proof-authority.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
+  "authority_source": {
+    "path": "C:/log/1600.txt",
+    "sha256": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202"
+  },
+  "external_trust_root": {
+    "path": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+    "root_id": "artifact-proof-root.v1"
+  },
+  "proof_schema": "schemas/artifact-proof.v1.schema.json",
+  "rule_registry": {
+    "artifact-proof-package.v1": {
+      "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
+      "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+      "callable": "validate_artifact_proofs",
+      "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+      "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+      "expected_failure_ids": [
+        "RMAP-ARTIFACT-PROOF-PRODUCER",
+        "RMAP-ARTIFACT-PROOF-IDENTITY",
+        "RMAP-ARTIFACT-PROOF-DERIVATION",
+        "RMAP-ARTIFACT-PROOF-RULE",
+        "RMAP-ARTIFACT-PROOF-STALENESS",
+        "RMAP-ARTIFACT-PROOF-LINEAGE",
+        "RMAP-ARTIFACT-PROOF-CONSUMER",
+        "RMAP-ARTIFACT-PROOF-APPLICABILITY"
+      ]
+    }
+  },
+  "permission_lattice": {
+    "artifact-contract-proof": {
+      "consumers": [
+        "composite plan validator"
+      ],
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    }
+  },
+  "classes": {
+    "authority-root": {
+      "artifact_kind": "normative",
+      "producer_authority": {
+        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+        "authority_category": "plan_books",
+        "producer_kind": "manual-authority",
+        "generator_path": null
+      },
+      "identity_mode": "authority-root",
+      "derivation": "authoritative-bytes",
+      "staleness": {
+        "invalidates": [
+          "artifact-proof-registry",
+          "runtime-artifact-type-proof",
+          "plan-repair-verified",
+          "plan-ready"
+        ],
+        "regeneration_command_id": "rmap-refresh-projections",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "lineage": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+        "required_fields": [
+          "artifact_path",
+          "immutable_identity",
+          "recovery_supersession"
+        ],
+        "predecessor_policy": "external-authority-revision"
+      }
+    },
+    "bootstrap-normative": {
+      "artifact_kind": "normative",
+      "producer_authority": {
+        "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "authority_category": "architecture_authority",
+        "producer_kind": "manual-authority",
+        "generator_path": null
+      },
+      "identity_mode": "pinned-bytes",
+      "derivation": "authoritative-bytes",
+      "staleness": {
+        "invalidates": [
+          "artifact-proof-registry",
+          "plan-repair-verified",
+          "plan-ready"
+        ],
+        "regeneration_command_id": "rmap-refresh-projections",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "lineage": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+        "required_fields": [
+          "artifact_path",
+          "immutable_identity",
+          "recovery_supersession"
+        ],
+        "predecessor_policy": "explicit-null-or-pinned-predecessor"
+      }
+    },
+    "plan-normative": {
+      "artifact_kind": "normative",
+      "producer_authority": {
+        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+        "authority_category": "plan_books",
+        "producer_kind": "manual-authority",
+        "generator_path": null
+      },
+      "identity_mode": "pinned-bytes",
+      "derivation": "authoritative-bytes",
+      "staleness": {
+        "invalidates": [
+          "artifact-proof-registry",
+          "plan-repair-verified",
+          "plan-ready"
+        ],
+        "regeneration_command_id": "rmap-refresh-projections",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "lineage": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+        "required_fields": [
+          "artifact_path",
+          "immutable_identity",
+          "recovery_supersession"
+        ],
+        "predecessor_policy": "explicit-null-or-pinned-predecessor"
+      }
+    },
+    "plan-projection": {
+      "artifact_kind": "projection",
+      "producer_authority": {
+        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
+        "authority_category": "machine_owners",
+        "producer_kind": "generated-projection",
+        "generator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py"
+      },
+      "identity_mode": "derived-projection",
+      "derivation": "exact-projection",
+      "staleness": {
+        "invalidates": [
+          "artifact-proof-registry",
+          "runtime-artifact-type-proof",
+          "plan-repair-verified",
+          "plan-ready"
+        ],
+        "regeneration_command_id": "rmap-refresh-projections",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "lineage": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+        "required_fields": [
+          "artifact_path",
+          "immutable_identity",
+          "recovery_supersession"
+        ],
+        "predecessor_policy": "regenerate-from-current-authority"
+      }
+    },
+    "plan-validator": {
+      "artifact_kind": "validator",
+      "producer_authority": {
+        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+        "authority_category": "plan_books",
+        "producer_kind": "manual-authority",
+        "generator_path": null
+      },
+      "identity_mode": "pinned-bytes",
+      "derivation": "authoritative-bytes",
+      "staleness": {
+        "invalidates": [
+          "validator-identity",
+          "artifact-proof-registry",
+          "plan-repair-verified",
+          "plan-ready"
+        ],
+        "regeneration_command_id": "rmap-refresh-projections",
+        "revalidation_command_id": "rmap-validator-tests"
+      },
+      "lineage": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+        "required_fields": [
+          "artifact_path",
+          "immutable_identity",
+          "recovery_supersession"
+        ],
+        "predecessor_policy": "explicit-null-or-pinned-predecessor"
+      }
+    },
+    "successor-evidence": {
+      "artifact_kind": "evidence",
+      "producer_authority": {
+        "authority_path": "docs/standards/bootstrap-review-control-plane.md",
+        "authority_category": "architecture_authority",
+        "producer_kind": "authorized-event",
+        "generator_path": null
+      },
+      "identity_mode": "pinned-bytes",
+      "derivation": "hash-bound-reference",
+      "staleness": {
+        "invalidates": [
+          "successor-policy-decision",
+          "review-policy-reentry",
+          "plan-ready"
+        ],
+        "regeneration_command_id": "rmap-refresh-projections",
+        "revalidation_command_id": "rmap-plan-validate"
+      },
+      "lineage": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+        "required_fields": [
+          "artifact_path",
+          "immutable_identity",
+          "recovery_supersession"
+        ],
+        "predecessor_policy": "profile-root-authorized-successor"
+      }
+    },
+    "manifest-bound-authority-root": {
+      "producer_authority": {
+        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+        "authority_category": "plan_books",
+        "producer_kind": "manual-authority",
+        "generator_path": null
+      },
+      "identity_mode": "derived-projection",
+      "derivation": "authoritative-bytes",
+      "staleness": {
+        "invalidates": [
+          "artifact-proof-registry",
+          "runtime-artifact-type-proof",
+          "plan-repair-verified",
+          "plan-ready"
+        ],
+        "regeneration_command_id": "rmap-refresh-projections",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "lineage": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+        "required_fields": [
+          "artifact_path",
+          "immutable_identity",
+          "recovery_supersession"
+        ],
+        "predecessor_policy": "manifest-bound-current-bytes"
+      },
+      "artifact_kind": "normative"
+    },
+    "manifest-bound-validator": {
+      "producer_authority": {
+        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+        "authority_category": "plan_books",
+        "producer_kind": "manual-authority",
+        "generator_path": null
+      },
+      "identity_mode": "derived-projection",
+      "derivation": "authoritative-bytes",
+      "staleness": {
+        "invalidates": [
+          "artifact-proof-registry",
+          "runtime-artifact-type-proof",
+          "plan-repair-verified",
+          "plan-ready"
+        ],
+        "regeneration_command_id": "rmap-refresh-projections",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "lineage": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+        "required_fields": [
+          "artifact_path",
+          "immutable_identity",
+          "recovery_supersession"
+        ],
+        "predecessor_policy": "manifest-bound-current-bytes"
+      },
+      "artifact_kind": "validator"
+    }
+  },
+  "artifacts": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-authority-root-registry.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:35e6de7b0a1f2473b81e601afc2ce32da3010c874d5d88ffba823c21a5497899",
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:55b75323c95daae0532a06b06c95de3ef0389746d8456901f26b7ef1c6ef908a",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:55b75323c95daae0532a06b06c95de3ef0389746d8456901f26b7ef1c6ef908a",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:bc70aea141a5786aafcdceac6cba727bc2b6b2dfbdecde5a682779fa8d4fee85",
+      "lifecycle_status": "supersedes",
+      "predecessor_sha256": "sha256:f115b1ef0af6e1dd75657e1edd97729387518660ed1398594fda5e49dd754cef",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:728686cfce18033461900754e2929cb9ca2298b234471feb3c26257825f39bac",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:728686cfce18033461900754e2929cb9ca2298b234471feb3c26257825f39bac",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-evidence-result.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:2fe318306075e0a57168bddc20b4b8c87d51a8ee3c26b59a0397e99156770639",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:2fe318306075e0a57168bddc20b4b8c87d51a8ee3c26b59a0397e99156770639",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-owner-authority.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:1f7fb210ed667e6050826e6020c06c0f12cee19b37c7541021df2f3355f4c372",
+      "lifecycle_status": "supersedes",
+      "predecessor_sha256": "sha256:89687dddc1a8a9f4abf0a36955625b225c4789eda21575f38ce8f92fa9db26fb",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:77636808f229d7829cdaee60b2d244e494baf32de1731f1744080da971644eea",
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:03b9f7dc3169b490408c579eae19da7eb91c663ea5e77271a962d1be97dd7785",
+      "lifecycle_status": "supersedes",
+      "predecessor_sha256": "sha256:f61339dc9a31320807159803c818a40f3fe5a642b4964b91e6004af968e34319",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:f85709cc2d6b4c9731d40e0ccd56a5bfb78defe187b049baf8acbd770fce8821",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:f85709cc2d6b4c9731d40e0ccd56a5bfb78defe187b049baf8acbd770fce8821",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:3ae132fd7c6dc6688e3ab37e221208f56ee9bf1aec79dad9cc531fd081c06494",
+      "lifecycle_status": "supersedes",
+      "predecessor_sha256": "sha256:41691be8b20312a9e07b33c1b8e22ac9ff5127f3ba838d243dd19750730dfc64",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+      "class_id": "bootstrap-normative",
+      "sha256": "sha256:ed47c887684f2f94f6ef46dbee9755474450109ce5523804e7fcd9b02d67cb95",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:ed47c887684f2f94f6ef46dbee9755474450109ce5523804e7fcd9b02d67cb95",
+      "derivation_rules": [
+        {
+          "source": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
+      "class_id": "authority-root",
+      "sha256": null,
+      "lifecycle_status": "supersedes",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ],
+      "predecessor_sha256": "sha256:cda94a6d293008a711bf27533e493628699d184d90ac9348d0ad4c75740e41ab"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
+      "class_id": "plan-normative",
+      "sha256": "sha256:f21184b203b3e445265a651af0fde3584e8947723d89493384ebf4c1160e220a",
+      "predecessor_sha256": "sha256:b663bca0f2b6301483a824ce61f71f4d2b7964cb541bb95900aa18d7c0153562",
+      "lifecycle_status": "supersedes",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+      "class_id": "plan-projection",
+      "sha256": null,
+      "predecessor_sha256": "sha256:152dccb3f75be1a32e48902051e4bef0635d0cb290ba57dd67eb5e0a4e94b81f",
+      "lifecycle_status": "supersedes"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+      "class_id": "plan-normative",
+      "sha256": "sha256:908cdbd2fd081857cf6a3f73a7dc78be0133e99890953db34496f14953b21d3b",
+      "predecessor_sha256": "sha256:c4d327947af11da32f8ba01c7ab273a556f4f36542814b6658db0ea5aa5561cc",
+      "lifecycle_status": "supersedes",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+      "class_id": "plan-normative",
+      "sha256": "sha256:e229a521a2beae917c08b47e2fd74d97af933a9ae3ef080ec53dc34303fa6af6",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:e229a521a2beae917c08b47e2fd74d97af933a9ae3ef080ec53dc34303fa6af6",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-slice-effect.v1.schema.json",
+      "class_id": "plan-normative",
+      "sha256": "sha256:3d008d770d1aa5c808a3771e8012050f96dca9f9f5418eb5111bd328f0f4fdd4",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:3d008d770d1aa5c808a3771e8012050f96dca9f9f5418eb5111bd328f0f4fdd4",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-supersession-proof.v1.schema.json",
+      "class_id": "plan-normative",
+      "sha256": "sha256:b94fefa9d1847eee633fb383492c0ae5a838a18ba5a783bfa274e62672b29f42",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:b94fefa9d1847eee633fb383492c0ae5a838a18ba5a783bfa274e62672b29f42",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
+      "class_id": "successor-evidence",
+      "sha256": "sha256:c859119ba6134ff36a9451bbe3ab8c969adebbde0f3f5cb42896ec8c2d68956a",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
+          "field": "$bytes",
+          "target_field": "/authoritySourceRef",
+          "derivation": "hash-bound-reference"
+        }
+      ],
+      "lineage": {
+        "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+        "required_fields": [
+          "authoritySourceRef",
+          "predecessorEventRef",
+          "revocationEventRef"
+        ],
+        "predecessor_policy": "profile-root-authorized-successor"
+      },
+      "proof_scope": "authorization-participating",
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "plan reentry validator"
+        ],
+        "predicate": "successor-policy-authorization",
+        "authorizes": [],
+        "does_not_authorize": [
+          "plan-ready",
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ]
+      },
+      "lifecycle_status": "new"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
+      "class_id": "successor-evidence",
+      "sha256": "sha256:659172239aca47162f4051f3438a503612c35f578fe9833a202abe7d8a7f3ca1",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
+          "field": "$bytes",
+          "target_field": "/authorizationEventRef",
+          "derivation": "hash-bound-reference"
+        }
+      ],
+      "lineage": {
+        "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+        "required_fields": [
+          "authorizationEventRef",
+          "authorizationEventId",
+          "supersededReviewId",
+          "successorChangeId"
+        ],
+        "predecessor_policy": "profile-root-authorized-successor"
+      },
+      "proof_scope": "authorization-participating",
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "plan reentry validator"
+        ],
+        "predicate": "successor-policy-authorization",
+        "authorizes": [],
+        "does_not_authorize": [
+          "plan-ready",
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ]
+      },
+      "lifecycle_status": "new"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
+      "class_id": "successor-evidence",
+      "sha256": "sha256:67e04414bf83b77f17cef3b5f2f26f413c2ac1c616c4560604039c914b50a17c",
+      "derivation_rules": [
+        {
+          "source": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+          "field": "$bytes",
+          "target_field": "/authorityRootRef",
+          "derivation": "hash-bound-reference"
+        },
+        {
+          "source": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+          "field": "$bytes",
+          "target_field": "/predecessorAuthorityRef",
+          "derivation": "hash-bound-reference"
+        }
+      ],
+      "lineage": {
+        "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+        "required_fields": [
+          "authorityRootRef",
+          "predecessorAuthorityRef",
+          "authorityId",
+          "policyRevision"
+        ],
+        "predecessor_policy": "profile-root-authorized-successor"
+      },
+      "proof_scope": "authorization-participating",
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "plan reentry validator"
+        ],
+        "predicate": "successor-policy-authorization",
+        "authorizes": [],
+        "does_not_authorize": [
+          "plan-ready",
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ]
+      },
+      "lifecycle_status": "new"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
+      "class_id": "plan-normative",
+      "sha256": "sha256:50b8b72afeeff344395d6783f2e2a85dd85078937310eb8d64c643ef7c8fa726",
+      "proof_scope": "authorization-participating",
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "plan-state validator"
+        ],
+        "predicate": "manual-pause-reentry",
+        "authorizes": [
+          "manual-pause-reentry"
+        ],
+        "does_not_authorize": [
+          "plan-ready",
+          "slice-ready",
+          "bootstrap-review",
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ]
+      },
+      "lifecycle_status": "supersedes",
+      "predecessor_sha256": "sha256:101860876f54fc958a682b889a4a6fc50a5058545b794ff8ec8b4d5e6bab6d66",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.schema.json",
+      "class_id": "plan-normative",
+      "sha256": "sha256:44073beedfde7651e8288337c610371fcb319b10f481b2101d5529dd1a49cc1a",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:44073beedfde7651e8288337c610371fcb319b10f481b2101d5529dd1a49cc1a",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json",
+      "class_id": "plan-projection",
+      "sha256": null,
+      "predecessor_sha256": "sha256:5c9f06a63cb919f4d04b7d1ceb4ca88b69b677b9159386e9847bad52eea353b1",
+      "lifecycle_status": "supersedes"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
+      "class_id": "plan-validator",
+      "sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+      "predecessor_sha256": "sha256:6a6ee8e13b510339be940ae838ab92c381e6e3f631eea6f416257e20d9958b75",
+      "lifecycle_status": "supersedes",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_verdicts.py",
+      "class_id": "plan-validator",
+      "sha256": "sha256:94f97c9eac51e06df65867a70139f42ef4dfbab40f1cca9481e86a66c13cc708",
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+      "class_id": "plan-validator",
+      "sha256": "sha256:f3160d7d7ba54aa66212fd696d2c17729b9ac53fd0f54e29d22e2a042a012903",
+      "lifecycle_status": "unchanged",
+      "predecessor_sha256": "sha256:f3160d7d7ba54aa66212fd696d2c17729b9ac53fd0f54e29d22e2a042a012903",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/review_reentry_environment.py",
+      "class_id": "plan-validator",
+      "sha256": "sha256:f8e8ff4fd70a49c0043b760cb42bb0c58dcfe5818a8dec9d84b345b97ea030be",
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
+      "class_id": "plan-validator",
+      "sha256": "sha256:1b240515db1a28204364425bbb4683be47a98cee5e8fc7cf96e0a8ac15f8e4d9",
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+      "class_id": "manifest-bound-authority-root",
+      "sha256": null,
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+      "class_id": "manifest-bound-validator",
+      "sha256": null,
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py",
+      "class_id": "manifest-bound-validator",
+      "sha256": null,
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_projection_support.py",
+      "class_id": "manifest-bound-validator",
+      "sha256": null,
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_inventory_support.py",
+      "class_id": "manifest-bound-validator",
+      "sha256": null,
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py",
+      "class_id": "manifest-bound-validator",
+      "sha256": null,
+      "lifecycle_status": "new",
+      "derivation_rules": [
+        {
+          "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "field": "$authority",
+          "target_field": "$contract",
+          "derivation": "authority-derived"
+        }
+      ]
+    }
+  ],
+  "runtime_types": [
+    {
+      "type_id": "bootstrap-finalized-run-instance",
+      "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+      "schema_producer_authority": {
+        "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "authority_category": "architecture_authority",
+        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+      },
+      "source_of_truth_derivation": {
+        "rules": [
+          {
+            "source": "review-input.json",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "reviewer-outputs",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "review-gate-state.json",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "verifier-output.json",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "p2-dispositions.json",
+            "derivation": "validator-resolved-runtime-input"
+          }
+        ]
+      },
+      "independent_recomputation": {
+        "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        "validator_sha256": "sha256:ddb3c0c1178fa081f22b24ab04c321b0538427717f4404328a96dc48758f1232",
+        "callable": "validate_finalized_run_evidence",
+        "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "rule_ids": [
+          "bootstrap-finalized-run-validator.v2"
+        ],
+        "negative_test_sha256": "sha256:72ea10e87685f8c97e7849426ec80b766bbe5e397dc50d0c93f78274b9bf7d22",
+        "expected_failure_ids": [
+          "RMAP-ARTIFACT-PROOF-PRODUCER",
+          "RMAP-ARTIFACT-PROOF-IDENTITY",
+          "RMAP-ARTIFACT-PROOF-DERIVATION",
+          "RMAP-ARTIFACT-PROOF-RULE",
+          "RMAP-ARTIFACT-PROOF-STALENESS",
+          "RMAP-ARTIFACT-PROOF-LINEAGE",
+          "RMAP-ARTIFACT-PROOF-CONSUMER"
+        ]
+      },
+      "staleness_propagation": {
+        "inputs": [
+          ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "invalidates": [
+          "finalized-envelope",
+          "plan-reentry",
+          "implementation-accepted"
+        ],
+        "propagation_mode": "fail-closed-before-predicate",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "recovery_supersession": {
+        "history_policy": "append-only-successor-no-rewrite",
+        "lineage_fields": [
+          "reviewId",
+          "changeId",
+          "inputHash",
+          "authorityRevision"
+        ],
+        "predecessor_policy": "schema-required-lineage-or-explicit-null"
+      },
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "S7 acceptance validator",
+          "plan reentry validator"
+        ],
+        "predicate": "bootstrap-finalized-run-validation",
+        "authorizes": [],
+        "does_not_authorize": [
+          "plan-ready",
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ],
+        "consumer_entrypoints": [
+          {
+            "consumer": "S7 acceptance validator",
+            "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+            "callable": "validate_finalized_run_evidence",
+            "failure_mode": "block-predicate-on-any-dimension-failure"
+          },
+          {
+            "consumer": "plan reentry validator",
+            "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
+            "callable": "validate_review_reentry",
+            "failure_mode": "block-predicate-on-any-dimension-failure"
+          }
+        ]
+      },
+      "immutable_identity": {
+        "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+        "schema_sha256": "sha256:55b75323c95daae0532a06b06c95de3ef0389746d8456901f26b7ef1c6ef908a",
+        "algorithm": "sha256-canonical-json-fields",
+        "identity_fields": [
+          "reviewId",
+          "changeId",
+          "inputHash",
+          "authorityRevision",
+          "artifactHashes"
+        ]
+      }
+    },
+    {
+      "type_id": "bootstrap-p2-disposition-instance",
+      "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+      "schema_producer_authority": {
+        "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "authority_category": "architecture_authority",
+        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+      },
+      "source_of_truth_derivation": {
+        "rules": [
+          {
+            "source": "review-candidates.json",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "authority-roots.v1.json",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "ownerAuthorityRef",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "closureCommandRegistryRef",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "nonImpactEvidenceRef",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "recheckEvidenceRef",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "closureProcessResultRef",
+            "derivation": "validator-resolved-runtime-input"
+          }
+        ]
+      },
+      "independent_recomputation": {
+        "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        "validator_sha256": "sha256:ddb3c0c1178fa081f22b24ab04c321b0538427717f4404328a96dc48758f1232",
+        "callable": "validate_p2_dispositions",
+        "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "rule_ids": [
+          "bootstrap-p2-disposition-evidence.v2"
+        ],
+        "negative_test_sha256": "sha256:72ea10e87685f8c97e7849426ec80b766bbe5e397dc50d0c93f78274b9bf7d22",
+        "expected_failure_ids": [
+          "RMAP-ARTIFACT-PROOF-PRODUCER",
+          "RMAP-ARTIFACT-PROOF-IDENTITY",
+          "RMAP-ARTIFACT-PROOF-DERIVATION",
+          "RMAP-ARTIFACT-PROOF-RULE",
+          "RMAP-ARTIFACT-PROOF-STALENESS",
+          "RMAP-ARTIFACT-PROOF-LINEAGE",
+          "RMAP-ARTIFACT-PROOF-CONSUMER"
+        ]
+      },
+      "staleness_propagation": {
+        "inputs": [
+          ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "invalidates": [
+          "review-metrics",
+          "finalized-envelope",
+          "implementation-accepted"
+        ],
+        "propagation_mode": "fail-closed-before-predicate",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "recovery_supersession": {
+        "history_policy": "append-only-successor-no-rewrite",
+        "lineage_fields": [
+          "reviewId",
+          "inputHash",
+          "candidateHash",
+          "findingIds"
+        ],
+        "predecessor_policy": "schema-required-lineage-or-explicit-null"
+      },
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "Bootstrap finalize",
+          "S7 acceptance validator"
+        ],
+        "predicate": "p2-disposition",
+        "authorizes": [],
+        "does_not_authorize": [
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ],
+        "consumer_entrypoints": [
+          {
+            "consumer": "Bootstrap finalize",
+            "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+            "callable": "validate_finalized_run_evidence",
+            "failure_mode": "block-predicate-on-any-dimension-failure"
+          },
+          {
+            "consumer": "S7 acceptance validator",
+            "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+            "callable": "validate_p2_dispositions",
+            "failure_mode": "block-predicate-on-any-dimension-failure"
+          }
+        ]
+      },
+      "immutable_identity": {
+        "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+        "schema_sha256": "sha256:728686cfce18033461900754e2929cb9ca2298b234471feb3c26257825f39bac",
+        "algorithm": "sha256-canonical-json-fields",
+        "identity_fields": [
+          "reviewId",
+          "inputHash",
+          "candidateHash",
+          "policyRevision",
+          "authorityRevision",
+          "findingIds"
+        ]
+      }
+    },
+    {
+      "type_id": "bootstrap-p2-process-event-instance",
+      "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json",
+      "schema_producer_authority": {
+        "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "authority_category": "architecture_authority",
+        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+      },
+      "source_of_truth_derivation": {
+        "rules": [
+          {
+            "source": "authority-roots.v1.json",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "bootstrap-p2-command-registry.v1",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "subprocess argv",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "cwd",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "exitCode",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "stdout bytes",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "stderr bytes",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "p2-process-events.jsonl",
+            "derivation": "validator-resolved-runtime-input"
+          }
+        ]
+      },
+      "independent_recomputation": {
+        "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        "validator_sha256": "sha256:ddb3c0c1178fa081f22b24ab04c321b0538427717f4404328a96dc48758f1232",
+        "callable": "validate_p2_dispositions",
+        "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "rule_ids": [
+          "bootstrap-p2-process-event.v1"
+        ],
+        "negative_test_sha256": "sha256:72ea10e87685f8c97e7849426ec80b766bbe5e397dc50d0c93f78274b9bf7d22",
+        "expected_failure_ids": [
+          "RMAP-ARTIFACT-PROOF-PRODUCER",
+          "RMAP-ARTIFACT-PROOF-IDENTITY",
+          "RMAP-ARTIFACT-PROOF-DERIVATION",
+          "RMAP-ARTIFACT-PROOF-RULE",
+          "RMAP-ARTIFACT-PROOF-STALENESS",
+          "RMAP-ARTIFACT-PROOF-LINEAGE",
+          "RMAP-ARTIFACT-PROOF-CONSUMER"
+        ]
+      },
+      "staleness_propagation": {
+        "inputs": [
+          ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json",
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "invalidates": [
+          "p2-process-result",
+          "p2-dispositions",
+          "review-metrics",
+          "finalized-envelope"
+        ],
+        "propagation_mode": "fail-closed-before-predicate",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "recovery_supersession": {
+        "history_policy": "append-only-successor-no-rewrite",
+        "lineage_fields": [
+          "previousEventHash",
+          "eventHash",
+          "eventId"
+        ],
+        "predecessor_policy": "schema-required-lineage-or-explicit-null"
+      },
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "Bootstrap P2 disposition validator"
+        ],
+        "predicate": "p2-process-success",
+        "authorizes": [],
+        "does_not_authorize": [
+          "plan-ready",
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ],
+        "consumer_entrypoints": [
+          {
+            "consumer": "Bootstrap P2 disposition validator",
+            "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+            "callable": "validate_p2_dispositions",
+            "failure_mode": "block-predicate-on-any-dimension-failure"
+          }
+        ]
+      },
+      "immutable_identity": {
+        "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json",
+        "schema_sha256": "sha256:77636808f229d7829cdaee60b2d244e494baf32de1731f1744080da971644eea",
+        "algorithm": "sha256-canonical-json-fields",
+        "identity_fields": [
+          "eventId",
+          "previousEventHash",
+          "eventHash",
+          "reviewId",
+          "inputHash",
+          "candidateHash",
+          "findingId",
+          "registryHash",
+          "descriptorHash",
+          "runnerIdentity",
+          "stdoutHash",
+          "stderrHash"
+        ]
+      }
+    },
+    {
+      "type_id": "bootstrap-successor-authorization-instance",
+      "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+      "schema_producer_authority": {
+        "authority_path": "docs/standards/bootstrap-review-control-plane.md",
+        "authority_category": "architecture_authority",
+        "authority_sha256": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e"
+      },
+      "source_of_truth_derivation": {
+        "rules": [
+          {
+            "source": "review profile policyRevision",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "authority-roots.v1.json",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "authoritySourceRef",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "predecessorEventRef",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "revocationEventRef",
+            "derivation": "validator-resolved-runtime-input"
+          }
+        ]
+      },
+      "independent_recomputation": {
+        "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        "validator_sha256": "sha256:ddb3c0c1178fa081f22b24ab04c321b0538427717f4404328a96dc48758f1232",
+        "callable": "validate_successor_policy_authorization",
+        "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "rule_ids": [
+          "bootstrap-successor-policy-authorization.v1"
+        ],
+        "negative_test_sha256": "sha256:72ea10e87685f8c97e7849426ec80b766bbe5e397dc50d0c93f78274b9bf7d22",
+        "expected_failure_ids": [
+          "RMAP-ARTIFACT-PROOF-PRODUCER",
+          "RMAP-ARTIFACT-PROOF-IDENTITY",
+          "RMAP-ARTIFACT-PROOF-DERIVATION",
+          "RMAP-ARTIFACT-PROOF-RULE",
+          "RMAP-ARTIFACT-PROOF-STALENESS",
+          "RMAP-ARTIFACT-PROOF-LINEAGE",
+          "RMAP-ARTIFACT-PROOF-CONSUMER"
+        ]
+      },
+      "staleness_propagation": {
+        "inputs": [
+          ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "invalidates": [
+          "successor-policy-decision",
+          "plan-reentry"
+        ],
+        "propagation_mode": "fail-closed-before-predicate",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "recovery_supersession": {
+        "history_policy": "append-only-successor-no-rewrite",
+        "lineage_fields": [
+          "predecessorEventRef",
+          "supersededReviewId",
+          "successorChangeId"
+        ],
+        "predecessor_policy": "schema-required-lineage-or-explicit-null"
+      },
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "plan reentry validator"
+        ],
+        "predicate": "successor-policy-authorization",
+        "authorizes": [],
+        "does_not_authorize": [
+          "plan-ready",
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ],
+        "consumer_entrypoints": [
+          {
+            "consumer": "plan reentry validator",
+            "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
+            "callable": "validate_review_reentry",
+            "failure_mode": "block-predicate-on-any-dimension-failure"
+          }
+        ]
+      },
+      "immutable_identity": {
+        "schema_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+        "schema_sha256": "sha256:f85709cc2d6b4c9731d40e0ccd56a5bfb78defe187b049baf8acbd770fce8821",
+        "algorithm": "sha256-canonical-json-fields",
+        "identity_fields": [
+          "eventId",
+          "decisionId",
+          "supersededReviewId",
+          "supersededChangeId",
+          "successorChangeId",
+          "policyRevision",
+          "authorityRevision",
+          "authoritySourceRef"
+        ]
+      }
+    },
+    {
+      "type_id": "candidate-lineage-instance",
+      "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+      "schema_producer_authority": {
+        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+        "authority_category": "plan_books",
+        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+      },
+      "source_of_truth_derivation": {
+        "rules": [
+          {
+            "source": "baseline-file-manifest",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "diff-manifest",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "adapter-decision",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "run-events",
+            "derivation": "validator-resolved-runtime-input"
+          }
+        ]
+      },
+      "independent_recomputation": {
+        "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+        "validator_sha256": "sha256:f3160d7d7ba54aa66212fd696d2c17729b9ac53fd0f54e29d22e2a042a012903",
+        "callable": "load_candidate_lineage",
+        "negative_test": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+        "rule_ids": [
+          "RMAP-CANDIDATE-LINEAGE",
+          "RMAP-CANDIDATE-LEDGER-FOLD"
+        ],
+        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "expected_failure_ids": [
+          "RMAP-ARTIFACT-PROOF-PRODUCER",
+          "RMAP-ARTIFACT-PROOF-IDENTITY",
+          "RMAP-ARTIFACT-PROOF-DERIVATION",
+          "RMAP-ARTIFACT-PROOF-RULE",
+          "RMAP-ARTIFACT-PROOF-STALENESS",
+          "RMAP-ARTIFACT-PROOF-LINEAGE",
+          "RMAP-ARTIFACT-PROOF-CONSUMER"
+        ]
+      },
+      "staleness_propagation": {
+        "inputs": [
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py"
+        ],
+        "invalidates": [
+          "candidate-lineage",
+          "implementation-candidate"
+        ],
+        "propagation_mode": "fail-closed-before-predicate",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "recovery_supersession": {
+        "history_policy": "append-only-successor-no-rewrite",
+        "lineage_fields": [
+          "slice_runs",
+          "root_hash"
+        ],
+        "predecessor_policy": "schema-required-lineage-or-explicit-null"
+      },
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "S6 candidate validator"
+        ],
+        "predicate": "implementation-candidate",
+        "authorizes": [
+          "bootstrap-review"
+        ],
+        "does_not_authorize": [
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ],
+        "consumer_entrypoints": [
+          {
+            "consumer": "S6 candidate validator",
+            "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py",
+            "callable": "validate_candidate_diff",
+            "failure_mode": "block-predicate-on-any-dimension-failure"
+          }
+        ]
+      },
+      "immutable_identity": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+        "schema_sha256": "sha256:e229a521a2beae917c08b47e2fd74d97af933a9ae3ef080ec53dc34303fa6af6",
+        "algorithm": "sha256-canonical-json-fields",
+        "identity_fields": [
+          "root_hash",
+          "cumulative_fold_hash",
+          "slice_runs"
+        ]
+      }
+    },
+    {
+      "type_id": "review-policy-reentry-instance",
+      "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.schema.json",
+      "schema_producer_authority": {
+        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+        "authority_category": "plan_books",
+        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+      },
+      "source_of_truth_derivation": {
+        "rules": [
+          {
+            "source": "review-blocking-state",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "successor-policy-decision",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "finalized-run-validation",
+            "derivation": "validator-resolved-runtime-input"
+          }
+        ]
+      },
+      "independent_recomputation": {
+        "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
+        "validator_sha256": "sha256:f74ec0432ee0f03ef84c2b32469f13d5ac3879687b657e4d208c9b3ba4c65b61",
+        "callable": "validate_review_reentry",
+        "negative_test": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+        "rule_ids": [
+          "RMAP-REVIEW-REENTRY"
+        ],
+        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "expected_failure_ids": [
+          "RMAP-ARTIFACT-PROOF-PRODUCER",
+          "RMAP-ARTIFACT-PROOF-IDENTITY",
+          "RMAP-ARTIFACT-PROOF-DERIVATION",
+          "RMAP-ARTIFACT-PROOF-RULE",
+          "RMAP-ARTIFACT-PROOF-STALENESS",
+          "RMAP-ARTIFACT-PROOF-LINEAGE",
+          "RMAP-ARTIFACT-PROOF-CONSUMER"
+        ]
+      },
+      "staleness_propagation": {
+        "inputs": [
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py"
+        ],
+        "invalidates": [
+          "plan-state",
+          "plan-ready"
+        ],
+        "propagation_mode": "fail-closed-before-predicate",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "recovery_supersession": {
+        "history_policy": "append-only-successor-no-rewrite",
+        "lineage_fields": [
+          "supersedes_blocker",
+          "successor_policy",
+          "semantic_closure"
+        ],
+        "predecessor_policy": "schema-required-lineage-or-explicit-null"
+      },
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "plan-state validator"
+        ],
+        "predicate": "manual-pause-reentry",
+        "authorizes": [
+          "manual-pause-reentry"
+        ],
+        "does_not_authorize": [
+          "plan-ready",
+          "slice-ready",
+          "bootstrap-review",
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ],
+        "consumer_entrypoints": [
+          {
+            "consumer": "plan-state validator",
+            "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
+            "callable": "validate_review_reentry",
+            "failure_mode": "block-predicate-on-any-dimension-failure"
+          }
+        ]
+      },
+      "immutable_identity": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.schema.json",
+        "schema_sha256": "sha256:44073beedfde7651e8288337c610371fcb319b10f481b2101d5529dd1a49cc1a",
+        "algorithm": "sha256-canonical-json-fields",
+        "identity_fields": [
+          "supersedes_blocker",
+          "successor_policy",
+          "semantic_closure"
+        ]
+      }
+    },
+    {
+      "type_id": "validation-result-instance",
+      "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/validation-result.v1.schema.json",
+      "schema_producer_authority": {
+        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+        "authority_category": "plan_books",
+        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+      },
+      "source_of_truth_derivation": {
+        "rules": [
+          {
+            "source": "predicate-artifact-closure",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "authority-manifest",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "validator-identity",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "runtime-evidence-arguments",
+            "derivation": "validator-resolved-runtime-input"
+          },
+          {
+            "source": "predicate-authority-lattice",
+            "derivation": "validator-resolved-runtime-input"
+          }
+        ]
+      },
+      "independent_recomputation": {
+        "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py",
+        "callable": "validate_authorizing_result",
+        "negative_test": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_validation_result_guards.py",
+        "rule_ids": [
+          "RMAP-RESULT-STALE",
+          "RMAP-RESULT-AUTHORITY",
+          "RMAP-RESULT-LINEAGE"
+        ],
+        "validator_sha256": "sha256:addb68d999e8b1928377a103d175b5e1ab1fcdd6fe0f70318e203ba624a9797f",
+        "negative_test_sha256": "sha256:3f0f33ecce3a043b9c2f2a3624958a387818f71d2fd48f59dbf878009a50755e",
+        "expected_failure_ids": [
+          "RMAP-ARTIFACT-PROOF-PRODUCER",
+          "RMAP-ARTIFACT-PROOF-IDENTITY",
+          "RMAP-ARTIFACT-PROOF-DERIVATION",
+          "RMAP-ARTIFACT-PROOF-RULE",
+          "RMAP-ARTIFACT-PROOF-STALENESS",
+          "RMAP-ARTIFACT-PROOF-LINEAGE",
+          "RMAP-ARTIFACT-PROOF-CONSUMER"
+        ]
+      },
+      "staleness_propagation": {
+        "inputs": [
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/validation-result.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_validation_result_guards.py"
+        ],
+        "invalidates": [
+          "plan-repair-verified",
+          "plan-ready",
+          "slice-ready",
+          "implementation-candidate",
+          "implementation-accepted"
+        ],
+        "propagation_mode": "fail-closed-before-predicate",
+        "revalidation_command_id": "rmap-plan-repair-validate"
+      },
+      "recovery_supersession": {
+        "history_policy": "append-only-successor-no-rewrite",
+        "lineage_fields": [
+          "lineage_mode",
+          "lineage_reason_code",
+          "predecessor_run_id",
+          "supersedes_run_id",
+          "predecessor_result_hash"
+        ],
+        "predecessor_policy": "initial-explicit-null-or-successor-recomputed-envelope",
+        "reason_codes": [
+          "INITIAL_RUN_NO_PREDECESSOR",
+          "SUPERSEDES_PRIOR_RESULT"
+        ]
+      },
+      "consumer_authorization_boundary": {
+        "consumers": [
+          "composite plan validator"
+        ],
+        "predicate": "validation-result",
+        "authorizes": [],
+        "does_not_authorize": [
+          "plan-repair-verified",
+          "plan-ready",
+          "slice-ready",
+          "bootstrap-review",
+          "implementation-accepted",
+          "protected-handoff",
+          "release-ready"
+        ],
+        "consumer_entrypoints": [
+          {
+            "consumer": "composite plan validator",
+            "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py",
+            "callable": "validate_authorizing_result",
+            "failure_mode": "block-predicate-on-any-dimension-failure"
+          }
+        ]
+      },
+      "immutable_identity": {
+        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/validation-result.v1.schema.json",
+        "schema_sha256": "sha256:52b7030abb9513ec5acf40a8a3e66cc7168252d8cceeb7eb422369f270072097",
+        "algorithm": "sha256-canonical-json-fields",
+        "identity_fields": [
+          "predicate",
+          "candidate_hash",
+          "current_candidate_hash",
+          "source_hash",
+          "validator_version",
+          "predicate_input_root",
+          "closure_definition_hash",
+          "authority_root",
+          "validator_root",
+          "runtime_evidence_root",
+          "run_id",
+          "lineage_mode",
+          "lineage_reason_code",
+          "predecessor_run_id",
+          "supersedes_run_id",
+          "predecessor_result_hash",
+          "authorizes",
+          "does_not_authorize"
+        ]
+      }
+    }
+  ]
+}

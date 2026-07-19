@@ -139,7 +139,8 @@ Before finalizing accepted P2 findings, provide `p2-dispositions.json` covering 
 
 - Every P2 is `fixed`, `refuted`, or `deferred`.
 - High-risk P2 cannot be deferred.
-- Deferral requires a schema-valid authorized owner reference, future expiry, non-impact evidence, a registered closure command, current recheck evidence, and a recheck trigger. Successful closure-process evidence is required only when the disposition becomes fixed or refuted.
+- Deferral requires a schema-valid authorized owner reference chained to the profile-bound authority-root registry, future expiry, non-impact evidence, a root-authorized command descriptor, current recheck evidence, and a recheck trigger. Successful closure-process evidence is required only when the disposition becomes fixed or refuted.
+- Execute registered P2 commands only through `run-p2-command`. It uses argument arrays with `shell=False`, a contained working directory, and the environment allowlist; it appends a hash-chained process event and binds actual stdout/stderr bytes. A handwritten `exitCode: 0` result is invalid.
 - An expired deferral blocks automatically.
 
 Finalize only after independent P0/P1 decisions and complete P2 dispositions. A final result cannot contain an open accepted P0/P1.
@@ -154,7 +155,7 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py vali
 
 The envelope is validation evidence only. It always has `authorizes=[]` and explicitly excludes plan acceptance, implementation acceptance, protected handoff, release, commit, and done authority. A plan-local validator may consume the envelope, but must independently apply its own acceptance predicate.
 
-After a third-round manual pause, re-entry requires a schema-valid `bootstrap-successor-policy-decision.v1` bound to a trusted authorization event and a genuinely new change, policy, authority, review, and input lineage. The consumer must rerun `validate-finalized-run`; a saved minimal envelope or self-declared independence flag cannot clear the pause.
+After a third-round manual pause, re-entry requires a schema-valid `bootstrap-successor-policy-decision.v1` bound to a trusted authorization event and a genuinely new change, policy, authority, review, and input lineage. The successor authority must bind the exact authority-root registry frozen by that policy revision; a run-local null-predecessor authority is invalid. The consumer must rerun `validate-finalized-run`; a saved minimal envelope or self-declared independence flag cannot clear the pause.
 
 ## Repair Rounds
 

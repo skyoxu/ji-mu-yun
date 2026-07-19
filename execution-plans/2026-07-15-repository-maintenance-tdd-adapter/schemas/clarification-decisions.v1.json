@@ -49,6 +49,30 @@
       "authority_hash": "sha256:89a741b5fdf49d38501d450814fcf8154fafc1832c1b9ec415ac2e8144c76bc9",
       "status": "closed",
       "write_disposition": "normal"
+    },
+    {
+      "kind": "repair",
+      "run_id": "clarification-20260718T000000Z",
+      "state_sha256": "sha256:9ac1b4dcb055e95f00300d6a94ffe86b8b41bfa9ff82917a77ac1e185078d666",
+      "authority_hash": "sha256:45daca4881ca221e6ede146eca6426485dd406346b13a0dc8f43e9ccbf5cbd22",
+      "status": "closed",
+      "write_disposition": "normal"
+    },
+    {
+      "kind": "repair",
+      "run_id": "clarification-20260718T160000Z",
+      "state_sha256": "sha256:7fca61a8b8bfca75b1ecc216578950b853709e2533c4a62374e747415a56dc51",
+      "authority_hash": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
+      "status": "closed",
+      "write_disposition": "normal"
+    },
+    {
+      "kind": "repair",
+      "run_id": "clarification-20260718T170000Z",
+      "state_sha256": "sha256:36a71f39ed0edd132e22094c7c4e596d13ef56c3b55980884aeb149f3047c09f",
+      "authority_hash": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
+      "status": "closed",
+      "write_disposition": "normal"
     }
   ],
   "decision_sets": {
@@ -374,6 +398,61 @@
         "status": "accepted",
         "summary": "Confirm the seventh proof dimension.",
         "decision": "Use consumer and authorization boundary as the seventh dimension."
+      }
+    ],
+    "repair_20260718_1500": [
+      {
+        "id": "CQ-001",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Freeze a profile-bound authority trust anchor.",
+        "decision": "Use the profile hash-bound Bootstrap authority-root registry as the only predecessor terminus for successor and P2 authority artifacts."
+      },
+      {
+        "id": "CQ-002",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Bind P2 success to real runner execution.",
+        "decision": "Bind executable, argv, cwd, descriptor hash, runner identity, process-event chain, and stdout/stderr bytes; reject handwritten success results."
+      },
+      {
+        "id": "CQ-003",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Authorize only one bounded closure cycle.",
+        "decision": "After deterministic trust-root repair, run one new successor Bootstrap closure cycle without reopening an unbounded finding loop or creating Round 4."
+      },
+      {
+        "id": "CQ-004",
+        "status": "accepted",
+        "blocking": false,
+        "summary": "Keep unavailable GitHub evidence unconfirmed.",
+        "decision": "Use explicitly recorded fresh local evidence and never report GitHub CI as passed without authenticated current-run evidence."
+      },
+      {
+        "id": "CQ-005",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Preserve Round 3 and gate reentry on clean successor evidence.",
+        "decision": "Keep Round 3 bytes immutable and change only the successor selector after root tests and a freshly recomputed clean closure envelope pass."
+      }
+    ],
+    "repair_20260718_1600": [
+      {
+        "id": "RMAP-ARTIFACT-PROOF-CLOSURE",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Close the seven confirmed artifact-proof dimensions without open-ended expansion.",
+        "decision": "Use an independent authority registry and exact producer, identity, typed derivation, executable rule, staleness, lineage, and consumer permission checks; close only after seven isolated counterexamples and the bounded deterministic stop conditions pass."
+      }
+    ],
+    "repair_20260718_1700": [
+      {
+        "id": "RMAP-ARTIFACT-PROOF-EXTERNAL-ROOT-CLOSURE",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Prevent the finding-added authority registry from synchronously refreshing its own trust root.",
+        "decision": "Bind the complete authority registry bytes and seven root-level proof dimensions from the VDD Skill contract, then require isolated self-refresh escalation and broken, wrong, and stale predecessor counterexamples."
       }
     ]
   },

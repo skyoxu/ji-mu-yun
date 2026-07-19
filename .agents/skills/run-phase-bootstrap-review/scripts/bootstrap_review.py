@@ -47,6 +47,7 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 PLAN_ROOT = SKILL_ROOT
 PROFILE_PATH = SKILL_ROOT / "references" / "review-profiles.v1.json"
+AUTHORITY_ROOT_PATH = SKILL_ROOT / "references" / "authority-roots.v1.json"
 PLAN_VALIDATOR_PATH = (
     REPOSITORY_ROOT
     / "execution-plans"
@@ -433,11 +434,82 @@ def validate_gate_state(gate_state: Any, manifest: dict[str, Any]) -> None:
         )
 
 
+def load_authority_root_registry(repository_root: Path, reference: Any) -> dict[str, Any]:
+    expected_path = ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json"
+    if not isinstance(reference, dict) or set(reference) != {"path", "sha256", "registryId"}:
+        raise BootstrapError("Bootstrap authority-root registry reference is invalid")
+    if reference.get("path") != expected_path or reference.get("registryId") != "bootstrap-authority-roots.v1":
+        raise BootstrapError("Bootstrap authority-root registry path or identity is not trusted")
+    path = ensure_within(repository_root / expected_path, repository_root, "Authority-root registry")
+    if not path.is_file() or file_hash(path) != reference.get("sha256"):
+        raise BootstrapError("Bootstrap authority-root registry is missing or stale")
+    registry = read_json(path)
+    errors = schema_validation_errors("bootstrap-authority-root-registry.v1.schema.json", registry)
+    exclusions = {"plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"}
+    roots = registry.get("roots") if isinstance(registry, dict) else None
+    if errors or registry.get("registryId") != reference.get("registryId") or registry.get("authorizes") != [] or set(registry.get("doesNotAuthorize", [])) != exclusions:
+        raise BootstrapError("Bootstrap authority-root registry contract is invalid: " + "; ".join(errors))
+    if not isinstance(roots, list) or {item.get("authorityKind") for item in roots if isinstance(item, dict)} != {"successor-policy", "p2-owner", "p2-command"}:
+        raise BootstrapError("Bootstrap authority-root registry lacks the exact authority kinds")
+    return registry
+
+
+def authority_root(registry: dict[str, Any], root_id: str, authority_kind: str) -> dict[str, Any]:
+    matches = [item for item in registry.get("roots", []) if item.get("rootId") == root_id and item.get("authorityKind") == authority_kind]
+    if len(matches) != 1:
+        raise BootstrapError(f"Authority root {root_id} is not uniquely registered for {authority_kind}")
+    return matches[0]
+
+
+def authority_root_reference(profile: dict[str, Any]) -> dict[str, str]:
+    reference = profile["authorityRootRegistry"]
+    return {"path": reference["path"], "sha256": reference["sha256"]}
+
+
+def profile_for_policy_revision(policy_revision: str) -> dict[str, Any]:
+    registry = read_json(PROFILE_PATH)
+    matches = [
+        value for value in registry.get("profiles", {}).values()
+        if isinstance(value, dict) and value.get("policyRevision") == policy_revision
+    ] if isinstance(registry, dict) else []
+    if len(matches) != 1:
+        raise BootstrapError("Successor policy revision does not resolve to one trusted Bootstrap profile")
+    profile = matches[0]
+    revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
+    if value_hash(revision_payload) != policy_revision:
+        raise BootstrapError("Successor policy revision does not match canonical profile content")
+    return profile
+
+
+def validate_leaf_root_binding(
+    document: dict[str, Any],
+    profile: dict[str, Any],
+    root: dict[str, Any],
+    *,
+    consumer: str,
+    scopes: list[str],
+    label: str,
+) -> None:
+    expected_reference = authority_root_reference(profile)
+    if document.get("authorityRootRef") != expected_reference:
+        raise BootstrapError(f"{label} does not bind the profile authority root")
+    if document.get("predecessorAuthorityRef") != expected_reference:
+        raise BootstrapError(f"{label} is not chained directly to the trusted authority root")
+    if document.get("signerId") not in root.get("authorizedSubjects", []):
+        raise BootstrapError(f"{label} signer is not authorized by the trusted authority root")
+    if consumer not in root.get("allowedConsumers", []):
+        raise BootstrapError(f"{label} consumer is not authorized by the trusted authority root")
+    if any(scope not in root.get("allowedScopes", []) for scope in scopes):
+        raise BootstrapError(f"{label} scope is not authorized by the trusted authority root")
+
+
 def load_profile(name: str) -> dict[str, Any]:
     registry = read_json(PROFILE_PATH)
     profile = registry.get("profiles", {}).get(name) if isinstance(registry, dict) else None
     if not isinstance(profile, dict):
         raise BootstrapError(f"Unknown bootstrap review profile: {name}")
+    root_reference = profile.get("authorityRootRegistry")
+    load_authority_root_registry(REPOSITORY_ROOT, root_reference)
     if profile.get("automaticInvocation") is not False or profile.get("readOnly") is not True:
         raise BootstrapError("Bootstrap profile must be read-only and prohibit automatic invocation")
     if profile.get("requiredLayers") != list(LAYERS):
@@ -1488,6 +1560,7 @@ def command_prepare(args: argparse.Namespace) -> int:
         "reviewProfile": profile["reviewProfile"],
         "profileName": args.profile,
         "policyRevision": profile["policyRevision"],
+        "authorityRootRegistry": profile["authorityRootRegistry"],
         "routeVersion": profile["routeVersion"],
         "controlPlaneRevision": profile["controlPlaneRevision"],
         "requiredLayers": profile["requiredLayers"],
@@ -1673,7 +1746,7 @@ def load_run(run_dir_arg: str) -> tuple[Path, dict[str, Any], Path]:
         "reviewProfile", "policyRevision", "routeVersion", "controlPlaneRevision", "requiredLayers", "codexExecPolicy",
         "reviewObjectType", "reviewDepth", "reviewerInstructionPolicy", "reviewCyclePolicy",
         "semanticReviewPolicy", "authorityFreezePolicy", "processLeasePolicy", "reviewCostPolicy",
-        "planBoundCheckPolicy", "requiredContextClasses", "completenessPolicy",
+        "planBoundCheckPolicy", "requiredContextClasses", "completenessPolicy", "authorityRootRegistry",
     ):
         if manifest.get(field) != profile.get(field):
             raise BootstrapError(f"review-input.json has stale or substituted {field}")
@@ -3295,6 +3368,11 @@ def validate_successor_policy_authorization(
         raise BootstrapError(
             "Successor policy decision is invalid: " + "; ".join(decision_errors)
         )
+    profile = profile_for_policy_revision(decision["policyRevision"])
+    root_registry = load_authority_root_registry(
+        repository_root, profile["authorityRootRegistry"]
+    )
+    root = authority_root(root_registry, "successor-policy-root.v1", "successor-policy")
     event, _ = load_typed_repository_reference(
         repository_root,
         decision["authorizationEventRef"],
@@ -3340,6 +3418,26 @@ def validate_successor_policy_authorization(
         raise BootstrapError("Successor policy artifacts have an invalid authorization boundary")
     if authority.get("status") != "active" or authority.get("policyRevision") != event.get("policyRevision"):
         raise BootstrapError("Successor policy authority is inactive or bound to another policy")
+    actor_scopes = [
+        scope
+        for actor_item in authority.get("authorizedActors", [])
+        for scope in actor_item.get("scopes", [])
+    ]
+    actor_consumers = {
+        consumer
+        for actor_item in authority.get("authorizedActors", [])
+        for consumer in actor_item.get("consumers", [])
+    }
+    validate_leaf_root_binding(
+        authority,
+        profile,
+        root,
+        consumer=event.get("consumer", ""),
+        scopes=actor_scopes,
+        label="Successor policy authority",
+    )
+    if not actor_consumers or not actor_consumers.issubset(set(root.get("allowedConsumers", []))):
+        raise BootstrapError("Successor policy authority delegates an unauthorized consumer")
     actors = [item for item in authority.get("authorizedActors", []) if item.get("actorId") == event.get("actorId")]
     if len(actors) != 1:
         raise BootstrapError("Successor policy actor is not uniquely authorized")
@@ -3371,10 +3469,7 @@ def validate_successor_policy_authorization(
     if event_expires <= now or authority_expires <= now:
         raise BootstrapError("Successor policy authority or event has expired")
 
-    for label, reference in (
-        ("Predecessor authority", authority.get("predecessorAuthorityRef")),
-        ("Predecessor authorization event", event.get("predecessorEventRef")),
-    ):
+    for label, reference in (("Predecessor authorization event", event.get("predecessorEventRef")),):
         if reference is None:
             continue
         if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
@@ -3408,6 +3503,14 @@ def validate_p2_dispositions(
         "authorityRevision": manifest["authorityRevision"],
         "findingIds": p2_ids,
     }
+    repository_root = Path(manifest["repositoryRoot"])
+    profile = load_profile(manifest["profileName"])
+    root_registry = load_authority_root_registry(
+        repository_root, profile["authorityRootRegistry"]
+    )
+    owner_root = authority_root(root_registry, "p2-owner-root.v1", "p2-owner")
+    command_root = authority_root(root_registry, "p2-command-root.v1", "p2-command")
+    root_reference = authority_root_reference(profile)
     if isinstance(value, dict):
         errors.extend(f"{key} does not match current findings" for key, expected_value in expected.items() if value.get(key) != expected_value)
     entries = value.get("dispositions") if isinstance(value, dict) else None
@@ -3483,25 +3586,151 @@ def validate_p2_dispositions(
             errors.append(f"P2 closure command registry for {finding_id} does not bind the current review identity")
         if registry.get("authorizes") != [] or not exclusions.issubset(set(registry.get("doesNotAuthorize", []))):
             errors.append(f"P2 closure command registry for {finding_id} has an invalid authorization boundary")
+        if (
+            registry.get("rootId") != command_root.get("rootId")
+            or registry.get("authorityRootRef") != root_reference
+            or registry.get("signerId") not in command_root.get("authorizedSubjects", [])
+            or registry.get("consumer") not in command_root.get("allowedConsumers", [])
+            or registry.get("runnerIdentity") != command_root.get("runnerIdentity")
+        ):
+            errors.append(f"P2 closure command registry for {finding_id} is not authorized by the profile root")
         commands = [item for item in registry.get("commands", []) if item.get("commandId") == entry.get("closureCommandId")]
         if len(commands) != 1:
             errors.append(f"P2 closure command is not uniquely registered: {finding_id}")
             return registry, registry_path, None
-        return registry, registry_path, commands[0]
+        command = commands[0]
+        if (
+            command.get("commandClass") not in command_root.get("allowedScopes", [])
+            or command.get("executable") not in command_root.get("allowedExecutables", [])
+        ):
+            errors.append(f"P2 closure command descriptor is outside root policy: {finding_id}")
+        try:
+            cwd = ensure_within(
+                repository_root / str(command.get("cwd", "")),
+                repository_root,
+                f"P2 command cwd for {finding_id}",
+            )
+        except BootstrapError as exc:
+            errors.append(str(exc))
+        else:
+            if not cwd.is_dir():
+                errors.append(f"P2 command cwd does not exist: {finding_id}")
+        return registry, registry_path, command
 
     def validate_process_ref(reference: Any, finding_id: str, registry_path: Path, command: dict[str, Any], required_class: str, label: str) -> None:
         process, _ = load_evidence_ref(reference, label, "bootstrap-p2-process-result.v1.schema.json")
         if process is None:
             return
         validate_common(process, finding_id, label)
+        descriptor_hash = value_hash(command)
         if (
             process.get("commandId") != command.get("commandId")
             or process.get("commandClass") != required_class
             or command.get("commandClass") != required_class
             or process.get("registryHash") != file_hash(registry_path)
+            or process.get("descriptorHash") != descriptor_hash
+            or process.get("runnerIdentity") != command_root.get("runnerIdentity")
             or process.get("exitCode") != 0
         ):
             errors.append(f"{label} does not prove the registered successful {required_class} command")
+        event, event_path = load_evidence_ref(
+            process.get("processEventRef"),
+            f"{label} event",
+            "bootstrap-p2-process-event.v1.schema.json",
+        )
+        log_reference = process.get("processLogRef")
+        log_path: Path | None = None
+        if not isinstance(log_reference, dict) or set(log_reference) != {"path", "sha256"}:
+            errors.append(f"{label} process log must be an exact path/hash reference")
+        else:
+            try:
+                log_path = ensure_within(
+                    repository_root / str(log_reference.get("path", "")),
+                    repository_root,
+                    f"{label} process log",
+                )
+            except BootstrapError as exc:
+                errors.append(str(exc))
+                log_path = None
+            if (
+                log_path is not None
+                and (
+                    log_path != (run_dir / "p2-process-events.jsonl").resolve()
+                    or not log_path.is_file()
+                    or file_hash(log_path) != log_reference.get("sha256")
+                )
+            ):
+                errors.append(f"{label} process log is missing, stale, or outside the runner-owned path")
+                log_path = None
+        if event is not None and event_path is not None:
+            event_root = (run_dir / "p2-process-events").resolve()
+            try:
+                event_path.resolve().relative_to(event_root)
+            except ValueError:
+                errors.append(f"{label} event is outside the runner-owned event directory")
+            expected_event = {
+                "reviewId": manifest["reviewId"],
+                "inputHash": manifest["inputHash"],
+                "candidateHash": candidate_hash,
+                "authorityRevision": manifest["authorityRevision"],
+                "findingId": finding_id,
+                "commandId": command.get("commandId"),
+                "commandClass": required_class,
+                "registryHash": file_hash(registry_path),
+                "descriptorHash": descriptor_hash,
+                "runnerIdentity": command_root.get("runnerIdentity"),
+                "executable": command.get("executable"),
+                "argv": command.get("argv"),
+                "cwd": command.get("cwd"),
+                "exitCode": 0,
+            }
+            if any(event.get(key) != expected_value for key, expected_value in expected_event.items()):
+                errors.append(f"{label} event does not reproduce the registered execution")
+            if (
+                process.get("stdoutHash") != event.get("stdoutHash")
+                or process.get("stderrHash") != event.get("stderrHash")
+                or process.get("observedAt") != event.get("observedAt")
+            ):
+                errors.append(f"{label} result does not derive from its process event")
+            for stream in ("stdout", "stderr"):
+                stream_path_key = f"{stream}Path"
+                stream_hash_key = f"{stream}Hash"
+                try:
+                    stream_path = ensure_within(
+                        repository_root / str(event.get(stream_path_key, "")),
+                        repository_root,
+                        f"{label} {stream}",
+                    )
+                except BootstrapError as exc:
+                    errors.append(str(exc))
+                    continue
+                if not stream_path.is_file() or file_hash(stream_path) != event.get(stream_hash_key):
+                    errors.append(f"{label} {stream} bytes are missing or stale")
+        if log_path is not None and event is not None:
+            try:
+                log_events = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+            except (OSError, UnicodeError, ValueError):
+                errors.append(f"{label} process log is not valid UTF-8 JSONL")
+                log_events = []
+            previous_hash = None
+            matching_events = 0
+            for logged_event in log_events:
+                schema_errors = schema_validation_errors("bootstrap-p2-process-event.v1.schema.json", logged_event)
+                if schema_errors:
+                    errors.append(f"{label} process log contains an invalid event: " + "; ".join(schema_errors))
+                    break
+                if logged_event.get("previousEventHash") != previous_hash:
+                    errors.append(f"{label} process event chain is broken")
+                    break
+                calculated_hash = value_hash({key: value for key, value in logged_event.items() if key != "eventHash"})
+                if logged_event.get("eventHash") != calculated_hash:
+                    errors.append(f"{label} process event hash is invalid")
+                    break
+                previous_hash = logged_event["eventHash"]
+                if logged_event == event:
+                    matching_events += 1
+            if matching_events != 1:
+                errors.append(f"{label} event is not uniquely present in the append-only process log")
         observed = parse_time(process.get("observedAt"), label)
         if observed is not None and observed > datetime.now(timezone.utc):
             errors.append(f"{label} observation is in the future")
@@ -3528,6 +3757,17 @@ def validate_p2_dispositions(
                 owner, _ = load_evidence_ref(entry.get("ownerAuthorityRef"), f"P2 owner authority for {finding_id}", "bootstrap-p2-owner-authority.v1.schema.json")
                 if owner is not None:
                     validate_common(owner, finding_id, f"P2 owner authority for {finding_id}")
+                    try:
+                        validate_leaf_root_binding(
+                            owner,
+                            profile,
+                            owner_root,
+                            consumer=owner.get("consumer", ""),
+                            scopes=[owner.get("scope", "")],
+                            label=f"P2 owner authority for {finding_id}",
+                        )
+                    except BootstrapError as exc:
+                        errors.append(str(exc))
                     if owner.get("owner") != entry.get("owner") or owner.get("scope") != entry.get("recheckTrigger") or owner.get("policyRevision") != manifest["policyRevision"] or owner.get("status") != "active":
                         errors.append(f"P2 owner authority does not authorize the declared owner and scope: {finding_id}")
                     owner_expiry = parse_time(owner.get("expiresAt"), f"P2 owner authority for {finding_id}")
@@ -3986,6 +4226,182 @@ def command_finalize(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_run_p2_command(args: argparse.Namespace) -> int:
+    run_dir, manifest, repository_root = load_run(args.run_dir)
+    gate = read_json(run_dir / "review-candidates.json")
+    matching_findings = [
+        item for item in gate.get("findings", [])
+        if isinstance(item, dict)
+        and item.get("findingId") == args.finding_id
+        and item.get("proposedSeverity") == "P2"
+    ] if isinstance(gate, dict) else []
+    if len(matching_findings) != 1:
+        raise BootstrapError("run-p2-command requires one current accepted P2 finding")
+    registry_path = Path(args.registry)
+    if not registry_path.is_absolute():
+        registry_path = repository_root / registry_path
+    registry_path = ensure_within(registry_path, repository_root, "P2 command registry")
+    registry = read_json(registry_path)
+    schema_errors = schema_validation_errors(
+        "bootstrap-p2-command-registry.v1.schema.json", registry
+    )
+    if schema_errors:
+        raise BootstrapError("P2 command registry is invalid: " + "; ".join(schema_errors))
+    profile = load_profile(manifest["profileName"])
+    root_registry = load_authority_root_registry(
+        repository_root, profile["authorityRootRegistry"]
+    )
+    root = authority_root(root_registry, "p2-command-root.v1", "p2-command")
+    expected_identity = {
+        "reviewId": manifest["reviewId"],
+        "inputHash": manifest["inputHash"],
+        "candidateHash": manifest["authorityContextHash"],
+        "policyRevision": manifest["policyRevision"],
+        "authorityRevision": manifest["authorityRevision"],
+        "rootId": root["rootId"],
+        "authorityRootRef": authority_root_reference(profile),
+        "consumer": "bootstrap-p2-disposition",
+        "runnerIdentity": root["runnerIdentity"],
+    }
+    if any(registry.get(key) != value for key, value in expected_identity.items()):
+        raise BootstrapError("P2 command registry does not bind the current trusted review authority")
+    if registry.get("signerId") not in root.get("authorizedSubjects", []):
+        raise BootstrapError("P2 command registry signer is not root-authorized")
+    commands = [
+        item for item in registry.get("commands", [])
+        if item.get("commandId") == args.command_id
+    ]
+    if len(commands) != 1:
+        raise BootstrapError("P2 command is not uniquely registered")
+    command = commands[0]
+    if (
+        command.get("commandClass") not in root.get("allowedScopes", [])
+        or command.get("executable") not in root.get("allowedExecutables", [])
+    ):
+        raise BootstrapError("P2 command descriptor is outside root policy")
+    cwd = ensure_within(
+        repository_root / command["cwd"], repository_root, "P2 command cwd"
+    )
+    if not cwd.is_dir():
+        raise BootstrapError("P2 command cwd does not exist")
+
+    event_id = f"p2-{command['commandId']}-{time.time_ns()}"
+    event_dir = run_dir / "p2-process-events" / event_id
+    event_dir.mkdir(parents=True, exist_ok=False)
+    stdout_path = event_dir / "stdout.bin"
+    stderr_path = event_dir / "stderr.bin"
+    argv = [command["executable"], *command["argv"]]
+    child_env, _ = child_environment()
+    try:
+        completed = subprocess.run(
+            argv,
+            cwd=cwd,
+            env=child_env,
+            capture_output=True,
+            shell=False,
+            check=False,
+        )
+        exit_code = completed.returncode
+        stdout = completed.stdout
+        stderr = completed.stderr
+    except OSError as exc:
+        exit_code = -1
+        stdout = b""
+        stderr = str(exc).encode("utf-8", errors="replace")
+    atomic_write_bytes(stdout_path, stdout)
+    atomic_write_bytes(stderr_path, stderr)
+    observed_at = utc_now()
+    log_path = run_dir / "p2-process-events.jsonl"
+    with process_lease_lock(run_dir):
+        previous_hash = None
+        if log_path.is_file():
+            existing_lines = [
+                line for line in log_path.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+            if existing_lines:
+                try:
+                    previous = json.loads(existing_lines[-1])
+                except ValueError as exc:
+                    raise BootstrapError("Existing P2 process log is invalid JSONL") from exc
+                previous_hash = previous.get("eventHash")
+                if not isinstance(previous_hash, str) or not HASH_PATTERN.fullmatch(previous_hash):
+                    raise BootstrapError("Existing P2 process log has an invalid chain tail")
+        event = {
+            "schemaVersion": "bootstrap-p2-process-event.v1",
+            "eventId": event_id,
+            "previousEventHash": previous_hash,
+            "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"],
+            "candidateHash": manifest["authorityContextHash"],
+            "authorityRevision": manifest["authorityRevision"],
+            "findingId": args.finding_id,
+            "commandId": command["commandId"],
+            "commandClass": command["commandClass"],
+            "registryHash": file_hash(registry_path),
+            "descriptorHash": value_hash(command),
+            "runnerIdentity": root["runnerIdentity"],
+            "executable": command["executable"],
+            "argv": command["argv"],
+            "cwd": command["cwd"],
+            "exitCode": exit_code,
+            "stdoutPath": stdout_path.relative_to(repository_root).as_posix(),
+            "stdoutHash": file_hash(stdout_path),
+            "stderrPath": stderr_path.relative_to(repository_root).as_posix(),
+            "stderrHash": file_hash(stderr_path),
+            "observedAt": observed_at,
+        }
+        event["eventHash"] = value_hash(event)
+        event_errors = schema_validation_errors(
+            "bootstrap-p2-process-event.v1.schema.json", event
+        )
+        if event_errors:
+            raise BootstrapError("Runner produced an invalid P2 process event: " + "; ".join(event_errors))
+        with log_path.open("ab") as stream:
+            stream.write(canonical_bytes(event) + b"\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+    event_path = event_dir / "event.json"
+    write_json(event_path, event)
+    if exit_code != 0:
+        raise BootstrapError(
+            f"Registered P2 command failed with exit code {exit_code}; event preserved at {event_path}"
+        )
+    exclusions = ["implementation-acceptance", "protected-handoff", "release", "commit", "done"]
+    result = {
+        "schemaVersion": "bootstrap-p2-process-result.v1",
+        "resultId": f"result-{event_id}",
+        "findingId": args.finding_id,
+        "reviewId": manifest["reviewId"],
+        "inputHash": manifest["inputHash"],
+        "candidateHash": manifest["authorityContextHash"],
+        "authorityRevision": manifest["authorityRevision"],
+        "commandId": command["commandId"],
+        "commandClass": command["commandClass"],
+        "registryHash": file_hash(registry_path),
+        "descriptorHash": value_hash(command),
+        "runnerIdentity": root["runnerIdentity"],
+        "processEventRef": {
+            "path": event_path.relative_to(repository_root).as_posix(),
+            "sha256": file_hash(event_path),
+        },
+        "processLogRef": {
+            "path": log_path.relative_to(repository_root).as_posix(),
+            "sha256": file_hash(log_path),
+        },
+        "stdoutHash": file_hash(stdout_path),
+        "stderrHash": file_hash(stderr_path),
+        "exitCode": 0,
+        "observedAt": observed_at,
+        "authorizes": [],
+        "doesNotAuthorize": exclusions,
+    }
+    result_path = event_dir / "process-result.json"
+    write_json(result_path, result)
+    print(result_path)
+    return 0
+
+
 def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
     seal_path = run_dir / "run-seal.json"
     seal = read_json(seal_path) if seal_path.is_file() else None
@@ -4310,6 +4726,15 @@ def build_parser() -> argparse.ArgumentParser:
     finalize = subparsers.add_parser("finalize", help="Apply manually saved verifier decisions")
     finalize.add_argument("--run-dir", required=True)
     finalize.set_defaults(handler=command_finalize)
+    run_p2 = subparsers.add_parser(
+        "run-p2-command",
+        help="Execute one root-authorized P2 descriptor and emit runner-owned evidence",
+    )
+    run_p2.add_argument("--run-dir", required=True)
+    run_p2.add_argument("--registry", required=True)
+    run_p2.add_argument("--finding-id", required=True)
+    run_p2.add_argument("--command-id", required=True)
+    run_p2.set_defaults(handler=command_run_p2_command)
     validate_finalized = subparsers.add_parser(
         "validate-finalized-run",
         help="Recompute a finalized run and emit a plan-consumable validation envelope",

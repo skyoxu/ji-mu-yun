@@ -83,7 +83,7 @@
 
 - Use the existing implementation-conformance profile, context classes, preflight, and plan-bound required checks.
 - Do not modify the 7-12 CLI unless deterministic evidence proves an extension-point gap.
-- The current Round 3 `manual_pause` blocks launching another review under the existing policy revision.
+- The Round 3 `manual_pause` remains immutable history; the authorized successor cycle clears only plan re-entry and does not itself authorize any implementation slice.
 
 ## RMAP-S7: Implementation Acceptance And Handoff
 

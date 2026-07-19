@@ -81,6 +81,18 @@ def validate_context_artifacts(
 ) -> list[dict[str, str]]:
     capsule_ref = context.get("capsule_ref")
     findings = validate_ref(capsule_ref, store, "context.capsule_ref")
+    if isinstance(capsule_ref, dict) and not findings:
+        capsule_bytes = store.get(store_key(capsule_ref))
+        try:
+            referenced_capsule = json.loads(capsule_bytes.decode("utf-8")) if capsule_bytes is not None else None
+        except (UnicodeError, ValueError):
+            referenced_capsule = None
+        if referenced_capsule != capsule:
+            findings.append(finding(
+                "RMAP-CAPSULE-CONTEXT",
+                "context.capsule_ref",
+                "Capsule object does not match the byte-verified capsule reference",
+            ))
     expected = capsule_artifact_refs(capsule)
     actual = context.get("artifact_refs")
     if not isinstance(actual, list):

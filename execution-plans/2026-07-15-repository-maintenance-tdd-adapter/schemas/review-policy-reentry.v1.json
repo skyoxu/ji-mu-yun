@@ -1,7 +1,7 @@
 {
   "schema_version": "jimuyun.review-policy-reentry.v1",
   "plan_id": "repository-maintenance-tdd-adapter",
-  "state": "awaiting_successor_policy",
+  "state": "reentry_authorized",
   "supersedes_blocker": {
     "path": "schemas/review-blocking-state.v1.json",
     "sha256": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
@@ -9,21 +9,23 @@
     "policy_revision": "sha256:2d5f9f1404d4d86307b66f9729b7c6f216aaef8bdd2f0f4062d763460673a5b8"
   },
   "successor_policy": {
-    "change_id": "pending",
-    "policy_revision": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-    "authority_revision": "pending",
-    "input_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-    "decision_path": "pending",
-    "decision_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    "change_id": "repository-maintenance-tdd-adapter-trust-root-v3",
+    "policy_revision": "sha256:d4077a8c91b9b271ff3607548b3575d1616d14dc3c10733849856959ee6ebc0a",
+    "authority_revision": "d097062190f9d435adf68031cf712cb948d702d6",
+    "input_hash": "sha256:72bebedbe17e28caa0539ac58bda0457f00c85f5e63f4bba463f1cdceef786d5",
+    "decision_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
+    "decision_sha256": "sha256:659172239aca47162f4051f3438a503612c35f578fe9833a202abe7d8a7f3ca1"
   },
   "semantic_closure": {
-    "review_id": "pending",
-    "bootstrap_run_path": "pending",
-    "envelope_path": "pending",
-    "envelope_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "review_id": "repo-maint-tdd-trust-root-closure-b-20260718",
+    "bootstrap_run_path": "logs/ci/2026-07-18/review-gateway-bootstrap-repo-maint-tdd-trust-root-closure-b-20260718",
+    "envelope_path": "logs/ci/2026-07-18/review-gateway-bootstrap-repo-maint-tdd-trust-root-closure-b-20260718/finalized-run-validation.json",
+    "envelope_sha256": "sha256:7f6ffaeaab7a1a6ea9780c2ef4103760b786c0a2bf96d9efe2cbb76f22f86287",
     "status": "clean"
   },
-  "authorizes": [],
+  "authorizes": [
+    "manual-pause-reentry"
+  ],
   "does_not_authorize": [
     "plan-ready",
     "slice-ready",

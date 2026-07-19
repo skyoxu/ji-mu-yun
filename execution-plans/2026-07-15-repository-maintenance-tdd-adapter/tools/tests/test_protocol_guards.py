@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import sys
 import unittest
@@ -12,6 +13,8 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from protocol_guards import evaluate_protocol_fixture, validate_protocol_fixture_suite  # noqa: E402
+from protocol_artifact_guards import capsule_artifact_refs, validate_context_artifacts, value_hash  # noqa: E402
+from protocol_fixture_support import hydrate_protocol_fixture  # noqa: E402
 
 
 class ProtocolGuardTests(unittest.TestCase):
@@ -27,6 +30,22 @@ class ProtocolGuardTests(unittest.TestCase):
 
     def test_capsule_context_hash_stale_is_rejected(self) -> None:
         self.assertEqual({"RMAP-CAPSULE-CONTEXT"}, self._rules("capsule-context-hash-stale"))
+
+    def test_capsule_object_must_match_referenced_bytes(self) -> None:
+        bundle, store, _ = hydrate_protocol_fixture(self.fixtures["valid_bundle"])
+        context = copy.deepcopy(bundle["contexts"][0]["context_manifest"])
+        capsule = copy.deepcopy(bundle["contexts"][1]["slice_capsule"])
+        context["capsule_id"] = capsule["capsule_id"]
+        context["stage"] = capsule["stage"]
+        context["artifact_refs"] = capsule_artifact_refs(capsule)
+        context["context_hash"] = value_hash({
+            "capsule_hash": context["capsule_ref"]["sha256"],
+            "artifact_refs": context["artifact_refs"],
+        })
+        self.assertEqual(
+            {"RMAP-CAPSULE-CONTEXT"},
+            {item["rule_id"] for item in validate_context_artifacts(context, capsule, store)},
+        )
 
     def test_adapter_decision_cannot_authorize_transition(self) -> None:
         self.assertEqual({"RMAP-ATTEMPT-AUTHORITY"}, self._rules("attempt-decision-authority-escalation"))

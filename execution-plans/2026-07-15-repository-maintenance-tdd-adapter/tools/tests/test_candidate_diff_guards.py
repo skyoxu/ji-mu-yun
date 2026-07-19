@@ -21,11 +21,45 @@ from candidate_diff_guards import derive_candidate_snapshot, fold_accepted_attem
 from candidate_lineage_guards import bytes_hash, load_candidate_lineage, manifest_root_hash, value_hash  # noqa: E402
 from contract_guards import contained_file, schema_error  # noqa: E402
 from authority_guards import validate_review_reentry  # noqa: E402
+from fixture_checks import evaluate_authority_root_self_refresh_fixture, evaluate_lineage_fixture, evaluate_self_refreshed_identity_fixture  # noqa: E402
+from rmap_checks import load_machine  # noqa: E402
 from evidence_guards import validate_runtime_disposition_sources  # noqa: E402
 from protocol_guards import hydrate_protocol_fixture  # noqa: E402
 
 
 class CandidateDiffGuardTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.data, errors = load_machine(PLAN_ROOT)
+        if errors:
+            raise AssertionError(errors)
+
+    def test_artifact_proof_self_refreshed_identity_is_rejected(self) -> None:
+        rules = {item["rule_id"] for item in evaluate_self_refreshed_identity_fixture(PLAN_ROOT)}
+        self.assertEqual({"RMAP-ARTIFACT-PROOF-IDENTITY"}, rules)
+
+    def test_artifact_proof_authority_root_cannot_self_refresh_permissions(self) -> None:
+        rules = {item["rule_id"] for item in evaluate_authority_root_self_refresh_fixture(PLAN_ROOT)}
+        self.assertEqual({"RMAP-ARTIFACT-PROOF-CONSUMER"}, rules)
+
+    def test_artifact_proof_lineage_predecessor_failures_are_isolated(self) -> None:
+        for fixture_id in (
+            "artifact-proof-lineage-broken-predecessor",
+            "artifact-proof-lineage-wrong-predecessor",
+            "artifact-proof-lineage-stale-predecessor",
+        ):
+            with self.subTest(fixture_id=fixture_id):
+                rules = {
+                    item["rule_id"]
+                    for item in evaluate_lineage_fixture(
+                        PLAN_ROOT,
+                        fixture_id,
+                        self.data["artifact_proofs"],
+                        self.data["authority_manifest"],
+                    )
+                }
+                self.assertEqual({"RMAP-ARTIFACT-PROOF-LINEAGE"}, rules)
+
     def test_candidate_diff_mutation_suite_is_exact(self) -> None:
         self.assertEqual([], validate_candidate_fixture_suite(PLAN_ROOT))
 
@@ -120,7 +154,9 @@ class CandidateDiffGuardTests(unittest.TestCase):
             policy_revision = "sha256:" + "9" * 64; authority_revision = "successor-authority"; input_hash = "sha256:" + "8" * 64
             exclusions = ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
             authority_path = run_dir / "successor-authority.json"
-            authority = {"schemaVersion": "bootstrap-successor-policy-authority.v1", "authorityId": "successor-authority-001", "policyRevision": policy_revision, "authorizedActors": [{"actorId": "operator-001", "role": "successor-policy-authorizer", "consumers": ["repository-maintenance-tdd-adapter-plan-reentry"], "scopes": ["plan-reentry"]}], "status": "active", "issuedAt": "2026-07-17T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z", "predecessorAuthorityRef": None, "authorizes": [], "doesNotAuthorize": exclusions}
+            root_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "references" / "authority-roots.v1.json"
+            root_ref = {"path": root_path.relative_to(repository_root).as_posix(), "sha256": "sha256:" + hashlib.sha256(root_path.read_bytes()).hexdigest()}
+            authority = {"schemaVersion": "bootstrap-successor-policy-authority.v1", "authorityId": "successor-authority-001", "rootId": "successor-policy-root.v1", "authorityRootRef": root_ref, "signerId": "repository-operator", "policyRevision": policy_revision, "authorizedActors": [{"actorId": "operator-001", "role": "successor-policy-authorizer", "consumers": ["repository-maintenance-tdd-adapter-plan-reentry"], "scopes": ["plan-reentry"]}], "status": "active", "issuedAt": "2026-07-17T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z", "predecessorAuthorityRef": root_ref, "authorizes": [], "doesNotAuthorize": exclusions}
             authority_path.write_text(json.dumps(authority), encoding="utf-8")
             authority_ref = {"path": authority_path.relative_to(repository_root).as_posix(), "sha256": "sha256:" + hashlib.sha256(authority_path.read_bytes()).hexdigest()}
             event_path = run_dir / "authorization-event.json"
@@ -136,10 +172,13 @@ class CandidateDiffGuardTests(unittest.TestCase):
             (run_dir / "review-input.json").write_text("{}", encoding="utf-8")
             relative = lambda path: path.relative_to(repository_root).as_posix()
             digest = lambda path: "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
-            reentry.update({"state": "reentry_authorized", "authorizes": ["plan-ready"], "does_not_authorize": ["slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]})
+            reentry.update({"state": "reentry_authorized", "authorizes": ["manual-pause-reentry"], "does_not_authorize": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]})
             reentry["successor_policy"] = {"change_id": "successor-change", "policy_revision": policy_revision, "authority_revision": authority_revision, "input_hash": input_hash, "decision_path": relative(decision_path), "decision_sha256": digest(decision_path)}
             reentry["semantic_closure"] = {"review_id": "successor-review", "bootstrap_run_path": relative(run_dir), "envelope_path": relative(envelope_path), "envelope_sha256": digest(envelope_path), "status": "clean"}
             fake = mock.Mock()
+            class FakeBootstrapError(Exception):
+                pass
+            fake.BootstrapError = FakeBootstrapError
             fake.schema_validation_errors.side_effect = lambda name, document: [] if (
                 name == "bootstrap-successor-policy-decision.v1.schema.json" and document.get("schemaVersion") == "bootstrap-successor-policy-decision.v1"
             ) or (
@@ -153,8 +192,17 @@ class CandidateDiffGuardTests(unittest.TestCase):
                 return event
             fake.validate_successor_policy_authorization.side_effect = validate_event
             fake.validate_finalized_run_evidence.return_value = envelope
-            with mock.patch("authority_guards._load_bootstrap_runtime", return_value=fake):
+            with mock.patch("authority_guards._load_bootstrap_runtime", return_value=fake), mock.patch(
+                "authority_guards.stable_environment_evidence", return_value=({}, {})
+            ):
                 self.assertEqual([], validate_review_reentry(PLAN_ROOT, blocker, reentry))
+
+                fake.validate_successor_policy_authorization.side_effect = FakeBootstrapError("untrusted root")
+                self.assertEqual(
+                    {"RMAP-REVIEW-REENTRY"},
+                    {item["rule_id"] for item in validate_review_reentry(PLAN_ROOT, blocker, reentry)},
+                )
+                fake.validate_successor_policy_authorization.side_effect = validate_event
 
                 decision_path.write_text("{}", encoding="utf-8")
                 reentry["successor_policy"]["decision_sha256"] = digest(decision_path)

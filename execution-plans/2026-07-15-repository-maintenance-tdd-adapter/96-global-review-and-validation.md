@@ -10,7 +10,7 @@ Sampling is not allowed.
 
 Before semantic review:
 
-1. run `tools/validate_all.py --predicate plan-repair-verified` and confirm that `--predicate plan-ready` returns `blocked`;
+1. run `tools/validate_all.py --predicate plan-repair-verified` and `--predicate plan-ready`; both must pass under workflow-integrity assurance, while neither may authorize protected handoff or release;
 2. run every test under `tools/tests/`;
 3. run the VDD Skill contract validator and tests;
 4. run the 7-12 Whole-directory validator and Bootstrap regression suite when reviewing integration claims;
@@ -18,8 +18,8 @@ Before semantic review:
 6. confirm no old plan or historical evidence changed during plan creation.
 7. observe at least one Capsule and one attempt-ledger counterexample with the expected stable rule ID.
 8. observe candidate omission, fabricated slice projection, missing cross-slice lineage, test-patch mismatch, authoritative S7 supersession, runtime P2/verifier source, partial re-entry evidence, and artifact-proof counterexamples with their stable rule IDs;
-9. apply the seven-dimensional artifact proof template to every artifact added for a prior finding and reject any missing producer authority, immutable identity, fact derivation, independent recomputation, stale-input propagation, successor lineage, or consumer authorization boundary;
-9. execute the disposable Git for Windows add/modify/delete/binary-patch test and junction containment test.
+9. apply the seven-dimensional proof contract to every formal artifact added for a prior finding; require explicit executable `PASS` or type-authorized reasoned `N/A`, reject missing verdicts, unauthorized N/A, fake PASS rules, forged producer, self-refreshed identity, unrelated derivation, unknown rule, empty invalidation, broken lineage, and incomplete consumer permission, and prove static contracts have zero runtime authority;
+10. execute the disposable Git for Windows add/modify/delete/binary-patch test and junction containment test.
 
 A deterministic failure stops semantic review.
 
@@ -45,10 +45,10 @@ Plan-ready requires:
 - every required fixture demonstrates the expected rule;
 - source/requirement/owner/phase/acceptance coverage is exact;
 - no open blocker exists;
-- plan status is `draft` or `plan-ready` and the result authorizes only transition to or confirmation of `plan-ready`;
+- plan status is `draft` or `plan-ready`, no workflow-integrity blocker is open, and the result authorizes only transition to or confirmation of `plan-ready`;
 - `does_not_authorize` includes slice, implementation candidate, implementation acceptance, protected handoff, and release.
 
-The current Round 3 blocking projection violates the no-open-blocker condition by design, so `plan-ready` must return machine status `blocked` and nonzero exit until the versioned re-entry selector validates a distinct external policy/authority decision and independent clean semantic closure envelope.
+The historical Round 3 blocker remains immutable. The current versioned re-entry selector validates a distinct profile-root-authorized policy decision and independently recomputed clean semantic closure envelope, but authorizes only `manual-pause-reentry`. The composite validator may then authorize `plan-ready` under workflow-integrity assurance. Protected handoff and release remain separately gated by independent verifier identity or trusted signed-envelope evidence.
 
 ## Implementation Review Predicate
 
@@ -69,7 +69,9 @@ Future `implementation-accepted` requires:
 
 Use one complete review, batch repair, then one final complete review. A third review is allowed only for a new P0/P1 or changed authority/context graph. P2-only repair uses targeted deterministic validation and does not trigger another full semantic review.
 
-The finalized Round 3 Bootstrap run remains immutable and blocking under `manual_pause_after_round_3`. The `review-policy-reentry.v1` selector currently remains `awaiting_successor_policy`; deterministic repair cannot clear it. Semantic re-entry requires a schema-valid successor policy decision, hash-bound authorization event, distinct change/policy/authority/review/input lineage, and a clean envelope reproduced by the repository Bootstrap v2 validator. It cannot be labelled Round 4.
+The finalized Round 3 Bootstrap run remains immutable under `manual_pause_after_round_3`; it was not edited or relabelled as Round 4. `review-policy-reentry.v1` now binds a schema-valid successor policy decision whose authority source terminates at the exact profile-bound root, a hash-bound authorization event, distinct change/policy/authority/review/input lineage, and a clean envelope reproduced by the repository Bootstrap v2 validator. The bounded successor cycle authorizes only plan re-entry, not implementation or release.
+
+GitHub CI for the repair revision is unconfirmed unless authenticated current-run evidence is available. Fresh local deterministic evidence may prove plan repair and closure predicates, but it must not be reported as GitHub Actions PASS.
 
 Round 2 `repo-maint-tdd-final-r2-20260716-024940` confirmed three new P1 findings covering controlled test temp, all-slice exit-proof reachability, and exact source-location validation. They are repaired as one deterministic VDD batch. Because Round 2 introduced new P1 findings, policy permits one Round 3 review; Round 3 is the hard-limit final semantic round and any remaining blocker enters manual pause.
 

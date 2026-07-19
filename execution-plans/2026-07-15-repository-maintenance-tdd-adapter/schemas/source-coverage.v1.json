@@ -171,7 +171,7 @@
     {
       "source_id": "clarification-projection",
       "path": "schemas/clarification-decisions.v1.json",
-      "sha256": "sha256:cfc53f3a3805e5757794f22d78f0950cb58ebf1c49dd69674826f7c3412e1286",
+      "sha256": "sha256:8d36bbfbde581f2786c07e2335c37e0dd02a9a5d65ce8a52bf3b0f44c4983dc0",
       "sections": [
         {
           "id": "CREATE-CQ-001-005",
@@ -280,6 +280,33 @@
             "RMAP-012",
             "RMAP-014",
             "RMAP-026",
+            "RMAP-027"
+          ]
+        },
+        {
+          "id": "REPAIR-20260718-1500-CQ-001-005",
+          "lines": "repair-20260718-1500:CQ-001..CQ-005",
+          "requirements": [
+            "RMAP-004",
+            "RMAP-012",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-018",
+            "RMAP-021",
+            "RMAP-027"
+          ]
+        },
+        {
+          "id": "REPAIR-20260718-1600-CLOSURE",
+          "lines": "repair-20260718-1600:RMAP-ARTIFACT-PROOF-CLOSURE",
+          "requirements": [
+            "RMAP-027"
+          ]
+        },
+        {
+          "id": "REPAIR-20260718-1700-EXTERNAL-ROOT-CLOSURE",
+          "lines": "repair-20260718-1700:RMAP-ARTIFACT-PROOF-EXTERNAL-ROOT-CLOSURE",
+          "requirements": [
             "RMAP-027"
           ]
         }

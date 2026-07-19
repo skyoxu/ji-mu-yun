@@ -61,7 +61,7 @@ Work:
 
 Exit: S7 proves one active S6 candidate through recovery/events/successor evidence independently of its own run ID, no open accepted P0/P1 remains, runtime P2 disposition/verifier evidence is complete, no high-risk/expired deferral remains, and the fresh plan-local envelope authorizes only implementation acceptance.
 
-Current state: blocked before P0 by `manual_pause_after_round_3`. `schemas/review-policy-reentry.v1.json` remains `awaiting_successor_policy`; a distinct successor change/policy/authority decision and independent clean semantic closure envelope are required before any phase can start.
+Current state: `plan-ready`. The distinct profile-root-authorized successor validly re-entered from the historical Round 3 manual pause, and the workflow-integrity predicate does not require an external execution identity. P0 may start from a current hash-bound `plan-ready` PASS; every later phase still requires its own predicate evidence. Protected handoff and release remain separately blocked pending independent verifier identity or a trusted signed envelope.
 
 ## Deferred P4
 

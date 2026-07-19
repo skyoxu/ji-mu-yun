@@ -13,8 +13,7 @@ from artifact_proof_guards import validate_artifact_proofs
 from current_state_guards import validate_current_state_projection
 from protocol_guards import validate_protocol_contract, validate_protocol_fixture_suite
 VALIDATOR_VERSION = "rmap-plan-validator.v2"
-HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
-REQ_RE = re.compile(r"^RMAP-(\d{3})$")
+HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$"); REQ_RE = re.compile(r"^RMAP-(\d{3})$")
 PLACEHOLDER_RE = re.compile(r"\$\{[^}]+\}")
 ALLOWED_ENV = {"PYTHONDONTWRITEBYTECODE", "GODOT_BIN"}
 ALLOWED_PLACEHOLDERS = {"repo_path", "plan_path", "run_path", "slice_id", "literal_enum"}
@@ -32,7 +31,8 @@ REQUIRED_FILES = {
     "schemas/acceptance-contracts.v1.json", "schemas/authority-manifest.v1.json",
     "schemas/clarification-decisions.v1.json", "schemas/review-blocking-state.v1.json",
     "schemas/review-policy-reentry.v1.json", "schemas/review-policy-reentry.v1.schema.json",
-    "schemas/artifact-proof.v1.schema.json", "schemas/artifact-proof-required.v1.json", "schemas/artifact-proof-registry.v1.json", "schemas/runtime-artifact-type-proof.v1.json", "tools/artifact_proof_guards.py",
+    "schemas/artifact-proof.v1.schema.json", "schemas/artifact-proof-authority.v1.json", "schemas/artifact-proof-required.v1.json", "schemas/artifact-proof-registry.v1.json", "schemas/runtime-artifact-type-proof.v1.json", "tools/artifact_proof_guards.py", "tools/artifact_proof_verdicts.py", "tools/review_reentry_environment.py",
+    "schemas/predicate-artifact-closure.v1.json", "tools/artifact_proof_projection_support.py", "tools/artifact_proof_inventory_support.py", "tools/runtime_artifact_proof_guards.py", "tools/validation_result_guards.py", "tools/tests/test_artifact_proof_closure.py",
     "schemas/candidate-diff-manifest.v1.schema.json", "schemas/candidate-result-ref.v1.schema.json",
     "schemas/candidate-lineage-manifest.v1.schema.json", "schemas/candidate-slice-effect.v1.schema.json", "schemas/candidate-supersession-proof.v1.schema.json",
     "schemas/context-manifest.v1.schema.json", "schemas/slice-capsule.v1.schema.json", "schemas/backend-request.v1.schema.json", "schemas/backend-response.v1.schema.json",
@@ -51,10 +51,23 @@ PREDICATE_AUTHORITY = {
 }
 def finding(rule_id: str, target: str, message: str) -> dict[str, str]:
     return {"rule_id": rule_id, "target": target, "message": message}
-def validate_plan_state(state: dict[str, Any], review_blocker: dict[str, Any], reentry: dict[str, Any] | None = None) -> list[dict[str, str]]:
+def validate_plan_state(
+    state: dict[str, Any],
+    review_blocker: dict[str, Any],
+    reentry: dict[str, Any] | None = None,
+    *,
+    require_runtime_evidence: bool = True,
+) -> list[dict[str, str]]:
     if reentry is None:
         reentry = strict_json(Path(__file__).resolve().parents[1] / "schemas" / "review-policy-reentry.v1.json")
-    return validate_plan_state_guard(Path(__file__).resolve().parents[1], state, review_blocker, reentry, PREDICATE_AUTHORITY)
+    return validate_plan_state_guard(
+        Path(__file__).resolve().parents[1],
+        state,
+        review_blocker,
+        reentry,
+        PREDICATE_AUTHORITY,
+        require_runtime_evidence=require_runtime_evidence,
+    )
 def validate_shadow_registry(shadow: dict[str, Any]) -> list[dict[str, str]]:
     return validate_shadow_registry_guard(Path(__file__).resolve().parents[1], shadow)
 def strict_json(path: Path) -> Any:
@@ -65,10 +78,11 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 def candidate_hash(plan_root: Path) -> str:
     digest = hashlib.sha256()
-    for path in sorted(plan_root.rglob("*"), key=lambda item: item.as_posix().lower()):
-        if not path.is_file() or "__pycache__" in path.parts or path.suffix == ".pyc":
-            continue
-        rel = path.relative_to(plan_root).as_posix()
+    closure = strict_json(plan_root / "schemas" / "predicate-artifact-closure.v1.json")
+    repository_root = plan_root.parents[1]
+    paths = [repository_root / relative for relative in closure["candidate_hash_scope"]["members"]]
+    for path in sorted(paths, key=lambda item: item.as_posix().lower()):
+        rel = path.relative_to(repository_root).as_posix()
         digest.update(rel.encode("utf-8")); digest.update(b"\0")
         digest.update(path.read_bytes()); digest.update(b"\0")
     return "sha256:" + digest.hexdigest()
@@ -86,6 +100,7 @@ def load_machine(plan_root: Path) -> tuple[dict[str, Any], list[dict[str, str]]]
         "acceptance": "schemas/acceptance-contracts.v1.json", "authority_manifest": "schemas/authority-manifest.v1.json",
         "clarification": "schemas/clarification-decisions.v1.json", "review_blocker": "schemas/review-blocking-state.v1.json",
         "review_reentry": "schemas/review-policy-reentry.v1.json", "artifact_proofs": "schemas/artifact-proof-registry.v1.json",
+        "predicate_closure": "schemas/predicate-artifact-closure.v1.json",
     }
     data: dict[str, Any] = {}
     findings: list[dict[str, str]] = []
@@ -357,12 +372,10 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
         findings.append(finding("RMAP-TDD-CANDIDATE-SEQUENCE", "S2-S7", "candidate, Bootstrap, and acceptance sequence is inverted"))
     return findings
 def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, str]], dict[str, Any]]:
-    checks: list[dict[str, Any]] = []
-    findings = validate_required_files(plan_root)
+    checks: list[dict[str, Any]] = []; findings = validate_required_files(plan_root)
     checks.append({"rule_id": "RMAP-STRUCT-REQUIRED", "status": "pass" if not findings else "fail", "evidence": ["required artifact inventory"]})
     data, load_findings = load_machine(plan_root); findings.extend(load_findings)
-    if load_findings:
-        return checks, findings, data
+    if load_findings: return checks, findings, data
     requirement_ids = {item["id"] for item in data["requirements"].get("requirements", []) if isinstance(item, dict) and "id" in item}
     groups = [
         ("RMAP-STRUCT-LINKS", validate_links(plan_root)),
@@ -370,7 +383,7 @@ def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[st
         ("RMAP-REQ-REGISTRY", validate_requirements(plan_root, data["requirements"], data["quality"], data["acceptance"])),
         ("RMAP-REQ-COVERAGE", validate_coverage(plan_root, data["coverage"], requirement_ids)),
         ("RMAP-REQ-DELTAS", validate_deltas(plan_root, data["deltas"], requirement_ids)),
-        ("RMAP-AUTH-PREDICATES", validate_plan_state(data["state"], data["review_blocker"], data["review_reentry"])),
+        ("RMAP-AUTH-PREDICATES", validate_plan_state(data["state"], data["review_blocker"], data["review_reentry"], require_runtime_evidence=False)),
         ("RMAP-CMD-REGISTRY", validate_commands(data["commands"], plan_root)),
         ("RMAP-CONTRACT", validate_contract(plan_root, data["contract"], data["requirements"], data["commands"])),
         ("RMAP-SHADOW", validate_shadow_registry(data["shadow"])),

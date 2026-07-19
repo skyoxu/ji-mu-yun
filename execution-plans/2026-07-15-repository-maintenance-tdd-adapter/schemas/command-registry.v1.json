@@ -15,6 +15,22 @@
   ],
   "commands": [
     {
+      "id": "rmap-refresh-projections",
+      "executable": "py",
+      "argv": [
+        "-3",
+        {
+          "type": "plan_path",
+          "value": "tools/refresh_projections.py"
+        }
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 120
+    },
+    {
       "id": "rmap-plan-validate",
       "executable": "py",
       "argv": [

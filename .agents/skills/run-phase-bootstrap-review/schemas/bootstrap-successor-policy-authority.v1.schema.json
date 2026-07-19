@@ -4,10 +4,13 @@
   "title": "Bootstrap Successor Policy Authority v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "authorityId", "policyRevision", "authorizedActors", "status", "issuedAt", "expiresAt", "predecessorAuthorityRef", "authorizes", "doesNotAuthorize"],
+  "required": ["schemaVersion", "authorityId", "rootId", "authorityRootRef", "signerId", "policyRevision", "authorizedActors", "status", "issuedAt", "expiresAt", "predecessorAuthorityRef", "authorizes", "doesNotAuthorize"],
   "properties": {
     "schemaVersion": {"const": "bootstrap-successor-policy-authority.v1"},
     "authorityId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "rootId": {"const": "successor-policy-root.v1"},
+    "authorityRootRef": {"$ref": "#/$defs/evidenceRef"},
+    "signerId": {"type": "string", "minLength": 1},
     "policyRevision": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "authorizedActors": {
       "type": "array", "minItems": 1, "uniqueItems": true,

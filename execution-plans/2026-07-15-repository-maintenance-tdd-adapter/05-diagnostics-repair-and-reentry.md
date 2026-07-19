@@ -28,6 +28,7 @@ Every failure record contains:
 | Candidate diff, test patch, or accepted-attempt fold incomplete | candidate evidence validator and evidence maintainer |
 | S7 references a stale or superseded S6 candidate | acceptance predecessor contract |
 | S0-S6 lineage omits a slice or breaks predecessor/event hashes | candidate lineage contract |
+| Protected handoff or release lacks custody outside the workflow identity | protected-verifier identity boundary |
 | Runtime P2 or verifier source evidence is missing/stale | Bootstrap acceptance evidence contract |
 
 Never weaken a validator to match a candidate without an explicit contract delta and regression counterexample.
@@ -63,7 +64,7 @@ A P2 disposition is valid only when:
 
 Security, data-loss, authority-bypass, evidence-integrity, irreversible-mutation, or release-bypass P2 findings are high-risk and non-deferrable. An expired deferral automatically moves acceptance to blocked until a new valid disposition exists.
 
-Deferred P2 evidence is not closure evidence. It must bind an authorized owner, non-impact evidence, a registered closure command, current recheck evidence, expiry, and recheck trigger. When a disposition changes to fixed or refuted, a hash-bound successful closure-process result becomes mandatory. The repository Bootstrap schema and producer own these fields; this plan only consumes them.
+Deferred P2 evidence is not closure evidence. It must bind an owner authority chained to the profile root, non-impact evidence, a root-authorized immutable command descriptor, current recheck evidence, expiry, and recheck trigger. When a disposition changes to fixed or refuted, a runner-produced process result derived from the hash-chained event log and actual stdout/stderr bytes becomes mandatory. Failed commands preserve their event and never emit a success result. The repository Bootstrap schema and producer own these fields; this plan only consumes them.
 
 ## Stop-Loss
 
@@ -74,6 +75,8 @@ Deferred P2 evidence is not closure evidence. It must bind an authorized owner, 
 - Capsule overwrite, attempt-ID reuse, raw sensitive-content persistence, or transition authority in `adapter-decision` stops the run.
 
 The current stop-loss owner is [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json). It remains immutable. [`schemas/review-policy-reentry.v1.json`](schemas/review-policy-reentry.v1.json) is the only successor selector: pending states authorize nothing; `reentry_authorized` requires a schema-valid repository Bootstrap successor decision, a current authorization-event hash, distinct change/policy/authority/review/input lineage, and a clean v2 envelope that exactly matches a fresh repository producer recomputation.
+
+That successor selector authorizes only `manual-pause-reentry`, which the composite validator consumes independently. `RMAP-BLOCK-PROTECTED-VERIFIER-IDENTITY` remains open only for protected handoff and release. Clearing it requires either independent verifier/evidence custody or a trusted signed envelope binding candidate, source, validator, policy, and verifier identity. Ordinary plan-ready recovery does not require that external identity. Recovery remains append-only and never rewrites the historical blocker or old diagnostic output.
 
 Deterministic repair may produce new plan-local validation evidence and a corrected candidate, but it cannot mutate the Round 3 disposition. After repair, semantic re-entry begins only through a separately recorded durable policy decision and a new authority cycle; it must not be represented as Round 4 of the existing `changeId` policy cycle.
 

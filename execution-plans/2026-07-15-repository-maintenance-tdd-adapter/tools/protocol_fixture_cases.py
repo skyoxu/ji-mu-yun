@@ -4,7 +4,7 @@ import copy
 from pathlib import Path
 from typing import Any
 
-from protocol_artifact_guards import bytes_hash, canonical_bytes, value_hash
+from protocol_artifact_guards import bytes_hash, canonical_bytes, store_key, value_hash
 from protocol_fixture_mutations import apply_protocol_mutations
 from protocol_fixture_support import hydrate_protocol_fixture
 from protocol_validation_guards import _finding, validate_protocol_bundle
@@ -29,6 +29,10 @@ def evaluate_protocol_fixture(plan_root: Path, fixture_id: str, fixtures: dict[s
         mutated["contexts"][0]["context_manifest"]["artifact_refs"].append(
             copy.deepcopy(mutated["contexts"][0]["context_manifest"]["artifact_refs"][0])
         )
+    elif fixture_id == "capsule-artifact-bytes-stale":
+        mutated = copy.deepcopy(bundle)
+        ref = mutated["contexts"][0]["context_manifest"]["artifact_refs"][0]
+        store[store_key(ref)] = b"stale-artifact-bytes"
     elif fixture_id == "attempt-event-lifecycle-missing":
         mutated = copy.deepcopy(bundle)
         del mutated["events"][2]

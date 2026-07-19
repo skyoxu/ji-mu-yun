@@ -328,8 +328,8 @@
       "mutations": [
         {
           "op": "replace",
-          "path": "/status",
-          "value": "plan-ready"
+          "path": "/blocking_disposition/state",
+          "value": "cleared"
         }
       ],
       "expected_valid": false,
@@ -460,6 +460,10 @@
         }
       ],
       "expected_rule": "RMAP-REVIEW-REENTRY",
+      "expected_rules": [
+        "RMAP-REVIEW-MANUAL-PAUSE",
+        "RMAP-REVIEW-REENTRY"
+      ],
       "expected_valid": false
     },
     {
@@ -473,6 +477,28 @@
         }
       ],
       "expected_rule": "RMAP-REVIEW-REENTRY",
+      "expected_rules": [
+        "RMAP-REVIEW-MANUAL-PAUSE",
+        "RMAP-REVIEW-REENTRY"
+      ],
+      "expected_valid": false
+    },
+    {
+      "id": "protected-verifier-identity-bypass",
+      "target": "plan_state",
+      "mutations": [
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": "plan-ready"
+        },
+        {
+          "op": "replace",
+          "path": "/open_blockers",
+          "value": []
+        }
+      ],
+      "expected_rule": "RMAP-PROTECTED-VERIFIER-IDENTITY",
       "expected_valid": false
     },
     {
@@ -481,7 +507,34 @@
       "mutations": [
         {"op": "remove", "path": "/proofs/0/source_of_truth_derivation"}
       ],
-      "expected_rule": "RMAP-ARTIFACT-PROOF",
+      "expected_rule": "RMAP-ARTIFACT-PROOF-SCHEMA",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-missing-verdict",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "remove", "path": "/proofs/0/dimension_verdicts/immutable_identity"}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-SCHEMA",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-unauthorized-na",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "replace", "path": "/proofs/0/dimension_verdicts/recovery_supersession", "value": {"status": "N/A", "reason_code": "NON_RUNTIME_VIEW", "reason": "The artifact is claimed to be a non-runtime view."}}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-APPLICABILITY",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-pass-without-executable-rule",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "replace", "path": "/proofs/0/dimension_verdicts/independent_recomputation/evidence_rule_ids", "value": ["not-an-executable-rule"]}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-APPLICABILITY",
       "expected_valid": false
     },
     {
@@ -490,7 +543,7 @@
       "mutations": [
         {"op": "add", "path": "/proofs/0/consumer_authorization_boundary/authorizes/-", "value": "plan-ready"}
       ],
-      "expected_rule": "RMAP-ARTIFACT-PROOF",
+      "expected_rule": "RMAP-ARTIFACT-PROOF-CONSUMER",
       "expected_valid": false
     },
     {
@@ -499,7 +552,131 @@
       "mutations": [
         {"op": "remove", "path": "/proofs/0"}
       ],
-      "expected_rule": "RMAP-ARTIFACT-PROOF",
+      "expected_rule": "RMAP-ARTIFACT-PROOF-PRODUCER",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-forged-producer",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "replace", "path": "/proofs/0/schema_producer_authority/authority_path", "value": "AGENTS.md"}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-PRODUCER",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-self-refreshed-identity",
+      "target": "artifact_identity",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-IDENTITY",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-unrelated-source",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "replace", "path": "/proofs/0/source_of_truth_derivation/rules/0/source", "value": "AGENTS.md"}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-DERIVATION",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-unknown-rule",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "replace", "path": "/proofs/0/independent_recomputation/rule_id", "value": "not-a-real-rule"}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-RULE",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-empty-invalidation",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "replace", "path": "/proofs/0/staleness_propagation/invalidates", "value": []}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-STALENESS",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-missing-lineage-field",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "replace", "path": "/proofs/0/recovery_supersession/lineage_fields", "value": ["not_a_real_field"]}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-LINEAGE",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-empty-consumer",
+      "target": "artifact_proofs",
+      "mutations": [
+        {"op": "replace", "path": "/proofs/0/consumer_authorization_boundary/consumers", "value": []}
+      ],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-CONSUMER",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-authority-root-self-refresh-escalation",
+      "target": "artifact_authority_root",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-CONSUMER",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-lineage-broken-predecessor",
+      "target": "artifact_lineage",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-LINEAGE",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-lineage-wrong-predecessor",
+      "target": "artifact_lineage",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-LINEAGE",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-lineage-stale-predecessor",
+      "target": "artifact_lineage",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-LINEAGE",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-synchronized-lattice-escalation",
+      "target": "artifact_trust_root_sync",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-CONSUMER",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-synchronized-staleness-truncation",
+      "target": "artifact_trust_root_sync",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-PRODUCER",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-synchronized-lineage-forgery",
+      "target": "artifact_trust_root_sync",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-PRODUCER",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-synchronized-producer-source",
+      "target": "artifact_trust_root_sync",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-PRODUCER",
+      "expected_valid": false
+    },
+    {
+      "id": "artifact-proof-full-stack-authority-takeover",
+      "target": "artifact_protected_boundary",
+      "mutations": [],
+      "expected_rule": "RMAP-ARTIFACT-PROOF-PROTECTED-ROOT",
       "expected_valid": false
     }
   ]

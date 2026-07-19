@@ -666,14 +666,45 @@
       ],
       "negative_fixture_ids": [
         "artifact-proof-missing-dimension",
+        "artifact-proof-missing-verdict",
+        "artifact-proof-unauthorized-na",
+        "artifact-proof-pass-without-executable-rule",
         "artifact-proof-static-authority-escalation",
-        "artifact-proof-required-item-omitted"
+        "artifact-proof-required-item-omitted",
+        "artifact-proof-forged-producer",
+        "artifact-proof-self-refreshed-identity",
+        "artifact-proof-unrelated-source",
+        "artifact-proof-unknown-rule",
+        "artifact-proof-empty-invalidation",
+        "artifact-proof-missing-lineage-field",
+        "artifact-proof-empty-consumer",
+        "artifact-proof-authority-root-self-refresh-escalation",
+        "artifact-proof-lineage-broken-predecessor",
+        "artifact-proof-lineage-wrong-predecessor",
+        "artifact-proof-lineage-stale-predecessor",
+        "artifact-proof-synchronized-lattice-escalation",
+        "artifact-proof-synchronized-staleness-truncation",
+        "artifact-proof-synchronized-lineage-forgery",
+        "artifact-proof-synchronized-producer-source",
+        "artifact-proof-full-stack-authority-takeover",
+        "protected-verifier-identity-bypass"
       ],
       "expected_failure_ids": [
-        "RMAP-ARTIFACT-PROOF"
+        "RMAP-ARTIFACT-PROOF-SCHEMA",
+        "RMAP-ARTIFACT-PROOF-PRODUCER",
+        "RMAP-ARTIFACT-PROOF-IDENTITY",
+        "RMAP-ARTIFACT-PROOF-DERIVATION",
+        "RMAP-ARTIFACT-PROOF-RULE",
+        "RMAP-ARTIFACT-PROOF-STALENESS",
+        "RMAP-ARTIFACT-PROOF-LINEAGE",
+        "RMAP-ARTIFACT-PROOF-CONSUMER",
+        "RMAP-ARTIFACT-PROOF-PROTECTED-ROOT",
+        "RMAP-ARTIFACT-PROOF-APPLICABILITY",
+        "RMAP-PROTECTED-VERIFIER-IDENTITY"
       ],
       "evidence_required": [
         "artifact-proof-schema",
+        "independent-proof-authority-inventory",
         "independent-proof-required-inventory",
         "static-contract-zero-authority",
         "runtime-artifact-type-proof",
@@ -681,7 +712,16 @@
         "registered-consumer-and-negative-test",
         "authority-manifest-hashes",
         "independent-validator",
-        "stable-rule-id"
+        "seven-dimension-specific-stable-rule-ids",
+        "pass-or-type-authorized-na-verdicts",
+        "external-vdd-skill-trust-root",
+        "bootstrap-owned-root-hash-guard",
+        "candidate-external-provisional-root-and-guard-diagnostics",
+        "provisional-diagnostic-no-protected-authority",
+        "protected-verifier-identity-blocker",
+        "full-stack-authority-takeover-counterexample",
+        "synchronized-trust-root-counterexamples",
+        "broken-wrong-and-stale-predecessor-counterexamples"
       ],
       "exit_predicate": "slice-ready"
     }

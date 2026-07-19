@@ -33,6 +33,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.target.write_text("# Plan\n\nUnsafe authority rule.\n", encoding="utf-8", newline="\n")
         self.unrelated = self.scope / "zz-unrelated.md"
         self.unrelated.write_text("# Unrelated\n", encoding="utf-8", newline="\n")
+        root_relative = Path(".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json")
+        root_target = self.repo / root_relative
+        root_target.parent.mkdir(parents=True, exist_ok=True)
+        root_target.write_bytes(bootstrap.AUTHORITY_ROOT_PATH.read_bytes())
         subprocess.run(["git", "init", "-q"], cwd=self.repo, check=True)
         subprocess.run(["git", "config", "user.email", "bootstrap@example.invalid"], cwd=self.repo, check=True)
         subprocess.run(["git", "config", "user.name", "Bootstrap Test"], cwd=self.repo, check=True)
@@ -324,6 +328,69 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "authorityOwner": "upstream plan",
             "consumer": "implementation operator",
             "validatorRef": "manual phase exit",
+        }
+
+    def authority_root_ref(self) -> dict[str, str]:
+        profile = bootstrap.load_profile("bootstrap-upstream-plan")
+        return bootstrap.authority_root_reference(profile)
+
+    def write_p2_registry(self, manifest: dict) -> tuple[Path, dict[str, str]]:
+        exclusions = ["implementation-acceptance", "protected-handoff", "release", "commit", "done"]
+        registry = {
+            "schemaVersion": "bootstrap-p2-command-registry.v1",
+            "registryId": "registry-001",
+            "rootId": "p2-command-root.v1",
+            "authorityRootRef": self.authority_root_ref(),
+            "signerId": "bootstrap-operator",
+            "consumer": "bootstrap-p2-disposition",
+            "runnerIdentity": "bootstrap-p2-runner.v1",
+            "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"],
+            "candidateHash": manifest["authorityContextHash"],
+            "policyRevision": manifest["policyRevision"],
+            "authorityRevision": manifest["authorityRevision"],
+            "commands": [
+                {
+                    "commandId": "recheck-command",
+                    "commandClass": "p2-recheck",
+                    "executable": "py",
+                    "argv": ["-3", "-c", "print('recheck passed')"],
+                    "cwd": ".",
+                },
+                {
+                    "commandId": "closure-command",
+                    "commandClass": "p2-closure",
+                    "executable": "py",
+                    "argv": ["-3", "-c", "print('closure passed')"],
+                    "cwd": ".",
+                },
+            ],
+            "authorizes": [],
+            "doesNotAuthorize": exclusions,
+        }
+        path = self.repo / "command-registry.json"
+        path.write_text(json.dumps(registry), encoding="utf-8", newline="\n")
+        return path, {
+            "path": path.relative_to(self.repo).as_posix(),
+            "sha256": bootstrap.file_hash(path),
+        }
+
+    def run_p2_command(self, finding_id: str, command_id: str) -> dict[str, str]:
+        before = set((self.run_dir / "p2-process-events").glob("*/process-result.json")) if (self.run_dir / "p2-process-events").is_dir() else set()
+        self.assertEqual(0, bootstrap.main([
+            "run-p2-command",
+            "--run-dir", str(self.run_dir),
+            "--registry", "command-registry.json",
+            "--finding-id", finding_id,
+            "--command-id", command_id,
+        ]))
+        after = set((self.run_dir / "p2-process-events").glob("*/process-result.json"))
+        created = after - before
+        self.assertEqual(1, len(created))
+        path = created.pop()
+        return {
+            "path": path.relative_to(self.repo).as_posix(),
+            "sha256": bootstrap.file_hash(path),
         }
 
     def test_prepare_creates_hash_bound_manual_materials_without_mutating_scope(self) -> None:
@@ -1950,44 +2017,19 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "inputHash": manifest["inputHash"], "candidateHash": manifest["authorityContextHash"],
             "authorityRevision": manifest["authorityRevision"],
         }
-        registry = {
-            "schemaVersion": "bootstrap-p2-command-registry.v1", "registryId": "registry-001",
-            "reviewId": manifest["reviewId"], "inputHash": manifest["inputHash"],
-            "candidateHash": manifest["authorityContextHash"], "policyRevision": manifest["policyRevision"],
-            "authorityRevision": manifest["authorityRevision"],
-            "commands": [
-                {"commandId": "recheck-command", "commandClass": "p2-recheck"},
-                {"commandId": "closure-command", "commandClass": "p2-closure"},
-            ],
-            "authorizes": [], "doesNotAuthorize": exclusions,
-        }
-        registry_path = self.repo / "command-registry.json"
-        registry_path.write_text(json.dumps(registry), encoding="utf-8", newline="\n")
-        registry_hash = bootstrap.file_hash(registry_path)
-        recheck_process = {
-            "schemaVersion": "bootstrap-p2-process-result.v1", "resultId": "recheck-result-001", **identity,
-            "commandId": "recheck-command", "commandClass": "p2-recheck", "registryHash": registry_hash,
-            "exitCode": 0, "observedAt": "2020-01-01T00:00:00Z", "authorizes": [],
-            "doesNotAuthorize": exclusions,
-        }
-        closure_process = {
-            "schemaVersion": "bootstrap-p2-process-result.v1", "resultId": "closure-result-001", **identity,
-            "commandId": "closure-command", "commandClass": "p2-closure", "registryHash": registry_hash,
-            "exitCode": 0, "observedAt": "2020-01-01T00:00:00Z", "authorizes": [],
-            "doesNotAuthorize": exclusions,
-        }
-        evidence_paths = {}
+        _, registry_ref = self.write_p2_registry(manifest)
+        evidence_paths = {"command-registry.json": registry_ref}
         for name, payload in {
             "owner-authority.json": {
                 "schemaVersion": "bootstrap-p2-owner-authority.v1", "receiptId": "owner-receipt-001",
+                "rootId": "p2-owner-root.v1", "authorityRootRef": self.authority_root_ref(),
+                "signerId": "bootstrap-operator", "predecessorAuthorityRef": self.authority_root_ref(),
+                "consumer": "bootstrap-p2-disposition",
                 "owner": "owner", **identity, "policyRevision": manifest["policyRevision"],
                 "scope": "expiry-or-authority-change", "status": "active",
                 "issuedAt": "2020-01-01T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z",
                 "authorizes": [], "doesNotAuthorize": exclusions,
             },
-            "command-registry.json": registry,
-            "recheck-process.json": recheck_process,
-            "closure-process.json": closure_process,
         }.items():
             path = self.repo / name
             path.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
@@ -2003,18 +2045,24 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 "expiresAt": "2099-01-01T00:00:00Z", "processResultRef": None,
                 "authorizes": [], "doesNotAuthorize": exclusions,
             },
-            "recheck.json": {
-                "schemaVersion": "bootstrap-p2-evidence-result.v1", "resultId": "recheck-evidence-001",
-                "evidenceType": "recheck", **identity, "scope": "expiry-or-authority-change",
-                "result": "passed", "observedAt": "2020-01-01T00:00:00Z",
-                "expiresAt": "2099-01-01T00:00:00Z",
-                "processResultRef": evidence_paths["recheck-process.json"],
-                "authorizes": [], "doesNotAuthorize": exclusions,
-            },
         }.items():
             path = self.repo / name
             path.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
             evidence_paths[name] = {"path": path.relative_to(self.repo).as_posix(), "sha256": bootstrap.file_hash(path)}
+        recheck_process_ref = self.run_p2_command(finding_id, "recheck-command")
+        recheck_path = self.repo / "recheck.json"
+        recheck_path.write_text(json.dumps({
+            "schemaVersion": "bootstrap-p2-evidence-result.v1", "resultId": "recheck-evidence-001",
+            "evidenceType": "recheck", **identity, "scope": "expiry-or-authority-change",
+            "result": "passed", "observedAt": "2020-01-01T00:00:00Z",
+            "expiresAt": "2099-01-01T00:00:00Z",
+            "processResultRef": recheck_process_ref,
+            "authorizes": [], "doesNotAuthorize": exclusions,
+        }), encoding="utf-8", newline="\n")
+        evidence_paths["recheck.json"] = {
+            "path": recheck_path.relative_to(self.repo).as_posix(),
+            "sha256": bootstrap.file_hash(recheck_path),
+        }
         p2 = {
             "schemaVersion": "bootstrap-p2-dispositions.v1", "reviewId": manifest["reviewId"],
             "inputHash": manifest["inputHash"], "candidateHash": manifest["authorityContextHash"],
@@ -2031,18 +2079,59 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 "recheckTrigger": "expiry-or-authority-change",
             }],
         }
+        owner_path = self.repo / "owner-authority.json"
+        owner = json.loads(owner_path.read_text(encoding="utf-8"))
+        self_issued_owner = dict(owner)
+        self_issued_owner["predecessorAuthorityRef"] = None
+        owner_path.write_text(json.dumps(self_issued_owner), encoding="utf-8", newline="\n")
+        p2["dispositions"][0]["risk"] = "normal"
+        p2["dispositions"][0]["ownerAuthorityRef"] = {
+            "path": owner_path.relative_to(self.repo).as_posix(),
+            "sha256": bootstrap.file_hash(owner_path),
+        }
+        self.write_json("p2-dispositions.json", p2)
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "not chained directly"):
+            bootstrap.validate_p2_dispositions(
+                self.run_dir,
+                manifest,
+                self.read_json("review-candidates.json")["findings"],
+            )
+        owner_path.write_text(json.dumps(owner), encoding="utf-8", newline="\n")
+        p2["dispositions"][0]["risk"] = "high"
+        p2["dispositions"][0]["ownerAuthorityRef"] = {
+            "path": owner_path.relative_to(self.repo).as_posix(),
+            "sha256": bootstrap.file_hash(owner_path),
+        }
         self.write_json("p2-dispositions.json", p2)
         self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
         p2["dispositions"][0]["risk"] = "normal"
         p2["dispositions"][0]["expiry"] = "2020-01-01T00:00:00Z"
         self.write_json("p2-dispositions.json", p2)
         self.assertEqual(1, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        closure_process_ref = self.run_p2_command(finding_id, "closure-command")
+        real_process_path = self.repo / closure_process_ref["path"]
+        handwritten = json.loads(real_process_path.read_text(encoding="utf-8"))
+        handwritten["processEventRef"] = evidence_paths["command-registry.json"]
+        handwritten["processLogRef"] = evidence_paths["command-registry.json"]
+        handwritten_path = self.repo / "handwritten-success-result.json"
+        handwritten_path.write_text(json.dumps(handwritten), encoding="utf-8", newline="\n")
         p2["dispositions"][0] = {
             "findingId": finding_id, "status": "fixed", "risk": "normal",
             "reason": "Targeted validation proves closure", "closureCommandId": "closure-command",
             "closureCommandRegistryRef": evidence_paths["command-registry.json"],
-            "closureProcessResultRef": evidence_paths["closure-process.json"],
+            "closureProcessResultRef": {
+                "path": handwritten_path.relative_to(self.repo).as_posix(),
+                "sha256": bootstrap.file_hash(handwritten_path),
+            },
         }
+        self.write_json("p2-dispositions.json", p2)
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "event"):
+            bootstrap.validate_p2_dispositions(
+                self.run_dir,
+                manifest,
+                self.read_json("review-candidates.json")["findings"],
+            )
+        p2["dispositions"][0]["closureProcessResultRef"] = closure_process_ref
         self.write_json("p2-dispositions.json", p2)
         self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
         self.assertEqual("clean", self.read_json("review-gate-result.json")["status"])
@@ -2073,9 +2162,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
     def test_successor_authorization_rejects_untrusted_actor_lineage_and_time(self) -> None:
         exclusions = ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
-        policy_revision = "sha256:" + "1" * 64
+        policy_revision = bootstrap.load_profile("bootstrap-upstream-plan")["policyRevision"]
         authority_path = self.repo / "successor-authority.json"
-        authority = {"schemaVersion": "bootstrap-successor-policy-authority.v1", "authorityId": "authority-001", "policyRevision": policy_revision, "authorizedActors": [{"actorId": "operator-001", "role": "successor-policy-authorizer", "consumers": ["repository-maintenance-tdd-adapter-plan-reentry"], "scopes": ["plan-reentry"]}], "status": "active", "issuedAt": "2026-01-01T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z", "predecessorAuthorityRef": None, "authorizes": [], "doesNotAuthorize": exclusions}
+        authority = {"schemaVersion": "bootstrap-successor-policy-authority.v1", "authorityId": "authority-001", "rootId": "successor-policy-root.v1", "authorityRootRef": self.authority_root_ref(), "signerId": "repository-operator", "policyRevision": policy_revision, "authorizedActors": [{"actorId": "operator-001", "role": "successor-policy-authorizer", "consumers": ["repository-maintenance-tdd-adapter-plan-reentry"], "scopes": ["plan-reentry"]}], "status": "active", "issuedAt": "2026-01-01T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z", "predecessorAuthorityRef": self.authority_root_ref(), "authorizes": [], "doesNotAuthorize": exclusions}
         authority_path.write_text(json.dumps(authority), encoding="utf-8", newline="\n")
         event_path = self.repo / "successor-event.json"
         event = {"schemaVersion": "bootstrap-successor-policy-authorization.v1", "eventId": "event-001", "decisionId": "decision-001", "actorId": "operator-001", "authoritySourceRef": {"path": "successor-authority.json", "sha256": bootstrap.file_hash(authority_path)}, "supersededReviewId": "review-old", "supersededChangeId": "change-old", "successorChangeId": "change-new", "policyRevision": policy_revision, "authorityRevision": "authority-new", "consumer": "repository-maintenance-tdd-adapter-plan-reentry", "scope": "plan-reentry", "status": "active", "issuedAt": "2026-01-02T00:00:00Z", "expiresAt": "2098-01-01T00:00:00Z", "predecessorEventRef": None, "revocationEventRef": None, "authorizes": [], "doesNotAuthorize": exclusions}
@@ -2091,6 +2180,16 @@ class BootstrapReviewCliTests(unittest.TestCase):
         event_path.write_text(json.dumps(event), encoding="utf-8", newline="\n")
         candidate = dict(decision); candidate["authorizationEventRef"] = {"path": "successor-event.json", "sha256": bootstrap.file_hash(event_path)}; candidate["decidedAt"] = "2025-01-01T00:00:00Z"
         with self.assertRaises(bootstrap.BootstrapError):
+            bootstrap.validate_successor_policy_authorization(self.repo, candidate)
+        self_issued = dict(authority)
+        self_issued["predecessorAuthorityRef"] = None
+        authority_path.write_text(json.dumps(self_issued), encoding="utf-8", newline="\n")
+        event_path.write_text(json.dumps(event), encoding="utf-8", newline="\n")
+        event["authoritySourceRef"] = {"path": "successor-authority.json", "sha256": bootstrap.file_hash(authority_path)}
+        event_path.write_text(json.dumps(event), encoding="utf-8", newline="\n")
+        candidate = dict(decision)
+        candidate["authorizationEventRef"] = {"path": "successor-event.json", "sha256": bootstrap.file_hash(event_path)}
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "not chained directly"):
             bootstrap.validate_successor_policy_authorization(self.repo, candidate)
 
     def test_list_inspect_and_seal_are_additive_lifecycle_views(self) -> None:

@@ -84,7 +84,9 @@
       "status": "active",
       "source_refs": [
         "agentbuild.txt:107-171",
-        "clarification:CQ-008"
+        "clarification:CQ-008",
+        "repair-20260718-1500:CQ-002",
+        "repair-20260718-1600:RMAP-ARTIFACT-PROOF-CLOSURE"
       ],
       "consumers": [
         "adapter",
@@ -249,7 +251,11 @@
         "clarification:CQ-005",
         "repair-20260717:CQ-007",
         "repair-20260717-999:CQ-004",
-        "repair-20260717-999:CQ-007"
+        "repair-20260717-999:CQ-007",
+        "repair-20260718-1500:CQ-001",
+        "repair-20260718-1500:CQ-002",
+        "repair-20260718-1500:CQ-003",
+        "repair-20260718-1500:CQ-005"
       ],
       "consumers": [
         "Bootstrap Skill",
@@ -322,7 +328,9 @@
       "source_refs": [
         "agentbuild.txt:225-360",
         "clarification:CQ-011",
-        "clarification:CQ-014"
+        "clarification:CQ-014",
+        "repair-20260718-1500:CQ-003",
+        "repair-20260718-1500:CQ-005"
       ],
       "consumers": [
         "status",
@@ -348,7 +356,10 @@
         "repair-20260717-999:CQ-004",
         "repair-20260717-999:CQ-007",
         "repair-20260717-1200:CQ-002",
-        "repair-20260717-1200:CQ-003"
+        "repair-20260717-1200:CQ-003",
+        "repair-20260718-1500:CQ-001",
+        "repair-20260718-1500:CQ-002",
+        "repair-20260718-1500:CQ-005"
       ],
       "consumers": [
         "implementation-accepted predicate",
@@ -389,7 +400,8 @@
       "acceptance_id": "RMAP-ACC-018",
       "status": "active",
       "source_refs": [
-        "agentbuild.txt:436-464"
+        "agentbuild.txt:436-464",
+        "repair-20260718-1500:CQ-004"
       ],
       "consumers": [
         "Skill release",
@@ -453,7 +465,8 @@
       "source_refs": [
         "agentbuild.txt:37-39",
         "clarification:CQ-017",
-        "repair-20260717-999:CQ-005"
+        "repair-20260717-999:CQ-005",
+        "repair-20260718-1500:CQ-004"
       ],
       "consumers": [
         "plan",
@@ -579,7 +592,7 @@
     },
     {
       "id": "RMAP-027",
-      "summary": "Every artifact introduced for a review finding satisfies the seven-dimensional artifact proof contract before it can participate in any predicate.",
+      "summary": "Every formal artifact introduced for a review finding records seven machine verdicts; each is an executable PASS or a type-authorized reasoned N/A, and authorization-participating artifacts require seven PASS results.",
       "owner": "artifact proof maintainer",
       "owner_book": "03-validators-fixtures-and-control-gates.md",
       "first_phase": "P0",
@@ -587,7 +600,9 @@
       "status": "active",
       "source_refs": [
         "repair-20260717-1300:CQ-003",
-        "repair-20260717-1300:CQ-005"
+        "repair-20260717-1300:CQ-005",
+        "repair-20260718-1500:CQ-001",
+        "repair-20260718-1500:CQ-002"
       ],
       "consumers": [
         "composite plan validator",
@@ -596,7 +611,7 @@
         "artifact consumer"
       ],
       "failure_family": "artifact_proof_incomplete",
-      "evidence_intent": "Exact registry, byte identity, producer/source derivation, recomputation, staleness, successor, and consumer-authority counterexamples.",
+      "evidence_intent": "Exact formal artifact population, seven PASS/N/A verdicts, static zero-authority boundaries, authorization-participating seven-PASS enforcement, protected-only external identity, and single-rule missing, unauthorized-N/A, fake-PASS, producer, identity, derivation, staleness, lineage, and consumer counterexamples.",
       "quality_check": "pass"
     }
   ]

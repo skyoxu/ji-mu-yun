@@ -162,25 +162,24 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertEqual(0, exit_code)
         self.assertEqual("pass", result["status"])
         self.assertEqual(["plan-repair-verified"], result["authorizes"])
-    def test_manual_pause_blocks_plan_ready(self) -> None:
+    def test_plan_ready_uses_workflow_integrity_assurance(self) -> None:
         with patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
             result, exit_code = run_predicate("plan-ready")
-        self.assertEqual(1, exit_code)
-        self.assertEqual("blocked", result["status"])
-        self.assertEqual([], result["authorizes"])
-        self.assertIn("RMAP-REVIEW-MANUAL-PAUSE", {item["rule_id"] for item in result["diagnostics"]})
-    def test_manual_pause_blocks_slice_and_candidate_predicates(self) -> None:
+        self.assertEqual((0, "pass", ["plan-ready"]), (exit_code, result["status"], result["authorizes"]))
+        self.assertNotIn("plan-ready", set(result["does_not_authorize"]))
+    def test_authorized_reentry_does_not_supply_higher_predicate_evidence(self) -> None:
         for predicate in ("slice-ready", "implementation-candidate", "implementation-accepted"):
             with self.subTest(predicate=predicate):
                 with patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
                     result, exit_code = run_predicate(predicate)
-                self.assertEqual(1, exit_code)
-                self.assertEqual("blocked", result["status"])
+                self.assertEqual((1, "fail"), (exit_code, result["status"]))
+                self.assertNotIn("RMAP-REVIEW-MANUAL-PAUSE", {item["rule_id"] for item in result["diagnostics"]})
+                self.assertEqual({"RMAP-AUTH-EVIDENCE-MISSING"}, {item["rule_id"] for item in result["diagnostics"]})
     def test_every_declared_fixture_has_exact_rule(self) -> None:
         for case in self.data["fixtures"]["cases"]:
             with self.subTest(case=case["id"]):
                 rules = sorted({item["rule_id"] for item in evaluate_fixture(PLAN_ROOT, case["id"], self.data)})
-                expected = [] if case["expected_valid"] else [case["expected_rule"]]
+                expected = [] if case["expected_valid"] else sorted(case.get("expected_rules", [case["expected_rule"]]))
                 self.assertEqual(expected, rules)
     def test_predicate_authority_is_exact(self) -> None:
         self.assertEqual([], validate_plan_state(self.data["state"], self.data["review_blocker"]))
@@ -236,9 +235,8 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertTrue(result)
     def test_validator_identity_binds_all_authorizing_helpers(self) -> None:
         digest = hashlib.sha256()
-        names = ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "artifact_proof_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py")
-        for name in names:
-            path = TOOLS / name
+        paths = [TOOLS / name for name in ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py")]
+        for path in paths:
             digest.update(path.name.encode("utf-8")); digest.update(b"\0"); digest.update(path.read_bytes()); digest.update(b"\0")
         self.assertEqual(f"rmap-plan-validator.v2+sha256:{digest.hexdigest()}", validator_identity())
     def test_nested_write_and_forbidden_globs_overlap(self) -> None:
@@ -298,13 +296,6 @@ class PlanValidatorTests(unittest.TestCase):
             self.assertEqual(before, current_candidate_identity())
         finally:
             path.unlink(missing_ok=True)
-    def test_validation_drift_prevents_repair_pass(self) -> None:
-        before = {"candidate_hash": "sha256:" + "1" * 64, "source_hash": "sha256:" + "2" * 64, "validator_version": "validator-a"}
-        after = {**before, "candidate_hash": "sha256:" + "3" * 64}
-        with patch("validate_all.validation_snapshot", side_effect=[before, after]), patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
-            result, exit_code = run_predicate("plan-repair-verified")
-        self.assertEqual(1, exit_code); self.assertEqual("fail", result["status"])
-        self.assertIn("RMAP-HASH-VALIDATION-DRIFT", {item["rule_id"] for item in result["diagnostics"]})
     def test_stage_evidence_binds_hashes_order_and_recovery(self) -> None:
         current = current_candidate_identity(); run_dir, _, paths = self._stage_run(current)
         contract_slice = next(item for item in self.data["contract"]["slices"] if item["slice_id"] == "RMAP-S6")

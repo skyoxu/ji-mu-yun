@@ -42,7 +42,7 @@ S0 cites ADR-0041 and creates only the repository-maintenance adapter standard. 
 - The stabilized Bootstrap control plane, ADR, standard, and compatibility projections are committed repository-owned authority. The authority manifest binds their current bytes; 7-12 remains a revision-bound compatibility adapter only.
 - Test counts are run-scoped observations, not mutable current-state authority: the 555 closure evidence recorded 48 plan tests, 87 Bootstrap Skill tests, and a passing 7-12 Whole-directory validator. Fresh commands and current envelopes supersede those historical observations.
 - No BMAD `SPEC.md`, `.memlog.md`, or `ARCHITECTURE-SPINE.md` package applies to this intent.
-- The finalized Round 3 Bootstrap result is `blocked` with eight confirmed P1 findings, and the review cycle is `manual_pause_after_round_3`. Deterministic repair cannot clear that semantic disposition.
+- The finalized Round 3 Bootstrap result remains immutable history with eight confirmed P1 findings and `manual_pause_after_round_3`; a separate profile-root-authorized successor cycle has now cleanly reclosed plan authority without rewriting that history.
 - The 1200 repair baseline is `logs/vdd-plan-repair/repository-maintenance-tdd-adapter/20260717-1200-repair-baseline/baseline-manifest.json`. It preserves the pre-repair 66-file target inventory, the old 51-test local PASS, the expected blocked plan-ready envelope, and the six newly repaired control-chain gaps.
 
 ## Confirmed Scope

@@ -13,7 +13,7 @@
       ],
       "summary": "Backfill all three existing refactor plans rather than one pilot.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "7-12",
         "7-07",
@@ -50,7 +50,7 @@
       ],
       "summary": "Use a repository-owned capsule executor instead of stock Quick Dev backend v1.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "adapter",
         "backend"
@@ -87,7 +87,7 @@
       ],
       "summary": "Reuse accepted ADR-0041 for the shared ownership pattern, keep Bootstrap execution scope explicit, and assign TDD Adapter semantics to its standard and Skill.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "standards",
         "Skill",
@@ -129,7 +129,7 @@
       ],
       "summary": "Replace baseline and candidate identity with an existing-file global baseline, first-add derivation, complete protocol-bundle recomputation, and separate previous-slice effect hash lineage.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "command registry",
         "adapter"
@@ -187,7 +187,7 @@
       ],
       "summary": "Add append-only recovery with stale predecessor and normally initialized successor.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "recovery",
         "logs"
@@ -225,7 +225,7 @@
       ],
       "summary": "Require authoritative S7 supersession proof, runtime Bootstrap dispositions, and immutable successor-policy reentry.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "implementation-accepted"
       ],
@@ -268,7 +268,7 @@
       ],
       "summary": "Replace partial Bootstrap consumption with the repository v2 finalized producer, direct verifier/P2 hashes, formal successor policy authorization, and fresh re-entry recomputation.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "7-12 Bootstrap CLI"
       ],
@@ -309,7 +309,7 @@
       ],
       "summary": "Remove P4 BMAD elimination from this plan.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "future plan"
       ],
@@ -342,7 +342,7 @@
       ],
       "summary": "Rename quick-dev-tdd-adapter architecture concept to Repository Maintenance TDD Adapter while retaining the stateless adapter identity.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "plan",
         "future Skill"
@@ -381,12 +381,11 @@
         "RMAP-013",
         "RMAP-018",
         "RMAP-020",
-        "RMAP-022",
-        "RMAP-027"
+        "RMAP-022"
       ],
       "summary": "Add the remaining executable contract, lifecycle, cumulative candidate-diff, validation, test, confidence, and source-custody requirements needed for a complete VDD control chain.",
       "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "plan validator",
         "adapter",
@@ -404,11 +403,9 @@
         "RMAP-ACC-013",
         "RMAP-ACC-018",
         "RMAP-ACC-020",
-        "RMAP-ACC-022",
-        "RMAP-ACC-027"
+        "RMAP-ACC-022"
       ],
       "affected_validators": [
-        "tools/artifact_proof_guards.py",
         "tools/authority_guards.py",
         "tools/candidate_diff_guards.py",
         "tools/current_state_guards.py",
@@ -417,7 +414,6 @@
         "tools/validate_all.py"
       ],
       "affected_fixtures": [
-        "artifact-proof-missing-dimension",
         "candidate-changed-file-omitted",
         "candidate-identity-incomplete",
         "candidate-test-patch-empty-with-test-change",
@@ -440,7 +436,6 @@
       ],
       "revalidation_command": "rmap-plan-repair-validate",
       "expected_rule_ids": [
-        "RMAP-ARTIFACT-PROOF",
         "RMAP-AUTH-PREDICATE",
         "RMAP-CANDIDATE-DIFF-EXACT",
         "RMAP-CANDIDATE-TEST-PATCH",
@@ -461,7 +456,7 @@
       ],
       "summary": "Replace self-asserted cross-slice effects with complete run-bundle validation and independently derived accepted decisions, diffs, events, stage results, and ledger roots.",
       "prior_revision": "sha256:5d318a8e9198faa85dba1df97308006900c82fb0210f7e827ca6c71d0dba28e0",
-      "proposed_contract_hash": "sha256:cc47e05aef5641539985d2ed2056bb442f1c8a84cb6d0adfa6d0def893cc4146",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
       "consumers": [
         "adapter prepare",
         "backend adapter",
@@ -523,6 +518,73 @@
         "RMAP-CAPSULE-CONTEXT",
         "RMAP-CAPSULE-PREDICATE",
         "RMAP-PROTOCOL-PATH"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-012",
+      "operation": "MODIFIED",
+      "requirements": [
+        "RMAP-027"
+      ],
+      "summary": "Require seven explicit executable PASS or type-authorized reasoned N/A verdicts for every formal finding-added artifact; require seven PASS results for authorization-participating artifacts and reserve external identity for protected handoff and release.",
+      "prior_revision": "sha256:3a8fe1611473a0ba006328c7446e8370db4e7f8e83076ca80e49d2478be8da06",
+      "proposed_contract_hash": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
+      "consumers": [
+        "composite plan validator",
+        "artifact producer",
+        "artifact consumer",
+        "VDD Skill trust-root validator",
+        "Codex Home provisional artifact-proof diagnostic verifier",
+        "plan-state workflow threat-model contract"
+      ],
+      "compatibility": "stricter-fail-closed-verdicts-with-protected-only-external-identity",
+      "acceptance_ids": [
+        "RMAP-ACC-027"
+      ],
+      "affected_validators": [
+        "tools/artifact_proof_guards.py",
+        "tools/fixture_checks.py",
+        "tools/authority_guards.py",
+        "tools/validate_all.py",
+        "C:/Users/Administrator/.codex/skills/run-phase-bootstrap-review/scripts/verify_artifact_proof_boundary.py"
+      ],
+      "affected_fixtures": [
+        "artifact-proof-missing-verdict",
+        "artifact-proof-unauthorized-na",
+        "artifact-proof-pass-without-executable-rule",
+        "artifact-proof-forged-producer",
+        "artifact-proof-self-refreshed-identity",
+        "artifact-proof-unrelated-source",
+        "artifact-proof-unknown-rule",
+        "artifact-proof-empty-invalidation",
+        "artifact-proof-missing-lineage-field",
+        "artifact-proof-empty-consumer",
+        "artifact-proof-authority-root-self-refresh-escalation",
+        "artifact-proof-lineage-broken-predecessor",
+        "artifact-proof-lineage-wrong-predecessor",
+        "artifact-proof-lineage-stale-predecessor",
+        "artifact-proof-synchronized-lattice-escalation",
+        "artifact-proof-synchronized-staleness-truncation",
+        "artifact-proof-synchronized-lineage-forgery",
+        "artifact-proof-synchronized-producer-source",
+        "artifact-proof-full-stack-authority-takeover",
+        "protected-verifier-identity-bypass"
+      ],
+      "affected_slices": [
+        "RMAP-S0"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-ARTIFACT-PROOF-PRODUCER",
+        "RMAP-ARTIFACT-PROOF-IDENTITY",
+        "RMAP-ARTIFACT-PROOF-DERIVATION",
+        "RMAP-ARTIFACT-PROOF-RULE",
+        "RMAP-ARTIFACT-PROOF-STALENESS",
+        "RMAP-ARTIFACT-PROOF-LINEAGE",
+        "RMAP-ARTIFACT-PROOF-CONSUMER",
+        "RMAP-ARTIFACT-PROOF-PROTECTED-ROOT",
+        "RMAP-ARTIFACT-PROOF-APPLICABILITY",
+        "RMAP-PROTECTED-VERIFIER-IDENTITY"
       ]
     }
   ]

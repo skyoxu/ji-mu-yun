@@ -11,29 +11,36 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from contract_guards import schema_error
+from contract_guards import contained_file, schema_error
 from fixture_checks import evaluate_fixture, validate_fixture_suite
 from candidate_diff_guards import validate_candidate_fixture_suite
 from protocol_guards import evaluate_protocol_fixture
 from evidence_guards import validate_candidate_review_documents
 from slice_guards import validate_slice_outputs
+from validation_result_guards import (
+    build_result as build_validation_result,
+    validate_authorizing_result as validate_result_guard,
+    value_hash as _value_hash,
+)
 from rmap_checks import (
     PREDICATE_AUTHORITY,
     VALIDATOR_VERSION,
     candidate_hash,
     load_machine,
     sha256_file,
+    validate_plan_state,
     validate_static,
 )
 
 
 PLAN_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = PLAN_ROOT.parents[1]
+UNIT_TEST_TIMEOUT_SECONDS = 300
 
 
 def validator_identity() -> str:
     digest = hashlib.sha256()
-    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "artifact_proof_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
+    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
     for path in (Path(__file__).with_name(name) for name in names):
         digest.update(path.name.encode("utf-8"))
         digest.update(b"\0")
@@ -55,21 +62,29 @@ def run_unit_tests() -> tuple[dict[str, Any], list[dict[str, str]]]:
     ]
     env = dict(os.environ)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
-    temp_root = REPOSITORY_ROOT / "logs" / "vdd-test-temp"
-    temp_root.mkdir(parents=True, exist_ok=True)
-    env["TEMP"] = str(temp_root)
-    env["TMP"] = str(temp_root)
-    result = subprocess.run(
-        command,
-        cwd=REPOSITORY_ROOT,
-        env=env,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        timeout=120,
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            command,
+            cwd=REPOSITORY_ROOT,
+            env=env,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            timeout=UNIT_TEST_TIMEOUT_SECONDS,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        check = {
+            "rule_id": "RMAP-UNIT-TESTS",
+            "status": "fail",
+            "evidence": [f"timeout_seconds={UNIT_TEST_TIMEOUT_SECONDS}"],
+        }
+        return check, [{
+            "rule_id": "RMAP-UNIT-TESTS",
+            "target": "tools/tests",
+            "message": f"unit tests exceeded timeout of {UNIT_TEST_TIMEOUT_SECONDS} seconds",
+        }]
     evidence = (result.stdout + result.stderr).strip().splitlines()
     check = {
         "rule_id": "RMAP-UNIT-TESTS",
@@ -89,41 +104,30 @@ def all_exclusions() -> list[str]:
 
 
 def validation_snapshot() -> dict[str, str]:
+    validator = validator_identity()
     return {
         "candidate_hash": candidate_hash(PLAN_ROOT),
         "source_hash": sha256_file(REPOSITORY_ROOT / "agentbuild.txt"),
-        "validator_version": validator_identity(),
+        "validator_version": validator,
+        "predicate_input_root": candidate_hash(PLAN_ROOT),
+        "closure_definition_hash": sha256_file(PLAN_ROOT / "schemas" / "predicate-artifact-closure.v1.json"),
+        "authority_root": sha256_file(PLAN_ROOT / "schemas" / "authority-manifest.v1.json"),
+        "validator_root": "sha256:" + validator.rsplit("sha256:", 1)[1],
     }
 
+def validate_authorizing_result(result: dict[str, Any], current: dict[str, str], runtime_evidence_root: str | None = None, predecessor_result: dict[str, Any] | None = None) -> list[dict[str, str]]:
+    return validate_result_guard(
+        result, current, PREDICATE_AUTHORITY, all_exclusions(), runtime_evidence_root,
+        predecessor_result, strict_load(PLAN_ROOT / "schemas" / "validation-result.v1.schema.json"),
+    )
 
-def build_result(predicate: str, checks: list[dict[str, Any]], findings: list[dict[str, str]], validated: dict[str, str], current: dict[str, str], status_override: str | None = None, capabilities: dict[str, bool] | None = None) -> dict[str, Any]:
-    passed = not findings and status_override is None
-    authorizes, excludes = PREDICATE_AUTHORITY[predicate]
-    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    result = {
-        "schema_version": "rmap.validation-result.v1",
-        "run_id": "rmap-plan-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
-        "predicate": predicate,
-        "status": status_override or ("pass" if passed else "fail"),
-        "candidate_hash": validated["candidate_hash"],
-        "current_candidate_hash": current["candidate_hash"],
-        "source_hash": validated["source_hash"],
-        "validator_version": validated["validator_version"],
-        "capabilities": capabilities or {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_accepted", "release_ready")},
-        "authorizes": authorizes if passed else [],
-        "does_not_authorize": excludes if passed else all_exclusions(),
-        "checks": checks,
-        "diagnostics": findings,
-        "generated_at": timestamp,
-    }
-    result_schema = strict_load(PLAN_ROOT / "schemas" / "validation-result.v1.schema.json")
-    envelope_error = schema_error(result, result_schema)
-    if envelope_error:
-        result["status"] = "fail"
-        result["authorizes"] = []
-        result["does_not_authorize"] = all_exclusions()
-        result["diagnostics"].append({"rule_id": "RMAP-RESULT-ENVELOPE", "target": "validation-result", "message": envelope_error})
-    return result
+
+def build_result(predicate: str, checks: list[dict[str, Any]], findings: list[dict[str, str]], validated: dict[str, str], current: dict[str, str], status_override: str | None = None, capabilities: dict[str, bool] | None = None, runtime_evidence_root: str | None = None, predecessor_result: dict[str, Any] | None = None) -> dict[str, Any]:
+    return build_validation_result(
+        PLAN_ROOT, predicate, checks, findings, validated, current,
+        PREDICATE_AUTHORITY, all_exclusions(), strict_load,
+        status_override, capabilities, runtime_evidence_root, predecessor_result,
+    )
 
 
 def _hash_bytes(value: bytes) -> str:
@@ -212,7 +216,22 @@ def strict_load(path: Path) -> dict[str, Any]:
     return value
 
 
-def run_predicate(predicate: str, slice_id: str | None = None, candidate_result: str | None = None, candidate_ref: str | None = None, bootstrap_run: str | None = None, run_dir: str | None = None, red_result: str | None = None, green_result: str | None = None, refactor_result: str | None = None) -> tuple[dict[str, Any], int]:
+def run_predicate(predicate: str, slice_id: str | None = None, candidate_result: str | None = None, candidate_ref: str | None = None, bootstrap_run: str | None = None, run_dir: str | None = None, red_result: str | None = None, green_result: str | None = None, refactor_result: str | None = None, predecessor_result_path: str | None = None) -> tuple[dict[str, Any], int]:
+    predecessor_path = contained_file(REPOSITORY_ROOT, predecessor_result_path) if predecessor_result_path else None
+    if predecessor_result_path and predecessor_path is None:
+        raise ValueError("predecessor result must be a repository-contained file")
+    predecessor_result = strict_load(predecessor_path) if predecessor_path else None
+    runtime_evidence_root = _value_hash({
+        "slice_id": slice_id,
+        "candidate_result": candidate_result,
+        "candidate_ref": candidate_ref,
+        "bootstrap_run": bootstrap_run,
+        "run_dir": run_dir,
+        "red_result": red_result,
+        "green_result": green_result,
+        "refactor_result": refactor_result,
+        "predecessor_result_hash": _value_hash(predecessor_result) if predecessor_result else None,
+    })
     validated_snapshot = validation_snapshot()
     checks, findings, data = validate_static(PLAN_ROOT)
     fixture_findings = validate_fixture_suite(PLAN_ROOT, data) if data else []
@@ -220,10 +239,31 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
     findings.extend(fixture_findings)
     checks.append({"rule_id": "RMAP-FIXTURES", "status": "pass" if not fixture_findings else "fail", "evidence": ["positive, negative, boundary, stale, and mutation cases"]})
     reentry_authorized = data.get("review_reentry", {}).get("state") == "reentry_authorized"
-    blocked_predicates = set() if reentry_authorized else set(data.get("review_blocker", {}).get("blocks_predicates", []))
-    if predicate in blocked_predicates:
+    if predicate in set(data.get("review_blocker", {}).get("blocks_predicates", [])):
+        reentry_findings = validate_plan_state(data["state"], data["review_blocker"], data["review_reentry"])
+        findings.extend(reentry_findings)
+        checks.append({
+            "rule_id": "RMAP-REVIEW-REENTRY",
+            "status": "pass" if not reentry_findings else "fail",
+            "evidence": ["successor policy and semantic closure independently recomputed"],
+        })
+        reentry_authorized = reentry_authorized and not reentry_findings
+    review_blocked_predicates = set() if reentry_authorized else set(data.get("review_blocker", {}).get("blocks_predicates", []))
+    identity_blockers = [
+        item for item in data.get("state", {}).get("open_blockers", [])
+        if isinstance(item, dict) and item.get("blocker_id") == "RMAP-BLOCK-PROTECTED-VERIFIER-IDENTITY"
+    ]
+    identity_blocked_predicates = {
+        item for blocker in identity_blockers for item in blocker.get("blocks_predicates", [])
+        if isinstance(item, str)
+    }
+    blocked_predicates = review_blocked_predicates | identity_blocked_predicates
+    if predicate in review_blocked_predicates:
         findings.append({"rule_id": "RMAP-REVIEW-MANUAL-PAUSE", "target": predicate, "message": "Round 3 manual pause requires a new review policy decision"})
         checks.append({"rule_id": "RMAP-REVIEW-MANUAL-PAUSE", "status": "blocked", "evidence": [data.get("review_blocker", {}).get("review_id", "missing review id")]})
+    if predicate in identity_blocked_predicates:
+        findings.append({"rule_id": "RMAP-PROTECTED-VERIFIER-IDENTITY", "target": predicate, "message": "protected handoff or release requires an independent execution identity or a trusted signed verification envelope"})
+        checks.append({"rule_id": "RMAP-PROTECTED-VERIFIER-IDENTITY", "status": "blocked", "evidence": [identity_blockers[0].get("current_verifier", "missing verifier identity")]})
     elif slice_id:
         contract_slice = next((item for item in data.get("contract", {}).get("slices", []) if item.get("slice_id") == slice_id), None)
         if contract_slice is None or contract_slice.get("exit_predicate") != predicate:
@@ -285,7 +325,8 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
     if current_snapshot != validated_snapshot:
         findings.append({"rule_id": "RMAP-HASH-VALIDATION-DRIFT", "target": "validation-run", "message": "plan, source, or validator changed during validation"})
         checks.append({"rule_id": "RMAP-HASH-VALIDATION-DRIFT", "status": "fail", "evidence": ["pre/post validation snapshots differ"]})
-    status_override = "blocked" if predicate in blocked_predicates and not [item for item in findings if item["rule_id"] != "RMAP-REVIEW-MANUAL-PAUSE"] else None
+    blocking_rules = {"RMAP-REVIEW-MANUAL-PAUSE", "RMAP-PROTECTED-VERIFIER-IDENTITY"}
+    status_override = "blocked" if predicate in blocked_predicates and not [item for item in findings if item["rule_id"] not in blocking_rules] else None
     derived_capabilities = {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_accepted", "release_ready")}
     if not findings and status_override is None and slice_id:
         order = {f"RMAP-S{index}": index for index in range(8)}
@@ -293,7 +334,10 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
             first_slice = rule.get("first_slice") if isinstance(rule, dict) else None
             if first_slice in order and order[slice_id] >= order[first_slice]:
                 derived_capabilities[name] = True
-    result = build_result(predicate, checks, findings, validated_snapshot, current_snapshot, status_override, derived_capabilities)
+    result = build_result(
+        predicate, checks, findings, validated_snapshot, current_snapshot,
+        status_override, derived_capabilities, runtime_evidence_root, predecessor_result,
+    )
     return result, 0 if result["status"] == "pass" else 1
 
 
@@ -343,12 +387,11 @@ def main() -> int:
     parser.add_argument("--candidate-ref")
     parser.add_argument("--bootstrap-run")
     parser.add_argument("--run-dir")
-    parser.add_argument("--red-result")
-    parser.add_argument("--green-result")
-    parser.add_argument("--refactor-result")
+    for option in ("--red-result", "--green-result", "--refactor-result", "--predecessor-result"):
+        parser.add_argument(option)
     parser.add_argument("--output")
     args = parser.parse_args()
-    result, exit_code = run_fixture(args.fixture) if args.fixture else run_predicate(args.predicate, args.slice_id, args.candidate_result, args.candidate_ref, args.bootstrap_run, args.run_dir, args.red_result, args.green_result, args.refactor_result)
+    result, exit_code = run_fixture(args.fixture) if args.fixture else run_predicate(args.predicate, args.slice_id, args.candidate_result, args.candidate_ref, args.bootstrap_run, args.run_dir, args.red_result, args.green_result, args.refactor_result, args.predecessor_result)
     write_output(args.output, result)
     return exit_code
 

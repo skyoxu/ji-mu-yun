@@ -26,7 +26,7 @@
 22. S0 ownership duplicate as the behavior-specific observed RED.
 23. Protected-tree hash and count drift for all three shadow plans.
 24. Positive and negative candidate/review/preflight/disposition identity binding.
-25. Immutable manual-pause blocker, successor re-entry selection, Round 4 rejection, and blocked predicate status.
+25. Immutable manual-pause blocker, stable successor re-entry recomputation across volatile Codex `arg0` paths, Round 4 rejection, and proof that protected-verifier identity applies only to protected handoff and release.
 26. Clean-checkout validation without clarification or repair logs.
 27. Executable acceptance registry, derived requirement quality, and exact earliest-phase mapping.
 28. Command descriptor versus RED/GREEN/REFACTOR invocation expectation separation.
@@ -38,9 +38,10 @@
 34. Per-slice full run-bundle recomputation against cached effects and cumulative cross-slice hash chain.
 35. First-add/new-path baseline semantics and retry-safe separation of cross-slice versus recovery lineage.
 36. Predicate-derived capability projection.
-37. Independent artifact-proof inventory exact-set, static-contract zero-authority, runtime-type identity/derivation/recomputation/staleness/recovery, registered consumer/rule/negative-test, and exact predicate-permission tests.
-38. Successor authorization rejects arbitrary JSON, wrong actor/change/policy, revoked or expired events, decision-before-event, stale bytes, and event reuse across decision identity.
-39. P2 typed evidence rejects wrong candidate/input/finding/scope, missing command registration, wrong command class or registry hash, nonzero process exit, and expired owner/non-impact/recheck evidence.
+37. Artifact-proof inventory exact-set, static-contract zero-authority, runtime-type identity/derivation/recomputation/staleness/recovery, registered consumer/rule/negative-test, exact predicate-permission tests, and explicit provisional-diagnostic assurance with `protected_boundary_satisfied=false`.
+38. Candidate-external root/guard identity verification and full-stack synchronized authority-takeover rejection, with the external envelope retaining `authorizes=[]`.
+38. Successor authorization rejects arbitrary JSON, run-local null-predecessor authority, wrong profile root/signer/actor/change/policy, revoked or expired events, decision-before-event, stale bytes, and event reuse across decision identity.
+39. P2 typed evidence rejects self-issued owner authority, wrong candidate/input/finding/scope, missing or altered command descriptor, wrong runner/class/registry hash, handwritten success, broken append-only event lineage, stale stdout/stderr, nonzero process exit, and expired owner/non-impact/recheck evidence.
 
 ## Required Adapter Fixtures
 
@@ -110,7 +111,7 @@ The candidate result authorizes only `bootstrap-review`. It explicitly excludes 
 
 ## Plan Validation Evidence
 
-Plan validation evidence belongs under `logs/vdd-plan-validation/repository-maintenance-tdd-adapter/<run-id>/`. A plan-ready result includes the exact plan candidate, source, validator, and fixture hashes plus rule-level evidence.
+Plan validation evidence belongs under `logs/vdd-plan-validation/repository-maintenance-tdd-adapter/<run-id>/`. A `plan-ready` PASS must bind current candidate, source, validator, re-entry, threat-model, and seven-dimension evidence and authorize only `plan-ready`. Independent identity or a signed envelope is required only for protected handoff and release.
 
 ## Semantic Review
 

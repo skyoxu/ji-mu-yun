@@ -18,6 +18,7 @@
 | P2 deferrals hide material risk | Non-deferrable risk families and expiry blocking | Missing owner, proof, expiry, or closure test |
 | Old manual-pause blocker is edited in place | Immutable blocker plus successor re-entry selector | Missing predecessor hash or same policy/authority cycle |
 | A repair-added artifact repeats a previously closed evidence flaw | Exact seven-dimensional artifact proof registry plus independent guard | Missing producer, identity, derivation, recomputation, staleness, supersession, or consumer boundary proof |
+| A same-identity diagnostic is mistaken for a protected verifier | `RMAP-BLOCK-PROTECTED-VERIFIER-IDENTITY` plus explicit provisional assurance output | `plan-ready` PASS without independent custody or a trusted signed envelope |
 | Adapter grows into a Router | No provider scheduler or hidden state | New central intent/plan selection logic |
 | Historical script directories grow new authority | New Skill owns common execution | New adapter semantics added to `scripts/sc` or `scripts/python` without ADR delta |
 | Large validator becomes unmaintainable | Keep files under 400 lines where practical and split by responsibility | Unapproved oversized mixed-concern script |
@@ -29,7 +30,7 @@
 - Source coverage includes all nine `agentbuild.txt` sections and every clarification decision.
 - Deliberate invalid and mutation cases fail with their expected stable rule IDs.
 - Capsule and attempt fixtures prove stale context, authority, partial-write, binding, sensitive-content, and lineage failures.
-- Every review-added normative, projection, evidence, lineage, and validator artifact is covered by the exact seven-dimensional artifact proof registry.
+- Every review-added normative, projection, evidence, lineage, and validator artifact is covered by the exact seven-dimensional artifact proof registry, while the two Codex Home-pinned artifacts are explicitly classified as provisional diagnostics rather than protected authority.
 - Validator unit tests and the fresh composite command pass.
 - The current result envelope has matching candidate/source/validator hashes and exact authority sets.
 - `plan-repair-verified` may pass only after the blocked candidate produces fresh deterministic evidence; it does not promote status.

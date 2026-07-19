@@ -1,7 +1,7 @@
 {
   "schema_version": "rmap.plan-state.v1",
   "plan_id": "repository-maintenance-tdd-adapter",
-  "status": "blocked",
+  "status": "plan-ready",
   "source": {
     "path": "../../agentbuild.txt",
     "sha256": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807"
@@ -13,13 +13,16 @@
       "repair-20260716T081500Z",
       "repair-20260717T013023Z",
       "clarification-20260717T063016Z",
-      "clarification-20260717T090544Z"
-      ,"clarification-20260717T190000Z"
+      "clarification-20260717T090544Z",
+      "clarification-20260717T190000Z",
+      "clarification-20260718T000000Z",
+      "clarification-20260718T160000Z",
+      "clarification-20260718T170000Z"
     ],
-    "current_repair_run_id": "clarification-20260717T190000Z",
+    "current_repair_run_id": "clarification-20260718T170000Z",
     "status": "closed",
     "write_disposition": "normal",
-    "confidence": 96
+    "confidence": 97
   },
   "blocking_disposition": {
     "path": "schemas/review-blocking-state.v1.json",
@@ -91,12 +94,67 @@
     "P3"
   ],
   "out_of_scope_phase": "P4",
+  "threat_model": {
+    "model_id": "repository-workflow-integrity.v1",
+    "plan_ready_assurance": "workflow-integrity",
+    "protected_assurance": "independent-verifier-identity",
+    "external_identity_required_for": [
+      "protected-handoff",
+      "release-ready"
+    ],
+    "external_identity_not_required_for": [
+      "plan-repair-verified",
+      "plan-ready",
+      "slice-ready",
+      "implementation-candidate",
+      "implementation-accepted"
+    ],
+    "in_scope": [
+      "workflow-internal-forgery",
+      "stale-evidence",
+      "self-attestation",
+      "authorization-escalation",
+      "validator-drift-during-run"
+    ],
+    "excluded": [
+      "network-attack",
+      "host-operations-compromise",
+      "malicious-administrator-control"
+    ]
+  },
   "open_blockers": [
     {
-      "blocker_id": "RMAP-BLOCK-BOOTSTRAP-MANUAL-PAUSE",
-      "source_review_id": "repo-maint-tdd-final-r3-20260716-110837",
-      "reason": "round_3_p1_dispositions_not_semantically_reclosed",
-      "reentry": "schemas/review-policy-reentry.v1.json"
+      "blocker_id": "RMAP-BLOCK-PROTECTED-VERIFIER-IDENTITY",
+      "rule_id": "RMAP-PROTECTED-VERIFIER-IDENTITY",
+      "status": "blocked",
+      "assurance_level": "provisional-diagnostic",
+      "blocks_predicates": [
+        "protected-handoff",
+        "release-ready"
+      ],
+      "current_verifier": "C:/Users/Administrator/.codex/skills/run-phase-bootstrap-review/scripts/verify_artifact_proof_boundary.py",
+      "threat_model_gap": "Protected handoff and release require verifier custody outside the repository workflow execution identity.",
+      "reentry_condition": {
+        "any_of": [
+          {
+            "kind": "independent-execution-identity",
+            "requirement": "Verifier code and evidence custody are not writable by the candidate execution identity."
+          },
+          {
+            "kind": "signed-envelope",
+            "requirement": "A trusted signer binds candidate, source, validator, policy, and verifier identities in a verified envelope."
+          }
+        ]
+      },
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
     }
   ],
   "capability_projection": {

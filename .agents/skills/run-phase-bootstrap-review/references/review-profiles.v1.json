@@ -3,7 +3,8 @@
   "profiles": {
     "bootstrap-upstream-plan": {
       "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
-      "policyRevision": "sha256:d34de520d73bff5752253b1378f3dd38d5864faf2424648a4bf28d91df810f72",
+      "policyRevision": "sha256:d4077a8c91b9b271ff3607548b3575d1616d14dc3c10733849856959ee6ebc0a",
+      "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
       "reviewObjectType": "plan-authority",
@@ -141,7 +142,8 @@
     },
     "bootstrap-implementation-conformance": {
       "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
-      "policyRevision": "sha256:597d59087d9fac44b6a04decb13064f46f9f386985a66ef35f91a91a9967a150",
+      "policyRevision": "sha256:1407f7bd3d4a57ae3e1d72f52424a7a739101b957d97c2855cc111b257884400",
+      "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
       "reviewObjectType": "implementation-conformance",
@@ -280,7 +282,8 @@
     },
     "bootstrap-skill-route": {
       "reviewProfile": "review-policy://bootstrap-skill-route/v1",
-      "policyRevision": "sha256:32e696c080308ec215cfa51a6d95cebbe684271ea2b73c6d8baf15a1fcd65d18",
+      "policyRevision": "sha256:d33980749bda33705cc8ca7dacdf48b2fe4c13184451fa6918bdfc7f4c57c957",
+      "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
       "reviewObjectType": "skill-route",
@@ -420,7 +423,8 @@
     },
     "bootstrap-focused-change": {
       "reviewProfile": "review-policy://bootstrap-focused-change/v1",
-      "policyRevision": "sha256:2a86a68036f0bd64eaffa41110c721d4fca589445b18fb2211e3e9c5acf2255b",
+      "policyRevision": "sha256:b60c47999586523dd1cdd2b5a490899c4472e37005262efefdbefa5ade811899",
+      "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
       "reviewObjectType": "focused-change",
