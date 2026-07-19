@@ -7,10 +7,10 @@ from typing import Any
 
 
 ROOT_PATH = ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json"
-ROOT_SHA256 = "sha256:5037517b2df2ab38247a131ee0486c5cb54c189349475e90474c3d5b35108ae5"
+ROOT_SHA256 = "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764"
 STANDARD_PATH = ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md"
 STANDARD_SHA256 = "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140"
-PREDECESSOR_SHA256 = "sha256:cda94a6d293008a711bf27533e493628699d184d90ac9348d0ad4c75740e41ab"
+PREDECESSOR_SHA256 = "sha256:2c0c297c20fbf46daaea5eca1836c9b3e51ce9699749eae2152cafd57a6b2544"
 INVALIDATES = ["artifact-proof-registry", "runtime-artifact-type-proof", "plan-repair-verified", "plan-ready"]
 DOES_NOT_AUTHORIZE = ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
 DIMENSION_RULES = {

@@ -1772,7 +1772,7 @@
       "schema_producer_authority": {
         "authority_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
         "authority_category": "protocol_authority",
-        "authority_sha256": "sha256:5037517b2df2ab38247a131ee0486c5cb54c189349475e90474c3d5b35108ae5",
+        "authority_sha256": "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -1780,7 +1780,7 @@
       "immutable_identity": {
         "mode": "authority-root",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:b9005348f34fbba2c1e004884359f9adbee2d09a8ce6d51be4510eb03f78a35a",
+        "artifact_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -1788,7 +1788,7 @@
         "rules": [
           {
             "source": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-            "source_sha256": "sha256:5037517b2df2ab38247a131ee0486c5cb54c189349475e90474c3d5b35108ae5",
+            "source_sha256": "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764",
             "field": "/proof/immutable_identity/artifact_sha256",
             "target_field": "$bytes",
             "derivation": "external-hash-pin"
@@ -1798,7 +1798,7 @@
       "independent_recomputation": {
         "rule_id": "vdd-skill-artifact-proof-trust-root.v1",
         "validator_path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
-        "validator_sha256": "sha256:752aa4af5afe7d6fba2d18929d8b3f3d4e6b4a909cc5142287c844b9bac1af12",
+        "validator_sha256": "sha256:53e742efa6a512245cf7ecc52c3fa40284bc79a345229117563f8960ff902e1b",
         "callable": "validate_artifact_proof_trust_roots",
         "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
         "negative_test_sha256": "sha256:c8e27653e0a69231801110f6d66c0e6138be2dacb04bd845c9a7007057f9d466",
@@ -1817,7 +1817,7 @@
         "inputs": [
           {
             "source": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-            "source_sha256": "sha256:5037517b2df2ab38247a131ee0486c5cb54c189349475e90474c3d5b35108ae5",
+            "source_sha256": "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764",
             "field": "/proof/immutable_identity/artifact_sha256",
             "target_field": "$bytes",
             "derivation": "external-hash-pin"
@@ -1842,7 +1842,7 @@
         ],
         "predecessor_policy": "external-vdd-skill-contract-revision",
         "lifecycle_status": "supersedes",
-        "predecessor_sha256": "sha256:cda94a6d293008a711bf27533e493628699d184d90ac9348d0ad4c75740e41ab"
+        "predecessor_sha256": "sha256:2c0c297c20fbf46daaea5eca1836c9b3e51ce9699749eae2152cafd57a6b2544"
       },
       "consumer_authorization_boundary": {
         "consumers": [
@@ -2056,7 +2056,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "authority_category": "machine_owners",
-        "authority_sha256": "sha256:b9005348f34fbba2c1e004884359f9adbee2d09a8ce6d51be4510eb03f78a35a",
+        "authority_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
         "producer_kind": "generated-projection",
         "generator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
         "generator_sha256": "sha256:e95731be2f7633df8f8e7999107dcec1712f1efc787e3f27cd043a3e76b9bea7"
@@ -2072,7 +2072,7 @@
         "rules": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:b9005348f34fbba2c1e004884359f9adbee2d09a8ce6d51be4510eb03f78a35a",
+            "source_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -2101,7 +2101,7 @@
         "inputs": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:b9005348f34fbba2c1e004884359f9adbee2d09a8ce6d51be4510eb03f78a35a",
+            "source_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -3490,7 +3490,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "authority_category": "machine_owners",
-        "authority_sha256": "sha256:b9005348f34fbba2c1e004884359f9adbee2d09a8ce6d51be4510eb03f78a35a",
+        "authority_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
         "producer_kind": "generated-projection",
         "generator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
         "generator_sha256": "sha256:e95731be2f7633df8f8e7999107dcec1712f1efc787e3f27cd043a3e76b9bea7"
@@ -3506,7 +3506,7 @@
         "rules": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:b9005348f34fbba2c1e004884359f9adbee2d09a8ce6d51be4510eb03f78a35a",
+            "source_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -3535,7 +3535,7 @@
         "inputs": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:b9005348f34fbba2c1e004884359f9adbee2d09a8ce6d51be4510eb03f78a35a",
+            "source_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -4212,7 +4212,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:1b240515db1a28204364425bbb4683be47a98cee5e8fc7cf96e0a8ac15f8e4d9",
+        "artifact_sha256": "sha256:e3aaf30efffdcfa943ef78dea6cc88166ab8475bebebf15ca4293d8d00419d54",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },

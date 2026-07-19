@@ -178,20 +178,34 @@ class ArtifactProofClosureTests(unittest.TestCase):
     def test_lineage_does_not_use_current_hash_as_fake_predecessor(self) -> None:
         authority = load_json("schemas/artifact-proof-authority.v1.json")
         registry = load_json("schemas/artifact-proof-registry.v1.json")
+        external_root = json.loads((REPOSITORY_ROOT / ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json").read_text(encoding="utf-8"))["proof"]
         rules = {item["path"]: item for item in authority["artifacts"]}
         for proof in registry["proofs"]:
             path = proof["artifact_path"]
             lineage = proof["recovery_supersession"]
-            baseline = rules[path].get("predecessor_sha256") or git_baseline_hash(path)
+            rule = rules[path]
+            declared_status = rule["lifecycle_status"]
+            declared_predecessor = rule.get("predecessor_sha256")
+            git_baseline = git_baseline_hash(path)
             current = "sha256:" + __import__("hashlib").sha256(
                 (REPOSITORY_ROOT / path).read_bytes()
             ).hexdigest()
             with self.subTest(path=path):
-                if baseline is None:
+                if rule["class_id"] == "authority-root":
+                    self.assertEqual(external_root["recovery_supersession"], lineage)
+                    continue
+                if declared_status == "new":
                     self.assertEqual(("new", None), (lineage["lifecycle_status"], lineage["predecessor_sha256"]))
-                elif baseline == current:
+                    self.assertIsNone(declared_predecessor)
+                    continue
+                baseline = declared_predecessor or git_baseline
+                self.assertIsNotNone(baseline, "non-new artifact must retain a predecessor identity")
+                if declared_status == "unchanged":
+                    self.assertEqual(current, baseline)
                     self.assertEqual(("unchanged", current), (lineage["lifecycle_status"], lineage["predecessor_sha256"]))
                 else:
+                    self.assertEqual("supersedes", declared_status)
+                    self.assertNotEqual(current, baseline)
                     self.assertEqual(("supersedes", baseline), (lineage["lifecycle_status"], lineage["predecessor_sha256"]))
 
     def test_non_authoritative_requires_machine_exclusion(self) -> None:

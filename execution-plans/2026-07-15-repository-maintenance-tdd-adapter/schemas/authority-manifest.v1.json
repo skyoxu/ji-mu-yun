@@ -39,7 +39,7 @@
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
-        "sha256": "sha256:717777b3b6a2461201255e0ee060a2a21cd22de5189b65dda000919dadb8dec8"
+        "sha256": "sha256:8285138bd999f28aa7490b73ea39a39cf92bda33e158a7efac8ff3a5c3507817"
       }
     ],
     "review_policy_authority": [
@@ -133,7 +133,7 @@
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-        "sha256": "sha256:5037517b2df2ab38247a131ee0486c5cb54c189349475e90474c3d5b35108ae5"
+        "sha256": "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764"
       }
     ],
     "plan_books": [
@@ -333,7 +333,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
-        "sha256": "sha256:26a292aed1db408d1f4b379387b090413346092c26aa4a0703046db6240b3a3a"
+        "sha256": "sha256:be3810aad4811b10a85a8b6b8830ba3d728ad1e44ed10e790077cb6d5ecd7636"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
@@ -357,7 +357,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-        "sha256": "sha256:b9005348f34fbba2c1e004884359f9adbee2d09a8ce6d51be4510eb03f78a35a"
+        "sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86"
       }
     ],
     "execution_dependencies": [
@@ -459,7 +459,7 @@
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
-        "sha256": "sha256:752aa4af5afe7d6fba2d18929d8b3f3d4e6b4a909cc5142287c844b9bac1af12"
+        "sha256": "sha256:53e742efa6a512245cf7ecc52c3fa40284bc79a345229117563f8960ff902e1b"
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
@@ -467,11 +467,11 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
-        "sha256": "sha256:1b240515db1a28204364425bbb4683be47a98cee5e8fc7cf96e0a8ac15f8e4d9"
+        "sha256": "sha256:e3aaf30efffdcfa943ef78dea6cc88166ab8475bebebf15ca4293d8d00419d54"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
-        "sha256": "sha256:5a10442a49c73b04a3b9447a2f54830553e7a3b1eda8260b330b1d10bd62b3f2"
+        "sha256": "sha256:09e0e3e2513a224dd8aff8f1f162aaf3038622a450da2061a9fdf1c24332804d"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_verdicts.py",

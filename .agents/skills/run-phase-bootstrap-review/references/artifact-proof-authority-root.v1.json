@@ -28,7 +28,7 @@
     "immutable_identity": {
       "mode": "authority-root",
       "algorithm": "sha256-bytes",
-      "artifact_sha256": "sha256:b9005348f34fbba2c1e004884359f9adbee2d09a8ce6d51be4510eb03f78a35a",
+      "artifact_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
       "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
       "manifest_path": "schemas/authority-manifest.v1.json"
     },
@@ -46,7 +46,7 @@
     "independent_recomputation": {
       "rule_id": "vdd-skill-artifact-proof-trust-root.v1",
       "validator_path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
-        "validator_sha256": "sha256:752aa4af5afe7d6fba2d18929d8b3f3d4e6b4a909cc5142287c844b9bac1af12",
+        "validator_sha256": "sha256:53e742efa6a512245cf7ecc52c3fa40284bc79a345229117563f8960ff902e1b",
       "callable": "validate_artifact_proof_trust_roots",
       "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
       "negative_test_sha256": "sha256:c8e27653e0a69231801110f6d66c0e6138be2dacb04bd845c9a7007057f9d466",
@@ -90,7 +90,7 @@
       ],
       "predecessor_policy": "external-vdd-skill-contract-revision",
       "lifecycle_status": "supersedes",
-      "predecessor_sha256": "sha256:cda94a6d293008a711bf27533e493628699d184d90ac9348d0ad4c75740e41ab"
+      "predecessor_sha256": "sha256:2c0c297c20fbf46daaea5eca1836c9b3e51ce9699749eae2152cafd57a6b2544"
     },
     "consumer_authorization_boundary": {
       "consumers": [

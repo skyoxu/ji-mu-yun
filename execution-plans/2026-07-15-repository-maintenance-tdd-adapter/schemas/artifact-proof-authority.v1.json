@@ -795,7 +795,7 @@
     {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
       "class_id": "plan-validator",
-      "sha256": "sha256:1b240515db1a28204364425bbb4683be47a98cee5e8fc7cf96e0a8ac15f8e4d9",
+      "sha256": "sha256:e3aaf30efffdcfa943ef78dea6cc88166ab8475bebebf15ca4293d8d00419d54",
       "lifecycle_status": "new",
       "derivation_rules": [
         {
