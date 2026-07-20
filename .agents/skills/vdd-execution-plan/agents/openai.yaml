@@ -1,4 +1,4 @@
 interface:
   display_name: "VDD Execution Plan"
   short_description: "Clarify, create, or repair strict executable VDD plans"
-  default_prompt: "Use $vdd-execution-plan to clarify requirements before creating or repairing a strict executable VDD plan."
+  default_prompt: "Use $vdd-execution-plan to clarify requirements and create or repair a strict executable VDD plan with a deterministic Authorization Proof Package when it authorizes a transition."

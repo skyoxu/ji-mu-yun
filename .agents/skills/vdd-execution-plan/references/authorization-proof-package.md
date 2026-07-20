@@ -10,6 +10,12 @@ boundary. Closure members are `PASS` or type-authorized `N/A`; an artifact
 outside a closure is classified `OUT-OF-CLOSURE` with machine checks and an
 empty authorization set.
 
+`PASS` is not a label alone. Each in-closure proof binds a registered producer
+authority, derivation rule, independent validator callable, invalidation
+contract, and consumer permission lattice. The runner resolves those entries
+from the package semantic contract and its seven isolated mutations separately
+forge each dimension's executable reference.
+
 The package has normative, projection, and execution roles. Normative roles
 include the proof schema, artifact/type registry, authority-root registry,
 rule registry, permission lattice, and runtime type registry. Projection
@@ -23,13 +29,24 @@ mode, and blob identity. Binary data additionally binds raw-byte SHA-256 and
 length and is never text-normalized. Generated or external values declare
 their canonical byte rule explicitly.
 
+Generated and external text may use `utf8-lf-v1`: raw bytes and decoded UTF-8
+text normalized from CRLF/CR to LF are each SHA-256 bound. Invalid UTF-8 or an
+undeclared canonicalization rule is rejected.
+
 Each authorizing predicate independently discovers its closure. A shared
 superset is allowed only when declared and proved to cover each predicate.
 The closure producer and verifier must have independent discovery entrypoints.
+The runner executes both registered entrypoints and requires each result to
+equal the declared closure; self-reported member lists alone are insufficient.
 
 External protected roots are repository-declared and supplied in an explicit
 handoff envelope. A deterministic package result may not claim protected
 handoff, release, fresh-context, or cross-model assurance.
+
+An external validation envelope is accepted only when it names a root and
+signer registered in `vdd-artifact-proof-roots.v1.json`, matches package bytes,
+and identifies the expected validator. Such evidence remains below protected
+handoff and release authority.
 
 The result envelope binds `candidate_hash`, `source_hash`, `validator_root`,
 `authority_root`, and `closure_definition_hash`. It emits a rule-level check

@@ -47,20 +47,36 @@ class BootstrapReviewCliTests(unittest.TestCase):
             },
         }
         self.authorization_package.write_text(json.dumps(package, indent=2) + "\n", encoding="utf-8", newline="\n")
+        os.environ["VDD_AUTHORIZATION_PROOF_SIGNING_KEY"] = "bootstrap-test-signing-key"
         result = {
             "schema_version": "vdd.authorization-proof-package-result.v1",
             "assurance_level": "deterministic-package",
             "package_sha256": bootstrap.file_hash(self.authorization_package),
+            "validation_provenance": {
+                "root_id": "vdd-local-deterministic",
+                "signer": "repository-local-deterministic-runner",
+                "validator_identity": "vdd.authorization_proof_package.validate.v1",
+                "package_sha256": bootstrap.file_hash(self.authorization_package),
+            },
             "status": "PASS",
             **package["bindings"],
             "checks": [{"rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}", "status": "pass", "evidence": ["fixture"]} for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS],
             "mutation_checks": [{"dimension": dimension, "status": "rejected", "expected_rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}"} for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS],
         }
+        provenance = result["validation_provenance"]
+        provenance["signature_algorithm"] = "hmac-sha256-v1"
+        signed = "sha256:" + __import__("hashlib").sha256(json.dumps(provenance, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+        provenance["signature"] = __import__("hmac").new(b"bootstrap-test-signing-key", signed.encode("ascii"), __import__("hashlib").sha256).hexdigest()
         self.authorization_result.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
         root_relative = Path(".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json")
         root_target = self.repo / root_relative
         root_target.parent.mkdir(parents=True, exist_ok=True)
         root_target.write_bytes(bootstrap.AUTHORITY_ROOT_PATH.read_bytes())
+        vdd_root = self.repo / bootstrap.VDD_ARTIFACT_PROOF_ROOT_REGISTRY
+        vdd_root.parent.mkdir(parents=True, exist_ok=True)
+        vdd_root.write_bytes(
+            (REPOSITORY_ROOT / bootstrap.VDD_ARTIFACT_PROOF_ROOT_REGISTRY).read_bytes()
+        )
         subprocess.run(["git", "init", "-q"], cwd=self.repo, check=True)
         subprocess.run(["git", "config", "user.email", "bootstrap@example.invalid"], cwd=self.repo, check=True)
         subprocess.run(["git", "config", "user.name", "Bootstrap Test"], cwd=self.repo, check=True)
@@ -344,6 +360,43 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.complete_preflight()
         self.assertEqual(1, bootstrap.main(["authorize-launch", "--run-dir", str(self.run_dir)]))
         self.assertFalse((self.run_dir / "review-launch-authorization.json").exists())
+
+    def test_authorization_closure_preflight_blocks_unregistered_result_provenance(self) -> None:
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        result["validation_provenance"]["signer"] = "forged-runner"
+        self.authorization_result.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
+        subprocess.run(["git", "add", "upstream-plan/authorization-closure-validation-result.json"], cwd=self.repo, check=True)
+        subprocess.run(["git", "commit", "-qm", "forged authorization provenance"], cwd=self.repo, check=True)
+        self.prepare()
+        self.complete_preflight()
+        self.assertEqual(1, bootstrap.main(["authorize-launch", "--run-dir", str(self.run_dir)]))
+
+    def test_authorization_closure_preflight_blocks_unsigned_result_provenance(self) -> None:
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        result["validation_provenance"].pop("signature")
+        self.authorization_result.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
+        subprocess.run(["git", "add", "upstream-plan/authorization-closure-validation-result.json"], cwd=self.repo, check=True)
+        subprocess.run(["git", "commit", "-qm", "unsigned authorization provenance"], cwd=self.repo, check=True)
+        self.prepare()
+        self.complete_preflight()
+        self.assertEqual(1, bootstrap.main(["authorize-launch", "--run-dir", str(self.run_dir)]))
+
+    def test_authorization_closure_preflight_accepts_vdd_runner_result(self) -> None:
+        package_source = REPOSITORY_ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        runner = REPOSITORY_ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts" / "authorization_proof_package.py"
+        self.authorization_package.write_bytes(package_source.read_bytes())
+        completed = subprocess.run(
+            [sys.executable, str(runner), str(self.authorization_package), "--orchestrate", "--result", str(self.authorization_result)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        subprocess.run(["git", "add", "upstream-plan"], cwd=self.repo, check=True)
+        subprocess.run(["git", "commit", "-qm", "vdd authorization package"], cwd=self.repo, check=True)
+        self.prepare()
+        self.complete_preflight()
+        self.assertEqual(0, bootstrap.main(["authorize-launch", "--run-dir", str(self.run_dir)]))
 
     def complete_process_lease(self, operation_id: str, role: str) -> None:
         child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])

@@ -1,4 +1,4 @@
 interface:
   display_name: "Run Phase Bootstrap Review"
   short_description: "Evidence-gated Bootstrap Review control plane"
-  default_prompt: "Use the repository-owned Bootstrap Review protocol for this request."
+  default_prompt: "Use $run-phase-bootstrap-review for the repository-owned Bootstrap Review protocol; upstream-plan reviews consume a fresh deterministic Authorization Proof Package before semantic reviewers launch."

@@ -5,6 +5,8 @@
     "agents/openai.yaml",
     "references/clarification-gate.md",
     "references/authorization-proof-package.md",
+    "references/vdd-artifact-proof-semantic-contract.v1.json",
+    "references/vdd-artifact-proof-roots.v1.json",
     "references/strict-vdd-standard.md",
     "references/skill-compliance-protocol.md",
     "scripts/clarification_state.py",
@@ -132,7 +134,8 @@
   },
   "authorization_proof_package": {
     "schema_path": "scripts/fixtures/authorization-proof-package-schema.json",
-    "golden_fixture_path": "scripts/fixtures/authorization-proof-package-golden.json"
+    "golden_fixture_path": "scripts/fixtures/authorization-proof-package-golden.json",
+    "integration_registry_path": "scripts/fixtures/authorization-proof-package-integration.json"
   },
   "clarification": {
     "schema_version": "vdd.clarification-state.v1",

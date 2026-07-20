@@ -7,6 +7,7 @@ import argparse
 import ctypes
 import getpass
 import hashlib
+import hmac
 import json
 import math
 import os
@@ -73,6 +74,12 @@ AUTHORIZATION_CLOSURE_BINDINGS = (
     "authority_root",
     "closure_definition_hash",
 )
+AUTHORIZATION_CLOSURE_PROVENANCE = {
+    "root_id": "vdd-local-deterministic",
+    "signer": "repository-local-deterministic-runner",
+    "validator_identity": "vdd.authorization_proof_package.validate.v1",
+}
+VDD_ARTIFACT_PROOF_ROOT_REGISTRY = ".agents/skills/vdd-execution-plan/references/vdd-artifact-proof-roots.v1.json"
 AUTHORITY_CLASS = "supplemental_bootstrap"
 REVIEW_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}")
 CHECK_ID_PATTERN = re.compile(r"[a-z][a-z0-9-]{2,63}")
@@ -1196,10 +1203,38 @@ def authorization_closure_context_errors(
         result = read_json(result_path)
     except BootstrapError as exc:
         return [str(exc)]
-    errors = validate_authorization_closure_result(package, result)
+    errors = validate_authorization_closure_result(package, result, repository_root)
     if result.get("package_sha256") != file_hash(package_path):
         errors.append("package_sha256 does not bind the current package bytes")
     return errors
+
+
+def authorization_closure_provenance_errors(repository_root: Path, provenance: object) -> list[str]:
+    registry_path = repository_root / VDD_ARTIFACT_PROOF_ROOT_REGISTRY
+    try:
+        registry = read_json(registry_path)
+    except BootstrapError:
+        return ["authorization closure root registry is unavailable"]
+    roots = registry.get("roots") if isinstance(registry, dict) else None
+    root_id = provenance.get("root_id") if isinstance(provenance, dict) else None
+    root = roots.get(root_id) if isinstance(roots, dict) else None
+    if not isinstance(root, dict):
+        return ["result validation_provenance root is not registered"]
+    expected = {
+        "root_id": root_id,
+        "signer": root.get("trusted_signer"),
+        "validator_identity": root.get("validator_identity"),
+    }
+    if not isinstance(provenance, dict) or any(provenance.get(key) != value for key, value in expected.items()):
+        return ["result validation_provenance is not a registered deterministic runner"]
+    signing_key = os.environ.get("VDD_AUTHORIZATION_PROOF_SIGNING_KEY")
+    signed = {key: value for key, value in provenance.items() if key != "signature"}
+    expected_signature = hmac.new(
+        signing_key.encode("utf-8"), ("sha256:" + hashlib.sha256(json.dumps(signed, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()).encode("ascii"), hashlib.sha256,
+    ).hexdigest() if signing_key else None
+    if provenance.get("signature_algorithm") != "hmac-sha256-v1" or not isinstance(provenance.get("signature"), str) or expected_signature is None or not hmac.compare_digest(provenance["signature"], expected_signature):
+        return ["result validation_provenance signature is invalid or unavailable"]
+    return []
 
 
 def validate_profile_context_semantics(
@@ -1921,7 +1956,9 @@ def validate_preflight_result(run_dir: Path, manifest: dict[str, Any]) -> str:
     return file_hash(path)
 
 
-def validate_authorization_closure_result(package: Any, result: Any) -> list[str]:
+def validate_authorization_closure_result(
+    package: Any, result: Any, repository_root: Path | None = None,
+) -> list[str]:
     """Return deterministic proof-envelope binding failures without rerunning mutations."""
     errors: list[str] = []
     if not isinstance(package, dict):
@@ -1939,6 +1976,16 @@ def validate_authorization_closure_result(package: Any, result: Any) -> list[str
         errors.append("result schema_version is invalid")
     if result.get("assurance_level") != "deterministic-package" or result.get("status") != "PASS":
         errors.append("result is not a deterministic package PASS")
+    provenance = result.get("validation_provenance")
+    if repository_root is None:
+        if not isinstance(provenance, dict) or any(
+            provenance.get(key) != value for key, value in AUTHORIZATION_CLOSURE_PROVENANCE.items()
+        ):
+            errors.append("result validation_provenance is not a registered deterministic runner")
+    else:
+        errors.extend(authorization_closure_provenance_errors(repository_root, provenance))
+    if not isinstance(provenance, dict) or provenance.get("package_sha256") != result.get("package_sha256"):
+        errors.append("result validation_provenance does not bind package_sha256")
     for field in AUTHORIZATION_CLOSURE_BINDINGS:
         expected = bindings.get(field) if isinstance(bindings, dict) else None
         if not isinstance(expected, str) or HASH_PATTERN.fullmatch(expected) is None:

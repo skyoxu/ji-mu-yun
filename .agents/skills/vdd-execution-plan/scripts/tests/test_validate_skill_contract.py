@@ -65,12 +65,44 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(["deterministic-package-validation"], payload["authorizes"])
         self.assertIn("release-ready", payload["does_not_authorize"])
 
-    def test_authorization_proof_package_integration_registry_is_valid(self) -> None:
+    def test_authorization_proof_package_integration_registry_reports_failing_validator(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
         fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
         registry = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-integration.json"
         completed = subprocess.run([sys.executable, str(script), str(fixture), "--integration-registry", str(registry)], cwd=SKILL_ROOT.parents[2], capture_output=True, text=True, encoding="utf-8")
-        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("VDD-PACKAGE-INTEGRATION-EXECUTION", completed.stdout)
+
+    def test_authorization_package_executes_registered_integration_validator(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            registry = Path(tmp) / "integration.json"
+            registry.write_text(json.dumps({
+                "schema_version": "vdd.authorization-proof-package-integration.v1",
+                "fixtures": [
+                    {"id": "golden", "kind": "golden", "package": str(fixture), "expected_assurance": "deterministic-package"},
+                    {"id": "failing-validator", "kind": "integration", "package": str(fixture), "validator": str(fixture), "arguments": [], "expected_assurance": "deterministic-package"},
+                ],
+            }), encoding="utf-8", newline="\n")
+            completed = subprocess.run([sys.executable, str(script), str(fixture), "--integration-registry", str(registry)], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("VDD-PACKAGE-INTEGRATION-EXECUTION", completed.stdout)
+
+    def test_authorization_package_rejects_self_registered_semantic_authority(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            for proof in payload["proofs"]:
+                proof["producer_authority"]["path"] = "forged/authority.md"
+            for authority in payload["semantic_contract"]["authorities"].values():
+                authority["path"] = "forged/authority.md"
+            package = Path(tmp) / "package.json"
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run([sys.executable, str(script), str(package), "--orchestrate"], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("VDD-PACKAGE-SEMANTIC-ROOT", completed.stdout)
 
     def test_authorization_package_recomputes_git_binary_closure_and_lineage(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
@@ -89,12 +121,13 @@ class SkillContractTests(unittest.TestCase):
             payload = json.loads((SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json").read_text(encoding="utf-8"))
             members = ["tracked", "runtime"]
             closure_root = "sha256:" + __import__("hashlib").sha256(json.dumps(sorted(members), separators=(",", ":")).encode("utf-8")).hexdigest()
-            payload["predicate_closures"] = {"plan-ready": {"producer": "manifest-discovery", "verifier": "consumer-trace", "mode": "exact", "producer_members": members, "verifier_members": members, "members": members, "closure_root": closure_root}}
+            payload["predicate_closures"] = {"plan-ready": {"producer": "manifest-discovery", "verifier": "consumer-trace", "producer_discovery": {"id": "builtin:in-closure-proofs"}, "verifier_discovery": {"id": "builtin:typed-proofs"}, "mode": "exact", "producer_members": members, "verifier_members": members, "members": members, "closure_root": closure_root}}
             payload["baseline"] = {"records": {"tracked": blob}}
-            payload["proofs"] = [
-                {"id": "tracked", "classification": "IN-CLOSURE", "artifact_type": "static", "dimension_verdicts": {dimension: "PASS" for dimension in ("schema_producer_authority", "immutable_identity", "source_of_truth_derivation", "independent_recomputation", "staleness_propagation", "recovery_supersession", "consumer_authorization_boundary")}, "identity": {"kind": "git-tracked", "tree": tree, "path": "tracked.txt", "mode": mode, "blob": blob}, "lineage": {"status": "unchanged", "predecessor": blob}},
-                {"id": "runtime", "classification": "IN-CLOSURE", "artifact_type": "runtime", "runtime_kind": "validation-result", "content_path": "runtime.bin", "dimension_verdicts": {dimension: "PASS" for dimension in ("schema_producer_authority", "immutable_identity", "source_of_truth_derivation", "independent_recomputation", "staleness_propagation", "recovery_supersession", "consumer_authorization_boundary")}, "identity": {"kind": "binary", "sha256": binary_hash, "byte_length": len(binary.read_bytes())}, "lineage": {"status": "new", "predecessor": None}}
-            ]
+            static = dict(payload["proofs"][0])
+            runtime = dict(payload["proofs"][1])
+            static.update({"id": "tracked", "identity": {"kind": "git-tracked", "tree": tree, "path": "tracked.txt", "mode": mode, "blob": blob}, "lineage": {"status": "unchanged", "predecessor": blob}})
+            runtime.update({"id": "runtime", "content_path": "runtime.bin", "identity": {"kind": "binary", "sha256": binary_hash, "byte_length": len(binary.read_bytes())}, "lineage": {"status": "new", "predecessor": None}})
+            payload["proofs"] = [static, runtime]
             package = root / "package.json"
             package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
             completed = subprocess.run([sys.executable, str(script), str(package), "--repository-root", str(root)], capture_output=True, text=True, encoding="utf-8")
@@ -119,6 +152,99 @@ class SkillContractTests(unittest.TestCase):
                 self.assertEqual(1, completed.returncode)
                 self.assertIn("VDD-PACKAGE-DIMENSION:" + dimension, completed.stdout)
 
+    def test_authorization_package_rejects_unknown_producer_authority(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        source = SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = json.loads(source.read_text(encoding="utf-8"))
+            payload["proofs"][0]["producer_authority"]["id"] = "forged-producer"
+            package = Path(tmp) / "package.json"
+            package.write_text(json.dumps(payload), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("VDD-PACKAGE-DIMENSION:schema_producer_authority", completed.stdout)
+
+    def test_authorization_package_rejects_shared_closure_discovery_callable(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        source = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = json.loads(source.read_text(encoding="utf-8"))
+            closure = payload["predicate_closures"]["plan-ready"]
+            closure["verifier_discovery"] = dict(closure["producer_discovery"])
+            package = Path(tmp) / "package.json"
+            package.write_text(json.dumps(payload), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("VDD-PACKAGE-CLOSURE:plan-ready", completed.stdout)
+
+    def test_authorization_package_recomputes_generated_text_identity(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        source = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            text_path = root / "generated.txt"
+            text_path.write_bytes(b"line one\r\nline two\r\n")
+            payload = json.loads(source.read_text(encoding="utf-8"))
+            identity = {
+                "kind": "generated-text",
+                "canonicalization_rule": "utf8-lf-v1",
+                "normalized_sha256": "sha256:" + __import__("hashlib").sha256(b"line one\nline two\n").hexdigest(),
+                "raw_sha256": "sha256:" + __import__("hashlib").sha256(text_path.read_bytes()).hexdigest(),
+            }
+            for proof in payload["proofs"]:
+                proof["content_path"] = "generated.txt"
+                proof["identity"] = dict(identity)
+            package = root / "package.json"
+            package.write_text(json.dumps(payload), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package), "--repository-root", str(root)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+
+    def test_authorization_package_rejects_unregistered_external_validation_envelope(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            envelope = Path(tmp) / "external-envelope.json"
+            envelope.write_text(json.dumps({"root_id": "forged", "signer": "forged"}), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(fixture), "--external-envelope", str(envelope)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode)
+
+    def test_authorization_package_rejects_unsigned_registered_external_envelope(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            envelope = Path(tmp) / "external-envelope.json"
+            envelope.write_text(json.dumps({
+                "schema_version": "vdd.external-validation-envelope.v1",
+                "root_id": "vdd-local-deterministic",
+                "signer": "repository-local-deterministic-runner",
+                "validator_identity": "vdd.authorization_proof_package.validate.v1",
+                "package_sha256": "sha256:" + __import__("hashlib").sha256(fixture.read_bytes()).hexdigest(),
+            }), encoding="utf-8", newline="\n")
+            completed = subprocess.run([sys.executable, str(script), str(fixture), "--external-envelope", str(envelope)], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("VDD-PACKAGE-EXTERNAL-ENVELOPE", completed.stdout)
+        self.assertIn("VDD-PACKAGE-EXTERNAL-ENVELOPE", completed.stdout)
+
     def test_authorization_package_orchestrator_reports_seven_mutation_checks(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
         fixture = SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json"
@@ -126,7 +252,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertEqual(7, len(payload["mutation_checks"]))
-        self.assertTrue(all(item["rejected"] for item in payload["mutation_checks"]))
+        self.assertTrue(all(item["status"] == "rejected" for item in payload["mutation_checks"]))
 
     def test_authorization_package_result_binds_current_inputs_and_rule_checks(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
@@ -151,6 +277,23 @@ class SkillContractTests(unittest.TestCase):
             )},
             {item["rule_id"] for item in payload["checks"]},
         )
+
+    def test_authorization_package_result_uses_bootstrap_mutation_contract(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json"
+        completed = subprocess.run(
+            [sys.executable, str(script), str(fixture), "--orchestrate"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(
+            {"dimension", "expected_rule_id", "status"},
+            set(payload["mutation_checks"][0]),
+        )
+        self.assertEqual("rejected", payload["mutation_checks"][0]["status"])
 
     def test_clean_skill_passes(self) -> None:
         result = self.validator.validate_skill(SKILL_ROOT)

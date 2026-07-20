@@ -8,6 +8,7 @@ import importlib.util
 import json
 import re
 import sys
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -67,11 +68,11 @@ def validate_authorization_proof_package(skill_root: Path, contract: dict[str, A
         return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(golden_path), "schema or dimensions are invalid")]
     if golden.get("roles") != schema.get("required_roles"):
         return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(golden_path), "required roles are incomplete")]
-    if schema.get("proof_required_fields") != ["id", "classification", "artifact_type", "dimension_verdicts", "identity", "lineage"] or schema.get("runtime_proof_required_fields") != ["runtime_kind"]:
+    if schema.get("proof_required_fields") != ["id", "classification", "artifact_type", "dimension_verdicts", "producer_authority", "derivation", "recomputation", "staleness", "consumer_authorization", "identity", "lineage"] or schema.get("runtime_proof_required_fields") != ["runtime_kind"]:
         return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(schema_path), "static and runtime proof contract is incomplete")]
     if schema.get("binding_required_fields") != ["candidate_hash", "source_hash", "validator_root", "authority_root", "closure_definition_hash"]:
         return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(schema_path), "fresh authorization bindings are incomplete")]
-    if schema.get("predicate_closure_required_fields") != ["producer", "verifier", "mode", "members", "producer_members", "verifier_members", "closure_root"]:
+    if schema.get("predicate_closure_required_fields") != ["producer", "verifier", "producer_discovery", "verifier_discovery", "mode", "members", "producer_members", "verifier_members", "closure_root"]:
         return [finding("VDD-ARTIFACT-PROOF-CLOSURE", str(schema_path), "independent closure contract is incomplete")]
     lineage = schema.get("lineage")
     if not isinstance(lineage, dict) or lineage.get("baseline_records") is not True or set(lineage) != {"baseline_records", "new", "unchanged", "supersedes"}:
@@ -84,6 +85,25 @@ def validate_authorization_proof_package(skill_root: Path, contract: dict[str, A
         return [finding("VDD-ARTIFACT-PROOF-CLOSURE", str(golden_path), "closure policy is incomplete")]
     if golden.get("assurance_level") != "deterministic-package":
         return [finding("VDD-RESULT-ASSURANCE", str(golden_path), "golden package must be deterministic-package")]
+    runner = skill_root / "scripts" / "authorization_proof_package.py"
+    completed = subprocess.run(
+        [sys.executable, str(runner), str(golden_path), "--orchestrate"],
+        capture_output=True, text=True, encoding="utf-8",
+    )
+    try:
+        envelope = parse_json(completed.stdout)
+    except (ValueError, json.JSONDecodeError) as exc:
+        return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(golden_path), f"runner output invalid: {exc}")]
+    expected_mutations = {
+        (dimension, f"VDD-PACKAGE-DIMENSION:{dimension}") for dimension in PROOF_DIMENSIONS
+    }
+    observed_mutations = {
+        (item.get("dimension"), item.get("expected_rule_id"))
+        for item in envelope.get("mutation_checks", [])
+        if isinstance(item, dict) and item.get("status") == "rejected"
+    }
+    if completed.returncode != 0 or envelope.get("status") != "PASS" or observed_mutations != expected_mutations:
+        return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(golden_path), "golden package execution or isolated mutations failed")]
     return []
 
 
@@ -862,6 +882,7 @@ def validate_skill(skill_root: Path) -> dict[str, Any]:
         "compliant-trace-fixture",
         "implementation-first-trace-fixture",
         "write-before-clarification-trace-fixture",
+        "authorization-proof-package-execution",
     ]
     try:
         contract = load_contract(skill_root)

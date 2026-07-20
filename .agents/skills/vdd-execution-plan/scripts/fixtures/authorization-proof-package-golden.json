@@ -13,6 +13,13 @@
     "projection": ["required-inventory", "resolved-proof-registry", "runtime-type-proof", "predicate-closure"],
     "execution": ["refresh", "independent-validator", "mutation-suite", "result-envelope"]
   },
+  "semantic_contract": {
+    "authorities": {"golden-authority": {"id": "golden-authority", "path": "references/authorization-proof-package.md", "kind": "protocol"}},
+    "derivation_rules": {"golden-derivation": {"id": "golden-derivation", "source": "required-inventory", "target": "resolved-proof-registry", "rule_id": "VDD-GOLDEN-DERIVATION"}},
+    "validators": {"golden-validator": {"id": "golden-validator", "path": "scripts/authorization_proof_package.py", "callable": "validate", "rule_id": "VDD-GOLDEN-VALIDATOR"}},
+    "invalidation_contracts": {"golden-invalidation": {"id": "golden-invalidation", "inputs": ["candidate_hash"], "invalidates": ["plan-ready"], "rule_id": "VDD-GOLDEN-STALE"}},
+    "consumers": {"golden-consumer": {"id": "golden-consumer", "predicate": "plan-ready", "authorizes": [], "does_not_authorize": ["protected-handoff", "release-ready"]}}
+  },
   "identity_policy": {
     "tracked": ["git-tree", "git-path", "git-mode", "git-blob"],
     "binary": ["raw-sha256", "byte-length"],
@@ -24,7 +31,7 @@
     "shared_superset_requires_proof": true
   },
   "predicate_closures": {
-    "plan-ready": {"producer": "static-discovery", "verifier": "trace-discovery", "mode": "exact", "members": ["golden-static", "golden-runtime"], "producer_members": ["golden-static", "golden-runtime"], "verifier_members": ["golden-static", "golden-runtime"], "closure_root": "sha256:0a5ec5534420e7ff6ba04a72382c60f3a08fb52547aca33a7a34a6001ed6fe25"}
+    "plan-ready": {"producer": "static-discovery", "verifier": "trace-discovery", "producer_discovery": {"id": "builtin:in-closure-proofs"}, "verifier_discovery": {"id": "builtin:typed-proofs"}, "mode": "exact", "members": ["golden-static", "golden-runtime"], "producer_members": ["golden-static", "golden-runtime"], "verifier_members": ["golden-static", "golden-runtime"], "closure_root": "sha256:0a5ec5534420e7ff6ba04a72382c60f3a08fb52547aca33a7a34a6001ed6fe25"}
   },
   "proofs": [
     {
@@ -40,6 +47,11 @@
         "recovery_supersession": "PASS",
         "consumer_authorization_boundary": "PASS"
       },
+      "producer_authority": {"id": "golden-authority", "path": "references/authorization-proof-package.md", "kind": "protocol"},
+      "derivation": {"id": "golden-derivation", "source": "required-inventory", "target": "resolved-proof-registry", "rule_id": "VDD-GOLDEN-DERIVATION"},
+      "recomputation": {"id": "golden-validator", "path": "scripts/authorization_proof_package.py", "callable": "validate", "rule_id": "VDD-GOLDEN-VALIDATOR"},
+      "staleness": {"id": "golden-invalidation", "inputs": ["candidate_hash"], "invalidates": ["plan-ready"], "rule_id": "VDD-GOLDEN-STALE"},
+      "consumer_authorization": {"id": "golden-consumer", "predicate": "plan-ready", "authorizes": [], "does_not_authorize": ["protected-handoff", "release-ready"]},
       "identity": {"kind": "git-tracked", "tree": "HEAD", "path": "plans/golden.json", "mode": "100644", "blob": "placeholder"},
       "lineage": {"status": "new", "predecessor": null}
     },
@@ -57,6 +69,11 @@
         "recovery_supersession": "PASS",
         "consumer_authorization_boundary": "PASS"
       },
+      "producer_authority": {"id": "golden-authority", "path": "references/authorization-proof-package.md", "kind": "protocol"},
+      "derivation": {"id": "golden-derivation", "source": "required-inventory", "target": "resolved-proof-registry", "rule_id": "VDD-GOLDEN-DERIVATION"},
+      "recomputation": {"id": "golden-validator", "path": "scripts/authorization_proof_package.py", "callable": "validate", "rule_id": "VDD-GOLDEN-VALIDATOR"},
+      "staleness": {"id": "golden-invalidation", "inputs": ["candidate_hash"], "invalidates": ["plan-ready"], "rule_id": "VDD-GOLDEN-STALE"},
+      "consumer_authorization": {"id": "golden-consumer", "predicate": "plan-ready", "authorizes": [], "does_not_authorize": ["protected-handoff", "release-ready"]},
       "identity": {"kind": "binary", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "byte_length": 0},
       "lineage": {"status": "new", "predecessor": null}
     }

@@ -1,0 +1,14 @@
+{
+  "schema_version": "vdd.artifact-proof-roots.v1",
+  "roots": {
+    "vdd-local-deterministic": {
+      "protocol_revision": "v1",
+      "allowed_artifact_classes": ["normative", "projection", "execution"],
+      "allowed_consumers": ["bootstrap-upstream-plan"],
+      "permission_ceiling": "deterministic-package-validation",
+      "lineage_policy": "append-only-successor-no-rewrite",
+      "validator_identity": "vdd.authorization_proof_package.validate.v1",
+      "trusted_signer": "repository-local-deterministic-runner"
+    }
+  }
+}

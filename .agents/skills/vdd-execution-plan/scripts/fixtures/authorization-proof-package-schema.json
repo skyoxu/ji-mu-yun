@@ -15,10 +15,10 @@
     "execution": ["refresh", "independent-validator", "mutation-suite", "result-envelope"]
   },
   "closure_member_verdicts": ["PASS", "N/A"],
-  "proof_required_fields": ["id", "classification", "artifact_type", "dimension_verdicts", "identity", "lineage"],
+  "proof_required_fields": ["id", "classification", "artifact_type", "dimension_verdicts", "producer_authority", "derivation", "recomputation", "staleness", "consumer_authorization", "identity", "lineage"],
   "binding_required_fields": ["candidate_hash", "source_hash", "validator_root", "authority_root", "closure_definition_hash"],
   "runtime_proof_required_fields": ["runtime_kind"],
-  "predicate_closure_required_fields": ["producer", "verifier", "mode", "members", "producer_members", "verifier_members", "closure_root"],
+  "predicate_closure_required_fields": ["producer", "verifier", "producer_discovery", "verifier_discovery", "mode", "members", "producer_members", "verifier_members", "closure_root"],
   "lineage": {
     "baseline_records": true,
     "new": {"baseline": "absent", "predecessor": null},

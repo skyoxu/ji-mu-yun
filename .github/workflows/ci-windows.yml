@@ -61,6 +61,13 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Authorization closure Skills (Python, hard gate)
+        shell: pwsh
+        run: |
+          py -3 -m unittest discover -s .agents/skills/vdd-execution-plan/scripts/tests -p "test_validate_skill_contract.py" -v
+          py -3 .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan
+          py -3 -m unittest discover -s .agents/skills/run-phase-bootstrap-review/tests -p "test_bootstrap_review.py" -k authorization_closure -v
+
       - name: Hard gates bundle (Python)
         shell: pwsh
         run: |
