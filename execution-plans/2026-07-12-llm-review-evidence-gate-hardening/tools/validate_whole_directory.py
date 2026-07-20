@@ -591,7 +591,7 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             "review-policy://bootstrap-upstream-plan/v1",
             "plan-authority",
             "authority-graph-and-current-state",
-            ["plan-source", "original-requirements", "repository-rules", "current-state", "referenced-standards", "schemas-and-fixtures"],
+            ["plan-source", "original-requirements", "repository-rules", "current-state", "referenced-standards", "schemas-and-fixtures", "authorization-closure-package", "authorization-closure-validation-result"],
             {"blind_hunter": "medium", "edge_case_hunter": "high", "acceptance_auditor": "high", "independent_verifier": "high"},
         ),
         "bootstrap-implementation-conformance": (

@@ -89,6 +89,25 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(1, completed.returncode)
         self.assertIn("VDD-PACKAGE-INTEGRATION-EXECUTION", completed.stdout)
 
+    def test_authorization_package_rejects_zero_exit_integration_without_pass_envelope(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            validator = root / "validator.py"
+            validator.write_text("import json\nprint(json.dumps({}))\n", encoding="utf-8", newline="\n")
+            registry = root / "integration.json"
+            registry.write_text(json.dumps({
+                "schema_version": "vdd.authorization-proof-package-integration.v1",
+                "fixtures": [
+                    {"id": "golden", "kind": "golden", "package": str(fixture), "expected_assurance": "deterministic-package"},
+                    {"id": "zero-exit-invalid", "kind": "integration", "package": str(fixture), "validator": str(validator), "arguments": [], "expected_assurance": "deterministic-package", "expected_result_schema": "rmap.validation-result.v1", "expected_predicate": "plan-ready", "expected_status": "pass", "required_bindings": ["candidate_hash", "current_candidate_hash"]},
+                ],
+            }), encoding="utf-8", newline="\n")
+            completed = subprocess.run([sys.executable, str(script), str(fixture), "--integration-registry", str(registry)], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("VDD-PACKAGE-INTEGRATION-RESULT", completed.stdout)
+
     def test_authorization_package_rejects_self_registered_semantic_authority(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
         fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"

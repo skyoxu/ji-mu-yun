@@ -397,6 +397,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.prepare()
         self.complete_preflight()
         self.assertEqual(0, bootstrap.main(["authorize-launch", "--run-dir", str(self.run_dir)]))
+        self.complete_layers()
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
 
     def complete_process_lease(self, operation_id: str, role: str) -> None:
         child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])

@@ -12,7 +12,12 @@
       "kind": "integration",
       "package": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
       "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py",
-      "expected_assurance": "deterministic-package"
+      "arguments": ["--predicate", "plan-ready"],
+      "expected_assurance": "deterministic-package",
+      "expected_result_schema": "rmap.validation-result.v1",
+      "expected_predicate": "plan-ready",
+      "expected_status": "pass",
+      "required_bindings": ["candidate_hash", "current_candidate_hash", "source_hash", "validator_root", "authority_root", "closure_definition_hash"]
     }
   ]
 }

@@ -459,6 +459,23 @@ def validate_integration_registry(repository_root: Path, registry_path: Path) ->
             completed = subprocess.run(command, cwd=repository_root, capture_output=True, text=True, encoding="utf-8")
             if completed.returncode != 0:
                 findings.append("VDD-PACKAGE-INTEGRATION-EXECUTION")
+                continue
+            try:
+                result = json.loads(completed.stdout)
+            except json.JSONDecodeError:
+                findings.append("VDD-PACKAGE-INTEGRATION-RESULT")
+                continue
+            required_bindings = item.get("required_bindings")
+            if (
+                not isinstance(result, dict)
+                or result.get("schema_version") != item.get("expected_result_schema")
+                or result.get("predicate") != item.get("expected_predicate")
+                or result.get("status") != item.get("expected_status")
+                or not isinstance(required_bindings, list)
+                or any(not isinstance(result.get(field), str) or not result[field].startswith("sha256:") for field in required_bindings)
+                or result.get("candidate_hash") != result.get("current_candidate_hash")
+            ):
+                findings.append("VDD-PACKAGE-INTEGRATION-RESULT")
     return sorted(set(findings))
 
 
