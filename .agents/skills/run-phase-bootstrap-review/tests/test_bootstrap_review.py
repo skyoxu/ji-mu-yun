@@ -33,6 +33,30 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.target.write_text("# Plan\n\nUnsafe authority rule.\n", encoding="utf-8", newline="\n")
         self.unrelated = self.scope / "zz-unrelated.md"
         self.unrelated.write_text("# Unrelated\n", encoding="utf-8", newline="\n")
+        self.authorization_package = self.scope / "authorization-closure-package.json"
+        self.authorization_result = self.scope / "authorization-closure-validation-result.json"
+        package = {
+            "schema_version": "vdd.authorization-proof-package.v1",
+            "assurance_level": "deterministic-package",
+            "bindings": {
+                "candidate_hash": "sha256:" + "1" * 64,
+                "source_hash": "sha256:" + "2" * 64,
+                "validator_root": "sha256:" + "3" * 64,
+                "authority_root": "sha256:" + "4" * 64,
+                "closure_definition_hash": "sha256:" + "5" * 64,
+            },
+        }
+        self.authorization_package.write_text(json.dumps(package, indent=2) + "\n", encoding="utf-8", newline="\n")
+        result = {
+            "schema_version": "vdd.authorization-proof-package-result.v1",
+            "assurance_level": "deterministic-package",
+            "package_sha256": bootstrap.file_hash(self.authorization_package),
+            "status": "PASS",
+            **package["bindings"],
+            "checks": [{"rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}", "status": "pass", "evidence": ["fixture"]} for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS],
+            "mutation_checks": [{"dimension": dimension, "status": "rejected", "expected_rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}"} for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS],
+        }
+        self.authorization_result.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
         root_relative = Path(".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json")
         root_target = self.repo / root_relative
         root_target.parent.mkdir(parents=True, exist_ok=True)
@@ -69,7 +93,11 @@ class BootstrapReviewCliTests(unittest.TestCase):
         profile_contract = bootstrap.load_profile(profile)
         context_args = []
         for context_class in profile_contract["requiredContextClasses"]:
-            context_args.extend(["--context-class", f"{context_class}={self.scope}"])
+            context_path = {
+                "authorization-closure-package": self.authorization_package,
+                "authorization-closure-validation-result": self.authorization_result,
+            }.get(context_class, self.scope)
+            context_args.extend(["--context-class", f"{context_class}={context_path}"])
         required_check_args = []
         if profile_contract["planBoundCheckPolicy"]["required"]:
             required_check_args = ["--required-check", f"implementation-proof={self.scope}"]
@@ -263,6 +291,60 @@ class BootstrapReviewCliTests(unittest.TestCase):
         result["status"] = "passed"
         self.write_json("preflight-result.json", result)
 
+    def test_authorization_closure_result_rejects_stale_result_binding(self) -> None:
+        package = {
+            "schema_version": "vdd.authorization-proof-package.v1",
+            "assurance_level": "deterministic-package",
+            "bindings": {
+                "candidate_hash": "sha256:" + "1" * 64,
+                "source_hash": "sha256:" + "2" * 64,
+                "validator_root": "sha256:" + "3" * 64,
+                "authority_root": "sha256:" + "4" * 64,
+                "closure_definition_hash": "sha256:" + "5" * 64,
+            },
+        }
+        result = {
+            "schema_version": "vdd.authorization-proof-package-result.v1",
+            "assurance_level": "deterministic-package",
+            "package_sha256": "sha256:" + "0" * 64,
+            "status": "PASS",
+            "candidate_hash": package["bindings"]["candidate_hash"],
+            "source_hash": package["bindings"]["source_hash"],
+            "validator_root": package["bindings"]["validator_root"],
+            "authority_root": package["bindings"]["authority_root"],
+            "closure_definition_hash": package["bindings"]["closure_definition_hash"],
+            "checks": [
+                {
+                    "rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}",
+                    "status": "pass",
+                    "evidence": ["package-dimension-verdicts"],
+                }
+                for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS
+            ],
+            "mutation_checks": [
+                {
+                    "dimension": dimension,
+                    "status": "rejected",
+                    "expected_rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}",
+                }
+                for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS
+            ],
+        }
+        result["candidate_hash"] = "sha256:" + "f" * 64
+        errors = bootstrap.validate_authorization_closure_result(package, result)
+        self.assertIn("result candidate_hash does not bind the package", errors)
+
+    def test_authorization_closure_preflight_blocks_tampered_result_before_launch(self) -> None:
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        result["candidate_hash"] = "sha256:" + "f" * 64
+        self.authorization_result.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
+        subprocess.run(["git", "add", "upstream-plan/authorization-closure-validation-result.json"], cwd=self.repo, check=True)
+        subprocess.run(["git", "commit", "-qm", "invalid authorization result"], cwd=self.repo, check=True)
+        self.prepare()
+        self.complete_preflight()
+        self.assertEqual(1, bootstrap.main(["authorize-launch", "--run-dir", str(self.run_dir)]))
+        self.assertFalse((self.run_dir / "review-launch-authorization.json").exists())
+
     def complete_process_lease(self, operation_id: str, role: str) -> None:
         child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
         self.addCleanup(lambda: child.poll() is None and child.kill())
@@ -307,7 +389,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
     def candidate(self, candidate_id: str = "BOOT-CANDIDATE-001", severity: str = "P1") -> dict:
         manifest = self.read_json("review-input.json")
-        artifact = manifest["artifacts"][0]
+        artifact = next(item for item in manifest["artifacts"] if item["artifact"] == "upstream-plan/plan.md")
         return {
             "candidateId": candidate_id,
             "artifactKind": "plan",
@@ -521,7 +603,13 @@ class BootstrapReviewCliTests(unittest.TestCase):
                         *[
                             item
                             for context_class in bootstrap.load_profile(profile_name)["requiredContextClasses"]
-                            for item in ("--context-class", f"{context_class}={self.scope}")
+                            for item in (
+                                "--context-class",
+                                f"{context_class}=" + str({
+                                    "authorization-closure-package": self.authorization_package,
+                                    "authorization-closure-validation-result": self.authorization_result,
+                                }.get(context_class, self.scope)),
+                            )
                         ],
                     ]
                 )
@@ -702,6 +790,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn("Fallback models: `gpt-5.5, gpt-5.4`", verifier_prompt)
         self.assertIn("Forbidden models: `gpt-5.6-sol`", verifier_prompt)
         self.assertIn("Reasoning effort: `high`", verifier_prompt)
+        self.assertIn("exact closure\nmember, stable dimension rule ID, and reachable authorization outcome", verifier_prompt)
 
     def test_gate_stops_before_review_when_preflight_is_pending(self) -> None:
         self.prepare()
@@ -919,6 +1008,27 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(["blind_hunter", "edge_case_hunter"], findings[0]["sourceReviewers"])
         self.assertEqual("duplicate", self.read_json("review-rejections.json")["rejections"][0]["reasonCode"])
         self.assertEqual("awaiting_verification", self.read_json("review-gate-result.json")["status"])
+
+    def test_gate_aggregates_authorization_closure_blockers_by_reachable_outcome(self) -> None:
+        self.prepare()
+        first = self.candidate("BOOT-CANDIDATE-101", "P1")
+        second = self.candidate("BOOT-CANDIDATE-102", "P1")
+        for candidate in (first, second):
+            candidate["authorizationPredicate"] = "plan-ready"
+            candidate["authorityRootCause"] = "self-referential derivation rule"
+            candidate["dimension"] = "plan"
+            candidate["badOutcome"] = "Plan-ready can authorize stale evidence"
+        second["triggerInput"] = "A second closure member reaches the same authorization bypass"
+        second["requiredState"] = "All closure members must derive from an independent source"
+        self.complete_layers({"blind_hunter": [first], "edge_case_hunter": [second]})
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        findings = self.read_json("review-candidates.json")["findings"]
+        self.assertEqual(1, len(findings))
+        self.assertEqual("plan-ready", findings[0]["authorizationPredicate"])
+        self.assertEqual(
+            [first["artifact"]],
+            findings[0]["affectedArtifacts"],
+        )
 
     def test_gate_keeps_same_evidence_with_distinct_failure_tuple(self) -> None:
         self.prepare()

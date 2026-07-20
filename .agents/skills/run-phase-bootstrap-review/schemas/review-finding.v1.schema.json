@@ -72,7 +72,15 @@
     "unverifiedDisposition": { "enum": ["blocking", "manual_pause"] },
     "authorityOwner": { "type": "string", "minLength": 1 },
     "consumer": { "type": "string", "minLength": 1 },
-    "validatorRef": { "type": "string", "minLength": 1 }
+    "validatorRef": { "type": "string", "minLength": 1 },
+    "authorizationPredicate": { "type": "string", "minLength": 1 },
+    "authorityRootCause": { "type": "string", "minLength": 1 },
+    "affectedArtifacts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
   },
   "allOf": [
     {

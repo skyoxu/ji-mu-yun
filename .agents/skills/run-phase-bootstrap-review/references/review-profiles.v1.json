@@ -3,7 +3,7 @@
   "profiles": {
     "bootstrap-upstream-plan": {
       "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
-      "policyRevision": "sha256:d4077a8c91b9b271ff3607548b3575d1616d14dc3c10733849856959ee6ebc0a",
+      "policyRevision": "sha256:7a8dc7e65858512b3aea6b2b15610bb91c04f484f34e88ebf2ab080d85027b05",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -15,7 +15,9 @@
         "repository-rules",
         "current-state",
         "referenced-standards",
-        "schemas-and-fixtures"
+        "schemas-and-fixtures",
+        "authorization-closure-package",
+        "authorization-closure-validation-result"
       ],
       "requiredLayers": [
         "blind_hunter",
@@ -73,9 +75,9 @@
             "Prefer reachable bad outcomes over hypothetical completeness or style suggestions."
           ],
           "acceptance_auditor": [
-            "Map each candidate to a current-phase requirement, accountable owner, consumer, validator, and acceptance evidence.",
-            "Distinguish plan readiness, implementation acceptance, and release authority before claiming missing work.",
-            "Do not report planned, paused, successor-owned, or explicitly non-applicable requirements as current defects."
+            "Check whether the plan threat model matches predicate authority, whether the closure supports its claimed plan-ready state, and whether real consumers are outside deterministic closure.",
+            "Distinguish plan readiness, implementation acceptance, and release authority; calibrate P0/P1 only to the reachable authorization outcome.",
+            "Do not repeat the seven deterministic proof dimensions or report planned, paused, successor-owned, or explicitly non-applicable requirements as current defects."
           ]
         },
         "falsePositiveRules": [
@@ -136,6 +138,8 @@
         "requiredChecks": [
           "scope-structure-and-links",
           "schema-and-fixture-parse",
+          "authorization-closure-package",
+          "authorization-closure-mutations",
           "plan-composite-validator"
         ]
       }

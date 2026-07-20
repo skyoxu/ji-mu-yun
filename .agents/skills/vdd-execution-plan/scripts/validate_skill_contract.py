@@ -15,41 +15,11 @@ from typing import Any
 
 CONTRACT_PATH = Path("scripts/skill-contract.json")
 HASH_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
-TRUST_ROOT_ID = "repository-maintenance-tdd-adapter"
-TRUST_ROOT_AUTHORITY_PATH = "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json"
-TRUST_ROOT_PREDECESSOR_SHA256 = "sha256:2c0c297c20fbf46daaea5eca1836c9b3e51ce9699749eae2152cafd57a6b2544"
-TRUST_ROOT_AUTHORITY_REVISION = "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202"
-TRUST_ROOT_STANDARD_PATH = ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md"
-TRUST_ROOT_STANDARD_SHA256 = "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140"
-TRUST_ROOT_EXTERNAL_PATH = ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json"
-TRUST_ROOT_DIAGNOSTIC_VERIFIER_PATH = Path.home() / ".codex" / "skills" / "run-phase-bootstrap-review" / "scripts" / "verify_artifact_proof_boundary.py"
-TRUST_ROOT_VALIDATOR_PATH = ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py"
-TRUST_ROOT_NEGATIVE_TEST_PATH = ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py"
-TRUST_ROOT_SCHEMA_PATH = "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json"
-TRUST_ROOT_FAILURE_IDS = [
-    "VDD-ARTIFACT-PROOF-PRODUCER",
-    "VDD-ARTIFACT-PROOF-IDENTITY",
-    "VDD-ARTIFACT-PROOF-DERIVATION",
-    "VDD-ARTIFACT-PROOF-RULE",
-    "VDD-ARTIFACT-PROOF-STALENESS",
-    "VDD-ARTIFACT-PROOF-LINEAGE",
-    "VDD-ARTIFACT-PROOF-CONSUMER",
-    "VDD-ARTIFACT-PROOF-APPLICABILITY",
-]
-TRUST_ROOT_INVALIDATES = [
-    "artifact-proof-registry",
-    "runtime-artifact-type-proof",
-    "plan-repair-verified",
-    "plan-ready",
-]
-TRUST_ROOT_EXCLUSIONS = [
-    "plan-ready",
-    "slice-ready",
-    "bootstrap-review",
-    "implementation-accepted",
-    "protected-handoff",
-    "release-ready",
-]
+PROOF_DIMENSIONS = (
+    "schema_producer_authority", "immutable_identity", "source_of_truth_derivation",
+    "independent_recomputation", "staleness_propagation", "recovery_supersession",
+    "consumer_authorization_boundary",
+)
 
 
 def finding(rule_id: str, target: str, message: str) -> dict[str, str]:
@@ -82,105 +52,38 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def validate_artifact_proof_trust_roots(
-    skill_root: Path, contract: dict[str, Any]
-) -> list[dict[str, str]]:
-    trust_roots = contract.get("artifact_proof_trust_roots")
-    if not isinstance(trust_roots, dict) or set(trust_roots) != {TRUST_ROOT_ID}:
-        return [finding("VDD-ARTIFACT-PROOF-PRODUCER", str(CONTRACT_PATH), "the exact trust-root registry is required")]
-    root = trust_roots[TRUST_ROOT_ID]
-    required_fields = {
-        "artifact_path", "artifact_kind", "proof_scope", "finding_ids", "dimension_verdicts", "schema_producer_authority",
-        "immutable_identity", "source_of_truth_derivation", "independent_recomputation",
-        "staleness_propagation", "recovery_supersession", "consumer_authorization_boundary",
-    }
-    if not isinstance(root, dict) or set(root) != required_fields:
-        return [finding("VDD-ARTIFACT-PROOF-PRODUCER", TRUST_ROOT_ID, "trust root must use the complete artifact-proof template")]
-    expected_verdicts = {
-        "schema_producer_authority": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-PRODUCER"]},
-        "immutable_identity": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-IDENTITY"]},
-        "source_of_truth_derivation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-DERIVATION"]},
-        "independent_recomputation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-RULE"]},
-        "staleness_propagation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-STALENESS"]},
-        "recovery_supersession": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-LINEAGE"]},
-        "consumer_authorization_boundary": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-CONSUMER"]},
-    }
-    if root.get("proof_scope") != "static-contract" or root.get("dimension_verdicts") != expected_verdicts:
-        return [finding("VDD-ARTIFACT-PROOF-APPLICABILITY", TRUST_ROOT_ID, "trust root requires seven exact executable PASS verdicts")]
-    producer = root.get("schema_producer_authority")
-    expected_producer = {
-        "authority_path": TRUST_ROOT_STANDARD_PATH,
-        "authority_category": "protocol_authority",
-        "authority_sha256": TRUST_ROOT_STANDARD_SHA256,
-        "producer_kind": "manual-authority",
-        "generator_path": None,
-        "generator_sha256": None,
-    }
-    if root.get("artifact_path") != TRUST_ROOT_AUTHORITY_PATH or root.get("artifact_kind") != "normative" or root.get("finding_ids") != ["RMAP-1600-UNIFORM-ARTIFACT-PROOF"] or producer != expected_producer or sha256_file(skill_root / "references/strict-vdd-standard.md") != TRUST_ROOT_STANDARD_SHA256:
-        return [finding("VDD-ARTIFACT-PROOF-PRODUCER", TRUST_ROOT_ID, "producer authority is not the strict VDD protocol authority")]
-    identity = root.get("immutable_identity")
-    if not isinstance(identity, dict) or set(identity) != {"mode", "algorithm", "artifact_sha256", "authority_revision", "manifest_path"} or identity.get("mode") != "authority-root" or identity.get("algorithm") != "sha256-bytes" or not HASH_PATTERN.fullmatch(str(identity.get("artifact_sha256"))) or identity.get("authority_revision") != TRUST_ROOT_AUTHORITY_REVISION or identity.get("manifest_path") != "schemas/authority-manifest.v1.json":
-        return [finding("VDD-ARTIFACT-PROOF-IDENTITY", TRUST_ROOT_ID, "immutable authority identity is invalid")]
-    expected_input = {
-        "source": TRUST_ROOT_EXTERNAL_PATH,
-        "source_sha256": None,
-        "field": "/proof/immutable_identity/artifact_sha256",
-        "target_field": "$bytes",
-        "derivation": "external-hash-pin",
-    }
-    derivation = root.get("source_of_truth_derivation")
-    if derivation != {"rules": [expected_input]}:
-        return [finding("VDD-ARTIFACT-PROOF-DERIVATION", TRUST_ROOT_ID, "trust-root derivation is not the declared self-reference-safe hash pin")]
-    recomputation = root.get("independent_recomputation")
-    expected_recomputation = {
-        "rule_id": "vdd-skill-artifact-proof-trust-root.v1",
-        "validator_path": TRUST_ROOT_VALIDATOR_PATH,
-        "validator_sha256": sha256_file(skill_root / "scripts/validate_skill_contract.py"),
-        "callable": "validate_artifact_proof_trust_roots",
-        "negative_test_path": TRUST_ROOT_NEGATIVE_TEST_PATH,
-        "negative_test_sha256": sha256_file(skill_root / "scripts/tests/test_validate_skill_contract.py"),
-        "expected_failure_ids": TRUST_ROOT_FAILURE_IDS,
-    }
-    if recomputation != expected_recomputation:
-        return [finding("VDD-ARTIFACT-PROOF-RULE", TRUST_ROOT_ID, "independent recomputation identity is stale or incomplete")]
-    stale = root.get("staleness_propagation")
-    expected_stale = {
-        "inputs": [expected_input],
-        "invalidates": TRUST_ROOT_INVALIDATES,
-        "regeneration_command_id": "rmap-refresh-projections",
-        "revalidation_command_id": "rmap-plan-repair-validate",
-    }
-    if stale != expected_stale:
-        return [finding("VDD-ARTIFACT-PROOF-STALENESS", TRUST_ROOT_ID, "staleness closure is not exact")]
-    recovery = root.get("recovery_supersession")
-    expected_recovery = {
-        "history_policy": "append-only-successor-no-rewrite",
-        "schema_path": TRUST_ROOT_SCHEMA_PATH,
-        "lineage_fields": ["artifact_path", "immutable_identity", "recovery_supersession"],
-        "predecessor_policy": "external-vdd-skill-contract-revision",
-        "lifecycle_status": "supersedes",
-        "predecessor_sha256": TRUST_ROOT_PREDECESSOR_SHA256,
-    }
-    if recovery != expected_recovery:
-        return [finding("VDD-ARTIFACT-PROOF-LINEAGE", TRUST_ROOT_ID, "predecessor lineage is not the pinned append-only predecessor")]
-    boundary = root.get("consumer_authorization_boundary")
-    expected_boundary = {
-        "consumers": ["composite plan validator"],
-        "predicate": "artifact-contract-proof",
-        "authorizes": [],
-        "does_not_authorize": TRUST_ROOT_EXCLUSIONS,
-    }
-    if boundary != expected_boundary:
-        return [finding("VDD-ARTIFACT-PROOF-CONSUMER", TRUST_ROOT_ID, "trust-root permission lattice is not exact zero authority")]
-    external_root_path = skill_root.parents[2] / TRUST_ROOT_EXTERNAL_PATH
-    if external_root_path.is_file():
-        try:
-            external_document = load_json(external_root_path)
-            external_proof = external_document.get("proof")
-        except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
-            external_proof = None
-        if not isinstance(external_proof, dict) or external_proof != root:
-            return [finding("VDD-ARTIFACT-PROOF-IDENTITY", TRUST_ROOT_ID, "Skill trust-root mirror differs from Bootstrap-owned root")]
+def validate_authorization_proof_package(skill_root: Path, contract: dict[str, Any]) -> list[dict[str, str]]:
+    package = contract.get("authorization_proof_package")
+    if not isinstance(package, dict):
+        return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(CONTRACT_PATH), "package contract is required")]
+    schema_path = skill_root / package.get("schema_path", "")
+    golden_path = skill_root / package.get("golden_fixture_path", "")
+    try:
+        schema = load_json(schema_path)
+        golden = load_json(golden_path)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(CONTRACT_PATH), str(exc))]
+    if schema.get("dimensions") != list(PROOF_DIMENSIONS) or golden.get("schema_version") != schema.get("schema_version"):
+        return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(golden_path), "schema or dimensions are invalid")]
+    if golden.get("roles") != schema.get("required_roles"):
+        return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(golden_path), "required roles are incomplete")]
+    if schema.get("proof_required_fields") != ["id", "classification", "artifact_type", "dimension_verdicts", "identity", "lineage"] or schema.get("runtime_proof_required_fields") != ["runtime_kind"]:
+        return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(schema_path), "static and runtime proof contract is incomplete")]
+    if schema.get("binding_required_fields") != ["candidate_hash", "source_hash", "validator_root", "authority_root", "closure_definition_hash"]:
+        return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(schema_path), "fresh authorization bindings are incomplete")]
+    if schema.get("predicate_closure_required_fields") != ["producer", "verifier", "mode", "members", "producer_members", "verifier_members", "closure_root"]:
+        return [finding("VDD-ARTIFACT-PROOF-CLOSURE", str(schema_path), "independent closure contract is incomplete")]
+    lineage = schema.get("lineage")
+    if not isinstance(lineage, dict) or lineage.get("baseline_records") is not True or set(lineage) != {"baseline_records", "new", "unchanged", "supersedes"}:
+        return [finding("VDD-ARTIFACT-PROOF-LINEAGE", str(schema_path), "baseline lineage contract is incomplete")]
+    identity = golden.get("identity_policy", {})
+    if identity.get("tracked") != ["git-tree", "git-path", "git-mode", "git-blob"] or identity.get("binary") != ["raw-sha256", "byte-length"]:
+        return [finding("VDD-ARTIFACT-PROOF-IDENTITY", str(golden_path), "identity policy is incomplete")]
+    closure = golden.get("closure_policy", {})
+    if closure.get("producer_verifier_independent") is not True or closure.get("predicate_specific") is not True or closure.get("shared_superset_requires_proof") is not True:
+        return [finding("VDD-ARTIFACT-PROOF-CLOSURE", str(golden_path), "closure policy is incomplete")]
+    if golden.get("assurance_level") != "deterministic-package":
+        return [finding("VDD-RESULT-ASSURANCE", str(golden_path), "golden package must be deterministic-package")]
     return []
 
 
@@ -218,7 +121,7 @@ def load_contract(skill_root: Path) -> dict[str, Any]:
     validation_result = data.get("validation_result")
     if not isinstance(validation_result, dict):
         raise ValueError("skill contract validation_result must be an object")
-    for field_name in ("required_fields", "allowed_statuses", "allowed_check_statuses"):
+    for field_name in ("required_fields", "allowed_statuses", "allowed_check_statuses", "allowed_assurance_levels"):
         require_string_list(validation_result, field_name)
     authority_by_predicate = validation_result.get("authority_by_predicate")
     if not isinstance(authority_by_predicate, dict) or not authority_by_predicate:
@@ -230,9 +133,9 @@ def load_contract(skill_root: Path) -> dict[str, Any]:
             require_string_list(authority, field_name)
         if set(authority["authorizes"]) & set(authority["does_not_authorize"]):
             raise ValueError(f"skill contract authority policy overlaps for predicate {predicate}")
-    trust_root_findings = validate_artifact_proof_trust_roots(skill_root, data)
-    if trust_root_findings:
-        first = trust_root_findings[0]
+    package_findings = validate_authorization_proof_package(skill_root, data)
+    if package_findings:
+        first = package_findings[0]
         raise ValueError(f"{first['rule_id']}: {first['message']}")
     compliance = data.get("compliance")
     if not isinstance(compliance, dict):
@@ -372,6 +275,11 @@ def validate_result_fixture(skill_root: Path, fixture: Path) -> dict[str, Any]:
     if status not in rules["allowed_statuses"]:
         findings.append(
             finding("VDD-RESULT-STATUS", str(fixture), f"invalid status: {status!r}")
+        )
+
+    if data.get("assurance_level") not in rules["allowed_assurance_levels"]:
+        findings.append(
+            finding("VDD-RESULT-ASSURANCE", str(fixture), "invalid assurance_level")
         )
 
     for field_name in ("candidate_hash", "current_candidate_hash", "source_hash"):

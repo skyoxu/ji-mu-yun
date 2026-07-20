@@ -1,0 +1,29 @@
+{
+  "schema_version": "vdd.authorization-proof-package.v1",
+  "dimensions": [
+    "schema_producer_authority",
+    "immutable_identity",
+    "source_of_truth_derivation",
+    "independent_recomputation",
+    "staleness_propagation",
+    "recovery_supersession",
+    "consumer_authorization_boundary"
+  ],
+  "required_roles": {
+    "normative": ["proof-schema", "artifact-type-registry", "authority-root-registry", "rule-registry", "permission-lattice", "runtime-type-registry"],
+    "projection": ["required-inventory", "resolved-proof-registry", "runtime-type-proof", "predicate-closure"],
+    "execution": ["refresh", "independent-validator", "mutation-suite", "result-envelope"]
+  },
+  "closure_member_verdicts": ["PASS", "N/A"],
+  "proof_required_fields": ["id", "classification", "artifact_type", "dimension_verdicts", "identity", "lineage"],
+  "binding_required_fields": ["candidate_hash", "source_hash", "validator_root", "authority_root", "closure_definition_hash"],
+  "runtime_proof_required_fields": ["runtime_kind"],
+  "predicate_closure_required_fields": ["producer", "verifier", "mode", "members", "producer_members", "verifier_members", "closure_root"],
+  "lineage": {
+    "baseline_records": true,
+    "new": {"baseline": "absent", "predecessor": null},
+    "unchanged": {"baseline_equals_current": true, "predecessor": "baseline"},
+    "supersedes": {"baseline_differs_current": true, "predecessor": "baseline"}
+  },
+  "out_of_closure": {"classification": "OUT-OF-CLOSURE", "required_fields": ["reason_code", "machine_checks", "authorizes"]}
+}

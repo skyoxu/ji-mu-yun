@@ -10,11 +10,12 @@
 6. Behavior slices and implementation phases
 7. Counterexamples, diagnostics, repair, and re-entry
 8. Evidence, freshness, and authority levels
-9. LLM review gates
-10. BMad interoperability
-11. Directory and ledger contract
-12. Anti-patterns
-13. Assessment rubric
+9. Authorization proof package
+10. LLM review gates
+11. BMad interoperability
+12. Directory and ledger contract
+13. Anti-patterns
+14. Assessment rubric
 
 ## 1. Definition
 
@@ -281,7 +282,21 @@ Never infer a higher level from a lower one.
 
 Before any success claim, identify the full proof command, run it against the current candidate, read the complete result/exit/failure counts, and cite the resulting evidence. Old output, an earlier candidate, a partial test target, or a successful command invocation cannot support the claim.
 
-## 9. LLM review gates
+## 9. Authorization proof package
+
+An authorizing VDD plan uses one executable seven-dimensional Authorization Proof Package. The package is a role contract, not a fixed seven-file checklist. It has normative owners (schema, artifact and runtime type registries, authority roots, rules, permissions), derived projections (required inventory, resolved proof registry, runtime type proof, predicate closure), and execution owners (refresh, independent validation, isolated mutations, result envelope).
+
+Authorization-closure review closes only when the deterministic package passes, all seven isolated mutations reject with their expected stable rule IDs, independent closure membership agrees, the result is fresh against candidate/source/validator/authority/closure bindings, and Bootstrap has no accepted P0/P1. Reopen only for a stable rule failure, an actual predicate-consumer change, an authority or threat-model revision, or failed fresh hash-bound validation.
+
+Each in-closure proof records all seven dimensions: schema/producer authority, immutable identity, source-of-truth derivation, independent recomputation, staleness propagation, recovery/supersession, and consumer authorization boundary. In-closure verdicts are only `PASS` or typed `N/A`. `NON-AUTHORITATIVE` is never a dimension verdict: it is an out-of-closure classification that must state a reason code, machine exclusion checks, and an empty authorization set.
+
+Both static artifacts and runtime artifact types are first-class. Runtime types include validation results, finalized runs, successor authorization, candidate lineage, process events, and implementation candidates. Each authorizing predicate has a separately discovered consumer closure. The producer and verifier discovery entrypoints must be independent. A shared-superset closure must name the predicate's actual dependencies and prove their set inclusion in the shared members.
+
+Identity is recomputed, not trusted from projection fields: Git-tracked artifacts bind tree, path, mode, and blob; binary artifacts bind raw SHA-256 and byte length without text normalization. Lineage compares a proof against an independent baseline record: `new` means absent baseline and null predecessor; `unchanged` means equal baseline/current hash and predecessor equal to baseline hash; `supersedes` means unequal baseline/current hash and predecessor equal to baseline hash.
+
+One documented runner must refresh derived projections, recompute actual identities, independently validate the package, execute one isolated negative mutation for each dimension, and write the current restricted result envelope. A PASS is only `deterministic-package` assurance and must not imply fresh-context observation, cross-model stability, protected handoff, or release readiness.
+
+## 10. LLM review gates
 
 LLM reviewers are untrusted candidate producers unless an accepted policy explicitly says otherwise.
 
@@ -311,7 +326,7 @@ When model, reasoning, tool access, or session separation affects authority, rec
 
 `readArtifacts` is an attestation unless tool traces prove reads. Do not describe self-reported coverage as mechanical proof.
 
-## 10. BMad interoperability
+## 11. BMad interoperability
 
 BMad artifacts are optional first-party inputs, not runtime dependencies. When present, map them without duplicating authority:
 
@@ -330,7 +345,7 @@ BMad user-value epics and VDD control-plane prerequisites are distinct. Shared c
 
 Use BMad's root-cause routing and bounded re-derivation patterns, but replace self-reviewed readiness with the composite validator, hash-bound evidence, and protected verifier where required. Never inherit a fixed finding quota from an adversarial reviewer.
 
-## 11. Directory and ledger contract
+## 12. Directory and ledger contract
 
 Preferred ownership map for a new split directory:
 
@@ -356,7 +371,7 @@ Preferred ownership map for a new split directory:
 
 The source coverage map and requirement ledger must agree exactly. Generated Markdown views must derive from machine owners and must not become independent authority.
 
-## 12. Anti-patterns
+## 13. Anti-patterns
 
 Reject these patterns:
 
@@ -383,7 +398,7 @@ Reject these patterns:
 - A success claim cites an old, partial, or unparsed validation run.
 - Skill package fixtures are described as proof of fresh-context Agent compliance.
 
-## 13. Assessment rubric
+## 14. Assessment rubric
 
 Classify separately:
 

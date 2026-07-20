@@ -7,6 +7,7 @@
   "current_candidate_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "source_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "validator_version": "vdd-plan-validator@1.0.0",
+  "assurance_level": "deterministic-package",
   "authorizes": [
     "plan-ready"
   ],

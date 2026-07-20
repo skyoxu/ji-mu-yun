@@ -20,7 +20,7 @@
     "schema_producer_authority": {
       "authority_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
       "authority_category": "protocol_authority",
-      "authority_sha256": "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140",
+      "authority_sha256": "sha256:46fa5cb22eb527fff6390fb3b41d72e57e60e45dfc8d21f6756f0c3d70250827",
       "producer_kind": "manual-authority",
       "generator_path": null,
       "generator_sha256": null
@@ -28,8 +28,8 @@
     "immutable_identity": {
       "mode": "authority-root",
       "algorithm": "sha256-bytes",
-      "artifact_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
-      "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
+      "artifact_sha256": "sha256:168a35205a70c91045462631921d0c130439bed0ae5be94ac1b04c985c0eaacd",
+      "authority_revision": "sha256:46fa5cb22eb527fff6390fb3b41d72e57e60e45dfc8d21f6756f0c3d70250827",
       "manifest_path": "schemas/authority-manifest.v1.json"
     },
     "source_of_truth_derivation": {
@@ -46,10 +46,10 @@
     "independent_recomputation": {
       "rule_id": "vdd-skill-artifact-proof-trust-root.v1",
       "validator_path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
-        "validator_sha256": "sha256:53e742efa6a512245cf7ecc52c3fa40284bc79a345229117563f8960ff902e1b",
-      "callable": "validate_artifact_proof_trust_roots",
+      "validator_sha256": "sha256:fda535fe5105014ca658a4d42174f74473794d6914e9650ce7a400ef1120b47f",
+      "callable": "validate_authorization_proof_package",
       "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
-      "negative_test_sha256": "sha256:c8e27653e0a69231801110f6d66c0e6138be2dacb04bd845c9a7007057f9d466",
+      "negative_test_sha256": "sha256:9aa4c79087ef82fbcde40cc67f47ee4808a18ed0f06b3658bb13d694ab222ca8",
       "expected_failure_ids": [
         "VDD-ARTIFACT-PROOF-PRODUCER",
         "VDD-ARTIFACT-PROOF-IDENTITY",

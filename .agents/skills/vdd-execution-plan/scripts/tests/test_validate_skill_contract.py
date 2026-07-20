@@ -30,39 +30,154 @@ class SkillContractTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.validator = load_validator()
 
+    def test_authorization_proof_package_golden_declares_required_execution_role(self) -> None:
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        payload = json.loads(fixture.read_text(encoding="utf-8"))
+        self.assertEqual("deterministic-package", payload["assurance_level"])
+        self.assertIn("result-envelope", payload["roles"]["execution"])
+
+    def test_authorization_proof_package_validator_rejects_dimension_and_lineage_mutations(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        for mutate in (
+            lambda item: item["proofs"][0]["dimension_verdicts"].pop("immutable_identity"),
+            lambda item: item["proofs"][0]["lineage"].update({"status": "supersedes", "predecessor": None}),
+            lambda item: item["predicate_closures"]["plan-ready"].update({"mode": "shared-superset", "coverage_proof": False}),
+        ):
+            with self.subTest(mutate=mutate):
+                with tempfile.TemporaryDirectory() as tmp:
+                    candidate = Path(tmp) / "package.json"
+                    payload = json.loads(fixture.read_text(encoding="utf-8"))
+                    mutate(payload)
+                    candidate.write_text(json.dumps(payload), encoding="utf-8")
+                    completed = subprocess.run([sys.executable, str(script), str(candidate)], capture_output=True, text=True, encoding="utf-8")
+                self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+
+    def test_authorization_proof_package_orchestrator_writes_restricted_pass_envelope(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            result_path = Path(tmp) / "result.json"
+            completed = subprocess.run([sys.executable, str(script), str(fixture), "--result", str(result_path)], capture_output=True, text=True, encoding="utf-8")
+            payload = json.loads(result_path.read_text(encoding="utf-8"))
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        self.assertEqual("PASS", payload["status"])
+        self.assertEqual(["deterministic-package-validation"], payload["authorizes"])
+        self.assertIn("release-ready", payload["does_not_authorize"])
+
+    def test_authorization_proof_package_integration_registry_is_valid(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        registry = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-integration.json"
+        completed = subprocess.run([sys.executable, str(script), str(fixture), "--integration-registry", str(registry)], cwd=SKILL_ROOT.parents[2], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+
+    def test_authorization_package_recomputes_git_binary_closure_and_lineage(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tracked = root / "tracked.txt"
+            binary = root / "runtime.bin"
+            tracked.write_text("tracked\n", encoding="utf-8", newline="\n")
+            binary.write_bytes(b"\x00runtime\xff")
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "add", "tracked.txt"], cwd=root, check=True)
+            subprocess.run(["git", "-c", "user.name=VDD", "-c", "user.email=vdd@example.invalid", "commit", "-qm", "fixture"], cwd=root, check=True)
+            tree = subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], cwd=root, text=True).strip()
+            mode, _, blob, _ = subprocess.check_output(["git", "ls-tree", tree, "--", "tracked.txt"], cwd=root, text=True).split()
+            binary_hash = __import__("hashlib").sha256(binary.read_bytes()).hexdigest()
+            payload = json.loads((SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json").read_text(encoding="utf-8"))
+            members = ["tracked", "runtime"]
+            closure_root = "sha256:" + __import__("hashlib").sha256(json.dumps(sorted(members), separators=(",", ":")).encode("utf-8")).hexdigest()
+            payload["predicate_closures"] = {"plan-ready": {"producer": "manifest-discovery", "verifier": "consumer-trace", "mode": "exact", "producer_members": members, "verifier_members": members, "members": members, "closure_root": closure_root}}
+            payload["baseline"] = {"records": {"tracked": blob}}
+            payload["proofs"] = [
+                {"id": "tracked", "classification": "IN-CLOSURE", "artifact_type": "static", "dimension_verdicts": {dimension: "PASS" for dimension in ("schema_producer_authority", "immutable_identity", "source_of_truth_derivation", "independent_recomputation", "staleness_propagation", "recovery_supersession", "consumer_authorization_boundary")}, "identity": {"kind": "git-tracked", "tree": tree, "path": "tracked.txt", "mode": mode, "blob": blob}, "lineage": {"status": "unchanged", "predecessor": blob}},
+                {"id": "runtime", "classification": "IN-CLOSURE", "artifact_type": "runtime", "runtime_kind": "validation-result", "content_path": "runtime.bin", "dimension_verdicts": {dimension: "PASS" for dimension in ("schema_producer_authority", "immutable_identity", "source_of_truth_derivation", "independent_recomputation", "staleness_propagation", "recovery_supersession", "consumer_authorization_boundary")}, "identity": {"kind": "binary", "sha256": binary_hash, "byte_length": len(binary.read_bytes())}, "lineage": {"status": "new", "predecessor": None}}
+            ]
+            package = root / "package.json"
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run([sys.executable, str(script), str(package), "--repository-root", str(root)], capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+            payload["predicate_closures"]["plan-ready"]["closure_root"] = "sha256:stale"
+            payload["proofs"][1]["identity"]["sha256"] = "0" * 64
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            refreshed = subprocess.run([sys.executable, str(script), str(package), "--repository-root", str(root), "--refresh", "--orchestrate"], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(0, refreshed.returncode, refreshed.stdout + refreshed.stderr)
+
+    def test_authorization_package_rejects_each_dimension_in_isolation(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        source = SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json"
+        dimensions = ("schema_producer_authority", "immutable_identity", "source_of_truth_derivation", "independent_recomputation", "staleness_propagation", "recovery_supersession", "consumer_authorization_boundary")
+        for dimension in dimensions:
+            with self.subTest(dimension=dimension), tempfile.TemporaryDirectory() as tmp:
+                payload = json.loads(source.read_text(encoding="utf-8"))
+                payload["proofs"][0]["dimension_verdicts"][dimension] = "NON-AUTHORITATIVE"
+                package = Path(tmp) / "package.json"
+                package.write_text(json.dumps(payload), encoding="utf-8")
+                completed = subprocess.run([sys.executable, str(script), str(package)], capture_output=True, text=True, encoding="utf-8")
+                self.assertEqual(1, completed.returncode)
+                self.assertIn("VDD-PACKAGE-DIMENSION:" + dimension, completed.stdout)
+
+    def test_authorization_package_orchestrator_reports_seven_mutation_checks(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json"
+        completed = subprocess.run([sys.executable, str(script), str(fixture), "--orchestrate"], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(7, len(payload["mutation_checks"]))
+        self.assertTrue(all(item["rejected"] for item in payload["mutation_checks"]))
+
+    def test_authorization_package_result_binds_current_inputs_and_rule_checks(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json"
+        completed = subprocess.run(
+            [sys.executable, str(script), str(fixture), "--orchestrate"],
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        payload = json.loads(completed.stdout)
+        bindings = json.loads(fixture.read_text(encoding="utf-8"))["bindings"]
+        self.assertEqual(bindings["candidate_hash"], payload["candidate_hash"])
+        self.assertEqual(bindings["source_hash"], payload["source_hash"])
+        self.assertEqual(bindings["validator_root"], payload["validator_root"])
+        self.assertEqual(bindings["authority_root"], payload["authority_root"])
+        self.assertEqual(bindings["closure_definition_hash"], payload["closure_definition_hash"])
+        self.assertEqual(
+            {"VDD-PACKAGE-DIMENSION:" + dimension for dimension in (
+                "schema_producer_authority", "immutable_identity", "source_of_truth_derivation",
+                "independent_recomputation", "staleness_propagation", "recovery_supersession",
+                "consumer_authorization_boundary",
+            )},
+            {item["rule_id"] for item in payload["checks"]},
+        )
+
     def test_clean_skill_passes(self) -> None:
         result = self.validator.validate_skill(SKILL_ROOT)
         self.assertTrue(result["ok"], result)
         self.assertEqual([], result["findings"])
 
-    def test_artifact_proof_trust_root_dimensions_fail_independently(self) -> None:
-        contract = json.loads((SKILL_ROOT / "scripts/skill-contract.json").read_text(encoding="utf-8"))
-        mutations = {
-            "VDD-ARTIFACT-PROOF-PRODUCER": lambda root: root["schema_producer_authority"].__setitem__("authority_path", "AGENTS.md"),
-            "VDD-ARTIFACT-PROOF-IDENTITY": lambda root: root["immutable_identity"].__setitem__("authority_revision", "sha256:" + "0" * 64),
-            "VDD-ARTIFACT-PROOF-DERIVATION": lambda root: root["source_of_truth_derivation"]["rules"][0].__setitem__("source", "AGENTS.md"),
-            "VDD-ARTIFACT-PROOF-RULE": lambda root: root["independent_recomputation"].__setitem__("callable", "missing_callable"),
-            "VDD-ARTIFACT-PROOF-STALENESS": lambda root: root["staleness_propagation"].__setitem__("invalidates", ["artifact-proof-registry"]),
-            "VDD-ARTIFACT-PROOF-LINEAGE": lambda root: root["recovery_supersession"].__setitem__("predecessor_sha256", "sha256:" + "1" * 64),
-            "VDD-ARTIFACT-PROOF-CONSUMER": lambda root: root["consumer_authorization_boundary"].__setitem__("authorizes", ["plan-ready"]),
-            "VDD-ARTIFACT-PROOF-APPLICABILITY": lambda root: root["dimension_verdicts"]["immutable_identity"].__setitem__("status", "N/A"),
-        }
-        for expected_rule, mutate in mutations.items():
-            with self.subTest(expected_rule=expected_rule):
-                candidate = copy.deepcopy(contract)
-                mutate(candidate["artifact_proof_trust_roots"]["repository-maintenance-tdd-adapter"])
-                findings = self.validator.validate_artifact_proof_trust_roots(SKILL_ROOT, candidate)
-                self.assertEqual([expected_rule], [item["rule_id"] for item in findings])
-
-    def test_artifact_proof_trust_root_producer_source_hash_is_pinned(self) -> None:
-        contract = json.loads((SKILL_ROOT / "scripts/skill-contract.json").read_text(encoding="utf-8"))
+    def test_authorization_proof_package_mutations_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             mutated = Path(tmp) / "skill"
             shutil.copytree(SKILL_ROOT, mutated)
-            standard = mutated / "references" / "strict-vdd-standard.md"
-            standard.write_bytes(standard.read_bytes() + b"\nproducer-source-mutation\n")
-            findings = self.validator.validate_artifact_proof_trust_roots(mutated, contract)
-        self.assertEqual(["VDD-ARTIFACT-PROOF-PRODUCER"], [item["rule_id"] for item in findings])
+            golden = mutated / "scripts/fixtures/authorization-proof-package-golden.json"
+            payload = json.loads(golden.read_text(encoding="utf-8"))
+            payload["roles"]["execution"].remove("result-envelope")
+            golden.write_text(json.dumps(payload), encoding="utf-8")
+            result = self.validator.validate_skill(mutated)
+        self.assertIn("VDD-SKILL-CONTRACT", {item["rule_id"] for item in result["findings"]})
+
+    def test_authorization_package_schema_rejects_missing_runtime_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            mutated = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, mutated)
+            schema = mutated / "scripts/fixtures/authorization-proof-package-schema.json"
+            payload = json.loads(schema.read_text(encoding="utf-8"))
+            del payload["runtime_proof_required_fields"]
+            schema.write_text(json.dumps(payload), encoding="utf-8")
+            result = self.validator.validate_skill(mutated)
+        self.assertIn("VDD-SKILL-CONTRACT", {item["rule_id"] for item in result["findings"]})
 
     def test_pass_result_fixture_is_valid(self) -> None:
         fixture = SKILL_ROOT / "scripts" / "fixtures" / "validation-result-pass.json"
@@ -136,6 +251,18 @@ class SkillContractTests(unittest.TestCase):
         result = self.validator.validate_result_fixture(SKILL_ROOT, fixture)
         self.assertFalse(result["ok"])
         self.assertIn("VDD-RESULT-STALE", {item["rule_id"] for item in result["findings"]})
+
+    def test_pass_result_requires_deterministic_package_assurance(self) -> None:
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "validation-result-pass.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "result.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            payload["assurance_level"] = "fresh-context-observed"
+            candidate.write_text(
+                json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n"
+            )
+            result = self.validator.validate_result_fixture(SKILL_ROOT, candidate)
+        self.assertIn("VDD-RESULT-ASSURANCE", {item["rule_id"] for item in result["findings"]})
 
     def test_missing_result_field_mutation_is_rejected(self) -> None:
         source = SKILL_ROOT / "scripts" / "fixtures" / "validation-result-pass.json"
@@ -847,16 +974,16 @@ class SkillContractTests(unittest.TestCase):
             ["VDD-SKILL-CONTRACT"], [item["rule_id"] for item in result["findings"]]
         )
 
-    def test_artifact_proof_trust_root_permission_escalation_is_rejected(self) -> None:
+    def test_authorization_proof_package_identity_mutation_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             mutated = Path(tmp) / "skill"
             shutil.copytree(SKILL_ROOT, mutated)
             target = mutated / "scripts" / "skill-contract.json"
             contract = json.loads(target.read_text(encoding="utf-8"))
-            contract["artifact_proof_trust_roots"]["repository-maintenance-tdd-adapter"]["consumer_authorization_boundary"]["authorizes"] = ["plan-ready"]
-            target.write_text(
-                json.dumps(contract, indent=2) + "\n", encoding="utf-8", newline="\n"
-            )
+            golden = mutated / "scripts/fixtures/authorization-proof-package-golden.json"
+            payload = json.loads(golden.read_text(encoding="utf-8"))
+            payload["identity_policy"]["binary"] = ["raw-sha256"]
+            golden.write_text(json.dumps(payload), encoding="utf-8")
             result = self.validator.validate_skill(mutated)
         self.assertFalse(result["ok"])
         self.assertEqual(

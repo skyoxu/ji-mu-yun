@@ -7,7 +7,7 @@ description: Clarify requirements before creating, restructuring, or repairing e
 
 Build execution plans in which executable verification controls development. Do not treat a plan as VDD merely because it contains testing sections.
 
-Before acting, read [references/strict-vdd-standard.md](references/strict-vdd-standard.md) and [references/clarification-gate.md](references/clarification-gate.md) completely. Apply repository instructions and more specific nested instructions first.
+Before acting, read [references/strict-vdd-standard.md](references/strict-vdd-standard.md), [references/clarification-gate.md](references/clarification-gate.md), and [authorization-proof-package.md](references/authorization-proof-package.md) completely. Apply repository instructions and more specific nested instructions first.
 
 When maintaining or evaluating this Skill itself, also read [references/skill-compliance-protocol.md](references/skill-compliance-protocol.md) and use `scripts/validate_skill_contract.py`.
 
@@ -144,6 +144,18 @@ Do not build a keyword-count validator. Parse the actual contracts and prove bot
 Before implementation authorization, run at least one invalid or mutation fixture and observe the expected stable failure ID. A test merely written or a validator source marker does not prove RED.
 
 If a protected or independent verifier is required, separate it from the repository-local plan validator. Freeze its rule/version identity before it authorizes downstream work.
+
+## Authorization proof package
+
+Every plan that can authorize a transition must carry one executable seven-dimensional Authorization Proof Package. File count is not normative: the required normative, projection, and execution roles are. Use the contract in [authorization-proof-package.md](references/authorization-proof-package.md).
+
+- Closure members have only `PASS` or typed `N/A` dimension verdicts. `NON-AUTHORITATIVE` is exclusively an `OUT-OF-CLOSURE` artifact classification with an empty `authorizes` set and machine exclusion checks.
+- Include both static artifacts and runtime artifact types such as validation results, finalized runs, successor authorizations, candidate lineage, process events, and implementation candidates.
+- Discover each authorizing predicate's consumer closure twice through independent producer and verifier entrypoints. A shared superset is allowed only with an explicit set-coverage proof for each predicate.
+- Bind tracked artifacts to Git tree, path, mode, and blob. Bind binary artifacts to raw SHA-256 and byte length. Recompute these identities from the selected repository root.
+- Compare every proof against an independent baseline: `new` has no baseline and null predecessor; `unchanged` equals the baseline and names it as predecessor; `supersedes` differs from the baseline and still names it as predecessor.
+- Invoke the package runner once with `--repository-root <root> --refresh --orchestrate --result <path>` to refresh projections, recompute identities, independently validate closures, run seven isolated mutations, and write a restricted deterministic-package result envelope.
+- Close authorization-closure review only after deterministic package PASS, expected rejection by all seven isolated mutations, independent membership agreement, fresh five-hash result bindings, and no Bootstrap-accepted P0/P1. Reopen only for a stable-rule failure, predicate-consumer change, authority/threat-model revision, or failed fresh hash-bound validation.
 
 ## Control LLM-assisted review
 

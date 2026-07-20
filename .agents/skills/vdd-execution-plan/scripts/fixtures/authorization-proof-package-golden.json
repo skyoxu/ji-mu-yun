@@ -1,0 +1,64 @@
+{
+  "schema_version": "vdd.authorization-proof-package.v1",
+  "assurance_level": "deterministic-package",
+  "bindings": {
+    "candidate_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "validator_root": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "authority_root": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "closure_definition_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "roles": {
+    "normative": ["proof-schema", "artifact-type-registry", "authority-root-registry", "rule-registry", "permission-lattice", "runtime-type-registry"],
+    "projection": ["required-inventory", "resolved-proof-registry", "runtime-type-proof", "predicate-closure"],
+    "execution": ["refresh", "independent-validator", "mutation-suite", "result-envelope"]
+  },
+  "identity_policy": {
+    "tracked": ["git-tree", "git-path", "git-mode", "git-blob"],
+    "binary": ["raw-sha256", "byte-length"],
+    "text_normalization": "declared-per-artifact"
+  },
+  "closure_policy": {
+    "producer_verifier_independent": true,
+    "predicate_specific": true,
+    "shared_superset_requires_proof": true
+  },
+  "predicate_closures": {
+    "plan-ready": {"producer": "static-discovery", "verifier": "trace-discovery", "mode": "exact", "members": ["golden-static", "golden-runtime"], "producer_members": ["golden-static", "golden-runtime"], "verifier_members": ["golden-static", "golden-runtime"], "closure_root": "sha256:0a5ec5534420e7ff6ba04a72382c60f3a08fb52547aca33a7a34a6001ed6fe25"}
+  },
+  "proofs": [
+    {
+      "id": "golden-static",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "static",
+      "dimension_verdicts": {
+        "schema_producer_authority": "PASS",
+        "immutable_identity": "PASS",
+        "source_of_truth_derivation": "PASS",
+        "independent_recomputation": "PASS",
+        "staleness_propagation": "PASS",
+        "recovery_supersession": "PASS",
+        "consumer_authorization_boundary": "PASS"
+      },
+      "identity": {"kind": "git-tracked", "tree": "HEAD", "path": "plans/golden.json", "mode": "100644", "blob": "placeholder"},
+      "lineage": {"status": "new", "predecessor": null}
+    },
+    {
+      "id": "golden-runtime",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "runtime",
+      "runtime_kind": "validation-result",
+      "dimension_verdicts": {
+        "schema_producer_authority": "PASS",
+        "immutable_identity": "PASS",
+        "source_of_truth_derivation": "PASS",
+        "independent_recomputation": "PASS",
+        "staleness_propagation": "PASS",
+        "recovery_supersession": "PASS",
+        "consumer_authorization_boundary": "PASS"
+      },
+      "identity": {"kind": "binary", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "byte_length": 0},
+      "lineage": {"status": "new", "predecessor": null}
+    }
+  ]
+}

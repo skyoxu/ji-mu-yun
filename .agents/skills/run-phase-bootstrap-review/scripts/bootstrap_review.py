@@ -57,6 +57,22 @@ PLAN_VALIDATOR_PATH = (
 )
 LAYERS = ("blind_hunter", "edge_case_hunter", "acceptance_auditor")
 HASH_PREFIX = "sha256:"
+AUTHORIZATION_CLOSURE_DIMENSIONS = (
+    "schema_producer_authority",
+    "immutable_identity",
+    "source_of_truth_derivation",
+    "independent_recomputation",
+    "staleness_propagation",
+    "recovery_supersession",
+    "consumer_authorization_boundary",
+)
+AUTHORIZATION_CLOSURE_BINDINGS = (
+    "candidate_hash",
+    "source_hash",
+    "validator_root",
+    "authority_root",
+    "closure_definition_hash",
+)
 AUTHORITY_CLASS = "supplemental_bootstrap"
 REVIEW_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}")
 CHECK_ID_PATTERN = re.compile(r"[a-z][a-z0-9-]{2,63}")
@@ -1161,14 +1177,42 @@ def build_context_class_artifacts(
     if missing:
         raise BootstrapError("Missing required context class assignments: " + ", ".join(missing))
     result = {name: sorted(mapped) for name, mapped in assignments.items()}
-    validate_profile_context_semantics(profile_name, result)
+    validate_profile_context_semantics(profile_name, result, repository_root)
     return result
+
+
+def authorization_closure_context_errors(
+    repository_root: Path,
+    mapping: dict[str, list[str]],
+) -> list[str]:
+    package_paths = mapping.get("authorization-closure-package", [])
+    result_paths = mapping.get("authorization-closure-validation-result", [])
+    if len(package_paths) != 1 or len(result_paths) != 1:
+        return ["authorization closure context classes must each bind exactly one artifact"]
+    try:
+        package_path = ensure_within(repository_root / package_paths[0], repository_root, "Authorization closure package")
+        result_path = ensure_within(repository_root / result_paths[0], repository_root, "Authorization closure result")
+        package = read_json(package_path)
+        result = read_json(result_path)
+    except BootstrapError as exc:
+        return [str(exc)]
+    errors = validate_authorization_closure_result(package, result)
+    if result.get("package_sha256") != file_hash(package_path):
+        errors.append("package_sha256 does not bind the current package bytes")
+    return errors
 
 
 def validate_profile_context_semantics(
     profile_name: str,
     mapping: dict[str, list[str]],
+    repository_root: Path | None = None,
 ) -> None:
+    if profile_name == "bootstrap-upstream-plan":
+        for name in ("authorization-closure-package", "authorization-closure-validation-result"):
+            items = mapping.get(name, [])
+            if len(items) != 1 or not items[0].endswith(".json"):
+                raise BootstrapError(f"{name} must bind exactly one JSON artifact")
+        return
     if profile_name != "bootstrap-skill-route":
         return
 
@@ -1225,7 +1269,9 @@ def validate_context_class_artifacts(manifest: dict[str, Any], profile: dict[str
             or any(not isinstance(item, str) or item not in artifact_names for item in mapped)
         ):
             raise BootstrapError(f"review-input.json has invalid context artifacts for {name}")
-    validate_profile_context_semantics(manifest.get("profileName", ""), mapping)
+    validate_profile_context_semantics(
+        manifest.get("profileName", ""), mapping, Path(manifest["repositoryRoot"])
+    )
 
 
 def prompt_text(layer: str, manifest: dict[str, Any], run_dir: Path) -> str:
@@ -1844,6 +1890,13 @@ def validate_preflight_result(run_dir: Path, manifest: dict[str, Any]) -> str:
         errors.append("checks must match deterministicPreflightPolicy.requiredChecks in order")
     if not errors and result.get("status") != "passed":
         errors.append("preflight status must be passed before reviewer gate")
+    if manifest.get("profileName") == "bootstrap-upstream-plan":
+        errors.extend(
+            "authorization closure preflight failed: " + error
+            for error in authorization_closure_context_errors(
+                Path(manifest["repositoryRoot"]), manifest["contextClassArtifacts"]
+            )
+        )
     preflight_root = (run_dir / manifest["deterministicPreflightPolicy"]["evidenceDirectory"]).resolve()
     if not errors:
         for check in checks:
@@ -1866,6 +1919,56 @@ def validate_preflight_result(run_dir: Path, manifest: dict[str, Any]) -> str:
     if errors:
         raise BootstrapError("Deterministic preflight is incomplete: " + "; ".join(errors))
     return file_hash(path)
+
+
+def validate_authorization_closure_result(package: Any, result: Any) -> list[str]:
+    """Return deterministic proof-envelope binding failures without rerunning mutations."""
+    errors: list[str] = []
+    if not isinstance(package, dict):
+        return ["authorization closure package must be an object"]
+    if not isinstance(result, dict):
+        return ["authorization closure validation result must be an object"]
+    if package.get("schema_version") != "vdd.authorization-proof-package.v1":
+        errors.append("package schema_version is invalid")
+    if package.get("assurance_level") != "deterministic-package":
+        errors.append("package assurance_level is invalid")
+    bindings = package.get("bindings")
+    if not isinstance(bindings, dict):
+        errors.append("package bindings are missing")
+    if result.get("schema_version") != "vdd.authorization-proof-package-result.v1":
+        errors.append("result schema_version is invalid")
+    if result.get("assurance_level") != "deterministic-package" or result.get("status") != "PASS":
+        errors.append("result is not a deterministic package PASS")
+    for field in AUTHORIZATION_CLOSURE_BINDINGS:
+        expected = bindings.get(field) if isinstance(bindings, dict) else None
+        if not isinstance(expected, str) or HASH_PATTERN.fullmatch(expected) is None:
+            errors.append(f"package binding {field} is invalid")
+        elif result.get(field) != expected:
+            errors.append(f"result {field} does not bind the package")
+    expected_rule_ids = {
+        f"VDD-PACKAGE-DIMENSION:{dimension}" for dimension in AUTHORIZATION_CLOSURE_DIMENSIONS
+    }
+    checks = result.get("checks")
+    actual_rule_ids = {
+        item.get("rule_id")
+        for item in checks
+        if isinstance(item, dict) and item.get("status") == "pass"
+    } if isinstance(checks, list) else set()
+    if actual_rule_ids != expected_rule_ids:
+        errors.append("result must contain exactly seven passing dimension rule checks")
+    mutations = result.get("mutation_checks")
+    actual_mutations = {
+        (item.get("dimension"), item.get("expected_rule_id"))
+        for item in mutations
+        if isinstance(item, dict) and item.get("status") == "rejected"
+    } if isinstance(mutations, list) else set()
+    expected_mutations = {
+        (dimension, f"VDD-PACKAGE-DIMENSION:{dimension}")
+        for dimension in AUTHORIZATION_CLOSURE_DIMENSIONS
+    }
+    if actual_mutations != expected_mutations:
+        errors.append("result must contain exactly seven rejected isolated mutations")
+    return errors
 
 
 def command_authorize_launch(args: argparse.Namespace) -> int:
@@ -2951,8 +3054,12 @@ def candidate_reason(candidate: Any, manifest: dict[str, Any], repository_root: 
         "triggerInput", "requiredState", "badOutcome", "contextRead", "existingGuardAnalysis", "proposedSeverity",
         "severityRationale", "confidence", "dimension", "authorityOwner", "consumer", "validatorRef",
     }
-    if set(candidate) != required:
+    optional_aggregation = {"authorizationPredicate", "authorityRootCause"}
+    candidate_fields = set(candidate)
+    if candidate_fields != required and candidate_fields != required | optional_aggregation:
         return "schema_invalid", "Candidate fields do not match bootstrap-reviewer-output.v1"
+    if ("authorizationPredicate" in candidate) != ("authorityRootCause" in candidate):
+        return "schema_invalid", "Authorization aggregation fields must be supplied together"
     candidate_id = candidate.get("candidateId")
     if not isinstance(candidate_id, str) or re.fullmatch(r"[A-Z][A-Z0-9-]{4,63}", candidate_id) is None:
         return "schema_invalid", "candidateId is invalid"
@@ -3016,6 +3123,13 @@ def candidate_reason(candidate: Any, manifest: dict[str, Any], repository_root: 
             return "schema_invalid", f"{key} is required"
         if normalize_placeholder_text(candidate[key]) in PLACEHOLDER_TEXT_VALUES:
             return "schema_invalid", f"{key} must be concrete, not placeholder-equivalent"
+    for key in optional_aggregation:
+        if key in candidate and (
+            not isinstance(candidate[key], str)
+            or not candidate[key].strip()
+            or normalize_placeholder_text(candidate[key]) in PLACEHOLDER_TEXT_VALUES
+        ):
+            return "schema_invalid", f"{key} must be concrete when supplied"
     return None, ""
 
 
@@ -3070,6 +3184,23 @@ def finding_from_candidate(candidate: dict[str, Any], layer: str, manifest: dict
     return finding
 
 
+def aggregation_fingerprint(finding: dict[str, Any]) -> str:
+    if (
+        finding.get("proposedSeverity") in {"P0", "P1"}
+        and isinstance(finding.get("authorizationPredicate"), str)
+        and isinstance(finding.get("authorityRootCause"), str)
+    ):
+        return value_hash([
+            "authorization-closure",
+            normalize_finding_identity_text(finding["authorizationPredicate"]),
+            finding["dimension"],
+            normalize_finding_identity_text(finding["authorityRootCause"]),
+            normalize_finding_identity_text(finding["badOutcome"]),
+            finding["authorityRevision"],
+        ])
+    return finding["evidenceFingerprint"]
+
+
 def verifier_prompt(run_dir: Path, manifest: dict[str, Any], blockers: list[dict[str, Any]]) -> str:
     ids = "\n".join(f"- `{item['findingId']}`: {item['artifact']}:{item['startLine']}" for item in blockers) or "- None"
     if manifest["executionMode"] == "codex-exec":
@@ -3100,6 +3231,9 @@ ID and no other IDs. Decisions are `confirmed`, `refuted`, or `unverified`.
 For `unverified`, select `security`, `data_loss`, or `other`; the gateway derives the disposition.
 For each decision, `evidenceChecked` must cover the candidate's exact artifact line range and every
 reference in its `contextRead`; an unrelated in-scope reference is not sufficient.
+For an authorization-closure blocker, confirm or refute the concrete failure path, exact closure
+member, stable dimension rule ID, and reachable authorization outcome. Do not replace this bounded
+verification with a second open-ended seven-dimension review.
 {output_contract}
 
 Candidates:
@@ -3152,7 +3286,9 @@ def evaluate_reviewer_outputs(
                 rejections.append(rejection(candidate, layer, manifest, code, reason))
                 continue
             finding = finding_from_candidate(candidate, layer, manifest)
-            fingerprint = finding["evidenceFingerprint"]
+            fingerprint = aggregation_fingerprint(finding)
+            if fingerprint != finding["evidenceFingerprint"]:
+                finding["findingId"] = "BSR-" + fingerprint.removeprefix(HASH_PREFIX)[:16].upper()
             candidates_by_fingerprint.setdefault(fingerprint, []).append((candidate, layer, finding))
     severity_rank = {"P0": 3, "P1": 2, "P2": 1}
     findings = []
@@ -3167,6 +3303,8 @@ def evaluate_reviewer_outputs(
         )
         selected_candidate, _selected_layer, selected_finding = ranked[0]
         selected_finding["sourceReviewers"] = sorted({item[1] for item in group})
+        if "authorizationPredicate" in selected_finding:
+            selected_finding["affectedArtifacts"] = sorted({item[2]["artifact"] for item in group})
         findings.append(selected_finding)
         for candidate, layer, _finding in ranked[1:]:
             rejections.append(

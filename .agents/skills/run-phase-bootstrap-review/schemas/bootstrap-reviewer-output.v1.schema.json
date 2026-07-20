@@ -79,7 +79,9 @@
           "dimension": { "enum": ["code", "document", "plan", "security", "acceptance", "edge-case"] },
           "authorityOwner": { "type": "string", "minLength": 1 },
           "consumer": { "type": "string", "minLength": 1 },
-          "validatorRef": { "type": "string", "minLength": 1 }
+          "validatorRef": { "type": "string", "minLength": 1 },
+          "authorizationPredicate": { "type": "string", "minLength": 1 },
+          "authorityRootCause": { "type": "string", "minLength": 1 }
         }
       }
     }

@@ -775,13 +775,20 @@ def _repository_root_for_state(state_path: Path, state: dict[str, Any]) -> Path:
             state_path.resolve().relative_to(project_root)
         except ValueError as exc:
             raise ValueError("state is outside its recorded repository root") from exc
-        return project_root
-    for ancestor in state_path.resolve().parents:
-        if (ancestor / ".git").exists():
-            return ancestor
+        default_evidence_root = project_root / "logs" / "vdd-clarifications"
+        registry_path = _canonical_registry_target_root(project_root, str(state.get("target_slug", ""))) / "registry.json"
+        registered = False
+        if registry_path.is_file():
+            registry = load_json(registry_path)
+            registered = isinstance(registry, dict) and state_path.resolve().relative_to(project_root).as_posix() in registry.get("active_states", [])
+        if state_path.resolve().is_relative_to(default_evidence_root) or registered:
+            return project_root
     for ancestor in state_path.resolve().parents:
         if ancestor.name.casefold() == "vdd-clarifications" and ancestor.parent.name.casefold() == "logs":
             return ancestor.parent.parent
+    for ancestor in state_path.resolve().parents:
+        if (ancestor / ".git").exists():
+            return ancestor
     current = Path.cwd().resolve()
     try:
         state_path.resolve().relative_to(current)
@@ -807,11 +814,13 @@ def _registry_state_paths(project_root: Path, target_slug: str) -> set[Path]:
             except ValueError as exc:
                 raise ValueError("clarification registry path escapes repository root") from exc
             paths.add(candidate)
-    if not registry_exists:
-        for state_path in project_root.rglob("state.json"):
-            parts = {part.casefold() for part in state_path.parts}
-            if "vdd-clarifications" in parts and state_path.parent.parent.name.casefold() == target_slug.casefold():
-                paths.add(state_path.resolve())
+    # The registry is an optimization, not exclusive authority. Scan the
+    # default evidence location as well so a local recovered sibling cannot
+    # bypass the lock, without recursively walking the whole repository.
+    default_target_root = project_root / "logs" / "vdd-clarifications" / target_slug
+    if default_target_root.is_dir():
+        for state_path in default_target_root.glob("*/state.json"):
+            paths.add(state_path.resolve())
     return paths
 
 

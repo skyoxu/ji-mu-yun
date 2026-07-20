@@ -7,9 +7,9 @@ from typing import Any
 
 
 ROOT_PATH = ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json"
-ROOT_SHA256 = "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764"
+ROOT_SHA256 = "sha256:cc1b44c981dbeb4a7177b8375f5a9564a288e325cb0410157945a3b9f1f2080f"
 STANDARD_PATH = ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md"
-STANDARD_SHA256 = "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140"
+STANDARD_SHA256 = "sha256:46fa5cb22eb527fff6390fb3b41d72e57e60e45dfc8d21f6756f0c3d70250827"
 PREDECESSOR_SHA256 = "sha256:2c0c297c20fbf46daaea5eca1836c9b3e51ce9699749eae2152cafd57a6b2544"
 INVALIDATES = ["artifact-proof-registry", "runtime-artifact-type-proof", "plan-repair-verified", "plan-ready"]
 DOES_NOT_AUTHORIZE = ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
@@ -49,7 +49,7 @@ def load_artifact_proof_root(repository_root: Path) -> tuple[dict[str, Any], str
     if producer.get("authority_path") != STANDARD_PATH or producer.get("authority_sha256") != STANDARD_SHA256 or _sha(repository_root / STANDARD_PATH) != STANDARD_SHA256:
         raise ValueError("Bootstrap artifact-proof producer authority is not pinned")
     identity = proof["immutable_identity"]
-    if identity.get("authority_revision") != "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202":
+    if identity.get("authority_revision") != STANDARD_SHA256:
         raise ValueError("Bootstrap artifact-proof authority revision is invalid")
     derivation = proof["source_of_truth_derivation"]["rules"]
     if derivation != [{"source": ROOT_PATH, "source_sha256": None, "field": "/proof/immutable_identity/artifact_sha256", "target_field": "$bytes", "derivation": "external-hash-pin"}]:

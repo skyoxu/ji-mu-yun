@@ -131,7 +131,15 @@ After all three layers validate, run `gate`. Report accepted and rejected counts
 
 When gate returns `awaiting_verification`, run one independent verifier through `run-layer --role independent_verifier` or the approved external verifier boundary. The verifier must cover each blocker's exact evidence and every `contextRead` reference.
 
+For authorization-closure P0/P1 candidates, provide `authorizationPredicate` and `authorityRootCause` together. The gate aggregates only those candidates by predicate, dimension, root cause, and reachable bad outcome, retaining the affected artifact list. Other candidates retain evidence-fingerprint deduplication.
+
+For `bootstrap-upstream-plan`, bind exactly one `authorization-closure-package` and one `authorization-closure-validation-result` context artifact. Before reviewer launch, Bootstrap validates their current package hash, five result bindings, seven passing stable dimension checks, and seven rejected isolated mutations. It consumes this frozen evidence and does not rerun the mutation suite. Acceptance Auditor reviews only predicate authority, untracked real consumers, plan-ready versus implementation/release claims, and P0/P1 reachability; it must not reopen field-level seven-dimension checks already covered by deterministic preflight.
+
 Do not rerun gate over saved verifier decisions or reopen a finalized run.
+
+## Authorization Closure Closure
+
+Authorization-closure review is closed when the deterministic package is `PASS`, all seven isolated mutations are rejected by their expected stable rule IDs, independent closure membership agrees, the current result binds candidate/source/validator/authority/closure hashes, and Bootstrap has no accepted P0/P1. Do not start another open seven-dimension finding round after closure. Reopen only when a stable dimension rule fails, the actual predicate consumer set changes, the authority or threat model changes, or fresh hash-bound validation fails.
 
 ## Dispose P2 And Finalize
 
