@@ -92,6 +92,14 @@ def main() -> int:
     if refactor["exit_code"] != 0:
         raise RuntimeError("REFACTOR command failed")
 
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "recovery-state.json").write_text(json.dumps({
+        "schema_version": "rmap.recovery-state.v1", "run_id": run_dir.name,
+        "state": "active", "contract_hash": context["stage_results"]["red"]["contract_hash"],
+        "validator_hash": context["stage_results"]["red"]["validator_hash"],
+        "predecessor_run_id": None, "supersedes_run_id": None,
+    }, indent=2) + "\n", encoding="utf-8", newline="\n")
+
     # The composer supplies protocol bindings; only observed values are injected here.
     for stage, observation in (("red", red), ("green", green), ("refactor", refactor)):
         core = context["stage_results"][stage]

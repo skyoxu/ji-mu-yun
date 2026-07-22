@@ -96,7 +96,7 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
         "boundaries": {"allowed_write_set": selected["allowed_changes"], "forbidden_write_set": selected["forbidden_changes"], "execution_read_set": selected["execution_read_set"], "dependency_closure": selected["dependency_closure"]},
         "target_command_ids": [red["id"], green["id"], *[item["id"] for item in refactor], terminal["id"]],
         "stage_results": {
-            "red": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "red-observed", "command_id": red["id"], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
+            "red": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "red-observed", "command_id": red["id"], "test_selector": tdd["red"]["test_selector"], "expected_failure_ids": tdd["red"]["expected_failure_ids"], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
             "green": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "green-observed", "command_id": green["id"], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
             "refactor": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "refactor-verified", "command_id": refactor[0]["id"], "command_ids": [item["id"] for item in refactor], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
         },
