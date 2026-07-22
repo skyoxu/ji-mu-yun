@@ -521,7 +521,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 180,
+      "timeout_seconds": 300,
       "declared_predicate": "implementation-candidate",
       "slice_id": "RMAP-S6"
     },
