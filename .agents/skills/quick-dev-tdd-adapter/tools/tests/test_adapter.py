@@ -147,6 +147,17 @@ class AdapterTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "undeclared existing artifact"):
                 ADAPTER.persist_protocol_bundle(run_dir, bundle, store)
 
+    def test_protocol_persistence_preserves_lifecycle_observations(self) -> None:
+        fixtures = json.loads((PLAN_ROOT / "fixtures" / "capsule-attempt-cases.v1.json").read_text(encoding="utf-8"))
+        bundle, store, _ = hydrate_protocol_fixture(fixtures["valid_bundle"])
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "RUN-001"
+            observation_dir = run_dir / "observations"; observation_dir.mkdir(parents=True)
+            for stage in ("red", "green", "refactor"):
+                (observation_dir / f"{stage}-observed.json").write_text("{}", encoding="utf-8")
+            ADAPTER.persist_protocol_bundle(run_dir, bundle, store)
+            self.assertTrue((observation_dir / "refactor-observed.json").is_file())
+
     def test_compose_stage_binding_is_derived_from_protocol_documents(self) -> None:
         fixtures = json.loads((PLAN_ROOT / "fixtures" / "capsule-attempt-cases.v1.json").read_text(encoding="utf-8"))
         bundle, _, _ = hydrate_protocol_fixture(fixtures["valid_bundle"])
