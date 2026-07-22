@@ -124,7 +124,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 120
+      "timeout_seconds": 300
     },
     {
       "id": "rmap-s0-slice-validate",
