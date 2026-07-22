@@ -675,6 +675,23 @@ VDD Skill 不应把 7-15 的全部控制面复制给所有需求。建议按风�
 - 验证：刷新投影后 `plan-ready` 通过，95 项测试在 `178.582s` 内通过。
 - 当前候选：`sha256:576b984e780c9bb6611737e4dc1419c22fe9355c42549367d869dc96bc18b6be`。
 
+### IR-006：S0-S5 当前重放完成与 S6 候选基线阻断
+
+**时间**：2026-07-23
+**状态**：修复已验证但 S6 被设计级基线矛盾阻断；不授权候选或实现接受。
+
+- 当前重放以目标目录的 hash-bound TDD 生命周期完成 S0、S2、S3、S4、S5；路由器同时确认已有当前 S1 结果，因此下一解锁切片为 S6。
+- 执行中修复了运行器的 observations 持久化、RED selector/failure binding、recovery state、终态 JSON 结果保存、candidate identity 路由、Capsule write-set 编码和 shadow replay RED probe；每项修复后均重新运行 `plan-ready`。
+- S3-S5 的原始 RED 是“fixture 不存在”断言，已在已实现工作树中必然通过。现改为 shell-free、无副作用的受控负向 probe；S0-S2 保持各自原有的 controlled RED。
+- S6 的实际阻断：初始实现提交 `aa1afef` 相对前置基线 `8d1a97f` 一次性包含 Adapter、shadow、计划、schema 和文档变更；当前候选模型却要求未提交 Git diff 与 S0-S6 的逐切片 stage-effect fold 精确相等。当前重放在已实现且已提交工作树中只观察验证命令，S0-S5 effect 都为空；把这些证据作为 S6 lineage 会把真实实现错误地表示为空候选。
+- 这不能通过补写 stage projection、bridge 或 candidate manifest 修复：它们都不能创建当时未发生的 GREEN 写入和逐切片 before/after 生命周期。这样做会违反 append-only、independent recomputation 与 fail-closed 要求。
+- 安全的后续选择必须显式决定其一：
+  1. 从 `8d1a97f` 建立隔离 replay worktree，在每个 GREEN 阶段按 slice write set 实际应用变更，直到 S6 前始终不提交；
+  2. 正式修订 S6，采用 hash-bound Git commit-range candidate，并新增独立、可审计的 commit-to-slice effect mapping；
+  3. 将已提交实现视为历史迁移，由新的 migration/acceptance plan 处理，不再把它伪装为本计划的原始 TDD replay。
+
+当前不选择上述任一语义变更前，不得构造 S6 candidate、启动 Bootstrap Review 或声明 S7 接受。
+
 ## 第二部分：实现完成后的整体报告
 
 状态：**待填写**。
