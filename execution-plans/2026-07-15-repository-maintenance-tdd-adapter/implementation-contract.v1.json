@@ -788,7 +788,7 @@
       ],
       "tdd": {
         "red": {
-          "command_id": "rmap-adapter-tests",
+          "command_id": "rmap-s6-controlled-red",
           "expected_failure_family": "candidate_not_bound",
           "expected_failure_ids": [
             "RMAP-REVIEW-CANDIDATE-NOT-BOUND"

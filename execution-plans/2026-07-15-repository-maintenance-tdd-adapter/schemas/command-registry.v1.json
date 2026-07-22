@@ -418,6 +418,18 @@
       "timeout_seconds": 120
     },
     {
+      "id": "rmap-s6-controlled-red",
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py",
+        "--failure-id",
+        "RMAP-REVIEW-CANDIDATE-NOT-BOUND"
+      ],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 60
+    },
+    {
       "id": "rmap-s6-identity-validate",
       "executable": "py",
       "argv": ["-3", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py"],
