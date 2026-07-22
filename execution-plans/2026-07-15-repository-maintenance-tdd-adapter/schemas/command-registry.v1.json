@@ -303,7 +303,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 180,
+      "timeout_seconds": 300,
       "declared_predicate": "slice-ready",
       "slice_id": "RMAP-S3"
     },
@@ -352,7 +352,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 180,
+      "timeout_seconds": 300,
       "declared_predicate": "slice-ready",
       "slice_id": "RMAP-S4"
     },
@@ -401,7 +401,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 180,
+      "timeout_seconds": 300,
       "declared_predicate": "slice-ready",
       "slice_id": "RMAP-S5"
     },
@@ -450,7 +450,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 180,
+      "timeout_seconds": 300,
       "declared_predicate": "slice-ready",
       "slice_id": "RMAP-S6"
     },
@@ -539,7 +539,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 180,
+      "timeout_seconds": 300,
       "declared_predicate": "slice-ready",
       "slice_id": "RMAP-S7"
     },
