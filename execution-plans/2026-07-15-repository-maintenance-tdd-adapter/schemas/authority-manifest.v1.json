@@ -189,7 +189,7 @@
     "machine_owners": [
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
-        "sha256": "sha256:ee3b308070b268be288b972f602a02913fd700df200706c6b7b09aa8247a671f"
+        "sha256": "sha256:29d0c49231b94f404673a85559077aa7faffcf02f514d54a81afff0d3f9e764d"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
@@ -205,7 +205,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
-        "sha256": "sha256:e52ad2a5e7d0a5cfc1e398b465faaa99a173a97a25357369f7d0feb640aaebb4"
+        "sha256": "sha256:ecae9e488db0edd2df83aadc5bc7bdedb94145356b5260c9e8513d70a18cd5d9"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
@@ -225,7 +225,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
-        "sha256": "sha256:28d78b5249026468579bb744e9b7f503ded4e1363bde60de1785044d02cbb138"
+        "sha256": "sha256:6430966afc7da5a1cb2135bdef646431de4874656335c29f01e2ad284cf9dc56"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/shadow-backfill.v1.json",

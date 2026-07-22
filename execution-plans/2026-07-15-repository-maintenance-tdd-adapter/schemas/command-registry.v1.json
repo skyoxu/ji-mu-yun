@@ -668,6 +668,21 @@
         "value": "."
       },
       "timeout_seconds": 180
+    },
+    {
+      "id": "rmap-observe-shadow-red",
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py",
+        "--failure-id",
+        "RMAP-SHADOW-CONTRACT-MISSING"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60
     }
   ]
 }

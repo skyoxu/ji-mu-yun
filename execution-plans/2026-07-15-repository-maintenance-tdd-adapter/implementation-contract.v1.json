@@ -542,7 +542,7 @@
       ],
       "tdd": {
         "red": {
-          "command_id": "rmap-adapter-tests",
+          "command_id": "rmap-observe-shadow-red",
           "expected_failure_family": "shadow_contract_missing",
           "expected_failure_ids": [
             "RMAP-SHADOW-CONTRACT-MISSING"
@@ -613,7 +613,7 @@
       ],
       "tdd": {
         "red": {
-          "command_id": "rmap-adapter-tests",
+          "command_id": "rmap-observe-shadow-red",
           "expected_failure_family": "shadow_contract_missing",
           "expected_failure_ids": [
             "RMAP-SHADOW-CONTRACT-MISSING"
@@ -686,7 +686,7 @@
       ],
       "tdd": {
         "red": {
-          "command_id": "rmap-adapter-tests",
+          "command_id": "rmap-observe-shadow-red",
           "expected_failure_family": "shadow_contract_missing",
           "expected_failure_ids": [
             "RMAP-SHADOW-CONTRACT-MISSING"
