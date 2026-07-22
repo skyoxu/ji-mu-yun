@@ -654,6 +654,17 @@ VDD Skill 不应把 7-15 的全部控制面复制给所有需求。建议按风�
 - 当前候选：`sha256:70e719f2fc7d768b2cb30602c7ee3c0ecc4c76292b224b2c3aeb08c674b6a212`。
 - 影响：IR-002 后的候选再次变化；必须在该候选对应的干净 Git 基线上开始 S0，不能混用此前的 S0/S1 证据。
 
+### IR-004：隔离 replay 与最终 review gate 解耦
+
+**时间**：2026-07-22
+**状态**：已验证；重新实施尚未完成。
+
+- 缺陷：不可变的 Round 3 `review-blocking-state` 同时列出 `plan-ready`、`slice-ready`、`implementation-candidate` 与 `implementation-accepted`。验证器因此要求隔离 S0-S6 replay 重算主工作区 Bootstrap Review 的环境绑定，导致非权威 worktree 路径变化被错误地视为 S0 GREEN 阻断。
+- 修复：保留历史 blocker 原文和其完整 S7 接受约束；在 `validate_all.py` 的谓词调度层仅让 `implementation-accepted` 消费 review reentry/manual-pause。S0-S5 及 S6 candidate 不再把最终 review state 作为前置条件；S7 仍要求当前、hash-bound 的 finalized review envelope。
+- 验证：刷新投影后 `plan-ready` 通过，95 项测试在 `178.480s` 内通过。
+- 当前候选：`sha256:0b56185e86e345374d72ea2e8510d50e5cea5d3e46b0f5e84e94f8872258b834`。
+- 影响：此前隔离 worktree 的 S0 RED 观察可保留为诊断，但不与本候选混用；提交后重新建立 S0 的完整生命周期。
+
 ## 第二部分：实现完成后的整体报告
 
 状态：**待填写**。

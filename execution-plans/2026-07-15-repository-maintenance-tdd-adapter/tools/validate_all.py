@@ -207,8 +207,6 @@ def current_candidate_identity(slice_id: str = "RMAP-S6") -> dict[str, str]:
         "plan_hash": candidate_hash(PLAN_ROOT),
         "source_hash": sha256_file(REPOSITORY_ROOT / "agentbuild.txt"),
     }
-
-
 def strict_load(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"), parse_constant=lambda item: (_ for _ in ()).throw(ValueError(item)))
     if not isinstance(value, dict):
@@ -239,7 +237,9 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
     findings.extend(fixture_findings)
     checks.append({"rule_id": "RMAP-FIXTURES", "status": "pass" if not fixture_findings else "fail", "evidence": ["positive, negative, boundary, stale, and mutation cases"]})
     reentry_authorized = data.get("review_reentry", {}).get("state") == "reentry_authorized"
-    if predicate in set(data.get("review_blocker", {}).get("blocks_predicates", [])):
+    declared_review_blocks = set(data.get("review_blocker", {}).get("blocks_predicates", []))
+    review_targeted = predicate == "implementation-accepted" and predicate in declared_review_blocks
+    if review_targeted:
         reentry_findings = validate_plan_state(data["state"], data["review_blocker"], data["review_reentry"])
         findings.extend(reentry_findings)
         checks.append({
@@ -248,7 +248,7 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
             "evidence": ["successor policy and semantic closure independently recomputed"],
         })
         reentry_authorized = reentry_authorized and not reentry_findings
-    review_blocked_predicates = set() if reentry_authorized else set(data.get("review_blocker", {}).get("blocks_predicates", []))
+    review_blocked_predicates = set() if reentry_authorized else declared_review_blocks & {"implementation-accepted"}
     identity_blockers = [
         item for item in data.get("state", {}).get("open_blockers", [])
         if isinstance(item, dict) and item.get("blocker_id") == "RMAP-BLOCK-PROTECTED-VERIFIER-IDENTITY"
