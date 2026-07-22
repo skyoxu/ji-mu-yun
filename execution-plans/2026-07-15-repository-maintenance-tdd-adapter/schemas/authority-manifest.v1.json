@@ -225,7 +225,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
-        "sha256": "sha256:b85c619bd12431c6da68f49f23e6ce5dd5f512671cf5790a503dc4442b8ede99"
+        "sha256": "sha256:28d78b5249026468579bb744e9b7f503ded4e1363bde60de1785044d02cbb138"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/shadow-backfill.v1.json",

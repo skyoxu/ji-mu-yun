@@ -164,7 +164,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 120,
+      "timeout_seconds": 300,
       "declared_predicate": "slice-ready",
       "slice_id": "RMAP-S0"
     },
