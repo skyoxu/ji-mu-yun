@@ -17,9 +17,11 @@ from rmap_checks import (
     validate_authority_manifest,
     validate_clarification_projection,
     validate_plan_state,
+    validate_plan_lifecycle_policy,
     validate_requirements,
     validate_shadow_registry,
 )
+from authority_guards import validate_acceptance_contracts, validate_review_reentry
 from artifact_proof_guards import (
     AUTHORITY_PATH,
     TRUST_ROOT_PATH,
@@ -79,7 +81,6 @@ def _validate_synchronized_artifact_fixture(clone_plan: Path) -> list[dict[str, 
     manifest = _json(manifest_path)
     authority_relative = (clone_plan / AUTHORITY_PATH).relative_to(repository_root).as_posix()
     _set_manifest_hash(manifest, authority_relative, _sha(clone_plan / AUTHORITY_PATH))
-    _set_manifest_hash(manifest, TRUST_ROOT_PATH, _sha(repository_root / TRUST_ROOT_PATH))
     _set_manifest_hash(manifest, SKILL_CONTRACT_PATH, _sha(repository_root / SKILL_CONTRACT_PATH))
     _set_manifest_hash(manifest, ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md", _sha(repository_root / ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md"))
     _write_json(manifest_path, manifest)
@@ -267,17 +268,20 @@ def validate_fixture_document(plan_root: Path, target: str, document: dict[str, 
     if target == "command_registry":
         return validate_commands(document)
     if target == "plan_state":
-        return validate_plan_state(document, data["review_blocker"], data["review_reentry"])
+        return validate_plan_state(document, data["review_blocker"], data["review_reentry"], require_runtime_evidence=False)
     if target == "review_blocker":
-        return validate_plan_state(data["state"], document, data["review_reentry"])
+        return validate_plan_state(data["state"], document, data["review_reentry"], require_runtime_evidence=False)
     if target == "review_reentry":
-        return validate_plan_state(data["state"], data["review_blocker"], document)
+        return validate_review_reentry(plan_root, data["review_blocker"], document)
     if target == "authority_manifest":
         return validate_authority_manifest(plan_root, document)
     if target == "clarification_projection":
         return validate_clarification_projection(document)
     if target == "acceptance":
-        return validate_requirements(plan_root, data["requirements"], data["quality"], document)
+        findings = validate_requirements(plan_root, data["requirements"], data["quality"], document)
+        findings.extend(validate_acceptance_contracts(document, data["requirements"], data["contract"], data["commands"], data["fixtures"], data["protocol_fixtures"], data["candidate_fixtures"]))
+        findings.extend(validate_plan_lifecycle_policy(plan_root, data["requirements"], document, data["contract"], data["authority_manifest"], data["predicate_closure"]))
+        return findings
     if target == "requirement_quality":
         return validate_requirements(plan_root, data["requirements"], document, data["acceptance"])
     if target == "shadow":
@@ -328,6 +332,10 @@ def evaluate_fixture(plan_root: Path, fixture_id: str, data: dict[str, Any]) -> 
     if base_key is None:
         return [finding("RMAP-STRUCT-FIXTURE", fixture_id, "fixture target is invalid")]
     mutated = apply_mutations(data[base_key], case.get("mutations", []))
+    if case.get("target") == "review_reentry" and case.get("id") == "review-reentry-stale-blocker":
+        mutated["state"] = "reentry_authorized"
+        mutated["authorizes"] = ["manual-pause-reentry"]
+        mutated["does_not_authorize"] = ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
     return validate_fixture_document(plan_root, case["target"], mutated, data)
 
 

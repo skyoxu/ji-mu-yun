@@ -28,6 +28,8 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `ADDED`: append-only recovery with stale predecessor and normally initialized successor.
 - `ADDED`: no open accepted P0/P1; every accepted P2 disposed; high-risk and expired deferrals block.
 - `ADDED`: implementation-contract instances belong to plans; common schema belongs to the Skill; runtime evidence belongs to logs.
+- `ADDED`: every Quick Dev target plan is audited before writes/freeze; material defects enter VDD repair, validation, append-only 95 change recording, and full identity refreeze.
+- `ADDED`: the non-authoritative 95 report index provides exact path lookup with target-directory-only fallback and synchronized creation; both index and unique report remain outside authority/candidate hashes, and the overall implementation entry is gated by the current declared terminal predicate.
 - `REMOVED`: no first-release Bootstrap CLI modification without a proved extension-point gap.
 - `REMOVED`: no P4 BMAD removal within this plan.
 
@@ -53,5 +55,6 @@ The original source remains `agentbuild.txt` at SHA-256 `1eff0054ca233d70ef00a8b
 - `MODIFIED`: `RMAP-027` separates static zero-authority contract proof from authorization-participating runtime proof, requires seven explicit executable PASS or type-authorized reasoned N/A verdicts, and confines independent verifier identity to protected handoff and release.
 - `MODIFIED`: S7 delegates finalized-run validation to the repository Bootstrap v2 producer; successor authorization and P2 evidence are typed, current-identity-bound, expiry/revocation-aware, and independently recomputed.
 - `REMOVED`: mutable single-Capsule overwrite, standalone adapter-decision authority, and any need for a Router or S8.
+- `ADDED`: `RMAP-028/029` and three single-fault `RMAP-PLAN-LIFECYCLE-POLICY` fixtures bind index-first report resolution, the pre-implementation audit/repair path, and the post-terminal report path without coupling to another requirement directory.
 
 No requirement is silently dropped. Machine-level delta details live in `schemas/spec-deltas.v1.json`.

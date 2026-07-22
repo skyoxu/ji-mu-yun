@@ -9,6 +9,7 @@ from typing import Any
 
 from candidate_lineage_guards import fold_accepted_attempts, load_candidate_lineage, validate_candidate_lineage_model, validate_candidate_result_ref, validate_candidate_supersession_model
 from contract_guards import contained_file, schema_error
+from replay_baseline_guards import load_replay_baseline
 
 
 HASH_RE = "sha256:"
@@ -147,14 +148,18 @@ def _canonical_test_patch(repository_root: Path, entries: list[dict[str, Any]]) 
     return b"".join(chunks)
 
 
-def derive_candidate_snapshot(plan_root: Path, repository_root: Path, contract: dict[str, Any], slice_id: str = "RMAP-S6") -> tuple[list[dict[str, Any]], bytes]:
+def derive_candidate_snapshot(plan_root: Path, repository_root: Path, contract: dict[str, Any], slice_id: str = "RMAP-S6", replay_baseline_ref: dict[str, Any] | None = None) -> tuple[list[dict[str, Any]], bytes, set[str]]:
     policy = scope_policy(plan_root, repository_root, contract, slice_id)
     monitored = set().union(*policy.values())
     tracked = _git(repository_root, "diff", "--no-renames", "--name-only", "-z", "HEAD", "--").decode("utf-8").split("\0")
     untracked = _git(repository_root, "ls-files", "--others", "--exclude-standard", "-z").decode("utf-8").split("\0")
     paths = sorted({path for path in [*tracked, *untracked] if path and _matches(path, monitored)}, key=str.casefold)
     entries = [_file_entry(repository_root, path, policy) for path in paths]
-    return entries, _canonical_test_patch(repository_root, entries)
+    exclusions, findings = load_replay_baseline(plan_root, repository_root, replay_baseline_ref, {_entry_path(item): item for item in entries})
+    if findings:
+        raise ValueError("; ".join(item["message"] for item in findings))
+    entries = [item for item in entries if _entry_path(item) not in exclusions]
+    return entries, _canonical_test_patch(repository_root, entries), exclusions
 
 
 def _core(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -173,8 +178,8 @@ def validate_candidate_diff(
     current: dict[str, str],
     candidate_run_id: str,
 ) -> list[dict[str, str]]:
-    expected, expected_patch = derive_candidate_snapshot(plan_root, repository_root, contract)
-    folded, fold_hash, fold_findings = load_candidate_lineage(plan_root, repository_root, lineage, candidate_run_id, current)
+    expected, expected_patch, exclusions = derive_candidate_snapshot(plan_root, repository_root, contract, replay_baseline_ref=lineage.get("replay_baseline_ref"))
+    folded, fold_hash, fold_findings = load_candidate_lineage(plan_root, repository_root, lineage, candidate_run_id, current, exclusions)
     if fold_findings:
         return fold_findings
     return validate_candidate_model(

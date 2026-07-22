@@ -12,6 +12,7 @@ Work:
 - migrate the common schema candidate into its single live owner;
 - define public persisted Capsule and append-only attempt schemas;
 - keep this plan's contract instance and predicates self-hosted;
+- establish the reusable target-plan audit, unique 95, VDD repair, validation, append-only change entry, identity refreeze, and report non-authority contract;
 - establish the exact review-added artifact registry and prove producer authority, immutable identity, source derivation, independent recomputation, staleness, supersession, and consumer authorization boundaries;
 - observe negative fixture RED.
 
@@ -30,8 +31,9 @@ Work:
 - materialize immutable per-invocation Capsule revisions and decision-last attempt histories;
 - reject raw sensitive evidence, partial attempts, stale bindings, and duplicate accepted stage lineages;
 - run the non-protected self-hosted slice.
+- implement target-plan audit before freeze, VDD repair handoff, post-repair validation/refreeze, and terminal-result reporting guards without coupling to another named plan directory;
 
-Exit: current candidate evidence proves the complete lifecycle, cumulative Git/S0-S6 lineage equality, reproducible test patch, authoritative S7 predecessor proof, and every negative/mutation/integration test passes.
+Exit: current candidate evidence proves the complete lifecycle, target-plan audit/repair/refreeze ordering, terminal-report fail-closed behavior, cumulative Git/S0-S6 lineage equality, reproducible test patch, authoritative S7 predecessor proof, and every negative/mutation/integration test passes.
 
 ## P2: Additive Shadow Backfill
 
@@ -58,8 +60,9 @@ Work:
 - perform semantic review only with explicit authorization;
 - repair all accepted P0/P1 and consume runtime Bootstrap disposition evidence for every accepted P2;
 - run the plan-local `implementation-accepted` predicate.
+- resolve the unique `95-*.md` through the non-authoritative repository index without scanning unrelated plan directories, and append the overall implementation result only after that current terminal predicate passes.
 
-Exit: S7 proves one active S6 candidate through recovery/events/successor evidence independently of its own run ID, no open accepted P0/P1 remains, runtime P2 disposition/verifier evidence is complete, no high-risk/expired deferral remains, and the fresh plan-local envelope authorizes only implementation acceptance.
+Exit: S7 proves one active S6 candidate through recovery/events/successor evidence independently of its own run ID, no open accepted P0/P1 remains, runtime P2 disposition/verifier evidence is complete, no high-risk/expired deferral remains, the fresh plan-local envelope authorizes only implementation acceptance, and the subsequently appended 95 result accurately reports but does not authorize that outcome.
 
 Current state: `plan-ready`. The distinct profile-root-authorized successor validly re-entered from the historical Round 3 manual pause, and the workflow-integrity predicate does not require an external execution identity. P0 may start from a current hash-bound `plan-ready` PASS; every later phase still requires its own predicate evidence. Protected handoff and release remain separately blocked pending independent verifier identity or a trusted signed envelope.
 

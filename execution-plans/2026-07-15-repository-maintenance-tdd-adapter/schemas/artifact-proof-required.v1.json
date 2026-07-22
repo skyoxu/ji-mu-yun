@@ -33,8 +33,6 @@
     "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
     "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/review_reentry_environment.py",
     "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
-    ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-    ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
     "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py",
     "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_projection_support.py",
     "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_inventory_support.py",

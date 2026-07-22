@@ -15,6 +15,7 @@ if str(TOOLS) not in sys.path:
 from protocol_guards import evaluate_protocol_fixture, validate_protocol_fixture_suite  # noqa: E402
 from protocol_artifact_guards import capsule_artifact_refs, validate_context_artifacts, value_hash  # noqa: E402
 from protocol_fixture_support import hydrate_protocol_fixture  # noqa: E402
+from protocol_validation_guards import validate_protocol_bundle  # noqa: E402
 
 
 class ProtocolGuardTests(unittest.TestCase):
@@ -81,6 +82,29 @@ class ProtocolGuardTests(unittest.TestCase):
         self.assertEqual(
             {"RMAP-ATTEMPT-LEDGER"},
             self._rules("candidate-ledger-root-stale"),
+        )
+
+    def test_request_commands_must_equal_the_bound_capsule_commands(self) -> None:
+        bundle, store, versions = hydrate_protocol_fixture(self.fixtures["valid_bundle"])
+        request = bundle["attempts"][0]["backend_request"]
+        request["allowed_command_ids"] = ["wrong-command"]
+        request["request_payload_hash"] = value_hash({
+            "capsule_hash": request["capsule_ref"]["sha256"],
+            "stage_binding_id": request["stage_binding_id"],
+            "goal": request["goal"],
+            "allowed_command_ids": request["allowed_command_ids"],
+        })
+        self.assertEqual(
+            {"RMAP-ATTEMPT-COMMAND"},
+            {item["rule_id"] for item in validate_protocol_bundle(PLAN_ROOT, bundle, artifact_store=store, file_versions=versions, require_complete=True)},
+        )
+
+    def test_change_type_must_match_before_and_after_snapshot_semantics(self) -> None:
+        bundle, store, versions = hydrate_protocol_fixture(self.fixtures["valid_bundle"])
+        bundle["attempts"][0]["diff_manifest"]["files"][0]["change_type"] = "delete"
+        self.assertEqual(
+            {"RMAP-ATTEMPT-DIFF-BINDING"},
+            {item["rule_id"] for item in validate_protocol_bundle(PLAN_ROOT, bundle, artifact_store=store, file_versions=versions, require_complete=True)},
         )
 
 

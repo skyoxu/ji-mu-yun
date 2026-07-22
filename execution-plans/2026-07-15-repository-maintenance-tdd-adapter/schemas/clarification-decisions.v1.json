@@ -73,6 +73,14 @@
       "authority_hash": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
       "status": "closed",
       "write_disposition": "normal"
+    },
+    {
+      "kind": "repair",
+      "run_id": "clarification-20260722T133456Z",
+      "state_sha256": "sha256:b369f473606905bd098281cec5b0dd2b566a089675ef8b11364f546c8eb63757",
+      "authority_hash": "sha256:6ed4a770d6d3067fe99e7b051a40e172e29d31216915e53ed714dcffbbcce246",
+      "status": "closed",
+      "write_disposition": "normal"
     }
   ],
   "decision_sets": {
@@ -453,6 +461,29 @@
         "blocking": true,
         "summary": "Prevent the finding-added authority registry from synchronously refreshing its own trust root.",
         "decision": "Bind the complete authority registry bytes and seven root-level proof dimensions from the VDD Skill contract, then require isolated self-refresh escalation and broken, wrong, and stale predecessor counterexamples."
+      }
+    ],
+    "repair_20260722_lifecycle": [
+      {
+        "id": "RMAP-PLAN-LIFECYCLE-PREIMPLEMENTATION",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Audit and repair each target execution-plan directory before implementation writes or identity freeze.",
+        "decision": "Require exactly one target 95 report, route material defects through the VDD repair write gate, append the pre-implementation change entry, pass the target validator, and refreeze all affected identities before observing RED."
+      },
+      {
+        "id": "RMAP-PLAN-LIFECYCLE-REPORT-INDEX",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Resolve target 95 reports without recursively scanning execution-plans and synchronize registration when Quick Dev creates a report.",
+        "decision": "Use execution-plans/95-implementation-report-index.v1.json as a non-authoritative index-first path hint, validate exact target containment and existence, fall back only to the named target directory, and create the report plus its index entry in the same pre-implementation change."
+      },
+      {
+        "id": "RMAP-PLAN-LIFECYCLE-COMPLETION",
+        "status": "accepted",
+        "blocking": true,
+        "summary": "Gate the target plan's overall implementation report on its current terminal predicate.",
+        "decision": "Append commands, exits, test counts, hashes, changed files, evidence, and residual gaps to the same 95 report only after the declared terminal predicate passes; report text never authorizes acceptance, commit, release, or done."
       }
     ]
   },

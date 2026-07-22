@@ -234,7 +234,9 @@
         }
       ],
       "cumulative_fold_hash": "sha256:3a95c438c86edb3b58fa77ffdc1be303b67e553d2868358c8fb26cd581c192f4",
-      "root_hash": "sha256:3666f5d8dd424ba2c6f5acb9b96a1aeacd74331689ee7a207e420d3d5881dfff"
+      "root_hash": "sha256:6a1d116991c3414ad7a429ad28edb80f55433a9dbfe0c9d850d4b48b90739bde",
+      "baseline_bridges": [],
+      "replay_baseline_ref": null
     },
     "lineage_runs": [
       {

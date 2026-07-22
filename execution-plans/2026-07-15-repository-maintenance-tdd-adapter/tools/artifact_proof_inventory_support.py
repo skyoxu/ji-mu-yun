@@ -100,6 +100,16 @@ def close_uniform_inventory(
     sha256_file: Callable[[Path], str], repository_root: Path,
 ) -> None:
     formal = inventory["contract_artifacts"]
+    external_trust_inputs = {
+        ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+        ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+    }
+    # The root and its verifier are an external, protected input pair. Including
+    # either in this plan's generated authority package makes rotation recursive.
+    formal[:] = [relative for relative in formal if relative not in external_trust_inputs]
+    authority["artifacts"] = [
+        item for item in authority["artifacts"] if item["path"] not in external_trust_inputs
+    ]
     for relative in inventory.pop("provisional_diagnostic_artifacts", []):
         if relative not in formal:
             formal.append(relative)
@@ -154,8 +164,6 @@ def close_uniform_inventory(
     authority["runtime_types"] = [runtime_by_type[key] for key in sorted(runtime_by_type)]
     by_path = {item["path"]: item for item in authority["artifacts"]}
     boundary_classes = {
-        ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json": "manifest-bound-authority-root",
-        ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py": "manifest-bound-validator",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py": "manifest-bound-validator",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_projection_support.py": "manifest-bound-validator",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_inventory_support.py": "manifest-bound-validator",

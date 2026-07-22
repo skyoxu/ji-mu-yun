@@ -613,6 +613,49 @@
       "failure_family": "artifact_proof_incomplete",
       "evidence_intent": "Exact formal artifact population, seven PASS/N/A verdicts, static zero-authority boundaries, authorization-participating seven-PASS enforcement, protected-only external identity, and single-rule missing, unauthorized-N/A, fake-PASS, producer, identity, derivation, staleness, lineage, and consumer counterexamples.",
       "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-028",
+      "summary": "Before implementation writes or identity freeze, resolve the target 95 report through the repository index with target-directory-only fallback, synchronize registration when creating it, audit the target execution-plan directory, route material defects through VDD repair, append the change entry, validate the repaired plan, and refreeze all affected identities.",
+      "owner": "plan lifecycle maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-028",
+      "status": "active",
+      "source_refs": [
+        "repair-20260722-lifecycle:RMAP-PLAN-LIFECYCLE-PREIMPLEMENTATION",
+        "repair-20260722-lifecycle:RMAP-PLAN-LIFECYCLE-REPORT-INDEX"
+      ],
+      "consumers": [
+        "Quick Dev prepare",
+        "VDD repair route",
+        "execution-plan report index reader and writer",
+        "target report writer",
+        "identity freezer"
+      ],
+      "failure_family": "target_plan_lifecycle_invalid",
+      "evidence_intent": "Index-first target report resolution, target-only fallback, synchronized registration, target-plan audit, unique 95 ownership, VDD repair gate, append-only change entry, fresh validator pass, and post-repair identity freeze evidence.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-029",
+      "summary": "Append an overall implementation result to the target 95 report only after the declared terminal predicate passes for the current candidate, while keeping the report non-authorizing.",
+      "owner": "completion report maintainer",
+      "owner_book": "06-testing-observability-and-evidence.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-029",
+      "status": "active",
+      "source_refs": [
+        "repair-20260722-lifecycle:RMAP-PLAN-LIFECYCLE-COMPLETION"
+      ],
+      "consumers": [
+        "terminal result reporter",
+        "target plan operator",
+        "recovery reader"
+      ],
+      "failure_family": "premature_or_authoritative_completion_report",
+      "evidence_intent": "Current terminal predicate envelope, command/exit/test/hash summary, changed-file and residual-gap record, append-only completion entry, and explicit non-authority boundary.",
+      "quality_check": "pass"
     }
   ]
 }

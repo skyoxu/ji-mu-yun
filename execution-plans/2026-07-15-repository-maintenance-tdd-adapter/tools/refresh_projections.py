@@ -13,6 +13,10 @@ from artifact_proof_projection_support import build_predicate_artifact_closure, 
 
 PLAN_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = PLAN_ROOT.parents[1]
+EXTERNAL_TRUST_INPUTS = {
+    ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+    ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+}
 
 
 def sha256_file(path: Path) -> str:
@@ -115,9 +119,9 @@ def refresh_successor_evidence() -> None:
 def refresh_artifact_proof_authority() -> None:
     path = PLAN_ROOT / "schemas" / "artifact-proof-authority.v1.json"
     document = read_json(path)
-    external_root = read_json(
-        REPOSITORY_ROOT / document["external_trust_root"]["path"]
-    )
+    document["artifacts"] = [
+        item for item in document["artifacts"] if item["path"] not in EXTERNAL_TRUST_INPUTS
+    ]
     closure_path = PLAN_ROOT / "schemas" / "predicate-artifact-closure.v1.json"
     baseline_commit = read_json(closure_path)["baseline_commit"] if closure_path.is_file() else subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=REPOSITORY_ROOT, capture_output=True,
@@ -136,11 +140,7 @@ def refresh_artifact_proof_authority() -> None:
         artifact["lifecycle_status"] = "new" if predecessor is None else (
             "unchanged" if predecessor == current_hash else "supersedes"
         )
-        if artifact["class_id"] == "authority-root":
-            predecessor = artifact.get("predecessor_sha256") or external_root["proof"]["immutable_identity"]["artifact_sha256"]
-            artifact["lifecycle_status"] = "supersedes"
-            artifact["predecessor_sha256"] = predecessor
-        elif predecessor is None:
+        if predecessor is None:
             artifact.pop("predecessor_sha256", None)
         else:
             artifact["predecessor_sha256"] = predecessor
@@ -209,10 +209,12 @@ def refresh_artifact_proof_inventory() -> None:
 def refresh_authority_manifest() -> None:
     path = PLAN_ROOT / "schemas" / "authority-manifest.v1.json"
     manifest = read_json(path)
+    skill_schema_prefix = ".agents/skills/quick-dev-tdd-adapter/schemas/"
+    migrated_schema_names = ["implementation-contract.v1.schema.json", "context-manifest.v1.schema.json", "slice-capsule.v1.schema.json", "backend-request.v1.schema.json", "backend-response.v1.schema.json", "diff-manifest.v1.schema.json", "adapter-decision.v1.schema.json", "agent-attempt-event.v1.schema.json", "baseline-file-manifest.v1.schema.json", "attempt-ledger-manifest.v1.schema.json"]
+    obsolete_paths = {f"execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/{name}" for name in migrated_schema_names}
     additions = {
         "review_policy_authority": [
             ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
-            ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
             ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-authority-root-registry.v1.schema.json",
             ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
             ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
@@ -225,12 +227,13 @@ def refresh_authority_manifest() -> None:
             ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json",
         ],
         "machine_owners": [
+            *(skill_schema_prefix + name for name in migrated_schema_names),
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json",
-            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/stage-evidence-projection.v1.schema.json",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
@@ -248,15 +251,20 @@ def refresh_authority_manifest() -> None:
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_inventory_support.py",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/review_reentry_environment.py",
-            ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_builder.py",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_builder.py",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_validation_result_guards.py",
+            "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_stage_projection_guards.py",
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py",
         ],
         "compatibility_inputs": [
             "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
         ],
     }
+    for entries in manifest["categories"].values():
+        entries[:] = [entry for entry in entries if entry["path"] not in EXTERNAL_TRUST_INPUTS | obsolete_paths]
     existing = {entry["path"] for entries in manifest["categories"].values() for entry in entries}
     for category, paths in additions.items():
         for relative in paths:
@@ -319,6 +327,8 @@ def refresh_candidate_lineage_fixture() -> None:
     document = read_json(path)
     base = document["base"]
     lineage = base["lineage"]
+    lineage["baseline_bridges"] = []
+    lineage["replay_baseline_ref"] = None
     prior_slice = None
     prior_run = None
     prior_effect_hash = None
@@ -349,7 +359,7 @@ def refresh_candidate_lineage_fixture() -> None:
 def refresh_clarification() -> None:
     path = PLAN_ROOT / "schemas" / "clarification-decisions.v1.json"
     document = read_json(path)
-    run_id = "clarification-20260717T190000Z"
+    run_id = "clarification-20260722T133456Z"
     state_path = REPOSITORY_ROOT / "logs" / "vdd-clarifications" / "2026-07-15-repository-maintenance-tdd-adapter-f6d1143a" / run_id / "state.json"
     source = next(item for item in document["sources"] if item["run_id"] == run_id)
     source["state_sha256"] = sha256_file(state_path)
@@ -366,6 +376,7 @@ def main() -> int:
     refresh_successor_evidence()
     refresh_artifact_proof_inventory()
     refresh_artifact_proof_authority()
+    refresh_authority_manifest()
     refresh_predicate_artifact_closure()
     refresh_authority_manifest()
     refresh_predicate_artifact_closure()
@@ -374,6 +385,9 @@ def main() -> int:
     refresh_contract()
     refresh_deltas()
     refresh_authority_manifest()
+    # The authority inventory is itself a proof input; regenerate proofs after
+    # its final byte update so the registry cannot retain a one-pass stale hash.
+    refresh_artifact_proof_authority()
     refresh_artifact_proofs()
     refresh_authority_manifest()
     print("Refreshed repository-maintenance plan projections")

@@ -14,7 +14,7 @@ Protected-state blocker: [`schemas/plan-state.v1.json`](schemas/plan-state.v1.js
 
 ## Outcome
 
-Create a repository-owned, stateless TDD adapter protocol that projects VDD plans into compact implementation contracts and immutable persisted Slice Capsule revisions, proves an observed RED before production writes, constrains GREEN and REFACTOR work, records every backend attempt in an append-only hash chain, and produces an implementation candidate for the existing Bootstrap semantic-review route. The implementation backend, Capsule, and adapter decision never own review, `done`, commit, acceptance, or release authority.
+Create a repository-owned, stateless TDD adapter protocol that resolves the target's `95-*.md` through the repository index with target-directory-only fallback, synchronizes registration when creating the report, then audits and, when necessary, repairs a target VDD plan before implementation identity freeze. It projects the plan into compact implementation contracts and immutable persisted Slice Capsule revisions, proves an observed RED before production writes, constrains GREEN and REFACTOR work, records every backend attempt in an append-only hash chain, and produces an implementation candidate for the existing Bootstrap semantic-review route. The same protocol appends an overall result to the target's unique `95-*.md` only after its current terminal predicate passes. The implementation backend, Capsule, index, report, and adapter decision never own review, `done`, commit, acceptance, or release authority.
 
 ## Current-State Truth
 
@@ -43,9 +43,11 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 7. [Implementation phases](07-implementation-phases.md)
 8. [Risks, DoD, and glossary](08-risks-dod-and-glossary.md)
 9. [Global review and validation](96-global-review-and-validation.md)
-10. [Requirements ledger](97-requirements-ledger.md)
-11. [Source-to-split audit](98-source-to-split-audit.md)
-12. [Source coverage](99-source-coverage.md)
+10. [Non-authorizing implementation evolution and completion report](95-implementation-evolution-and-completion-report.md)
+11. [Repository 95 implementation report index](../95-implementation-report-index.v1.json)
+11. [Requirements ledger](97-requirements-ledger.md)
+12. [Source-to-split audit](98-source-to-split-audit.md)
+13. [Source coverage](99-source-coverage.md)
 
 ## Machine Owners
 
@@ -53,9 +55,9 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 - Requirement registry: [`schemas/requirements.v1.json`](schemas/requirements.v1.json)
 - Source coverage: [`schemas/source-coverage.v1.json`](schemas/source-coverage.v1.json)
 - Spec deltas: [`schemas/spec-deltas.v1.json`](schemas/spec-deltas.v1.json)
-- Proposed common contract schema: [`schemas/implementation-contract.v1.schema.json`](schemas/implementation-contract.v1.schema.json)
-- Persisted context schemas: [`schemas/context-manifest.v1.schema.json`](schemas/context-manifest.v1.schema.json) and [`schemas/slice-capsule.v1.schema.json`](schemas/slice-capsule.v1.schema.json)
-- Attempt ledger schemas: [`schemas/backend-request.v1.schema.json`](schemas/backend-request.v1.schema.json), [`schemas/backend-response.v1.schema.json`](schemas/backend-response.v1.schema.json), [`schemas/diff-manifest.v1.schema.json`](schemas/diff-manifest.v1.schema.json), [`schemas/adapter-decision.v1.schema.json`](schemas/adapter-decision.v1.schema.json), and [`schemas/agent-attempt-event.v1.schema.json`](schemas/agent-attempt-event.v1.schema.json)
+- Common contract schema: [`implementation-contract.v1.schema.json`](../../.agents/skills/quick-dev-tdd-adapter/schemas/implementation-contract.v1.schema.json)
+- Persisted context schemas: [`context-manifest.v1.schema.json`](../../.agents/skills/quick-dev-tdd-adapter/schemas/context-manifest.v1.schema.json) and [`slice-capsule.v1.schema.json`](../../.agents/skills/quick-dev-tdd-adapter/schemas/slice-capsule.v1.schema.json)
+- Attempt ledger schemas: [`backend-request.v1.schema.json`](../../.agents/skills/quick-dev-tdd-adapter/schemas/backend-request.v1.schema.json), [`backend-response.v1.schema.json`](../../.agents/skills/quick-dev-tdd-adapter/schemas/backend-response.v1.schema.json), [`diff-manifest.v1.schema.json`](../../.agents/skills/quick-dev-tdd-adapter/schemas/diff-manifest.v1.schema.json), [`adapter-decision.v1.schema.json`](../../.agents/skills/quick-dev-tdd-adapter/schemas/adapter-decision.v1.schema.json), and [`agent-attempt-event.v1.schema.json`](../../.agents/skills/quick-dev-tdd-adapter/schemas/agent-attempt-event.v1.schema.json)
 - Final candidate schemas: [`schemas/candidate-diff-manifest.v1.schema.json`](schemas/candidate-diff-manifest.v1.schema.json), [`schemas/candidate-slice-effect.v1.schema.json`](schemas/candidate-slice-effect.v1.schema.json), [`schemas/candidate-lineage-manifest.v1.schema.json`](schemas/candidate-lineage-manifest.v1.schema.json), [`schemas/candidate-result-ref.v1.schema.json`](schemas/candidate-result-ref.v1.schema.json), and [`schemas/candidate-supersession-proof.v1.schema.json`](schemas/candidate-supersession-proof.v1.schema.json)
 - Review-added artifact proof contract, Codex Home provisional diagnostic binder, diagnostic-pinned root/guard proofs, VDD Skill mirror, candidate-owned authority/required inventories, static registry, and runtime type proof: `C:/Users/Administrator/.codex/skills/run-phase-bootstrap-review/scripts/verify_artifact_proof_boundary.py`, `.agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json`, `.agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py`, [`.agents/skills/vdd-execution-plan/scripts/skill-contract.json`](../../.agents/skills/vdd-execution-plan/scripts/skill-contract.json), [`schemas/artifact-proof.v1.schema.json`](schemas/artifact-proof.v1.schema.json), [`schemas/artifact-proof-authority.v1.json`](schemas/artifact-proof-authority.v1.json), [`schemas/artifact-proof-required.v1.json`](schemas/artifact-proof-required.v1.json), [`schemas/artifact-proof-registry.v1.json`](schemas/artifact-proof-registry.v1.json), and [`schemas/runtime-artifact-type-proof.v1.json`](schemas/runtime-artifact-type-proof.v1.json)
 - Capsule and attempt mutation fixtures: [`fixtures/capsule-attempt-cases.v1.json`](fixtures/capsule-attempt-cases.v1.json)
@@ -73,6 +75,8 @@ Create a repository-owned, stateless TDD adapter protocol that projects VDD plan
 - Candidate diff validator: [`tools/candidate_diff_guards.py`](tools/candidate_diff_guards.py)
 - Cross-slice lineage and supersession validator: [`tools/candidate_lineage_guards.py`](tools/candidate_lineage_guards.py)
 - Review-added artifact proof validator: [`tools/artifact_proof_guards.py`](tools/artifact_proof_guards.py)
+
+The directory must contain exactly one `95-*.md` report. Quick Dev and VDD resolve it through `execution-plans/95-implementation-report-index.v1.json` first and inspect only the named target directory on a miss. Creating the report and registering its complete filename is one pre-implementation change. The index and report are non-authoritative continuity aids and are deliberately excluded from authority and candidate hashes so later entries cannot manufacture or invalidate predicate evidence.
 
 ## Validation Commands
 

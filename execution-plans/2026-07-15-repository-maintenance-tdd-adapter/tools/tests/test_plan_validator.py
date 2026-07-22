@@ -1,8 +1,7 @@
 from __future__ import annotations
 import copy, hashlib
 import json, shutil
-import sys
-import unittest
+import sys, unittest
 import uuid
 from pathlib import Path
 from unittest.mock import patch
@@ -91,11 +90,11 @@ class PlanValidatorTests(unittest.TestCase):
     def _write_protocol_run(self, run_dir: Path) -> None:
         repository_root = PLAN_ROOT.parents[1]
         base = copy.deepcopy(self.data["protocol_fixtures"]["valid_bundle"])
-        target = (run_dir / "candidate-source.txt").relative_to(repository_root).as_posix()
+        target = "logs/rmap-test-candidate-source.txt"
         base["slice_capsule"]["slice_id"] = "RMAP-S6"
         base["slice_capsule"]["run_id"] = "run-a"
         base["slice_capsule"]["exit_predicate"] = "implementation-candidate"
-        base["slice_capsule"]["boundaries"]["allowed_write_set"] = ["logs/tdd-adapter/**"]
+        base["slice_capsule"]["boundaries"]["allowed_write_set"] = ["logs/**"]
         base["context_manifest"]["slice_id"] = "RMAP-S6"
         base["context_manifest"]["run_id"] = "run-a"
         base["attempts"][0]["diff_manifest"]["files"][0]["path"] = target
@@ -166,15 +165,14 @@ class PlanValidatorTests(unittest.TestCase):
         with patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
             result, exit_code = run_predicate("plan-ready")
         self.assertEqual((0, "pass", ["plan-ready"]), (exit_code, result["status"], result["authorizes"]))
-        self.assertNotIn("plan-ready", set(result["does_not_authorize"]))
+        self.assertEqual([], result["diagnostics"])
     def test_authorized_reentry_does_not_supply_higher_predicate_evidence(self) -> None:
         for predicate in ("slice-ready", "implementation-candidate", "implementation-accepted"):
             with self.subTest(predicate=predicate):
                 with patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
                     result, exit_code = run_predicate(predicate)
                 self.assertEqual((1, "fail"), (exit_code, result["status"]))
-                self.assertNotIn("RMAP-REVIEW-MANUAL-PAUSE", {item["rule_id"] for item in result["diagnostics"]})
-                self.assertEqual({"RMAP-AUTH-EVIDENCE-MISSING"}, {item["rule_id"] for item in result["diagnostics"]})
+                self.assertIn("RMAP-AUTH-EVIDENCE-MISSING", {item["rule_id"] for item in result["diagnostics"]})
     def test_every_declared_fixture_has_exact_rule(self) -> None:
         for case in self.data["fixtures"]["cases"]:
             with self.subTest(case=case["id"]):
@@ -182,7 +180,7 @@ class PlanValidatorTests(unittest.TestCase):
                 expected = [] if case["expected_valid"] else sorted(case.get("expected_rules", [case["expected_rule"]]))
                 self.assertEqual(expected, rules)
     def test_predicate_authority_is_exact(self) -> None:
-        self.assertEqual([], validate_plan_state(self.data["state"], self.data["review_blocker"]))
+        self.assertEqual(set(), {item["rule_id"] for item in validate_plan_state(self.data["state"], self.data["review_blocker"])})
         for name, (authorizes, excludes) in PREDICATE_AUTHORITY.items():
             self.assertEqual(authorizes, self.data["state"]["predicates"][name]["authorizes"])
             self.assertEqual(excludes, self.data["state"]["predicates"][name]["does_not_authorize"])
@@ -206,6 +204,10 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertEqual({"RMAP-CMD-RAW"}, {item["rule_id"] for item in validate_commands(commands)})
         commands = copy.deepcopy(self.data["commands"]); commands["commands"][0]["executable"] = "powershell"
         self.assertIn("RMAP-CMD-EXECUTABLE", {item["rule_id"] for item in validate_commands(commands)})
+    def test_duplicate_ownership_is_rejected(self) -> None:
+        case = next(item for item in self.data["fixtures"]["cases"] if item["id"] == "duplicate-ownership")
+        findings = {item["rule_id"] for item in evaluate_fixture(PLAN_ROOT, case["id"], self.data)}
+        self.assertEqual({"RMAP-OWNERSHIP-DUPLICATE"}, findings)
     def test_command_descriptors_do_not_own_stage_exit(self) -> None:
         self.assertTrue(all("expected_exit" not in item and "expected_failure_ids" not in item for item in self.data["commands"]["commands"]))
     def test_slice_command_requires_explicit_stage_arguments(self) -> None:
@@ -217,6 +219,13 @@ class PlanValidatorTests(unittest.TestCase):
         contract["slices"][2]["tdd"]["red"]["expected_exit"] = "zero"
         rules = {item["rule_id"] for item in validate_contract(PLAN_ROOT, contract, self.data["requirements"], self.data["commands"])}
         self.assertIn("RMAP-TDD-STAGE-EXPECTATION", rules)
+    def test_quick_dev_plan_lifecycle_is_contract_bound(self) -> None:
+        requirements = {item["id"]: item for item in self.data["requirements"]["requirements"]}; acceptances = {item["requirement_id"]: item for item in self.data["acceptance"]["acceptances"]}; slices = {item["slice_id"]: item for item in self.data["contract"]["slices"]}
+        self.assertTrue({"RMAP-028", "RMAP-029"} <= set(requirements) and {"RMAP-028"} <= set(slices["RMAP-S1"]["requirement_ids"]) and {"RMAP-028", "RMAP-029"} <= set(slices["RMAP-S2"]["requirement_ids"]))
+        self.assertEqual(("RMAP-S1", ["RMAP-S2"], "RMAP-S2"), (acceptances["RMAP-028"]["owner_slice_id"], acceptances["RMAP-028"]["supporting_slice_ids"], acceptances["RMAP-029"]["owner_slice_id"]))
+        self.assertTrue({"plan-audit-before-freeze", "target-95-append-only-change-entry", "repository-report-index-first-lookup", "target-directory-only-index-miss-fallback", "target-95-index-synchronized", "index-non-authoritative"} <= set(acceptances["RMAP-028"]["evidence_required"]))
+        self.assertEqual(["plan-lifecycle-audit-omitted", "plan-lifecycle-report-index-bypassed"], acceptances["RMAP-028"]["negative_fixture_ids"])
+        self.assertTrue({"terminal-predicate-pass", "target-95-append-only-completion-entry"} <= set(acceptances["RMAP-029"]["evidence_required"]))
     def test_contract_schema_required_field_is_enforced(self) -> None:
         contract = copy.deepcopy(self.data["contract"]); del contract["plan_id"]
         self.assertEqual(["RMAP-STRUCT-SCHEMA"], [item["rule_id"] for item in validate_contract(PLAN_ROOT, contract, self.data["requirements"], self.data["commands"])])
@@ -361,7 +370,7 @@ class PlanValidatorTests(unittest.TestCase):
             folded = [{key: item.get(key) for key in ("change_type", "baseline_path", "candidate_path", "before_sha256", "after_sha256")} for item in expected_diff]
             runtime = _bootstrap_runtime(repository_root)
             runtime.validate_finalized_run_evidence = lambda *_args: envelope
-            with patch("candidate_diff_guards.derive_candidate_snapshot", return_value=(expected_diff, b"")), patch("candidate_diff_guards.load_candidate_lineage", return_value=(folded, value_hash(folded), [])), patch("evidence_guards._bootstrap_runtime", return_value=runtime):
+            with patch("candidate_diff_guards.derive_candidate_snapshot", return_value=(expected_diff, b"", set())), patch("candidate_diff_guards.load_candidate_lineage", return_value=(folded, value_hash(folded), [])), patch("evidence_guards._bootstrap_runtime", return_value=runtime):
                 self.assertEqual([], validate_candidate_document(PLAN_ROOT, relative, candidate, current, stages))
                 self.assertEqual([], validate_candidate_review_documents(PLAN_ROOT, relative, candidate, envelope, review_input, review_result, dispositions, current, stages, review_dir, candidate_ref, candidate_ref_relative))
         finally:

@@ -4,7 +4,7 @@
 
 The repository already has rigorous VDD planning and evidence-gated Bootstrap review, but it lacks a small, stable, machine-readable consumption surface between a behavior slice and an implementation agent. The missing control plane permits an implementation workflow to claim progress without proving a real RED, constraining its write set, preserving baseline identity, or separating candidate production from acceptance authority.
 
-The plan succeeds when a repository-owned adapter can consume one implementation-contract instance, enforce the RED -> GREEN -> REFACTOR sequence, recover from hash-bound evidence, and emit a candidate envelope that can enter Bootstrap review without letting the backend review, mark done, commit, accept, or release.
+The plan succeeds when a repository-owned adapter resolves the target report through the repository index without scanning unrelated plan directories, synchronizes the index if it creates the report, audits the target plan before implementation identity freeze, routes material plan defects through VDD repair, preserves an append-only change record in the target's unique `95-*.md`, consumes one implementation-contract instance, enforces the RED -> GREEN -> REFACTOR sequence, recovers from hash-bound evidence, and emits a candidate envelope that can enter Bootstrap review without letting the backend review, mark done, commit, accept, or release. After the target's declared terminal predicate passes for the current candidate, the adapter may append a non-authorizing overall implementation result to the same report.
 
 ## Approved Sources
 
@@ -30,6 +30,8 @@ The plan succeeds when a repository-owned adapter can consume one implementation
 
 Mutable run state and result envelopes belong under `logs/tdd-adapter/**`, never inside an execution-plan directory.
 
+Each target plan also owns exactly one append-only `95-*.md` continuity report. `execution-plans/95-implementation-report-index.v1.json` maps its directory to the complete report filename as a non-authoritative lookup hint. Consumers validate an indexed hit and otherwise inspect only the target directory. The report records pre-implementation repairs and a terminal implementation summary, while both report and index remain outside machine authority and candidate identity.
+
 ## Framework ADR Gate
 
 The existing Accepted [`ADR-0041 Bootstrap Review Execution Control Plane Ownership`](../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md) owns the shared repository control-plane ownership pattern and Bootstrap-specific execution boundary: durable semantics live in standards, executable protocol lives in a repository-owned Skill, plan-local validation owns business acceptance, and compatibility adapters do not acquire durable behavior. It does not define this TDD Adapter's RED/GREEN/REFACTOR, Capsule, attempt-ledger, candidate-diff, or S7 predecessor semantics; the new repository-maintenance standard and adapter Skill own those details.
@@ -54,6 +56,8 @@ S0 cites ADR-0041 and creates only the repository-maintenance adapter standard. 
 - Immutable per-invocation persisted Capsule revisions and an append-only Agent Attempt Ledger.
 - Existing Bootstrap extension points before any Bootstrap CLI delta.
 - Cross-slice S0-S6 immutable candidate lineage, authoritative S7 supersession proof, and runtime Bootstrap disposition evidence.
+- Target-plan audit before implementation writes or identity freeze, VDD repair plus fresh validation when defects exist, and post-repair identity refreezing.
+- Index-first, target-directory-bounded resolution of the target plan's unique non-authorizing `95-*.md`, synchronized registration on creation, and terminal-predicate-gated overall result reporting.
 
 ## Non-Goals
 
@@ -65,3 +69,5 @@ S0 cites ADR-0041 and creates only the repository-maintenance adapter standard. 
 - Automatically launching a provider or Codex subprocess in adapter v1.
 - Adding a Router, another slice, or mutable `ledger.json` state.
 - Treating confidence, assistant text, process exit, plan validation, or Bootstrap supplemental evidence as release authority.
+- Treating a 95 index entry or `95-*.md` content as acceptance, commit, release, or completion authority.
+- Coupling the lifecycle behavior to any named historical requirement directory instead of resolving the current target plan and its registered validator.

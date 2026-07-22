@@ -97,7 +97,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -239,7 +239,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -382,7 +382,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -524,7 +524,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -666,7 +666,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -807,7 +807,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -949,7 +949,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1091,7 +1091,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1233,7 +1233,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1375,7 +1375,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1517,7 +1517,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1660,7 +1660,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1772,7 +1772,7 @@
       "schema_producer_authority": {
         "authority_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
         "authority_category": "protocol_authority",
-        "authority_sha256": "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764",
+        "authority_sha256": "sha256:638f92a8e687adde9910612970240952e018ad31d3a82ada4f31d1896cad504a",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -1780,7 +1780,7 @@
       "immutable_identity": {
         "mode": "authority-root",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+        "artifact_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -1788,7 +1788,7 @@
         "rules": [
           {
             "source": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-            "source_sha256": "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764",
+            "source_sha256": "sha256:638f92a8e687adde9910612970240952e018ad31d3a82ada4f31d1896cad504a",
             "field": "/proof/immutable_identity/artifact_sha256",
             "target_field": "$bytes",
             "derivation": "external-hash-pin"
@@ -1801,7 +1801,7 @@
         "validator_sha256": "sha256:53e742efa6a512245cf7ecc52c3fa40284bc79a345229117563f8960ff902e1b",
         "callable": "validate_artifact_proof_trust_roots",
         "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
-        "negative_test_sha256": "sha256:c8e27653e0a69231801110f6d66c0e6138be2dacb04bd845c9a7007057f9d466",
+        "negative_test_sha256": "sha256:6962bf68883310bbee276beff3530995f7c9a3d186ba8a18deeb3c05f6d26468",
         "expected_failure_ids": [
           "VDD-ARTIFACT-PROOF-PRODUCER",
           "VDD-ARTIFACT-PROOF-IDENTITY",
@@ -1817,7 +1817,7 @@
         "inputs": [
           {
             "source": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-            "source_sha256": "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764",
+            "source_sha256": "sha256:638f92a8e687adde9910612970240952e018ad31d3a82ada4f31d1896cad504a",
             "field": "/proof/immutable_identity/artifact_sha256",
             "target_field": "$bytes",
             "derivation": "external-hash-pin"
@@ -1914,7 +1914,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -1922,7 +1922,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:f21184b203b3e445265a651af0fde3584e8947723d89493384ebf4c1160e220a",
+        "artifact_sha256": "sha256:bd1b327c8db36eea5236072837c8944eb6b5ce40c3b1733c7215a174928cd8f7",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -1933,7 +1933,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -1943,7 +1943,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1962,7 +1962,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -2056,10 +2056,10 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "authority_category": "machine_owners",
-        "authority_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+        "authority_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
         "producer_kind": "generated-projection",
         "generator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
-        "generator_sha256": "sha256:e95731be2f7633df8f8e7999107dcec1712f1efc787e3f27cd043a3e76b9bea7"
+        "generator_sha256": "sha256:a8c4a9db13e0c30bffa1e9991cf20bb3b38004b8456f3b39cf7757c0475961e5"
       },
       "immutable_identity": {
         "mode": "derived-projection",
@@ -2072,7 +2072,7 @@
         "rules": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+            "source_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -2085,7 +2085,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -2101,7 +2101,7 @@
         "inputs": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+            "source_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -2199,7 +2199,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -2218,7 +2218,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -2228,7 +2228,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -2247,7 +2247,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -2342,7 +2342,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -2350,7 +2350,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:e229a521a2beae917c08b47e2fd74d97af933a9ae3ef080ec53dc34303fa6af6",
+        "artifact_sha256": "sha256:d11e8154395566a063e9bcbf2ed420f51e2e64d53a751b53588050f8cb22377b",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -2361,7 +2361,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -2371,7 +2371,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -2390,7 +2390,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -2410,7 +2410,7 @@
           "recovery_supersession"
         ],
         "predecessor_policy": "explicit-null-or-pinned-predecessor",
-        "lifecycle_status": "unchanged",
+        "lifecycle_status": "supersedes",
         "predecessor_sha256": "sha256:e229a521a2beae917c08b47e2fd74d97af933a9ae3ef080ec53dc34303fa6af6"
       },
       "consumer_authorization_boundary": {
@@ -2485,7 +2485,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -2504,7 +2504,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -2514,7 +2514,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -2533,7 +2533,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -2627,7 +2627,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -2646,7 +2646,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -2656,7 +2656,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -2675,7 +2675,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -2798,7 +2798,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -2938,7 +2938,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -3086,7 +3086,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -3205,7 +3205,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -3213,7 +3213,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:50b8b72afeeff344395d6783f2e2a85dd85078937310eb8d64c643ef7c8fa726",
+        "artifact_sha256": "sha256:5e39bf358f6534385e4dcd411a97c19ea582d78346d4ac2d7cc6b7e087a88578",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -3224,7 +3224,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -3234,7 +3234,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -3253,7 +3253,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -3349,7 +3349,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -3368,7 +3368,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -3378,7 +3378,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -3397,7 +3397,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -3490,10 +3490,10 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "authority_category": "machine_owners",
-        "authority_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+        "authority_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
         "producer_kind": "generated-projection",
         "generator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
-        "generator_sha256": "sha256:e95731be2f7633df8f8e7999107dcec1712f1efc787e3f27cd043a3e76b9bea7"
+        "generator_sha256": "sha256:a8c4a9db13e0c30bffa1e9991cf20bb3b38004b8456f3b39cf7757c0475961e5"
       },
       "immutable_identity": {
         "mode": "derived-projection",
@@ -3506,7 +3506,7 @@
         "rules": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+            "source_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -3519,7 +3519,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -3535,7 +3535,7 @@
         "inputs": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+            "source_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -3633,7 +3633,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -3652,7 +3652,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -3662,7 +3662,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -3681,7 +3681,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -3775,7 +3775,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -3794,7 +3794,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -3804,7 +3804,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -3823,7 +3823,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -3920,7 +3920,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -3928,7 +3928,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:f3160d7d7ba54aa66212fd696d2c17729b9ac53fd0f54e29d22e2a042a012903",
+        "artifact_sha256": "sha256:6953b8324cfeecd62ce9b0d0107ba10576fffd1908371fc6084811f0211cc9a1",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -3939,7 +3939,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -3949,7 +3949,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -3968,7 +3968,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -3989,7 +3989,7 @@
           "recovery_supersession"
         ],
         "predecessor_policy": "explicit-null-or-pinned-predecessor",
-        "lifecycle_status": "unchanged",
+        "lifecycle_status": "supersedes",
         "predecessor_sha256": "sha256:f3160d7d7ba54aa66212fd696d2c17729b9ac53fd0f54e29d22e2a042a012903"
       },
       "consumer_authorization_boundary": {
@@ -4062,7 +4062,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -4081,7 +4081,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -4091,7 +4091,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -4110,7 +4110,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -4204,7 +4204,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -4212,7 +4212,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:e3aaf30efffdcfa943ef78dea6cc88166ab8475bebebf15ca4293d8d00419d54",
+        "artifact_sha256": "sha256:108cf84a982024cb45b701b3ad1d3f5ce603a48947ab328e07e7a3f4050a07d6",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -4223,7 +4223,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -4233,7 +4233,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -4252,7 +4252,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -4273,290 +4273,6 @@
           "recovery_supersession"
         ],
         "predecessor_policy": "explicit-null-or-pinned-predecessor",
-        "lifecycle_status": "new",
-        "predecessor_sha256": null
-      },
-      "consumer_authorization_boundary": {
-        "consumers": [
-          "composite plan validator"
-        ],
-        "authorizes": [],
-        "does_not_authorize": [
-          "plan-ready",
-          "slice-ready",
-          "bootstrap-review",
-          "implementation-accepted",
-          "protected-handoff",
-          "release-ready"
-        ],
-        "predicate": "artifact-contract-proof"
-      }
-    },
-    {
-      "artifact_path": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-      "artifact_kind": "normative",
-      "proof_scope": "static-contract",
-      "finding_ids": [
-        "RMAP-1400-UNIFORM-ARTIFACT-PROOF"
-      ],
-      "dimension_verdicts": {
-        "schema_producer_authority": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-PRODUCER"
-          ]
-        },
-        "immutable_identity": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-IDENTITY"
-          ]
-        },
-        "source_of_truth_derivation": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-DERIVATION"
-          ]
-        },
-        "independent_recomputation": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-RULE"
-          ]
-        },
-        "staleness_propagation": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-STALENESS"
-          ]
-        },
-        "recovery_supersession": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-LINEAGE"
-          ]
-        },
-        "consumer_authorization_boundary": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-CONSUMER"
-          ]
-        }
-      },
-      "schema_producer_authority": {
-        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
-        "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
-        "producer_kind": "manual-authority",
-        "generator_path": null,
-        "generator_sha256": null
-      },
-      "immutable_identity": {
-        "mode": "derived-projection",
-        "algorithm": "sha256-bytes",
-        "artifact_sha256": null,
-        "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
-        "manifest_path": "schemas/authority-manifest.v1.json"
-      },
-      "source_of_truth_derivation": {
-        "rules": [
-          {
-            "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
-            "field": "$authority",
-            "target_field": "$contract",
-            "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
-          }
-        ]
-      },
-      "independent_recomputation": {
-        "rule_id": "artifact-proof-package.v1",
-        "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
-        "callable": "validate_artifact_proofs",
-        "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
-        "expected_failure_ids": [
-          "RMAP-ARTIFACT-PROOF-PRODUCER",
-          "RMAP-ARTIFACT-PROOF-IDENTITY",
-          "RMAP-ARTIFACT-PROOF-DERIVATION",
-          "RMAP-ARTIFACT-PROOF-RULE",
-          "RMAP-ARTIFACT-PROOF-STALENESS",
-          "RMAP-ARTIFACT-PROOF-LINEAGE",
-          "RMAP-ARTIFACT-PROOF-CONSUMER",
-          "RMAP-ARTIFACT-PROOF-APPLICABILITY"
-        ]
-      },
-      "staleness_propagation": {
-        "inputs": [
-          {
-            "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
-            "field": "$authority",
-            "target_field": "$contract",
-            "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
-          }
-        ],
-        "invalidates": [
-          "artifact-proof-registry",
-          "runtime-artifact-type-proof",
-          "plan-repair-verified",
-          "plan-ready"
-        ],
-        "regeneration_command_id": "rmap-refresh-projections",
-        "revalidation_command_id": "rmap-plan-repair-validate"
-      },
-      "recovery_supersession": {
-        "history_policy": "append-only-successor-no-rewrite",
-        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
-        "lineage_fields": [
-          "artifact_path",
-          "immutable_identity",
-          "recovery_supersession"
-        ],
-        "predecessor_policy": "manifest-bound-current-bytes",
-        "lifecycle_status": "new",
-        "predecessor_sha256": null
-      },
-      "consumer_authorization_boundary": {
-        "consumers": [
-          "composite plan validator"
-        ],
-        "authorizes": [],
-        "does_not_authorize": [
-          "plan-ready",
-          "slice-ready",
-          "bootstrap-review",
-          "implementation-accepted",
-          "protected-handoff",
-          "release-ready"
-        ],
-        "predicate": "artifact-contract-proof"
-      }
-    },
-    {
-      "artifact_path": ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
-      "artifact_kind": "validator",
-      "proof_scope": "static-contract",
-      "finding_ids": [
-        "RMAP-1400-UNIFORM-ARTIFACT-PROOF"
-      ],
-      "dimension_verdicts": {
-        "schema_producer_authority": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-PRODUCER"
-          ]
-        },
-        "immutable_identity": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-IDENTITY"
-          ]
-        },
-        "source_of_truth_derivation": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-DERIVATION"
-          ]
-        },
-        "independent_recomputation": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-RULE"
-          ]
-        },
-        "staleness_propagation": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-STALENESS"
-          ]
-        },
-        "recovery_supersession": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-LINEAGE"
-          ]
-        },
-        "consumer_authorization_boundary": {
-          "status": "PASS",
-          "evidence_rule_ids": [
-            "RMAP-ARTIFACT-PROOF-CONSUMER"
-          ]
-        }
-      },
-      "schema_producer_authority": {
-        "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
-        "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
-        "producer_kind": "manual-authority",
-        "generator_path": null,
-        "generator_sha256": null
-      },
-      "immutable_identity": {
-        "mode": "derived-projection",
-        "algorithm": "sha256-bytes",
-        "artifact_sha256": null,
-        "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
-        "manifest_path": "schemas/authority-manifest.v1.json"
-      },
-      "source_of_truth_derivation": {
-        "rules": [
-          {
-            "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
-            "field": "$authority",
-            "target_field": "$contract",
-            "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
-          }
-        ]
-      },
-      "independent_recomputation": {
-        "rule_id": "artifact-proof-package.v1",
-        "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
-        "callable": "validate_artifact_proofs",
-        "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
-        "expected_failure_ids": [
-          "RMAP-ARTIFACT-PROOF-PRODUCER",
-          "RMAP-ARTIFACT-PROOF-IDENTITY",
-          "RMAP-ARTIFACT-PROOF-DERIVATION",
-          "RMAP-ARTIFACT-PROOF-RULE",
-          "RMAP-ARTIFACT-PROOF-STALENESS",
-          "RMAP-ARTIFACT-PROOF-LINEAGE",
-          "RMAP-ARTIFACT-PROOF-CONSUMER",
-          "RMAP-ARTIFACT-PROOF-APPLICABILITY"
-        ]
-      },
-      "staleness_propagation": {
-        "inputs": [
-          {
-            "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
-            "field": "$authority",
-            "target_field": "$contract",
-            "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
-          }
-        ],
-        "invalidates": [
-          "artifact-proof-registry",
-          "runtime-artifact-type-proof",
-          "plan-repair-verified",
-          "plan-ready"
-        ],
-        "regeneration_command_id": "rmap-refresh-projections",
-        "revalidation_command_id": "rmap-plan-repair-validate"
-      },
-      "recovery_supersession": {
-        "history_policy": "append-only-successor-no-rewrite",
-        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
-        "lineage_fields": [
-          "artifact_path",
-          "immutable_identity",
-          "recovery_supersession"
-        ],
-        "predecessor_policy": "manifest-bound-current-bytes",
         "lifecycle_status": "new",
         "predecessor_sha256": null
       },
@@ -4630,7 +4346,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -4649,7 +4365,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -4659,7 +4375,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -4678,7 +4394,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -4772,7 +4488,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -4791,7 +4507,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -4801,7 +4517,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -4820,7 +4536,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -4914,7 +4630,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -4933,7 +4649,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -4943,7 +4659,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -4962,7 +4678,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [
@@ -5056,7 +4772,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
         "authority_category": "plan_books",
-        "authority_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+        "authority_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -5075,7 +4791,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ]
       },
@@ -5085,7 +4801,7 @@
         "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
-        "negative_test_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+        "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -5104,7 +4820,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f"
+            "source_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8"
           }
         ],
         "invalidates": [

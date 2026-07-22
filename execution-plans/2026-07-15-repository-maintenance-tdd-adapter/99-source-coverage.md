@@ -31,6 +31,9 @@ The machine owner declares ranges and exact arrays. The validator independently 
 | Repair 20260717 1200 CQ-001 to CQ-005 | RMAP-002, 013, 014, 016, 020, 023 |
 | Repair 20260717 1300 CQ-001 to CQ-005 | RMAP-012, 014, 026, 027 |
 | Repair 20260718 1500 CQ-001 to CQ-005 | RMAP-004, 012, 015, 016, 018, 021, 027 |
+| Repair 20260718 artifact-proof closure | RMAP-027 |
+| Repair 20260718 external-root closure | RMAP-027 |
+| Repair 20260722 target-plan lifecycle and 95 report index | RMAP-028, 029 |
 
 The machine source is `schemas/clarification-decisions.v1.json`, not the ignored raw clarification run under `logs/**`.
 

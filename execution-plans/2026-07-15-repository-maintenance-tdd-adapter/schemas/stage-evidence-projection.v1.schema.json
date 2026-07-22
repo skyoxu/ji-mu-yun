@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.stage-evidence-projection.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "slice_id", "run_id", "baseline_files", "effects", "stage_result_hashes", "final_event_hash", "root_hash"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.stage-evidence-projection.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "slice_id": {"enum": ["RMAP-S0", "RMAP-S1", "RMAP-S2", "RMAP-S3", "RMAP-S4", "RMAP-S5", "RMAP-S6"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "baseline_files": {"type": "array"},
+    "effects": {"type": "array"},
+    "stage_result_hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["red", "green", "refactor"],
+      "properties": {
+        "red": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "green": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "refactor": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "final_event_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "root_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

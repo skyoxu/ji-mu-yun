@@ -1,4 +1,4 @@
 interface:
   display_name: "VDD Execution Plan"
   short_description: "Clarify, create, or repair strict executable VDD plans"
-  default_prompt: "Use $vdd-execution-plan to clarify requirements before creating or repairing a strict executable VDD plan."
+  default_prompt: "Use $vdd-execution-plan to resolve any indexed 95 implementation report first, then clarify requirements before creating or repairing a strict executable VDD plan."

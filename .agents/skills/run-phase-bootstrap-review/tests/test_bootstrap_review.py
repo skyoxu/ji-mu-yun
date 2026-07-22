@@ -702,6 +702,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn("Fallback models: `gpt-5.5, gpt-5.4`", verifier_prompt)
         self.assertIn("Forbidden models: `gpt-5.6-sol`", verifier_prompt)
         self.assertIn("Reasoning effort: `high`", verifier_prompt)
+        self.assertIn("`findingId`, `decision`, `reason`, and `evidenceChecked`", verifier_prompt)
+        self.assertIn("do not use `rationale`", verifier_prompt)
 
     def test_gate_stops_before_review_when_preflight_is_pending(self) -> None:
         self.prepare()

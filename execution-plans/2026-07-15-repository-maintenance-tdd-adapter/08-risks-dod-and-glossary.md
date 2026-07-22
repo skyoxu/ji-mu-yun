@@ -22,6 +22,10 @@
 | Adapter grows into a Router | No provider scheduler or hidden state | New central intent/plan selection logic |
 | Historical script directories grow new authority | New Skill owns common execution | New adapter semantics added to `scripts/sc` or `scripts/python` without ADR delta |
 | Large validator becomes unmaintainable | Keep files under 400 lines where practical and split by responsibility | Unapproved oversized mixed-concern script |
+| Implementation starts from a defective or stale plan | Audit before writes/freeze, VDD repair, fresh target validation, then full identity refreeze | Missing audit, unresolved defect, or reused pre-repair identity |
+| The 95 report becomes a second authority | Exactly one append-only report excluded from authority/candidate hashes | Report enters a hash scope or claims predicate authority |
+| The report index becomes stale or recreates repository-wide discovery | Validate exact contained entries, use target-directory-only fallback, and keep index non-authoritative | Missing target entry, duplicate/escaping filename, or recursive execution-plans scan |
+| Completion is reported from a partial slice | Require the target's current declared terminal predicate and result envelope | Non-terminal or assistant-only completion claim |
 
 ## Definition Of Done: Plan Creation
 
@@ -29,12 +33,13 @@
 - Every active requirement maps once to source, owner, first phase, acceptance ID, evidence intent, and status.
 - Source coverage includes all nine `agentbuild.txt` sections and every clarification decision.
 - Deliberate invalid and mutation cases fail with their expected stable rule IDs.
+- RMAP-028/029 bind index/audit/repair/report behavior to S1/S2, and all three lifecycle counterexamples fail only with `RMAP-PLAN-LIFECYCLE-POLICY`.
 - Capsule and attempt fixtures prove stale context, authority, partial-write, binding, sensitive-content, and lineage failures.
 - Every review-added normative, projection, evidence, lineage, and validator artifact is covered by the exact seven-dimensional artifact proof registry, while the two Codex Home-pinned artifacts are explicitly classified as provisional diagnostics rather than protected authority.
 - Validator unit tests and the fresh composite command pass.
 - The current result envelope has matching candidate/source/validator hashes and exact authority sets.
 - `plan-repair-verified` may pass only after the blocked candidate produces fresh deterministic evidence; it does not promote status.
-- Status remains `blocked` while the Round 3 manual-pause projection is current.
+- Status may remain `plan-ready` under workflow-integrity assurance after valid successor re-entry; protected handoff and release remain blocked by independent-verifier identity.
 - No implementation, old-plan backfill, ADR, standard, Skill, or Bootstrap runtime change is falsely claimed complete.
 
 ## Definition Of Done: Future Implementation
@@ -49,6 +54,8 @@
 - Bootstrap review is finalized under current hashes.
 - No open accepted P0/P1; runtime Bootstrap P2/verifier source evidence is complete; high-risk and expired deferrals are absent.
 - Plan-local validator authorizes implementation acceptance and explicitly excludes release.
+- Every target report was resolved index-first with target-only fallback and synchronized registration when created; every target was audited before implementation identity freeze; material plan defects were repaired through VDD, validated, recorded in the unique 95 report, and followed by a complete identity refreeze.
+- The overall implementation result was appended only after the target's current terminal predicate passed, and the report remains outside all authorization and candidate hashes.
 
 ## Glossary
 
@@ -66,3 +73,5 @@
 - **Supersession proof**: hash-bound recovery, event, and successor evidence proving which S6 candidate run remains active.
 - **Review-policy re-entry**: successor selector that preserves the old blocker and requires a distinct policy/authority cycle plus independent semantic closure.
 - **Artifact proof**: exact registry entry that binds a review-added artifact to its producer, immutable bytes, authoritative derivation, independent recomputation, stale-input behavior, successor lineage, and permitted consumers/authorizations.
+- **95 report**: the target plan's unique append-only implementation evolution and completion report; it records audited changes and terminal results but has no predicate, acceptance, commit, handoff, or release authority.
+- **95 report index**: `execution-plans/95-implementation-report-index.v1.json`, a non-authoritative directory-to-complete-filename lookup that prevents repository-wide report discovery and is synchronized when Quick Dev creates a report.

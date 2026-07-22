@@ -34,6 +34,12 @@ Use create mode when the user asks for a new plan or names a target that does no
 
 If the named target is ambiguous between a file and directory, inspect local context first. Ask only when choosing would materially alter authority or overwrite unrelated work.
 
+## Resolve the target implementation report
+
+Before enumerating plan content, read `execution-plans/95-implementation-report-index.v1.json` and look up the exact target plan directory. On a valid hit, verify that the indexed `report_filename` is a basename matching `95-*.md`, resolves inside the target, and exists before reading it. Treat the index as a non-authoritative path hint, never as plan, acceptance, completion, or release authority.
+
+On an index miss, inspect only the named target directory for `95-*.md`; never traverse all of `execution-plans/`. A duplicate, stale, escaping, or ambiguous entry is a repair defect. Preserve unrelated index entries. When Quick Dev creates a report, the report and its index entry must be written in the same pre-implementation change before the target is validated and its affected identities are refrozen.
+
 ## Complete the pre-writing clarification gate
 
 For create and repair modes, complete the gate in [references/clarification-gate.md](references/clarification-gate.md) before writing or modifying the target plan, schemas, fixtures, validators, tests, or product code. Pure read-only review does not trigger this write gate.

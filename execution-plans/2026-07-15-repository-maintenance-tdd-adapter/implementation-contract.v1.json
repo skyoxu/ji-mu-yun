@@ -19,22 +19,22 @@
       "../../.agents/skills/vdd-execution-plan/references/strict-vdd-standard.md": "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140",
       "../2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md": "sha256:e3f0f05ef426aada395843dace58410b3ddfbcb39326e96ae562cad9eb7cfc35",
       "../2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json": "sha256:ca42e682cd6077a13b61d261ca75f70d98b1717547324c71c40b92c16de4048a",
-      "00-index.md": "sha256:4bd69e239dba9e576f9c96ffa015eed5f15c54f5a97f2d9599ad36260a40304a",
-      "01-intent-authority-and-non-goals.md": "sha256:b7e4a4fa4e039c6207a73a5d395a293691be6f7e24697e62be2ebfbf94f5e30a",
-      "02-executable-contracts-and-invariants.md": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
-      "03-validators-fixtures-and-control-gates.md": "sha256:20c63acd536a369f748b3c59949938d851f85c3f8ba55f7fee900e5663cbed53",
-      "04-behavior-slices-and-implementation-order.md": "sha256:ab9b900a39ad945bff6307c932914dc9fcd6003d5c0938f7de6c3dff9e5e509a",
-      "05-diagnostics-repair-and-reentry.md": "sha256:8cd89f36331f449a5bb211361d512910cadbb9e4ce8d4d4f2e47a938a6d2b795",
-      "06-testing-observability-and-evidence.md": "sha256:aad031b9f93325de6d2197394de5dac70dc751c8b9fabc25fde2b6ed78918319",
-      "96-global-review-and-validation.md": "sha256:218b760ec302520df8548a395f78e13c889dcea6f2f08625f838de1bdcede364",
-      "schemas/clarification-decisions.v1.json": "sha256:8d36bbfbde581f2786c07e2335c37e0dd02a9a5d65ce8a52bf3b0f44c4983dc0",
+      "00-index.md": "sha256:495bd5176c006c870b6799cf26b176bf45e9ed2a4d0aa4707e274f2059c08529",
+      "01-intent-authority-and-non-goals.md": "sha256:cc563f15712704c195bafa80c3e7bf433fdc688c4b1d9da321102a658423e741",
+      "02-executable-contracts-and-invariants.md": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
+      "03-validators-fixtures-and-control-gates.md": "sha256:fe2b102834c2d63148987a39733fc2cb47386df236c3bbc1b7bdd6dd5a2e986a",
+      "04-behavior-slices-and-implementation-order.md": "sha256:003bd832db06afdfdd9c851db3d72fc9f11fe85d333525ec5701a4ea48071ecf",
+      "05-diagnostics-repair-and-reentry.md": "sha256:b27ed10bb013ce670b7c45d4322fddc1c5c4d67356a08b683873cf24995feed0",
+      "06-testing-observability-and-evidence.md": "sha256:1a8a598ba52cf9e57364e942f5fe3c7a47d2dd4d241e2d4ed69855b51c84bda0",
+      "96-global-review-and-validation.md": "sha256:a4b97ae7ad12d464baa28d2c40ff727771e5ab41e00e522884dce0b954c8c252",
+      "schemas/clarification-decisions.v1.json": "sha256:43cbafb22f8f2350928b8a294a23ab41bb170b3f8775b82c78a27aac57ee8d88",
       "schemas/review-blocking-state.v1.json": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
-      "schemas/acceptance-contracts.v1.json": "sha256:d5d9ea9ee37570c7872f64c0794055a907bbecf77463db261434dcf5a022ddee",
+      "schemas/acceptance-contracts.v1.json": "sha256:2cde5b346ba502fde333d3edbf18f9f8cfc66facf457a5b6a1f876e5936f84d4",
       "../../.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json": "sha256:7dc81b5d86763959fefaa4057c24913384a817d6a54ddeb4004d46bdbb8c0acc",
       "../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
       "../../docs/standards/bootstrap-review-control-plane.md": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e",
       "../../.agents/skills/run-phase-bootstrap-review/SKILL.md": "sha256:7e86fbfd1acf231f1dfd6a07f909da3c6a2d9ed1f7e351fa10da90124a9d6f69",
-      "../../.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py": "sha256:ddb3c0c1178fa081f22b24ab04c321b0538427717f4404328a96dc48758f1232",
+      "../../.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py": "sha256:26ba741ed4754380b776996cf0d2bf03538b7e4e63fcdad3fba24b4267b023fd",
       "../../.agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py": "sha256:afbe840b25c016c14a3be98178b30a21ef668fb328b98977ad6d693fcfa36623",
       "../../.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json": "sha256:55b75323c95daae0532a06b06c95de3ef0389746d8456901f26b7ef1c6ef908a"
     },
@@ -75,15 +75,15 @@
     "context_layout": "context/<capsule-id>",
     "attempt_layout": "attempts/<attempt-id>",
     "schemas": {
-      "context_manifest": "schemas/context-manifest.v1.schema.json",
-      "slice_capsule": "schemas/slice-capsule.v1.schema.json",
-      "backend_request": "schemas/backend-request.v1.schema.json",
-      "backend_response": "schemas/backend-response.v1.schema.json",
-      "diff_manifest": "schemas/diff-manifest.v1.schema.json",
-      "adapter_decision": "schemas/adapter-decision.v1.schema.json",
-      "attempt_event": "schemas/agent-attempt-event.v1.schema.json",
-      "baseline_file_manifest": "schemas/baseline-file-manifest.v1.schema.json",
-      "attempt_ledger_manifest": "schemas/attempt-ledger-manifest.v1.schema.json"
+      "context_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/context-manifest.v1.schema.json",
+      "slice_capsule": ".agents/skills/quick-dev-tdd-adapter/schemas/slice-capsule.v1.schema.json",
+      "backend_request": ".agents/skills/quick-dev-tdd-adapter/schemas/backend-request.v1.schema.json",
+      "backend_response": ".agents/skills/quick-dev-tdd-adapter/schemas/backend-response.v1.schema.json",
+      "diff_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/diff-manifest.v1.schema.json",
+      "adapter_decision": ".agents/skills/quick-dev-tdd-adapter/schemas/adapter-decision.v1.schema.json",
+      "attempt_event": ".agents/skills/quick-dev-tdd-adapter/schemas/agent-attempt-event.v1.schema.json",
+      "baseline_file_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+      "attempt_ledger_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/attempt-ledger-manifest.v1.schema.json"
     },
     "capsule_policy": {
       "immutable_revisions": true,
@@ -134,6 +134,24 @@
     "block_execution_read_set_drift": true,
     "block_dependency_closure_drift": true,
     "allow_unrelated_worktree_drift": true
+  },
+  "replay_baseline_policy": {
+    "mode": "sealed-snapshot-copy-before-red",
+    "workspace_isolation": true,
+    "source_artifacts": [
+      "implementation-contract.v1.json",
+      "authority.source_hashes",
+      "source_revision"
+    ],
+    "manifest_schema": "schemas/replay-baseline-manifest.v1.schema.json",
+    "hash_bound": true,
+    "candidate_excluded": true,
+    "authorizes": [],
+    "does_not_authorize": [
+      "slice-ready",
+      "implementation-candidate",
+      "implementation-accepted"
+    ]
   },
   "acceptance_policy": {
     "open_accepted_p0_p1_blocks": true,
@@ -192,14 +210,45 @@
       ],
       "depends_on": [],
       "allowed_changes": {
-        "production": [],
+        "production": [
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/stage-evidence-projection.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-contract.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py"
+        ],
         "tests": [
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/**"
         ],
         "documentation": [
           "docs/standards/repository-maintenance-agent-protocol.md",
           "docs/standards/_index.md",
-          "docs/PROJECT_DOCUMENTATION_INDEX.md"
+          "docs/PROJECT_DOCUMENTATION_INDEX.md",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/03-validators-fixtures-and-control-gates.md",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/candidate-diff-cases.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/clarification-decisions.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/source-coverage.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/authority-manifest.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json"
         ]
       },
       "forbidden_changes": [
@@ -229,7 +278,7 @@
           "expected_exit": "nonzero"
         },
         "green": {
-          "command_id": "rmap-s0-slice-validate",
+          "command_id": "rmap-s0-preflight",
           "expected_exit": "zero"
         },
         "refactor": {
@@ -239,7 +288,7 @@
               "expected_exit": "zero"
             },
             {
-              "command_id": "rmap-s0-slice-validate",
+              "command_id": "rmap-s0-preflight",
               "expected_exit": "zero"
             }
           ]
@@ -248,6 +297,7 @@
       "review": {
         "profile": "bootstrap-upstream-plan"
       },
+      "post_refactor_command_id": "rmap-s0-slice-validate",
       "exit_predicate": "slice-ready",
       "phase_id": "P0"
     },
@@ -261,7 +311,8 @@
         "RMAP-022",
         "RMAP-025",
         "RMAP-026",
-        "RMAP-027"
+        "RMAP-027",
+        "RMAP-028"
       ],
       "acceptance_ids": [
         "RMAP-ACC-003",
@@ -270,7 +321,8 @@
         "RMAP-ACC-022",
         "RMAP-ACC-025",
         "RMAP-ACC-026",
-        "RMAP-ACC-027"
+        "RMAP-ACC-027",
+        "RMAP-ACC-028"
       ],
       "source_refs": [
         "04-behavior-slices-and-implementation-order.md#rmap-s1-common-contract-and-self-hosted-plan-instance"
@@ -280,12 +332,21 @@
       ],
       "allowed_changes": {
         "production": [
-          ".agents/skills/quick-dev-tdd-adapter/**"
+          ".agents/skills/quick-dev-tdd-adapter/**",
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/vdd-execution-plan/agents/openai.yaml",
+          ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_support.py"
         ],
         "tests": [
-          ".agents/skills/quick-dev-tdd-adapter/tools/tests/**"
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/**",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_stage_projection_guards.py"
         ],
         "documentation": [
+          "execution-plans/README.md",
+          "execution-plans/95-implementation-report-index.v1.json",
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/**"
         ]
       },
@@ -313,7 +374,7 @@
           "expected_exit": "nonzero"
         },
         "green": {
-          "command_id": "rmap-s1-slice-validate",
+          "command_id": "rmap-s1-preflight",
           "expected_exit": "zero"
         },
         "refactor": {
@@ -323,7 +384,7 @@
               "expected_exit": "zero"
             },
             {
-              "command_id": "rmap-s1-slice-validate",
+              "command_id": "rmap-s1-preflight",
               "expected_exit": "zero"
             }
           ]
@@ -332,6 +393,7 @@
       "review": {
         "profile": "bootstrap-skill-route"
       },
+      "post_refactor_command_id": "rmap-s1-slice-validate",
       "exit_predicate": "slice-ready",
       "phase_id": "P0"
     },
@@ -352,7 +414,9 @@
         "RMAP-018",
         "RMAP-006",
         "RMAP-025",
-        "RMAP-026"
+        "RMAP-026",
+        "RMAP-028",
+        "RMAP-029"
       ],
       "acceptance_ids": [
         "RMAP-ACC-005",
@@ -368,7 +432,9 @@
         "RMAP-ACC-018",
         "RMAP-ACC-006",
         "RMAP-ACC-025",
-        "RMAP-ACC-026"
+        "RMAP-ACC-026",
+        "RMAP-ACC-028",
+        "RMAP-ACC-029"
       ],
       "source_refs": [
         "04-behavior-slices-and-implementation-order.md#rmap-s2-stateless-capsule-and-recovery-adapter"
@@ -395,6 +461,7 @@
       ],
       "execution_read_set": [
         "AGENTS.md",
+        ".agents/skills/vdd-execution-plan/**",
         ".agents/skills/quick-dev-tdd-adapter/**"
       ],
       "dependency_closure": [
@@ -412,7 +479,7 @@
           "expected_exit": "nonzero"
         },
         "green": {
-          "command_id": "rmap-s2-slice-validate",
+          "command_id": "rmap-adapter-tests",
           "expected_exit": "zero"
         },
         "refactor": {
@@ -422,7 +489,7 @@
               "expected_exit": "zero"
             },
             {
-              "command_id": "rmap-s2-slice-validate",
+              "command_id": "rmap-adapter-tests",
               "expected_exit": "zero"
             }
           ]
@@ -431,6 +498,7 @@
       "review": {
         "profile": "bootstrap-skill-route"
       },
+      "post_refactor_command_id": "rmap-s2-slice-validate",
       "exit_predicate": "slice-ready",
       "phase_id": "P1"
     },
@@ -454,7 +522,8 @@
       "allowed_changes": {
         "production": [],
         "tests": [
-          "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/fixtures/tdd-adapter-shadow.v1.json"
+          "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/fixtures/tdd-adapter-shadow.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_contract.py"
         ],
         "documentation": [
           "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json"
@@ -482,7 +551,7 @@
           "expected_exit": "nonzero"
         },
         "green": {
-          "command_id": "rmap-s3-slice-validate",
+          "command_id": "rmap-s3-shadow-validate",
           "expected_exit": "zero"
         },
         "refactor": {
@@ -492,7 +561,7 @@
               "expected_exit": "zero"
             },
             {
-              "command_id": "rmap-s3-slice-validate",
+              "command_id": "rmap-s3-shadow-validate",
               "expected_exit": "zero"
             }
           ]
@@ -501,6 +570,7 @@
       "review": {
         "profile": "bootstrap-focused-change"
       },
+      "post_refactor_command_id": "rmap-s3-slice-validate",
       "exit_predicate": "slice-ready",
       "phase_id": "P2"
     },
@@ -524,7 +594,8 @@
       "allowed_changes": {
         "production": [],
         "tests": [
-          "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/fixtures/tdd-adapter-shadow.v1.json"
+          "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/fixtures/tdd-adapter-shadow.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0707_contract.py"
         ],
         "documentation": [
           "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/implementation-contract.v1.json"
@@ -547,11 +618,11 @@
           "expected_failure_ids": [
             "RMAP-SHADOW-CONTRACT-MISSING"
           ],
-          "test_selector": "test_shadow_contract_missing_is_rejected",
+          "test_selector": "test_shadow_0707_contract_missing_is_rejected",
           "expected_exit": "nonzero"
         },
         "green": {
-          "command_id": "rmap-s4-slice-validate",
+          "command_id": "rmap-s4-shadow-validate",
           "expected_exit": "zero"
         },
         "refactor": {
@@ -561,7 +632,7 @@
               "expected_exit": "zero"
             },
             {
-              "command_id": "rmap-s4-slice-validate",
+              "command_id": "rmap-s4-shadow-validate",
               "expected_exit": "zero"
             }
           ]
@@ -570,6 +641,7 @@
       "review": {
         "profile": "bootstrap-focused-change"
       },
+      "post_refactor_command_id": "rmap-s4-slice-validate",
       "exit_predicate": "slice-ready",
       "phase_id": "P2"
     },
@@ -593,7 +665,8 @@
       "allowed_changes": {
         "production": [],
         "tests": [
-          "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/fixtures/tdd-adapter-shadow.v1.json"
+          "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/fixtures/tdd-adapter-shadow.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0711_contract.py"
         ],
         "documentation": [
           "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/implementation-contract.v1.json"
@@ -618,11 +691,11 @@
           "expected_failure_ids": [
             "RMAP-SHADOW-CONTRACT-MISSING"
           ],
-          "test_selector": "test_shadow_contract_missing_is_rejected",
+          "test_selector": "test_shadow_0711_contract_missing_is_rejected",
           "expected_exit": "nonzero"
         },
         "green": {
-          "command_id": "rmap-s5-slice-validate",
+          "command_id": "rmap-s5-shadow-validate",
           "expected_exit": "zero"
         },
         "refactor": {
@@ -632,7 +705,7 @@
               "expected_exit": "zero"
             },
             {
-              "command_id": "rmap-s5-slice-validate",
+              "command_id": "rmap-s5-shadow-validate",
               "expected_exit": "zero"
             }
           ]
@@ -641,6 +714,7 @@
       "review": {
         "profile": "bootstrap-focused-change"
       },
+      "post_refactor_command_id": "rmap-s5-slice-validate",
       "exit_predicate": "slice-ready",
       "phase_id": "P2"
     },
@@ -670,9 +744,23 @@
         "RMAP-S5"
       ],
       "allowed_changes": {
-        "production": [],
+        "production": [
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/stage-evidence-projection.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+          ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+        ],
         "tests": [
-          ".agents/skills/quick-dev-tdd-adapter/tools/tests/**"
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/**",
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
         ],
         "documentation": [
           "docs/standards/repository-maintenance-agent-protocol.md"
@@ -706,7 +794,7 @@
           "expected_exit": "nonzero"
         },
         "green": {
-          "command_id": "rmap-s6-candidate-validate",
+          "command_id": "rmap-s6-identity-validate",
           "expected_exit": "zero"
         },
         "refactor": {
@@ -716,7 +804,7 @@
               "expected_exit": "zero"
             },
             {
-              "command_id": "rmap-s6-candidate-validate",
+              "command_id": "rmap-s6-identity-validate",
               "expected_exit": "zero"
             }
           ]
@@ -725,6 +813,7 @@
       "review": {
         "profile": "bootstrap-implementation-conformance"
       },
+      "post_refactor_command_id": "rmap-s6-candidate-validate",
       "exit_predicate": "implementation-candidate",
       "phase_id": "P3"
     },
@@ -789,7 +878,7 @@
           "expected_exit": "nonzero"
         },
         "green": {
-          "command_id": "rmap-s7-acceptance-validate",
+          "command_id": "rmap-s7-slice-validate",
           "expected_exit": "zero"
         },
         "refactor": {
@@ -799,7 +888,7 @@
               "expected_exit": "zero"
             },
             {
-              "command_id": "rmap-s7-acceptance-validate",
+              "command_id": "rmap-s7-slice-validate",
               "expected_exit": "zero"
             }
           ]
@@ -808,6 +897,7 @@
       "review": {
         "profile": "bootstrap-implementation-conformance"
       },
+      "post_refactor_command_id": "rmap-s7-acceptance-validate",
       "exit_predicate": "implementation-accepted",
       "phase_id": "P3"
     }
@@ -822,9 +912,11 @@
       "candidate_result_ref": "schemas/candidate-result-ref.v1.schema.json",
       "candidate_lineage_manifest": "schemas/candidate-lineage-manifest.v1.schema.json",
       "candidate_supersession_proof": "schemas/candidate-supersession-proof.v1.schema.json",
-      "candidate_slice_effect": "schemas/candidate-slice-effect.v1.schema.json"
+      "candidate_slice_effect": "schemas/candidate-slice-effect.v1.schema.json",
+      "candidate_baseline_bridge": "schemas/candidate-baseline-bridge.v1.schema.json",
+      "stage_evidence_projection": "schemas/stage-evidence-projection.v1.schema.json"
     },
-    "required_run_artifacts": [
+    "protocol_run_artifacts": [
       "changed-files.json",
       "test-diff.patch",
       "red-result.json",
@@ -841,6 +933,13 @@
       "baseline-file-manifest.v1.json",
       "attempt-ledger-manifest.v1.json",
       "candidate-lineage-manifest.json"
+    ],
+    "stage_projection_artifacts": [
+      "red-result.json",
+      "green-result.json",
+      "refactor-result.json",
+      "recovery-state.json",
+      "stage-evidence-projection.v1.json"
     ],
     "stage_binding": {
       "contract_and_validator_hashes_current": true,

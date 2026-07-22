@@ -245,11 +245,11 @@ class ArtifactProofClosureTests(unittest.TestCase):
         registry = load_json("schemas/artifact-proof-registry.v1.json")
         formal_paths = set(inventory["contract_artifacts"])
         self.assertNotIn("provisional_diagnostic_artifacts", inventory)
-        self.assertIn(
+        self.assertNotIn(
             ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
             formal_paths,
         )
-        self.assertIn(
+        self.assertNotIn(
             ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
             formal_paths,
         )
@@ -261,14 +261,6 @@ class ArtifactProofClosureTests(unittest.TestCase):
         classes = authority["classes"]
         by_path = {item["path"]: item for item in authority["artifacts"]}
         expected = {
-            ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json": (
-                "manifest-bound-authority-root",
-                "normative",
-            ),
-            ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py": (
-                "manifest-bound-validator",
-                "validator",
-            ),
             "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py": (
                 "manifest-bound-validator",
                 "validator",

@@ -42,6 +42,7 @@
 38. Candidate-external root/guard identity verification and full-stack synchronized authority-takeover rejection, with the external envelope retaining `authorizes=[]`.
 38. Successor authorization rejects arbitrary JSON, run-local null-predecessor authority, wrong profile root/signer/actor/change/policy, revoked or expired events, decision-before-event, stale bytes, and event reuse across decision identity.
 39. P2 typed evidence rejects self-issued owner authority, wrong candidate/input/finding/scope, missing or altered command descriptor, wrong runner/class/registry hash, handwritten success, broken append-only event lineage, stale stdout/stderr, nonzero process exit, and expired owner/non-impact/recheck evidence.
+40. Target-plan lifecycle tests cover index-first lookup, target-directory-only miss fallback, synchronized registration, audit-before-freeze ordering, unique `95-*.md` ownership, VDD repair gating, target-validator PASS, post-repair identity refreeze, index/report hash exclusion, and terminal-predicate-gated overall reporting.
 
 ## Required Adapter Fixtures
 
@@ -63,6 +64,13 @@
 - stale Capsule context or predecessor hash;
 - raw or sensitive backend request/response persistence;
 - missing decision, stale decision binding, forbidden diff, or duplicate accepted stage.
+- missing or duplicate target `95-*.md`;
+- stale, duplicate, escaping, or recursively bypassed 95 report index;
+- audit attempted after identity freeze or implementation write;
+- material defect bypasses VDD repair or target-plan validation;
+- post-repair execution reuses pre-repair identities;
+- non-terminal slice or assistant summary attempts an overall completion entry;
+- report is added to authority/candidate hashes or claims acceptance/release authority.
 
 ## Evidence Ownership
 
@@ -104,6 +112,14 @@ Every file binds the same run, plan, contract, slice, source, validator, command
 Every slice command receives `--run-dir`, `--red-result`, `--green-result`, and `--refactor-result`; implicit latest selection and repository-wide evidence scans are forbidden. S6 additionally receives `--candidate-result`. Only S7 receives both `--candidate-ref` and `--bootstrap-run`; its `--candidate-result` uses an explicit independent `<candidate-run-id>`.
 
 Raw clarification and repair evidence remains under `logs/**`, but clean-checkout authorization consumes only minimized projections in `schemas/clarification-decisions.v1.json`, immutable `schemas/review-blocking-state.v1.json`, `schemas/review-policy-reentry.v1.json`, and `schemas/shadow-protected-baseline.v1.json`.
+
+## Target 95 Report Evidence
+
+Each target execution-plan directory has exactly one `95-*.md`. Its directory and complete filename are registered in `execution-plans/95-implementation-report-index.v1.json`; consumers use the index first and inspect only the target directory on a miss. Report creation and registration are one pre-implementation change. Both index and report are continuity aids excluded from authority manifests, contract source hashes, and candidate hash scope.
+
+A pre-implementation change entry records the audit result, defect and affected requirement/contract IDs, VDD clarification/repair identity, modified files, target-validator command and exit, current hashes, evidence paths, and residual gaps. It is written only after repair validation passes and before identities are refrozen for RED.
+
+An overall implementation entry records the terminal predicate and current result envelope, commands, exits, test counts, source/contract/validator/candidate hashes, changed files, evidence paths, and residual gaps. It is appended only after terminal PASS. Neither entry authorizes a predicate, acceptance, commit, protected handoff, release, or `done`.
 
 ## Candidate Envelope
 

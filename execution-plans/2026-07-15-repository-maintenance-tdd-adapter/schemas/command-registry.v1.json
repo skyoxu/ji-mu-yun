@@ -28,7 +28,43 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 120
+      "timeout_seconds": 300
+    },
+    {
+      "id": "rmap-s0-preflight",
+      "executable": "py",
+      "argv": [
+        "-3",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_all.py"
+        },
+        "--predicate",
+        "plan-ready"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300
+    },
+    {
+      "id": "rmap-s1-preflight",
+      "executable": "py",
+      "argv": [
+        "-3",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_all.py"
+        },
+        "--predicate",
+        "plan-ready"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300
     },
     {
       "id": "rmap-plan-validate",
@@ -46,7 +82,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 120
+      "timeout_seconds": 300
     },
     {
       "id": "rmap-plan-repair-validate",
@@ -64,7 +100,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 120,
+      "timeout_seconds": 300,
       "declared_predicate": "plan-repair-verified"
     },
     {
@@ -170,7 +206,7 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 180,
+      "timeout_seconds": 300,
       "declared_predicate": "slice-ready",
       "slice_id": "RMAP-S1"
     },
@@ -212,9 +248,22 @@
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 180,
+      "timeout_seconds": 300,
       "declared_predicate": "slice-ready",
       "slice_id": "RMAP-S2"
+    },
+    {
+      "id": "rmap-s3-shadow-validate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_contract.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60
     },
     {
       "id": "rmap-s3-slice-validate",
@@ -259,6 +308,13 @@
       "slice_id": "RMAP-S3"
     },
     {
+      "id": "rmap-s4-shadow-validate",
+      "executable": "py",
+      "argv": ["-3", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0707_contract.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 60
+    },
+    {
       "id": "rmap-s4-slice-validate",
       "executable": "py",
       "argv": [
@@ -301,6 +357,13 @@
       "slice_id": "RMAP-S4"
     },
     {
+      "id": "rmap-s5-shadow-validate",
+      "executable": "py",
+      "argv": ["-3", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0711_contract.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 60
+    },
+    {
       "id": "rmap-s5-slice-validate",
       "executable": "py",
       "argv": [
@@ -341,6 +404,55 @@
       "timeout_seconds": 180,
       "declared_predicate": "slice-ready",
       "slice_id": "RMAP-S5"
+    },
+    {
+      "id": "rmap-s6-identity-validate",
+      "executable": "py",
+      "argv": ["-3", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 60
+    },
+    {
+      "id": "rmap-s6-slice-validate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_all.py"
+        },
+        "--predicate",
+        "slice-ready",
+        "--slice-id",
+        "RMAP-S6",
+        "--run-dir",
+        {
+          "type": "run_path",
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>"
+        },
+        "--red-result",
+        {
+          "type": "run_path",
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>/red-result.json"
+        },
+        "--green-result",
+        {
+          "type": "run_path",
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>/green-result.json"
+        },
+        "--refactor-result",
+        {
+          "type": "run_path",
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>/refactor-result.json"
+        }
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 180,
+      "declared_predicate": "slice-ready",
+      "slice_id": "RMAP-S6"
     },
     {
       "id": "rmap-s6-candidate-validate",
@@ -388,6 +500,48 @@
       "timeout_seconds": 180,
       "declared_predicate": "implementation-candidate",
       "slice_id": "RMAP-S6"
+    },
+    {
+      "id": "rmap-s7-slice-validate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_all.py"
+        },
+        "--predicate",
+        "slice-ready",
+        "--slice-id",
+        "RMAP-S7",
+        "--run-dir",
+        {
+          "type": "run_path",
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>"
+        },
+        "--red-result",
+        {
+          "type": "run_path",
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>/red-result.json"
+        },
+        "--green-result",
+        {
+          "type": "run_path",
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>/green-result.json"
+        },
+        "--refactor-result",
+        {
+          "type": "run_path",
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>/refactor-result.json"
+        }
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 180,
+      "declared_predicate": "slice-ready",
+      "slice_id": "RMAP-S7"
     },
     {
       "id": "rmap-s7-acceptance-validate",

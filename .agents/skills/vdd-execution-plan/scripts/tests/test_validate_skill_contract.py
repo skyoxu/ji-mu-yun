@@ -35,6 +35,32 @@ class SkillContractTests(unittest.TestCase):
         self.assertTrue(result["ok"], result)
         self.assertEqual([], result["findings"])
 
+    def test_execution_plan_report_index_policy_is_bound(self) -> None:
+        repository_root = SKILL_ROOT.parents[2]
+        index_path = repository_root / "execution-plans/95-implementation-report-index.v1.json"
+        index = json.loads(index_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            "jimuyun.execution-plan-95-report-index.v1",
+            index.get("schema_version"),
+        )
+        entries = index.get("entries")
+        self.assertIsInstance(entries, list)
+        self.assertEqual(
+            sorted(entries, key=lambda item: item["plan_directory"].casefold()),
+            entries,
+        )
+        for entry in entries:
+            self.assertEqual({"plan_directory", "report_filename"}, set(entry))
+            report_name = entry["report_filename"]
+            self.assertEqual(report_name, Path(report_name).name)
+            report = repository_root / "execution-plans" / entry["plan_directory"] / report_name
+            self.assertTrue(report.is_file(), report)
+
+        skill_text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("inspect only the named target directory", skill_text)
+        self.assertIn("same pre-implementation change", skill_text)
+        self.assertIn("non-authoritative path hint", skill_text)
+
     def test_artifact_proof_trust_root_dimensions_fail_independently(self) -> None:
         contract = json.loads((SKILL_ROOT / "scripts/skill-contract.json").read_text(encoding="utf-8"))
         mutations = {

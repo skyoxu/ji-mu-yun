@@ -724,6 +724,69 @@
         "broken-wrong-and-stale-predecessor-counterexamples"
       ],
       "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-028",
+      "requirement_id": "RMAP-028",
+      "owner_slice_id": "RMAP-S1",
+      "supporting_slice_ids": [
+        "RMAP-S2"
+      ],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s1-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "plan-lifecycle-audit-omitted",
+        "plan-lifecycle-report-index-bypassed"
+      ],
+      "expected_failure_ids": [
+        "RMAP-PLAN-LIFECYCLE-POLICY"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "plan-audit-before-freeze",
+        "unique-target-95-report",
+        "vdd-repair-write-gate",
+        "target-plan-validator-pass",
+        "target-95-append-only-change-entry",
+        "refrozen-authority-candidate-and-validator-hashes",
+        "report-excluded-from-authority-and-candidate-hash",
+        "repository-report-index-first-lookup",
+        "target-directory-only-index-miss-fallback",
+        "target-95-index-synchronized",
+        "index-non-authoritative",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-029",
+      "requirement_id": "RMAP-029",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "plan-lifecycle-terminal-predicate-bypassed"
+      ],
+      "expected_failure_ids": [
+        "RMAP-PLAN-LIFECYCLE-POLICY"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "terminal-predicate-pass",
+        "target-95-append-only-completion-entry",
+        "completion-command-exit-test-and-hash-summary",
+        "changed-files-evidence-and-residual-gaps",
+        "report-non-authority",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
     }
   ]
 }

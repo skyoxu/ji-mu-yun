@@ -4,6 +4,8 @@
 
 `tools/validate_all.py` is the only composite entry. `plan-repair-verified` authorizes no readiness or implementation state. The Round 3 manual pause has a valid bounded re-entry, so `plan-ready` may pass under workflow-integrity assurance; protected-verifier identity is evaluated only for protected handoff and release.
 
+`RMAP-S0` explicitly enumerates every plan-owned derived projection that `tools/refresh_projections.py` may refresh after an allowed S0 documentation or test change. This is a bounded write set; it does not authorize edits to unrelated plan books, validators, historical evidence, Bootstrap behavior, or Phase paths.
+
 ## Required Checks
 
 1. Required books and unique ownership.
@@ -34,6 +36,7 @@
 26. The global baseline rejects predicted future paths while a first accepted add is valid and becomes part of the derived cross-slice state.
 27. Cross-slice effect hashes are separate from same-slice recovery/supersession lineage.
 28. Re-entry rejects empty policy decisions, partial saved envelopes, stale authorization events, and any saved envelope that differs from a fresh Bootstrap producer result.
+29. Exact target-plan lifecycle bindings, index-first report resolution with target-directory-only fallback, synchronized report registration, unique `95-*.md` ownership, index/report hash exclusion, audit-before-freeze evidence, and terminal-predicate-gated completion evidence.
 24. Positive, negative, boundary, stale, mutation, real Git for Windows, and junction containment tests.
 25. Validator unit tests executed, not inferred from source markers.
 
@@ -55,6 +58,7 @@
 | `RMAP-ARTIFACT-PROOF-PROTECTED-ROOT` | Legacy compatibility rule: repository root/guard bytes differ from the provisional Codex Home diagnostic pin |
 | `RMAP-PROTECTED-VERIFIER-IDENTITY` | protected handoff or release lacks an independent execution identity or trusted signed envelope |
 | `RMAP-ARTIFACT-PROOF-APPLICABILITY` | a dimension is not an executable `PASS` or type-authorized `N/A` |
+| `RMAP-PLAN-LIFECYCLE-POLICY` | target audit/repair/report mapping is missing, the unique 95 boundary is violated, or completion bypasses the terminal predicate |
 
 ## Fixture Contract
 
@@ -110,10 +114,15 @@ The minimum cases are:
 - forged producer, artifact/proof/manifest self-refresh without owner revision, authority-root permission escalation with synchronized plan-local refresh, unrelated derivation source, unknown rule, empty invalidation, nonexistent lineage field, broken predecessor, wrong predecessor, stale/current predecessor, empty/incomplete consumer permission, or full-stack synchronized replacement of root, guard, Skill/plan validators, authority, manifest, projections, tests, and refresh tool; each must produce only its declared stable rule.
 - missing proof dimension, inventory omission, static-contract authority escalation, runtime projection drift, or runtime predicate permission mismatch.
 - real Git for Windows add/modify/delete/binary-patch behavior and junction escape.
+- `plan-lifecycle-audit-omitted`, which replaces audit-before-freeze evidence and must produce only `RMAP-PLAN-LIFECYCLE-POLICY`;
+- `plan-lifecycle-report-index-bypassed`, which replaces index-first lookup evidence with a recursive execution-plans scan and must produce only `RMAP-PLAN-LIFECYCLE-POLICY`;
+- `plan-lifecycle-terminal-predicate-bypassed`, which replaces terminal predicate evidence with an assistant-summary claim and must produce only `RMAP-PLAN-LIFECYCLE-POLICY`.
 
 ## RED Before Implementation
 
 Before a slice can become ready, run at least one declared invalid fixture and observe its exact stable rule ID. A written test or a clean plan validator alone is insufficient. Evidence belongs under `logs/tdd-adapter/**` or `logs/vdd-plan-validation/**`, not in this directory.
+
+For S1/S2 lifecycle work, observed RED includes all three lifecycle fixtures. GREEN requires the exact RMAP-028/029 requirement, acceptance, slice, index/report-boundary, and source-projection mappings; weakening one mapping must restore the same stable failure.
 
 ## Bootstrap Separation
 

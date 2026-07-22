@@ -4,7 +4,7 @@
   "title": "Ji Mu Yun Implementation Contract",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "plan_id", "source_revision", "protocol_version", "authority", "ownership", "command_registry", "backend", "protocol_artifacts", "recovery", "drift_policy", "acceptance_policy", "candidate_identity_policy", "shadow_backfills", "slices"],
+  "required": ["schema_version", "plan_id", "source_revision", "protocol_version", "authority", "ownership", "command_registry", "backend", "protocol_artifacts", "recovery", "drift_policy", "replay_baseline_policy", "acceptance_policy", "candidate_identity_policy", "shadow_backfills", "slices"],
   "properties": {
     "schema_version": {"const": "jimuyun.implementation-contract.v1"},
     "plan_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
@@ -17,6 +17,7 @@
     "protocol_artifacts": {"$ref": "#/$defs/protocolArtifacts"},
     "recovery": {"$ref": "#/$defs/recoveryPolicy"},
     "drift_policy": {"$ref": "#/$defs/driftPolicy"},
+    "replay_baseline_policy": {"$ref": "#/$defs/replayBaselinePolicy"},
     "acceptance_policy": {"$ref": "#/$defs/acceptancePolicy"},
     "candidate_identity_policy": {"$ref": "#/$defs/candidateIdentityPolicy"},
     "shadow_backfills": {"type": "array", "items": {"$ref": "#/$defs/shadowBackfill"}},
@@ -100,6 +101,15 @@
         "block_git_index_drift": {"const": true}, "block_authority_drift": {"const": true}, "block_contract_drift": {"const": true}, "block_validator_drift": {"const": true}, "block_command_registry_drift": {"const": true}, "block_write_set_overlap": {"const": true}, "block_execution_read_set_drift": {"const": true}, "block_dependency_closure_drift": {"const": true}, "allow_unrelated_worktree_drift": {"const": true}
       }
     },
+    "replayBaselinePolicy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "workspace_isolation", "source_artifacts", "manifest_schema", "hash_bound", "candidate_excluded", "authorizes", "does_not_authorize"],
+      "properties": {
+        "mode": {"const": "sealed-snapshot-copy-before-red"}, "workspace_isolation": {"const": true},
+        "source_artifacts": {"$ref": "#/$defs/stringArray"}, "manifest_schema": {"const": "schemas/replay-baseline-manifest.v1.schema.json"}, "hash_bound": {"const": true}, "candidate_excluded": {"const": true},
+        "authorizes": {"const": []}, "does_not_authorize": {"const": ["slice-ready", "implementation-candidate", "implementation-accepted"]}
+      }
+    },
     "acceptancePolicy": {
       "type": "object",
       "additionalProperties": false,
@@ -117,7 +127,7 @@
     "candidateIdentityPolicy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["exact_match_required", "worktree_scope", "unrelated_worktree_drift", "rename_policy", "candidate_artifact_schemas", "required_run_artifacts", "stage_binding", "attempt_binding", "required_fields"],
+      "required": ["exact_match_required", "worktree_scope", "unrelated_worktree_drift", "rename_policy", "candidate_artifact_schemas", "protocol_run_artifacts", "stage_projection_artifacts", "stage_binding", "attempt_binding", "required_fields"],
       "properties": {
         "exact_match_required": {"const": true},
         "worktree_scope": {"const": "declared-slice-closure-through-candidate"},
@@ -126,16 +136,19 @@
         "candidate_artifact_schemas": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["candidate_diff_manifest", "candidate_result_ref", "candidate_lineage_manifest", "candidate_slice_effect", "candidate_supersession_proof"],
+          "required": ["candidate_diff_manifest", "candidate_result_ref", "candidate_lineage_manifest", "candidate_slice_effect", "candidate_supersession_proof", "stage_evidence_projection", "candidate_baseline_bridge"],
           "properties": {
             "candidate_diff_manifest": {"const": "schemas/candidate-diff-manifest.v1.schema.json"},
             "candidate_result_ref": {"const": "schemas/candidate-result-ref.v1.schema.json"},
             "candidate_lineage_manifest": {"const": "schemas/candidate-lineage-manifest.v1.schema.json"},
             "candidate_slice_effect": {"const": "schemas/candidate-slice-effect.v1.schema.json"},
-            "candidate_supersession_proof": {"const": "schemas/candidate-supersession-proof.v1.schema.json"}
+            "candidate_supersession_proof": {"const": "schemas/candidate-supersession-proof.v1.schema.json"},
+            "stage_evidence_projection": {"const": "schemas/stage-evidence-projection.v1.schema.json"},
+            "candidate_baseline_bridge": {"const": "schemas/candidate-baseline-bridge.v1.schema.json"}
           }
         },
-        "required_run_artifacts": {"$ref": "#/$defs/stringArray"},
+        "protocol_run_artifacts": {"$ref": "#/$defs/stringArray"},
+        "stage_projection_artifacts": {"$ref": "#/$defs/stringArray"},
         "stage_binding": {
           "type": "object",
           "additionalProperties": false,
@@ -188,7 +201,7 @@
       "additionalProperties": false,
       "required": ["slice_id", "title", "phase_id", "requirement_ids", "acceptance_ids", "source_refs", "depends_on", "allowed_changes", "forbidden_changes", "execution_read_set", "dependency_closure", "tdd", "review", "exit_predicate"],
       "properties": {
-        "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"}, "title": {"type": "string"}, "phase_id": {"enum": ["P0", "P1", "P2", "P3"]}, "requirement_ids": {"$ref": "#/$defs/stringArray"}, "acceptance_ids": {"$ref": "#/$defs/stringArray"}, "source_refs": {"$ref": "#/$defs/stringArray"}, "depends_on": {"$ref": "#/$defs/stringArray"}, "allowed_changes": {"$ref": "#/$defs/writeSet"}, "forbidden_changes": {"$ref": "#/$defs/stringArray"}, "execution_read_set": {"$ref": "#/$defs/stringArray"}, "dependency_closure": {"$ref": "#/$defs/stringArray"}, "tdd": {"$ref": "#/$defs/tddContract"}, "review": {"$ref": "#/$defs/reviewContract"}, "exit_predicate": {"enum": ["slice-ready", "implementation-candidate", "implementation-accepted"]}
+        "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"}, "title": {"type": "string"}, "phase_id": {"enum": ["P0", "P1", "P2", "P3"]}, "requirement_ids": {"$ref": "#/$defs/stringArray"}, "acceptance_ids": {"$ref": "#/$defs/stringArray"}, "source_refs": {"$ref": "#/$defs/stringArray"}, "depends_on": {"$ref": "#/$defs/stringArray"}, "allowed_changes": {"$ref": "#/$defs/writeSet"}, "forbidden_changes": {"$ref": "#/$defs/stringArray"}, "execution_read_set": {"$ref": "#/$defs/stringArray"}, "dependency_closure": {"$ref": "#/$defs/stringArray"}, "tdd": {"$ref": "#/$defs/tddContract"}, "review": {"$ref": "#/$defs/reviewContract"}, "post_refactor_command_id": {"type": "string"}, "exit_predicate": {"enum": ["slice-ready", "implementation-candidate", "implementation-accepted"]}
       }
     }
   }

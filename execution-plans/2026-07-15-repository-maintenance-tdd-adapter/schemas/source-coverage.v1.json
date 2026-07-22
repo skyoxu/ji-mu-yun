@@ -171,7 +171,7 @@
     {
       "source_id": "clarification-projection",
       "path": "schemas/clarification-decisions.v1.json",
-      "sha256": "sha256:8d36bbfbde581f2786c07e2335c37e0dd02a9a5d65ce8a52bf3b0f44c4983dc0",
+      "sha256": "sha256:43cbafb22f8f2350928b8a294a23ab41bb170b3f8775b82c78a27aac57ee8d88",
       "sections": [
         {
           "id": "CREATE-CQ-001-005",
@@ -308,6 +308,14 @@
           "lines": "repair-20260718-1700:RMAP-ARTIFACT-PROOF-EXTERNAL-ROOT-CLOSURE",
           "requirements": [
             "RMAP-027"
+          ]
+        },
+        {
+          "id": "REPAIR-20260722-PLAN-LIFECYCLE",
+          "lines": "repair-20260722-lifecycle:RMAP-PLAN-LIFECYCLE-PREIMPLEMENTATION..RMAP-PLAN-LIFECYCLE-COMPLETION",
+          "requirements": [
+            "RMAP-028",
+            "RMAP-029"
           ]
         }
       ]

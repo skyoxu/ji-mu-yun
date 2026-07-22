@@ -49,15 +49,15 @@ def validate_protocol_contract(contract: dict[str, Any]) -> list[dict[str, str]]
     findings: list[dict[str, str]] = []
     protocol = contract.get("protocol_artifacts", {})
     expected_schemas = {
-        "context_manifest": "schemas/context-manifest.v1.schema.json",
-        "slice_capsule": "schemas/slice-capsule.v1.schema.json",
-        "backend_request": "schemas/backend-request.v1.schema.json",
-        "backend_response": "schemas/backend-response.v1.schema.json",
-        "diff_manifest": "schemas/diff-manifest.v1.schema.json",
-        "adapter_decision": "schemas/adapter-decision.v1.schema.json",
-        "attempt_event": "schemas/agent-attempt-event.v1.schema.json",
-        "baseline_file_manifest": "schemas/baseline-file-manifest.v1.schema.json",
-        "attempt_ledger_manifest": "schemas/attempt-ledger-manifest.v1.schema.json",
+        "context_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/context-manifest.v1.schema.json",
+        "slice_capsule": ".agents/skills/quick-dev-tdd-adapter/schemas/slice-capsule.v1.schema.json",
+        "backend_request": ".agents/skills/quick-dev-tdd-adapter/schemas/backend-request.v1.schema.json",
+        "backend_response": ".agents/skills/quick-dev-tdd-adapter/schemas/backend-response.v1.schema.json",
+        "diff_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/diff-manifest.v1.schema.json",
+        "adapter_decision": ".agents/skills/quick-dev-tdd-adapter/schemas/adapter-decision.v1.schema.json",
+        "attempt_event": ".agents/skills/quick-dev-tdd-adapter/schemas/agent-attempt-event.v1.schema.json",
+        "baseline_file_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+        "attempt_ledger_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/attempt-ledger-manifest.v1.schema.json",
     }
     capsule_policy = protocol.get("capsule_policy", {})
     attempt_policy = protocol.get("attempt_policy", {})
@@ -121,7 +121,7 @@ def _precheck(bundle: dict[str, Any]) -> list[dict[str, str]]:
 
 def _schema_findings(plan_root: Path, bundle: dict[str, Any]) -> list[dict[str, str]]:
     schemas = {
-        key: json.loads((plan_root / "schemas" / name).read_text(encoding="utf-8"))
+        key: json.loads((plan_root.parents[1] / ".agents" / "skills" / "quick-dev-tdd-adapter" / "schemas" / name).read_text(encoding="utf-8"))
         for key, name in SCHEMA_FILES.items()
     }
     documents: list[tuple[str, Any]] = []
@@ -211,6 +211,7 @@ def validate_protocol_bundle(
     baseline_entries = {
         entry["path"]: entry for entry in bundle["baseline_file_manifest"]["files"]
     }
+    observed_paths: set[str] = set()
     for index, attempt in enumerate(attempts):
         request, response, diff, decision = (
             attempt[key] for key in ("backend_request", "backend_response", "diff_manifest", "adapter_decision")
@@ -237,6 +238,9 @@ def validate_protocol_bundle(
         })
         if ref_errors or not attempt_context or request["request_payload_hash"] != expected_payload_hash:
             return [_finding("RMAP-ATTEMPT-REQUEST-BINDING", attempt_id, "backend request is not bound to current Capsule bytes and stage")]
+        expected_commands = capsule_by_hash[capsule_hash][1]["target_command_ids"]
+        if request["allowed_command_ids"] != expected_commands:
+            return [_finding("RMAP-ATTEMPT-COMMAND", attempt_id, "backend request commands do not equal bound Capsule command IDs")]
         diff_paths = [entry["path"] for entry in diff["files"]]
         if response["changed_files"] != diff_paths:
             return [_finding("RMAP-ATTEMPT-RESPONSE-DIFF", attempt_id, "backend response changed-file set differs from canonical diff")]
@@ -252,10 +256,20 @@ def validate_protocol_bundle(
             before = file_versions.get((attempt_id, "before", entry["path"]))
             after = file_versions.get((attempt_id, "after", entry["path"]))
             result_snapshot = entry.get("result_snapshot_ref")
+            change_type = entry["change_type"]
+            if (
+                (change_type == "add" and (before is not None or after is None or result_snapshot is None))
+                or (change_type == "modify" and (before is None or after is None or result_snapshot is None))
+                or (change_type == "delete" and (before is None or after is not None or result_snapshot is not None))
+            ):
+                return [_finding("RMAP-ATTEMPT-DIFF-BINDING", attempt_id, "change type does not match before/after snapshot semantics")]
             if after is not None:
                 snapshot_errors = validate_ref(result_snapshot, artifact_store, f"{attempt_id}.result_snapshot_ref", role_required=False)
                 if snapshot_errors:
                     return [_finding("RMAP-ATTEMPT-AFTER-HASH", attempt_id, "result snapshot is missing or stale against actual bytes")]
+                expected_snapshot_path = f"attempts/{attempt_id}/result-files/{entry['path']}"
+                if result_snapshot["path_type"] != "run_path" or result_snapshot["path"] != expected_snapshot_path:
+                    return [_finding("RMAP-ATTEMPT-AFTER-HASH", attempt_id, "result snapshot path does not bind the changed file path")]
             elif result_snapshot is not None:
                 return [_finding("RMAP-ATTEMPT-AFTER-HASH", attempt_id, "deleted file cannot retain a result snapshot")]
             before_hash = None if before is None else bytes_hash(before)
@@ -266,8 +280,9 @@ def validate_protocol_bundle(
                 return [_finding("RMAP-ATTEMPT-AFTER-HASH", attempt_id, "diff after hash does not match current result bytes")]
             baseline = baseline_entries.get(entry["path"])
             first_add = entry.get("change_type") == "add" and before_hash is None and baseline is None
-            if index == 0 and not first_add and (baseline is None or baseline.get("sha256") != before_hash):
-                return [_finding("RMAP-ATTEMPT-BEFORE-HASH", attempt_id, "first attempt is not bound to baseline file manifest")]
+            if entry["path"] not in observed_paths and not first_add and (baseline is None or baseline.get("sha256") != before_hash):
+                return [_finding("RMAP-ATTEMPT-BEFORE-HASH", attempt_id, "first observed file version is not bound to baseline file manifest")]
+            observed_paths.add(entry["path"])
         expected_baseline_root = value_hash({entry["path"]: entry["before_sha256"] for entry in diff["files"]})
         expected_result_root = value_hash({entry["path"]: entry["after_sha256"] for entry in diff["files"]})
         if (

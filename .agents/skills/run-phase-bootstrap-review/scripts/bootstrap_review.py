@@ -3100,6 +3100,9 @@ ID and no other IDs. Decisions are `confirmed`, `refuted`, or `unverified`.
 For `unverified`, select `security`, `data_loss`, or `other`; the gateway derives the disposition.
 For each decision, `evidenceChecked` must cover the candidate's exact artifact line range and every
 reference in its `contextRead`; an unrelated in-scope reference is not sufficient.
+Every decision must contain exactly `findingId`, `decision`, `reason`, and `evidenceChecked`.
+Use `reason` for the concise evidence-based conclusion; do not use `rationale`. Include
+`unverifiedClass` only when `decision` is `unverified`.
 {output_contract}
 
 Candidates:

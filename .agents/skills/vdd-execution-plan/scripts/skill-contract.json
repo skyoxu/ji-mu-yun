@@ -24,6 +24,7 @@
     "SKILL.md": [
       "# VDD Execution Plan",
       "## Select the mode",
+      "## Resolve the target implementation report",
       "## Complete the pre-writing clarification gate",
       "## Establish authority before writing",
       "## Build the VDD control chain",
@@ -70,7 +71,8 @@
       "references/strict-vdd-standard.md",
       "references/skill-compliance-protocol.md",
       "scripts/clarification_state.py",
-      "scripts/validate_skill_contract.py"
+      "scripts/validate_skill_contract.py",
+      "execution-plans/95-implementation-report-index.v1.json"
     ],
     "references/clarification-gate.md": [
       "scripts/clarification_state.py",
@@ -148,7 +150,7 @@
       "immutable_identity": {
         "mode": "authority-root",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+        "artifact_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -169,7 +171,7 @@
           "validator_sha256": "sha256:53e742efa6a512245cf7ecc52c3fa40284bc79a345229117563f8960ff902e1b",
         "callable": "validate_artifact_proof_trust_roots",
         "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
-        "negative_test_sha256": "sha256:c8e27653e0a69231801110f6d66c0e6138be2dacb04bd845c9a7007057f9d466",
+        "negative_test_sha256": "sha256:6962bf68883310bbee276beff3530995f7c9a3d186ba8a18deeb3c05f6d26468",
         "expected_failure_ids": [
           "VDD-ARTIFACT-PROOF-PRODUCER",
           "VDD-ARTIFACT-PROOF-IDENTITY",

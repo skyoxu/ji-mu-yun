@@ -19,8 +19,8 @@
   "semantic_closure": {
     "review_id": "repo-maint-tdd-trust-root-closure-b-20260718",
     "bootstrap_run_path": "logs/ci/2026-07-18/review-gateway-bootstrap-repo-maint-tdd-trust-root-closure-b-20260718",
-    "envelope_path": "logs/ci/2026-07-18/review-gateway-bootstrap-repo-maint-tdd-trust-root-closure-b-20260718/finalized-run-validation.json",
-    "envelope_sha256": "sha256:7f6ffaeaab7a1a6ea9780c2ef4103760b786c0a2bf96d9efe2cbb76f22f86287",
+    "envelope_path": "logs/ci/2026-07-18/review-gateway-bootstrap-repo-maint-tdd-trust-root-closure-b-20260718/finalized-run-validation-20260720.json",
+    "envelope_sha256": "sha256:4e1e73035063bafe4e2438618c161e30a978672007297a40feff34d90a463918",
     "status": "clean"
   },
   "authorizes": [

@@ -29,7 +29,7 @@ This file is the top-level navigation for project docs.
 - Base architecture: `docs/architecture/base/**`
 - Overlay slices: `docs/architecture/overlays/**`
 - Phase service architecture rationale: `docs/architecture/phase-service/_index.md`
-- Standards: `docs/standards/_index.md`, `docs/standards/phase-service.md`, `docs/standards/godot-engine-semantics.md`, `docs/standards/godot-ui-capability-contract.md`, `docs/standards/godot-ui-style-contract.md`, `docs/standards/bootstrap-review-control-plane.md`
+- Standards: `docs/standards/_index.md`, `docs/standards/phase-service.md`, `docs/standards/godot-engine-semantics.md`, `docs/standards/godot-ui-capability-contract.md`, `docs/standards/godot-ui-style-contract.md`, `docs/standards/bootstrap-review-control-plane.md`, `docs/standards/repository-maintenance-agent-protocol.md`
 - Bootstrap Review ownership ADR: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`
 - Testing rules: `docs/testing-framework.md`
 - Delivery/run protocol: `DELIVERY_PROFILE.md`, `docs/workflows/run-protocol.md`, `docs/workflows/local-hard-checks.md`

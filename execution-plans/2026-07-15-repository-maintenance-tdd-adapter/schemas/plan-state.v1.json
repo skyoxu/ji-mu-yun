@@ -17,12 +17,13 @@
       "clarification-20260717T190000Z",
       "clarification-20260718T000000Z",
       "clarification-20260718T160000Z",
-      "clarification-20260718T170000Z"
+      "clarification-20260718T170000Z",
+      "clarification-20260722T133456Z"
     ],
-    "current_repair_run_id": "clarification-20260718T170000Z",
+    "current_repair_run_id": "clarification-20260722T133456Z",
     "status": "closed",
     "write_disposition": "normal",
-    "confidence": 97
+    "confidence": 96
   },
   "blocking_disposition": {
     "path": "schemas/review-blocking-state.v1.json",

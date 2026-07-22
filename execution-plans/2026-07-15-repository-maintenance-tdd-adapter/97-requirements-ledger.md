@@ -33,5 +33,7 @@ Executable acceptance owner: [`schemas/acceptance-contracts.v1.json`](schemas/ac
 | RMAP-025 | Persist immutable Capsules with typed refs and an exact byte-verified artifact union. | context protocol maintainer | P0 | RMAP-ACC-025 | active |
 | RMAP-026 | Attempts form a complete RED-GREEN-REFACTOR prefix whose real decisions, diffs, events, stage results, and ledger roots independently derive every slice and candidate projection. | attempt protocol maintainer | P0 | RMAP-ACC-026 | active |
 | RMAP-027 | Every formal finding-added artifact has seven machine verdicts: executable PASS or type-authorized reasoned N/A; authorization-participating artifacts require seven PASS results. | artifact proof maintainer | P0 | RMAP-ACC-027 | active |
+| RMAP-028 | Resolve the 95 report index-first with target-only fallback; synchronize creation/registration; audit before writes/freeze; repair through VDD, validate, append the change entry, and refreeze identities. | plan lifecycle maintainer | P0 | RMAP-ACC-028 | active |
+| RMAP-029 | Append the target's overall implementation result only after its current declared terminal predicate passes; keep the report non-authorizing. | completion report maintainer | P1 | RMAP-ACC-029 | active |
 
 Each acceptance identity is executable intent. The machine registry owns source refs, evidence intent, consumers, failure family, and quality-check status.

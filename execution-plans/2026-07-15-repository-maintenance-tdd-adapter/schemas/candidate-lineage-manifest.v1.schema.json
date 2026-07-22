@@ -3,7 +3,7 @@
   "$id": "jimuyun.candidate-lineage-manifest.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "plan_id", "candidate_run_id", "baseline_identity", "slice_runs", "cumulative_fold_hash", "root_hash"],
+  "required": ["schema_version", "plan_id", "candidate_run_id", "baseline_identity", "slice_runs", "baseline_bridges", "replay_baseline_ref", "cumulative_fold_hash", "root_hash"],
   "properties": {
     "schema_version": {"const": "jimuyun.candidate-lineage-manifest.v1"},
     "plan_id": {"const": "repository-maintenance-tdd-adapter"},
@@ -36,6 +36,26 @@
           "final_event_hash": {"pattern": "^sha256:[0-9a-f]{64}$"}
         }
       }
+    },
+    "baseline_bridges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from_slice_id", "to_slice_id", "bridge_path", "bridge_sha256"],
+        "properties": {
+          "from_slice_id": {"pattern": "^RMAP-S[0-5]$"},
+          "to_slice_id": {"pattern": "^RMAP-S[1-6]$"},
+          "bridge_path": {"type": "string", "minLength": 1},
+          "bridge_sha256": {"pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "replay_baseline_ref": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"pattern": "^sha256:[0-9a-f]{64}$"}}
     },
     "cumulative_fold_hash": {"pattern": "^sha256:[0-9a-f]{64}$"},
     "root_hash": {"pattern": "^sha256:[0-9a-f]{64}$"}

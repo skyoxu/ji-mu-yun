@@ -124,7 +124,8 @@ class CandidateDiffGuardTests(unittest.TestCase):
             (root / "docs" / "modify.md").write_text("after\n", encoding="utf-8")
             (root / "Tests.Godot" / "binary.bin").write_bytes(bytes(range(256)))
             contract = {"slices": [{"slice_id": "RMAP-S6", "allowed_changes": {"production": [], "tests": ["Tests.Godot/**"], "documentation": ["docs/**"]}, "execution_read_set": [], "dependency_closure": [], "forbidden_changes": []}]}
-            entries, patch = derive_candidate_snapshot(plan, root, contract)
+            entries, patch, exclusions = derive_candidate_snapshot(plan, root, contract)
+            self.assertEqual(set(), exclusions)
             by_path = {item.get("candidate_path") or item.get("baseline_path"): item for item in entries}
             self.assertEqual("delete", by_path["docs/delete.md"]["change_type"])
             self.assertEqual("modify", by_path["docs/modify.md"]["change_type"])
@@ -369,6 +370,8 @@ class CandidateDiffGuardTests(unittest.TestCase):
                 "candidate_run_id": "RMAP-S6-RUN-001",
                 "baseline_identity": current,
                 "slice_runs": slice_runs,
+                "baseline_bridges": [],
+                "replay_baseline_ref": None,
                 "cumulative_fold_hash": value_hash(cumulative),
                 "root_hash": "",
             }

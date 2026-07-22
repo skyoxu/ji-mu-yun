@@ -25,6 +25,16 @@ Every contract instance binds:
 
 The instance is a projection, not a second requirements document. Long prose remains in the owning books; the instance cites stable IDs and source references.
 
+## Target Plan Lifecycle Contract
+
+`RMAP-028` and `RMAP-029`, their acceptance entries, and their S1/S2 mappings define the target-plan lifecycle and non-authoritative report index behavior without extending the closed public implementation-contract schema.
+
+Before the first implementation write or identity freeze, Quick Dev reads `execution-plans/95-implementation-report-index.v1.json`, validates an exact contained hit, and on a miss inspects only the current target execution-plan directory. It never recursively scans other plan directories. If it creates the canonical report, the report and sorted unique index entry are one pre-implementation change. It then locates the registered composite validator, requires exactly one `95-*.md`, and audits the complete plan authority and implementation readiness. A stale, escaping, duplicate, or ambiguous index/report, a missing validator, or an unresolved material defect fails closed.
+
+When the audit finds a material defect, Quick Dev enters `vdd-execution-plan` repair mode and obeys its clarification and write gates. It repairs every affected plan artifact, runs the target's registered plan validator to PASS, appends the audit and change record to the target report, then refreezes source, authority, contract, validator, command, baseline, and candidate identities before RED. No pre-repair identity or evidence may be reused. A clean audit still requires durable audit evidence, but it does not manufacture a change entry.
+
+The target report is append-only and excluded from both authority and candidate hashes. Its change entry records the defect, affected contracts, modified files, validation command/result, evidence, and remaining gaps. Its overall implementation entry is permitted only when the target contract identifies a terminal slice or predicate and the current registered terminal result passes. That entry records commands, exit codes, test counts, hashes, changed files, evidence, and residual gaps. Non-terminal slice results, assistant summaries, report prose, and successful process exit alone cannot trigger or authorize the entry.
+
 ## Persisted Slice Context Capsule
 
 Each backend invocation consumes one immutable `context/<capsule-id>/` revision containing `context-manifest.v1.json` and `slice-capsule.v1.json`. Every artifact reference declares exactly one `path_type` (`repo_path`, `plan_path`, or `run_path`), safe relative path, role where applicable, and actual byte SHA-256. The context manifest is the deduplicated exact union of every Capsule artifact reference; omitted, extra, duplicate, ambiguous-root, stale-byte, or raw blocker payload references fail closed. The Capsule contains references, stable IDs, boundaries, predicates, and hashes only; it cannot rewrite requirements or carry mutable stage state. Later revisions bind `predecessor_capsule_hash` and never overwrite earlier bytes.
@@ -38,6 +48,10 @@ Each `attempts/<attempt-id>/` directory contains a minimized backend request env
 Attempts use monotonic IDs, request and decision predecessor links, and a previous decision hash. Accepted stages form only a legal `RED -> GREEN -> REFACTOR` prefix; S2 and S6 exit require all three exactly once. Each attempt has an exact event lifecycle, and every event artifact reference is checked against actual bytes. The adapter recomputes response/diff file equality, command allowlist membership, Capsule-boundary scope, baseline snapshot bytes, per-attempt result snapshot bytes, and the canonical diff hash. The decision binds a stable stage ID and expected stage-result path; the stage result binds the finalized decision hash without a content-hash cycle.
 
 `attempt-ledger-manifest.v1.json` closes every request, response, diff, decision, and stage-result hash plus the raw `run-events.jsonl` byte hash and final canonical event hash. Missing decision, partial write, stale hash, forbidden/unrelated accepted diff, incomplete lifecycle, multiple accepted lineages, stale ledger root, or authority escalation fails closed. `adapter-decision` may record `accepted_for_validation`; it never authorizes a state change, and S6 alone may bind the final accepted attempt and ledger closure into the candidate envelope.
+
+## Standard Stage Evidence Projection
+
+`stage-evidence-projection.v1.schema.json` is the non-protocol lineage input for S0, S1, S3, S4, and S5. It binds immutable RED, GREEN, and REFACTOR result bytes, a frozen baseline file set, and the slice-local effect fold. It is not an attempt ledger, cannot claim acceptance authority, and may not be used for S2 or S6. Candidate lineage independently verifies its stage-result hashes, effect continuity, root hash, and predecessor chain.
 
 ## Command Execution Contract
 
@@ -104,9 +118,9 @@ The current [`review-blocking-state.v1.json`](schemas/review-blocking-state.v1.j
 
 ## S0 Slice Proof
 
-`RMAP-S0` keeps `slice-ready` as its exit predicate. Its GREEN command is `rmap-s0-slice-validate`, which invokes the plan-local composite with `--predicate slice-ready --slice-id RMAP-S0`. The command checks the existing Accepted ADR-0041, the new ownership standard, both index projections, and the absence of a colliding ADR-0041 path; missing implementation outputs fail closed with `RMAP-AUTH-SLICE-EVIDENCE`. `plan-ready` is never accepted as a substitute.
+`RMAP-S0` keeps `slice-ready` as its exit predicate. Its GREEN command is the non-authorizing `rmap-s0-preflight`, which proves only the current `plan-ready` baseline. After RED, GREEN, and REFACTOR evidence is recorded, `rmap-s0-slice-validate` invokes the plan-local composite with `--predicate slice-ready --slice-id RMAP-S0` as the final exit gate. The final gate checks the existing Accepted ADR-0041, the new ownership standard, both index projections, and the absence of a colliding ADR-0041 path; missing implementation outputs fail closed with `RMAP-AUTH-SLICE-EVIDENCE`. `plan-ready` is never accepted as a substitute for `slice-ready`.
 
-The same command-to-exit rule applies to every slice. Each S0-S7 GREEN command has a unique command ID whose `declared_predicate` and `slice_id` exactly match the slice contract. The composite consumes `--slice-id`, verifies that binding, and checks the outputs or evidence owned by that slice. A generic test command or a command bound to another slice cannot authorize an exit.
+The final post-REFACTOR command-to-exit rule applies to every slice. Each S0-S7 final command has a unique command ID whose `declared_predicate` and `slice_id` exactly match the slice contract. S0 and S1 use non-authorizing plan-ready preflights for GREEN and REFACTOR, because their final `slice-ready` commands consume the stage evidence written only after those stages. A GREEN or REFACTOR preflight cannot authorize an exit. The composite consumes `--slice-id`, verifies that binding, and checks the outputs or evidence owned by that slice. A generic test command or a command bound to another slice cannot authorize an exit.
 
 The junction regression creates one uniquely named junction directly under `logs/`, points it at an existing outside directory, verifies resolved containment rejection, and removes it in `finally`. It does not depend on host `%TEMP%` or on creating a writable grandchild under a restricted token. Disposable test state never becomes plan authority.
 

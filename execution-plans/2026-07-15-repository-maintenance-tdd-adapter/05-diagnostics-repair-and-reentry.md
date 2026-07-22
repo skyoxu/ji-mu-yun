@@ -30,6 +30,10 @@ Every failure record contains:
 | S0-S6 lineage omits a slice or breaks predecessor/event hashes | candidate lineage contract |
 | Protected handoff or release lacks custody outside the workflow identity | protected-verifier identity boundary |
 | Runtime P2 or verifier source evidence is missing/stale | Bootstrap acceptance evidence contract |
+| Target plan audit is missing, late, or finds an unresolved defect | target-plan lifecycle contract, then VDD repair |
+| 95 report index is missing, stale, duplicate, escaping, or bypassed by a repository-wide scan | non-authoritative index contract, then target-directory-only recovery |
+| Target `95-*.md` is missing, ambiguous, hash-authoritative, or rewritten | target report ownership and append-only boundary |
+| Overall result is requested before the current terminal predicate passes | terminal reporter; no write is allowed |
 
 Never weaken a validator to match a candidate without an explicit contract delta and regression counterexample.
 
@@ -50,6 +54,8 @@ On relevant drift:
 5. rerun prepare and the required RED gate.
 
 Unrelated worktree changes outside all closures are appended as observations and do not restart the run.
+
+A target-plan repair is relevant drift by definition. It invalidates every pre-repair freeze and TDD stage observation. After the target validator passes and the change entry is appended, recovery creates or refreezes a successor identity before RED; it never patches an existing Capsule, baseline, or result envelope to point at the repaired plan.
 
 Within one run, Capsule and attempt bytes are also immutable. Capsule revisions link by predecessor Capsule hash. `ATTEMPT-001`, `ATTEMPT-002`, and later IDs are monotonic; each request and decision names the previous attempt, and each decision binds the previous decision hash. The decision is written last. A crash before that write leaves an `incomplete` attempt that cannot satisfy a stage predicate.
 
@@ -73,6 +79,7 @@ Deferred P2 evidence is not closure evidence. It must bind an owner authority ch
 - Bootstrap full semantic review follows its own two-round default and three-round hard limit.
 - Historical evidence is never rewritten to make a later run pass.
 - Capsule overwrite, attempt-ID reuse, raw sensitive-content persistence, or transition authority in `adapter-decision` stops the run.
+- A stale or ambiguous index, recursive execution-plans scan, missing or ambiguous target `95-*.md`, failed target validator, reuse of a pre-repair identity, or attempted completion entry before terminal PASS stops the run without modifying the report.
 
 The current stop-loss owner is [`schemas/review-blocking-state.v1.json`](schemas/review-blocking-state.v1.json). It remains immutable. [`schemas/review-policy-reentry.v1.json`](schemas/review-policy-reentry.v1.json) is the only successor selector: pending states authorize nothing; `reentry_authorized` requires a schema-valid repository Bootstrap successor decision, a current authorization-event hash, distinct change/policy/authority/review/input lineage, and a clean v2 envelope that exactly matches a fresh repository producer recomputation.
 

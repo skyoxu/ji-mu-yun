@@ -122,7 +122,7 @@
       "mutations": [
         {
           "op": "replace",
-          "path": "/slices/0/tdd/green/command_id",
+      "path": "/slices/0/post_refactor_command_id",
           "value": "rmap-plan-validate"
         }
       ],
@@ -135,7 +135,7 @@
       "mutations": [
         {
           "op": "replace",
-          "path": "/slices/1/tdd/green/command_id",
+      "path": "/slices/1/post_refactor_command_id",
           "value": "rmap-plan-validate"
         }
       ],
@@ -460,10 +460,7 @@
         }
       ],
       "expected_rule": "RMAP-REVIEW-REENTRY",
-      "expected_rules": [
-        "RMAP-REVIEW-MANUAL-PAUSE",
-        "RMAP-REVIEW-REENTRY"
-      ],
+    "expected_rules": ["RMAP-REVIEW-REENTRY"],
       "expected_valid": false
     },
     {
@@ -477,10 +474,7 @@
         }
       ],
       "expected_rule": "RMAP-REVIEW-REENTRY",
-      "expected_rules": [
-        "RMAP-REVIEW-MANUAL-PAUSE",
-        "RMAP-REVIEW-REENTRY"
-      ],
+    "expected_rules": ["RMAP-REVIEW-REENTRY"],
       "expected_valid": false
     },
     {
@@ -677,6 +671,33 @@
       "target": "artifact_protected_boundary",
       "mutations": [],
       "expected_rule": "RMAP-ARTIFACT-PROOF-PROTECTED-ROOT",
+      "expected_valid": false
+    },
+    {
+      "id": "plan-lifecycle-audit-omitted",
+      "target": "acceptance",
+      "mutations": [
+        {"op": "replace", "path": "/acceptances/27/evidence_required/2", "value": "audit-after-freeze"}
+      ],
+      "expected_rule": "RMAP-PLAN-LIFECYCLE-POLICY",
+      "expected_valid": false
+    },
+    {
+      "id": "plan-lifecycle-report-index-bypassed",
+      "target": "acceptance",
+      "mutations": [
+        {"op": "replace", "path": "/acceptances/27/evidence_required/9", "value": "recursive-execution-plans-scan"}
+      ],
+      "expected_rule": "RMAP-PLAN-LIFECYCLE-POLICY",
+      "expected_valid": false
+    },
+    {
+      "id": "plan-lifecycle-terminal-predicate-bypassed",
+      "target": "acceptance",
+      "mutations": [
+        {"op": "replace", "path": "/acceptances/28/evidence_required/2", "value": "assistant-summary-pass"}
+      ],
+      "expected_rule": "RMAP-PLAN-LIFECYCLE-POLICY",
       "expected_valid": false
     }
   ]

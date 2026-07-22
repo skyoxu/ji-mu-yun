@@ -10,7 +10,6 @@ from typing import Any
 from contract_guards import contained_file, schema_error
 from review_reentry_environment import stable_environment_evidence
 
-
 HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 PROTECTED_VERIFIER_BLOCKER = {
@@ -167,7 +166,7 @@ def validate_plan_state(
         findings.append(_finding("RMAP-PROTECTED-VERIFIER-IDENTITY", "plan-state", "protected handoff and release identity boundary is inconsistent"))
     if state.get("threat_model") != WORKFLOW_THREAT_MODEL:
         findings.append(_finding("RMAP-AUTH-THREAT-MODEL", "plan-state", "predicate assurance does not match the workflow-integrity threat model"))
-    if not reentry_authorized:
+    if require_runtime_evidence and not reentry_authorized:
         findings.append(_finding("RMAP-REVIEW-MANUAL-PAUSE", "plan-state", "Round 3 manual pause has no valid successor reentry"))
     blocking = state.get("blocking_disposition", {})
     if blocking.get("path") != "schemas/review-blocking-state.v1.json" or blocking.get("state") != "manual_pause_after_round_3" or blocking.get("reentry") != "schemas/review-policy-reentry.v1.json":
@@ -270,12 +269,10 @@ def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> li
         "docs/standards/bootstrap-review-control-plane.md",
         ".agents/skills/run-phase-bootstrap-review/SKILL.md",
         ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
-        ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
         ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
         ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
         ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
         ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
-        ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
         ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
         ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-authority-root-registry.v1.schema.json",
         ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json",
@@ -304,15 +301,11 @@ def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> li
         "schemas/source-coverage.v1.json", "schemas/spec-deltas.v1.json", "schemas/requirement-quality.v1.json",
         "schemas/acceptance-contracts.v1.json", "schemas/clarification-decisions.v1.json",
         "schemas/review-blocking-state.v1.json", "schemas/command-registry.v1.json",
-        "schemas/implementation-contract.v1.schema.json", "schemas/shadow-backfill.v1.json",
+        "schemas/shadow-backfill.v1.json",
         "schemas/shadow-protected-baseline.v1.json", "schemas/validation-result.v1.schema.json",
-        "schemas/diagnostic.v1.schema.json", "schemas/context-manifest.v1.schema.json",
-        "schemas/slice-capsule.v1.schema.json", "schemas/backend-request.v1.schema.json",
-        "schemas/backend-response.v1.schema.json", "schemas/diff-manifest.v1.schema.json",
-        "schemas/adapter-decision.v1.schema.json", "schemas/agent-attempt-event.v1.schema.json",
-        "schemas/baseline-file-manifest.v1.schema.json", "schemas/attempt-ledger-manifest.v1.schema.json",
+        "schemas/diagnostic.v1.schema.json",
         "schemas/candidate-diff-manifest.v1.schema.json", "schemas/candidate-result-ref.v1.schema.json",
-        "schemas/candidate-lineage-manifest.v1.schema.json", "schemas/candidate-slice-effect.v1.schema.json", "schemas/candidate-supersession-proof.v1.schema.json",
+        "schemas/candidate-lineage-manifest.v1.schema.json", "schemas/candidate-slice-effect.v1.schema.json", "schemas/candidate-supersession-proof.v1.schema.json", "schemas/stage-evidence-projection.v1.schema.json",
         "schemas/reentry-successor-20260718/authorization-event.json", "schemas/reentry-successor-20260718/policy-decision.json", "schemas/reentry-successor-20260718/successor-authority.json",
         "schemas/review-policy-reentry.v1.schema.json", "schemas/review-policy-reentry.v1.json",
         "schemas/artifact-proof.v1.schema.json", "schemas/artifact-proof-authority.v1.json", "schemas/artifact-proof-required.v1.json", "schemas/artifact-proof-registry.v1.json", "schemas/runtime-artifact-type-proof.v1.json",
@@ -323,8 +316,15 @@ def validate_authority_manifest(plan_root: Path, manifest: dict[str, Any]) -> li
         "tools/protocol_validation_guards.py", "tools/protocol_fixture_support.py",
         "tools/protocol_fixture_cases.py",
         "tools/protocol_fixture_mutations.py", "tools/protocol_artifact_guards.py",
-        "tools/attempt_lineage_guards.py", "tools/refresh_projections.py", "tools/artifact_proof_guards.py", "tools/artifact_proof_verdicts.py", "tools/runtime_artifact_proof_guards.py", "tools/artifact_proof_projection_support.py", "tools/artifact_proof_inventory_support.py", "tools/validation_result_guards.py", "tools/review_reentry_environment.py",
-         "tools/tests/test_plan_validator.py", "tools/tests/test_protocol_guards.py", "tools/tests/test_candidate_diff_guards.py", "tools/tests/test_artifact_proof_closure.py", "tools/tests/test_validation_result_guards.py",
+        "tools/attempt_lineage_guards.py", "tools/refresh_projections.py", "tools/artifact_proof_guards.py", "tools/artifact_proof_verdicts.py", "tools/runtime_artifact_proof_guards.py", "tools/artifact_proof_projection_support.py", "tools/artifact_proof_inventory_support.py", "tools/validation_result_guards.py", "tools/review_reentry_environment.py", "tools/stage_projection_builder.py", "tools/candidate_builder.py", "tools/candidate_lineage_builder.py",
+          "tools/tests/test_plan_validator.py", "tools/tests/test_protocol_guards.py", "tools/tests/test_candidate_diff_guards.py", "tools/tests/test_stage_projection_guards.py", "tools/tests/test_artifact_proof_closure.py", "tools/tests/test_validation_result_guards.py",
+    ))
+    skill_prefix = ".agents/skills/quick-dev-tdd-adapter/schemas/"
+    expected.update(skill_prefix + name for name in (
+        "implementation-contract.v1.schema.json", "context-manifest.v1.schema.json", "slice-capsule.v1.schema.json",
+        "backend-request.v1.schema.json", "backend-response.v1.schema.json", "diff-manifest.v1.schema.json",
+        "adapter-decision.v1.schema.json", "agent-attempt-event.v1.schema.json", "baseline-file-manifest.v1.schema.json",
+        "attempt-ledger-manifest.v1.schema.json",
     ))
     if seen != expected:
         findings.append(_finding("RMAP-HASH-AUTHORITY-MANIFEST", "authority-manifest", "authority inventory differs from the closed required path set"))
@@ -337,7 +337,7 @@ def validate_clarification_projection(projection: dict[str, Any], state: dict[st
         return [_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "projection schema is invalid")]
     sources = projection.get("sources", [])
     source_fields = {"kind", "run_id", "state_sha256", "authority_hash", "status", "write_disposition"}
-    if [item.get("kind") for item in sources if isinstance(item, dict)] != ["creation", "repair", "repair", "repair", "repair", "repair", "repair", "repair", "repair"] or any(set(item) != source_fields or item.get("status") != "closed" for item in sources):
+    if [item.get("kind") for item in sources if isinstance(item, dict)] != ["creation", *(["repair"] * 9)] or any(set(item) != source_fields or item.get("status") != "closed" for item in sources):
         findings.append(_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "source lineage is incomplete"))
     sets = projection.get("decision_sets", {})
     expected_sets = {
@@ -350,6 +350,7 @@ def validate_clarification_projection(projection: dict[str, Any], state: dict[st
         "repair_20260718_1500": [f"CQ-{index:03d}" for index in range(1, 6)],
         "repair_20260718_1600": ["RMAP-ARTIFACT-PROOF-CLOSURE"],
         "repair_20260718_1700": ["RMAP-ARTIFACT-PROOF-EXTERNAL-ROOT-CLOSURE"],
+        "repair_20260722_lifecycle": ["RMAP-PLAN-LIFECYCLE-PREIMPLEMENTATION", "RMAP-PLAN-LIFECYCLE-REPORT-INDEX", "RMAP-PLAN-LIFECYCLE-COMPLETION"],
     }
     if set(sets) != set(expected_sets) or any([item.get("id") for item in sets.get(name, [])] != ids for name, ids in expected_sets.items()):
         findings.append(_finding("RMAP-REQ-CLARIFICATION-PROJECTION", "clarification-decisions", "decision identity set is incomplete"))

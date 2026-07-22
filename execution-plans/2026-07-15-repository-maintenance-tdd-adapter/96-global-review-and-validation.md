@@ -20,6 +20,7 @@ Before semantic review:
 8. observe candidate omission, fabricated slice projection, missing cross-slice lineage, test-patch mismatch, authoritative S7 supersession, runtime P2/verifier source, partial re-entry evidence, and artifact-proof counterexamples with their stable rule IDs;
 9. apply the seven-dimensional proof contract to every formal artifact added for a prior finding; require explicit executable `PASS` or type-authorized reasoned `N/A`, reject missing verdicts, unauthorized N/A, fake PASS rules, forged producer, self-refreshed identity, unrelated derivation, unknown rule, empty invalidation, broken lineage, and incomplete consumer permission, and prove static contracts have zero runtime authority;
 10. execute the disposable Git for Windows add/modify/delete/binary-patch test and junction containment test.
+11. observe all three target-plan lifecycle counterexamples, verify the exact non-authoritative index entry and exactly one `95-*.md`, and prove that both index and report are absent from authority and candidate hash scopes.
 
 A deterministic failure stops semantic review.
 
@@ -64,6 +65,7 @@ Future `implementation-accepted` requires:
 - a candidate-bound final context/Capsule, immutable S0-S6 lineage, and authoritative non-supersession proof;
 - runtime Bootstrap P2 dispositions and verifier output schema-valid and directly hash-bound by the v2 finalized envelope;
 - every review-added artifact covered by the independent required inventory, static contract proof, runtime artifact type proof, current authority hash, registered validator/negative test, consumer registry, and exact predicate permission lattice.
+- target-plan audit and any VDD repair completed before implementation identity freeze, with the target validator passing and all affected identities refrozen.
 
 ## Bounded Review Cycle
 
@@ -79,4 +81,4 @@ Round 3 `repo-maint-tdd-final-r3-20260716-110837` confirmed eight P1 findings. T
 
 ## Completion Claim
 
-The final reporter reads the complete result envelope and names commands, exit codes, test counts, evidence paths, current hashes, residual gaps, and changed files. A clean process exit without a valid current envelope is not a pass.
+The final reporter resolves the report from the validated non-authoritative index entry, reads the complete terminal result envelope, and names commands, exit codes, test counts, evidence paths, current hashes, residual gaps, and changed files. Only then may it append the overall result to the target plan's unique `95-*.md`. A clean process exit, partial-slice result, assistant summary, index entry, or report entry without a valid current terminal envelope is not a pass and authorizes nothing.
