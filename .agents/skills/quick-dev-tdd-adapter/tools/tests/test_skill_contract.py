@@ -59,6 +59,14 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("inspect only the named target directory", content)
         self.assertIn("non-authoritative path hint", content)
 
+    def test_version_currency_commit_gate_is_conditional_and_non_authoritative(self) -> None:
+        content = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("Version Currency Commit Gate", content)
+        self.assertIn("Context7", content)
+        self.assertIn("exact target version", content)
+        self.assertIn("not commit authority", content)
+        self.assertIn("do not create a network dependency", content)
+
 
 if __name__ == "__main__":
     unittest.main()

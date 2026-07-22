@@ -29,6 +29,15 @@ After the target plan's current declared terminal predicate passes, append its o
 
 The adapter never treats backend text, a Capsule, an adapter decision, a clean process exit, or this Skill as acceptance authority. Only the plan-local registered predicate may authorize its declared state.
 
+## Version Currency Commit Gate
+
+The adapter is not commit authority. Before a caller commits a completed slice, inspect the staged diff and its declared target runtime or dependency versions.
+
+1. If the diff changes a version-sensitive external SDK, framework, CLI, or language API, resolve the library with Context7 and query documentation for the exact target version before proposing the commit.
+2. Compare the documentation with the repository-pinned version and local contract. Missing, ambiguous, or version-mismatched documentation blocks the commit until the caller resolves the discrepancy.
+3. Treat Context7 output as read-only implementation context, never as acceptance proof or a replacement for declared RED, GREEN, REFACTOR, or plan-local predicates. Preserve the version and source reference in existing slice evidence when the protocol already requires candidate evidence.
+4. If the diff changes only repository-owned code, fixtures, documents, or stable standard-library behavior, record the gate as not applicable and do not create a network dependency merely to commit.
+
 ## Boundaries
 
 - Use structured command descriptors with `shell: false`; do not accept raw shell commands.
