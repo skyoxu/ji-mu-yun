@@ -45,8 +45,8 @@ def _normalize_pattern(plan_root: Path, repository_root: Path, pattern: str) -> 
     normalized = pattern.replace("\\", "/").strip("/")
     if not normalized or "<" in normalized or normalized.casefold().startswith("logs/"):
         return None
-    prefixes = (".agents/", ".github/", "docs/", "execution-plans/", "scripts/", "runtime/", "PhaseA.Platform/", "Game.", "Tests.")
-    if normalized in {"AGENTS.md", "README.md", "agentbuild.txt"} or normalized.startswith(prefixes):
+    prefixes = (".agents/", ".github/", "decision-logs/", "docs/", "execution-plans/", "scripts/", "runtime/", "PhaseA.Platform/", "Game.", "Tests.")
+    if normalized in {".gitignore", "AGENTS.md", "README.md", "agentbuild.txt"} or normalized.startswith(prefixes):
         return normalized
     return f"{plan_root.relative_to(repository_root).as_posix()}/{normalized}"
 def _matches(path: str, patterns: set[str]) -> bool:
