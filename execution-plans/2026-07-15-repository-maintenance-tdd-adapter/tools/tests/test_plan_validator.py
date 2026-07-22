@@ -180,22 +180,22 @@ class PlanValidatorTests(unittest.TestCase):
                 expected = [] if case["expected_valid"] else sorted(case.get("expected_rules", [case["expected_rule"]]))
                 self.assertEqual(expected, rules)
     def test_predicate_authority_is_exact(self) -> None:
-        self.assertEqual(set(), {item["rule_id"] for item in validate_plan_state(self.data["state"], self.data["review_blocker"])})
+        self.assertEqual(set(), {item["rule_id"] for item in validate_plan_state(self.data["state"], self.data["review_blocker"], require_runtime_evidence=False)})
         for name, (authorizes, excludes) in PREDICATE_AUTHORITY.items():
             self.assertEqual(authorizes, self.data["state"]["predicates"][name]["authorizes"])
             self.assertEqual(excludes, self.data["state"]["predicates"][name]["does_not_authorize"])
     def test_round_four_authorization_is_rejected(self) -> None:
         blocker = copy.deepcopy(self.data["review_blocker"])
         blocker["round_4_authorized"] = True
-        rules = {item["rule_id"] for item in validate_plan_state(self.data["state"], blocker)}
+        rules = {item["rule_id"] for item in validate_plan_state(self.data["state"], blocker, require_runtime_evidence=False)}
         self.assertEqual({"RMAP-REVIEW-MANUAL-PAUSE"}, rules)
     def test_blocker_projection_requires_full_authority_binding(self) -> None:
         blocker = copy.deepcopy(self.data["review_blocker"]); blocker["policy_revision"] = "garbage"
-        self.assertIn("RMAP-REVIEW-MANUAL-PAUSE", {item["rule_id"] for item in validate_plan_state(self.data["state"], blocker)})
+        self.assertIn("RMAP-REVIEW-MANUAL-PAUSE", {item["rule_id"] for item in validate_plan_state(self.data["state"], blocker, require_runtime_evidence=False)})
     def test_release_escalation_is_rejected(self) -> None:
         state = copy.deepcopy(self.data["state"])
         state["predicates"]["plan-repair-verified"]["authorizes"].append("release-ready")
-        rules = {item["rule_id"] for item in validate_plan_state(state, self.data["review_blocker"])}
+        rules = {item["rule_id"] for item in validate_plan_state(state, self.data["review_blocker"], require_runtime_evidence=False)}
         self.assertEqual({"RMAP-AUTH-PREDICATE"}, rules)
     def test_shell_and_raw_command_are_rejected(self) -> None:
         commands = copy.deepcopy(self.data["commands"]); commands["shell"] = True

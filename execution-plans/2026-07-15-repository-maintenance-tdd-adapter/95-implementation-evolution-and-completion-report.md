@@ -665,6 +665,16 @@ VDD Skill 不应把 7-15 的全部控制面复制给所有需求。建议按风�
 - 当前候选：`sha256:0b56185e86e345374d72ea2e8510d50e5cea5d3e46b0f5e84e94f8872258b834`。
 - 影响：此前隔离 worktree 的 S0 RED 观察可保留为诊断，但不与本候选混用；提交后重新建立 S0 的完整生命周期。
 
+### IR-005：隔离 replay 的静态验证模式
+
+**时间**：2026-07-22
+**状态**：已验证；重新实施尚未完成。
+
+- 缺陷：`test_plan_validator.py` 的静态谓词断言隐式启用 Bootstrap Review runtime environment 重算。隔离 worktree 的路径差异使这三项静态测试误报 reentry/manual-pause，尽管 S0-S6 已不消费该 runtime gate。
+- 修复：这些结构断言显式使用 `require_runtime_evidence=False`；S7 的 `implementation-accepted` 运行时路径仍使用完整 review reentry 与 finalized envelope 验证。
+- 验证：刷新投影后 `plan-ready` 通过，95 项测试在 `178.582s` 内通过。
+- 当前候选：`sha256:576b984e780c9bb6611737e4dc1419c22fe9355c42549367d869dc96bc18b6be`。
+
 ## 第二部分：实现完成后的整体报告
 
 状态：**待填写**。

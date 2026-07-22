@@ -399,7 +399,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
-        "sha256": "sha256:5c7098fd589930e40387c4ef543169fb1404076d5d2dd526afe6223fc1476982"
+        "sha256": "sha256:3a902bf6c7e9c26dcd7b95d38233a774151f3f693048eb558a2bcc7ccd83a776"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_guards.py",
