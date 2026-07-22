@@ -613,6 +613,23 @@ VDD Skill 不应把 7-15 的全部控制面复制给所有需求。建议按风�
 5. S6 的旧 candidate-result `pass` 绑定旧候选和旧 consumer；S7 当前没有可用于本报告第二部分的有效最终接受结论。
 6. 2026-07-22 的 S6 recovery proposal 在三轮后仍为 `blocked/manual-pause`；批量修复和 93 项计划测试不改变该审核事实。
 
+## 8. 当前重新实施记录
+
+### IR-001：重新实施基线与 S0
+
+**时间**：2026-07-22
+**状态**：进行中；仅 S0 已由当前候选重新验证通过。
+
+- 实施前基线提交：`aa1afef feat: establish RMAP TDD adapter baseline`。
+- 当前候选：`sha256:06192a01fe0110936864da6f4be0fd0e3d0718c64474051f52e667ca9ab5e92c`。
+- S0 运行：`rmap-s0-replay-20260722T084218Z-7d340688a7d7`。
+- S0 RED：`rmap-observe-ownership-red` 返回 `1`，观察到声明的 duplicate-ownership 负例。
+- S0 GREEN：`rmap-s0-preflight` 返回 `0`。
+- S0 REFACTOR：`rmap-validator-tests` 与 `rmap-s0-preflight` 均返回 `0`。
+- S0 `slice-ready`：通过；最终 validator 运行 94 项测试且无诊断。
+
+证据根：`logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S0/rmap-s0-replay-20260722T084218Z-7d340688a7d7/`。
+
 ## 第二部分：实现完成后的整体报告
 
 状态：**待填写**。
