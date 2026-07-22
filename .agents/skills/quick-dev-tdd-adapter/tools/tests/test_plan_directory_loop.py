@@ -59,6 +59,7 @@ class PlanDirectoryLoopTests(unittest.TestCase):
         self.assertIn("logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S0/RUN-TEST", result["terminal"]["argv"])
         self.assertIn("payload_base64", result["run_context"]["implementation_contract"])
         self.assertTrue(__import__("base64").b64decode(result["run_context"]["implementation_contract"]["payload_base64"], validate=True))
+        self.assertIsInstance(result["run_context"]["boundaries"]["allowed_write_set"], list)
 
     def test_lifecycle_rejects_shell_command_descriptor(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
