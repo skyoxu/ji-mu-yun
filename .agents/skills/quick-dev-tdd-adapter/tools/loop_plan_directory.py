@@ -37,6 +37,10 @@ def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> N
         command_path.write_text(json.dumps(commands_document[index], indent=2) + "\n", encoding="utf-8", newline="\n")
         commands.extend(["--command", f"refactor={command_path}"])
     invocation_args = [str(TOOLS / "run_slice_lifecycle.py"), "--workspace", str(root), "--plan-dir", str(plan), "--run-dir", str(run_dir), "--slice-id", slice_id, "--run-context", str(invocation / "run-context.json"), "--terminal-command", str(invocation / "terminal-command.json")]
+    for index, command in enumerate(json.loads((invocation / "preparation-commands.json").read_text(encoding="utf-8"))):
+        command_path = invocation / f"preparation-command-{index}.json"
+        command_path.write_text(json.dumps(command, indent=2) + "\n", encoding="utf-8", newline="\n")
+        invocation_args.extend(["--prepare-command", str(command_path)])
     for snapshot in snapshots:
         invocation_args.extend(["--snapshot-path", snapshot])
     _run([*invocation_args, *commands])

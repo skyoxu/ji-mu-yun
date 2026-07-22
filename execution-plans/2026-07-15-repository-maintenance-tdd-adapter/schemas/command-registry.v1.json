@@ -406,6 +406,18 @@
       "slice_id": "RMAP-S5"
     },
     {
+      "id": "rmap-s6-prepare-committed-candidate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        {"type": "plan_path", "value": "tools/committed_candidate_builder.py"},
+        "--run-dir",
+        {"type": "run_path", "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>"}
+      ],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 120
+    },
+    {
       "id": "rmap-s6-identity-validate",
       "executable": "py",
       "argv": ["-3", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py"],

@@ -21,23 +21,15 @@ FILE_KEYS = {
 
 def _finding(rule_id: str, target: str, message: str) -> dict[str, str]:
     return {"rule_id": rule_id, "target": target, "message": message}
-
-
 def bytes_hash(value: bytes) -> str:
     return HASH_RE + hashlib.sha256(value).hexdigest()
-
-
 def value_hash(value: Any) -> str:
     payload = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     return bytes_hash(payload)
-
-
 def manifest_root_hash(document: dict[str, Any]) -> str:
     value = dict(document)
     value.pop("root_hash", None)
     return value_hash(value)
-
-
 def _git(repository_root: Path, *args: str, accepted: set[int] | None = None) -> bytes:
     result = subprocess.run(
         ["git", "-c", "core.autocrlf=false", *args],
@@ -49,8 +41,6 @@ def _git(repository_root: Path, *args: str, accepted: set[int] | None = None) ->
     if result.returncode not in allowed:
         raise ValueError(result.stderr.decode("utf-8", errors="replace"))
     return result.stdout
-
-
 def _normalize_pattern(plan_root: Path, repository_root: Path, pattern: str) -> str | None:
     normalized = pattern.replace("\\", "/").strip("/")
     if not normalized or "<" in normalized or normalized.casefold().startswith("logs/"):
@@ -59,8 +49,6 @@ def _normalize_pattern(plan_root: Path, repository_root: Path, pattern: str) -> 
     if normalized in {"AGENTS.md", "README.md", "agentbuild.txt"} or normalized.startswith(prefixes):
         return normalized
     return f"{plan_root.relative_to(repository_root).as_posix()}/{normalized}"
-
-
 def _matches(path: str, patterns: set[str]) -> bool:
     folded = path.replace("\\", "/").casefold()
     for pattern in patterns:
@@ -70,8 +58,6 @@ def _matches(path: str, patterns: set[str]) -> bool:
         if fnmatch.fnmatchcase(folded, candidate):
             return True
     return False
-
-
 def scope_policy(plan_root: Path, repository_root: Path, contract: dict[str, Any], slice_id: str) -> dict[str, set[str]]:
     slices = contract.get("slices", [])
     selected = next((index for index, item in enumerate(slices) if item.get("slice_id") == slice_id), None)
@@ -91,8 +77,6 @@ def scope_policy(plan_root: Path, repository_root: Path, contract: dict[str, Any
         for role, patterns in raw.items():
             policy[role].update(filter(None, (_normalize_pattern(plan_root, repository_root, value) for value in patterns)))
     return policy
-
-
 def _classify(path: str, policy: dict[str, set[str]]) -> tuple[list[str], str]:
     roles = [role for role in ("production", "test", "documentation", "execution_read", "dependency", "forbidden") if _matches(path, policy[role])]
     if "forbidden" in roles:
@@ -100,8 +84,6 @@ def _classify(path: str, policy: dict[str, set[str]]) -> tuple[list[str], str]:
     if any(role in roles for role in ("production", "test", "documentation")):
         return roles, "allowed"
     return roles or ["dependency"], "unrelated"
-
-
 def _head_blob(repository_root: Path, path: str) -> bytes | None:
     listing = _git(repository_root, "ls-tree", "-z", "HEAD", "--", path)
     if not listing:
@@ -109,8 +91,6 @@ def _head_blob(repository_root: Path, path: str) -> bytes | None:
     header = listing.split(b"\t", 1)[0].decode("ascii")
     object_id = header.split()[2]
     return _git(repository_root, "cat-file", "blob", object_id)
-
-
 def _file_entry(repository_root: Path, path: str, policy: dict[str, set[str]]) -> dict[str, Any]:
     before = _head_blob(repository_root, path)
     current_path = repository_root / path
@@ -129,12 +109,8 @@ def _file_entry(repository_root: Path, path: str, policy: dict[str, set[str]]) -
         "roles": roles,
         "scope": scope,
     }
-
-
 def _entry_path(entry: dict[str, Any]) -> str:
     return str(entry.get("candidate_path") or entry.get("baseline_path") or "")
-
-
 def _canonical_test_patch(repository_root: Path, entries: list[dict[str, Any]]) -> bytes:
     tests = [entry for entry in entries if "test" in entry.get("roles", []) and entry.get("scope") == "allowed"]
     tracked = [_entry_path(entry) for entry in tests if entry.get("change_type") != "add"]
@@ -178,6 +154,8 @@ def validate_candidate_diff(
     current: dict[str, str],
     candidate_run_id: str,
 ) -> list[dict[str, str]]:
+    if manifest.get("schema_version") == "jimuyun.candidate-diff-manifest.v2":
+        return validate_committed_candidate_diff(plan_root, repository_root, contract, manifest, manifest_path, test_patch, candidate_run_id)
     expected, expected_patch, exclusions = derive_candidate_snapshot(plan_root, repository_root, contract, replay_baseline_ref=lineage.get("replay_baseline_ref"))
     folded, fold_hash, fold_findings = load_candidate_lineage(plan_root, repository_root, lineage, candidate_run_id, current, exclusions)
     if fold_findings:
@@ -194,6 +172,51 @@ def validate_candidate_diff(
         current,
         candidate_run_id,
     )
+
+
+def validate_committed_candidate_diff(
+    plan_root: Path, repository_root: Path, contract: dict[str, Any], manifest: dict[str, Any],
+    manifest_path: str, test_patch: bytes, candidate_run_id: str,
+) -> list[dict[str, str]]:
+    """Independently recompute the declared committed-range migration candidate."""
+    try:
+        run_dir = (repository_root / manifest_path).resolve().parent
+        range_path = run_dir / "committed-candidate-range.json"
+        range_map = json.loads(range_path.read_text(encoding="utf-8"))
+        if manifest.get("run_id") != candidate_run_id or manifest.get("basis") != "committed-range":
+            raise ValueError("candidate run identity or basis is invalid")
+        ref = manifest.get("range_map_ref", {})
+        if ref != {"path_type": "run_path", "path": "committed-candidate-range.json", "sha256": value_hash(range_map)}:
+            raise ValueError("candidate range map reference is stale")
+        if range_map.get("schema_version") != "jimuyun.committed-candidate-range.v1" or range_map.get("authorizes") != [] or range_map.get("rename_policy") != "delete-add-no-renames" or range_map.get("root_hash") != value_hash({key: value for key, value in range_map.items() if key != "root_hash"}):
+            raise ValueError("committed range map is malformed or authoritative")
+        base, head = str(range_map["base_commit"]), str(range_map["head_commit"])
+        if _git(repository_root, "merge-base", "--is-ancestor", base, head) != b"":
+            raise ValueError("committed range ancestry is invalid")
+        paths = [item for item in _git(repository_root, "diff", "--no-renames", "--name-only", "-z", base, head).decode("utf-8").split("\0") if item]
+        if len(paths) != len(range_map.get("files", [])):
+            raise ValueError("committed range file coverage is incomplete")
+        expected: list[dict[str, Any]] = []
+        for path in sorted(paths, key=str.casefold):
+            before = _git(repository_root, "show", f"{base}:{path}", accepted={0, 128}) if _git(repository_root, "cat-file", "-e", f"{base}:{path}", accepted={0, 1}) == b"" else None
+            after = _git(repository_root, "show", f"{head}:{path}", accepted={0, 128}) if _git(repository_root, "cat-file", "-e", f"{head}:{path}", accepted={0, 1}) == b"" else None
+            change = "add" if before is None else "delete" if after is None else "modify"
+            matches = []
+            for index in range(7):
+                policy = scope_policy(plan_root, repository_root, contract, f"RMAP-S{index}")
+                if any(_matches(path, policy[role]) for role in ("production", "test", "documentation")) and not _matches(path, policy["forbidden"]):
+                    matches.append(f"RMAP-S{index}")
+            if not matches:
+                raise ValueError(f"committed candidate path outside declared closure: {path}")
+            expected.append({"change_type": change, "baseline_path": None if change == "add" else path, "candidate_path": None if change == "delete" else path, "before_sha256": None if before is None else bytes_hash(before), "after_sha256": None if after is None else bytes_hash(after), "slice_id": matches[0], "commit_hashes": _git(repository_root, "log", "--format=%H", f"{base}..{head}", "--", path).decode("ascii").split()})
+        patch = _git(repository_root, "diff", "--binary", "--full-index", "--no-renames", "--no-ext-diff", "--no-textconv", base, head, "--")
+        if range_map.get("files") != expected or manifest.get("files") != expected or test_patch != patch or manifest.get("test_diff_ref", {}).get("sha256") != bytes_hash(patch):
+            raise ValueError("committed range candidate differs from independent Git recomputation")
+        if manifest.get("root_hash") != manifest_root_hash(manifest):
+            raise ValueError("committed range candidate root hash is stale")
+        return []
+    except (OSError, UnicodeError, KeyError, ValueError, json.JSONDecodeError) as exc:
+        return [_finding("RMAP-COMMITTED-RANGE-EXACT", manifest_path, str(exc))]
 
 
 def validate_candidate_model(

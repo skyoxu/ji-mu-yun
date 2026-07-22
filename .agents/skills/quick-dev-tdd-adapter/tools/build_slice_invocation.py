@@ -86,6 +86,7 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
     green = _descriptor(commands, tdd["green"]["command_id"], **values)
     refactor = [_descriptor(commands, item["command_id"], **values) for item in tdd["refactor"]["invocations"]]
     terminal = _descriptor(commands, selected["post_refactor_command_id"], **values)
+    preparation = [_descriptor(commands, item["command_id"], **values) for item in selected.get("pre_terminal", [])]
     identity = _load_candidate_identity(plan, slice_id)
     authority = plan / contract["authority"]["authority_manifest"]
     context = {
@@ -101,7 +102,7 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
             "refactor": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "refactor-verified", "command_id": refactor[0]["id"], "command_ids": [item["id"] for item in refactor], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
         },
     }
-    return {"run_context": context, "red": red, "green": green, "refactor": refactor, "terminal": terminal}
+    return {"run_context": context, "red": red, "green": green, "refactor": refactor, "preparation": preparation, "terminal": terminal}
 
 
 def main() -> int:
@@ -114,7 +115,7 @@ def main() -> int:
     args = parser.parse_args()
     output = build(args.repository_root, args.plan_dir, args.slice_id, args.run_id)
     args.out_dir.mkdir(parents=True, exist_ok=False)
-    files = {"run-context.json": output["run_context"], "red-command.json": output["red"], "green-command.json": output["green"], "refactor-commands.json": output["refactor"], "terminal-command.json": output["terminal"]}
+    files = {"run-context.json": output["run_context"], "red-command.json": output["red"], "green-command.json": output["green"], "refactor-commands.json": output["refactor"], "preparation-commands.json": output["preparation"], "terminal-command.json": output["terminal"]}
     for name, value in files.items():
         (args.out_dir / name).write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps({"run_id": args.run_id, "created_at": datetime.now(timezone.utc).isoformat(), "authorizes": []}))

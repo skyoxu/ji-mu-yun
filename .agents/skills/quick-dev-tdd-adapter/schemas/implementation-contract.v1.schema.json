@@ -133,6 +133,7 @@
         "worktree_scope": {"const": "declared-slice-closure-through-candidate"},
         "unrelated_worktree_drift": {"const": "excluded-from-candidate-hash"},
         "rename_policy": {"const": "delete-add-no-renames"},
+        "committed_range": {"type": "object", "additionalProperties": false, "required": ["base_commit", "mode", "authorizes"], "properties": {"base_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "mode": {"const": "hash-bound-commit-to-slice-map"}, "authorizes": {"type": "array", "items": {"type": "string"}}}},
         "candidate_artifact_schemas": {
           "type": "object",
           "additionalProperties": false,
@@ -201,7 +202,7 @@
       "additionalProperties": false,
       "required": ["slice_id", "title", "phase_id", "requirement_ids", "acceptance_ids", "source_refs", "depends_on", "allowed_changes", "forbidden_changes", "execution_read_set", "dependency_closure", "tdd", "review", "exit_predicate"],
       "properties": {
-        "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"}, "title": {"type": "string"}, "phase_id": {"enum": ["P0", "P1", "P2", "P3"]}, "requirement_ids": {"$ref": "#/$defs/stringArray"}, "acceptance_ids": {"$ref": "#/$defs/stringArray"}, "source_refs": {"$ref": "#/$defs/stringArray"}, "depends_on": {"$ref": "#/$defs/stringArray"}, "allowed_changes": {"$ref": "#/$defs/writeSet"}, "forbidden_changes": {"$ref": "#/$defs/stringArray"}, "execution_read_set": {"$ref": "#/$defs/stringArray"}, "dependency_closure": {"$ref": "#/$defs/stringArray"}, "tdd": {"$ref": "#/$defs/tddContract"}, "review": {"$ref": "#/$defs/reviewContract"}, "post_refactor_command_id": {"type": "string"}, "exit_predicate": {"enum": ["slice-ready", "implementation-candidate", "implementation-accepted"]}
+        "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"}, "title": {"type": "string"}, "phase_id": {"enum": ["P0", "P1", "P2", "P3"]}, "requirement_ids": {"$ref": "#/$defs/stringArray"}, "acceptance_ids": {"$ref": "#/$defs/stringArray"}, "source_refs": {"$ref": "#/$defs/stringArray"}, "depends_on": {"$ref": "#/$defs/stringArray"}, "allowed_changes": {"$ref": "#/$defs/writeSet"}, "forbidden_changes": {"$ref": "#/$defs/stringArray"}, "execution_read_set": {"$ref": "#/$defs/stringArray"}, "dependency_closure": {"$ref": "#/$defs/stringArray"}, "tdd": {"$ref": "#/$defs/tddContract"}, "review": {"$ref": "#/$defs/reviewContract"}, "pre_terminal": {"type": "array", "items": {"$ref": "#/$defs/stageInvocation"}}, "post_refactor_command_id": {"type": "string"}, "exit_predicate": {"enum": ["slice-ready", "implementation-candidate", "implementation-accepted"]}
       }
     }
   }

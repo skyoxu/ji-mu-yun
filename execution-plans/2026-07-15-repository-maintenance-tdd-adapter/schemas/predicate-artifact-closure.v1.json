@@ -4289,10 +4289,12 @@
       "excluded": [
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/authorization-event.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/policy-decision.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
       ]
     },
@@ -4434,10 +4436,12 @@
       "excluded": [
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/authorization-event.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/policy-decision.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
       ]
     },
@@ -4579,10 +4583,12 @@
       "excluded": [
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/authorization-event.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/policy-decision.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
       ]
     },
@@ -4724,10 +4730,12 @@
       "excluded": [
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/authorization-event.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/policy-decision.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
       ]
     },
@@ -4869,10 +4877,12 @@
       "excluded": [
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/authorization-event.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/policy-decision.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
       ]
     }
@@ -4891,6 +4901,17 @@
     },
     {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
+      "classification": "OUT-OF-CLOSURE",
+      "reason_code": "NOT_CONSUMED_BY_AUTHORIZING_PREDICATE",
+      "machine_checks": [
+        "not-read-by-validator",
+        "not-in-predicate-hash",
+        "authorizes-none"
+      ],
+      "authorizes": []
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
       "classification": "OUT-OF-CLOSURE",
       "reason_code": "NOT_CONSUMED_BY_AUTHORIZING_PREDICATE",
       "machine_checks": [
@@ -4935,6 +4956,17 @@
     },
     {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+      "classification": "OUT-OF-CLOSURE",
+      "reason_code": "NOT_CONSUMED_BY_AUTHORIZING_PREDICATE",
+      "machine_checks": [
+        "not-read-by-validator",
+        "not-in-predicate-hash",
+        "authorizes-none"
+      ],
+      "authorizes": []
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
       "classification": "OUT-OF-CLOSURE",
       "reason_code": "NOT_CONSUMED_BY_AUTHORIZING_PREDICATE",
       "machine_checks": [

@@ -59,6 +59,7 @@ def main() -> int:
     parser.add_argument("--snapshot-path", action="append", required=True)
     parser.add_argument("--command", action="append", required=True, help="stage=path-to-shell-false-command-json")
     parser.add_argument("--terminal-command", type=Path, required=True)
+    parser.add_argument("--prepare-command", type=Path, action="append", default=[])
     args = parser.parse_args()
     workspace, plan_dir, run_dir = args.workspace.resolve(), args.plan_dir.resolve(), args.run_dir.resolve()
     try:
@@ -117,6 +118,10 @@ def main() -> int:
     projection = _projection(plan_dir)
     output = run_dir / "stage-evidence-projection.v1.json"
     output.write_text(json.dumps(projection.build(workspace, run_dir, args.slice_id, args.snapshot_path), indent=2) + "\n", encoding="utf-8", newline="\n")
+    for path in args.prepare_command:
+        preparation = _command(str(path))
+        if _run(workspace, preparation) != 0:
+            raise RuntimeError("plan-local candidate preparation failed")
     terminal = _command(str(args.terminal_command))
     terminal_result = _run_terminal(workspace, terminal)
     if terminal_result.returncode != 0:

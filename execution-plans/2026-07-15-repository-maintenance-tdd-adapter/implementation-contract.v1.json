@@ -746,6 +746,7 @@
       "allowed_changes": {
         "production": [
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_builder.py",
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
@@ -754,6 +755,7 @@
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/stage-evidence-projection.v1.schema.json",
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
           ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
           ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
           ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
@@ -781,7 +783,8 @@
         "schemas/candidate-diff-manifest.v1.schema.json",
         "schemas/candidate-lineage-manifest.v1.schema.json",
         "schemas/candidate-supersession-proof.v1.schema.json",
-        "schemas/candidate-slice-effect.v1.schema.json"
+        "schemas/candidate-slice-effect.v1.schema.json",
+        "schemas/committed-candidate-range.v1.schema.json"
       ],
       "tdd": {
         "red": {
@@ -813,6 +816,12 @@
       "review": {
         "profile": "bootstrap-implementation-conformance"
       },
+      "pre_terminal": [
+        {
+          "command_id": "rmap-s6-prepare-committed-candidate",
+          "expected_exit": "zero"
+        }
+      ],
       "post_refactor_command_id": "rmap-s6-candidate-validate",
       "exit_predicate": "implementation-candidate",
       "phase_id": "P3"
@@ -907,6 +916,11 @@
     "worktree_scope": "declared-slice-closure-through-candidate",
     "unrelated_worktree_drift": "excluded-from-candidate-hash",
     "rename_policy": "delete-add-no-renames",
+    "committed_range": {
+      "base_commit": "8d1a97f639d37ef740bea9d8eca83b9344246480",
+      "mode": "hash-bound-commit-to-slice-map",
+      "authorizes": []
+    },
     "candidate_artifact_schemas": {
       "candidate_diff_manifest": "schemas/candidate-diff-manifest.v1.schema.json",
       "candidate_result_ref": "schemas/candidate-result-ref.v1.schema.json",

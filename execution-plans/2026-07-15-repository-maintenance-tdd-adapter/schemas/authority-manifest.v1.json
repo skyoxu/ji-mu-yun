@@ -189,7 +189,7 @@
     "machine_owners": [
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
-        "sha256": "sha256:29d0c49231b94f404673a85559077aa7faffcf02f514d54a81afff0d3f9e764d"
+        "sha256": "sha256:2783dc6fb340603b7da8d4c84317146c7fa7eb9d935b25f8e33486c208920d9c"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
@@ -205,7 +205,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
-        "sha256": "sha256:ecae9e488db0edd2df83aadc5bc7bdedb94145356b5260c9e8513d70a18cd5d9"
+        "sha256": "sha256:20ead10909f3d9271afcb3b81ffbc19336c573dd67c6e8e1047b851ae203f120"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
@@ -225,7 +225,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
-        "sha256": "sha256:478b29cd7e74f64fabb6449056231d4edbc94264b73f0a0e064547e89f8ede24"
+        "sha256": "sha256:4b08dfc84bc35699136241d32346eaed920e3954e89c80cf9d073207f610cd6e"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/shadow-backfill.v1.json",
@@ -321,7 +321,7 @@
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/schemas/implementation-contract.v1.schema.json",
-        "sha256": "sha256:eacb39cea73ac1b7d67ac810aa09eafefa760c142a2f99a05cdd6fe6c6c5bf4e"
+        "sha256": "sha256:715d20e85ec99be5e482e067fdef0bef85d2499dcef89d7d0ee6f7591531e37a"
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/schemas/context-manifest.v1.schema.json",
@@ -439,7 +439,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py",
-        "sha256": "sha256:2c852e5268bbb3a271eab5f1e895df3357bdbf38705bbe28eb046289d4917396"
+        "sha256": "sha256:36a6ddb767d8c7a26d05821a26f55752c13a9e7f5204ea630e0a09febacb4d5c"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/current_state_guards.py",
