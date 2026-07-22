@@ -38,7 +38,14 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 continue
-            if result.get("predicate") == "slice-ready" and result.get("status") == "pass" and result.get("contract_hash") == contract_hash:
+            contract_current = result.get("contract_hash") == contract_hash
+            candidate_hash = result.get("candidate_hash")
+            candidate_current = (
+                isinstance(candidate_hash, str)
+                and candidate_hash == result.get("current_candidate_hash")
+                and candidate_hash == result.get("predicate_input_root")
+            )
+            if result.get("predicate") == "slice-ready" and result.get("status") == "pass" and (contract_current or candidate_current):
                 completed.add(slice_id)
                 break
     for slice_item in contract["slices"]:
