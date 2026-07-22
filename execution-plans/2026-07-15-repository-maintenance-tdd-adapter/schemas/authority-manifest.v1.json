@@ -439,7 +439,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py",
-        "sha256": "sha256:02eecf0f0ca6b9275eecc9a871a00b5db5c0c65ddb9676de5c99833fb40d4189"
+        "sha256": "sha256:6e4588496add3eaa5dc930599307f204457b27793fc6387b778dd44667a11d43"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/current_state_guards.py",

@@ -180,6 +180,13 @@ def validate_committed_candidate_diff(
 ) -> list[dict[str, str]]:
     """Independently recompute the declared committed-range migration candidate."""
     try:
+        def blob(commit: str, path: str) -> bytes | None:
+            result = subprocess.run(["git", "show", f"{commit}:{path}"], cwd=repository_root, capture_output=True, check=False)
+            if result.returncode == 0:
+                return result.stdout
+            if result.returncode == 128:
+                return None
+            raise ValueError(result.stderr.decode("utf-8", errors="replace"))
         run_dir = (repository_root / manifest_path).resolve().parent
         range_path = run_dir / "committed-candidate-range.json"
         range_map = json.loads(range_path.read_text(encoding="utf-8"))
@@ -198,8 +205,7 @@ def validate_committed_candidate_diff(
             raise ValueError("committed range file coverage is incomplete")
         expected: list[dict[str, Any]] = []
         for path in sorted(paths, key=str.casefold):
-            before = _git(repository_root, "show", f"{base}:{path}", accepted={0, 128}) if _git(repository_root, "cat-file", "-e", f"{base}:{path}", accepted={0, 1}) == b"" else None
-            after = _git(repository_root, "show", f"{head}:{path}", accepted={0, 128}) if _git(repository_root, "cat-file", "-e", f"{head}:{path}", accepted={0, 1}) == b"" else None
+            before, after = blob(base, path), blob(head, path)
             change = "add" if before is None else "delete" if after is None else "modify"
             matches = []
             for index in range(7):
