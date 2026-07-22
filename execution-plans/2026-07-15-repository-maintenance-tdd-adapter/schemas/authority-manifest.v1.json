@@ -151,7 +151,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md",
-        "sha256": "sha256:003bd832db06afdfdd9c851db3d72fc9f11fe85d333525ec5701a4ea48071ecf"
+        "sha256": "sha256:81fb4fba4bb5c17c846ca75ef445fcb1d8757fb12afc97730fbdfdca26dc6c8e"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/05-diagnostics-repair-and-reentry.md",
@@ -189,7 +189,7 @@
     "machine_owners": [
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
-        "sha256": "sha256:d203372e0aa1dbcab821e2f4f1a7d2ae77bc519a99f9f899ceff68450d4360ff"
+        "sha256": "sha256:ee3b308070b268be288b972f602a02913fd700df200706c6b7b09aa8247a671f"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
@@ -205,7 +205,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
-        "sha256": "sha256:01d5f471a887f1cc30eaece64fced363c020c23cf6056d210a9c1c8bbc1ed314"
+        "sha256": "sha256:e52ad2a5e7d0a5cfc1e398b465faaa99a173a97a25357369f7d0feb640aaebb4"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
@@ -225,7 +225,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
-        "sha256": "sha256:5329ea29ee8a8f6bb8b2df7b735cf00744a05ee036aed316524252678f3667f4"
+        "sha256": "sha256:ce8482b9595744e42162b9115fe0a96246f40c41916eb3e24545266987818cc8"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/shadow-backfill.v1.json",

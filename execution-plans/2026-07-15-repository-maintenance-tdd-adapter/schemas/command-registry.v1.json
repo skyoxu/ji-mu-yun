@@ -637,6 +637,19 @@
       "timeout_seconds": 60
     },
     {
+      "id": "rmap-observe-adapter-red",
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/adapter_red_probe.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60
+    },
+    {
       "id": "rmap-adapter-tests",
       "executable": "py",
       "argv": [

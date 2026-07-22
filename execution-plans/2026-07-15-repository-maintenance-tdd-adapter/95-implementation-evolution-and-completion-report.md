@@ -630,6 +630,19 @@ VDD Skill 不应把 7-15 的全部控制面复制给所有需求。建议按风�
 
 证据根：`logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S0/rmap-s0-replay-20260722T084218Z-7d340688a7d7/`。
 
+### IR-002：S2 RED 合同修复与重新实施基线刷新
+
+**时间**：2026-07-22
+**状态**：已验证；重新实施尚未完成。
+
+- 缺陷：S2 的 RED 与 GREEN 同时声明 `rmap-adapter-tests`。该命令在已实现状态返回 `0`，没有受控负例，因此无法在不篡改测试或实现的前提下观察声明的 RED。
+- 修复：新增 shell-free 的 `rmap-observe-adapter-red`。它通过既有适配器状态机在 GREEN 之前请求 RED，稳定输出 `RMAP-TDD-RED-NOT-OBSERVED` 并以 `1` 退出；S2 GREEN/REFACTOR 仍使用 `rmap-adapter-tests`。
+- 覆盖：新增探针自身测试和独立的 S2 命令差异合同测试；为保持结构上限，将该合同测试置于独立文件，`test_plan_validator.py` 保持 400 行以内。
+- 派生物：已运行 `tools/refresh_projections.py`，使 authority、spec delta 和 artifact closure 投影重新绑定当前文件身份。
+- 验证：完整计划测试 `95` 项通过（`179.265s`）；`plan-repair-verified` 通过（`189.199s`）；`plan-ready` 通过（`180.952s`）。
+- 当前候选：`sha256:688a991e253d928dc8c332fea4b1643e8aacdd3281732103bba8737ba4cd5dfc`。
+- 影响：IR-001 中基于旧候选 `sha256:06192a...` 的 S0 运行，以及修复前 S1 重放，只保留为历史事实，不能作为当前重新实施的 `slice-ready` 证据。修复提交后必须从 S0 开始重新执行。
+
 ## 第二部分：实现完成后的整体报告
 
 状态：**待填写**。

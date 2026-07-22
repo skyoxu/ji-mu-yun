@@ -23,7 +23,7 @@
       "01-intent-authority-and-non-goals.md": "sha256:cc563f15712704c195bafa80c3e7bf433fdc688c4b1d9da321102a658423e741",
       "02-executable-contracts-and-invariants.md": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
       "03-validators-fixtures-and-control-gates.md": "sha256:fe2b102834c2d63148987a39733fc2cb47386df236c3bbc1b7bdd6dd5a2e986a",
-      "04-behavior-slices-and-implementation-order.md": "sha256:003bd832db06afdfdd9c851db3d72fc9f11fe85d333525ec5701a4ea48071ecf",
+      "04-behavior-slices-and-implementation-order.md": "sha256:81fb4fba4bb5c17c846ca75ef445fcb1d8757fb12afc97730fbdfdca26dc6c8e",
       "05-diagnostics-repair-and-reentry.md": "sha256:b27ed10bb013ce670b7c45d4322fddc1c5c4d67356a08b683873cf24995feed0",
       "06-testing-observability-and-evidence.md": "sha256:1a8a598ba52cf9e57364e942f5fe3c7a47d2dd4d241e2d4ed69855b51c84bda0",
       "96-global-review-and-validation.md": "sha256:a4b97ae7ad12d464baa28d2c40ff727771e5ab41e00e522884dce0b954c8c252",
@@ -470,7 +470,7 @@
       ],
       "tdd": {
         "red": {
-          "command_id": "rmap-adapter-tests",
+          "command_id": "rmap-observe-adapter-red",
           "expected_failure_family": "missing_behavior",
           "expected_failure_ids": [
             "RMAP-TDD-RED-NOT-OBSERVED"
