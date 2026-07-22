@@ -1,33 +1,33 @@
 ---
 name: quick-dev-tdd-adapter
-description: Execute one hash-bound Repository Maintenance TDD slice through prepare, observed RED, minimal GREEN, refactor, and evidence capture.
+description: Resume one explicit Repository Maintenance execution-plan directory through hash-bound TDD slices, observed RED, minimal GREEN, refactor, evidence capture, and its plan-local terminal predicate.
 ---
 
 # Repository Maintenance TDD Adapter
 
-Use this Skill only with a valid `implementation-contract.v1.json` and a named behavior slice. It is a stateless, in-session protocol adapter; it is not a provider scheduler, review authority, commit authority, or release authority.
+Use this Skill only with an explicit plan file or plan directory containing a valid `implementation-contract.v1.json`. It is a plan-directory execution loop; it is not a review authority, commit authority, or release authority.
 
 ## Target Plan Report Lifecycle
 
 Complete this lifecycle before `prepare` or any implementation identity freeze:
 
-1. Read `execution-plans/95-implementation-report-index.v1.json` and look up the exact target plan directory. Do not enumerate or recursively scan other execution-plan directories.
-2. On an index hit, require exactly one matching entry, require its `report_filename` to be a basename matching `95-*.md`, and verify that the resolved file exists inside the indexed target directory.
-3. On an index miss, inspect only the named target directory. If one `95-*.md` already exists, use it and register its complete filename. If none exists, create `95-implementation-evolution-and-completion-report.md` and register it. Create the report and update the index in the same pre-implementation change, preserving unrelated entries and deterministic directory ordering.
-4. A duplicate, stale, escaping, or ambiguous entry fails closed and routes to VDD repair. The index is a non-authoritative path hint; the target report remains append-only continuity documentation and cannot authorize acceptance, commit, handoff, release, or completion.
-5. Audit the target plan, route material defects through the VDD repair write gate, append the pre-implementation change entry to the resolved report, validate the repaired plan, and refreeze every affected identity before observing RED.
+1. Require `--plan-dir execution-plans/<plan-dir>` or one plan file inside that directory. Reject paths outside `execution-plans/`.
+2. Read only the supplied file and its containing target directory. Do not enumerate, index, or infer state from any other execution-plan directory.
+3. Resolve at most one `95-*.md` inside the target directory. A duplicate, stale, escaping, or ambiguous report fails closed and routes to VDD repair.
+4. Treat the report and `logs/tdd-adapter/<plan-id>/run-state.v1.json` as non-authoritative continuity data. Both carry `authorizes: []` and cannot authorize acceptance, commit, handoff, release, or completion.
+5. Audit the target plan, route material defects through the target directory's declared repair gate, validate the repaired plan, and refreeze every affected identity before observing RED.
 
 After the target plan's current declared terminal predicate passes, append its overall implementation result to the same report. Never use report text or an index entry to satisfy that predicate.
 
 ## Required Order
 
-1. Read the current plan contract, authority sources, predecessor evidence, and the three references in this Skill.
-2. Freeze the current plan, source, contract, validator, command-registry, Git baseline, and write-boundary identities.
-3. Run the declared RED command and require its expected nonzero failure before a production write.
-4. Make only the minimal allowed GREEN change, then run the declared GREEN command.
-5. Run the declared REFACTOR checks and emit current, append-only evidence under `logs/tdd-adapter/**`.
+1. Run `tools/loop_plan_directory.py` before every expensive action. It reads only the explicit target directory and its plan-local evidence and emits one next action.
+2. For `run-slice`, generate a plan-local `run_context` and invoke `tools/run_slice_lifecycle.py`; it uses the shared `LifecycleRunner` and `stage_artifact_composer`. Never handwrite stage, Capsule, attempt, or ledger JSON.
+3. Run the declared RED command and require its expected nonzero failure before a production write; then run GREEN, REFACTOR, and the plan-local slice predicate.
+4. After `slice-ready`, route the next unlocked slice automatically. Stop only at the plan-local terminal predicate, `external-repair-required`, `await-external-envelope`, or a repeated failure fingerprint.
+5. S7 may read and validate a referenced finalized Bootstrap envelope, but this Skill never launches Bootstrap Review, changes review evidence, or creates a successor policy.
 
-The adapter never treats backend text, a Capsule, an adapter decision, a clean process exit, or this Skill as acceptance authority. Only the plan-local registered predicate may authorize its declared state.
+The adapter never treats backend text, a Capsule, an adapter decision, run state, a clean process exit, or this Skill as acceptance authority. Only the plan-local registered predicate may authorize its declared state.
 
 ## Version Currency Commit Gate
 
