@@ -27,6 +27,18 @@ After the target plan's current declared terminal predicate passes, append its o
 4. After `slice-ready`, route the next unlocked slice automatically. Stop only at the plan-local terminal predicate, `external-repair-required`, `await-external-envelope`, or a repeated failure fingerprint.
 5. S7 may read and validate a referenced finalized Bootstrap envelope, but this Skill never launches Bootstrap Review, changes review evidence, or creates a successor policy.
 
+Use the bounded driver for a declared slice write set:
+
+```powershell
+py -3 .agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py `
+  --repository-root C:\jimuyun `
+  --plan-dir C:\jimuyun\execution-plans\<target-plan> `
+  --snapshot-path <declared-write-path> `
+  --max-actions 8
+```
+
+The caller supplies explicit snapshot paths from the current slice's declared write set. The driver creates a new append-only run, compiles only the target plan's registered commands, executes all declared refactor invocations, and re-routes after a current terminal predicate. It must not guess a write set or create implementation changes absent from the backend's declared allowed writes.
+
 The adapter never treats backend text, a Capsule, an adapter decision, run state, a clean process exit, or this Skill as acceptance authority. Only the plan-local registered predicate may authorize its declared state.
 
 ## Version Currency Commit Gate
