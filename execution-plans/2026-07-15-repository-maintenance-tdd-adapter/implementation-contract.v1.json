@@ -450,7 +450,11 @@
           ".agents/skills/quick-dev-tdd-adapter/tools/tests/**"
         ],
         "documentation": [
-          "docs/standards/repository-maintenance-agent-protocol.md"
+          "docs/standards/repository-maintenance-agent-protocol.md",
+          ".gitignore",
+          "decision-logs/2026-07-21-rmap-replay-bootstrap-baseline.md",
+          "decision-logs/2026-07-21-rmap-vdd-creation-risk-log.md",
+          "docs/adr/ADR-0042-artifact-proof-trust-root-rotation-boundary.md"
         ]
       },
       "forbidden_changes": [

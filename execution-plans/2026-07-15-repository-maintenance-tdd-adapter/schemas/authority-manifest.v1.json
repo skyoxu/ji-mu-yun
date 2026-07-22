@@ -189,7 +189,7 @@
     "machine_owners": [
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
-        "sha256": "sha256:3019fc986c5413aefa47ca2ccfb0b296f5636bae052c00213a53b4284c10452b"
+        "sha256": "sha256:c4242b63316181c60ccf2d1328641d9782763f95e60c967f3ecaa3c9dd5159dd"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
@@ -205,7 +205,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
-        "sha256": "sha256:df74c1c4b28d925594e5ed98282c69d699a0e13cd39cfff4db18f92f0fd842ae"
+        "sha256": "sha256:917b533a10a3527c3b7f9efce0ebff69f1e7d20b2b2d42dda0fd43989c8c8dd1"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
