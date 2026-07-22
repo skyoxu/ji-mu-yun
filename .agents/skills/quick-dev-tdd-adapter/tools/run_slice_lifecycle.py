@@ -36,6 +36,10 @@ def _run(workspace: Path, command: dict[str, Any]) -> int:
     return completed.returncode
 
 
+def _run_terminal(workspace: Path, command: dict[str, Any]) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run([command["executable"], *command["argv"]], cwd=workspace / command["cwd"], shell=False, check=False, capture_output=True, timeout=command["timeout_seconds"])
+
+
 def _projection(plan_dir: Path):
     spec = importlib.util.spec_from_file_location("plan_stage_projection_builder", plan_dir / "tools" / "stage_projection_builder.py")
     if spec is None or spec.loader is None:
@@ -114,8 +118,18 @@ def main() -> int:
     output = run_dir / "stage-evidence-projection.v1.json"
     output.write_text(json.dumps(projection.build(workspace, run_dir, args.slice_id, args.snapshot_path), indent=2) + "\n", encoding="utf-8", newline="\n")
     terminal = _command(str(args.terminal_command))
-    if _run(workspace, terminal) != 0:
+    terminal_result = _run_terminal(workspace, terminal)
+    if terminal_result.returncode != 0:
         raise RuntimeError("plan-local terminal predicate failed")
+    try:
+        predicate_result = json.loads(terminal_result.stdout.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("terminal predicate did not emit a JSON result") from exc
+    if predicate_result.get("status") != "pass" or not isinstance(predicate_result.get("predicate"), str):
+        raise RuntimeError("terminal predicate output is not a passing result")
+    (run_dir / f"{predicate_result['predicate']}-result.json").write_text(
+        json.dumps(predicate_result, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     state = run_dir.parents[1] / "run-state.v1.json"
     state.write_text(json.dumps({"schema_version": "jimuyun.tdd-adapter-run-state.v1", "last_slice_id": args.slice_id, "last_observed_predicate": "slice-ready", "next_action": "route", "failure_fingerprint": None, "repeat_count": 0, "authorizes": [], "does_not_authorize": ["implementation-accepted", "commit", "release"]}, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps({"run_id": run_dir.name, "stages": ["red", "green", "refactor"], "bundle_schema": bundle["schema_version"], "terminal_exit": 0, "authorizes": []}, sort_keys=True))
