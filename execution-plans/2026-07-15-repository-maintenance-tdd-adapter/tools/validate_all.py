@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import argparse
 import fnmatch
 import hashlib
@@ -10,7 +9,6 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
 from contract_guards import contained_file, schema_error
 from fixture_checks import evaluate_fixture, validate_fixture_suite
 from candidate_diff_guards import validate_candidate_fixture_suite
@@ -31,13 +29,9 @@ from rmap_checks import (
     validate_plan_state,
     validate_static,
 )
-
-
 PLAN_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = PLAN_ROOT.parents[1]
 UNIT_TEST_TIMEOUT_SECONDS = 300
-
-
 def validator_identity() -> str:
     digest = hashlib.sha256()
     names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
@@ -47,8 +41,6 @@ def validator_identity() -> str:
         digest.update(path.read_bytes())
         digest.update(b"\0")
     return f"{VALIDATOR_VERSION}+sha256:{digest.hexdigest()}"
-
-
 def run_unit_tests() -> tuple[dict[str, Any], list[dict[str, str]]]:
     command = [
         sys.executable,
@@ -290,11 +282,17 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
                         candidate_relative = candidate_path.relative_to(REPOSITORY_ROOT).as_posix()
                         if not candidate_relative.startswith("logs/tdd-adapter/"):
                             raise ValueError("candidate evidence path must stay in logs/tdd-adapter")
-                        candidate = strict_load(candidate_path)
                         if slice_id == "RMAP-S6":
-                            from evidence_guards import validate_candidate_document
-                            slice_findings.extend(validate_candidate_document(PLAN_ROOT, candidate_relative, candidate, current, stage_documents))
+                            from candidate_diff_guards import validate_candidate_diff
+                            evidence_dir = candidate_path.parent
+                            manifest_path, lineage_path, test_path = (evidence_dir / name for name in ("changed-files.json", "candidate-lineage-manifest.json", "test-diff.patch"))
+                            slice_findings.extend(validate_candidate_diff(
+                                PLAN_ROOT, REPOSITORY_ROOT, data["contract"], strict_load(manifest_path),
+                                manifest_path.relative_to(REPOSITORY_ROOT).as_posix(), test_path.read_bytes(),
+                                strict_load(lineage_path), current, evidence_dir.name,
+                            ))
                         else:
+                            candidate = strict_load(candidate_path)
                             review_dir = (REPOSITORY_ROOT / str(bootstrap_run)).resolve()
                             review_relative = review_dir.relative_to(REPOSITORY_ROOT).as_posix()
                             if not review_relative.startswith("logs/ci/"):
