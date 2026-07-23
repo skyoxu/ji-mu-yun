@@ -48,7 +48,8 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 and candidate_hash == result.get("current_candidate_hash")
                 and candidate_hash == result.get("predicate_input_root")
             )
-            if result.get("predicate") == exit_predicate and result.get("status") == "pass" and (contract_current or candidate_current):
+            required_artifact = result_path.with_name("candidate-result.json") if exit_predicate == "implementation-candidate" else None
+            if result.get("predicate") == exit_predicate and result.get("status") == "pass" and (contract_current or candidate_current) and (required_artifact is None or required_artifact.is_file()):
                 completed.add(slice_id)
                 break
     for slice_item in contract["slices"]:
