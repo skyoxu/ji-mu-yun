@@ -13,8 +13,10 @@ empty authorization set.
 `PASS` is not a label alone. Each in-closure proof binds a registered producer
 authority, derivation rule, independent validator callable, invalidation
 contract, and consumer permission lattice. The runner resolves those entries
-from the package semantic contract and its seven isolated mutations separately
-forge each dimension's executable reference.
+from the package semantic contract. Seven dimension mutations separately forge
+each dimension's executable reference, and eight source-closure mutations cover
+omit, extra, identity drift, role change, predicate unlink, proof unlink,
+source_binding replay, and copied source hash.
 
 The package has normative, projection, and execution roles. Normative roles
 include the proof schema, artifact/type registry, authority-root registry,
@@ -38,6 +40,18 @@ superset is allowed only when declared and proved to cover each predicate.
 The closure producer and verifier must have independent discovery entrypoints.
 The runner executes both registered entrypoints and requires each result to
 equal the declared closure; self-reported member lists alone are insufficient.
+The producer reads a hash-bound `vdd.plan-link-discovery.v1` document and the
+verifier reads a different hash-bound `vdd.validator-read-set-discovery.v1`
+document. Package proofs and a package-selected semantic registry are not
+discovery sources, and the two discovery references must use distinct IDs,
+paths, hashes, and schemas.
+
+Every source inventory member carries the complete frozen context-class set,
+a primary source role, and identity/path fields equal to its observed proof.
+Its source_binding is a `vdd.plan-source-binding.v1` object, not a label.
+The reference requires plan, package, proof, predicate, result, and review
+bindings. Bootstrap materializes and revalidates the current review-bound
+consumption sidecar; copying that sidecar to another review or input is stale.
 
 External protected roots are repository-declared and supplied in an explicit
 handoff envelope. A deterministic package result may not claim protected
@@ -53,8 +67,8 @@ The result envelope binds `candidate_hash`, `source_hash`, `validator_root`,
 for every proof dimension. Downstream consumers freeze and compare these
 fields; a process exit code or package path alone is not authorization.
 
-An authorization-closure review is closed when the deterministic package passes, all seven isolated
-mutations are rejected by their expected stable rule IDs, independent closure membership agrees, the
+An authorization-closure review is closed when the deterministic package passes, all seven dimension
+mutations and eight source-closure mutations are rejected by their expected stable rule IDs, independent closure membership agrees, the
 result is fresh against all five bindings, and Bootstrap has no accepted P0/P1. Reopen only when a
 stable dimension rule fails, the actual predicate consumer set changes, the authority or threat model
 changes, or fresh hash-bound validation fails.

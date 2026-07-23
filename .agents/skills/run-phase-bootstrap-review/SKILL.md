@@ -43,6 +43,18 @@ The 2026-07-12 CLI is a revision-bound compatibility adapter only. Do not add du
 
 ## Select One Profile
 
+Before preparing a review, classify the selected target with:
+
+```text
+py -3 scripts/bootstrap_review.py classify-target --repository-root <root> --target <path>
+```
+
+The classifier is content-blind: one Markdown requirements file is always
+`standalone-direct-change` and uses `bootstrap-focused-change`; a selected
+directory is `vdd-plan` and uses `bootstrap-upstream-plan`; a non-Markdown
+implementation target uses `bootstrap-implementation-conformance`. Never
+upgrade a standalone file because its prose resembles a VDD plan.
+
 - Plan or Whole-directory authority: `bootstrap-upstream-plan`.
 - Implemented code and feature closure: `bootstrap-implementation-conformance`.
 - Skill or route: `bootstrap-skill-route`.
@@ -101,7 +113,7 @@ The runner materializes the deterministic handshake helper inside each attempt d
 
 ## Authorize Launch
 
-Run `authorize-launch`. It revalidates preflight, access proof, Artifact View, repair closure, Git index, write set, execution read set, dependency closure, profile, schema, and artifact freshness.
+Run `authorize-launch`. It revalidates preflight, access proof, Artifact View, repair closure, Git index, write set, execution read set, dependency closure, profile, schema, and artifact freshness. Before the first launch authorization is written, a successor run also reloads its hash-bound decision, event, and authority source and rechecks current status, revocation, lineage, and expiry.
 
 If `reviewCostEstimate.highCost=true`, show the P50/P90 token and wall-time bands, sample count, confidence, verifier likelihood, and retry risk. Obtain explicit user acknowledgement before `--ack-high-cost`.
 
@@ -130,16 +142,19 @@ Manual and specialized-agent modes remain external execution boundaries. Their o
 After all three layers validate, run `gate`. Report accepted and rejected counts only from successful gate output.
 
 When gate returns `awaiting_verification`, run one independent verifier through `run-layer --role independent_verifier` or the approved external verifier boundary. The verifier must cover each blocker's exact evidence and every `contextRead` reference.
+The parent must apply blocker membership, exact-evidence, and complete context-coverage validation before it writes `verifier-output.json`. A schema-valid but semantically invalid child payload remains a failed attempt and leaves the pending formal verifier output retryable.
 
 For authorization-closure P0/P1 candidates, provide `authorizationPredicate` and `authorityRootCause` together. The gate aggregates only those candidates by predicate, dimension, root cause, and reachable bad outcome, retaining the affected artifact list. Other candidates retain evidence-fingerprint deduplication.
 
-For `bootstrap-upstream-plan`, bind exactly one `authorization-closure-package` and one `authorization-closure-validation-result` context artifact. Before reviewer launch, Bootstrap validates their current package hash, five result bindings, seven passing stable dimension checks, and seven rejected isolated mutations. It consumes this frozen evidence and does not rerun the mutation suite. Acceptance Auditor reviews only predicate authority, untracked real consumers, plan-ready versus implementation/release claims, and P0/P1 reachability; it must not reopen field-level seven-dimension checks already covered by deterministic preflight.
+For `bootstrap-upstream-plan`, bind exactly one `authorization-closure-package` and one `authorization-closure-validation-result` context artifact. The profile declares `plan-source`, `repository-rules`, `current-state`, `referenced-standards`, and `schemas-and-fixtures` as required source-bearing context classes. Bind `original-requirements` only when the complete VDD plan actually consumes a distinct external authority source; never create a standalone requirements file to satisfy this optional class. Every frozen artifact in the applicable mappings participates in exact source closure. Before reviewer launch, Bootstrap validates the current package hash, five result bindings, seven passing stable dimension checks, and all fifteen rejected mutations: seven dimension mutations plus eight source-closure mutations. It consumes this frozen evidence and does not rerun the mutation suite. Acceptance Auditor reviews only predicate authority, untracked real consumers, plan-ready versus implementation/release claims, and P0/P1 reachability; it must not reopen field-level deterministic checks already covered by preflight.
+
+For every in-closure source, require the complete frozen context-class set, proof-bound role/path/identity, and a versioned source_binding reference. A Git-tracked identity binds tree, canonical path, mode, blob, and the frozen bytes read from that blob; the binary exception binds raw SHA-256 and byte length. `prepare` writes `source-binding-consumptions.json`; deterministic preflight recomputes it against the current plan paths, package/result bytes and bindings, proof/predicate mapping, and review/change/input lineage. A missing, edited, or replayed consumption sidecar blocks launch.
 
 Do not rerun gate over saved verifier decisions or reopen a finalized run.
 
 ## Authorization Closure Closure
 
-Authorization-closure review is closed when the deterministic package is `PASS`, all seven isolated mutations are rejected by their expected stable rule IDs, independent closure membership agrees, the current result binds candidate/source/validator/authority/closure hashes, and Bootstrap has no accepted P0/P1. Do not start another open seven-dimension finding round after closure. Reopen only when a stable dimension rule fails, the actual predicate consumer set changes, the authority or threat model changes, or fresh hash-bound validation fails.
+Authorization-closure review is closed when the deterministic package is `PASS`, all seven dimension mutations and eight source-closure mutations are rejected by their expected stable rule IDs, independent closure membership agrees, the current result binds candidate/source/validator/authority/closure hashes, and Bootstrap has no accepted P0/P1. Do not start another open seven-dimension finding round after closure. Reopen only when a stable rule fails, the actual predicate consumer set changes, the authority or threat model changes, or fresh hash-bound validation fails.
 
 ## Dispose P2 And Finalize
 

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "sequence", "predecessor_event_hash", "payload_hash", "payload_byte_length", "event_hash", "event_id", "transition_id", "user_turn_id", "authority_hash", "target_hash"],
+  "properties": {
+    "schema_version": {"const": "vdd.clarification-event.v2"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "predecessor_event_hash": {"type": ["string", "null"]},
+    "payload_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "payload_byte_length": {"type": "integer", "minimum": 1},
+    "event_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "event_id": {"type": "string", "minLength": 1},
+    "transition_id": {"type": "string", "minLength": 1}
+    ,"user_turn_id": {"type": "string", "minLength": 1}
+    ,"authority_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+    ,"target_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

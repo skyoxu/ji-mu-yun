@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -12,7 +13,65 @@ from pathlib import Path
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
+
+
+def bind_external_discovery(root: Path, payload: dict, members: list[str]) -> None:
+    producer = root / "plan-links.json"
+    producer.write_text(
+        json.dumps(
+            {
+                "schema_version": "vdd.plan-link-discovery.v1",
+                "discovery_id": "test-plan-links.v1",
+                "links": [
+                    {"predicate": "plan-ready", "proof_id": member}
+                    for member in members
+                ],
+            }
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    verifier = root / "validator-read-set.json"
+    verifier.write_text(
+        json.dumps(
+            {
+                "schema_version": "vdd.validator-read-set-discovery.v1",
+                "discovery_id": "test-validator-read-set.v1",
+                "read_sets": {"plan-ready": members},
+            }
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    closure = payload["predicate_closures"]["plan-ready"]
+    closure["producer_discovery"] = {
+        "id": "test-plan-links.v1",
+        "kind": "plan-links",
+        "reference": {
+            "path": producer.name,
+            "sha256": "sha256:" + __import__("hashlib").sha256(producer.read_bytes()).hexdigest(),
+        },
+    }
+    closure["verifier_discovery"] = {
+        "id": "test-validator-read-set.v1",
+        "kind": "validator-read-set",
+        "reference": {
+            "path": verifier.name,
+            "sha256": "sha256:" + __import__("hashlib").sha256(verifier.read_bytes()).hexdigest(),
+        },
+    }
+
+
+def source_binding_reference(binding_id: str) -> dict:
+    return {
+        "schema_version": "vdd.plan-source-binding.v1",
+        "binding_id": binding_id,
+        "required_bindings": [
+            "plan", "package", "source", "proof", "predicate", "result", "review", "input",
+        ],
+    }
 VALIDATOR_PATH = SKILL_ROOT / "scripts" / "validate_skill_contract.py"
+FRESH_EVALUATOR_PATH = SKILL_ROOT / "scripts" / "fresh_context_evaluation.py"
 
 
 def load_validator():
@@ -25,10 +84,64 @@ def load_validator():
     return module
 
 
+def load_fresh_evaluator():
+    if not FRESH_EVALUATOR_PATH.exists():
+        raise AssertionError(f"fresh-context evaluator missing: {FRESH_EVALUATOR_PATH}")
+    spec = importlib.util.spec_from_file_location("fresh_context_evaluation", FRESH_EVALUATOR_PATH)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
 class SkillContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        os.environ["VDD_AUTHORIZATION_PROOF_SIGNING_KEY"] = "vdd-test-signing-key"
         cls.validator = load_validator()
+
+    def test_workflow_boundary_requires_an_explicit_single_file_non_trigger(self) -> None:
+        contract = json.loads((SKILL_ROOT / "scripts" / "skill-contract.json").read_text(encoding="utf-8"))
+        contract.pop("workflow_boundary", None)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, root)
+            (root / "scripts" / "skill-contract.json").write_text(
+                json.dumps(contract, indent=2) + "\n", encoding="utf-8", newline="\n"
+            )
+            validation = self.validator.validate_skill(root)
+        self.assertFalse(validation["ok"])
+        self.assertIn(
+            "VDD-WORKFLOW-BOUNDARY-CONTRACT",
+            {item["rule_id"] for item in validation["findings"]},
+        )
+
+    def test_clarification_event_schema_is_a_required_and_validated_contract_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, root)
+            (root / "scripts" / "schemas" / "clarification-event.v2.schema.json").unlink()
+            validation = self.validator.validate_skill(root)
+        self.assertFalse(validation["ok"])
+        self.assertIn(
+            "VDD-CLARIFICATION-SCHEMA-CONTRACT",
+            {item["rule_id"] for item in validation["findings"]},
+        )
+
+    def test_clarification_requirements_validator_rejects_modified_requirement_without_prior_provenance(self) -> None:
+        script = SKILL_ROOT / "scripts" / "validate_clarification_requirements.py"
+        registry = SKILL_ROOT / "scripts" / "vdd-clarification-requirements.v1.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "requirements.json"
+            payload = json.loads(registry.read_text(encoding="utf-8"))
+            next(item for item in payload["requirements"] if item["id"] == "VCR-007").pop("prior_provenance")
+            candidate.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), "--registry", str(candidate)],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("VDD-CLARIFICATION-REQUIREMENTS-PROVENANCE", completed.stdout)
 
     def test_authorization_proof_package_golden_declares_required_execution_role(self) -> None:
         fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
@@ -65,13 +178,243 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(["deterministic-package-validation"], payload["authorizes"])
         self.assertIn("release-ready", payload["does_not_authorize"])
 
-    def test_authorization_proof_package_integration_registry_reports_failing_validator(self) -> None:
+    def test_authorization_package_rejects_missing_source_inventory(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "package.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            payload.pop("source_inventory")
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("VDD-PACKAGE-SOURCE-INVENTORY", completed.stdout)
+
+    def test_authorization_package_accepts_plan_local_source_bindings(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "package.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            for member in payload["source_inventory"]:
+                member["source_binding"] = source_binding_reference(
+                    "PSB-" + member["source_id"]
+                )
+            spec = importlib.util.spec_from_file_location("authorization_proof_package_source_binding_test", script)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            runner = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(runner)
+            payload["bindings"] = runner.recompute_bindings(payload, package) or payload["bindings"]
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+
+    def test_authorization_package_rejects_inventory_without_source_binding_and_disposition(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "package.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            payload["source_inventory"] = [
+                {
+                    "source_id": f"source-{proof['id']}",
+                    "source_role": "plan-source" if proof["id"] == "golden-static" else "validation-result",
+                    "context_classes": ["plan-source" if proof["id"] == "golden-static" else "validation-result"],
+                    "canonical_path": "plans/golden.json" if proof["id"] == "golden-static" else "logs/golden-result.json",
+                    "identity": dict(proof["identity"]),
+                    "applicable_predicates": ["plan-ready"],
+                    "consumer": "plan-ready",
+                    "proof_id": proof["id"],
+                    "classification": "IN-CLOSURE",
+                }
+                for proof in payload["proofs"]
+            ]
+            spec = importlib.util.spec_from_file_location("authorization_proof_package_source_binding_test", script)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            runner = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(runner)
+            payload["bindings"] = runner.recompute_bindings(payload, package)
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("VDD-PACKAGE-SOURCE-INVENTORY", completed.stdout)
+
+    def test_authorization_package_rejects_legacy_string_source_binding(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "package.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            payload["source_inventory"][0]["source_binding"] = "PSB-golden-static"
+            spec = importlib.util.spec_from_file_location("authorization_proof_package_source_binding_reference_test", script)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            runner = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(runner)
+            payload["bindings"] = runner.recompute_bindings(payload, package)
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("VDD-PACKAGE-SOURCE-BINDING", completed.stdout)
+
+    def test_legacy_package_adapter_is_read_only_and_never_authorizes_plan_readiness(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        golden = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "legacy.json"
+            payload = json.loads(golden.read_text(encoding="utf-8"))
+            payload["schema_version"] = "vdd.authorization-proof-package.v0"
+            package.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
+            before = package.read_bytes()
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package), "--legacy-read-only"],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+            self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+            result = json.loads(completed.stdout)
+            self.assertEqual("legacy_read_only", result["status"])
+            self.assertEqual([], result["authorizes"])
+            self.assertIn("plan-ready", result["does_not_authorize"])
+            self.assertEqual(before, package.read_bytes())
+
+    def test_authorization_package_rejects_predicate_proof_without_inventory_member(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "package.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            proof = payload["proofs"][0]
+            payload["source_inventory"] = [
+                {
+                    "source_id": "source-golden-static",
+                    "source_role": "plan-source",
+                    "context_classes": ["plan-source"],
+                    "canonical_path": "plans/golden.json",
+                    "identity": dict(proof["identity"]),
+                    "source_binding": source_binding_reference("PSB-golden-static"),
+                    "applicable_predicates": ["plan-ready"],
+                    "consumer": "plan-ready",
+                    "proof_id": proof["id"],
+                    "classification": "IN-CLOSURE",
+                    "disposition": "consumed",
+                }
+            ]
+            spec = importlib.util.spec_from_file_location("authorization_proof_package_reverse_closure_test", script)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            runner = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(runner)
+            payload["bindings"] = runner.recompute_bindings(payload, package)
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("VDD-PACKAGE-SOURCE-CLOSURE:plan-ready", completed.stdout)
+
+    def test_authorization_package_rejects_in_closure_proof_without_inventory_member(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "package.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            orphan = copy.deepcopy(payload["proofs"][0])
+            orphan["id"] = "orphan-static"
+            payload["proofs"].append(orphan)
+            spec = importlib.util.spec_from_file_location("authorization_proof_package_orphan_proof_test", script)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            runner = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(runner)
+            payload["bindings"] = runner.recompute_bindings(payload, package)
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("VDD-PACKAGE-SOURCE-PROOF", completed.stdout)
+
+    def test_authorization_package_rejects_package_controlled_discovery_subset(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "package.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            payload["proofs"][1].update(
+                {
+                    "classification": "OUT-OF-CLOSURE",
+                    "authorizes": [],
+                    "reason_code": "package-controlled-omission",
+                    "machine_checks": ["forged-subset"],
+                }
+            )
+            payload["source_inventory"] = [payload["source_inventory"][0]]
+            payload["semantic_contract"]["closure_consumers"]["plan-ready"] = ["golden-static"]
+            semantic = Path(tmp) / "semantic-contract.json"
+            semantic.write_text(json.dumps(payload["semantic_contract"]), encoding="utf-8", newline="\n")
+            payload["semantic_contract_reference"] = {
+                "path": semantic.name,
+                "sha256": "sha256:" + __import__("hashlib").sha256(semantic.read_bytes()).hexdigest(),
+            }
+            closure = payload["predicate_closures"]["plan-ready"]
+            for field in ("members", "producer_members", "verifier_members"):
+                closure[field] = ["golden-static"]
+            closure["closure_root"] = "sha256:" + __import__("hashlib").sha256(
+                json.dumps(["golden-static"], separators=(",", ":")).encode("utf-8")
+            ).hexdigest()
+            spec = importlib.util.spec_from_file_location("authorization_proof_package_discovery_test", script)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            runner = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(runner)
+            payload["bindings"] = runner.recompute_bindings(payload, package)
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("VDD-PACKAGE-CLOSURE:plan-ready", completed.stdout)
+
+    def test_authorization_proof_package_integration_registry_runs_self_contained_validator(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
         fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
         registry = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-integration.json"
-        completed = subprocess.run([sys.executable, str(script), str(fixture), "--integration-registry", str(registry)], cwd=SKILL_ROOT.parents[2], capture_output=True, text=True, encoding="utf-8")
-        self.assertEqual(1, completed.returncode)
-        self.assertIn("VDD-PACKAGE-INTEGRATION-EXECUTION", completed.stdout)
+        environment = dict(os.environ)
+        environment["VDD_AUTHORIZATION_PROOF_SIGNING_KEY"] = "vdd-self-contained-integration-key"
+        completed = subprocess.run([sys.executable, str(script), str(fixture), "--integration-registry", str(registry)], cwd=SKILL_ROOT.parents[2], env=environment, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        self.assertEqual("PASS", json.loads(completed.stdout)["status"])
 
     def test_authorization_package_executes_registered_integration_validator(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
@@ -123,6 +466,125 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(1, completed.returncode)
         self.assertIn("VDD-PACKAGE-SEMANTIC-ROOT", completed.stdout)
 
+    def test_authorization_package_accepts_hash_bound_plan_semantic_registry(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            semantic = json.loads(json.dumps(payload["semantic_contract"]))
+            semantic["authorities"] = {"plan-authority": {"id": "plan-authority", "path": "plan/authority.md", "kind": "plan-contract"}}
+            for proof in payload["proofs"]:
+                proof["producer_authority"] = dict(semantic["authorities"]["plan-authority"])
+            registry = root / "semantic-registry.json"
+            registry.write_text(json.dumps(semantic), encoding="utf-8", newline="\n")
+            payload["semantic_contract"] = semantic
+            payload["semantic_contract_reference"] = {
+                "path": "semantic-registry.json",
+                "sha256": "sha256:" + __import__("hashlib").sha256(registry.read_bytes()).hexdigest(),
+            }
+            canonical_hash = lambda value: "sha256:" + __import__("hashlib").sha256(
+                json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            ).hexdigest()
+            payload["bindings"] = {
+                "candidate_hash": canonical_hash(payload["proofs"]),
+                "source_hash": canonical_hash(sorted(payload["source_inventory"], key=lambda item: item["source_id"])),
+                "validator_root": "sha256:" + __import__("hashlib").sha256(script.read_bytes()).hexdigest(),
+                "authority_root": "sha256:" + __import__("hashlib").sha256(registry.read_bytes()).hexdigest(),
+                "closure_definition_hash": canonical_hash(payload["predicate_closures"]),
+            }
+            package = root / "package.json"
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run([sys.executable, str(script), str(package)], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+
+    def test_authorization_package_rejects_copied_source_hash_after_inventory_change(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "package.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            payload["source_inventory"] = [
+                {
+                    "source_id": "source-golden-static",
+                    "source_role": "plan-source",
+                    "context_classes": ["plan-source"],
+                    "canonical_path": "plans/golden.json",
+                    "identity": dict(payload["proofs"][0]["identity"]),
+                    "source_binding": source_binding_reference("PSB-golden-static"),
+                    "applicable_predicates": ["plan-ready"],
+                    "consumer": "plan-ready",
+                    "proof_id": "golden-static",
+                    "classification": "IN-CLOSURE",
+                    "disposition": "consumed",
+                },
+                {
+                    "source_id": "source-golden-runtime",
+                    "source_role": "validation-result",
+                    "context_classes": ["validation-result"],
+                    "canonical_path": "logs/golden-result.json",
+                    "identity": dict(payload["proofs"][1]["identity"]),
+                    "source_binding": source_binding_reference("PSB-golden-runtime"),
+                    "applicable_predicates": ["plan-ready"],
+                    "consumer": "plan-ready",
+                    "proof_id": "golden-runtime",
+                    "classification": "IN-CLOSURE",
+                    "disposition": "consumed",
+                },
+            ]
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            spec = importlib.util.spec_from_file_location("authorization_proof_package_inventory_test", script)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            runner = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(runner)
+            payload["bindings"] = runner.recompute_bindings(payload, package)
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            baseline = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+            self.assertEqual(0, baseline.returncode, baseline.stdout + baseline.stderr)
+            payload = json.loads(package.read_text(encoding="utf-8"))
+            copied_source_hash = payload["bindings"]["source_hash"]
+            payload["source_inventory"][0]["canonical_path"] = "plans/omitted-original-requirement.md"
+            payload["bindings"]["source_hash"] = copied_source_hash
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("VDD-PACKAGE-SOURCE-HASH-STALE", completed.stdout)
+
+    def test_authorization_package_rejects_inventory_identity_not_bound_to_proof(self) -> None:
+        script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp) / "package.json"
+            payload = json.loads(fixture.read_text(encoding="utf-8"))
+            payload["source_inventory"][0]["canonical_path"] = "plans/forged.json"
+            payload["source_inventory"][0]["identity"]["path"] = "plans/forged.json"
+            spec = importlib.util.spec_from_file_location("authorization_proof_package_identity_binding_test", script)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            runner = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(runner)
+            payload["bindings"] = runner.recompute_bindings(payload, package)
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            completed = subprocess.run(
+                [sys.executable, str(script), str(package)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+        self.assertEqual(1, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("VDD-PACKAGE-SOURCE-IDENTITY", completed.stdout)
+
     def test_authorization_package_recomputes_git_binary_closure_and_lineage(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
         with tempfile.TemporaryDirectory() as tmp:
@@ -140,14 +602,57 @@ class SkillContractTests(unittest.TestCase):
             payload = json.loads((SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json").read_text(encoding="utf-8"))
             members = ["tracked", "runtime"]
             closure_root = "sha256:" + __import__("hashlib").sha256(json.dumps(sorted(members), separators=(",", ":")).encode("utf-8")).hexdigest()
-            payload["predicate_closures"] = {"plan-ready": {"producer": "manifest-discovery", "verifier": "consumer-trace", "producer_discovery": {"id": "builtin:in-closure-proofs"}, "verifier_discovery": {"id": "builtin:typed-proofs"}, "mode": "exact", "producer_members": members, "verifier_members": members, "members": members, "closure_root": closure_root}}
+            payload["semantic_contract"]["closure_consumers"] = {"plan-ready": members}
+            payload["predicate_closures"] = {"plan-ready": {"producer": "manifest-discovery", "verifier": "consumer-trace", "mode": "exact", "producer_members": members, "verifier_members": members, "members": members, "closure_root": closure_root}}
+            bind_external_discovery(root, payload, members)
             payload["baseline"] = {"records": {"tracked": blob}}
             static = dict(payload["proofs"][0])
             runtime = dict(payload["proofs"][1])
             static.update({"id": "tracked", "identity": {"kind": "git-tracked", "tree": tree, "path": "tracked.txt", "mode": mode, "blob": blob}, "lineage": {"status": "unchanged", "predecessor": blob}})
             runtime.update({"id": "runtime", "content_path": "runtime.bin", "identity": {"kind": "binary", "sha256": binary_hash, "byte_length": len(binary.read_bytes())}, "lineage": {"status": "new", "predecessor": None}})
             payload["proofs"] = [static, runtime]
+            payload["source_inventory"] = [
+                {
+                    "source_id": "source-tracked",
+                    "source_role": "plan-source",
+                    "context_classes": ["plan-source"],
+                    "canonical_path": "tracked.txt",
+                    "identity": dict(static["identity"]),
+                    "source_binding": source_binding_reference("PSB-tracked"),
+                    "applicable_predicates": ["plan-ready"],
+                    "consumer": "plan-ready",
+                    "proof_id": "tracked",
+                    "classification": "IN-CLOSURE",
+                    "disposition": "consumed",
+                },
+                {
+                    "source_id": "source-runtime",
+                    "source_role": "validation-result",
+                    "context_classes": ["validation-result"],
+                    "canonical_path": "runtime.bin",
+                    "identity": dict(runtime["identity"]),
+                    "source_binding": source_binding_reference("PSB-runtime"),
+                    "applicable_predicates": ["plan-ready"],
+                    "consumer": "plan-ready",
+                    "proof_id": "runtime",
+                    "classification": "IN-CLOSURE",
+                    "disposition": "consumed",
+                },
+            ]
             package = root / "package.json"
+            registry = root / "semantic-registry.json"
+            registry.write_text(json.dumps(payload["semantic_contract"]), encoding="utf-8", newline="\n")
+            payload["semantic_contract_reference"] = {
+                "path": registry.name,
+                "sha256": "sha256:" + __import__("hashlib").sha256(registry.read_bytes()).hexdigest(),
+            }
+            package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+            spec = importlib.util.spec_from_file_location("authorization_proof_package_refresh_test", script)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            runner = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(runner)
+            payload["bindings"] = runner.recompute_bindings(payload, package)
             package.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
             completed = subprocess.run([sys.executable, str(script), str(package), "--repository-root", str(root)], capture_output=True, text=True, encoding="utf-8")
             self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
@@ -223,10 +728,11 @@ class SkillContractTests(unittest.TestCase):
             for proof in payload["proofs"]:
                 proof["content_path"] = "generated.txt"
                 proof["identity"] = dict(identity)
+            bind_external_discovery(root, payload, ["golden-static", "golden-runtime"])
             package = root / "package.json"
             package.write_text(json.dumps(payload), encoding="utf-8")
             completed = subprocess.run(
-                [sys.executable, str(script), str(package), "--repository-root", str(root)],
+                [sys.executable, str(script), str(package), "--repository-root", str(root), "--refresh"],
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
@@ -264,14 +770,31 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("VDD-PACKAGE-EXTERNAL-ENVELOPE", completed.stdout)
         self.assertIn("VDD-PACKAGE-EXTERNAL-ENVELOPE", completed.stdout)
 
-    def test_authorization_package_orchestrator_reports_seven_mutation_checks(self) -> None:
+    def test_authorization_package_orchestrator_reports_source_closure_mutation_checks(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
         fixture = SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json"
         completed = subprocess.run([sys.executable, str(script), str(fixture), "--orchestrate"], capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
         payload = json.loads(completed.stdout)
-        self.assertEqual(7, len(payload["mutation_checks"]))
+        self.assertEqual(15, len(payload["mutation_checks"]))
         self.assertTrue(all(item["status"] == "rejected" for item in payload["mutation_checks"]))
+        self.assertEqual(
+            {
+                "source-omit",
+                "source-extra",
+                "source-identity-drift",
+                "source-role-change",
+                "source-predicate-unlink",
+                "source-proof-unlink",
+                "source-binding-replay",
+                "source-copied-hash",
+            },
+            {
+                item["dimension"]
+                for item in payload["mutation_checks"]
+                if item["dimension"].startswith("source-")
+            },
+        )
 
     def test_authorization_package_result_binds_current_inputs_and_rule_checks(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
@@ -300,6 +823,20 @@ class SkillContractTests(unittest.TestCase):
     def test_authorization_package_result_uses_bootstrap_mutation_contract(self) -> None:
         script = SKILL_ROOT / "scripts" / "authorization_proof_package.py"
         fixture = SKILL_ROOT / "scripts/fixtures/authorization-proof-package-golden.json"
+        bootstrap_script = (
+            SKILL_ROOT.parent
+            / "run-phase-bootstrap-review"
+            / "scripts"
+            / "bootstrap_review.py"
+        )
+        bootstrap_spec = importlib.util.spec_from_file_location(
+            "bootstrap_review_mutation_contract",
+            bootstrap_script,
+        )
+        self.assertIsNotNone(bootstrap_spec)
+        self.assertIsNotNone(bootstrap_spec.loader)
+        bootstrap_review = importlib.util.module_from_spec(bootstrap_spec)
+        bootstrap_spec.loader.exec_module(bootstrap_review)
         completed = subprocess.run(
             [sys.executable, str(script), str(fixture), "--orchestrate"],
             capture_output=True,
@@ -308,6 +845,16 @@ class SkillContractTests(unittest.TestCase):
         )
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
         payload = json.loads(completed.stdout)
+        expected_mutations = {
+            (dimension, f"VDD-PACKAGE-DIMENSION:{dimension}")
+            for dimension in bootstrap_review.AUTHORIZATION_CLOSURE_DIMENSIONS
+        } | set(bootstrap_review.SOURCE_CLOSURE_MUTATION_EXPECTATIONS.items())
+        actual_mutations = {
+            (item["dimension"], item["expected_rule_id"])
+            for item in payload["mutation_checks"]
+            if item["status"] == "rejected"
+        }
+        self.assertEqual(expected_mutations, actual_mutations)
         self.assertEqual(
             {"dimension", "expected_rule_id", "status"},
             set(payload["mutation_checks"][0]),
@@ -407,6 +954,56 @@ class SkillContractTests(unittest.TestCase):
             result = self.validator.validate_scenarios(SKILL_ROOT, fixture)
         self.assertFalse(result["ok"])
         self.assertIn("VDD-SCENARIO-LEVEL", {item["rule_id"] for item in result["findings"]})
+
+    def test_verified_fresh_context_policy_rejects_replayed_or_incomplete_run_evidence(self) -> None:
+        source = SKILL_ROOT / "scripts" / "fresh-context-evaluation.v1.json"
+        payload = json.loads(source.read_text(encoding="utf-8"))
+        payload["status"] = "verified"
+        payload["results"] = [{
+            "scenario_level": "supportive", "run": 1,
+            "model": "independent-approved-model",
+            "evaluator": "independent-fresh-context-evaluator",
+            "isolation": "new-context-no-expected-answer-or-prior-conclusions",
+            "rubric_version": "v1",
+            "vcr_results": {"VCR-002": True, "VCR-004": True, "VCR-006": True},
+            "passed": True,
+        }] * 36
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "fresh-context.json"
+            candidate.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
+            result = self.validator.validate_fresh_context_policy(candidate)
+        self.assertFalse(result["ok"])
+        self.assertIn("VDD-FRESH-CONTEXT-THRESHOLD", {item["rule_id"] for item in result["findings"]})
+
+    def test_fresh_context_evaluator_normalizes_an_isolated_run_and_refuses_duplicate_slot(self) -> None:
+        evaluator = load_fresh_evaluator()
+        policy = json.loads((SKILL_ROOT / "scripts" / "fresh-context-evaluation.v1.json").read_text(encoding="utf-8"))
+        policy["results"] = []
+        raw = {
+            "scenario_level": "supportive", "run": 1,
+            "model": "independent-approved-model", "evaluator": "independent-fresh-context-evaluator",
+            "isolation": "new-context-no-expected-answer-or-prior-conclusions", "rubric_version": "v1",
+            "vcr_results": {"VCR-002": True, "VCR-004": True, "VCR-006": True}, "passed": True,
+            "evidence": "CQ types, scenario probe, and ADR candidate were explicit.",
+        }
+        normalized = evaluator.normalize_run(policy, raw)
+        self.assertTrue(normalized["passed"])
+        self.assertEqual((True, ""), evaluator.append_run(policy, normalized))
+        self.assertEqual((False, "duplicate scenario/run slot"), evaluator.append_run(policy, normalized))
+
+    def test_fresh_context_evaluator_keeps_failed_attempts_and_appends_a_new_generation(self) -> None:
+        evaluator = load_fresh_evaluator()
+        policy = json.loads((SKILL_ROOT / "scripts" / "fresh-context-evaluation.v1.json").read_text(encoding="utf-8"))
+        original = copy.deepcopy(policy["results"])
+        attempt_id = "fresh-test-isolated-r2"
+        created, message, attempt = evaluator.create_attempt(policy, attempt_id)
+        self.assertTrue(created, message)
+        self.assertEqual(attempt_id, attempt["attempt_id"])
+        self.assertEqual(original, policy["results"])
+        self.assertEqual(attempt_id, policy["active_attempt_id"])
+        replayed, message, _ = evaluator.create_attempt(policy, attempt_id)
+        self.assertFalse(replayed)
+        self.assertIn("already exists", message)
 
     def test_stale_pass_result_is_rejected(self) -> None:
         fixture = SKILL_ROOT / "scripts" / "fixtures" / "validation-result-stale.json"
@@ -709,9 +1306,12 @@ class SkillContractTests(unittest.TestCase):
             self.assertEqual(0, status.returncode, status.stdout + status.stderr)
             self.assertEqual("clarification_required", json.loads(status.stdout)["status"])
 
+            questions = copy.deepcopy(pass_fixture["questions"])
+            for question in questions:
+                question["primary_type"] = "fact_gap"
             round_payload = {
                 "round_id": "CR-001",
-                "questions": pass_fixture["questions"],
+                "questions": questions,
                 "same_level_exhausted": False,
                 "same_level_exhausted_reason": None,
                 "confidence": 96,

@@ -20,6 +20,7 @@ jobs:
       EXPORT_SIZE_MAX_MB: '150'
       PYTHONIOENCODING: 'utf-8'
       PYTHONUTF8: '1'
+      VDD_AUTHORIZATION_PROOF_SIGNING_KEY: ${{ secrets.VDD_AUTHORIZATION_PROOF_SIGNING_KEY }}
       DELIVERY_PROFILE: ${{ inputs.delivery_profile || 'fast-ship' }}
       SC_ACCEPTANCE_TASK_ID: ${{ inputs.acceptance_task_id }}
       WHITELIST_WARN_DAYS: '90'

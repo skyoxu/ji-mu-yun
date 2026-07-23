@@ -35,12 +35,41 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.unrelated.write_text("# Unrelated\n", encoding="utf-8", newline="\n")
         self.authorization_package = self.scope / "authorization-closure-package.json"
         self.authorization_result = self.scope / "authorization-closure-validation-result.json"
+        source_inventory = [
+            {
+                "source_id": "source-plan",
+                "source_role": "plan-source",
+                "context_classes": [
+                    "plan-source", "repository-rules", "current-state",
+                    "referenced-standards", "schemas-and-fixtures",
+                ],
+                "canonical_path": "upstream-plan/plan.md",
+                "identity": {
+                    "kind": "frozen-artifact",
+                    "sha256": bootstrap.file_hash(self.target),
+                    "byte_length": self.target.stat().st_size,
+                },
+                "source_binding": {
+                    "schema_version": "vdd.plan-source-binding.v1",
+                    "binding_id": "PSB-source-plan",
+                    "required_bindings": ["plan", "package", "source", "proof", "predicate", "result", "review", "input"],
+                },
+                "applicable_predicates": ["plan-ready"],
+                "consumer": "plan-ready",
+                "proof_id": "plan-source-proof",
+                "classification": "IN-CLOSURE",
+                "disposition": "consumed",
+            }
+        ]
         package = {
             "schema_version": "vdd.authorization-proof-package.v1",
             "assurance_level": "deterministic-package",
+            "source_inventory": source_inventory,
+            "proofs": [{"id": "plan-source-proof"}],
+            "predicate_closures": {"plan-ready": {"members": ["plan-source-proof"]}},
             "bindings": {
                 "candidate_hash": "sha256:" + "1" * 64,
-                "source_hash": "sha256:" + "2" * 64,
+                "source_hash": bootstrap.value_hash(source_inventory),
                 "validator_root": "sha256:" + "3" * 64,
                 "authority_root": "sha256:" + "4" * 64,
                 "closure_definition_hash": "sha256:" + "5" * 64,
@@ -61,7 +90,13 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "status": "PASS",
             **package["bindings"],
             "checks": [{"rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}", "status": "pass", "evidence": ["fixture"]} for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS],
-            "mutation_checks": [{"dimension": dimension, "status": "rejected", "expected_rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}"} for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS],
+            "mutation_checks": [
+                {"dimension": dimension, "status": "rejected", "expected_rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}"}
+                for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS
+            ] + [
+                {"dimension": dimension, "status": "rejected", "expected_rule_id": rule}
+                for dimension, rule in bootstrap.SOURCE_CLOSURE_MUTATION_EXPECTATIONS.items()
+            ],
         }
         provenance = result["validation_provenance"]
         provenance["signature_algorithm"] = "hmac-sha256-v1"
@@ -86,6 +121,27 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temp.cleanup()
+
+    def test_review_target_classifier_keeps_single_requirements_files_out_of_vdd(self) -> None:
+        implementation = self.repo / "src" / "change.py"
+        implementation.parent.mkdir()
+        implementation.write_text("print('change')\n", encoding="utf-8", newline="\n")
+        self.assertEqual(
+            "standalone-direct-change",
+            bootstrap.classify_review_target(self.repo, str(self.target))["classification"],
+        )
+        self.assertEqual(
+            "bootstrap-focused-change",
+            bootstrap.classify_review_target(self.repo, str(self.target))["profile"],
+        )
+        self.assertEqual(
+            "vdd-plan",
+            bootstrap.classify_review_target(self.repo, str(self.scope))["classification"],
+        )
+        self.assertEqual(
+            "implemented-change",
+            bootstrap.classify_review_target(self.repo, str(implementation))["classification"],
+        )
 
     def read_json(self, relative: str) -> dict:
         return json.loads((self.run_dir / relative).read_text(encoding="utf-8"))
@@ -112,6 +168,12 @@ class BootstrapReviewCliTests(unittest.TestCase):
             context_path = {
                 "authorization-closure-package": self.authorization_package,
                 "authorization-closure-validation-result": self.authorization_result,
+                "plan-source": self.target,
+                "original-requirements": self.target,
+                "repository-rules": self.target,
+                "current-state": self.target,
+                "referenced-standards": self.target,
+                "schemas-and-fixtures": self.target,
             }.get(context_class, self.scope)
             context_args.extend(["--context-class", f"{context_class}={context_path}"])
         required_check_args = []
@@ -125,9 +187,16 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 repository_root, ["upstream-plan"], self.run_dir
             )
             artifact_names = [item["artifact"] for item in artifacts]
-            context_mapping = {
-                name: artifact_names for name in profile_contract["requiredContextClasses"]
-            }
+            context_mapping = {}
+            for name in profile_contract["requiredContextClasses"]:
+                if name == "authorization-closure-package":
+                    context_mapping[name] = [self.authorization_package.relative_to(self.repo).as_posix()]
+                elif name == "authorization-closure-validation-result":
+                    context_mapping[name] = [self.authorization_result.relative_to(self.repo).as_posix()]
+                elif name in set(profile_contract.get("sourceClosureContextClasses", [])):
+                    context_mapping[name] = [self.target.relative_to(self.repo).as_posix()]
+                else:
+                    context_mapping[name] = artifact_names
             plan_checks = (
                 [{"checkId": "implementation-proof", "authorityArtifacts": artifact_names}]
                 if profile_contract["planBoundCheckPolicy"]["required"] else []
@@ -344,11 +413,151 @@ class BootstrapReviewCliTests(unittest.TestCase):
                     "expected_rule_id": f"VDD-PACKAGE-DIMENSION:{dimension}",
                 }
                 for dimension in bootstrap.AUTHORIZATION_CLOSURE_DIMENSIONS
+            ] + [
+                {
+                    "dimension": dimension,
+                    "status": "rejected",
+                    "expected_rule_id": rule,
+                }
+                for dimension, rule in bootstrap.SOURCE_CLOSURE_MUTATION_EXPECTATIONS.items()
             ],
         }
         result["candidate_hash"] = "sha256:" + "f" * 64
         errors = bootstrap.validate_authorization_closure_result(package, result)
         self.assertIn("result candidate_hash does not bind the package", errors)
+
+    def test_upstream_profile_declares_all_source_bearing_context_classes(self) -> None:
+        self.assertEqual(
+            [
+                "plan-source",
+                "repository-rules",
+                "current-state",
+                "referenced-standards",
+                "schemas-and-fixtures",
+            ],
+            bootstrap.load_profile("bootstrap-upstream-plan")["sourceClosureContextClasses"],
+        )
+
+    def test_upstream_profile_allows_no_external_requirements_source(self) -> None:
+        profile = bootstrap.load_profile("bootstrap-upstream-plan")
+        self.assertNotIn("original-requirements", profile["requiredContextClasses"])
+        self.assertEqual(
+            ["original-requirements"],
+            profile["optionalSourceClosureContextClasses"],
+        )
+
+    def test_authorization_source_closure_covers_every_declared_source_class(self) -> None:
+        package = json.loads(self.authorization_package.read_text(encoding="utf-8"))
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        target = self.target.relative_to(self.repo).as_posix()
+        unrelated = self.unrelated.relative_to(self.repo).as_posix()
+        mapping = {name: [target] for name in bootstrap.load_profile("bootstrap-upstream-plan")["sourceClosureContextClasses"]}
+        mapping["repository-rules"] = [unrelated]
+        artifacts = [
+            {"artifact": target, "sha256": bootstrap.file_hash(self.target), "sizeBytes": self.target.stat().st_size},
+            {"artifact": unrelated, "sha256": bootstrap.file_hash(self.unrelated), "sizeBytes": self.unrelated.stat().st_size},
+        ]
+        errors = bootstrap.authorization_source_closure_errors(
+            package,
+            result,
+            mapping,
+            artifacts,
+            tuple(bootstrap.load_profile("bootstrap-upstream-plan")["sourceClosureContextClasses"]),
+        )
+        self.assertTrue(any("BOOTSTRAP-SOURCE-CLOSURE-INVENTORY" in error for error in errors), errors)
+
+    def test_git_tracked_frozen_identity_binds_tree_path_mode_and_blob(self) -> None:
+        relative = self.target.relative_to(self.repo).as_posix()
+        fields = subprocess.check_output(
+            ["git", "ls-tree", "HEAD", "--", relative],
+            cwd=self.repo,
+            text=True,
+            encoding="utf-8",
+        ).strip().split(maxsplit=3)
+        identity = {
+            "kind": "git-tracked",
+            "tree": "HEAD",
+            "path": relative,
+            "mode": fields[0],
+            "blob": fields[2],
+        }
+        artifact = {
+            "artifact": relative,
+            "sha256": bootstrap.file_hash(self.target),
+            "sizeBytes": self.target.stat().st_size,
+        }
+        self.assertTrue(
+            bootstrap.git_tracked_frozen_identity_matches(
+                self.repo,
+                relative,
+                identity,
+                artifact,
+            )
+        )
+        for field, value in (
+            ("tree", "HEAD~1"),
+            ("path", "upstream-plan/other.md"),
+            ("mode", "100755"),
+            ("blob", "0" * 40),
+        ):
+            with self.subTest(field=field):
+                mutated = dict(identity)
+                mutated[field] = value
+                self.assertFalse(
+                    bootstrap.git_tracked_frozen_identity_matches(
+                        self.repo,
+                        relative,
+                        mutated,
+                        artifact,
+                    )
+                )
+
+    def test_authorization_source_closure_accepts_binary_hash_identity(self) -> None:
+        package = json.loads(self.authorization_package.read_text(encoding="utf-8"))
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        path = self.target.relative_to(self.repo).as_posix()
+        identity = {
+            "kind": "binary",
+            "sha256": bootstrap.file_hash(self.target).removeprefix("sha256:"),
+            "byte_length": self.target.stat().st_size,
+        }
+        package["source_inventory"][0]["identity"] = identity
+        proof_id = package["source_inventory"][0]["proof_id"]
+        next(proof for proof in package["proofs"] if proof["id"] == proof_id)["identity"] = identity
+        source_hash = bootstrap.value_hash(package["source_inventory"])
+        package["bindings"]["source_hash"] = source_hash
+        result["source_hash"] = source_hash
+        errors = bootstrap.authorization_source_closure_errors(
+            package,
+            result,
+            {"plan-source": [path], "original-requirements": []},
+            [{
+                "artifact": path,
+                "sha256": bootstrap.file_hash(self.target),
+                "sizeBytes": self.target.stat().st_size,
+            }],
+        )
+        self.assertFalse(
+            any(error.startswith("BOOTSTRAP-SOURCE-CLOSURE-CONTEXT:") for error in errors),
+            errors,
+        )
+
+    def test_verifier_candidate_is_semantically_checked_before_formal_write(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        formal = bootstrap.verifier_template(manifest)
+        formal["decisions"] = [{
+            "findingId": "BSR-UNKNOWN00000000",
+            "decision": "confirmed",
+            "reason": "Unknown blocker",
+            "evidenceChecked": ["upstream-plan/plan.md:1"],
+        }]
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "unknown or duplicate finding ID"):
+            bootstrap.validate_verifier_candidate_for_write(
+                formal,
+                manifest,
+                {"BSR-KNOWN00000000": self.candidate()},
+            )
 
     def test_authorization_closure_preflight_blocks_tampered_result_before_launch(self) -> None:
         result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
@@ -360,6 +569,173 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.complete_preflight()
         self.assertEqual(1, bootstrap.main(["authorize-launch", "--run-dir", str(self.run_dir)]))
         self.assertFalse((self.run_dir / "review-launch-authorization.json").exists())
+
+    def test_authorization_closure_preflight_blocks_omitted_context_source_before_launch(self) -> None:
+        package = json.loads(self.authorization_package.read_text(encoding="utf-8"))
+        package["source_inventory"] = []
+        package["bindings"]["source_hash"] = bootstrap.value_hash([])
+        self.authorization_package.write_text(
+            json.dumps(package, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        package_hash = bootstrap.file_hash(self.authorization_package)
+        result["package_sha256"] = package_hash
+        result["source_hash"] = package["bindings"]["source_hash"]
+        provenance = result["validation_provenance"]
+        provenance["package_sha256"] = package_hash
+        provenance.pop("signature", None)
+        signed = "sha256:" + __import__("hashlib").sha256(
+            json.dumps(provenance, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        provenance["signature"] = __import__("hmac").new(
+            b"bootstrap-test-signing-key", signed.encode("ascii"), __import__("hashlib").sha256
+        ).hexdigest()
+        self.authorization_result.write_text(
+            json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        subprocess.run(["git", "add", "upstream-plan"], cwd=self.repo, check=True)
+        subprocess.run(["git", "commit", "-qm", "omitted source inventory"], cwd=self.repo, check=True)
+        self.prepare()
+        self.complete_preflight()
+        manifest = self.read_json("review-input.json")
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "BOOTSTRAP-SOURCE-CLOSURE-INVENTORY"):
+            bootstrap.validate_preflight_result(self.run_dir, manifest)
+        self.assertFalse((self.run_dir / "review-launch-authorization.json").exists())
+
+    def test_authorization_source_closure_rejects_missing_source_binding_and_disposition(self) -> None:
+        package = json.loads(self.authorization_package.read_text(encoding="utf-8"))
+        package["source_inventory"][0].pop("source_binding")
+        package["source_inventory"][0].pop("disposition")
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        path = self.target.relative_to(self.repo).as_posix()
+        errors = bootstrap.authorization_source_closure_errors(
+            package,
+            result,
+            {"plan-source": [path], "original-requirements": []},
+            [
+                {
+                    "artifact": path,
+                    "sha256": bootstrap.file_hash(self.target),
+                    "sizeBytes": self.target.stat().st_size,
+                }
+            ],
+        )
+        self.assertTrue(
+            any("BOOTSTRAP-SOURCE-CLOSURE-BINDING" in error for error in errors),
+            errors,
+        )
+
+    def test_source_binding_consumption_rejects_replay_across_review(self) -> None:
+        self.prepare()
+        first_consumption = self.run_dir / "source-binding-consumptions.json"
+        self.assertTrue(first_consumption.is_file())
+        replayed = first_consumption.read_text(encoding="utf-8")
+
+        self.run_dir = self.repo / "bootstrap-run-2"
+        self.prepare(review_id="upstream-manual-002", change_id="upstream-change-002")
+        (self.run_dir / "source-binding-consumptions.json").write_text(
+            replayed, encoding="utf-8", newline="\n"
+        )
+        self.complete_preflight()
+        manifest = self.read_json("review-input.json")
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "BOOTSTRAP-SOURCE-CLOSURE-BINDING"):
+            bootstrap.validate_preflight_result(self.run_dir, manifest)
+
+    def test_authorization_source_closure_rejects_role_context_mismatch(self) -> None:
+        package = json.loads(self.authorization_package.read_text(encoding="utf-8"))
+        package["source_inventory"][0].update(
+            {
+                "source_role": "original-requirements",
+                "source_binding": {
+                    "schema_version": "vdd.plan-source-binding.v1",
+                    "binding_id": "PSB-source-plan",
+                    "required_bindings": ["plan", "package", "source", "proof", "predicate", "result", "review", "input"],
+                },
+                "disposition": "consumed",
+            }
+        )
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        source_hash = bootstrap.value_hash(package["source_inventory"])
+        package["bindings"]["source_hash"] = source_hash
+        result["source_hash"] = source_hash
+        path = self.target.relative_to(self.repo).as_posix()
+        errors = bootstrap.authorization_source_closure_errors(
+            package,
+            result,
+            {"plan-source": [path], "original-requirements": []},
+            [
+                {
+                    "artifact": path,
+                    "sha256": bootstrap.file_hash(self.target),
+                    "sizeBytes": self.target.stat().st_size,
+                }
+            ],
+        )
+        self.assertTrue(
+            any("BOOTSTRAP-SOURCE-CLOSURE-ROLE" in error for error in errors),
+            errors,
+        )
+
+    def test_authorization_source_closure_rejects_incomplete_context_class_set(self) -> None:
+        package = json.loads(self.authorization_package.read_text(encoding="utf-8"))
+        package["source_inventory"][0]["context_classes"] = ["plan-source"]
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        source_hash = bootstrap.value_hash(package["source_inventory"])
+        package["bindings"]["source_hash"] = source_hash
+        result["source_hash"] = source_hash
+        path = self.target.relative_to(self.repo).as_posix()
+        errors = bootstrap.authorization_source_closure_errors(
+            package,
+            result,
+            {"plan-source": [path], "original-requirements": [path]},
+            [
+                {
+                    "artifact": path,
+                    "sha256": bootstrap.file_hash(self.target),
+                    "sizeBytes": self.target.stat().st_size,
+                }
+            ],
+        )
+        self.assertTrue(
+            any("BOOTSTRAP-SOURCE-CLOSURE-CONTEXT-CLASSES" in error for error in errors),
+            errors,
+        )
+
+    def test_authorization_source_closure_rejects_orphan_predicate_proof(self) -> None:
+        package = json.loads(self.authorization_package.read_text(encoding="utf-8"))
+        package["source_inventory"][0].update(
+            {
+                "source_binding": {
+                    "schema_version": "vdd.plan-source-binding.v1",
+                    "binding_id": "PSB-source-plan",
+                    "required_bindings": ["plan", "package", "source", "proof", "predicate", "result", "review", "input"],
+                },
+                "disposition": "consumed",
+            }
+        )
+        package["proofs"].append({"id": "orphan-source-proof"})
+        package["predicate_closures"]["plan-ready"]["members"].append("orphan-source-proof")
+        result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
+        source_hash = bootstrap.value_hash(package["source_inventory"])
+        package["bindings"]["source_hash"] = source_hash
+        result["source_hash"] = source_hash
+        path = self.target.relative_to(self.repo).as_posix()
+        errors = bootstrap.authorization_source_closure_errors(
+            package,
+            result,
+            {"plan-source": [path], "original-requirements": []},
+            [
+                {
+                    "artifact": path,
+                    "sha256": bootstrap.file_hash(self.target),
+                    "sizeBytes": self.target.stat().st_size,
+                }
+            ],
+        )
+        self.assertTrue(
+            any("BOOTSTRAP-SOURCE-CLOSURE-PROOF" in error for error in errors),
+            errors,
+        )
 
     def test_authorization_closure_preflight_blocks_unregistered_result_provenance(self) -> None:
         result = json.loads(self.authorization_result.read_text(encoding="utf-8"))
@@ -384,9 +760,136 @@ class BootstrapReviewCliTests(unittest.TestCase):
     def test_authorization_closure_preflight_accepts_vdd_runner_result(self) -> None:
         package_source = REPOSITORY_ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts" / "fixtures" / "authorization-proof-package-golden.json"
         runner = REPOSITORY_ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts" / "authorization_proof_package.py"
-        self.authorization_package.write_bytes(package_source.read_bytes())
+        package = json.loads(package_source.read_text(encoding="utf-8"))
+        source_proof = next(proof for proof in package["proofs"] if proof["id"] == "golden-static")
+        tracked = subprocess.check_output(
+            ["git", "ls-tree", "HEAD", "--", "upstream-plan/plan.md"],
+            cwd=self.repo,
+            text=True,
+            encoding="utf-8",
+        ).strip().split(maxsplit=3)
+        self.assertEqual(4, len(tracked))
+        source_proof.update(
+            {
+                "content_path": "upstream-plan/plan.md",
+                "identity": {
+                    "kind": "git-tracked",
+                    "tree": "HEAD",
+                    "path": "upstream-plan/plan.md",
+                    "mode": tracked[0],
+                    "blob": tracked[2],
+                },
+            }
+        )
+        next(proof for proof in package["proofs"] if proof["id"] == "golden-runtime").update(
+            {
+                "classification": "OUT-OF-CLOSURE",
+                "authorizes": [],
+                "reason_code": "not-a-source-input",
+                "machine_checks": ["single-source-bootstrap-fixture"],
+                "content_path": "upstream-plan/plan.md",
+                "identity": dict(source_proof["identity"]),
+            }
+        )
+        package["semantic_contract"]["closure_consumers"]["plan-ready"] = ["golden-static"]
+        closure = package["predicate_closures"]["plan-ready"]
+        for field in ("members", "producer_members", "verifier_members"):
+            closure[field] = ["golden-static"]
+        closure["closure_root"] = bootstrap.value_hash(["golden-static"])
+        plan_links = self.scope / "plan-links.json"
+        plan_links.write_text(
+            json.dumps(
+                {
+                    "schema_version": "vdd.plan-link-discovery.v1",
+                    "discovery_id": "bootstrap-plan-links.v1",
+                    "links": [{"predicate": "plan-ready", "proof_id": "golden-static"}],
+                }
+            ),
+            encoding="utf-8",
+            newline="\n",
+        )
+        validator_read_set = self.scope / "validator-read-set.json"
+        validator_read_set.write_text(
+            json.dumps(
+                {
+                    "schema_version": "vdd.validator-read-set-discovery.v1",
+                    "discovery_id": "bootstrap-validator-read-set.v1",
+                    "read_sets": {"plan-ready": ["golden-static"]},
+                }
+            ),
+            encoding="utf-8",
+            newline="\n",
+        )
+        closure["producer_discovery"] = {
+            "id": "bootstrap-plan-links.v1",
+            "kind": "plan-links",
+            "reference": {
+                "path": plan_links.relative_to(self.repo).as_posix(),
+                "sha256": bootstrap.file_hash(plan_links),
+            },
+        }
+        closure["verifier_discovery"] = {
+            "id": "bootstrap-validator-read-set.v1",
+            "kind": "validator-read-set",
+            "reference": {
+                "path": validator_read_set.relative_to(self.repo).as_posix(),
+                "sha256": bootstrap.file_hash(validator_read_set),
+            },
+        }
+        package["source_inventory"] = [
+            {
+                "source_id": "source-plan",
+                "source_role": "plan-source",
+                "context_classes": list(
+                    bootstrap.load_profile("bootstrap-upstream-plan")["sourceClosureContextClasses"]
+                ),
+                "canonical_path": "upstream-plan/plan.md",
+                "identity": dict(source_proof["identity"]),
+                "source_binding": {
+                    "schema_version": "vdd.plan-source-binding.v1",
+                    "binding_id": "PSB-source-plan",
+                    "required_bindings": ["plan", "package", "source", "proof", "predicate", "result", "review", "input"],
+                },
+                "applicable_predicates": ["plan-ready"],
+                "consumer": "plan-ready",
+                "proof_id": "golden-static",
+                "classification": "IN-CLOSURE",
+                "disposition": "consumed",
+            }
+        ]
+        semantic_registry = self.authorization_package.parent / "semantic-contract.json"
+        semantic_registry.write_text(
+            json.dumps(package["semantic_contract"], indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        package["semantic_contract_reference"] = {
+            "path": semantic_registry.name,
+            "sha256": bootstrap.file_hash(semantic_registry),
+        }
+        self.authorization_package.write_text(
+            json.dumps(package, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        spec = importlib.util.spec_from_file_location("authorization_proof_package_bootstrap_test", runner)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        package_runner = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(package_runner)
+        package["bindings"] = package_runner.recompute_bindings(package, self.authorization_package)
+        self.authorization_package.write_text(
+            json.dumps(package, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
         completed = subprocess.run(
-            [sys.executable, str(runner), str(self.authorization_package), "--orchestrate", "--result", str(self.authorization_result)],
+            [
+                sys.executable,
+                str(runner),
+                str(self.authorization_package),
+                "--repository-root",
+                str(self.repo),
+                "--orchestrate",
+                "--result",
+                str(self.authorization_result),
+            ],
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -467,8 +970,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "validatorRef": "manual phase exit",
         }
 
-    def authority_root_ref(self) -> dict[str, str]:
-        profile = bootstrap.load_profile("bootstrap-upstream-plan")
+    def authority_root_ref(self, profile_name: str = "bootstrap-upstream-plan") -> dict[str, str]:
+        profile = bootstrap.load_profile(profile_name)
         return bootstrap.authority_root_reference(profile)
 
     def write_p2_registry(self, manifest: dict) -> tuple[Path, dict[str, str]]:

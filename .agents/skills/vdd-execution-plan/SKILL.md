@@ -15,6 +15,8 @@ When maintaining or evaluating this Skill itself, also read [references/skill-co
 
 Choose exactly one mode.
 
+Do not invoke this Skill for a generic request to generate one requirements file. A single requirements file belongs to the standalone direct-change workflow: it has no VDD package, does not auto-upgrade, and is never an implicit create-mode input. Enter this Skill only when the user explicitly asks to create or repair a complete VDD execution-plan directory.
+
 ### Repair an existing directory
 
 Use repair mode when the prompt names a directory and it exists.
@@ -41,9 +43,12 @@ For create and repair modes, complete the gate in [references/clarification-gate
 1. Load authority and inspect the current state read-only. Find discoverable answers instead of asking the user.
 2. Persist clarification state outside the target plan with `scripts/clarification_state.py` under the repository evidence root, normally `logs/vdd-clarifications/<target-slug>/<run-id>/`. Coordination uses one repository-canonical target registry and cross-process lock independent of the selected evidence root; multiple local Codex sessions must resume the same active target run.
 3. Discuss unresolved boundaries in dependency order. Each question round normally contains at least five same-level questions, stable `CQ-NNN` identities, a recommendation per question, and a confidence assessment. Fewer questions require an explicit same-level exhaustion reason; never invent filler.
+   - Classify every CQ as exactly one of `fact_gap`, `user_decision`, or `authority_conflict`. For a material contract, recovery, or domain ambiguity, add a concrete normal, failure, boundary, or evolution scenario probe rather than a generic question. Record an ADR candidate only for an irreversible, context-sensitive decision with a real tradeoff; it is not a formal ADR.
 4. Continue until the user explicitly states both that no further clarification is needed and that writing may begin. Agreement, encouragement, urgency, a high confidence score, or an initial prompt that pre-authorizes writing is not an exit.
 5. Fail closed in headless mode. A caller may relay questions and resume the same run, but it may not simulate user confirmation or select a fast/express path.
 6. Recheck authority and target hashes before writing. Invalidate the exit and reopen affected questions when relevant inputs changed.
+
+For a clarification-to-authority projection, freeze the clarification control-asset source/owner closure through `scripts/clarification_closure.py` and `scripts/clarification_baseline.py` before promotion preflight. Promotion shares the canonical target lock with clarification mutations. It may stage a verified immutable generation and atomically publish its single committed-generation pointer, but it must not directly overwrite multiple authority files. Every transactional consumer must use the hash-bound resolver; otherwise leave the promotion blocked or reduce the write set to one atomically replaceable owner object. A successful promotion authorizes only that projection write, never `plan-ready`, a phase, implementation acceptance, or release.
 
 The LLM may suggest ending clarification only at confidence `>= 90`, with no open blockers and all required boundary dimensions grounded. The user remains the only exit authority. If the user explicitly exits with blockers still open, writing may begin only in `draft`; clarification exit never proves `plan-ready`.
 
@@ -152,10 +157,12 @@ Every plan that can authorize a transition must carry one executable seven-dimen
 - Closure members have only `PASS` or typed `N/A` dimension verdicts. `NON-AUTHORITATIVE` is exclusively an `OUT-OF-CLOSURE` artifact classification with an empty `authorizes` set and machine exclusion checks.
 - Include both static artifacts and runtime artifact types such as validation results, finalized runs, successor authorizations, candidate lineage, process events, and implementation candidates.
 - Discover each authorizing predicate's consumer closure twice through independent producer and verifier entrypoints. A shared superset is allowed only with an explicit set-coverage proof for each predicate.
+- Bind producer discovery to an external plan-link document and verifier discovery to a distinct external validator read-set document; both references are hash-bound and neither may be derived from package proofs or its semantic contract.
+- Inventory every source with its complete context-class set and a versioned plan-local source binding. Bootstrap consumption must bind the current plan, package, source, proof, predicate, result, review, and input lineage; a prior review's consumption is not reusable.
 - Bind tracked artifacts to Git tree, path, mode, and blob. Bind binary artifacts to raw SHA-256 and byte length. Recompute these identities from the selected repository root.
 - Compare every proof against an independent baseline: `new` has no baseline and null predecessor; `unchanged` equals the baseline and names it as predecessor; `supersedes` differs from the baseline and still names it as predecessor.
-- Invoke the package runner once with `--repository-root <root> --refresh --orchestrate --result <path>` to refresh projections, recompute identities, independently validate closures, run seven isolated mutations, and write a restricted deterministic-package result envelope.
-- Close authorization-closure review only after deterministic package PASS, expected rejection by all seven isolated mutations, independent membership agreement, fresh five-hash result bindings, and no Bootstrap-accepted P0/P1. Reopen only for a stable-rule failure, predicate-consumer change, authority/threat-model revision, or failed fresh hash-bound validation.
+- Invoke the package runner once with `--repository-root <root> --refresh --orchestrate --result <path>` to refresh projections, recompute identities, independently validate closures, run seven dimension mutations plus eight source-closure mutations, and write a restricted deterministic-package result envelope.
+- Close authorization-closure review only after deterministic package PASS, expected rejection by all fifteen mutations, independent membership agreement, fresh five-hash result bindings, and no Bootstrap-accepted P0/P1. Reopen only for a stable-rule failure, predicate-consumer change, authority/threat-model revision, or failed fresh hash-bound validation.
 
 ## Control LLM-assisted review
 

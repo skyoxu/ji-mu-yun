@@ -67,6 +67,16 @@ AUTHORIZATION_CLOSURE_DIMENSIONS = (
     "recovery_supersession",
     "consumer_authorization_boundary",
 )
+SOURCE_CLOSURE_MUTATION_EXPECTATIONS = {
+    "source-omit": "VDD-PACKAGE-SOURCE-INVENTORY",
+    "source-extra": "VDD-PACKAGE-SOURCE-CLOSURE:plan-ready",
+    "source-identity-drift": "VDD-PACKAGE-SOURCE-IDENTITY",
+    "source-role-change": "VDD-PACKAGE-SOURCE-IDENTITY",
+    "source-predicate-unlink": "VDD-PACKAGE-SOURCE-CLOSURE:plan-ready",
+    "source-proof-unlink": "VDD-PACKAGE-SOURCE-PROOF",
+    "source-binding-replay": "VDD-PACKAGE-SOURCE-BINDING",
+    "source-copied-hash": "VDD-PACKAGE-SOURCE-HASH-STALE",
+}
 AUTHORIZATION_CLOSURE_BINDINGS = (
     "candidate_hash",
     "source_hash",
@@ -74,6 +84,9 @@ AUTHORIZATION_CLOSURE_BINDINGS = (
     "authority_root",
     "closure_definition_hash",
 )
+SOURCE_BINDING_BINDINGS = [
+    "plan", "package", "source", "proof", "predicate", "result", "review", "input",
+]
 AUTHORIZATION_CLOSURE_PROVENANCE = {
     "root_id": "vdd-local-deterministic",
     "signer": "repository-local-deterministic-runner",
@@ -458,9 +471,9 @@ def validate_gate_state(gate_state: Any, manifest: dict[str, Any]) -> None:
 
 
 def load_authority_root_registry(repository_root: Path, reference: Any) -> dict[str, Any]:
-    expected_path = ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json"
     if not isinstance(reference, dict) or set(reference) != {"path", "sha256", "registryId"}:
         raise BootstrapError("Bootstrap authority-root registry reference is invalid")
+    expected_path = ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json"
     if reference.get("path") != expected_path or reference.get("registryId") != "bootstrap-authority-roots.v1":
         raise BootstrapError("Bootstrap authority-root registry path or identity is not trusted")
     path = ensure_within(repository_root / expected_path, repository_root, "Authority-root registry")
@@ -611,10 +624,61 @@ def load_profile(name: str) -> dict[str, Any]:
     context_classes = profile.get("requiredContextClasses")
     if not isinstance(context_classes, list) or not context_classes or len(context_classes) != len(set(context_classes)):
         raise BootstrapError("Bootstrap profile must define unique required context classes")
+    source_context_classes = profile.get("sourceClosureContextClasses")
+    if name == "bootstrap-upstream-plan":
+        expected_source_classes = [
+            "plan-source", "repository-rules", "current-state",
+            "referenced-standards", "schemas-and-fixtures",
+        ]
+        if source_context_classes != expected_source_classes:
+            raise BootstrapError("Upstream profile must declare every source-bearing context class")
+        if profile.get("optionalSourceClosureContextClasses") != ["original-requirements"]:
+            raise BootstrapError("Upstream profile must declare the optional external requirements source class")
+    elif source_context_classes is not None or profile.get("optionalSourceClosureContextClasses") is not None:
+        raise BootstrapError("Only the upstream profile may declare source-bearing closure classes")
     revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
     if profile.get("policyRevision") != value_hash(revision_payload):
         raise BootstrapError("Bootstrap profile policyRevision does not match its canonical content")
     return profile
+
+
+def classify_review_target(repository_root: Path, target: str) -> dict[str, str]:
+    """Classify the user-selected review object without inspecting its content.
+
+    A standalone Markdown requirement stays on the direct-change path.  Only a
+    selected directory is a VDD-plan object; no file is upgraded because of
+    markers or prose it happens to contain.
+    """
+    candidate = Path(target)
+    if not candidate.is_absolute():
+        candidate = repository_root / candidate
+    candidate = ensure_within(candidate, repository_root, "Review target")
+    if not candidate.exists():
+        raise BootstrapError(f"Review target does not exist: {candidate}")
+    if candidate.is_dir():
+        return {
+            "target": candidate.relative_to(repository_root).as_posix(),
+            "classification": "vdd-plan",
+            "profile": "bootstrap-upstream-plan",
+        }
+    if candidate.suffix.casefold() == ".md":
+        return {
+            "target": candidate.relative_to(repository_root).as_posix(),
+            "classification": "standalone-direct-change",
+            "profile": "bootstrap-focused-change",
+        }
+    return {
+        "target": candidate.relative_to(repository_root).as_posix(),
+        "classification": "implemented-change",
+        "profile": "bootstrap-implementation-conformance",
+    }
+
+
+def command_classify_target(args: argparse.Namespace) -> int:
+    repository_root = Path(args.repository_root).resolve()
+    result = classify_review_target(repository_root, args.target)
+    print(json.dumps({"schemaVersion": "bootstrap-review-target-classification.v1", **result}, indent=2))
+    return 0
 
 
 def collect_scope(repository_root: Path, scopes: list[str], out_dir: Path) -> tuple[list[str], list[dict[str, Any]]]:
@@ -1154,7 +1218,10 @@ def build_context_class_artifacts(
         item["artifact"]: ensure_within(repository_root / item["artifact"], repository_root, "Input artifact")
         for item in artifacts
     }
-    assignments: dict[str, set[str]] = {name: set() for name in required_classes}
+    optional_classes = profile_optional_context_classes(profile_name)
+    assignments: dict[str, set[str]] = {
+        name: set() for name in [*required_classes, *optional_classes]
+    }
     for raw in raw_assignments:
         name, separator, raw_path = raw.partition("=")
         name = name.strip()
@@ -1180,17 +1247,26 @@ def build_context_class_artifacts(
                 f"Context class {name} does not map to any artifact in the prepared --scope set: {candidate}"
             )
         assignments[name].update(matched)
-    missing = [name for name, mapped in assignments.items() if not mapped]
+    missing = [name for name in required_classes if not assignments[name]]
     if missing:
         raise BootstrapError("Missing required context class assignments: " + ", ".join(missing))
-    result = {name: sorted(mapped) for name, mapped in assignments.items()}
+    result = {name: sorted(mapped) for name, mapped in assignments.items() if mapped}
     validate_profile_context_semantics(profile_name, result, repository_root)
     return result
+
+
+def profile_optional_context_classes(profile_name: str) -> list[str]:
+    profile = load_profile(profile_name)
+    optional = profile.get("optionalSourceClosureContextClasses", [])
+    return list(optional) if isinstance(optional, list) else []
 
 
 def authorization_closure_context_errors(
     repository_root: Path,
     mapping: dict[str, list[str]],
+    artifacts: list[dict[str, Any]],
+    run_dir: Path | None = None,
+    manifest: dict[str, Any] | None = None,
 ) -> list[str]:
     package_paths = mapping.get("authorization-closure-package", [])
     result_paths = mapping.get("authorization-closure-validation-result", [])
@@ -1206,7 +1282,326 @@ def authorization_closure_context_errors(
     errors = validate_authorization_closure_result(package, result, repository_root)
     if result.get("package_sha256") != file_hash(package_path):
         errors.append("package_sha256 does not bind the current package bytes")
+    source_classes = tuple(
+        manifest.get("sourceClosureContextClasses", ("plan-source", "original-requirements"))
+        if manifest is not None else ("plan-source", "original-requirements")
+    )
+    errors.extend(
+        authorization_source_closure_errors(
+            package,
+            result,
+            mapping,
+            artifacts,
+            source_classes,
+            repository_root,
+        )
+    )
+    if run_dir is not None and manifest is not None:
+        consumption_path = run_dir / "source-binding-consumptions.json"
+        try:
+            actual_consumption = read_json(consumption_path)
+            expected_consumption = build_source_binding_consumptions(
+                repository_root, manifest, package_path, result_path, package, result
+            )
+        except BootstrapError:
+            errors.append("BOOTSTRAP-SOURCE-CLOSURE-BINDING: consumption evidence is missing or invalid")
+        else:
+            if actual_consumption != expected_consumption:
+                errors.append("BOOTSTRAP-SOURCE-CLOSURE-BINDING: consumption evidence is stale or replayed")
     return errors
+
+
+def valid_source_binding_reference(value: object) -> bool:
+    return (
+        isinstance(value, dict)
+        and set(value) == {"schema_version", "binding_id", "required_bindings"}
+        and value.get("schema_version") == "vdd.plan-source-binding.v1"
+        and isinstance(value.get("binding_id"), str)
+        and bool(value["binding_id"])
+        and value.get("required_bindings") == SOURCE_BINDING_BINDINGS
+    )
+
+
+def build_source_binding_consumptions(
+    repository_root: Path,
+    manifest: dict[str, Any],
+    package_path: Path | None = None,
+    result_path: Path | None = None,
+    package: dict[str, Any] | None = None,
+    result: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    mapping = manifest.get("contextClassArtifacts", {})
+    package_paths = mapping.get("authorization-closure-package", []) if isinstance(mapping, dict) else []
+    result_paths = mapping.get("authorization-closure-validation-result", []) if isinstance(mapping, dict) else []
+    if package_path is None:
+        if len(package_paths) != 1:
+            raise BootstrapError("BOOTSTRAP-SOURCE-CLOSURE-BINDING: package context is invalid")
+        package_path = ensure_within(repository_root / package_paths[0], repository_root, "Authorization closure package")
+    if result_path is None:
+        if len(result_paths) != 1:
+            raise BootstrapError("BOOTSTRAP-SOURCE-CLOSURE-BINDING: result context is invalid")
+        result_path = ensure_within(repository_root / result_paths[0], repository_root, "Authorization closure result")
+    package = package or read_json(package_path)
+    result = result or read_json(result_path)
+    inventory = package.get("source_inventory")
+    if not isinstance(inventory, list):
+        inventory = []
+    records = []
+    for member in inventory:
+        source_binding = member.get("source_binding") if isinstance(member, dict) else None
+        if not valid_source_binding_reference(source_binding) or member.get("disposition") != "consumed":
+            continue
+        records.append(
+            {
+                "source_bindingReference": source_binding,
+                "sourceId": member.get("source_id"),
+                "canonicalPath": member.get("canonical_path"),
+                "proofId": member.get("proof_id"),
+                "predicates": member.get("applicable_predicates"),
+                "consumer": member.get("consumer"),
+                "disposition": "consumed",
+            }
+        )
+    bindings = package.get("bindings", {})
+    result_bindings = {field: result.get(field) for field in AUTHORIZATION_CLOSURE_BINDINGS}
+    return {
+        "schemaVersion": "bootstrap-source-binding-consumptions.v1",
+        "review": {
+            "reviewId": manifest.get("reviewId"),
+            "changeId": manifest.get("changeId"),
+            "inputHash": manifest.get("inputHash"),
+            "profileName": manifest.get("profileName"),
+            "policyRevision": manifest.get("policyRevision"),
+            "authorityRevision": manifest.get("authorityRevision"),
+        },
+        "plan": {
+            "planSources": mapping.get("plan-source", []),
+            "originalRequirements": mapping.get("original-requirements", []),
+        },
+        "package": {
+            "path": package_path.relative_to(repository_root).as_posix(),
+            "sha256": file_hash(package_path),
+            "bindings": {field: bindings.get(field) for field in AUTHORIZATION_CLOSURE_BINDINGS},
+        },
+        "result": {
+            "path": result_path.relative_to(repository_root).as_posix(),
+            "sha256": file_hash(result_path),
+            "schemaVersion": result.get("schema_version"),
+            "status": result.get("status"),
+            "bindings": result_bindings,
+        },
+        "records": sorted(records, key=lambda item: str(item["source_bindingReference"]["binding_id"])),
+        "authorizes": [],
+        "doesNotAuthorize": [
+            "plan-ready", "implementation-accepted", "protected-handoff", "release-ready"
+        ],
+    }
+
+
+def authorization_source_closure_errors(
+    package: dict[str, Any],
+    result: dict[str, Any],
+    mapping: dict[str, list[str]],
+    artifacts: list[dict[str, Any]],
+    source_classes: tuple[str, ...] = ("plan-source", "original-requirements"),
+    repository_root: Path | None = None,
+) -> list[str]:
+    expected_paths = sorted({
+        path
+        for context_class in source_classes
+        for path in mapping.get(context_class, [])
+    })
+    expected_context_classes: dict[str, set[str]] = {}
+    for context_class in source_classes:
+        for path in mapping.get(context_class, []):
+            expected_context_classes.setdefault(path, set()).add(context_class)
+    artifact_by_path = {
+        item.get("artifact"): item for item in artifacts if isinstance(item, dict)
+    }
+    inventory = package.get("source_inventory")
+    if not isinstance(inventory, list) or not inventory:
+        return ["BOOTSTRAP-SOURCE-CLOSURE-INVENTORY: package source_inventory is missing or empty"]
+    if any(not isinstance(item, dict) for item in inventory):
+        return ["BOOTSTRAP-SOURCE-CLOSURE-INVENTORY: every source inventory member must be an object"]
+
+    source_ids = [item.get("source_id") for item in inventory]
+    proof_ids = [item.get("proof_id") for item in inventory]
+    actual_paths = [
+        item.get("canonical_path")
+        for item in inventory
+        if item.get("classification") == "IN-CLOSURE"
+    ]
+    errors: list[str] = []
+    if (
+        any(not isinstance(item, str) or not item for item in source_ids + proof_ids + actual_paths)
+        or len(source_ids) != len(set(source_ids))
+        or len(proof_ids) != len(set(proof_ids))
+        or len(actual_paths) != len(set(actual_paths))
+    ):
+        errors.append("BOOTSTRAP-SOURCE-CLOSURE-INVENTORY: source, proof, and path identities must be unique")
+    if sorted(actual_paths) != expected_paths:
+        errors.append("BOOTSTRAP-SOURCE-CLOSURE-INVENTORY: frozen context and package source paths differ")
+
+    proof_registry = {
+        proof.get("id")
+        for proof in package.get("proofs", [])
+        if isinstance(proof, dict) and isinstance(proof.get("id"), str)
+    }
+    closures = package.get("predicate_closures")
+    for member in inventory:
+        if member.get("classification") != "IN-CLOSURE":
+            continue
+        path = member.get("canonical_path")
+        expected_classes = expected_context_classes.get(path, set())
+        actual_classes = member.get("context_classes")
+        if (
+            not isinstance(actual_classes, list)
+            or any(not isinstance(item, str) or not item for item in actual_classes)
+            or len(actual_classes) != len(set(actual_classes))
+            or set(actual_classes) != expected_classes
+        ):
+            errors.append(
+                f"BOOTSTRAP-SOURCE-CLOSURE-CONTEXT-CLASSES: context classes do not match frozen context for {path}"
+            )
+        primary_role = next(
+            (context_class for context_class in source_classes if context_class in expected_classes),
+            None,
+        )
+        if member.get("source_role") != primary_role:
+            errors.append(
+                f"BOOTSTRAP-SOURCE-CLOSURE-ROLE: source role does not match frozen context for {path}"
+            )
+        if (
+            not valid_source_binding_reference(member.get("source_binding"))
+            or member.get("disposition") != "consumed"
+        ):
+            errors.append(
+                f"BOOTSTRAP-SOURCE-CLOSURE-BINDING: missing source_binding or disposition for {path}"
+            )
+        artifact = artifact_by_path.get(path)
+        identity = member.get("identity")
+        identity_kind = identity.get("kind") if isinstance(identity, dict) else None
+        frozen_hash_matches = (
+            identity.get("sha256") == artifact.get("sha256")
+            and identity.get("byte_length") == artifact.get("sizeBytes")
+        ) if identity_kind == "frozen-artifact" and isinstance(artifact, dict) else False
+        binary_hash = identity.get("sha256") if identity_kind == "binary" else None
+        binary_hash_matches = (
+            isinstance(binary_hash, str)
+            and (binary_hash if binary_hash.startswith("sha256:") else "sha256:" + binary_hash)
+            == artifact.get("sha256")
+            and identity.get("byte_length") == artifact.get("sizeBytes")
+        ) if isinstance(artifact, dict) else False
+        text_hash_matches = (
+            identity.get("raw_sha256") == artifact.get("sha256")
+        ) if identity_kind in {"generated-text", "external-text"} and isinstance(artifact, dict) else False
+        git_hash_matches = git_tracked_frozen_identity_matches(
+            repository_root,
+            path,
+            identity,
+            artifact,
+        )
+        if (
+            not isinstance(artifact, dict)
+            or not isinstance(identity, dict)
+            or not (
+                frozen_hash_matches
+                or binary_hash_matches
+                or text_hash_matches
+                or git_hash_matches
+            )
+        ):
+            errors.append(f"BOOTSTRAP-SOURCE-CLOSURE-CONTEXT: frozen identity mismatch for {path}")
+        proof_id = member.get("proof_id")
+        predicates = member.get("applicable_predicates")
+        if proof_id not in proof_registry or not isinstance(predicates, list) or not predicates:
+            errors.append(f"BOOTSTRAP-SOURCE-CLOSURE-PROOF: invalid proof mapping for {path}")
+            continue
+        for predicate in predicates:
+            closure = closures.get(predicate) if isinstance(closures, dict) else None
+            members = closure.get("members") if isinstance(closure, dict) else None
+            if not isinstance(members, list) or proof_id not in members:
+                errors.append(
+                    f"BOOTSTRAP-SOURCE-CLOSURE-PROOF: {proof_id} is not in predicate {predicate}"
+                )
+
+    if isinstance(closures, dict):
+        for predicate, closure in closures.items():
+            members = closure.get("members") if isinstance(closure, dict) else None
+            inventory_members = [
+                member.get("proof_id")
+                for member in inventory
+                if member.get("classification") == "IN-CLOSURE"
+                and predicate in member.get("applicable_predicates", [])
+            ]
+            if (
+                not isinstance(members, list)
+                or len(members) != len(set(members))
+                or set(members) != set(inventory_members)
+            ):
+                errors.append(
+                    f"BOOTSTRAP-SOURCE-CLOSURE-PROOF: predicate {predicate} does not match source inventory"
+                )
+
+    canonical_inventory = sorted(inventory, key=lambda item: str(item.get("source_id", "")))
+    recomputed_source_hash = value_hash(canonical_inventory)
+    bindings = package.get("bindings")
+    if (
+        not isinstance(bindings, dict)
+        or bindings.get("source_hash") != recomputed_source_hash
+        or result.get("source_hash") != recomputed_source_hash
+    ):
+        errors.append("BOOTSTRAP-SOURCE-CLOSURE-HASH: source_hash does not bind the frozen inventory")
+    return errors
+
+
+def git_tracked_frozen_identity_matches(
+    repository_root: Path | None,
+    canonical_path: Any,
+    identity: Any,
+    artifact: Any,
+) -> bool:
+    if (
+        repository_root is None
+        or not isinstance(canonical_path, str)
+        or not isinstance(identity, dict)
+        or set(identity) != {"kind", "tree", "path", "mode", "blob"}
+        or identity.get("kind") != "git-tracked"
+        or identity.get("path") != canonical_path
+        or not isinstance(artifact, dict)
+    ):
+        return False
+    try:
+        output = subprocess.check_output(
+            ["git", "ls-tree", identity["tree"], "--", identity["path"]],
+            cwd=repository_root,
+            text=True,
+            encoding="utf-8",
+            stderr=subprocess.DEVNULL,
+        ).strip()
+        blob_bytes = subprocess.check_output(
+            ["git", "cat-file", "blob", identity["blob"]],
+            cwd=repository_root,
+            stderr=subprocess.DEVNULL,
+        )
+        target = ensure_within(
+            repository_root / canonical_path,
+            repository_root,
+            "Git-tracked source",
+        )
+        raw = target.read_bytes()
+    except (KeyError, OSError, subprocess.CalledProcessError, BootstrapError):
+        return False
+    fields = output.split(maxsplit=3)
+    return (
+        len(fields) == 4
+        and fields[1] == "blob"
+        and (fields[0], fields[2], fields[3].split("\t", 1)[-1])
+        == (identity["mode"], identity["blob"], identity["path"])
+        and raw == blob_bytes
+        and artifact.get("sha256") == HASH_PREFIX + hashlib.sha256(raw).hexdigest()
+        and artifact.get("sizeBytes") == len(raw)
+    )
 
 
 def authorization_closure_provenance_errors(repository_root: Path, provenance: object) -> list[str]:
@@ -1292,10 +1687,16 @@ def validate_profile_context_semantics(
 def validate_context_class_artifacts(manifest: dict[str, Any], profile: dict[str, Any]) -> None:
     mapping = manifest.get("contextClassArtifacts")
     required_classes = profile["requiredContextClasses"]
-    if not isinstance(mapping, dict) or set(mapping) != set(required_classes):
+    optional_classes = profile.get("optionalSourceClosureContextClasses", [])
+    allowed_classes = set(required_classes) | set(optional_classes)
+    if (
+        not isinstance(mapping, dict)
+        or not set(required_classes) <= set(mapping)
+        or not set(mapping) <= allowed_classes
+    ):
         raise BootstrapError("review-input.json context class mapping does not match the profile")
     artifact_names = {item.get("artifact") for item in manifest.get("artifacts", []) if isinstance(item, dict)}
-    for name in required_classes:
+    for name in mapping:
         mapped = mapping.get(name)
         if (
             not isinstance(mapped, list)
@@ -1667,6 +2068,14 @@ def command_prepare(args: argparse.Namespace) -> int:
         "deterministicPreflightPolicy": preflight_policy,
         "executionMode": args.execution_mode,
         "requiredContextClasses": profile["requiredContextClasses"],
+        "sourceClosureContextClasses": [
+            *profile.get("sourceClosureContextClasses", []),
+            *[
+                name for name in profile.get("optionalSourceClosureContextClasses", [])
+                if name in context_class_artifacts
+            ],
+        ],
+        "optionalSourceClosureContextClasses": profile.get("optionalSourceClosureContextClasses", []),
         "contextClassArtifacts": context_class_artifacts,
         "authorityContextHash": context_hash,
         "completenessPolicy": profile["completenessPolicy"],
@@ -1721,6 +2130,11 @@ def command_prepare(args: argparse.Namespace) -> int:
         }
     manifest["inputHash"] = value_hash(manifest)
     write_json(out_dir / "review-input.json", manifest)
+    if args.profile == "bootstrap-upstream-plan":
+        write_json(
+            out_dir / "source-binding-consumptions.json",
+            build_source_binding_consumptions(repository_root, manifest),
+        )
     write_json(out_dir / "preflight-result.json", preflight_template(manifest), grant_modify=True)
     write_json(
         out_dir / profile["processLeasePolicy"]["sidecar"],
@@ -1827,9 +2241,15 @@ def load_run(run_dir_arg: str) -> tuple[Path, dict[str, Any], Path]:
         "reviewProfile", "policyRevision", "routeVersion", "controlPlaneRevision", "requiredLayers", "codexExecPolicy",
         "reviewObjectType", "reviewDepth", "reviewerInstructionPolicy", "reviewCyclePolicy",
         "semanticReviewPolicy", "authorityFreezePolicy", "processLeasePolicy", "reviewCostPolicy",
-        "planBoundCheckPolicy", "requiredContextClasses", "completenessPolicy", "authorityRootRegistry",
+        "planBoundCheckPolicy", "requiredContextClasses", "optionalSourceClosureContextClasses",
+        "completenessPolicy", "authorityRootRegistry",
     ):
-        if manifest.get(field) != profile.get(field):
+        expected_projection = (
+            profile.get(field, [])
+            if field == "optionalSourceClosureContextClasses"
+            else profile.get(field)
+        )
+        if manifest.get(field) != expected_projection:
             raise BootstrapError(f"review-input.json has stale or substituted {field}")
     if manifest.get("authorityClass") != AUTHORITY_CLASS:
         raise BootstrapError("review-input.json has an invalid bootstrap authority class")
@@ -1929,7 +2349,8 @@ def validate_preflight_result(run_dir: Path, manifest: dict[str, Any]) -> str:
         errors.extend(
             "authorization closure preflight failed: " + error
             for error in authorization_closure_context_errors(
-                Path(manifest["repositoryRoot"]), manifest["contextClassArtifacts"]
+                Path(manifest["repositoryRoot"]), manifest["contextClassArtifacts"], manifest["artifacts"],
+                run_dir, manifest,
             )
         )
     preflight_root = (run_dir / manifest["deterministicPreflightPolicy"]["evidenceDirectory"]).resolve()
@@ -2012,14 +2433,14 @@ def validate_authorization_closure_result(
     expected_mutations = {
         (dimension, f"VDD-PACKAGE-DIMENSION:{dimension}")
         for dimension in AUTHORIZATION_CLOSURE_DIMENSIONS
-    }
+    } | set(SOURCE_CLOSURE_MUTATION_EXPECTATIONS.items())
     if actual_mutations != expected_mutations:
-        errors.append("result must contain exactly seven rejected isolated mutations")
+        errors.append("result must contain exactly fifteen rejected isolated mutations")
     return errors
 
 
 def command_authorize_launch(args: argparse.Namespace) -> int:
-    run_dir, manifest, _repository_root = load_run(args.run_dir)
+    run_dir, manifest, repository_root = load_run(args.run_dir)
     authorization_path = run_dir / manifest["authorityFreezePolicy"]["authorizationSidecar"]
     if authorization_path.exists():
         validate_launch_authorization(run_dir, manifest)
@@ -2936,6 +3357,8 @@ def command_run_layer(args: argparse.Namespace) -> int:
             errors = schema_validation_errors("bootstrap-verifier-output.v1.schema.json", formal)
             if errors:
                 raise BootstrapError("Verifier candidate is invalid: " + "; ".join(errors))
+            blockers = load_verifier_blockers_for_write(run_dir, manifest)
+            validate_verifier_candidate_for_write(formal, manifest, blockers)
             write_json(run_dir / "verifier-output.json", formal)
         else:
             formal = reviewer_template(args.role, manifest)
@@ -3522,6 +3945,40 @@ def validate_verifier(
     if missing:
         raise BootstrapError(f"Verifier decisions are missing for: {', '.join(sorted(missing))}")
     return decisions
+
+
+def load_verifier_blockers_for_write(
+    run_dir: Path, manifest: dict[str, Any]
+) -> dict[str, dict[str, Any]]:
+    gate = read_json(run_dir / "review-gate-state.json")
+    validate_gate_state(gate, manifest)
+    candidate_doc = read_json(run_dir / "review-candidates.json")
+    if gate.get("candidatesHash") != value_hash(candidate_doc):
+        raise BootstrapError("review-candidates.json changed before verifier write")
+    findings = candidate_doc.get("findings") if isinstance(candidate_doc, dict) else None
+    if not isinstance(findings, list):
+        raise BootstrapError("review-candidates.json is invalid before verifier write")
+    blockers = {
+        item.get("findingId"): item
+        for item in findings
+        if isinstance(item, dict)
+        and isinstance(item.get("findingId"), str)
+        and item.get("proposedSeverity") in {"P0", "P1"}
+    }
+    if len(blockers) != sum(
+        1 for item in findings
+        if isinstance(item, dict) and item.get("proposedSeverity") in {"P0", "P1"}
+    ):
+        raise BootstrapError("review-candidates.json has invalid blocker identities")
+    return blockers
+
+
+def validate_verifier_candidate_for_write(
+    output: dict[str, Any],
+    manifest: dict[str, Any],
+    blockers: dict[str, dict[str, Any]],
+) -> None:
+    validate_verifier(output, manifest, blockers)
 
 
 def load_typed_repository_reference(
@@ -4812,6 +5269,12 @@ def command_seal_run(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
+    classify_target = subparsers.add_parser(
+        "classify-target", help="Classify a review target without selecting an implicit workflow"
+    )
+    classify_target.add_argument("--repository-root", required=True)
+    classify_target.add_argument("--target", required=True)
+    classify_target.set_defaults(handler=command_classify_target)
     prepare = subparsers.add_parser("prepare", help="Create hash-bound manual reviewer materials")
     prepare.add_argument("--repository-root", required=True)
     prepare.add_argument("--review-id", required=True)

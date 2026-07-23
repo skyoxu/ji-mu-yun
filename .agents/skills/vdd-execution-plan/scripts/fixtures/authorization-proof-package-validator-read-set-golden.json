@@ -1,0 +1,10 @@
+{
+  "schema_version": "vdd.validator-read-set-discovery.v1",
+  "discovery_id": "golden-validator-read-set.v1",
+  "read_sets": {
+    "plan-ready": [
+      "golden-static",
+      "golden-runtime"
+    ]
+  }
+}

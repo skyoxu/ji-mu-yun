@@ -1,12 +1,66 @@
 {
   "schema_version": "vdd.authorization-proof-package.v1",
   "assurance_level": "deterministic-package",
+  "source_inventory": [
+    {
+      "source_id": "source-golden-static",
+      "source_role": "plan-source",
+      "context_classes": [
+        "plan-source"
+      ],
+      "canonical_path": "plans/golden.json",
+      "identity": {
+        "kind": "git-tracked",
+        "tree": "HEAD",
+        "path": "plans/golden.json",
+        "mode": "100644",
+        "blob": "placeholder"
+      },
+      "source_binding": {
+        "schema_version": "vdd.plan-source-binding.v1",
+        "binding_id": "PSB-golden-static",
+        "required_bindings": ["plan", "package", "source", "proof", "predicate", "result", "review", "input"]
+      },
+      "applicable_predicates": [
+        "plan-ready"
+      ],
+      "consumer": "plan-ready",
+      "proof_id": "golden-static",
+      "classification": "IN-CLOSURE",
+      "disposition": "consumed"
+    },
+    {
+      "source_id": "source-golden-runtime",
+      "source_role": "validation-result",
+      "context_classes": [
+        "validation-result"
+      ],
+      "canonical_path": "logs/golden-result.json",
+      "identity": {
+        "kind": "binary",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "byte_length": 0
+      },
+      "source_binding": {
+        "schema_version": "vdd.plan-source-binding.v1",
+        "binding_id": "PSB-golden-runtime",
+        "required_bindings": ["plan", "package", "source", "proof", "predicate", "result", "review", "input"]
+      },
+      "applicable_predicates": [
+        "plan-ready"
+      ],
+      "consumer": "plan-ready",
+      "proof_id": "golden-runtime",
+      "classification": "IN-CLOSURE",
+      "disposition": "consumed"
+    }
+  ],
   "bindings": {
-    "candidate_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "source_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-    "validator_root": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-    "authority_root": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-    "closure_definition_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    "candidate_hash": "sha256:f7c10e301b2529aa59ad946bb51700d88c1cd118a027cccacb3b0a9dee0333b9",
+    "source_hash": "sha256:b6adb5e227f86855baa6d536c04602928269ab7466092cc47a4329284a21677f",
+    "validator_root": "sha256:e096e0a150d6c13e5c9838bc872e1bf05f86a006be97ec33b46036bb5d0f6242",
+    "authority_root": "sha256:c189cb67a1e98866bea331d0586ed686d21db9825048c47964214b3de33d884d",
+    "closure_definition_hash": "sha256:1a5ed1a0bb959edf0e8b8e2ba2e2ece7cea8d8efa465a79f66a870c777fd9c5c"
   },
   "roles": {
     "normative": ["proof-schema", "artifact-type-registry", "authority-root-registry", "rule-registry", "permission-lattice", "runtime-type-registry"],
@@ -18,7 +72,8 @@
     "derivation_rules": {"golden-derivation": {"id": "golden-derivation", "source": "required-inventory", "target": "resolved-proof-registry", "rule_id": "VDD-GOLDEN-DERIVATION"}},
     "validators": {"golden-validator": {"id": "golden-validator", "path": "scripts/authorization_proof_package.py", "callable": "validate", "rule_id": "VDD-GOLDEN-VALIDATOR"}},
     "invalidation_contracts": {"golden-invalidation": {"id": "golden-invalidation", "inputs": ["candidate_hash"], "invalidates": ["plan-ready"], "rule_id": "VDD-GOLDEN-STALE"}},
-    "consumers": {"golden-consumer": {"id": "golden-consumer", "predicate": "plan-ready", "authorizes": [], "does_not_authorize": ["protected-handoff", "release-ready"]}}
+    "consumers": {"golden-consumer": {"id": "golden-consumer", "predicate": "plan-ready", "authorizes": [], "does_not_authorize": ["protected-handoff", "release-ready"]}},
+    "closure_consumers": {"plan-ready": ["golden-static", "golden-runtime"]}
   },
   "identity_policy": {
     "tracked": ["git-tree", "git-path", "git-mode", "git-blob"],
@@ -31,11 +86,36 @@
     "shared_superset_requires_proof": true
   },
   "predicate_closures": {
-    "plan-ready": {"producer": "static-discovery", "verifier": "trace-discovery", "producer_discovery": {"id": "builtin:in-closure-proofs"}, "verifier_discovery": {"id": "builtin:typed-proofs"}, "mode": "exact", "members": ["golden-static", "golden-runtime"], "producer_members": ["golden-static", "golden-runtime"], "verifier_members": ["golden-static", "golden-runtime"], "closure_root": "sha256:0a5ec5534420e7ff6ba04a72382c60f3a08fb52547aca33a7a34a6001ed6fe25"}
+    "plan-ready": {
+      "producer": "static-discovery",
+      "verifier": "trace-discovery",
+      "producer_discovery": {
+        "id": "golden-plan-links.v1",
+        "kind": "plan-links",
+        "reference": {
+          "path": ".agents/skills/vdd-execution-plan/scripts/fixtures/authorization-proof-package-plan-links-golden.json",
+          "sha256": "sha256:1e8a61d44b9fb2293cc60bd4c825850e7d12ccd1c12e15dcb06f8a9ac6472b67"
+        }
+      },
+      "verifier_discovery": {
+        "id": "golden-validator-read-set.v1",
+        "kind": "validator-read-set",
+        "reference": {
+          "path": ".agents/skills/vdd-execution-plan/scripts/fixtures/authorization-proof-package-validator-read-set-golden.json",
+          "sha256": "sha256:ae89593add74b8bc508f8ba1c099b219fe45278b55c84a2c09e72a93fd59a09b"
+        }
+      },
+      "mode": "exact",
+      "members": ["golden-static", "golden-runtime"],
+      "producer_members": ["golden-static", "golden-runtime"],
+      "verifier_members": ["golden-static", "golden-runtime"],
+      "closure_root": "sha256:0a5ec5534420e7ff6ba04a72382c60f3a08fb52547aca33a7a34a6001ed6fe25"
+    }
   },
   "proofs": [
     {
       "id": "golden-static",
+      "source_role": "plan-source",
       "classification": "IN-CLOSURE",
       "artifact_type": "static",
       "dimension_verdicts": {
@@ -57,6 +137,8 @@
     },
     {
       "id": "golden-runtime",
+      "source_role": "validation-result",
+      "content_path": "logs/golden-result.json",
       "classification": "IN-CLOSURE",
       "artifact_type": "runtime",
       "runtime_kind": "validation-result",

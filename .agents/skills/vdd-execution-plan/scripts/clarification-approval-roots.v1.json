@@ -1,0 +1,12 @@
+{
+  "schema_version": "vdd.clarification-approval-roots.v1",
+  "roots": {
+    "repository-local-hmac": {
+      "algorithm": "hmac-sha256-v1",
+      "environment_key": "VDD_CLARIFICATION_APPROVAL_SIGNING_KEY",
+      "verifier_id": "repository-local-hmac-verifier.v1",
+      "allowed_scopes": ["clarification-promotion"],
+      "allowed_identity_levels": ["interaction-attested", "trusted-user-identity"]
+    }
+  }
+}

@@ -3,7 +3,7 @@
   "profiles": {
     "bootstrap-upstream-plan": {
       "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
-      "policyRevision": "sha256:7a8dc7e65858512b3aea6b2b15610bb91c04f484f34e88ebf2ab080d85027b05",
+      "policyRevision": "sha256:de8c0d39f9fb05ca631139b2d9b744dbd4dce384fa6a5f88e11b9a13a257c7c9",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -11,13 +11,22 @@
       "reviewDepth": "authority-graph-and-current-state",
       "requiredContextClasses": [
         "plan-source",
-        "original-requirements",
         "repository-rules",
         "current-state",
         "referenced-standards",
         "schemas-and-fixtures",
         "authorization-closure-package",
         "authorization-closure-validation-result"
+      ],
+      "sourceClosureContextClasses": [
+        "plan-source",
+        "repository-rules",
+        "current-state",
+        "referenced-standards",
+        "schemas-and-fixtures"
+      ],
+      "optionalSourceClosureContextClasses": [
+        "original-requirements"
       ],
       "requiredLayers": [
         "blind_hunter",

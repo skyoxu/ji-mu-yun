@@ -85,6 +85,7 @@ Treat the following as in-scope for Phase service changes:
 ## Repository Workflow Kernel Boundary
 - `workflow.md` defines the repository-local formal delivery workflow. It is not the default Phase browser/API path.
 - `workflow.example.md` is onboarding for a game repository copied from the original template. It is not onboarding for this root platform repository.
+- Creating or repairing a complete execution-plan directory must use `$vdd-execution-plan`; a standalone requirements Markdown file remains a direct-change workflow and must not trigger VDD package creation.
 - Phase routes reuse selected repository scripts, validators, profiles, Godot assets, and route contracts as internal execution dependencies.
 - Do not route ordinary Phase service work into business-repository Taskmaster triplets, formal Chapter 3-7 orchestration, Chapter 4 overlay-generator commands, local Chapter 6 review recovery, or game-template release steps unless the task explicitly targets that internal toolchain.
 - Phase architecture overlays and ADRs must still be updated when a Phase boundary, threshold, contract, security posture, or release decision changes.

@@ -15,10 +15,22 @@
     "execution": ["refresh", "independent-validator", "mutation-suite", "result-envelope"]
   },
   "closure_member_verdicts": ["PASS", "N/A"],
-  "proof_required_fields": ["id", "classification", "artifact_type", "dimension_verdicts", "producer_authority", "derivation", "recomputation", "staleness", "consumer_authorization", "identity", "lineage"],
+  "proof_required_fields": ["id", "source_role", "classification", "artifact_type", "dimension_verdicts", "producer_authority", "derivation", "recomputation", "staleness", "consumer_authorization", "identity", "lineage"],
+  "source_inventory_required_fields": ["source_id", "source_role", "context_classes", "canonical_path", "identity", "source_binding", "applicable_predicates", "consumer", "proof_id", "classification", "disposition"],
+  "source_binding_reference": {
+    "schema_version": "vdd.plan-source-binding.v1",
+    "required_fields": ["schema_version", "binding_id", "required_bindings"],
+    "required_bindings": ["plan", "package", "source", "proof", "predicate", "result", "review", "input"]
+  },
   "binding_required_fields": ["candidate_hash", "source_hash", "validator_root", "authority_root", "closure_definition_hash"],
   "runtime_proof_required_fields": ["runtime_kind"],
   "predicate_closure_required_fields": ["producer", "verifier", "producer_discovery", "verifier_discovery", "mode", "members", "producer_members", "verifier_members", "closure_root"],
+  "predicate_discovery": {
+    "producer_schema": "vdd.plan-link-discovery.v1",
+    "verifier_schema": "vdd.validator-read-set-discovery.v1",
+    "hash_bound_external_references": true,
+    "distinct_paths_and_ids": true
+  },
   "lineage": {
     "baseline_records": true,
     "new": {"baseline": "absent", "predecessor": null},

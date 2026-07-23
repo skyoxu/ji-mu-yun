@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "roots"],
+  "properties": {
+    "schema_version": {"const": "vdd.clarification-approval-roots.v1"},
+    "roots": {"type": "object", "minProperties": 1}
+  }
+}

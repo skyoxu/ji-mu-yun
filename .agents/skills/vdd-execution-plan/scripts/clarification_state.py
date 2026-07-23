@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import msvcrt
 import os
@@ -118,11 +119,22 @@ REQUIRED_ROUND_FIELDS = (
     "user_turn_id",
 )
 REQUIRED_QUESTION_FIELDS = ("id", "status", "blocking", "summary", "recommendation", "basis")
-ALLOWED_QUESTION_FIELDS = frozenset((*REQUIRED_QUESTION_FIELDS, "owner", "recheck_condition"))
+ALLOWED_QUESTION_FIELDS = frozenset((
+    *REQUIRED_QUESTION_FIELDS, "owner", "recheck_condition", "primary_type",
+    "scenario_probe", "depends_on", "term_candidates", "decision_candidates",
+))
+PRIMARY_QUESTION_TYPES = {"fact_gap", "user_decision", "authority_conflict"}
 REOPENABLE_QUESTION_STATUSES = {"answered", "deferred"}
 OPEN_BLOCKER_STATUSES = {"open", "reopened", "deferred"}
 REGISTRY_SCHEMA_VERSION = "vdd.clarification-target-registry.v1"
 PENDING_TRANSITION_SCHEMA_VERSION = "vdd.clarification-pending-transition.v1"
+PENDING_SUCCESSOR_SCHEMA_VERSION = "vdd.clarification-pending-successor.v1"
+EVENT_SCHEMA_VERSION = "vdd.clarification-event.v2"
+SNAPSHOT_SCHEMA_VERSION = "vdd.clarification-snapshot.v2"
+REDUCER_VERSION = "vdd.clarification-reducer.v1"
+EVENT_REQUIRED_FIELDS = (
+    "event_id", "transition_id", "user_turn_id", "authority_hash", "target_hash",
+)
 REQUIRED_EXIT_FIELDS = (
     "actor",
     "explicit_no_more_clarification",
@@ -357,6 +369,73 @@ def validate_state_data(data: Any, target: str = "state.json") -> list[dict[str,
                         "repair mode must not re-ask confirmed authority",
                     )
                 )
+            primary_type = question.get("primary_type")
+            if primary_type is not None and primary_type not in PRIMARY_QUESTION_TYPES:
+                findings.append(
+                    finding("VDD-CLARIFICATION-QUESTION-CLASSIFICATION", question_target, "invalid primary_type")
+                )
+            dependencies = question.get("depends_on")
+            if dependencies is not None and (
+                not isinstance(dependencies, list)
+                or len(dependencies) != len(set(dependencies))
+                or any(not isinstance(item, str) or item == question_id for item in dependencies)
+            ):
+                findings.append(
+                    finding("VDD-CLARIFICATION-QUESTION-DEPENDENCY", question_target, "invalid depends_on")
+                )
+            scenario_probe = question.get("scenario_probe")
+            if scenario_probe is not None and (
+                not isinstance(scenario_probe, dict)
+                or set(scenario_probe) != {"kind", "applicability", "evidence_refs"}
+                or scenario_probe.get("kind") not in {"normal", "failure", "boundary", "evolution"}
+                or not isinstance(scenario_probe.get("applicability"), str)
+                or not isinstance(scenario_probe.get("evidence_refs"), list)
+                or any(not isinstance(ref, str) or not ref for ref in scenario_probe.get("evidence_refs", []))
+            ):
+                findings.append(
+                    finding("VDD-CLARIFICATION-SCENARIO-PROBE", question_target, "invalid scenario_probe")
+                )
+            for field_name, required_fields, rule_id in (
+                ("term_candidates", {"id", "source_cq", "definition", "scope", "replaces"}, "VDD-CLARIFICATION-TERM-CANDIDATE"),
+                ("decision_candidates", {"id", "source_cq", "irreversible", "context_sensitive", "tradeoff", "evidence_refs", "repository_adr_required", "disposition"}, "VDD-CLARIFICATION-DECISION-CANDIDATE"),
+            ):
+                candidates = question.get(field_name)
+                if candidates is not None and (
+                    not isinstance(candidates, list)
+                    or any(not isinstance(item, dict) or not required_fields <= set(item) for item in candidates)
+                ):
+                    findings.append(finding(rule_id, question_target, f"invalid {field_name}"))
+                    continue
+                if not isinstance(candidates, list):
+                    continue
+                candidate_ids = [item.get("id") for item in candidates if isinstance(item, dict)]
+                if len(candidate_ids) != len(set(candidate_ids)):
+                    findings.append(finding(rule_id, question_target, f"duplicate {field_name} id"))
+                for candidate in candidates:
+                    if not isinstance(candidate, dict):
+                        continue
+                    if candidate.get("source_cq") != question_id or not all(
+                        is_non_empty_string(candidate.get(name)) for name in ("id", "source_cq")
+                    ):
+                        findings.append(finding(rule_id, question_target, f"{field_name} must bind its source CQ"))
+                    if field_name == "term_candidates" and (
+                        not is_non_empty_string(candidate.get("definition"))
+                        or not is_non_empty_string(candidate.get("scope"))
+                        or not isinstance(candidate.get("replaces"), list)
+                        or any(not is_non_empty_string(item) for item in candidate["replaces"])
+                    ):
+                        findings.append(finding(rule_id, question_target, "term candidate fields are invalid"))
+                    if field_name == "decision_candidates" and (
+                        not isinstance(candidate.get("irreversible"), bool)
+                        or not isinstance(candidate.get("context_sensitive"), bool)
+                        or not is_non_empty_string(candidate.get("tradeoff"))
+                        or not isinstance(candidate.get("evidence_refs"), list)
+                        or not candidate["evidence_refs"]
+                        or any(not is_non_empty_string(item) for item in candidate["evidence_refs"])
+                        or not isinstance(candidate.get("repository_adr_required"), bool)
+                        or candidate.get("disposition") not in {"candidate_only", "not_required", "requires_adr"}
+                    ):
+                        findings.append(finding(rule_id, question_target, "decision candidate fields are invalid"))
         computed_blockers = sum(
             1
             for question in questions
@@ -681,10 +760,70 @@ def _write_state(path: Path, data: dict[str, Any]) -> None:
     _atomic_write(path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
 
+def _canonical_hash(value: Any) -> str:
+    return "sha256:" + hashlib.sha256(
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def _canonical_bytes(value: Any) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def _write_baseline_authority_manifest(state_path: Path, state: dict[str, Any]) -> None:
+    path = state_path.parent / "baseline-authority.json"
+    project_root = Path(state["repository_root"]).resolve()
+    skill_root = Path(__file__).resolve().parent.parent
+    control_closure = None
+    try:
+        skill_root.relative_to(project_root)
+        closure_path = skill_root / "scripts" / "clarification_closure.py"
+        registry_path = skill_root / "scripts" / "vdd-clarification-requirements.v1.json"
+        spec = importlib.util.spec_from_file_location("vdd_clarification_baseline_closure", closure_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError("closure loader is unavailable")
+        closure = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(closure)
+        registry = load_json(registry_path)
+        produced = closure.producer(registry)
+        verified = closure.verifier(project_root, skill_root, registry)
+        if produced.get("members") != verified.get("members") or any(not item.get("exists") for item in verified.get("observations", [])):
+            raise ClarificationCommandError("VDD-CLARIFICATION-BASELINE-CLOSURE", "control-asset closure is incomplete")
+        control_closure = {
+            "producer": produced,
+            "verifier": verified,
+            "closure_hash": _canonical_hash({"producer": produced, "verifier": verified}),
+        }
+    except ValueError:
+        # Isolated unit fixtures deliberately do not contain the repository Skill.
+        control_closure = None
+    manifest = {
+        "schema_version": "vdd.clarification-baseline-authority.v1",
+        "run_id": state["run_id"],
+        "target": state["target"],
+        "authority_hash": state["authority_hash"],
+        "target_hash": state["target_hash"],
+        "created_at": state["updated_at"],
+        "control_asset_closure": control_closure,
+        "authority_manifest": state.get("authority_manifest"),
+    }
+    manifest["manifest_hash"] = _canonical_hash(manifest)
+    if path.exists():
+        existing = load_json(path)
+        if existing != manifest:
+            raise ClarificationCommandError(
+                "VDD-CLARIFICATION-BASELINE-IMMUTABLE",
+                "baseline authority manifest already exists with a different identity",
+            )
+        return
+    _atomic_write(path, json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+
+
 def _append_event(run_dir: Path, event: dict[str, Any]) -> None:
     path = run_dir / "events.jsonl"
     existing = path.read_text(encoding="utf-8") if path.exists() else ""
     transition_id = event.get("transition_id")
+    prior_events: list[dict[str, Any]] = []
     if is_non_empty_string(transition_id):
         for line_number, line in enumerate(existing.splitlines(), start=1):
             try:
@@ -692,9 +831,46 @@ def _append_event(run_dir: Path, event: dict[str, Any]) -> None:
             except json.JSONDecodeError as exc:
                 raise ValueError(f"invalid event JSON at line {line_number}: {exc}") from exc
             if isinstance(prior, dict) and prior.get("transition_id") == transition_id:
+                prior_payload = {
+                    key: value for key, value in prior.items()
+                    if key not in {"schema_version", "sequence", "predecessor_event_hash", "payload_hash", "payload_byte_length", "event_hash"}
+                }
+                if _canonical_hash(prior_payload) != _canonical_hash(event):
+                    raise ClarificationCommandError(
+                        "VDD-CLARIFICATION-IDEMPOTENCY",
+                        "transition ID was replayed with a different payload",
+                    )
                 return
-    line = json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n"
+            if isinstance(prior, dict):
+                prior_events.append(prior)
+    payload = dict(event)
+    committed = {
+        **payload,
+        "schema_version": EVENT_SCHEMA_VERSION,
+        "sequence": len(prior_events) + 1,
+        "predecessor_event_hash": prior_events[-1].get("event_hash") if prior_events else None,
+        "payload_hash": _canonical_hash(payload),
+        "payload_byte_length": len(_canonical_bytes(payload)),
+    }
+    committed["event_hash"] = _canonical_hash(committed)
+    line = json.dumps(committed, ensure_ascii=False, separators=(",", ":")) + "\n"
     _atomic_write(path, existing + line)
+
+
+def _prior_transition_event(run_dir: Path, transition_id: str) -> dict[str, Any] | None:
+    path = run_dir / "events.jsonl"
+    if not path.is_file():
+        return None
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        try:
+            event = load_json_text(line)
+        except (ValueError, json.JSONDecodeError) as exc:
+            raise ClarificationCommandError(
+                "VDD-CLARIFICATION-EVENT-INTEGRITY", f"invalid event JSON at line {line_number}: {exc}"
+            ) from exc
+        if isinstance(event, dict) and event.get("transition_id") == transition_id:
+            return event
+    return None
 
 
 def _pending_transition_path(run_dir: Path) -> Path:
@@ -705,7 +881,18 @@ def _commit_state_and_event(
     state_path: Path, state: dict[str, Any], event: dict[str, Any]
 ) -> None:
     transition_id = event.get("transition_id") or f"transition-{uuid.uuid4()}"
-    committed_event = {**event, "transition_id": transition_id}
+    committed_event = {
+        **event,
+        "event_id": event.get("event_id") or f"event-{uuid.uuid4()}",
+        "transition_id": transition_id,
+        "user_turn_id": event.get("user_turn_id") or "system",
+        "authority_hash": state["current_authority_hash"],
+        "target_hash": state["current_target_hash"],
+        # The event, rather than state.json, is the recoverable source for the
+        # minimized projection.  Old v2 histories without this field stay read-only.
+        "reducer_version": REDUCER_VERSION,
+        "state_projection": state,
+    }
     pending_path = _pending_transition_path(state_path.parent)
     pending = {
         "schema_version": PENDING_TRANSITION_SCHEMA_VERSION,
@@ -716,6 +903,19 @@ def _commit_state_and_event(
     _atomic_write(pending_path, json.dumps(pending, ensure_ascii=False, indent=2) + "\n")
     _write_state(state_path, state)
     _append_event(state_path.parent, committed_event)
+    events = (state_path.parent / "events.jsonl").read_text(encoding="utf-8").splitlines()
+    event = json.loads(events[-1])
+    snapshot = {
+        "schema_version": SNAPSHOT_SCHEMA_VERSION,
+        "sequence": event["sequence"],
+        "event_head": event["event_hash"],
+        "state": state,
+    }
+    snapshot["snapshot_hash"] = _canonical_hash(snapshot)
+    snapshot_path = state_path.parent / "snapshots" / f"{event['sequence']:08d}.json"
+    if not snapshot_path.exists():
+        _atomic_write(snapshot_path, json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n")
+    _update_registry_anchor(state_path, state)
     pending_path.unlink()
 
 
@@ -733,11 +933,32 @@ def _recover_pending_transition(state_path: Path) -> None:
         raise ValueError(f"incomplete pending transition: {pending_path}")
     if event.get("transition_id") != transition_id:
         raise ValueError(f"pending transition identity mismatch: {pending_path}")
+    if event.get("reducer_version") not in {None, REDUCER_VERSION}:
+        raise ClarificationCommandError(
+            "VDD-CLARIFICATION-REDUCER-VERSION", "pending transition has an unknown reducer version"
+        )
+    if event.get("reducer_version") == REDUCER_VERSION and event.get("state_projection") != state:
+        raise ClarificationCommandError(
+            "VDD-CLARIFICATION-REDUCER-PROJECTION", "pending transition projection does not match state"
+        )
     findings = validate_state_data(state, str(state_path))
     if findings:
         raise ValueError(json.dumps(findings, ensure_ascii=False))
     _write_state(state_path, state)
     _append_event(state_path.parent, event)
+    events = (state_path.parent / "events.jsonl").read_text(encoding="utf-8").splitlines()
+    committed = json.loads(events[-1])
+    snapshot = {
+        "schema_version": SNAPSHOT_SCHEMA_VERSION,
+        "sequence": committed["sequence"],
+        "event_head": committed["event_hash"],
+        "state": state,
+    }
+    snapshot["snapshot_hash"] = _canonical_hash(snapshot)
+    snapshot_path = state_path.parent / "snapshots" / f"{committed['sequence']:08d}.json"
+    if not snapshot_path.exists():
+        _atomic_write(snapshot_path, json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n")
+    _update_registry_anchor(state_path, state)
     pending_path.unlink()
 
 
@@ -836,9 +1057,211 @@ def _write_target_registry(
         "target": target,
         "target_slug": target_slug,
         "active_states": relative_paths,
+        "runs": {},
         "updated_at": now_iso(),
     }
+    if registry_path.is_file():
+        existing = load_json(registry_path)
+        if isinstance(existing, dict) and isinstance(existing.get("runs"), dict):
+            payload["runs"] = existing["runs"]
     _atomic_write(registry_path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+
+
+def _anchor_for_run(run_dir: Path) -> dict[str, Any]:
+    event_path = run_dir / "events.jsonl"
+    if not event_path.is_file():
+        return {"sequence": 0, "event_head": None, "snapshot_hash": None}
+    lines = event_path.read_text(encoding="utf-8").splitlines()
+    if not lines:
+        return {"sequence": 0, "event_head": None, "snapshot_hash": None}
+    event = load_json_text(lines[-1])
+    if not isinstance(event, dict) or not isinstance(event.get("sequence"), int):
+        raise ClarificationCommandError("VDD-CLARIFICATION-REGISTRY-ANCHOR", "cannot anchor malformed event history")
+    snapshot = load_json(run_dir / "snapshots" / f"{event['sequence']:08d}.json")
+    if not isinstance(snapshot, dict) or not isinstance(snapshot.get("snapshot_hash"), str):
+        raise ClarificationCommandError("VDD-CLARIFICATION-REGISTRY-ANCHOR", "cannot anchor malformed snapshot history")
+    return {"sequence": event["sequence"], "event_head": event.get("event_hash"), "snapshot_hash": snapshot["snapshot_hash"]}
+
+
+def load_json_text(text: str) -> Any:
+    return json.loads(text, parse_constant=_reject_json_constant)
+
+
+def _update_registry_anchor(state_path: Path, state: dict[str, Any]) -> None:
+    project_root = _repository_root_for_state(state_path, state)
+    registry_path = _canonical_registry_target_root(project_root, state["target_slug"]) / "registry.json"
+    registry = load_json(registry_path) if registry_path.is_file() else {}
+    if not isinstance(registry, dict):
+        raise ClarificationCommandError("VDD-CLARIFICATION-REGISTRY-ANCHOR", "target registry is invalid")
+    relative = state_path.resolve().relative_to(project_root).as_posix()
+    runs = registry.setdefault("runs", {})
+    if not isinstance(runs, dict):
+        raise ClarificationCommandError("VDD-CLARIFICATION-REGISTRY-ANCHOR", "target registry runs are invalid")
+    runs[relative] = _anchor_for_run(state_path.parent)
+    registry["schema_version"] = REGISTRY_SCHEMA_VERSION
+    registry["target"] = state["target"]
+    registry["target_slug"] = state["target_slug"]
+    registry.setdefault("active_states", [])
+    registry["updated_at"] = now_iso()
+    _atomic_write(registry_path, json.dumps(registry, ensure_ascii=False, indent=2) + "\n")
+
+
+def _pending_successor_path(registry_root: Path) -> Path:
+    return registry_root / "pending-successor.json"
+
+
+def _successor_state(predecessor: dict[str, Any], successor_run_id: str, predecessor_anchor: dict[str, Any]) -> dict[str, Any]:
+    timestamp = now_iso()
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "repository_root": predecessor["repository_root"],
+        "run_id": successor_run_id,
+        "mode": predecessor["mode"],
+        "target": predecessor["target"],
+        "target_slug": predecessor["target_slug"],
+        "status": "active",
+        "interaction_mode": predecessor["interaction_mode"],
+        "authority_hash": predecessor["current_authority_hash"],
+        "current_authority_hash": predecessor["current_authority_hash"],
+        "target_hash": predecessor["current_target_hash"],
+        "current_target_hash": predecessor["current_target_hash"],
+        "confirmed_boundaries": [],
+        "non_goals": [],
+        "conflicts": [],
+        "open_items": [],
+        "open_blocker_count": 0,
+        "questions": [],
+        "rounds": [],
+        "exit_attestation": None,
+        "write_disposition": "blocked",
+        "updated_at": timestamp,
+        "predecessor_run_id": predecessor["run_id"],
+        "predecessor_event_head": predecessor_anchor["event_head"],
+    }
+
+
+def _legacy_bundle(predecessor_path: Path, successor_path: Path) -> dict[str, Any]:
+    """Freeze raw identities without modifying an older event/snapshot layout."""
+    predecessor_dir = predecessor_path.parent
+    entries = []
+    for candidate in sorted(predecessor_dir.rglob("*")):
+        if not candidate.is_file() or candidate.name == "pending-transition.json":
+            continue
+        raw = candidate.read_bytes()
+        entries.append({
+            "path": candidate.relative_to(predecessor_dir).as_posix(),
+            "raw_sha256": "sha256:" + hashlib.sha256(raw).hexdigest(),
+            "byte_length": len(raw),
+        })
+    bundle = {
+        "schema_version": "vdd.clarification-legacy-bundle.v1",
+        "adapter_version": "vdd.clarification-legacy-read-only-adapter.v1",
+        "predecessor_state": str(predecessor_path.resolve()),
+        "entries": entries,
+    }
+    bundle["bundle_hash"] = _canonical_hash(bundle)
+    return bundle
+
+
+def _validate_legacy_bundle(successor_path: Path, state: dict[str, Any]) -> None:
+    expected_hash = state.get("legacy_bundle_hash")
+    if expected_hash is None:
+        return
+    path = successor_path.parent / "legacy-bundle.json"
+    try:
+        bundle = load_json(path)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ClarificationCommandError("VDD-CLARIFICATION-LEGACY-QUARANTINE", "legacy bundle is unavailable") from exc
+    if not isinstance(bundle, dict) or bundle.get("bundle_hash") != expected_hash:
+        raise ClarificationCommandError("VDD-CLARIFICATION-LEGACY-QUARANTINE", "legacy bundle identity is invalid")
+    unhashed = {key: value for key, value in bundle.items() if key != "bundle_hash"}
+    if bundle.get("adapter_version") != "vdd.clarification-legacy-read-only-adapter.v1" or _canonical_hash(unhashed) != expected_hash:
+        raise ClarificationCommandError("VDD-CLARIFICATION-LEGACY-QUARANTINE", "legacy adapter identity drifted")
+    predecessor_dir = Path(bundle.get("predecessor_state", "")).parent
+    for entry in bundle.get("entries", []):
+        if not isinstance(entry, dict):
+            raise ClarificationCommandError("VDD-CLARIFICATION-LEGACY-QUARANTINE", "legacy bundle entry is invalid")
+        candidate = predecessor_dir / str(entry.get("path", ""))
+        try:
+            raw = candidate.read_bytes()
+        except OSError as exc:
+            raise ClarificationCommandError("VDD-CLARIFICATION-LEGACY-QUARANTINE", "legacy bundle member is missing") from exc
+        if (
+            entry.get("raw_sha256") != "sha256:" + hashlib.sha256(raw).hexdigest()
+            or entry.get("byte_length") != len(raw)
+        ):
+            raise ClarificationCommandError("VDD-CLARIFICATION-LEGACY-QUARANTINE", "legacy bundle member drifted")
+
+
+def _complete_successor_transaction(project_root: Path, registry_root: Path, pending: dict[str, Any]) -> Path:
+    required = {"schema_version", "transition_id", "predecessor_state", "successor_state", "predecessor_anchor", "successor"}
+    if not isinstance(pending, dict) or pending.get("schema_version") != PENDING_SUCCESSOR_SCHEMA_VERSION or not required <= set(pending):
+        raise ClarificationCommandError("VDD-CLARIFICATION-SUCCESSOR-TRANSACTION", "pending successor transaction is invalid")
+    predecessor_path = (project_root / pending["predecessor_state"]).resolve()
+    successor_path = (project_root / pending["successor_state"]).resolve()
+    try:
+        predecessor_path.relative_to(project_root)
+        successor_path.relative_to(project_root)
+    except ValueError as exc:
+        raise ClarificationCommandError("VDD-CLARIFICATION-SUCCESSOR-TRANSACTION", "successor transaction escapes repository") from exc
+    predecessor = _load_state(predecessor_path)
+    successor = pending["successor"]
+    if not isinstance(successor, dict) or successor.get("run_id") != successor_path.parent.name:
+        raise ClarificationCommandError("VDD-CLARIFICATION-SUCCESSOR-TRANSACTION", "successor transaction identity is invalid")
+    if predecessor.get("status") != "superseded" and _anchor_for_run(predecessor_path.parent) != pending["predecessor_anchor"]:
+        raise ClarificationCommandError("VDD-CLARIFICATION-SUCCESSOR-TRANSACTION", "predecessor history drifted during restart")
+    if predecessor.get("status") != "superseded":
+        predecessor["status"] = "superseded"
+        predecessor["exit_attestation"] = None
+        predecessor["write_disposition"] = "blocked"
+        predecessor["updated_at"] = now_iso()
+        _commit_state_and_event(predecessor_path, predecessor, {
+            "event": "run_superseded", "at": predecessor["updated_at"],
+            "successor_run_id": successor["run_id"], "transition_id": pending["transition_id"] + ":predecessor",
+        })
+    if not successor_path.exists():
+        findings = validate_state_data(successor, str(successor_path))
+        if findings:
+            raise ClarificationCommandError("VDD-CLARIFICATION-SUCCESSOR-TRANSACTION", "successor state is invalid")
+        bundle = _legacy_bundle(predecessor_path, successor_path)
+        _atomic_write(successor_path.parent / "legacy-bundle.json", json.dumps(bundle, ensure_ascii=False, indent=2) + "\n")
+        successor["legacy_bundle_hash"] = bundle["bundle_hash"]
+        _write_baseline_authority_manifest(successor_path, successor)
+        _commit_state_and_event(successor_path, successor, {
+            "event": "run_initialized", "at": successor["updated_at"], "run_id": successor["run_id"],
+            "predecessor_run_id": predecessor["run_id"], "transition_id": pending["transition_id"] + ":successor",
+        })
+    else:
+        actual_successor = _load_state(successor_path)
+        if actual_successor.get("run_id") != successor["run_id"] or actual_successor.get("predecessor_run_id") != predecessor["run_id"]:
+            raise ClarificationCommandError("VDD-CLARIFICATION-SUCCESSOR-TRANSACTION", "existing successor conflicts with pending transaction")
+    _write_target_registry(project_root, predecessor["target"], predecessor["target_slug"], [successor_path])
+    _pending_successor_path(registry_root).unlink(missing_ok=True)
+    return successor_path
+
+
+def _recover_pending_successor(project_root: Path, registry_root: Path) -> Path | None:
+    pending_path = _pending_successor_path(registry_root)
+    if not pending_path.is_file():
+        return None
+    return _complete_successor_transaction(project_root, registry_root, load_json(pending_path))
+
+
+def _validate_registry_anchor(state_path: Path, state: dict[str, Any]) -> None:
+    project_root = _repository_root_for_state(state_path, state)
+    registry_path = _canonical_registry_target_root(project_root, state["target_slug"]) / "registry.json"
+    if not registry_path.is_file():
+        return
+    registry = load_json(registry_path)
+    if not isinstance(registry, dict):
+        raise ClarificationCommandError("VDD-CLARIFICATION-REGISTRY-ANCHOR", "target registry is invalid")
+    relative = state_path.resolve().relative_to(project_root).as_posix()
+    expected = registry.get("runs", {}).get(relative) if isinstance(registry.get("runs"), dict) else None
+    if expected is None:
+        return
+    actual = _anchor_for_run(state_path.parent)
+    if expected != actual:
+        raise ClarificationCommandError("VDD-CLARIFICATION-REGISTRY-ANCHOR", "committed history does not match the target registry anchor")
 
 
 def _active_states_for_target(
@@ -910,10 +1333,197 @@ def _state_path(value: str) -> Path:
     return path
 
 
+def _custody_path(run_dir: Path) -> Path:
+    return run_dir / "sensitive-custody.json"
+
+
+def _assert_not_quarantined(run_dir: Path) -> None:
+    custody = _custody_path(run_dir)
+    if custody.is_file():
+        raise ClarificationCommandError(
+            "VDD-CLARIFICATION-SENSITIVE-QUARANTINE",
+            "clarification run is quarantined after a sensitive-data incident",
+        )
+
+
+def _custody_category(path: Path) -> str:
+    name = path.name.casefold()
+    if name == "events.jsonl":
+        return "event"
+    if "snapshot" in path.parts:
+        return "snapshot"
+    if name.startswith("pending-"):
+        return "pending-transition"
+    if "generation" in path.parts or "promotion" in name:
+        return "promotion-artifact"
+    if "backup" in name or "temp" in name or name.startswith("."):
+        return "temp-or-backup"
+    return "derived-sidecar"
+
+
+def quarantine_sensitive_run(state_path: Path, incident_id: str, reason: str) -> dict[str, Any]:
+    """Dispose every run-local copy after a confirmed sensitive-data incident."""
+    run_dir = state_path.parent
+    if not is_non_empty_string(incident_id) or _sensitive_paths({"reason": reason}):
+        raise ClarificationCommandError("VDD-CLARIFICATION-SENSITIVE-QUARANTINE", "incident identity or reason is invalid")
+    custody = _custody_path(run_dir)
+    if custody.is_file():
+        existing = load_json(custody)
+        if isinstance(existing, dict) and existing.get("incident_id") == incident_id:
+            return {"status": "quarantined", "state": str(state_path), "idempotent": True}
+        raise ClarificationCommandError("VDD-CLARIFICATION-SENSITIVE-QUARANTINE", "run is already quarantined")
+    copies = []
+    for candidate in sorted(run_dir.rglob("*")):
+        if not candidate.is_file() or candidate == custody:
+            continue
+        raw = candidate.read_bytes()
+        copies.append({
+            "path": candidate.relative_to(run_dir).as_posix(),
+            "raw_sha256": "sha256:" + hashlib.sha256(raw).hexdigest(),
+            "byte_length": len(raw),
+            "category": _custody_category(candidate),
+            "disposition": "secure-delete-required",
+        })
+    # The custody marker is written before deletion so a sharing violation or
+    # crash cannot leave a resumable run with an unknown sensitive-copy state.
+    record = {
+        "schema_version": "vdd.clarification-sensitive-custody.v1",
+        "incident_id": incident_id,
+        "reason": reason,
+        "quarantined_at": now_iso(),
+        "copies": copies,
+        "status": "quarantined",
+    }
+    record["manifest_hash"] = _canonical_hash(record)
+    _atomic_write(custody, json.dumps(record, ensure_ascii=False, indent=2) + "\n")
+    failures = []
+    for copy in copies:
+        candidate = run_dir / copy["path"]
+        try:
+            candidate.unlink()
+            copy["disposition"] = "deleted"
+        except OSError:
+            failures.append(copy["path"])
+            copy["disposition"] = "manual-disposal-required"
+    record["status"] = "quarantined-manual-disposal-required" if failures else "quarantined-disposed"
+    record["remaining_paths"] = failures
+    record["manifest_hash"] = _canonical_hash({key: value for key, value in record.items() if key != "manifest_hash"})
+    _atomic_write(custody, json.dumps(record, ensure_ascii=False, indent=2) + "\n")
+    if failures:
+        raise ClarificationCommandError(
+            "VDD-CLARIFICATION-SENSITIVE-CUSTODY", "could not dispose all sensitive-copy custody paths"
+        )
+    return {"status": "quarantined", "state": str(state_path), "disposed_copies": len(copies)}
+
+
+def _validate_event_chain(run_dir: Path) -> None:
+    path = run_dir / "events.jsonl"
+    if not path.exists():
+        return
+    predecessor = None
+    event_ids: set[str] = set()
+    transition_ids: set[str] = set()
+    reducer_seen = False
+    for expected_sequence, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        try:
+            event = load_json_text(line)
+        except (ValueError, json.JSONDecodeError) as exc:
+            raise ClarificationCommandError(
+                "VDD-CLARIFICATION-EVENT-INTEGRITY",
+                f"event chain contains a partial or invalid event at line {expected_sequence}",
+            ) from exc
+        if not isinstance(event, dict):
+            raise ClarificationCommandError(
+                "VDD-CLARIFICATION-EVENT-INTEGRITY", "event chain contains a non-object event"
+            )
+        payload = {key: value for key, value in event.items() if key not in {"schema_version", "sequence", "predecessor_event_hash", "payload_hash", "payload_byte_length", "event_hash"}}
+        hashed = {key: value for key, value in event.items() if key != "event_hash"}
+        if (
+            event.get("schema_version") != EVENT_SCHEMA_VERSION
+            or event.get("sequence") != expected_sequence
+            or event.get("predecessor_event_hash") != predecessor
+            or event.get("payload_hash") != _canonical_hash(payload)
+            or event.get("payload_byte_length") != len(_canonical_bytes(payload))
+            or event.get("event_hash") != _canonical_hash(hashed)
+        ):
+            raise ClarificationCommandError("VDD-CLARIFICATION-EVENT-INTEGRITY", "event chain is invalid or modified")
+        if (
+            any(not is_non_empty_string(event.get(field_name)) for field_name in ("event_id", "transition_id", "user_turn_id"))
+            or any(not isinstance(event.get(field_name), str) or not HASH_PATTERN.fullmatch(event[field_name]) for field_name in ("authority_hash", "target_hash"))
+        ):
+            raise ClarificationCommandError("VDD-CLARIFICATION-EVENT-INTEGRITY", "event checkpoint identity is incomplete")
+        if event["event_id"] in event_ids or event["transition_id"] in transition_ids:
+            raise ClarificationCommandError("VDD-CLARIFICATION-EVENT-INTEGRITY", "event or transition identity is duplicated")
+        event_ids.add(event["event_id"])
+        transition_ids.add(event["transition_id"])
+        snapshot = run_dir / "snapshots" / f"{expected_sequence:08d}.json"
+        if not snapshot.is_file():
+            raise ClarificationCommandError("VDD-CLARIFICATION-SNAPSHOT-LINEAGE", "checkpoint snapshot is missing")
+        snapshot_value = load_json(snapshot)
+        if not isinstance(snapshot_value, dict):
+            raise ClarificationCommandError("VDD-CLARIFICATION-SNAPSHOT-LINEAGE", "checkpoint snapshot is invalid")
+        stored_hash = snapshot_value.get("snapshot_hash")
+        unhashed_snapshot = {key: value for key, value in snapshot_value.items() if key != "snapshot_hash"}
+        if (
+            snapshot_value.get("schema_version") != SNAPSHOT_SCHEMA_VERSION
+            or snapshot_value.get("sequence") != expected_sequence
+            or snapshot_value.get("event_head") != event["event_hash"]
+            or stored_hash != _canonical_hash(unhashed_snapshot)
+        ):
+            raise ClarificationCommandError("VDD-CLARIFICATION-SNAPSHOT-LINEAGE", "checkpoint snapshot is stale or modified")
+        reducer_version = event.get("reducer_version")
+        projection = event.get("state_projection")
+        if reducer_version is None and projection is None:
+            # A pre-reducer v2 history is readable only through its immutable
+            # snapshot lineage.  A successor migration must establish a new
+            # reducer-backed genesis before it can be promoted.
+            if reducer_seen:
+                raise ClarificationCommandError(
+                    "VDD-CLARIFICATION-REDUCER-PROJECTION",
+                    "legacy event cannot follow reducer-backed history",
+                )
+        elif reducer_version != REDUCER_VERSION or not isinstance(projection, dict):
+            raise ClarificationCommandError(
+                "VDD-CLARIFICATION-REDUCER-VERSION",
+                "event has an unknown reducer or invalid projection",
+            )
+        else:
+            reducer_seen = True
+            projection_findings = validate_state_data(projection, f"{run_dir}#event-{expected_sequence}")
+            if projection_findings:
+                raise ClarificationCommandError(
+                    "VDD-CLARIFICATION-REDUCER-PROJECTION",
+                    "event reducer projection is structurally invalid",
+                )
+            if snapshot_value.get("state") != projection:
+                raise ClarificationCommandError(
+                    "VDD-CLARIFICATION-REDUCER-PROJECTION",
+                    "event replay projection differs from checkpoint snapshot",
+                )
+        predecessor = event["event_hash"]
+
+
 def _load_state(path: Path) -> dict[str, Any]:
+    _assert_not_quarantined(path.parent)
+    _validate_event_chain(path.parent)
     data = load_json(path)
     if not isinstance(data, dict):
         raise ValueError("state must be a JSON object")
+    _validate_legacy_bundle(path, data)
+    _validate_registry_anchor(path, data)
+    event_path = path.parent / "events.jsonl"
+    if (
+        not _pending_transition_path(path.parent).exists()
+        and event_path.is_file()
+        and event_path.read_text(encoding="utf-8").splitlines()
+    ):
+        sequence = len(event_path.read_text(encoding="utf-8").splitlines())
+        snapshot = load_json(path.parent / "snapshots" / f"{sequence:08d}.json")
+        if not isinstance(snapshot, dict) or snapshot.get("state") != data:
+            raise ClarificationCommandError(
+                "VDD-CLARIFICATION-REDUCER-PROJECTION",
+                "state projection differs from the latest committed snapshot",
+            )
     return data
 
 
@@ -983,6 +1593,20 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
     else:
         evidence_root = project_root / "logs"
     normalized_target = _normalize_target(project_root, args.target)
+    authority_manifest = None
+    if args.authority_manifest:
+        authority_manifest = load_json(Path(args.authority_manifest).resolve())
+        unhashed = {key: value for key, value in authority_manifest.items() if key != "manifest_hash"} if isinstance(authority_manifest, dict) else {}
+        if (
+            not isinstance(authority_manifest, dict)
+            or authority_manifest.get("schema_version") != "vdd.clarification-authority-manifest.v1"
+            or authority_manifest.get("target") != normalized_target
+            or authority_manifest.get("authority_hash") != args.authority_hash
+            or authority_manifest.get("target_hash") != args.target_hash
+            or not isinstance(authority_manifest.get("sources"), list)
+            or authority_manifest.get("manifest_hash") != _canonical_hash(unhashed)
+        ):
+            raise ClarificationCommandError("VDD-CLARIFICATION-BASELINE-AUTHORITY", "authority manifest is invalid or stale")
     try:
         evidence_root.relative_to(project_root)
     except ValueError as exc:
@@ -1004,6 +1628,7 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
     target_root = evidence_root / "vdd-clarifications" / target_slug
     registry_root = _canonical_registry_target_root(project_root, target_slug)
     with _target_lock(registry_root):
+        _recover_pending_successor(project_root, registry_root)
         active = _active_states_for_target(project_root, normalized_target, target_slug)
         if active:
             return {
@@ -1038,11 +1663,13 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
             "exit_attestation": None,
             "write_disposition": "blocked",
             "updated_at": timestamp,
+            "authority_manifest": authority_manifest,
         }
         findings = validate_state_data(state, str(state_path))
         if findings:
             raise ValueError(json.dumps(findings, ensure_ascii=False))
         _write_target_registry(project_root, normalized_target, target_slug, [state_path])
+        _write_baseline_authority_manifest(state_path, state)
         _commit_state_and_event(
             state_path,
             state,
@@ -1073,6 +1700,21 @@ def command_record_round(
         raise ValueError("round payload must be a JSON object")
     if _sensitive_paths(payload):
         raise ValueError("round payload contains prohibited sensitive data")
+    user_turn_id = payload.get("user_turn_id")
+    if not is_non_empty_string(user_turn_id):
+        raise ClarificationCommandError(
+            "VDD-CLARIFICATION-IDEMPOTENCY", "round payload requires a stable user_turn_id"
+        )
+    transition_id = getattr(args, "transition_id", None) or f"user-turn:{user_turn_id}"
+    request_hash = _canonical_hash(payload)
+    prior = _prior_transition_event(state_path.parent, transition_id)
+    if prior is not None:
+        if prior.get("request_hash") != request_hash:
+            raise ClarificationCommandError(
+                "VDD-CLARIFICATION-IDEMPOTENCY",
+                "transition ID was replayed with a different payload",
+            )
+        return {"status": "round_recorded", "state": str(state_path), "idempotent": True}
     questions = payload.get("questions")
     if not isinstance(questions, list):
         raise ValueError("round payload questions must be a list")
@@ -1081,12 +1723,24 @@ def command_record_round(
     for question in questions:
         if not isinstance(question, dict) or not is_non_empty_string(question.get("id")):
             raise ValueError("each round question requires an id")
+        if question.get("id") not in question_map and question.get("primary_type") not in PRIMARY_QUESTION_TYPES:
+            raise ClarificationCommandError(
+                "VDD-CLARIFICATION-QUESTION-CLASSIFICATION",
+                "new questions must declare a valid primary_type",
+            )
         extra_fields = sorted(set(question) - ALLOWED_QUESTION_FIELDS)
         if extra_fields:
             raise ClarificationCommandError(
                 "VDD-CLARIFICATION-QUESTION-TRANSITION",
                 f"question {question.get('id')} contains unsupported fields: {extra_fields}",
             )
+        for dependency in question.get("depends_on", []):
+            predecessor = question_map.get(dependency)
+            if predecessor is None or predecessor.get("status") != "answered":
+                raise ClarificationCommandError(
+                    "VDD-CLARIFICATION-QUESTION-DEPENDENCY",
+                    f"question {question['id']} depends on an unanswered or unknown CQ: {dependency}",
+                )
         existing = question_map.get(question["id"])
         question_map[question["id"]] = (
             _merge_question(existing, question) if existing is not None else question
@@ -1128,6 +1782,10 @@ def command_record_round(
             "round_id": round_item["round_id"],
             "question_ids": question_ids,
             "confidence": round_item["confidence"],
+            "user_turn_id": round_item["user_turn_id"],
+            "transition_id": transition_id,
+            "event_id": f"event-{transition_id}",
+            "request_hash": request_hash,
         },
     )
     return {"status": "round_recorded", "state": str(state_path)}
@@ -1319,6 +1977,67 @@ def command_supersede(
     return {"status": "superseded", "state": str(state_path)}
 
 
+@_locked_state_command
+def command_restart(
+    args: argparse.Namespace, state_path: Path, state: dict[str, Any]
+) -> dict[str, Any]:
+    if state.get("status") == "superseded":
+        successor_path = state_path.parent.parent / args.successor_run_id / "state.json"
+        if successor_path.is_file():
+            successor = _load_state(successor_path)
+            if successor.get("predecessor_run_id") == state.get("run_id"):
+                return {
+                    "status": "restarted", "predecessor": str(state_path), "successor": str(successor_path),
+                    "transition_id": args.transition_id, "idempotent": True,
+                }
+        raise ClarificationCommandError(
+            "VDD-CLARIFICATION-SUCCESSOR-TRANSACTION", "terminal predecessor has no matching successor"
+        )
+    if state.get("status") not in SUPERSEDE_SOURCE_STATUSES:
+        raise ClarificationCommandError(
+            "VDD-CLARIFICATION-STATE-TRANSITION", "only a non-terminal run can restart"
+        )
+    if args.successor_run_id == state.get("run_id") or not RUN_ID_PATTERN.fullmatch(args.successor_run_id):
+        raise ClarificationCommandError(
+            "VDD-CLARIFICATION-SUCCESSOR-TRANSACTION", "successor run identity is invalid"
+        )
+    project_root = _repository_root_for_state(state_path, state)
+    registry_root = _canonical_registry_target_root(project_root, state["target_slug"])
+    pending_path = _pending_successor_path(registry_root)
+    predecessor_anchor = _anchor_for_run(state_path.parent)
+    successor_path = state_path.parent.parent / args.successor_run_id / "state.json"
+    relative_predecessor = state_path.resolve().relative_to(project_root).as_posix()
+    relative_successor = successor_path.resolve().relative_to(project_root).as_posix()
+    if pending_path.exists():
+        pending = load_json(pending_path)
+        if (
+            pending.get("predecessor_state") != relative_predecessor
+            or pending.get("successor_state") != relative_successor
+            or pending.get("transition_id") != args.transition_id
+        ):
+            raise ClarificationCommandError(
+                "VDD-CLARIFICATION-SUCCESSOR-TRANSACTION", "another successor transaction is pending"
+            )
+    else:
+        successor = _successor_state(state, args.successor_run_id, predecessor_anchor)
+        pending = {
+            "schema_version": PENDING_SUCCESSOR_SCHEMA_VERSION,
+            "transition_id": args.transition_id,
+            "predecessor_state": relative_predecessor,
+            "successor_state": relative_successor,
+            "predecessor_anchor": predecessor_anchor,
+            "successor": successor,
+        }
+        _atomic_write(pending_path, json.dumps(pending, ensure_ascii=False, indent=2) + "\n")
+    successor_path = _complete_successor_transaction(project_root, registry_root, pending)
+    return {
+        "status": "restarted",
+        "predecessor": str(state_path),
+        "successor": str(successor_path),
+        "transition_id": args.transition_id,
+    }
+
+
 def command_validate(args: argparse.Namespace) -> dict[str, Any]:
     state_path = _state_path(args.state)
     findings = validate_state_file(state_path)
@@ -1365,6 +2084,11 @@ def command_status(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def command_quarantine(args: argparse.Namespace) -> dict[str, Any]:
+    state_path = _state_path(args.state)
+    return quarantine_sensitive_run(state_path, args.incident_id, args.reason)
+
+
 def add_hash_argument(parser: argparse.ArgumentParser, name: str) -> None:
     parser.add_argument(name, required=True, type=str)
 
@@ -1380,6 +2104,7 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--mode", required=True, choices=sorted(ALLOWED_MODES))
     init.add_argument("--interaction-mode", required=True, choices=sorted(ALLOWED_INTERACTION_MODES))
     init.add_argument("--run-id")
+    init.add_argument("--authority-manifest")
     add_hash_argument(init, "--authority-hash")
     add_hash_argument(init, "--target-hash")
     init.set_defaults(handler=command_init)
@@ -1387,6 +2112,7 @@ def build_parser() -> argparse.ArgumentParser:
     record = subparsers.add_parser("record-round")
     record.add_argument("--state", required=True)
     record.add_argument("--round-file", required=True)
+    record.add_argument("--transition-id")
     record.set_defaults(handler=command_record_round)
 
     close = subparsers.add_parser("close")
@@ -1412,6 +2138,12 @@ def build_parser() -> argparse.ArgumentParser:
     supersede.add_argument("--successor-run-id", required=True)
     supersede.set_defaults(handler=command_supersede)
 
+    restart = subparsers.add_parser("restart")
+    restart.add_argument("--state", required=True)
+    restart.add_argument("--successor-run-id", required=True)
+    restart.add_argument("--transition-id", required=True)
+    restart.set_defaults(handler=command_restart)
+
     validate = subparsers.add_parser("validate")
     validate.add_argument("--state", required=True)
     validate.set_defaults(handler=command_validate)
@@ -1419,6 +2151,12 @@ def build_parser() -> argparse.ArgumentParser:
     status = subparsers.add_parser("status")
     status.add_argument("--state", required=True)
     status.set_defaults(handler=command_status)
+
+    quarantine = subparsers.add_parser("quarantine")
+    quarantine.add_argument("--state", required=True)
+    quarantine.add_argument("--incident-id", required=True)
+    quarantine.add_argument("--reason", required=True)
+    quarantine.set_defaults(handler=command_quarantine)
     return parser
 
 

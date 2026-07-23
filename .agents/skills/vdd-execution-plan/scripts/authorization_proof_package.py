@@ -17,6 +17,16 @@ DIMENSIONS = (
     "independent_recomputation", "staleness_propagation", "recovery_supersession",
     "consumer_authorization_boundary",
 )
+SOURCE_CLOSURE_MUTATION_EXPECTATIONS = {
+    "source-omit": "VDD-PACKAGE-SOURCE-INVENTORY",
+    "source-extra": "VDD-PACKAGE-SOURCE-CLOSURE:plan-ready",
+    "source-identity-drift": "VDD-PACKAGE-SOURCE-IDENTITY",
+    "source-role-change": "VDD-PACKAGE-SOURCE-IDENTITY",
+    "source-predicate-unlink": "VDD-PACKAGE-SOURCE-CLOSURE:plan-ready",
+    "source-proof-unlink": "VDD-PACKAGE-SOURCE-PROOF",
+    "source-binding-replay": "VDD-PACKAGE-SOURCE-BINDING",
+    "source-copied-hash": "VDD-PACKAGE-SOURCE-HASH-STALE",
+}
 BINDING_FIELDS = (
     "candidate_hash", "source_hash", "validator_root", "authority_root", "closure_definition_hash",
 )
@@ -29,6 +39,14 @@ SEMANTIC_DIMENSION_FIELDS = {
     "staleness_propagation": "staleness",
     "consumer_authorization_boundary": "consumer_authorization",
 }
+SOURCE_INVENTORY_FIELDS = {
+    "source_id", "source_role", "context_classes", "canonical_path", "identity",
+    "source_binding", "applicable_predicates", "consumer", "proof_id",
+    "classification", "disposition",
+}
+SOURCE_BINDING_BINDINGS = [
+    "plan", "package", "source", "proof", "predicate", "result", "review", "input",
+]
 
 
 def load(path: Path) -> dict:
@@ -90,20 +108,20 @@ def text_identity(root: Path, proof: dict, identity: dict) -> bool:
 
 def validate_external_envelope(
     envelope_path: Path, registry_path: Path, package_path: Path,
-) -> list[str]:
+) -> tuple[list[str], dict | None]:
     try:
         envelope = load(envelope_path)
         registry = load(registry_path)
     except (OSError, ValueError, json.JSONDecodeError):
-        return ["VDD-PACKAGE-EXTERNAL-ENVELOPE"]
+        return ["VDD-PACKAGE-EXTERNAL-ENVELOPE"], None
     if registry.get("schema_version") != "vdd.artifact-proof-roots.v1":
-        return ["VDD-PACKAGE-ROOT-REGISTRY"]
+        return ["VDD-PACKAGE-ROOT-REGISTRY"], None
     roots = registry.get("roots")
     if not isinstance(roots, dict):
-        return ["VDD-PACKAGE-ROOT-REGISTRY"]
+        return ["VDD-PACKAGE-ROOT-REGISTRY"], None
     root = roots.get(envelope.get("root_id"))
     if not isinstance(root, dict):
-        return ["VDD-PACKAGE-EXTERNAL-ENVELOPE"]
+        return ["VDD-PACKAGE-EXTERNAL-ENVELOPE"], None
     signing_key = os.environ.get("VDD_AUTHORIZATION_PROOF_SIGNING_KEY")
     expected = {
         "signer": root.get("trusted_signer"),
@@ -117,17 +135,24 @@ def validate_external_envelope(
     if envelope.get("schema_version") != "vdd.external-validation-envelope.v1" or any(
         envelope.get(key) != value for key, value in expected.items()
     ) or not isinstance(envelope.get("signature"), str) or signature is None or not hmac.compare_digest(envelope["signature"], signature):
-        return ["VDD-PACKAGE-EXTERNAL-ENVELOPE"]
-    return []
+        return ["VDD-PACKAGE-EXTERNAL-ENVELOPE"], None
+    return [], {
+        "envelope_sha256": "sha256:" + hashlib.sha256(envelope_path.read_bytes()).hexdigest(),
+        "root_id": envelope["root_id"], "signer": envelope["signer"],
+        "permission_ceiling": root.get("permission_ceiling"),
+        "expires_at": envelope.get("expires_at"),
+    }
 
 
-def local_validation_provenance(package_path: Path) -> dict:
+def local_validation_provenance(package_path: Path, external: dict | None = None) -> dict:
     provenance = {
         "root_id": "vdd-local-deterministic",
         "signer": "repository-local-deterministic-runner",
         "validator_identity": "vdd.authorization_proof_package.validate.v1",
         "package_sha256": "sha256:" + hashlib.sha256(package_path.read_bytes()).hexdigest(),
     }
+    if external is not None:
+        provenance["external_validation"] = external
     signing_key = os.environ.get("VDD_AUTHORIZATION_PROOF_SIGNING_KEY")
     if signing_key:
         provenance["signature_algorithm"] = "hmac-sha256-v1"
@@ -137,26 +162,58 @@ def local_validation_provenance(package_path: Path) -> dict:
     return provenance
 
 
-def discover_in_closure_proofs(package: dict, _predicate: str) -> list[str]:
-    return sorted(
-        proof["id"] for proof in package.get("proofs", [])
-        if isinstance(proof, dict) and proof.get("classification") == "IN-CLOSURE"
-    )
-
-
-def discover_typed_proofs(package: dict, _predicate: str) -> list[str]:
-    return sorted(
-        proof["id"] for proof in package.get("proofs", [])
-        if isinstance(proof, dict)
-        and proof.get("classification") == "IN-CLOSURE"
-        and proof.get("artifact_type") in {"static", "runtime"}
-    )
-
-
-DISCOVERY_ENTRYPOINTS = {
-    "builtin:in-closure-proofs": discover_in_closure_proofs,
-    "builtin:typed-proofs": discover_typed_proofs,
-}
+def discover_external_members(
+    entry: object,
+    predicate: str,
+    expected_kind: str,
+    package_path: Path | None,
+    repository_root: Path | None,
+) -> list[str] | None:
+    if not isinstance(entry, dict) or set(entry) != {"id", "kind", "reference"}:
+        return None
+    if entry.get("kind") != expected_kind or not isinstance(entry.get("id"), str):
+        return None
+    reference = entry.get("reference")
+    if (
+        not isinstance(reference, dict)
+        or set(reference) != {"path", "sha256"}
+        or not isinstance(reference.get("path"), str)
+        or not isinstance(reference.get("sha256"), str)
+    ):
+        return None
+    root = repository_root or Path.cwd()
+    target = (root / reference["path"]).resolve()
+    try:
+        target.relative_to(root.resolve())
+    except ValueError:
+        return None
+    if not target.is_file() or reference["sha256"] != "sha256:" + hashlib.sha256(target.read_bytes()).hexdigest():
+        return None
+    try:
+        document = load(target)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+    if document.get("discovery_id") != entry["id"]:
+        return None
+    if expected_kind == "plan-links":
+        if document.get("schema_version") != "vdd.plan-link-discovery.v1":
+            return None
+        links = document.get("links")
+        if not isinstance(links, list):
+            return None
+        members = [
+            item.get("proof_id")
+            for item in links
+            if isinstance(item, dict) and item.get("predicate") == predicate
+        ]
+    else:
+        if document.get("schema_version") != "vdd.validator-read-set-discovery.v1":
+            return None
+        read_sets = document.get("read_sets")
+        members = read_sets.get(predicate) if isinstance(read_sets, dict) else None
+    if not isinstance(members, list) or any(not isinstance(item, str) or not item for item in members):
+        return None
+    return sorted(members)
 
 
 def semantic_dimension_findings(proof: dict, contract: object) -> list[str]:
@@ -203,7 +260,101 @@ def semantic_dimension_findings(proof: dict, contract: object) -> list[str]:
     return findings
 
 
-def validate(package: dict, repository_root: Path | None = None) -> list[str]:
+def resolve_semantic_contract(package: dict, package_path: Path | None) -> tuple[object, bool]:
+    reference = package.get("semantic_contract_reference")
+    if reference is None:
+        try:
+            return load(SEMANTIC_ROOT), True
+        except (OSError, ValueError, json.JSONDecodeError):
+            return None, False
+    if (
+        package_path is None
+        or not isinstance(reference, dict)
+        or set(reference) != {"path", "sha256"}
+        or not isinstance(reference.get("path"), str)
+        or not isinstance(reference.get("sha256"), str)
+    ):
+        return None, False
+    target = (package_path.parent / reference["path"]).resolve()
+    if target.parent != package_path.parent.resolve() or not target.is_file():
+        return None, False
+    raw = target.read_bytes()
+    if reference["sha256"] != "sha256:" + hashlib.sha256(raw).hexdigest():
+        return None, False
+    try:
+        return load(target), True
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None, False
+
+
+def canonical_source_inventory(package: dict) -> list[dict] | None:
+    inventory = package.get("source_inventory")
+    if not isinstance(inventory, list) or not inventory:
+        return []
+    normalized: list[dict] = []
+    source_ids: set[str] = set()
+    proof_ids: set[str] = set()
+    for member in inventory:
+        if not isinstance(member, dict) or set(member) != SOURCE_INVENTORY_FIELDS:
+            return []
+        source_id = member.get("source_id")
+        proof_id = member.get("proof_id")
+        predicates = member.get("applicable_predicates")
+        context_classes = member.get("context_classes")
+        if (
+            not isinstance(source_id, str) or not source_id
+            or not isinstance(proof_id, str) or not proof_id
+            or source_id in source_ids or proof_id in proof_ids
+            or not isinstance(member.get("source_role"), str) or not member["source_role"]
+            or not isinstance(context_classes, list) or not context_classes
+            or any(not isinstance(item, str) or not item for item in context_classes)
+            or len(context_classes) != len(set(context_classes))
+            or member["source_role"] not in context_classes
+            or not isinstance(member.get("canonical_path"), str) or not member["canonical_path"]
+            or not isinstance(member.get("identity"), dict) or not member["identity"]
+            or not isinstance(predicates, list) or not predicates
+            or any(not isinstance(item, str) or not item for item in predicates)
+            or not isinstance(member.get("consumer"), str) or not member["consumer"]
+            or member.get("classification") not in {"IN-CLOSURE", "OUT-OF-CLOSURE"}
+            or not isinstance(member.get("disposition"), str) or not member["disposition"]
+        ):
+            return []
+        source_ids.add(source_id)
+        proof_ids.add(proof_id)
+        normalized.append(copy.deepcopy(member))
+    return sorted(normalized, key=lambda item: item["source_id"])
+
+
+def valid_source_binding_reference(value: object) -> bool:
+    return (
+        isinstance(value, dict)
+        and set(value) == {"schema_version", "binding_id", "required_bindings"}
+        and value.get("schema_version") == "vdd.plan-source-binding.v1"
+        and isinstance(value.get("binding_id"), str)
+        and bool(value["binding_id"])
+        and value.get("required_bindings") == SOURCE_BINDING_BINDINGS
+    )
+
+
+def recompute_bindings(package: dict, package_path: Path | None) -> dict[str, str] | None:
+    semantic_contract, valid = resolve_semantic_contract(package, package_path)
+    if not valid:
+        return None
+    reference = package.get("semantic_contract_reference")
+    semantic_bytes = (package_path.parent / reference["path"]).read_bytes() if isinstance(reference, dict) else SEMANTIC_ROOT.read_bytes()
+    source_inventory = canonical_source_inventory(package)
+    if source_inventory == []:
+        return None
+    return {
+        "candidate_hash": canonical_hash(package.get("proofs")),
+        "source_hash": canonical_hash(source_inventory),
+        "validator_root": "sha256:" + hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "authority_root": "sha256:" + hashlib.sha256(semantic_bytes).hexdigest(),
+        "closure_definition_hash": canonical_hash(package.get("predicate_closures")),
+    }
+
+
+def validate(package: dict, repository_root: Path | None = None, package_path: Path | None = None) -> list[str]:
     findings: list[str] = []
     if package.get("schema_version") != "vdd.authorization-proof-package.v1":
         findings.append("VDD-PACKAGE-SCHEMA")
@@ -215,6 +366,31 @@ def validate(package: dict, repository_root: Path | None = None) -> list[str]:
         for field in BINDING_FIELDS
     ):
         findings.append("VDD-PACKAGE-BINDINGS")
+    source_inventory = canonical_source_inventory(package)
+    recomputed = recompute_bindings(package, package_path)
+    if source_inventory == []:
+        findings.append("VDD-PACKAGE-SOURCE-INVENTORY")
+    binding_ids = [
+        member.get("source_binding", {}).get("binding_id")
+        for member in source_inventory or []
+        if isinstance(member.get("source_binding"), dict)
+    ]
+    if (
+        any(
+            not valid_source_binding_reference(member.get("source_binding"))
+            or member.get("disposition") != "consumed"
+            for member in source_inventory or []
+        )
+        or len(binding_ids) != len(source_inventory or [])
+        or len(binding_ids) != len(set(binding_ids))
+    ):
+        findings.append("VDD-PACKAGE-SOURCE-BINDING")
+    if recomputed is None or not isinstance(bindings, dict) or any(
+        bindings.get(field) != recomputed.get(field) for field in BINDING_FIELDS if field != "source_hash"
+    ):
+        findings.append("VDD-PACKAGE-BINDINGS")
+    if recomputed is None or not isinstance(bindings, dict) or bindings.get("source_hash") != recomputed.get("source_hash"):
+        findings.append("VDD-PACKAGE-SOURCE-HASH-STALE")
     roles = package.get("roles")
     required_roles = ("normative", "projection", "execution")
     if not isinstance(roles, dict) or any(not roles.get(layer) for layer in required_roles):
@@ -222,14 +398,9 @@ def validate(package: dict, repository_root: Path | None = None) -> list[str]:
     semantic_contract = package.get("semantic_contract")
     if not isinstance(semantic_contract, dict):
         findings.append("VDD-PACKAGE-SEMANTIC-CONTRACT")
-    else:
-        try:
-            trusted_semantic_contract = load(SEMANTIC_ROOT)
-        except (OSError, ValueError, json.JSONDecodeError):
-            findings.append("VDD-PACKAGE-SEMANTIC-ROOT")
-        else:
-            if semantic_contract != trusted_semantic_contract:
-                findings.append("VDD-PACKAGE-SEMANTIC-ROOT")
+    trusted_semantic_contract, semantic_root_valid = resolve_semantic_contract(package, package_path)
+    if not semantic_root_valid or semantic_contract != trusted_semantic_contract:
+        findings.append("VDD-PACKAGE-SEMANTIC-ROOT")
 
     closures = package.get("predicate_closures")
     closure_members: set[str] = set()
@@ -249,22 +420,33 @@ def validate(package: dict, repository_root: Path | None = None) -> list[str]:
             if (
                 not isinstance(producer_entry, dict)
                 or not isinstance(verifier_entry, dict)
-                or set(producer_entry) != {"id"}
-                or set(verifier_entry) != {"id"}
                 or producer_entry.get("id") == verifier_entry.get("id")
-                or producer_entry.get("id") not in DISCOVERY_ENTRYPOINTS
-                or verifier_entry.get("id") not in DISCOVERY_ENTRYPOINTS
+                or producer_entry.get("reference") == verifier_entry.get("reference")
             ):
                 findings.append(rule)
                 continue
-            discovered_producer = DISCOVERY_ENTRYPOINTS[producer_entry["id"]](package, str(predicate))
-            discovered_verifier = DISCOVERY_ENTRYPOINTS[verifier_entry["id"]](package, str(predicate))
+            discovered_producer = discover_external_members(
+                producer_entry, str(predicate), "plan-links", package_path, repository_root
+            )
+            discovered_verifier = discover_external_members(
+                verifier_entry, str(predicate), "validator-read-set", package_path, repository_root
+            )
             if not all(isinstance(value, list) for value in (declared, producer, verifier)):
                 findings.append(rule)
                 continue
+            predicate_source_proofs = {
+                member["proof_id"]
+                for member in source_inventory
+                if member["classification"] == "IN-CLOSURE"
+                and str(predicate) in member["applicable_predicates"]
+            } if source_inventory else set()
+            if set(declared) != predicate_source_proofs:
+                findings.append("VDD-PACKAGE-SOURCE-CLOSURE:" + str(predicate))
             if (
                 set(declared) != set(producer)
                 or set(declared) != set(verifier)
+                or discovered_producer is None
+                or discovered_verifier is None
                 or set(declared) != set(discovered_producer)
                 or set(declared) != set(discovered_verifier)
             ):
@@ -350,6 +532,45 @@ def validate(package: dict, repository_root: Path | None = None) -> list[str]:
         findings.append("VDD-PACKAGE-CLOSURE-MEMBER")
     if proofs and not (static_seen and runtime_seen):
         findings.append("VDD-PACKAGE-ARTIFACT-TYPE")
+    proof_by_id = {
+        proof.get("id"): proof
+        for proof in proofs or []
+        if isinstance(proof, dict) and isinstance(proof.get("id"), str)
+    }
+    in_closure_proof_ids = [
+        proof["id"]
+        for proof in proofs or []
+        if isinstance(proof, dict)
+        and isinstance(proof.get("id"), str)
+        and proof.get("classification") == "IN-CLOSURE"
+    ]
+    inventory_in_closure_proof_ids = [
+        member["proof_id"]
+        for member in source_inventory or []
+        if member["classification"] == "IN-CLOSURE"
+    ]
+    if (
+        len(in_closure_proof_ids) != len(set(in_closure_proof_ids))
+        or set(in_closure_proof_ids) != set(inventory_in_closure_proof_ids)
+    ):
+        findings.append("VDD-PACKAGE-SOURCE-PROOF")
+    for member in source_inventory or []:
+        proof = proof_by_id.get(member["proof_id"])
+        if not isinstance(proof, dict):
+            findings.append("VDD-PACKAGE-SOURCE-PROOF")
+        proof_identity = proof.get("identity") if isinstance(proof, dict) else None
+        observed_path = (
+            proof_identity.get("path")
+            if isinstance(proof_identity, dict) and proof_identity.get("kind") == "git-tracked"
+            else proof.get("content_path") if isinstance(proof, dict) else None
+        )
+        if (
+            not isinstance(proof, dict)
+            or member["identity"] != proof_identity
+            or member["canonical_path"] != observed_path
+            or member["source_role"] != proof.get("source_role")
+        ):
+            findings.append("VDD-PACKAGE-SOURCE-IDENTITY")
     return sorted(set(findings))
 
 
@@ -382,10 +603,55 @@ def mutation_checks(package: dict) -> list[dict]:
                 "status": "rejected" if rule in findings else "failed",
             }
         )
+    for mutation, rule in SOURCE_CLOSURE_MUTATION_EXPECTATIONS.items():
+        mutated = copy.deepcopy(package)
+        inventory = mutated["source_inventory"]
+        if mutation == "source-omit":
+            mutated["source_inventory"] = []
+        elif mutation == "source-extra":
+            member = copy.deepcopy(inventory[0])
+            member["source_id"] = "source-mutation-extra"
+            member["proof_id"] = "mutation-extra-proof"
+            member["source_binding"]["binding_id"] = "PSB-mutation-extra"
+            inventory.append(member)
+            proof = copy.deepcopy(mutated["proofs"][0])
+            proof["id"] = member["proof_id"]
+            mutated["proofs"].append(proof)
+        elif mutation == "source-identity-drift":
+            inventory[0]["identity"] = copy.deepcopy(inventory[0]["identity"])
+            inventory[0]["identity"]["kind"] = "forged-identity"
+        elif mutation == "source-role-change":
+            inventory[0]["source_role"] = "forged-role"
+            inventory[0]["context_classes"] = ["forged-role"]
+        elif mutation == "source-predicate-unlink":
+            inventory[0]["applicable_predicates"] = ["unlinked-predicate"]
+        elif mutation == "source-proof-unlink":
+            inventory[0]["proof_id"] = "unlinked-source-proof"
+        elif mutation == "source-binding-replay":
+            if len(inventory) > 1:
+                inventory[1]["source_binding"] = copy.deepcopy(inventory[0]["source_binding"])
+            else:
+                member = copy.deepcopy(inventory[0])
+                member["source_id"] = "source-mutation-source_binding-replay"
+                member["proof_id"] = "mutation-source_binding-replay-proof"
+                inventory.append(member)
+                proof = copy.deepcopy(mutated["proofs"][0])
+                proof["id"] = member["proof_id"]
+                mutated["proofs"].append(proof)
+        else:
+            inventory[0]["consumer"] = "copied-hash-consumer"
+        findings = validate(mutated)
+        checks.append(
+            {
+                "dimension": mutation,
+                "expected_rule_id": rule,
+                "status": "rejected" if rule in findings else "failed",
+            }
+        )
     return checks
 
 
-def refresh_projections(package: dict, repository_root: Path) -> list[str]:
+def refresh_projections(package: dict, repository_root: Path, package_path: Path) -> list[str]:
     """Refresh only derived closure roots and observed file identities."""
     findings: list[str] = []
     for predicate, closure in package.get("predicate_closures", {}).items():
@@ -429,6 +695,33 @@ def refresh_projections(package: dict, repository_root: Path) -> list[str]:
                     identity["canonicalization_rule"] = "utf8-lf-v1"
                     identity["raw_sha256"] = "sha256:" + hashlib.sha256(raw).hexdigest()
                     identity["normalized_sha256"] = "sha256:" + hashlib.sha256(normalized).hexdigest()
+    proof_by_id = {
+        proof.get("id"): proof
+        for proof in package.get("proofs", [])
+        if isinstance(proof, dict) and isinstance(proof.get("id"), str)
+    }
+    for member in package.get("source_inventory", []):
+        if not isinstance(member, dict):
+            findings.append("VDD-PACKAGE-REFRESH")
+            continue
+        proof = proof_by_id.get(member.get("proof_id"))
+        identity = proof.get("identity") if isinstance(proof, dict) else None
+        content_path = (
+            identity.get("path")
+            if isinstance(identity, dict) and identity.get("kind") == "git-tracked"
+            else proof.get("content_path") if isinstance(proof, dict) else None
+        )
+        if not isinstance(identity, dict) or not isinstance(content_path, str):
+            findings.append("VDD-PACKAGE-REFRESH")
+            continue
+        member["identity"] = copy.deepcopy(identity)
+        member["canonical_path"] = content_path
+        member["source_role"] = proof.get("source_role")
+    bindings = recompute_bindings(package, package_path)
+    if bindings is None:
+        findings.append("VDD-PACKAGE-REFRESH-BINDINGS")
+    else:
+        package["bindings"] = bindings
     return sorted(set(findings))
 
 
@@ -479,6 +772,27 @@ def validate_integration_registry(repository_root: Path, registry_path: Path) ->
     return sorted(set(findings))
 
 
+def legacy_read_only_result(package_path: Path, package: dict) -> dict:
+    schema_version = package.get("schema_version")
+    if (
+        not isinstance(schema_version, str)
+        or not schema_version.startswith("vdd.authorization-proof-package.")
+        or schema_version == "vdd.authorization-proof-package.v1"
+    ):
+        raise ValueError("VDD-PACKAGE-LEGACY-ADAPTER: package is not a supported legacy package")
+    return {
+        "schema_version": "vdd.authorization-proof-package-legacy-read.v1",
+        "status": "legacy_read_only",
+        "source_schema_version": schema_version,
+        "package_sha256": "sha256:" + hashlib.sha256(package_path.read_bytes()).hexdigest(),
+        "authorizes": [],
+        "does_not_authorize": [
+            "deterministic-package-validation", "plan-ready", "phase-authorized",
+            "implementation-accepted", "protected-handoff", "release-ready",
+        ],
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("package", type=Path)
@@ -489,21 +803,29 @@ def main() -> int:
     parser.add_argument("--root-registry", type=Path)
     parser.add_argument("--orchestrate", action="store_true")
     parser.add_argument("--refresh", action="store_true")
+    parser.add_argument("--legacy-read-only", action="store_true")
     args = parser.parse_args()
     root = args.repository_root.resolve() if args.repository_root else None
     package = load(args.package)
+    if args.legacy_read_only:
+        if args.refresh or args.orchestrate or args.result is not None:
+            raise ValueError("VDD-PACKAGE-LEGACY-ADAPTER: read-only mode cannot refresh, orchestrate, or write a result")
+        print(json.dumps(legacy_read_only_result(args.package, package), indent=2))
+        return 0
     findings = []
     if args.refresh:
         if root is None:
             findings.append("VDD-PACKAGE-REFRESH-ROOT")
         else:
-            findings.extend(refresh_projections(package, root))
+            findings.extend(refresh_projections(package, root, args.package))
             if not findings:
                 args.package.write_text(json.dumps(package, indent=2) + "\n", encoding="utf-8", newline="\n")
-    findings.extend(validate(package, root))
+    findings.extend(validate(package, root, args.package))
+    external_provenance = None
     if args.external_envelope is not None:
         registry = args.root_registry or ((root or Path.cwd()) / DEFAULT_ROOT_REGISTRY)
-        findings.extend(validate_external_envelope(args.external_envelope, registry, args.package))
+        external_findings, external_provenance = validate_external_envelope(args.external_envelope, registry, args.package)
+        findings.extend(external_findings)
     if args.integration_registry is not None:
         findings = sorted(set(findings + validate_integration_registry((root or Path.cwd()), args.integration_registry)))
     mutations = mutation_checks(package) if args.orchestrate else []
@@ -514,14 +836,18 @@ def main() -> int:
         {"rule_id": "VDD-PACKAGE-DIMENSION:" + dimension, "status": "pass" if status == "PASS" else "fail", "evidence": ["package-dimension-verdicts"]}
         for dimension in DIMENSIONS
     ]
-    envelope = {"schema_version": "vdd.authorization-proof-package-result.v1", "assurance_level": "deterministic-package", "package_sha256": "sha256:" + hashlib.sha256(args.package.read_bytes()).hexdigest(), "validation_provenance": local_validation_provenance(args.package), "status": status, "findings": sorted(set(findings)), "checks": checks, "mutation_checks": mutations, "authorizes": [] if findings else ["deterministic-package-validation"], "does_not_authorize": ["fresh-context-observed", "cross-model-stability", "protected-handoff", "release-ready"], "generated_at": datetime.now(timezone.utc).isoformat()}
+    envelope = {"schema_version": "vdd.authorization-proof-package-result.v1", "assurance_level": "deterministic-package", "package_sha256": "sha256:" + hashlib.sha256(args.package.read_bytes()).hexdigest(), "validation_provenance": local_validation_provenance(args.package, external_provenance), "status": status, "findings": sorted(set(findings)), "checks": checks, "mutation_checks": mutations, "authorizes": [] if findings else ["deterministic-package-validation"], "does_not_authorize": ["fresh-context-observed", "cross-model-stability", "protected-handoff", "release-ready"], "generated_at": datetime.now(timezone.utc).isoformat()}
+    if "signature" not in envelope["validation_provenance"]:
+        envelope["findings"] = sorted(set(envelope["findings"] + ["VDD-PACKAGE-PROVENANCE-SIGNATURE"]))
+        envelope["status"] = "BLOCKED"
+        envelope["authorizes"] = []
     if isinstance(package.get("bindings"), dict):
         envelope.update({field: package["bindings"].get(field) for field in BINDING_FIELDS})
     if args.result is not None:
         args.result.parent.mkdir(parents=True, exist_ok=True)
         args.result.write_text(json.dumps(envelope, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps(envelope, indent=2))
-    return 0 if not findings else 1
+    return 0 if envelope["status"] == "PASS" else 1
 
 
 if __name__ == "__main__":

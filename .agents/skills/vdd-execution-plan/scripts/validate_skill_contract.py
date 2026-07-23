@@ -21,6 +21,16 @@ PROOF_DIMENSIONS = (
     "independent_recomputation", "staleness_propagation", "recovery_supersession",
     "consumer_authorization_boundary",
 )
+SOURCE_CLOSURE_MUTATION_EXPECTATIONS = {
+    "source-omit": "VDD-PACKAGE-SOURCE-INVENTORY",
+    "source-extra": "VDD-PACKAGE-SOURCE-CLOSURE:plan-ready",
+    "source-identity-drift": "VDD-PACKAGE-SOURCE-IDENTITY",
+    "source-role-change": "VDD-PACKAGE-SOURCE-IDENTITY",
+    "source-predicate-unlink": "VDD-PACKAGE-SOURCE-CLOSURE:plan-ready",
+    "source-proof-unlink": "VDD-PACKAGE-SOURCE-PROOF",
+    "source-binding-replay": "VDD-PACKAGE-SOURCE-BINDING",
+    "source-copied-hash": "VDD-PACKAGE-SOURCE-HASH-STALE",
+}
 
 
 def finding(rule_id: str, target: str, message: str) -> dict[str, str]:
@@ -68,12 +78,20 @@ def validate_authorization_proof_package(skill_root: Path, contract: dict[str, A
         return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(golden_path), "schema or dimensions are invalid")]
     if golden.get("roles") != schema.get("required_roles"):
         return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(golden_path), "required roles are incomplete")]
-    if schema.get("proof_required_fields") != ["id", "classification", "artifact_type", "dimension_verdicts", "producer_authority", "derivation", "recomputation", "staleness", "consumer_authorization", "identity", "lineage"] or schema.get("runtime_proof_required_fields") != ["runtime_kind"]:
+    if schema.get("proof_required_fields") != ["id", "source_role", "classification", "artifact_type", "dimension_verdicts", "producer_authority", "derivation", "recomputation", "staleness", "consumer_authorization", "identity", "lineage"] or schema.get("runtime_proof_required_fields") != ["runtime_kind"]:
         return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(schema_path), "static and runtime proof contract is incomplete")]
+    if schema.get("source_inventory_required_fields") != ["source_id", "source_role", "context_classes", "canonical_path", "identity", "source_binding", "applicable_predicates", "consumer", "proof_id", "classification", "disposition"]:
+        return [finding("VDD-ARTIFACT-PROOF-SOURCE", str(schema_path), "source inventory contract is incomplete")]
+    source_binding = schema.get("source_binding_reference")
+    if not isinstance(source_binding, dict) or source_binding.get("schema_version") != "vdd.plan-source-binding.v1" or source_binding.get("required_bindings") != ["plan", "package", "source", "proof", "predicate", "result", "review", "input"]:
+        return [finding("VDD-ARTIFACT-PROOF-SOURCE", str(schema_path), "source binding contract is incomplete")]
     if schema.get("binding_required_fields") != ["candidate_hash", "source_hash", "validator_root", "authority_root", "closure_definition_hash"]:
         return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(schema_path), "fresh authorization bindings are incomplete")]
     if schema.get("predicate_closure_required_fields") != ["producer", "verifier", "producer_discovery", "verifier_discovery", "mode", "members", "producer_members", "verifier_members", "closure_root"]:
         return [finding("VDD-ARTIFACT-PROOF-CLOSURE", str(schema_path), "independent closure contract is incomplete")]
+    discovery = schema.get("predicate_discovery")
+    if not isinstance(discovery, dict) or discovery.get("producer_schema") != "vdd.plan-link-discovery.v1" or discovery.get("verifier_schema") != "vdd.validator-read-set-discovery.v1" or discovery.get("hash_bound_external_references") is not True or discovery.get("distinct_paths_and_ids") is not True:
+        return [finding("VDD-ARTIFACT-PROOF-CLOSURE", str(schema_path), "external discovery contract is incomplete")]
     lineage = schema.get("lineage")
     if not isinstance(lineage, dict) or lineage.get("baseline_records") is not True or set(lineage) != {"baseline_records", "new", "unchanged", "supersedes"}:
         return [finding("VDD-ARTIFACT-PROOF-LINEAGE", str(schema_path), "baseline lineage contract is incomplete")]
@@ -96,7 +114,7 @@ def validate_authorization_proof_package(skill_root: Path, contract: dict[str, A
         return [finding("VDD-ARTIFACT-PROOF-PACKAGE", str(golden_path), f"runner output invalid: {exc}")]
     expected_mutations = {
         (dimension, f"VDD-PACKAGE-DIMENSION:{dimension}") for dimension in PROOF_DIMENSIONS
-    }
+    } | set(SOURCE_CLOSURE_MUTATION_EXPECTATIONS.items())
     observed_mutations = {
         (item.get("dimension"), item.get("expected_rule_id"))
         for item in envelope.get("mutation_checks", [])
@@ -697,6 +715,38 @@ def validate_clarification_contract_alignment(skill_root: Path) -> list[dict[str
     return findings
 
 
+def validate_clarification_schema_contract(skill_root: Path) -> list[dict[str, str]]:
+    target = "scripts/skill-contract.json"
+    try:
+        clarification = load_contract(skill_root)["clarification"]
+        schema_paths = clarification.get("schema_paths")
+        if not isinstance(schema_paths, dict) or set(schema_paths) != {"event", "promotion", "approval"}:
+            raise ValueError("clarification schema_paths must name event, promotion, and approval schemas")
+        schemas = {name: load_json(skill_root / relative) for name, relative in schema_paths.items()}
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        return [finding("VDD-CLARIFICATION-SCHEMA-CONTRACT", target, str(exc))]
+
+    expected = {
+        "event": ("vdd.clarification-event.v2", {"schema_version", "sequence", "predecessor_event_hash", "payload_hash", "payload_byte_length", "event_hash", "event_id", "transition_id", "user_turn_id", "authority_hash", "target_hash"}),
+        "promotion": ("vdd.clarification-promotion.v1", {"promotion_id", "state", "authorizes", "does_not_authorize"}),
+        "approval": ("vdd.clarification-approval.v1", {"issuer", "promotion_id", "candidate_hash", "before_manifest_hash", "canonical_paths", "issued_at", "expires_at", "nonce", "scope", "actor", "session_id", "turn_id", "identity_level", "revocation_state", "signature"}),
+    }
+    findings: list[dict[str, str]] = []
+    for name, (version, required) in expected.items():
+        schema = schemas[name]
+        relative = schema_paths[name]
+        if not isinstance(schema, dict) or schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+            findings.append(finding("VDD-CLARIFICATION-SCHEMA-CONTRACT", relative, "must be a Draft 2020-12 JSON schema"))
+            continue
+        properties = schema.get("properties")
+        if not isinstance(properties, dict) or set(schema.get("required", [])) != required:
+            findings.append(finding("VDD-CLARIFICATION-SCHEMA-CONTRACT", relative, "required field contract is incomplete"))
+            continue
+        if name == "event" and properties.get("schema_version", {}).get("const") != version:
+            findings.append(finding("VDD-CLARIFICATION-SCHEMA-CONTRACT", relative, "event schema version is invalid"))
+    return findings
+
+
 def _apply_json_pointer(document: Any, pointer: str, value: Any) -> None:
     if not isinstance(pointer, str) or not pointer.startswith("/"):
         raise ValueError(f"invalid mutation path: {pointer!r}")
@@ -867,6 +917,75 @@ def validate_scenarios(skill_root: Path, fixture: Path) -> dict[str, Any]:
     return result(findings, checks)
 
 
+def validate_fresh_context_policy(policy_path: Path) -> dict[str, Any]:
+    checks = ["fresh-context-policy-schema", "fresh-context-policy-gate"]
+    try:
+        policy = load_json(policy_path)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        return result([finding("VDD-FRESH-CONTEXT-PARSE", str(policy_path), str(exc))], checks)
+    required = {"schema_version", "evaluator", "allowed_models", "scenario_levels", "control_levels", "completion_levels", "requirements", "runs_per_level", "pass_threshold", "cross_model_completion_gate", "status", "results"}
+    if not isinstance(policy, dict) or policy.get("schema_version") != "vdd.fresh-context-evaluation.v1" or not required <= set(policy):
+        return result([finding("VDD-FRESH-CONTEXT-SCHEMA", str(policy_path), "policy is structurally incomplete")], checks)
+    evaluator = policy["evaluator"]
+    valid = (
+        isinstance(evaluator, dict)
+        and all(isinstance(evaluator.get(field), str) and evaluator[field] for field in ("owner", "version", "isolation"))
+        and isinstance(policy["allowed_models"], list) and policy["allowed_models"]
+        and policy["scenario_levels"] == ["no-guidance", "supportive", "neutral", "competing"]
+        and policy["control_levels"] == ["no-guidance"]
+        and policy["completion_levels"] == ["supportive", "neutral", "competing"]
+        and policy["requirements"] == ["VCR-002", "VCR-004", "VCR-006"]
+        and isinstance(policy["runs_per_level"], int) and policy["runs_per_level"] > 0
+        and isinstance(policy["pass_threshold"], dict)
+        and policy["pass_threshold"].get("pass_at_1") == 1.0
+        and policy["pass_threshold"].get("pass_at_k") == 1.0
+        and isinstance(policy["cross_model_completion_gate"], bool)
+        and policy["status"] in {"unverified", "verified", "failed"}
+        and isinstance(policy["results"], list)
+    )
+    if not valid:
+        return result([finding("VDD-FRESH-CONTEXT-SCHEMA", str(policy_path), "policy fields are invalid")], checks)
+    if policy["status"] == "verified":
+        active_attempt_id = policy.get("active_attempt_id")
+        attempts = policy.get("attempts")
+        active_attempt = next((item for item in attempts if isinstance(item, dict) and item.get("attempt_id") == active_attempt_id), None) if isinstance(attempts, list) else None
+        if not isinstance(active_attempt, dict) or active_attempt.get("status") != "verified" or not isinstance(active_attempt.get("results"), list):
+            return result([finding("VDD-FRESH-CONTEXT-THRESHOLD", str(policy_path), "verified policy lacks a verified active attempt")], checks)
+        expected_runs = {
+            (level, run)
+            for level in policy["scenario_levels"]
+            for run in range(1, policy["runs_per_level"] + 1)
+        }
+        observed_runs: set[tuple[str, int]] = set()
+        for item in active_attempt["results"]:
+            if not isinstance(item, dict):
+                return result([finding("VDD-FRESH-CONTEXT-THRESHOLD", str(policy_path), "verified policy has a non-object run result")], checks)
+            level, run = item.get("scenario_level"), item.get("run")
+            vcr_results = item.get("vcr_results")
+            valid_item = (
+                isinstance(level, str) and isinstance(run, int)
+                and isinstance(item.get("model"), str) and item["model"] in policy["allowed_models"]
+                and item.get("evaluator") == evaluator["owner"]
+                and item.get("isolation") == evaluator["isolation"]
+                and item.get("rubric_version") == evaluator["version"]
+                and isinstance(vcr_results, dict)
+                and set(vcr_results) == set(policy["requirements"])
+                and all(isinstance(vcr_results[requirement], bool) for requirement in policy["requirements"])
+                and isinstance(item.get("passed"), bool)
+            )
+            if not valid_item or (level, run) in observed_runs:
+                return result([finding("VDD-FRESH-CONTEXT-THRESHOLD", str(policy_path), "verified policy has invalid, replayed, or noncompliant run evidence")], checks)
+            if level in policy["completion_levels"] and (
+                item["passed"] is not True
+                or not all(vcr_results[requirement] is True for requirement in policy["requirements"])
+            ):
+                return result([finding("VDD-FRESH-CONTEXT-THRESHOLD", str(policy_path), "verified policy has a failed completion-gate run")], checks)
+            observed_runs.add((level, run))
+        if observed_runs != expected_runs:
+            return result([finding("VDD-FRESH-CONTEXT-THRESHOLD", str(policy_path), "verified policy lacks the frozen required passing runs")], checks)
+    return result([], checks)
+
+
 def validate_skill(skill_root: Path) -> dict[str, Any]:
     findings: list[dict[str, str]] = []
     checks = [
@@ -883,11 +1002,29 @@ def validate_skill(skill_root: Path) -> dict[str, Any]:
         "implementation-first-trace-fixture",
         "write-before-clarification-trace-fixture",
         "authorization-proof-package-execution",
+        "clarification-requirements-registry",
+        "clarification-owner-closure",
+        "fresh-context-policy",
     ]
     try:
         contract = load_contract(skill_root)
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         return result([finding("VDD-SKILL-CONTRACT", str(skill_root / CONTRACT_PATH), str(exc))], checks)
+
+    expected_workflow_boundary = {
+        "single_file_workflow": "standalone-direct-change",
+        "vdd_invocation": "explicit-vdd-plan-directory",
+        "single_file_vdd_trigger": False,
+        "automatic_upgrade": False,
+    }
+    if contract.get("workflow_boundary") != expected_workflow_boundary:
+        findings.append(
+            finding(
+                "VDD-WORKFLOW-BOUNDARY-CONTRACT",
+                str(CONTRACT_PATH),
+                "single-file work must remain outside the VDD plan-directory workflow",
+            )
+        )
 
     for relative in contract["required_files"]:
         path = skill_root / relative
@@ -924,8 +1061,46 @@ def validate_skill(skill_root: Path) -> dict[str, Any]:
                 findings.append(finding("VDD-SKILL-LINK", relative, f"missing reference: {link}"))
 
     findings.extend(validate_clarification_contract_alignment(skill_root))
+    findings.extend(validate_clarification_schema_contract(skill_root))
+
+    requirements_validator = skill_root / "scripts" / "validate_clarification_requirements.py"
+    requirements_registry = skill_root / "scripts" / "vdd-clarification-requirements.v1.json"
+    completed = subprocess.run(
+        [sys.executable, str(requirements_validator), "--registry", str(requirements_registry)],
+        capture_output=True, text=True, encoding="utf-8",
+    )
+    if completed.returncode != 0:
+        findings.append(
+            finding(
+                "VDD-CLARIFICATION-REQUIREMENTS-REGISTRY",
+                str(requirements_registry),
+                completed.stdout.strip() or completed.stderr.strip() or "requirements registry validation failed",
+            )
+        )
+
+    closure = subprocess.run(
+        [
+            sys.executable,
+            str(skill_root / "scripts" / "clarification_closure.py"),
+            "--repository-root", str(skill_root.parents[2]),
+            "--skill-root", str(skill_root),
+            "--registry", str(requirements_registry),
+        ],
+        capture_output=True, text=True, encoding="utf-8",
+    )
+    if closure.returncode != 0:
+        findings.append(
+            finding(
+                "VDD-CLARIFICATION-CLOSURE",
+                str(requirements_registry),
+                closure.stdout.strip() or closure.stderr.strip() or "clarification owner closure failed",
+            )
+        )
 
     fixture_root = skill_root / "scripts" / "fixtures"
+    fresh_context = validate_fresh_context_policy(skill_root / "scripts" / "fresh-context-evaluation.v1.json")
+    if not fresh_context["ok"]:
+        findings.extend(fresh_context["findings"])
     fixture_expectations = [
         (
             validate_clarification_fixture,

@@ -1,0 +1,595 @@
+{
+  "schema_version": "vdd.clarification-requirements.v1",
+  "intent_kernel": "INTENT-KERNEL-VCR-20260721",
+  "reviewed_baseline": {
+    "commit": "ae7d3bf67531d5f585e983728ca58eb0900f9198",
+    "tree": "833fea71dd7a5be69d79e964e779c70f3dec5ee5"
+  },
+  "requirements": [
+    {
+      "id": "VCR-001",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "references/clarification-gate.md",
+      "first_phase": "S1",
+      "affected_consumers": [
+        "Agent question rounds",
+        "`record-round`"
+      ],
+      "acceptance_id": "VCR-A001",
+      "failure_family": "batch-dependency",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/references/clarification-gate.md",
+        "locator": "Question rounds",
+        "baseline_git_identity": "100644/b42a5de017045a7581820d13867d95e344f51147",
+        "replacement": "VCR-001 全行"
+      }
+    },
+    {
+      "id": "VCR-002",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S1",
+      "affected_consumers": [
+        "CQ schema",
+        "Agent discovery"
+      ],
+      "acceptance_id": "VCR-A002",
+      "failure_family": "question-classification",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-003",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S1",
+      "affected_consumers": [
+        "CQ schema",
+        "round validator"
+      ],
+      "acceptance_id": "VCR-A003",
+      "failure_family": "dependency-order",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-004",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "references/clarification-gate.md",
+      "first_phase": "S1",
+      "affected_consumers": [
+        "Agent questioning",
+        "compliance evaluator"
+      ],
+      "acceptance_id": "VCR-A004",
+      "failure_family": "scenario-applicability",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-005",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S1",
+      "affected_consumers": [
+        "checkpoint",
+        "recovery",
+        "promotion"
+      ],
+      "acceptance_id": "VCR-A005",
+      "failure_family": "term-candidate",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-006",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "references/clarification-gate.md",
+      "first_phase": "S1",
+      "affected_consumers": [
+        "Agent decisions",
+        "ADR projection"
+      ],
+      "acceptance_id": "VCR-A006",
+      "failure_family": "adr-candidate",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-007",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S2",
+      "affected_consumers": [
+        "user-turn checkpoint",
+        "recovery"
+      ],
+      "acceptance_id": "VCR-A007",
+      "failure_family": "checkpoint-durability",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/scripts/clarification_state.py",
+        "locator": "command_record_round` + `_commit_state_and_event",
+        "baseline_git_identity": "100644/d37256aea90921008b133763009ea8ac36846377",
+        "replacement": "VCR-007 全行"
+      }
+    },
+    {
+      "id": "VCR-008",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S2",
+      "affected_consumers": [
+        "event store",
+        "audit"
+      ],
+      "acceptance_id": "VCR-A008",
+      "failure_family": "history-immutability",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/scripts/clarification_state.py",
+        "locator": "_append_event` + `_commit_state_and_event",
+        "baseline_git_identity": "100644/d37256aea90921008b133763009ea8ac36846377",
+        "replacement": "VCR-008 全行"
+      }
+    },
+    {
+      "id": "VCR-009",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S2",
+      "affected_consumers": [
+        "event writer",
+        "retry caller"
+      ],
+      "acceptance_id": "VCR-A009",
+      "failure_family": "transition-idempotency",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/scripts/clarification_state.py",
+        "locator": "_commit_state_and_event` + `_recover_pending_transition",
+        "baseline_git_identity": "100644/d37256aea90921008b133763009ea8ac36846377",
+        "replacement": "VCR-009 全行"
+      }
+    },
+    {
+      "id": "VCR-010",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S2",
+      "affected_consumers": [
+        "snapshot writer",
+        "recovery"
+      ],
+      "acceptance_id": "VCR-A010",
+      "failure_family": "snapshot-lineage",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-011",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S2",
+      "affected_consumers": [
+        "new-session recovery",
+        "Agent"
+      ],
+      "acceptance_id": "VCR-A011",
+      "failure_family": "context-recovery",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/references/clarification-gate.md",
+        "locator": "Persistence and recovery",
+        "baseline_git_identity": "100644/b42a5de017045a7581820d13867d95e344f51147",
+        "replacement": "VCR-011 全行"
+      }
+    },
+    {
+      "id": "VCR-012",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S2",
+      "affected_consumers": [
+        "event/snapshot/candidate writers"
+      ],
+      "acceptance_id": "VCR-A012",
+      "failure_family": "data-minimization",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/scripts/clarification_state.py",
+        "locator": "_sensitive_paths` + `validate_state_data",
+        "baseline_git_identity": "100644/d37256aea90921008b133763009ea8ac36846377",
+        "replacement": "VCR-012 全行"
+      }
+    },
+    {
+      "id": "VCR-013",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S2",
+      "affected_consumers": [
+        "concurrent checkpoint writers"
+      ],
+      "acceptance_id": "VCR-A013",
+      "failure_family": "checkpoint-concurrency",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/scripts/clarification_state.py",
+        "locator": "_target_lock` + `_locked_state_command",
+        "baseline_git_identity": "100644/d37256aea90921008b133763009ea8ac36846377",
+        "replacement": "VCR-013 全行"
+      }
+    },
+    {
+      "id": "VCR-014",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S2",
+      "affected_consumers": [
+        "invalidate/reopen/supersede/restart"
+      ],
+      "acceptance_id": "VCR-A014",
+      "failure_family": "additive-lineage",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/scripts/clarification_state.py",
+        "locator": "command_invalidate` + `command_reopen` + `command_supersede",
+        "baseline_git_identity": "100644/d37256aea90921008b133763009ea8ac36846377",
+        "replacement": "VCR-014 全行"
+      }
+    },
+    {
+      "id": "VCR-015",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S4",
+      "affected_consumers": [
+        "legacy runs",
+        "recovery adapter"
+      ],
+      "acceptance_id": "VCR-A015",
+      "failure_family": "legacy-migration",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/references/clarification-gate.md",
+        "locator": "Create and repair behavior` + `Persistence and recovery",
+        "baseline_git_identity": "100644/b42a5de017045a7581820d13867d95e344f51147",
+        "replacement": "VCR-015 全行"
+      }
+    },
+    {
+      "id": "VCR-016",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "promotion caller",
+        "protected paths"
+      ],
+      "acceptance_id": "VCR-A016",
+      "failure_family": "authorization-binding",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/references/clarification-gate.md",
+        "locator": "Confidence and exit` + `Write boundary",
+        "baseline_git_identity": "100644/b42a5de017045a7581820d13867d95e344f51147",
+        "replacement": "VCR-016 全行"
+      }
+    },
+    {
+      "id": "VCR-017",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "conflict classifier",
+        "authority writers"
+      ],
+      "acceptance_id": "VCR-A017",
+      "failure_family": "three-way-conflict",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-018",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "identity resolver",
+        "owner resolver"
+      ],
+      "acceptance_id": "VCR-A018",
+      "failure_family": "authority-identity",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-019",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "promotion reservation",
+        "authority writers"
+      ],
+      "acceptance_id": "VCR-A019",
+      "failure_family": "promotion-freshness",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-020",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "promotion failure evidence"
+      ],
+      "acceptance_id": "VCR-A020",
+      "failure_family": "zero-write-failure",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-021",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "multi-file authority commit",
+        "recovery"
+      ],
+      "acceptance_id": "VCR-A021",
+      "failure_family": "promotion-transaction",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-022",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_authority_resolver.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "term/ADR/plan projection owners"
+      ],
+      "acceptance_id": "VCR-A022",
+      "failure_family": "owner-resolution",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-023",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "promotion result consumers"
+      ],
+      "acceptance_id": "VCR-A023",
+      "failure_family": "authorization-boundary",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-024",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/validate_skill_contract.py",
+      "first_phase": "S5",
+      "affected_consumers": [
+        "compliance scenarios",
+        "release evaluator"
+      ],
+      "acceptance_id": "VCR-A024",
+      "failure_family": "scenario-level-coverage",
+      "delta": "MODIFIED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result",
+      "prior_provenance": {
+        "path": ".agents/skills/vdd-execution-plan/references/skill-compliance-protocol.md",
+        "locator": "Scenario levels` + `Evidence levels` + `Release checklist",
+        "baseline_git_identity": "100644/a871ce695280743f14a99530ee7a85813b2fb6a2",
+        "replacement": "VCR-024 全行"
+      }
+    },
+    {
+      "id": "VCR-025",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_baseline.py",
+      "first_phase": "S0",
+      "affected_consumers": [
+        "checkpoint",
+        "promotion baseline consumer"
+      ],
+      "acceptance_id": "VCR-A025",
+      "failure_family": "baseline-lineage",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-026",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "compatible classifier",
+        "owner predicates"
+      ],
+      "acceptance_id": "VCR-A026",
+      "failure_family": "semantic-merge-authority",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-027",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "concurrent promotions and state writers"
+      ],
+      "acceptance_id": "VCR-A027",
+      "failure_family": "write-set-concurrency",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-028",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "transaction journal",
+        "recovery"
+      ],
+      "acceptance_id": "VCR-A028",
+      "failure_family": "promotion-state",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-029",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S0",
+      "affected_consumers": [
+        "event writer",
+        "reducer",
+        "validator"
+      ],
+      "acceptance_id": "VCR-A029",
+      "failure_family": "event-state",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-030",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_promotion.py",
+      "first_phase": "S3",
+      "affected_consumers": [
+        "exit/approval producers and consumers"
+      ],
+      "acceptance_id": "VCR-A030",
+      "failure_family": "identity-attestation",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-031",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S4",
+      "affected_consumers": [
+        "evidence custody",
+        "recovery",
+        "promotion"
+      ],
+      "acceptance_id": "VCR-A031",
+      "failure_family": "sensitive-incident",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-032",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S4",
+      "affected_consumers": [
+        "legacy adapter",
+        "successor event"
+      ],
+      "acceptance_id": "VCR-A032",
+      "failure_family": "legacy-anchor",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-033",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_state.py",
+      "first_phase": "S2",
+      "affected_consumers": [
+        "target registry",
+        "recovery"
+      ],
+      "acceptance_id": "VCR-A033",
+      "failure_family": "tail-rollback",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-034",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/clarification_closure.py",
+      "first_phase": "S0",
+      "affected_consumers": [
+        "all implementation and validation phases"
+      ],
+      "acceptance_id": "VCR-A034",
+      "failure_family": "requirement-closure",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    },
+    {
+      "id": "VCR-035",
+      "approved_source": "INTENT-KERNEL-VCR-20260721",
+      "owner": "scripts/vdd-clarification-requirements.v1.json",
+      "first_phase": "S0",
+      "affected_consumers": [
+        "requirements registry producer/verifier",
+        "all modified requirement owners"
+      ],
+      "acceptance_id": "VCR-A035",
+      "failure_family": "prior-provenance",
+      "delta": "ADDED",
+      "status": "approved",
+      "evidence_intent": "positive, single-rule negative, and applicable mutation with current hash-bound result"
+    }
+  ]
+}

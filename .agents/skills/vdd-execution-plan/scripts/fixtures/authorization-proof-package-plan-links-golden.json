@@ -1,0 +1,14 @@
+{
+  "schema_version": "vdd.plan-link-discovery.v1",
+  "discovery_id": "golden-plan-links.v1",
+  "links": [
+    {
+      "predicate": "plan-ready",
+      "proof_id": "golden-static"
+    },
+    {
+      "predicate": "plan-ready",
+      "proof_id": "golden-runtime"
+    }
+  ]
+}

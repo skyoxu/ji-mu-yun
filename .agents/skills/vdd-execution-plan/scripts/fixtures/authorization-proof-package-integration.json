@@ -8,15 +8,15 @@
       "expected_assurance": "deterministic-package"
     },
     {
-      "id": "repository-maintenance-tdd-adapter",
+      "id": "self-contained-source-closure-package",
       "kind": "integration",
-      "package": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
-      "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py",
-      "arguments": ["--predicate", "plan-ready"],
+      "package": ".agents/skills/vdd-execution-plan/scripts/fixtures/authorization-proof-package-golden.json",
+      "validator": ".agents/skills/vdd-execution-plan/scripts/fixtures/authorization-proof-package-self-contained-integration.py",
+      "arguments": [],
       "expected_assurance": "deterministic-package",
-      "expected_result_schema": "rmap.validation-result.v1",
-      "expected_predicate": "plan-ready",
-      "expected_status": "pass",
+      "expected_result_schema": "vdd.authorization-proof-package-result.v1",
+      "expected_predicate": null,
+      "expected_status": "PASS",
       "required_bindings": ["candidate_hash", "current_candidate_hash", "source_hash", "validator_root", "authority_root", "closure_definition_hash"]
     }
   ]

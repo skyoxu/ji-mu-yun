@@ -4,4 +4,5 @@
   "validators": {"golden-validator": {"id": "golden-validator", "path": "scripts/authorization_proof_package.py", "callable": "validate", "rule_id": "VDD-GOLDEN-VALIDATOR"}},
   "invalidation_contracts": {"golden-invalidation": {"id": "golden-invalidation", "inputs": ["candidate_hash"], "invalidates": ["plan-ready"], "rule_id": "VDD-GOLDEN-STALE"}},
   "consumers": {"golden-consumer": {"id": "golden-consumer", "predicate": "plan-ready", "authorizes": [], "does_not_authorize": ["protected-handoff", "release-ready"]}}
+  ,"closure_consumers": {"plan-ready": ["golden-static", "golden-runtime"]}
 }

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["promotion_id", "state", "authorizes", "does_not_authorize"],
+  "properties": {
+    "promotion_id": {"type": "string", "minLength": 1},
+    "state": {"enum": ["prepared", "reserved", "committing", "committed", "blocked", "recovery_required", "aborted"]},
+    "authorizes": {"const": []},
+    "does_not_authorize": {"type": "array", "minItems": 4}
+  }
+}

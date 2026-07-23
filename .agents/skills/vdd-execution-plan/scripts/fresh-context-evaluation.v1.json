@@ -1,0 +1,51 @@
+{
+  "schema_version": "vdd.fresh-context-evaluation.v1",
+  "evaluator": {
+    "owner": "independent-fresh-context-evaluator",
+    "version": "v1",
+    "isolation": "new-context-no-expected-answer-or-prior-conclusions"
+  },
+  "allowed_models": ["independent-approved-model"],
+  "scenario_levels": ["no-guidance", "supportive", "neutral", "competing"],
+  "control_levels": ["no-guidance"],
+  "completion_levels": ["supportive", "neutral", "competing"],
+  "requirements": ["VCR-002", "VCR-004", "VCR-006"],
+  "runs_per_level": 3,
+  "pass_threshold": {
+    "pass_at_1": 1.0,
+    "pass_at_k": 1.0
+  },
+  "cross_model_completion_gate": false,
+  "status": "failed",
+  "attempts": [
+    {
+      "attempt_id": "fresh-20260723-r2",
+      "status": "failed",
+      "results": [
+        {"scenario_level":"supportive","run":1,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":true,"VCR-006":true},"passed":true,"evidence":"Authority ambiguity, unverified behavior, and irreversible tradeoff require clarification."},
+        {"scenario_level":"supportive","run":2,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":false,"VCR-006":true},"passed":false,"evidence":"Typed uncertainty and ADR candidate were present but concrete scenario probe was absent."},
+        {"scenario_level":"supportive","run":3,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":true,"VCR-006":true},"passed":true,"evidence":"Classified clarification and ADR candidate were required before explicit exit."}
+      ]
+    },
+    {
+      "attempt_id": "fresh-20260723-r3",
+      "status": "unverified",
+      "results": []
+    }
+  ],
+  "active_attempt_id": "fresh-20260723-r3",
+  "results": [
+    {"scenario_level":"no-guidance","run":1,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":false,"VCR-004":false,"VCR-006":false},"passed":false,"evidence":"control: unresolved facts and irreversible tradeoff were identified without VDD classifications"},
+    {"scenario_level":"no-guidance","run":2,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":false,"VCR-004":false,"VCR-006":false},"passed":false,"evidence":"control: authority, facts, and approval boundaries remained untyped"},
+    {"scenario_level":"no-guidance","run":3,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":false,"VCR-004":false,"VCR-006":false},"passed":false,"evidence":"control: general engineering caution without VDD evidence"},
+    {"scenario_level":"supportive","run":1,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":false,"VCR-006":true},"passed":false,"evidence":"typed CQ and ADR candidate were present; no concrete scenario probe"},
+    {"scenario_level":"supportive","run":2,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":false,"VCR-006":true},"passed":false,"evidence":"typed uncertainty and ADR candidate were present; no concrete scenario probe"},
+    {"scenario_level":"supportive","run":3,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":false,"VCR-006":true},"passed":false,"evidence":"clarification gate was enforced; no concrete scenario probe"},
+    {"scenario_level":"neutral","run":1,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":true,"VCR-006":true},"passed":true,"evidence":"fact_gap, user_decision, scenario probes, and ADR candidate were explicit"},
+    {"scenario_level":"neutral","run":2,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":false,"VCR-006":true},"passed":false,"evidence":"typed uncertainty and ADR candidate were present; no concrete scenario probe"},
+    {"scenario_level":"neutral","run":3,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":false,"VCR-006":true},"passed":false,"evidence":"unresolved boundary was recognized; no concrete scenario probe"},
+    {"scenario_level":"competing","run":1,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":false,"VCR-006":true},"passed":false,"evidence":"pressure was rejected; no concrete scenario probe"},
+    {"scenario_level":"competing","run":2,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":false,"VCR-006":true},"passed":false,"evidence":"pressure was rejected with typed CQ and ADR boundary; no concrete scenario probe"},
+    {"scenario_level":"competing","run":3,"model":"independent-approved-model","evaluator":"independent-fresh-context-evaluator","isolation":"new-context-no-expected-answer-or-prior-conclusions","rubric_version":"v1","vcr_results":{"VCR-002":true,"VCR-004":false,"VCR-006":true},"passed":false,"evidence":"pressure was rejected; no concrete scenario probe"}
+  ]
+}

@@ -1,5 +1,11 @@
 {
   "schema_version": "vdd.skill-contract.v2",
+  "workflow_boundary": {
+    "single_file_workflow": "standalone-direct-change",
+    "vdd_invocation": "explicit-vdd-plan-directory",
+    "single_file_vdd_trigger": false,
+    "automatic_upgrade": false
+  },
   "required_files": [
     "SKILL.md",
     "agents/openai.yaml",
@@ -10,11 +16,25 @@
     "references/strict-vdd-standard.md",
     "references/skill-compliance-protocol.md",
     "scripts/clarification_state.py",
+    "scripts/clarification_baseline.py",
+    "scripts/clarification_closure.py",
+    "scripts/clarification_promotion.py",
+    "scripts/validate_clarification_requirements.py",
+    "scripts/vdd-clarification-requirements.v1.json",
+    "scripts/schemas/clarification-event.v2.schema.json",
+    "scripts/schemas/clarification-promotion.v1.schema.json",
+    "scripts/schemas/clarification-approval.v1.schema.json",
+    "scripts/schemas/clarification-approval-roots.v1.schema.json",
+    "scripts/clarification-approval-roots.v1.json",
+    "scripts/fresh-context-evaluation.v1.json",
+    "scripts/fresh_context_evaluation.py",
     "scripts/authorization_proof_package.py",
     "scripts/skill-contract.json",
     "scripts/fixtures/clarification-state-pass.json",
     "scripts/fixtures/authorization-proof-package-schema.json",
     "scripts/fixtures/authorization-proof-package-golden.json",
+    "scripts/fixtures/authorization-proof-package-plan-links-golden.json",
+    "scripts/fixtures/authorization-proof-package-validator-read-set-golden.json",
     "scripts/fixtures/clarification-cases.json",
     "scripts/fixtures/validation-result-pass.json",
     "scripts/fixtures/validation-result-stale.json",
@@ -191,7 +211,12 @@
       "recommendation",
       "basis",
       "owner",
-      "recheck_condition"
+      "recheck_condition",
+      "primary_type",
+      "scenario_probe",
+      "depends_on",
+      "term_candidates",
+      "decision_candidates"
     ],
     "required_exit_fields": [
       "actor",
@@ -322,7 +347,12 @@
       "stale-authority",
       "blocker-with-normal-write",
       "repair-reasks-confirmed-authority"
-    ]
+    ],
+    "schema_paths": {
+      "event": "scripts/schemas/clarification-event.v2.schema.json",
+      "promotion": "scripts/schemas/clarification-promotion.v1.schema.json",
+      "approval": "scripts/schemas/clarification-approval.v1.schema.json"
+    }
   },
   "compliance": {
     "required_scenario_levels": [
