@@ -33,7 +33,10 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
         slice_id = slice_item.get("slice_id")
         if not isinstance(slice_id, str):
             raise ValueError("slice id is invalid")
-        for result_path in (evidence_root / slice_id).glob("*/slice-ready-result.json"):
+        exit_predicate = slice_item.get("exit_predicate", "slice-ready")
+        if not isinstance(exit_predicate, str) or not exit_predicate:
+            raise ValueError("slice exit predicate is invalid")
+        for result_path in (evidence_root / slice_id).glob(f"*/{exit_predicate}-result.json"):
             try:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
@@ -45,7 +48,7 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 and candidate_hash == result.get("current_candidate_hash")
                 and candidate_hash == result.get("predicate_input_root")
             )
-            if result.get("predicate") == "slice-ready" and result.get("status") == "pass" and (contract_current or candidate_current):
+            if result.get("predicate") == exit_predicate and result.get("status") == "pass" and (contract_current or candidate_current):
                 completed.add(slice_id)
                 break
     for slice_item in contract["slices"]:

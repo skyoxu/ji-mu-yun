@@ -135,6 +135,10 @@ def main() -> int:
     (run_dir / f"{predicate_result['predicate']}-result.json").write_text(
         json.dumps(predicate_result, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
+    if predicate_result["predicate"] == "implementation-candidate":
+        (run_dir / "candidate-result.json").write_text(
+            json.dumps(predicate_result, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
     state = run_dir.parents[1] / "run-state.v1.json"
     state.write_text(json.dumps({"schema_version": "jimuyun.tdd-adapter-run-state.v1", "last_slice_id": args.slice_id, "last_observed_predicate": "slice-ready", "next_action": "route", "failure_fingerprint": None, "repeat_count": 0, "authorizes": [], "does_not_authorize": ["implementation-accepted", "commit", "release"]}, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps({"run_id": run_dir.name, "stages": ["red", "green", "refactor"], "bundle_schema": bundle["schema_version"], "terminal_exit": 0, "authorizes": []}, sort_keys=True))
