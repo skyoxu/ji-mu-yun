@@ -91,16 +91,16 @@
 - Do not modify the 7-12 CLI unless deterministic evidence proves an extension-point gap.
 - The Round 3 `manual_pause` remains immutable history; the authorized successor cycle clears only plan re-entry and does not itself authorize any implementation slice.
 
-## RMAP-S7: Implementation Acceptance And Handoff
+## RMAP-S7: Implementation Completion And Acceptance Handoff
 
 - Requirements: `RMAP-011`, `RMAP-013`, `RMAP-016`, `RMAP-020`, `RMAP-027`.
 - Phase: `P3`.
 - Run fresh deterministic proof against current hashes and consume the repository Skill's `bootstrap-finalized-run-validation.v1` envelope.
 - Consume an explicit `candidate-result-ref.json` that binds the S6 run, candidate bytes/hash, predicate, and `candidate-supersession-proof.json`. Recovery state, event log, final event hash, and a validator-owned scan of the canonical S6 recovery root must prove that run remains active. S6 and S7 run IDs are independent; no implicit latest, Boolean assertion, or caller-supplied empty successor list is allowed.
 - Consume runtime `p2-dispositions.json` through the Bootstrap metrics hash; require complete owner/expiry/closure-test/reason fields and verifier source evidence when blocking findings exist. Reject high-risk or expired dispositions.
-- Produce `implementation-accepted` only from the plan-local validator.
+- Produce `implementation-complete` only from the plan-local validator.
 - After that current terminal predicate passes, append the overall implementation result to this plan's unique non-authorizing `95-*.md`; never use the report to satisfy the predicate.
-- GREEN and REFACTOR: `rmap-s7-slice-validate` verifies the current S7 lifecycle without requiring an acceptance input that is derived from that lifecycle. After REFACTOR, `rmap-s7-acceptance-validate` validates the envelope schema, profile/control-plane/validator identity, finalized artifact hashes, non-authorizing boundary, authoritative candidate activity, and runtime finding closure before `implementation-accepted`.
+- GREEN and REFACTOR: `rmap-s7-slice-validate` verifies the current S7 lifecycle without requiring an acceptance input that is derived from that lifecycle. After REFACTOR, `rmap-s7-completion-validate` verifies the current candidate lineage and emits a schema-validated acceptance handoff with `authorizes: []` before `implementation-complete`.
 - Exit explicitly excludes protected handoff and release.
 
 ## Dependency Order

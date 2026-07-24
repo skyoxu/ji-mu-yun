@@ -4,7 +4,7 @@
   "title": "Ji Mu Yun Implementation Contract",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "plan_id", "source_revision", "protocol_version", "authority", "ownership", "command_registry", "backend", "protocol_artifacts", "recovery", "drift_policy", "replay_baseline_policy", "acceptance_policy", "candidate_identity_policy", "shadow_backfills", "slices"],
+  "required": ["schema_version", "plan_id", "source_revision", "protocol_version", "authority", "ownership", "command_registry", "backend", "protocol_artifacts", "recovery", "drift_policy", "replay_baseline_policy", "execution_replay_policy", "acceptance_policy", "candidate_identity_policy", "shadow_backfills", "slices"],
   "properties": {
     "schema_version": {"const": "jimuyun.implementation-contract.v1"},
     "plan_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
@@ -18,6 +18,7 @@
     "recovery": {"$ref": "#/$defs/recoveryPolicy"},
     "drift_policy": {"$ref": "#/$defs/driftPolicy"},
     "replay_baseline_policy": {"$ref": "#/$defs/replayBaselinePolicy"},
+    "execution_replay_policy": {"$ref": "#/$defs/executionReplayPolicy"},
     "acceptance_policy": {"$ref": "#/$defs/acceptancePolicy"},
     "candidate_identity_policy": {"$ref": "#/$defs/candidateIdentityPolicy"},
     "shadow_backfills": {"type": "array", "items": {"$ref": "#/$defs/shadowBackfill"}},
@@ -107,7 +108,31 @@
       "properties": {
         "mode": {"const": "sealed-snapshot-copy-before-red"}, "workspace_isolation": {"const": true},
         "source_artifacts": {"$ref": "#/$defs/stringArray"}, "manifest_schema": {"const": "schemas/replay-baseline-manifest.v1.schema.json"}, "hash_bound": {"const": true}, "candidate_excluded": {"const": true},
-        "authorizes": {"const": []}, "does_not_authorize": {"const": ["slice-ready", "implementation-candidate", "implementation-accepted"]}
+        "authorizes": {"const": []}, "does_not_authorize": {"const": ["slice-ready", "implementation-candidate", "implementation-complete"]}
+      }
+    },
+    "executionReplayPolicy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["targeted_validation", "authoritative_full_replay"],
+      "properties": {
+        "targeted_validation": {
+          "type": "object", "additionalProperties": false,
+          "required": ["allowed_slices", "must_run_in_order", "evidence_marker", "authorizes", "does_not_authorize"],
+          "properties": {
+            "allowed_slices": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+            "must_run_in_order": {"const": true},
+            "evidence_marker": {"const": "targeted-validation.v1.json"},
+            "authorizes": {"const": []},
+            "does_not_authorize": {"$ref": "#/$defs/stringArray"}
+          }
+        },
+        "authoritative_full_replay": {
+          "type": "object", "additionalProperties": false,
+          "required": ["start_slice", "requires_all_slices", "authorizes"],
+          "properties": {
+            "start_slice": {"const": "RMAP-S0"}, "requires_all_slices": {"const": true}, "authorizes": {"const": []}
+          }
+        }
       }
     },
     "acceptancePolicy": {
@@ -200,9 +225,9 @@
     "slice": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["slice_id", "title", "phase_id", "requirement_ids", "acceptance_ids", "source_refs", "depends_on", "allowed_changes", "forbidden_changes", "execution_read_set", "dependency_closure", "tdd", "review", "exit_predicate"],
+      "required": ["slice_id", "title", "phase_id", "requirement_ids", "acceptance_ids", "source_refs", "depends_on", "allowed_changes", "execution_snapshot_paths", "forbidden_changes", "execution_read_set", "dependency_closure", "tdd", "review", "exit_predicate"],
       "properties": {
-        "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"}, "title": {"type": "string"}, "phase_id": {"enum": ["P0", "P1", "P2", "P3"]}, "requirement_ids": {"$ref": "#/$defs/stringArray"}, "acceptance_ids": {"$ref": "#/$defs/stringArray"}, "source_refs": {"$ref": "#/$defs/stringArray"}, "depends_on": {"$ref": "#/$defs/stringArray"}, "allowed_changes": {"$ref": "#/$defs/writeSet"}, "forbidden_changes": {"$ref": "#/$defs/stringArray"}, "execution_read_set": {"$ref": "#/$defs/stringArray"}, "dependency_closure": {"$ref": "#/$defs/stringArray"}, "tdd": {"$ref": "#/$defs/tddContract"}, "review": {"$ref": "#/$defs/reviewContract"}, "pre_terminal": {"type": "array", "items": {"$ref": "#/$defs/stageInvocation"}}, "post_refactor_command_id": {"type": "string"}, "exit_predicate": {"enum": ["slice-ready", "implementation-candidate", "implementation-accepted"]}
+        "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"}, "title": {"type": "string"}, "phase_id": {"enum": ["P0", "P1", "P2", "P3"]}, "requirement_ids": {"$ref": "#/$defs/stringArray"}, "acceptance_ids": {"$ref": "#/$defs/stringArray"}, "source_refs": {"$ref": "#/$defs/stringArray"}, "depends_on": {"$ref": "#/$defs/stringArray"}, "allowed_changes": {"$ref": "#/$defs/writeSet"}, "execution_snapshot_paths": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}, "forbidden_changes": {"$ref": "#/$defs/stringArray"}, "execution_read_set": {"$ref": "#/$defs/stringArray"}, "dependency_closure": {"$ref": "#/$defs/stringArray"}, "tdd": {"$ref": "#/$defs/tddContract"}, "review": {"$ref": "#/$defs/reviewContract"}, "pre_terminal": {"type": "array", "items": {"$ref": "#/$defs/stageInvocation"}}, "post_refactor_command_id": {"type": "string"}, "exit_predicate": {"enum": ["slice-ready", "implementation-candidate", "implementation-complete"]}
       }
     }
   }

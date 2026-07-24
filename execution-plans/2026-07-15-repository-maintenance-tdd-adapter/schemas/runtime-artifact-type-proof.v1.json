@@ -37,13 +37,13 @@
       },
       "independent_recomputation": {
         "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "validator_sha256": "sha256:26ba741ed4754380b776996cf0d2bf03538b7e4e63fcdad3fba24b4267b023fd",
+        "validator_sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
         "callable": "validate_finalized_run_evidence",
         "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
         "rule_ids": [
           "bootstrap-finalized-run-validator.v2"
         ],
-        "negative_test_sha256": "sha256:3555348a5359ad3b9a0aaaf0ae2db1190a9ccad2813f7092a006f2001b3b230f",
+        "negative_test_sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -206,13 +206,13 @@
       },
       "independent_recomputation": {
         "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "validator_sha256": "sha256:26ba741ed4754380b776996cf0d2bf03538b7e4e63fcdad3fba24b4267b023fd",
+        "validator_sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
         "callable": "validate_p2_dispositions",
         "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
         "rule_ids": [
           "bootstrap-p2-disposition-evidence.v2"
         ],
-        "negative_test_sha256": "sha256:3555348a5359ad3b9a0aaaf0ae2db1190a9ccad2813f7092a006f2001b3b230f",
+        "negative_test_sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -379,13 +379,13 @@
       },
       "independent_recomputation": {
         "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "validator_sha256": "sha256:26ba741ed4754380b776996cf0d2bf03538b7e4e63fcdad3fba24b4267b023fd",
+        "validator_sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
         "callable": "validate_p2_dispositions",
         "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
         "rule_ids": [
           "bootstrap-p2-process-event.v1"
         ],
-        "negative_test_sha256": "sha256:3555348a5359ad3b9a0aaaf0ae2db1190a9ccad2813f7092a006f2001b3b230f",
+        "negative_test_sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -540,13 +540,13 @@
       },
       "independent_recomputation": {
         "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "validator_sha256": "sha256:26ba741ed4754380b776996cf0d2bf03538b7e4e63fcdad3fba24b4267b023fd",
+        "validator_sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
         "callable": "validate_successor_policy_authorization",
         "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
         "rule_ids": [
           "bootstrap-successor-policy-authorization.v1"
         ],
-        "negative_test_sha256": "sha256:3555348a5359ad3b9a0aaaf0ae2db1190a9ccad2813f7092a006f2001b3b230f",
+        "negative_test_sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -834,7 +834,7 @@
       },
       "independent_recomputation": {
         "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
-        "validator_sha256": "sha256:5fc523fd8cd115e08d7370e8e28cfea29fcc148f8f2dbdc71a29261a2eb0fd37",
+        "validator_sha256": "sha256:80d2f76b0e22622eddbcb78a64bfe34690329f2f8b402986f96eeccaaa4671aa",
         "callable": "validate_review_reentry",
         "negative_test": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "rule_ids": [
@@ -995,7 +995,7 @@
           "RMAP-RESULT-AUTHORITY",
           "RMAP-RESULT-LINEAGE"
         ],
-        "validator_sha256": "sha256:addb68d999e8b1928377a103d175b5e1ab1fcdd6fe0f70318e203ba624a9797f",
+        "validator_sha256": "sha256:e4097829ce56911c254cdfeeac876c76ccd017aa5e92f23d976a004e1b46c1ff",
         "negative_test_sha256": "sha256:3f0f33ecce3a043b9c2f2a3624958a387818f71d2fd48f59dbf878009a50755e",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
@@ -1064,7 +1064,7 @@
       },
       "immutable_identity": {
         "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/validation-result.v1.schema.json",
-        "schema_sha256": "sha256:52b7030abb9513ec5acf40a8a3e66cc7168252d8cceeb7eb422369f270072097",
+        "schema_sha256": "sha256:b96eeb63f3a90962eb7f6c9d3a77aeffaf7e1efe7c054250ca08e1f1778824a6",
         "algorithm": "sha256-canonical-json-fields",
         "identity_fields": [
           "predicate",

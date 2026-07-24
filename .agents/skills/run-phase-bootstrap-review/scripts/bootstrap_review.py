@@ -1253,9 +1253,10 @@ the live original path; resolve each relative `snapshotPath` against the assigne
 never against the attempt workspace or current directory. Cite the corresponding `originalPath` and
 original line range in candidates.
 Do not modify the controller-owned formal output and do not run `validate-layer`; return only the
-structured candidate payload requested by the Codex Exec runtime wrapper. Keep
-`coverage.requiredArtifacts` equal to the manifest artifact list, and partition it exactly between
-`readArtifacts` and `missingArtifacts`. A failed payload requires a concrete `failureReason`."""
+structured candidate payload requested by the Codex Exec runtime wrapper. Do not hand-copy the
+coverage path arrays: after reading every Artifact View entry, derive `coverage.requiredArtifacts`
+directly from the frozen manifest's artifact list, copy that same ordered list to `readArtifacts`,
+and set `missingArtifacts=[]`. A failed payload requires a concrete `failureReason`."""
     else:
         execution_contract = f"""Do not start until `review-launch-authorization.json` exists and validates. In manual or
 specialized-agent mode, the operator owns recovery and process evidence.
@@ -1299,11 +1300,11 @@ deterministic implementation checks may run, but they must not emit semantic fin
 {execution_contract}
 
 Zero candidates are valid. Set `status` to `completed` only after the layer is actually reviewed.
-Keep `coverage.requiredArtifacts` unchanged. Move an artifact from `missingArtifacts` to
-`readArtifacts` only after reading it. `completed` requires every required artifact to be read and
-no missing artifact. If required role context is absent from the manifest, set `status` to `failed`,
+For a completed payload, derive the coverage arrays from the frozen Artifact View manifest instead
+of manually transcribing paths: `requiredArtifacts` and `readArtifacts` must be the same ordered
+manifest list, and `missingArtifacts` must be empty. If required role context is absent from the manifest, set `status` to `failed`,
 write a concrete `failureReason`, keep candidates empty, and never read outside the manifest.
-In particular, `completed` requires
+In particular, `completed` requires every required artifact to be read;
 `missingArtifacts=[]` and exact set equality between `requiredArtifacts` and `readArtifacts`.
 There is no minimum finding quota. A fixed-count instruction is nonbinding first-pass exploration
 only; never save a candidate merely to satisfy a requested count.
@@ -1866,6 +1867,85 @@ def validate_preflight_result(run_dir: Path, manifest: dict[str, Any]) -> str:
     if errors:
         raise BootstrapError("Deterministic preflight is incomplete: " + "; ".join(errors))
     return file_hash(path)
+
+
+def _preflight_descriptor(
+    repository_root: Path, plan_dir: Path, run_dir: Path, descriptor: dict[str, Any]
+) -> tuple[list[str], Path, int]:
+    """Compile a plan-owned shell-free command descriptor for preflight."""
+    if descriptor.get("executable") not in {"py", "python"}:
+        raise BootstrapError("Preflight command executable is not allowlisted")
+    argv = descriptor.get("argv")
+    if not isinstance(argv, list) or not argv:
+        raise BootstrapError("Preflight command argv is invalid")
+    values: list[str] = [str(descriptor["executable"])]
+    for item in argv:
+        if isinstance(item, str):
+            values.append(item)
+        elif isinstance(item, dict) and set(item) == {"type", "value"}:
+            kind, value = item["type"], item["value"]
+            if kind == "plan_path":
+                values.append(str(ensure_within(plan_dir / str(value), plan_dir, "Preflight plan path")))
+            elif kind == "run_path":
+                suffix = re.sub(
+                    r"^tdd-adapter/<plan-id>/(?:<slice-id>|RMAP-S6)/<run-id>",
+                    "",
+                    str(value),
+                )
+                values.append(str(ensure_within(run_dir / suffix.lstrip("/"), run_dir, "Preflight run path")))
+            else:
+                raise BootstrapError("Preflight command contains an unsupported typed placeholder")
+        else:
+            raise BootstrapError("Preflight command argv is not structured")
+    cwd = descriptor.get("cwd")
+    if not isinstance(cwd, dict) or cwd.get("type") != "repo_path" or cwd.get("value") != ".":
+        raise BootstrapError("Preflight command cwd is not the repository root")
+    timeout = descriptor.get("timeout_seconds")
+    if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0 or timeout > 900:
+        raise BootstrapError("Preflight command timeout is invalid")
+    return values, repository_root, timeout
+
+
+def command_run_preflight(args: argparse.Namespace) -> int:
+    run_dir, manifest, repository_root = load_run(args.run_dir)
+    if (run_dir / "review-launch-authorization.json").exists():
+        raise BootstrapError("Preflight cannot be changed after launch authorization")
+    plan_dir = ensure_within(Path(args.plan_dir).resolve(), repository_root, "Preflight plan directory")
+    registry_path = ensure_within(Path(args.command_registry).resolve(), repository_root, "Preflight command registry")
+    if not plan_dir.is_dir() or not registry_path.is_file():
+        raise BootstrapError("Preflight plan directory or command registry is missing")
+    registry = read_json(registry_path)
+    commands = {item.get("id"): item for item in registry.get("commands", []) if isinstance(item, dict)}
+    bindings: dict[str, str] = {}
+    for raw in args.check_binding:
+        check_id, separator, command_id = raw.partition("=")
+        if not separator or check_id in bindings or not CHECK_ID_PATTERN.fullmatch(check_id) or not command_id:
+            raise BootstrapError("Preflight check binding must be unique <check-id>=<command-id>")
+        bindings[check_id] = command_id
+    required = manifest["deterministicPreflightPolicy"]["requiredChecks"]
+    if set(bindings) != set(required):
+        raise BootstrapError("Preflight bindings must cover the exact required check set")
+    result = preflight_template(manifest)
+    evidence_dir = run_dir / manifest["deterministicPreflightPolicy"]["evidenceDirectory"]
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    for check in result["checks"]:
+        check_id = check["checkId"]
+        descriptor = commands.get(bindings[check_id])
+        if not isinstance(descriptor, dict):
+            raise BootstrapError(f"Preflight command is not registered: {bindings[check_id]}")
+        argv, cwd, timeout = _preflight_descriptor(repository_root, plan_dir, Path(args.slice_run_dir).resolve(), descriptor)
+        completed = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout, shell=False)
+        evidence = evidence_dir / f"{check_id}.log"
+        write_text(evidence, "COMMAND: " + json.dumps(argv) + "\nEXIT: " + str(completed.returncode) + "\nSTDOUT:\n" + completed.stdout + "\nSTDERR:\n" + completed.stderr)
+        check.update({"status": "passed" if completed.returncode == 0 else "failed", "command": json.dumps(argv), "exitCode": completed.returncode, "evidencePath": f"preflight/{evidence.name}", "evidenceHash": file_hash(evidence)})
+        if completed.returncode != 0:
+            result["status"] = "failed"
+            write_json(run_dir / "preflight-result.json", result, grant_modify=True)
+            return 1
+    result["status"] = "passed"
+    write_json(run_dir / "preflight-result.json", result, grant_modify=True)
+    print(f"Completed deterministic preflight at {run_dir}")
+    return 0
 
 
 def command_authorize_launch(args: argparse.Namespace) -> int:
@@ -4682,6 +4762,13 @@ def build_parser() -> argparse.ArgumentParser:
     authorize.add_argument("--run-dir", required=True)
     authorize.add_argument("--ack-high-cost", action="store_true")
     authorize.set_defaults(handler=command_authorize_launch)
+    preflight = subparsers.add_parser("run-preflight", help="Execute plan-owned deterministic preflight commands")
+    preflight.add_argument("--run-dir", required=True)
+    preflight.add_argument("--plan-dir", required=True)
+    preflight.add_argument("--command-registry", required=True)
+    preflight.add_argument("--slice-run-dir", required=True)
+    preflight.add_argument("--check-binding", action="append", default=[])
+    preflight.set_defaults(handler=command_run_preflight)
     prove_access = subparsers.add_parser(
         "prove-access", help="Run an identity-equivalent Codex access probe before authorization"
     )

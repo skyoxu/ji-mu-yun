@@ -141,7 +141,7 @@ def validate_candidate_document(
     required = {"schema_version", "predicate", "status", "plan_hash", "source_hash", "slice_id", "run_id", "authority_revision", "candidate_identity", "authorizes", "does_not_authorize"}
     if set(candidate) != required or candidate.get("schema_version") != "jimuyun.tdd-result.v1" or candidate.get("predicate") != "implementation-candidate" or candidate.get("status") != "pass" or candidate.get("slice_id") != "RMAP-S6" or not isinstance(candidate.get("run_id"), str) or not candidate.get("run_id"):
         findings.append(_finding("RMAP-REVIEW-EVIDENCE-BINDING", candidate_path, "candidate result shape, predicate, or owner slice is invalid"))
-    if candidate.get("authorizes") != ["bootstrap-review"] or set(candidate.get("does_not_authorize", [])) != {"implementation-accepted", "protected-handoff", "release-ready"}:
+    if candidate.get("authorizes") != [] or set(candidate.get("does_not_authorize", [])) != {"implementation-authorized", "implementation-complete", "acceptance-passed", "archived"}:
         findings.append(_finding("RMAP-REVIEW-EVIDENCE-BINDING", candidate_path, "candidate authority set is invalid"))
     if candidate.get("authority_revision") != current.get("head"):
         findings.append(_finding("RMAP-HASH-CANDIDATE-IDENTITY", candidate_path, "candidate authority revision differs from the current Git authority"))

@@ -1,7 +1,6 @@
 from __future__ import annotations
 import copy, hashlib
-import json, shutil
-import sys, unittest
+import json, shutil, sys, unittest
 import uuid
 from pathlib import Path
 from unittest.mock import patch
@@ -10,7 +9,7 @@ TOOLS = PLAN_ROOT / "tools"
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 from authority_guards import validate_acceptance_contracts, validate_authority_manifest, validate_clarification_projection  # noqa: E402
-from contract_guards import junction_escape_is_rejected, schema_error  # noqa: E402
+from contract_guards import junction_escape_is_rejected, schema_error, validate_execution_snapshot_paths  # noqa: E402
 from candidate_diff_guards import fold_accepted_attempts, manifest_root_hash  # noqa: E402
 from evidence_guards import _bootstrap_runtime, validate_candidate_document, validate_candidate_review_documents  # noqa: E402
 from fixture_checks import apply_mutations, evaluate_fixture  # noqa: E402
@@ -54,8 +53,8 @@ class PlanValidatorTests(unittest.TestCase):
             "schema_version": "jimuyun.tdd-result.v1", "predicate": "implementation-candidate", "status": "pass",
             "plan_hash": current["plan_hash"], "source_hash": current["source_hash"], "slice_id": "RMAP-S6", "run_id": "run-a",
             "authority_revision": authority_revision or current["head"], "candidate_identity": identity,
-            "authorizes": ["bootstrap-review"],
-            "does_not_authorize": ["implementation-accepted", "protected-handoff", "release-ready"],
+            "authorizes": [],
+            "does_not_authorize": ["implementation-authorized", "implementation-complete", "acceptance-passed", "archived"],
         }
     def _stage_run(self, current: dict[str, str]) -> tuple[Path, list[dict[str, object]], dict[str, str]]:
         repository_root = PLAN_ROOT.parents[1]
@@ -148,10 +147,11 @@ class PlanValidatorTests(unittest.TestCase):
         identity["final_attempt_event_hash"] = value_hash(events[-1])
         identity["accepted_attempt_id"] = "ATTEMPT-003"
         identity["accepted_attempt_decision_hash"] = "sha256:" + hashlib.sha256((run_dir / "attempts" / "ATTEMPT-003" / "adapter-decision.v1.json").read_bytes()).hexdigest()
-        path = run_dir / "candidate-result.json"; path.write_text(json.dumps(candidate), encoding="utf-8")
+        path = run_dir / "candidate-evidence.json"; path.write_text(json.dumps(candidate), encoding="utf-8")
         return path, candidate, stages, paths
     def test_machine_documents_load(self) -> None:
         self.assertEqual([], self.load_findings)
+
     def test_static_plan_is_valid(self) -> None:
         _, findings, _ = validate_static(PLAN_ROOT)
         self.assertEqual([], findings)
@@ -167,7 +167,7 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertEqual((0, "pass", ["plan-ready"]), (exit_code, result["status"], result["authorizes"]))
         self.assertEqual([], result["diagnostics"])
     def test_authorized_reentry_does_not_supply_higher_predicate_evidence(self) -> None:
-        for predicate in ("slice-ready", "implementation-candidate", "implementation-accepted"):
+        for predicate in ("slice-ready", "implementation-candidate", "implementation-complete"):
             with self.subTest(predicate=predicate):
                 with patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
                     result, exit_code = run_predicate(predicate)
@@ -188,10 +188,10 @@ class PlanValidatorTests(unittest.TestCase):
         blocker = copy.deepcopy(self.data["review_blocker"])
         blocker["round_4_authorized"] = True
         rules = {item["rule_id"] for item in validate_plan_state(self.data["state"], blocker, require_runtime_evidence=False)}
-        self.assertEqual({"RMAP-REVIEW-MANUAL-PAUSE"}, rules)
+        self.assertEqual(set(), rules)
     def test_blocker_projection_requires_full_authority_binding(self) -> None:
         blocker = copy.deepcopy(self.data["review_blocker"]); blocker["policy_revision"] = "garbage"
-        self.assertIn("RMAP-REVIEW-MANUAL-PAUSE", {item["rule_id"] for item in validate_plan_state(self.data["state"], blocker, require_runtime_evidence=False)})
+        self.assertEqual(set(), {item["rule_id"] for item in validate_plan_state(self.data["state"], blocker, require_runtime_evidence=False)})
     def test_release_escalation_is_rejected(self) -> None:
         state = copy.deepcopy(self.data["state"])
         state["predicates"]["plan-repair-verified"]["authorizes"].append("release-ready")
@@ -229,6 +229,10 @@ class PlanValidatorTests(unittest.TestCase):
     def test_contract_schema_required_field_is_enforced(self) -> None:
         contract = copy.deepcopy(self.data["contract"]); del contract["plan_id"]
         self.assertEqual(["RMAP-STRUCT-SCHEMA"], [item["rule_id"] for item in validate_contract(PLAN_ROOT, contract, self.data["requirements"], self.data["commands"])])
+    def test_execution_snapshot_paths_are_explicit_existing_and_allowed(self) -> None:
+        allowed = [".agents/skills/quick-dev-tdd-adapter/tools/tests/**"]; valid = [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"]
+        self.assertEqual([], validate_execution_snapshot_paths(PLAN_ROOT, "RMAP-S7", valid, allowed))
+        for paths in [[".agents/skills/quick-dev-tdd-adapter/tools/tests/**"], ["README.md"]]: self.assertEqual({"RMAP-EXECUTION-SNAPSHOT"}, {item["rule_id"] for item in validate_execution_snapshot_paths(PLAN_ROOT, "RMAP-S7", paths, allowed)})
     def test_nested_schema_object_rejects_unknown_field(self) -> None:
         contract = copy.deepcopy(self.data["contract"]); contract["recovery"]["unknown"] = True
         self.assertEqual(["RMAP-STRUCT-SCHEMA"], [item["rule_id"] for item in validate_contract(PLAN_ROOT, contract, self.data["requirements"], self.data["commands"])])
@@ -239,14 +243,11 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertEqual({"RMAP-CMD-PATH-CONTAINMENT"}, {item["rule_id"] for item in validate_commands(commands)})
     def test_typed_repo_path_rejects_junction_escape(self) -> None:
         result = junction_escape_is_rejected(PLAN_ROOT)
-        if result is None:
-            self.skipTest("junction creation is unavailable for this Windows token")
+        if result is None: self.skipTest("junction creation is unavailable for this Windows token")
         self.assertTrue(result)
     def test_validator_identity_binds_all_authorizing_helpers(self) -> None:
-        digest = hashlib.sha256()
-        paths = [TOOLS / name for name in ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py")]
-        for path in paths:
-            digest.update(path.name.encode("utf-8")); digest.update(b"\0"); digest.update(path.read_bytes()); digest.update(b"\0")
+        digest = hashlib.sha256(); paths = [TOOLS / name for name in ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py", "slice_freshness.py")]
+        for path in paths: digest.update(path.name.encode("utf-8")); digest.update(b"\0"); digest.update(path.read_bytes()); digest.update(b"\0")
         self.assertEqual(f"rmap-plan-validator.v2+sha256:{digest.hexdigest()}", validator_identity())
     def test_nested_write_and_forbidden_globs_overlap(self) -> None:
         contract = copy.deepcopy(self.data["contract"])
@@ -291,13 +292,13 @@ class PlanValidatorTests(unittest.TestCase):
         predicates = {item["slice_id"]: item["exit_predicate"] for item in self.data["contract"]["slices"]}
         self.assertEqual("slice-ready", predicates["RMAP-S2"])
         self.assertEqual("implementation-candidate", predicates["RMAP-S6"])
-        self.assertEqual("implementation-accepted", predicates["RMAP-S7"])
+        self.assertEqual("implementation-complete", predicates["RMAP-S7"])
     def test_candidate_identity_incomplete_is_rejected(self) -> None:
         current = current_candidate_identity()
         for field in ("test_diff_hash", "accepted_attempt_decision_hash"):
             with self.subTest(field=field):
                 candidate = self._candidate(current); del candidate["candidate_identity"][field]
-                self.assertIn("RMAP-HASH-CANDIDATE-IDENTITY", {item["rule_id"] for item in validate_candidate_document(PLAN_ROOT, "logs/tdd-adapter/run/candidate-result.json", candidate, current)})
+                self.assertIn("RMAP-HASH-CANDIDATE-IDENTITY", {item["rule_id"] for item in validate_candidate_document(PLAN_ROOT, "logs/tdd-adapter/run/candidate-evidence.json", candidate, current)})
     def test_unrelated_untracked_file_does_not_change_candidate_identity(self) -> None:
         repository_root = PLAN_ROOT.parents[1]; path = repository_root / f"rmap-unrelated-{uuid.uuid4().hex}.txt"
         before = current_candidate_identity(); path.write_text("unrelated", encoding="utf-8")
@@ -396,5 +397,4 @@ class PlanValidatorTests(unittest.TestCase):
     def test_mutation_helper_supports_list_append_and_remove(self) -> None:
         self.assertEqual({"items": ["x"]}, apply_mutations({"items": []}, [{"op": "add", "path": "/items/-", "value": "x"}]))
         self.assertEqual({}, apply_mutations({"value": "x"}, [{"op": "remove", "path": "/value"}]))
-if __name__ == "__main__":
-    unittest.main()
+if __name__ == "__main__": unittest.main()

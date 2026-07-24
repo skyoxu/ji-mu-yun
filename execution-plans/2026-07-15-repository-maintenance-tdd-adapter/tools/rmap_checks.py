@@ -1,11 +1,8 @@
 from __future__ import annotations
-import hashlib
-import json
-import re
-from datetime import datetime, timezone
-from pathlib import Path
+import hashlib, json, re
+from datetime import datetime, timezone; from pathlib import Path
 from typing import Any
-from contract_guards import glob_patterns_overlap, schema_error, typed_path_is_safe
+from lifecycle_state_guards import validate_legacy_migration; from contract_guards import glob_patterns_overlap, schema_error, typed_path_is_safe, validate_execution_snapshot_paths
 from source_guards import validate_coverage as validate_source_coverage, validate_plan_lifecycle_policy
 from shadow_guards import validate_shadow_protected_trees, validate_shadow_registry as validate_shadow_registry_guard
 from authority_guards import validate_acceptance_contracts, validate_authority_manifest, validate_clarification_projection, validate_plan_state as validate_plan_state_guard, validate_script_sizes
@@ -30,7 +27,7 @@ REQUIRED_FILES = {
     "schemas/clarification-decisions.v1.json", "schemas/review-blocking-state.v1.json",
     "schemas/review-policy-reentry.v1.json", "schemas/review-policy-reentry.v1.schema.json",
     "schemas/artifact-proof.v1.schema.json", "schemas/artifact-proof-authority.v1.json", "schemas/artifact-proof-required.v1.json", "schemas/artifact-proof-registry.v1.json", "schemas/runtime-artifact-type-proof.v1.json", "tools/artifact_proof_guards.py", "tools/artifact_proof_verdicts.py", "tools/review_reentry_environment.py",
-    "schemas/predicate-artifact-closure.v1.json", "tools/artifact_proof_projection_support.py", "tools/artifact_proof_inventory_support.py", "tools/runtime_artifact_proof_guards.py", "tools/validation_result_guards.py", "tools/tests/test_artifact_proof_closure.py",
+    "schemas/predicate-artifact-closure.v1.json", "schemas/implementation-authorization.v1.schema.json", "schemas/acceptance-handoff.v1.schema.json", "schemas/legacy-lifecycle-migration.v1.schema.json", "schemas/legacy-lifecycle-migration.v1.json", "tools/artifact_proof_projection_support.py", "tools/artifact_proof_inventory_support.py", "tools/runtime_artifact_proof_guards.py", "tools/validation_result_guards.py", "tools/lifecycle_state_guards.py", "tools/tests/test_artifact_proof_closure.py", "tools/tests/test_lifecycle_state_guards.py",
     "schemas/candidate-diff-manifest.v1.schema.json", "schemas/candidate-result-ref.v1.schema.json",
     "schemas/candidate-lineage-manifest.v1.schema.json", "schemas/candidate-slice-effect.v1.schema.json", "schemas/candidate-supersession-proof.v1.schema.json", "schemas/stage-evidence-projection.v1.schema.json",
     "fixtures/fixture-cases.v1.json", "fixtures/candidate-diff-cases.v1.json", "tools/validate_all.py", "tools/rmap_checks.py",
@@ -40,14 +37,13 @@ REQUIRED_FILES = {
 }
 SKILL_SCHEMA_FILES = {"implementation-contract.v1.schema.json", "context-manifest.v1.schema.json", "slice-capsule.v1.schema.json", "backend-request.v1.schema.json", "backend-response.v1.schema.json", "diff-manifest.v1.schema.json", "adapter-decision.v1.schema.json", "agent-attempt-event.v1.schema.json", "baseline-file-manifest.v1.schema.json", "attempt-ledger-manifest.v1.schema.json"}
 PREDICATE_AUTHORITY = {
-    "plan-repair-verified": (["plan-repair-verified"], ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]),
-    "plan-ready": (["plan-ready"], ["slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]),
-    "slice-ready": (["slice-ready"], ["bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]),
-    "implementation-candidate": (["bootstrap-review"], ["implementation-accepted", "protected-handoff", "release-ready"]),
-    "implementation-accepted": (["implementation-accepted"], ["protected-handoff", "release-ready"]),
+    "plan-repair-verified": (["plan-repair-verified"], ["plan-ready", "slice-ready", "implementation-authorized", "implementation-complete", "acceptance-passed", "archived"]),
+    "plan-ready": (["plan-ready"], ["slice-ready", "implementation-authorized", "implementation-complete", "acceptance-passed", "archived"]),
+    "slice-ready": (["slice-ready"], ["implementation-authorized", "implementation-complete", "acceptance-passed", "archived"]),
+    "implementation-candidate": ([], ["implementation-authorized", "implementation-complete", "acceptance-passed", "archived"]),
+    "implementation-complete": (["implementation-complete"], ["acceptance-passed", "archived"]),
 }
-def finding(rule_id: str, target: str, message: str) -> dict[str, str]:
-    return {"rule_id": rule_id, "target": target, "message": message}
+def finding(rule_id: str, target: str, message: str) -> dict[str, str]: return {"rule_id": rule_id, "target": target, "message": message}
 def validate_plan_state(
     state: dict[str, Any],
     review_blocker: dict[str, Any],
@@ -251,7 +247,7 @@ def validate_commands(registry: dict[str, Any], plan_root: Path | None = None) -
             argv = command.get("argv", [])
             required_flags = {"--predicate", "--slice-id", "--run-dir", "--red-result", "--green-result", "--refactor-result"}
             required_flags.update({"--candidate-result"} if declared_predicate == "implementation-candidate" else set())
-            required_flags.update({"--candidate-result", "--candidate-ref", "--bootstrap-run"} if declared_predicate == "implementation-accepted" else set())
+            required_flags.update({"--candidate-result"} if declared_predicate == "implementation-complete" else set())
             if not required_flags.issubset({item for item in argv if isinstance(item, str)}):
                 findings.append(finding("RMAP-CMD-STAGE-PROTOCOL", str(cid), "slice proof command omits required explicit evidence arguments"))
     return findings
@@ -297,8 +293,7 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
     policy = contract.get("acceptance_policy", {})
     if policy.get("open_accepted_p0_p1_blocks") is not True or policy.get("p2_requires_disposition") is not True or policy.get("expired_p2_deferral_blocks") is not True:
         findings.append(finding("RMAP-REVIEW-P2-DISPOSITION", "acceptance-policy", "acceptance blocker policy is incomplete"))
-    if policy.get("high_risk_p2_deferrable") is not False:
-        findings.append(finding("RMAP-REVIEW-P2-HIGH-RISK", "acceptance-policy", "high-risk P2 cannot be deferred"))
+    if policy.get("high_risk_p2_deferrable") is not False: findings.append(finding("RMAP-REVIEW-P2-HIGH-RISK", "acceptance-policy", "high-risk P2 cannot be deferred"))
     if policy.get("release_authorized") is not False or policy.get("confidence_authoritative") is not False:
         findings.append(finding("RMAP-AUTH-ACCEPTANCE", "acceptance-policy", "confidence or release authority escaped"))
     if policy.get("runtime_disposition_source") != "bootstrap-finalized-run":
@@ -317,10 +312,12 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
     if slice_ids != [f"RMAP-S{index}" for index in range(8)]:
         findings.append(finding("RMAP-TDD-SLICE", "slices", "slice sequence mismatch"))
     identity_policy = contract.get("candidate_identity_policy", {}); replay_policy = contract.get("replay_baseline_policy", {})
-    if replay_policy != {"mode": "sealed-snapshot-copy-before-red", "workspace_isolation": True, "source_artifacts": ["implementation-contract.v1.json", "authority.source_hashes", "source_revision"], "manifest_schema": "schemas/replay-baseline-manifest.v1.schema.json", "hash_bound": True, "candidate_excluded": True, "authorizes": [], "does_not_authorize": ["slice-ready", "implementation-candidate", "implementation-accepted"]}:
+    if replay_policy != {"mode": "sealed-snapshot-copy-before-red", "workspace_isolation": True, "source_artifacts": ["implementation-contract.v1.json", "authority.source_hashes", "source_revision"], "manifest_schema": "schemas/replay-baseline-manifest.v1.schema.json", "hash_bound": True, "candidate_excluded": True, "authorizes": [], "does_not_authorize": ["slice-ready", "implementation-candidate", "implementation-complete"]}:
         findings.append(finding("RMAP-REPLAY-BASELINE", "replay-baseline-policy", "replay baseline synchronization policy is incomplete"))
+    execution_policy = contract.get("execution_replay_policy", {}); expected_execution_policy = {"targeted_validation": {"allowed_slices": ["RMAP-S6", "RMAP-S7"], "must_run_in_order": True, "evidence_marker": "targeted-validation.v1.json", "authorizes": [], "does_not_authorize": ["slice-ready", "implementation-candidate", "implementation-complete", "acceptance-passed", "archived"]}, "authoritative_full_replay": {"start_slice": "RMAP-S0", "requires_all_slices": True, "authorizes": []}}
+    if execution_policy != expected_execution_policy: findings.append(finding("RMAP-EXECUTION-REPLAY-POLICY", "execution-replay-policy", "targeted and authoritative replay boundaries are incomplete"))
     required_identity = {"head", "index_tree", "tracked_diff_hash", "untracked_manifest_hash", "contract_hash", "command_registry_hash", "validator_hash", "authority_manifest_hash", "candidate_diff_manifest_hash", "candidate_lineage_manifest_hash", "test_diff_hash", "red_run_id", "green_run_id", "refactor_run_id", "candidate_worktree_hash", "final_context_manifest_hash", "final_capsule_hash", "attempt_ledger_manifest_hash", "run_events_hash", "final_attempt_event_hash", "accepted_attempt_id", "accepted_attempt_decision_hash"}
-    expected_protocol_artifacts = {"changed-files.json", "candidate-lineage-manifest.json", "test-diff.patch", "red-result.json", "green-result.json", "refactor-result.json", "recovery-state.json", "context-manifest.v1.json", "slice-capsule.v1.json", "backend-request.v1.json", "backend-response.v1.json", "diff-manifest.v1.json", "adapter-decision.v1.json", "run-events.jsonl", "baseline-file-manifest.v1.json", "attempt-ledger-manifest.v1.json"}; expected_stage_artifacts = {"red-result.json", "green-result.json", "refactor-result.json", "recovery-state.json", "stage-evidence-projection.v1.json"}
+    expected_protocol_artifacts = {"changed-files.json", "candidate-evidence.json", "candidate-lineage-manifest.json", "test-diff.patch", "red-result.json", "green-result.json", "refactor-result.json", "recovery-state.json", "context-manifest.v1.json", "slice-capsule.v1.json", "backend-request.v1.json", "backend-response.v1.json", "diff-manifest.v1.json", "adapter-decision.v1.json", "run-events.jsonl", "baseline-file-manifest.v1.json", "attempt-ledger-manifest.v1.json"}; expected_stage_artifacts = {"red-result.json", "green-result.json", "refactor-result.json", "recovery-state.json", "stage-evidence-projection.v1.json"}
     stage_binding = identity_policy.get("stage_binding", {})
     attempt_binding = identity_policy.get("attempt_binding", {})
     candidate_schemas = {"candidate_diff_manifest": "schemas/candidate-diff-manifest.v1.schema.json", "candidate_result_ref": "schemas/candidate-result-ref.v1.schema.json", "candidate_lineage_manifest": "schemas/candidate-lineage-manifest.v1.schema.json", "candidate_slice_effect": "schemas/candidate-slice-effect.v1.schema.json", "candidate_supersession_proof": "schemas/candidate-supersession-proof.v1.schema.json", "stage_evidence_projection": "schemas/stage-evidence-projection.v1.schema.json", "candidate_baseline_bridge": "schemas/candidate-baseline-bridge.v1.schema.json"}
@@ -350,8 +347,9 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
         proof_command = command_map.get(item.get("post_refactor_command_id", green.get("command_id")), {})
         if proof_command.get("declared_predicate") != item.get("exit_predicate") or proof_command.get("slice_id") != sid:
             findings.append(finding("RMAP-TDD-EXIT-PROOF", sid, "final predicate command cannot prove its exit predicate"))
-        allowed = item.get("allowed_changes", {})
-        write_paths = allowed.get("production", []) + allowed.get("tests", []) + allowed.get("documentation", [])
+        if green.get("command_id") in {item.get("post_refactor_command_id"), f"rmap-{sid.lower()}-slice-validate"}: findings.append(finding("RMAP-TDD-GREEN-SELF-REFERENCE", sid, "GREEN cannot invoke its own post-stage predicate"))
+        allowed = item.get("allowed_changes", {}); write_paths = allowed.get("production", []) + allowed.get("tests", []) + allowed.get("documentation", [])
+        findings.extend(validate_execution_snapshot_paths(plan_root, sid, item.get("execution_snapshot_paths"), write_paths))
         forbidden_paths = item.get("forbidden_changes", [])
         overlap = next(((write_path, forbidden_path) for write_path in write_paths for forbidden_path in forbidden_paths if glob_patterns_overlap(write_path, forbidden_path)), None)
         if overlap:
@@ -367,8 +365,8 @@ def validate_contract(plan_root: Path, contract: dict[str, Any], registry: dict[
     if slice_requirements != set(req_map):
         findings.append(finding("RMAP-TDD-REQUIREMENT-COVERAGE", "slices", "active requirement union differs from slice coverage"))
     by_id = {item.get("slice_id"): item for item in slices}
-    if by_id.get("RMAP-S2", {}).get("exit_predicate") != "slice-ready" or by_id.get("RMAP-S6", {}).get("exit_predicate") != "implementation-candidate" or by_id.get("RMAP-S7", {}).get("exit_predicate") != "implementation-accepted":
-        findings.append(finding("RMAP-TDD-CANDIDATE-SEQUENCE", "S2-S7", "candidate, Bootstrap, and acceptance sequence is inverted"))
+    if by_id.get("RMAP-S2", {}).get("exit_predicate") != "slice-ready" or by_id.get("RMAP-S6", {}).get("exit_predicate") != "implementation-candidate" or by_id.get("RMAP-S7", {}).get("exit_predicate") != "implementation-complete":
+        findings.append(finding("RMAP-TDD-CANDIDATE-SEQUENCE", "S2-S7", "candidate and implementation-completion sequence is invalid"))
     return findings
 def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, str]], dict[str, Any]]:
     checks: list[dict[str, Any]] = []; findings = validate_required_files(plan_root)
@@ -376,6 +374,7 @@ def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[st
     data, load_findings = load_machine(plan_root); findings.extend(load_findings)
     if load_findings: return checks, findings, data
     requirement_ids = {item["id"] for item in data["requirements"].get("requirements", []) if isinstance(item, dict) and "id" in item}
+    lifecycle_marker = strict_json(plan_root / "schemas" / "legacy-lifecycle-migration.v1.json")
     groups = [
         ("RMAP-STRUCT-LINKS", validate_links(plan_root)),
         ("RMAP-DOC-CURRENT-STATE", validate_current_state_projection(plan_root)),
@@ -383,6 +382,7 @@ def validate_static(plan_root: Path) -> tuple[list[dict[str, Any]], list[dict[st
         ("RMAP-REQ-COVERAGE", validate_coverage(plan_root, data["coverage"], requirement_ids)),
         ("RMAP-REQ-DELTAS", validate_deltas(plan_root, data["deltas"], requirement_ids)),
         ("RMAP-AUTH-PREDICATES", validate_plan_state(data["state"], data["review_blocker"], data["review_reentry"], require_runtime_evidence=False)),
+        ("RMAP-LIFECYCLE-MIGRATION", validate_legacy_migration(plan_root, lifecycle_marker)),
         ("RMAP-CMD-REGISTRY", validate_commands(data["commands"], plan_root)),
         ("RMAP-CONTRACT", validate_contract(plan_root, data["contract"], data["requirements"], data["commands"])),
         ("RMAP-SHADOW", validate_shadow_registry(data["shadow"])),

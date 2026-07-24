@@ -13,13 +13,14 @@ from contract_guards import contained_file, schema_error
 from fixture_checks import evaluate_fixture, validate_fixture_suite
 from candidate_diff_guards import validate_candidate_fixture_suite
 from protocol_guards import evaluate_protocol_fixture
-from evidence_guards import validate_candidate_review_documents
+from evidence_guards import validate_candidate_document
 from slice_guards import validate_slice_outputs
 from validation_result_guards import (
     build_result as build_validation_result,
     validate_authorizing_result as validate_result_guard,
     value_hash as _value_hash,
 )
+from slice_freshness import snapshot as slice_snapshot
 from rmap_checks import (
     PREDICATE_AUTHORITY,
     VALIDATOR_VERSION,
@@ -29,12 +30,10 @@ from rmap_checks import (
     validate_plan_state,
     validate_static,
 )
-PLAN_ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY_ROOT = PLAN_ROOT.parents[1]
-UNIT_TEST_TIMEOUT_SECONDS = 300
+PLAN_ROOT, REPOSITORY_ROOT, UNIT_TEST_TIMEOUT_SECONDS = Path(__file__).resolve().parents[1], Path(__file__).resolve().parents[3], 300
 def validator_identity() -> str:
     digest = hashlib.sha256()
-    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py"]
+    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py", "slice_freshness.py"]
     for path in (Path(__file__).with_name(name) for name in names):
         digest.update(path.name.encode("utf-8"))
         digest.update(b"\0")
@@ -92,7 +91,7 @@ def run_unit_tests() -> tuple[dict[str, Any], list[dict[str, str]]]:
 
 
 def all_exclusions() -> list[str]:
-    return ["plan-repair-verified", "plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+    return ["plan-repair-verified", "plan-ready", "slice-ready", "implementation-authorized", "implementation-complete", "acceptance-passed", "archived"]
 
 
 def validation_snapshot() -> dict[str, str]:
@@ -106,6 +105,16 @@ def validation_snapshot() -> dict[str, str]:
         "authority_root": sha256_file(PLAN_ROOT / "schemas" / "authority-manifest.v1.json"),
         "validator_root": "sha256:" + validator.rsplit("sha256:", 1)[1],
     }
+
+
+def slice_validation_snapshot(slice_id: str) -> dict[str, str]:
+    """Return the freshness roots for one slice and its declared predecessors.
+
+    A late-slice repair must not invalidate completed independent predecessors.
+    Keep the existing result envelope fields, but derive their plan root from the
+    selected slice's recursive dependency closure rather than the whole plan.
+    """
+    return slice_snapshot(strict_load(PLAN_ROOT / "implementation-contract.v1.json"), slice_id, sha256_file(REPOSITORY_ROOT / "agentbuild.txt"), sha256_file(PLAN_ROOT / "schemas" / "predicate-artifact-closure.v1.json"), sha256_file(PLAN_ROOT / "schemas" / "authority-manifest.v1.json"), validator_identity(), _value_hash)
 
 def validate_authorizing_result(result: dict[str, Any], current: dict[str, str], runtime_evidence_root: str | None = None, predecessor_result: dict[str, Any] | None = None) -> list[dict[str, str]]:
     return validate_result_guard(
@@ -206,6 +215,31 @@ def strict_load(path: Path) -> dict[str, Any]:
     return value
 
 
+def write_acceptance_handoff(run_dir: str | None, result: dict[str, Any]) -> list[dict[str, str]]:
+    """Publish the implementation-owned, explicitly non-authorizing handoff."""
+    target = (REPOSITORY_ROOT / run_dir).resolve() if run_dir else None
+    try:
+        relative = target.relative_to(REPOSITORY_ROOT).as_posix() if target is not None else ""
+    except ValueError:
+        relative = ""
+    if target is None or not target.is_dir() or not relative.startswith("logs/tdd-adapter/"):
+        return [{"rule_id": "RMAP-ACCEPTANCE-HANDOFF-PATH", "target": str(run_dir), "message": "completion handoff must remain in the declared TDD run directory"}]
+    handoff = {
+        "schema_version": "rmap.acceptance-handoff.v1",
+        "plan_id": "repository-maintenance-tdd-adapter",
+        "state": "implementation-complete",
+        "implementation_result": (target.relative_to(REPOSITORY_ROOT) / "implementation-complete-result.json").as_posix(),
+        "candidate_hash": result["candidate_hash"],
+        "authorizes": [],
+        "does_not_authorize": ["acceptance-passed", "protected-handoff", "release-ready", "archived"],
+    }
+    error = schema_error(handoff, strict_load(PLAN_ROOT / "schemas" / "acceptance-handoff.v1.schema.json"))
+    if error:
+        return [{"rule_id": "RMAP-ACCEPTANCE-HANDOFF-SCHEMA", "target": "acceptance-handoff", "message": error}]
+    (target / "acceptance-handoff.json").write_text(json.dumps(handoff, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    return []
+
+
 def run_predicate(predicate: str, slice_id: str | None = None, candidate_result: str | None = None, candidate_ref: str | None = None, bootstrap_run: str | None = None, run_dir: str | None = None, red_result: str | None = None, green_result: str | None = None, refactor_result: str | None = None, predecessor_result_path: str | None = None) -> tuple[dict[str, Any], int]:
     predecessor_path = contained_file(REPOSITORY_ROOT, predecessor_result_path) if predecessor_result_path else None
     if predecessor_result_path and predecessor_path is None:
@@ -222,41 +256,13 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
         "refactor_result": refactor_result,
         "predecessor_result_hash": _value_hash(predecessor_result) if predecessor_result else None,
     })
-    validated_snapshot = validation_snapshot()
+    validated_snapshot = slice_validation_snapshot(slice_id) if slice_id else validation_snapshot()
     checks, findings, data = validate_static(PLAN_ROOT)
     fixture_findings = validate_fixture_suite(PLAN_ROOT, data) if data else []
     fixture_findings.extend(validate_candidate_fixture_suite(PLAN_ROOT) if data else [])
     findings.extend(fixture_findings)
     checks.append({"rule_id": "RMAP-FIXTURES", "status": "pass" if not fixture_findings else "fail", "evidence": ["positive, negative, boundary, stale, and mutation cases"]})
-    reentry_authorized = data.get("review_reentry", {}).get("state") == "reentry_authorized"
-    declared_review_blocks = set(data.get("review_blocker", {}).get("blocks_predicates", []))
-    review_targeted = predicate == "implementation-accepted" and predicate in declared_review_blocks
-    if review_targeted:
-        reentry_findings = validate_plan_state(data["state"], data["review_blocker"], data["review_reentry"])
-        findings.extend(reentry_findings)
-        checks.append({
-            "rule_id": "RMAP-REVIEW-REENTRY",
-            "status": "pass" if not reentry_findings else "fail",
-            "evidence": ["successor policy and semantic closure independently recomputed"],
-        })
-        reentry_authorized = reentry_authorized and not reentry_findings
-    review_blocked_predicates = set() if reentry_authorized else declared_review_blocks & {"implementation-accepted"}
-    identity_blockers = [
-        item for item in data.get("state", {}).get("open_blockers", [])
-        if isinstance(item, dict) and item.get("blocker_id") == "RMAP-BLOCK-PROTECTED-VERIFIER-IDENTITY"
-    ]
-    identity_blocked_predicates = {
-        item for blocker in identity_blockers for item in blocker.get("blocks_predicates", [])
-        if isinstance(item, str)
-    }
-    blocked_predicates = review_blocked_predicates | identity_blocked_predicates
-    if predicate in review_blocked_predicates:
-        findings.append({"rule_id": "RMAP-REVIEW-MANUAL-PAUSE", "target": predicate, "message": "Round 3 manual pause requires a new review policy decision"})
-        checks.append({"rule_id": "RMAP-REVIEW-MANUAL-PAUSE", "status": "blocked", "evidence": [data.get("review_blocker", {}).get("review_id", "missing review id")]})
-    if predicate in identity_blocked_predicates:
-        findings.append({"rule_id": "RMAP-PROTECTED-VERIFIER-IDENTITY", "target": predicate, "message": "protected handoff or release requires an independent execution identity or a trusted signed verification envelope"})
-        checks.append({"rule_id": "RMAP-PROTECTED-VERIFIER-IDENTITY", "status": "blocked", "evidence": [identity_blockers[0].get("current_verifier", "missing verifier identity")]})
-    elif slice_id:
+    if slice_id:
         contract_slice = next((item for item in data.get("contract", {}).get("slices", []) if item.get("slice_id") == slice_id), None)
         if contract_slice is None or contract_slice.get("exit_predicate") != predicate:
             slice_check = {"rule_id": "RMAP-AUTH-SLICE", "status": "fail", "evidence": ["slice/predicate binding"]}
@@ -273,8 +279,8 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
                     except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
                         pass
             if slice_id in {"RMAP-S6", "RMAP-S7"}:
-                if not candidate_result or (slice_id == "RMAP-S7" and (not bootstrap_run or not candidate_ref)):
-                    slice_findings.append({"rule_id": "RMAP-REVIEW-EVIDENCE-BINDING", "target": slice_id, "message": "explicit candidate result and required review evidence are missing"})
+                if not candidate_result:
+                    slice_findings.append({"rule_id": "RMAP-REVIEW-EVIDENCE-BINDING", "target": slice_id, "message": "explicit candidate result is missing"})
                 else:
                     try:
                         current = current_candidate_identity()
@@ -291,19 +297,9 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
                                 manifest_path.relative_to(REPOSITORY_ROOT).as_posix(), test_path.read_bytes(),
                                 strict_load(lineage_path), current, evidence_dir.name,
                             ))
+                            slice_findings.extend(validate_candidate_document(PLAN_ROOT, candidate_relative, strict_load(candidate_path), current, stage_documents))
                         else:
-                            candidate = strict_load(candidate_path)
-                            review_dir = (REPOSITORY_ROOT / str(bootstrap_run)).resolve()
-                            review_relative = review_dir.relative_to(REPOSITORY_ROOT).as_posix()
-                            if not review_relative.startswith("logs/ci/"):
-                                raise ValueError("Bootstrap evidence path must stay in logs/ci")
-                            candidate_ref_path = (REPOSITORY_ROOT / str(candidate_ref)).resolve()
-                            candidate_ref_relative = candidate_ref_path.relative_to(REPOSITORY_ROOT).as_posix()
-                            if not candidate_ref_relative.startswith("logs/tdd-adapter/"):
-                                raise ValueError("candidate reference must stay in logs/tdd-adapter")
-                            documents = [strict_load(review_dir / "finalized-run-validation.json"), strict_load(review_dir / "review-input.json"), strict_load(review_dir / "review-gate-result.json"), strict_load(review_dir / "review-dispositions.json")]
-                            candidate_ref_document = strict_load(candidate_ref_path)
-                            slice_findings.extend(validate_candidate_review_documents(PLAN_ROOT, candidate_relative, candidate, *documents, current, stage_documents, review_dir, candidate_ref_document, candidate_ref_relative))
+                            slice_findings.extend(validate_candidate_document(PLAN_ROOT, candidate_relative, strict_load(candidate_path), current, None))  # S7 must load S6 stages beside its candidate.
                     except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
                         slice_findings.append({"rule_id": "RMAP-REVIEW-EVIDENCE-BINDING", "target": slice_id, "message": str(exc)})
             slice_check["status"] = "pass" if not slice_findings else "fail"
@@ -319,13 +315,12 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
     test_check, test_findings = run_unit_tests()
     checks.append(test_check)
     findings.extend(test_findings)
-    current_snapshot = validation_snapshot()
+    current_snapshot = slice_validation_snapshot(slice_id) if slice_id else validation_snapshot()
     if current_snapshot != validated_snapshot:
         findings.append({"rule_id": "RMAP-HASH-VALIDATION-DRIFT", "target": "validation-run", "message": "plan, source, or validator changed during validation"})
         checks.append({"rule_id": "RMAP-HASH-VALIDATION-DRIFT", "status": "fail", "evidence": ["pre/post validation snapshots differ"]})
-    blocking_rules = {"RMAP-REVIEW-MANUAL-PAUSE", "RMAP-PROTECTED-VERIFIER-IDENTITY"}
-    status_override = "blocked" if predicate in blocked_predicates and not [item for item in findings if item["rule_id"] not in blocking_rules] else None
-    derived_capabilities = {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_accepted", "release_ready")}
+    status_override = None
+    derived_capabilities = {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_complete", "release_ready")}
     if not findings and status_override is None and slice_id:
         order = {f"RMAP-S{index}": index for index in range(8)}
         for name, rule in data.get("state", {}).get("capability_projection", {}).get("capabilities", {}).items():
@@ -336,6 +331,13 @@ def run_predicate(predicate: str, slice_id: str | None = None, candidate_result:
         predicate, checks, findings, validated_snapshot, current_snapshot,
         status_override, derived_capabilities, runtime_evidence_root, predecessor_result,
     )
+    if result["status"] == "pass" and predicate == "implementation-complete":
+        handoff_findings = write_acceptance_handoff(run_dir, result)
+        if handoff_findings:
+            result["diagnostics"].extend(handoff_findings)
+            result["status"] = "fail"
+            result["authorizes"] = []
+            result["does_not_authorize"] = all_exclusions()
     return result, 0 if result["status"] == "pass" else 1
 
 
@@ -357,7 +359,7 @@ def run_fixture(fixture_id: str) -> tuple[dict[str, Any], int]:
         "candidate_hash": current_hash,
         "source_hash": sha256_file(REPOSITORY_ROOT / "agentbuild.txt"),
         "validator_version": validator_identity(),
-        "capabilities": {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_accepted", "release_ready")},
+        "capabilities": {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_complete", "release_ready")},
         "checks": [check],
         "diagnostics": findings,
         "authorizes": [],

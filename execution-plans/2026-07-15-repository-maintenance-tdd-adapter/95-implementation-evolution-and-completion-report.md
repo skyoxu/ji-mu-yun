@@ -694,6 +694,19 @@ VDD Skill 不应把 7-15 的全部控制面复制给所有需求。建议按风�
 
 ## 第二部分：实现完成后的整体报告
 
+### IR-008：定向切片验证与权威全链重放分离
+
+**时间**：2026-07-24
+**状态**：已实施；尚未授权实现完成。
+
+**问题**：此前路由器只提供一条执行路径。S6/S7 的合同、命令或验证器修复会改变全局合同/验证身份，导致调试中的后期修复被立即升级为从 S0 开始的高成本重放。这样无法先收敛单个切片故障，并会反复消耗完整协议夹具验证时间。
+
+**修改**：`implementation-contract.v1.json` 新增 `execution_replay_policy`。其中 `targeted_validation` 仅允许按顺序执行 `RMAP-S6`、`RMAP-S7`，每个运行写入 `targeted-validation.v1.json`，并明确 `authorizes: []`；`authoritative_full_replay` 仍固定从 `RMAP-S0` 开始并要求全部切片。新增 `tools/targeted_slice_validation.py` 执行前者。常规路由器会忽略带该标记的运行，候选选择器也只在定向模式中消费它们。
+
+**安全边界**：定向验证用于发现并修复单个切片的生命周期、命令、工件与绑定问题；它不能形成 `slice-ready`、`implementation-candidate`、`implementation-complete`、验收或归档状态。只有定向链稳定通过后启动的一次权威全链重放可以提供最终实现证据。
+
+**验证要求**：刷新投影后必须通过 `plan-repair-verified` 和全套计划测试；在此之后先执行一次非授权 S6→S7 定向验证，再按合同从 S0 进行唯一的权威重放。
+
 状态：**待填写**。
 
 现有 [96-global-review-and-validation.md](96-global-review-and-validation.md) 只定义最终报告的最低字段，没有提供完整的实施后报告，因此本部分保留。
@@ -726,3 +739,29 @@ VDD Skill 不应把 7-15 的全部控制面复制给所有需求。建议按风�
 ## IR-007：S6 候选基线迁移为已提交范围映射
 
 为避免把已提交实现误判为空工作树差异，S6 改为从固定基线 `8d1a97f639d37ef740bea9d8eca83b9344246480` 到运行时冻结的 `HEAD` 独立重算候选。生成的范围清单逐文件记录变更前后哈希、提交列表和唯一的 S0-S6 写集归属；它不授予验收、提交、交接或发布权限。当前 RED/GREEN/REFACTOR 仍作为重新验证证据，不能被历史提交范围替代。S7 的 finalized Bootstrap envelope 要求未变。
+
+### EV-021：外部信任根由投影字节钉扎改为版本化语义策略
+
+**时间**：2026-07-23
+**状态**：已采纳并验证；只恢复计划再生能力，不授权 S6、S7 或实现接受。
+
+**问题**：外部 Bootstrap/VDD trust root 将 `artifact-proof-authority.v1.json` 的当前字节哈希作为自身不可变身份。该文件又是 `rmap-refresh-projections` 的合法再生输出。因此任何正常的 control-plane 变更都会使计划 authority 更新，而外部根仍钉住旧字节，造成“必须刷新才能验证、刷新后又必然失效”的循环阻断。
+
+**修复**：外部根现在绑定 `vdd-artifact-proof-root-policy.v2` 的语义身份、严格 VDD 标准字节、验证器边界、零授权权限格和 successor lineage，不再绑定可再生计划投影的字节。计划本地 `authority-manifest`、artifact registry 和 predicate closure 仍绑定所有当前实际文件字节；未经授权的根策略 revision、producer、derivation、staleness、lineage 或 consumer 改动继续由独立稳定 rule 拒绝。
+
+**同步更新**：
+
+- 更新 7-15 artifact-proof schema、guard、authority/registry/runtime/manifest/closure 投影；
+- 更新 Bootstrap root loader 与 external root 镜像；
+- 更新 VDD strict standard、skill contract、validator 与 regression test；
+- 新增回归断言：语义根不得重新引入可再生计划字节钉扎，根策略 identity 变异仍按 `VDD-ARTIFACT-PROOF-IDENTITY` 拒绝。
+
+**本轮证据**：
+
+- clarification exit：`logs/vdd-clarifications/2026-07-15-repository-maintenance-tdd-adapter-f6d1143a/trust-root-repair-20260723/state.json`；
+- VDD contract validation：通过；VDD tests：51 项通过；
+- 7-15 tools tests：95 项通过；
+- current `plan-ready`：`logs/vdd-clarifications/2026-07-15-repository-maintenance-tdd-adapter-f6d1143a/trust-root-repair-20260723/plan-ready-result.json`，状态 `pass`；
+- Bootstrap Skill regression：90 项通过。
+
+**给 VDD Skill 的教训**：external root 应固定规则和升级边界，而不是冻结合法生成器的输出字节。仅当根策略本身变更时才需要 successor；普通计划投影再生必须由本地 byte-bound manifest 和当前验证结果闭环。

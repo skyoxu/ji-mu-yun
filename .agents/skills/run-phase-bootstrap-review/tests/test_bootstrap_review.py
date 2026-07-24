@@ -716,6 +716,20 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(1, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
         self.assertFalse((self.run_dir / "review-gate-result.json").exists())
 
+    def test_runner_owned_preflight_rejects_shell_descriptors(self) -> None:
+        with self.assertRaises(bootstrap.BootstrapError):
+            bootstrap._preflight_descriptor(
+                self.repo,
+                self.scope,
+                self.run_dir,
+                {
+                    "executable": "cmd",
+                    "argv": ["/c", "echo unsafe"],
+                    "cwd": {"type": "repo_path", "value": "."},
+                    "timeout_seconds": 60,
+                },
+            )
+
     def test_gate_rejects_stale_preflight_evidence(self) -> None:
         self.prepare()
         self.complete_layers()
@@ -1888,6 +1902,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn(str(self.run_dir / manifest["artifactView"]["manifestPath"]), prompt)
         self.assertIn("Read every artifact from its Artifact View snapshotPath", prompt)
         self.assertIn("Resolve every relative snapshotPath against the assigned run directory", prompt)
+        self.assertIn("Do not hand-copy the\ncoverage path arrays", prompt)
+        self.assertIn("derive the coverage arrays from the frozen Artifact View manifest", prompt)
         self.assertIn("Do not edit formal output files", prompt)
         self.assertNotIn("fill\n`reviewer-outputs/blind_hunter.json`", prompt)
 

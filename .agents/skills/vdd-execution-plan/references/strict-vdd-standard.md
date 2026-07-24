@@ -102,6 +102,8 @@ Contracts must be machine-readable where a machine consumes them. Prose owns rat
 
 Avoid duplicate authority. A plan references durable standards and ADRs rather than copying thresholds or security policy.
 
+An external trust root may bind a versioned semantic policy, its producer authority, validator boundary, permission lattice, and successor lineage. It must not byte-pin a plan-local artifact that the declared regeneration command is expected to rewrite. Current bytes of regenerable plan projections remain plan-local manifest evidence and must be revalidated after regeneration. A root-policy change requires an explicit successor revision and negative proof; an ordinary projection refresh must not require a root change.
+
 Deferral is not verification. An allowed deferral retains its status and must include owner, affected scope, severity, non-impact proof, expiry/recheck trigger, and exact closure test.
 
 ## 4. Specification deltas and drift control

@@ -7,9 +7,9 @@ from typing import Any
 
 
 ROOT_PATH = ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json"
-ROOT_SHA256 = "sha256:638f92a8e687adde9910612970240952e018ad31d3a82ada4f31d1896cad504a"
+ROOT_SHA256 = "sha256:e44a386e6ddc35ba76a27ec5223e6b0349823a7b5250f3baa22c9a464fff28a8"
 STANDARD_PATH = ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md"
-STANDARD_SHA256 = "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140"
+STANDARD_SHA256 = "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72"
 PREDECESSOR_SHA256 = "sha256:2c0c297c20fbf46daaea5eca1836c9b3e51ce9699749eae2152cafd57a6b2544"
 INVALIDATES = ["artifact-proof-registry", "runtime-artifact-type-proof", "plan-repair-verified", "plan-ready"]
 DOES_NOT_AUTHORIZE = ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
@@ -49,10 +49,16 @@ def load_artifact_proof_root(repository_root: Path) -> tuple[dict[str, Any], str
     if producer.get("authority_path") != STANDARD_PATH or producer.get("authority_sha256") != STANDARD_SHA256 or _sha(repository_root / STANDARD_PATH) != STANDARD_SHA256:
         raise ValueError("Bootstrap artifact-proof producer authority is not pinned")
     identity = proof["immutable_identity"]
-    if identity.get("authority_revision") != "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202":
+    if identity != {
+        "mode": "semantic-root-policy",
+        "algorithm": "vdd-root-policy-v1",
+        "artifact_sha256": None,
+        "authority_revision": "vdd-artifact-proof-root-policy.v2",
+        "manifest_path": "schemas/authority-manifest.v1.json",
+    }:
         raise ValueError("Bootstrap artifact-proof authority revision is invalid")
     derivation = proof["source_of_truth_derivation"]["rules"]
-    if derivation != [{"source": ROOT_PATH, "source_sha256": None, "field": "/proof/immutable_identity/artifact_sha256", "target_field": "$bytes", "derivation": "external-hash-pin"}]:
+    if derivation != [{"source": STANDARD_PATH, "source_sha256": STANDARD_SHA256, "field": "/3-authority-intent-kernels-and-executable-contracts", "target_field": "$policy", "derivation": "semantic-policy-reference"}]:
         raise ValueError("Bootstrap artifact-proof root derivation is invalid")
     stale = proof["staleness_propagation"]
     if stale.get("invalidates") != INVALIDATES or stale.get("regeneration_command_id") != "rmap-refresh-projections" or stale.get("revalidation_command_id") != "rmap-plan-repair-validate":

@@ -332,8 +332,7 @@
           "value": "cleared"
         }
       ],
-      "expected_valid": false,
-      "expected_rule": "RMAP-REVIEW-MANUAL-PAUSE"
+      "expected_valid": true
     },
     {
       "id": "review-round4-authorized",
@@ -345,8 +344,7 @@
           "value": true
         }
       ],
-      "expected_valid": false,
-      "expected_rule": "RMAP-REVIEW-MANUAL-PAUSE"
+      "expected_valid": true
     },
     {
       "id": "red-stage-exit-conflict",

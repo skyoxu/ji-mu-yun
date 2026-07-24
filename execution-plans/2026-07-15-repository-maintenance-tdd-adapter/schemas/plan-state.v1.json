@@ -39,10 +39,10 @@
       "does_not_authorize": [
         "plan-ready",
         "slice-ready",
-        "bootstrap-review",
-        "implementation-accepted",
-        "protected-handoff",
-        "release-ready"
+        "implementation-authorized",
+        "implementation-complete",
+        "acceptance-passed",
+        "archived"
       ]
     },
     "plan-ready": {
@@ -51,10 +51,10 @@
       ],
       "does_not_authorize": [
         "slice-ready",
-        "bootstrap-review",
-        "implementation-accepted",
-        "protected-handoff",
-        "release-ready"
+        "implementation-authorized",
+        "implementation-complete",
+        "acceptance-passed",
+        "archived"
       ]
     },
     "slice-ready": {
@@ -62,29 +62,28 @@
         "slice-ready"
       ],
       "does_not_authorize": [
-        "bootstrap-review",
-        "implementation-accepted",
-        "protected-handoff",
-        "release-ready"
+        "implementation-authorized",
+        "implementation-complete",
+        "acceptance-passed",
+        "archived"
       ]
     },
     "implementation-candidate": {
-      "authorizes": [
-        "bootstrap-review"
-      ],
+      "authorizes": [],
       "does_not_authorize": [
-        "implementation-accepted",
-        "protected-handoff",
-        "release-ready"
+        "implementation-authorized",
+        "implementation-complete",
+        "acceptance-passed",
+        "archived"
       ]
     },
-    "implementation-accepted": {
+    "implementation-complete": {
       "authorizes": [
-        "implementation-accepted"
+        "implementation-complete"
       ],
       "does_not_authorize": [
-        "protected-handoff",
-        "release-ready"
+        "acceptance-passed",
+        "archived"
       ]
     }
   },
@@ -108,7 +107,7 @@
       "plan-ready",
       "slice-ready",
       "implementation-candidate",
-      "implementation-accepted"
+      "implementation-complete"
     ],
     "in_scope": [
       "workflow-internal-forgery",
@@ -165,7 +164,7 @@
       "common_schema_skill_owned": {"first_slice": "RMAP-S1", "predicate": "slice-ready"},
       "adapter_operational": {"first_slice": "RMAP-S2", "predicate": "slice-ready"},
       "old_plan_backfill_complete": {"first_slice": "RMAP-S5", "predicate": "slice-ready"},
-      "implementation_accepted": {"first_slice": "RMAP-S7", "predicate": "implementation-accepted"},
+      "implementation_complete": {"first_slice": "RMAP-S7", "predicate": "implementation-complete"},
       "release_ready": {"first_slice": null, "predicate": null}
     }
   }

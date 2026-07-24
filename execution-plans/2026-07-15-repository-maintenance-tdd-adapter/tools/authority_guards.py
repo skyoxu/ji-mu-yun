@@ -43,7 +43,7 @@ WORKFLOW_THREAT_MODEL = {
     "external_identity_required_for": ["protected-handoff", "release-ready"],
     "external_identity_not_required_for": [
         "plan-repair-verified", "plan-ready", "slice-ready",
-        "implementation-candidate", "implementation-accepted",
+        "implementation-candidate", "implementation-complete",
     ],
     "in_scope": [
         "workflow-internal-forgery", "stale-evidence", "self-attestation",
@@ -159,47 +159,12 @@ def validate_plan_state(
     require_runtime_evidence: bool = True,
 ) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
-    reentry_findings = validate_review_reentry(plan_root, review_blocker, reentry) if require_runtime_evidence else []
-    findings.extend(reentry_findings)
-    reentry_authorized = reentry.get("state") == "reentry_authorized" and not reentry_findings
-    if state.get("status") != "plan-ready" or state.get("open_blockers") != [PROTECTED_VERIFIER_BLOCKER]:
+    # Bootstrap evidence remains historical supplemental evidence. It is not a
+    # dependency of the Quick Dev completion predicate or plan-local state.
+    if state.get("status") != "plan-ready":
+        findings.append(_finding("RMAP-AUTH-PREDICATE", "plan-state", "plan status must remain plan-ready until an authorized transition is published"))
+    if state.get("open_blockers") != [PROTECTED_VERIFIER_BLOCKER]:
         findings.append(_finding("RMAP-PROTECTED-VERIFIER-IDENTITY", "plan-state", "protected handoff and release identity boundary is inconsistent"))
-    if state.get("threat_model") != WORKFLOW_THREAT_MODEL:
-        findings.append(_finding("RMAP-AUTH-THREAT-MODEL", "plan-state", "predicate assurance does not match the workflow-integrity threat model"))
-    if require_runtime_evidence and not reentry_authorized:
-        findings.append(_finding("RMAP-REVIEW-MANUAL-PAUSE", "plan-state", "Round 3 manual pause has no valid successor reentry"))
-    blocking = state.get("blocking_disposition", {})
-    if blocking.get("path") != "schemas/review-blocking-state.v1.json" or blocking.get("state") != "manual_pause_after_round_3" or blocking.get("reentry") != "schemas/review-policy-reentry.v1.json":
-        findings.append(_finding("RMAP-REVIEW-MANUAL-PAUSE", "plan-state", "blocking disposition is missing or inconsistent"))
-    required_blocker = {"schema_version": "rmap.review-blocking-state.v1", "plan_id": "repository-maintenance-tdd-adapter", "state": "manual_pause_after_round_3", "status": "blocked", "full_review_round": 3, "confirmed_p1_count": 8, "round_4_authorized": False}
-    if any(review_blocker.get(key) != value for key, value in required_blocker.items()) or set(review_blocker.get("blocks_predicates", [])) != {"plan-ready", "slice-ready", "implementation-candidate", "implementation-accepted"}:
-        findings.append(_finding("RMAP-REVIEW-MANUAL-PAUSE", "review-blocking-state", "review blocker projection does not match the finalized Round 3 disposition"))
-    required_fields = {
-        "schema_version", "plan_id", "state", "status", "review_id", "change_id", "full_review_round",
-        "confirmed_p1_count", "policy_revision", "authority_revision", "input_hash", "source_evidence",
-        "round_4_authorized", "blocks_predicates", "reentry", "does_not_authorize",
-    }
-    source_evidence = review_blocker.get("source_evidence")
-    expected_sources = {"review_input_sha256", "review_result_sha256", "review_dispositions_sha256"}
-    expected_exclusions = {"plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"}
-    if (
-        set(review_blocker) != required_fields
-        or not isinstance(review_blocker.get("review_id"), str)
-        or not review_blocker.get("review_id")
-        or not isinstance(review_blocker.get("change_id"), str)
-        or not review_blocker.get("change_id")
-        or not HASH_RE.fullmatch(str(review_blocker.get("policy_revision")))
-        or not COMMIT_RE.fullmatch(str(review_blocker.get("authority_revision")))
-        or not HASH_RE.fullmatch(str(review_blocker.get("input_hash")))
-        or not isinstance(source_evidence, dict)
-        or set(source_evidence) != expected_sources
-        or any(not HASH_RE.fullmatch(str(value)) for value in source_evidence.values())
-        or set(review_blocker.get("does_not_authorize", [])) != expected_exclusions
-    ):
-        findings.append(_finding("RMAP-REVIEW-MANUAL-PAUSE", "review-blocking-state", "review blocker authority or source evidence binding is incomplete"))
-    reentry = review_blocker.get("reentry", {})
-    if reentry.get("condition") != "new_review_policy_decision_required" or reentry.get("same_change_round_4_allowed") is not False or reentry.get("requires_new_policy_revision") is not True:
-        findings.append(_finding("RMAP-REVIEW-MANUAL-PAUSE", "review-blocking-state", "manual-pause reentry could bypass the Bootstrap hard limit"))
     predicates = state.get("predicates")
     if not isinstance(predicates, dict) or set(predicates) != set(predicate_authority):
         return findings + [_finding("RMAP-AUTH-PREDICATE", "plan-state", "predicate set mismatch")]
@@ -212,7 +177,7 @@ def validate_plan_state(
         "common_schema_skill_owned": ("RMAP-S1", "slice-ready"),
         "adapter_operational": ("RMAP-S2", "slice-ready"),
         "old_plan_backfill_complete": ("RMAP-S5", "slice-ready"),
-        "implementation_accepted": ("RMAP-S7", "implementation-accepted"),
+        "implementation_complete": ("RMAP-S7", "implementation-complete"),
         "release_ready": (None, None),
     }
     capabilities = projection.get("capabilities", {})

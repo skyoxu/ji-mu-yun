@@ -122,8 +122,10 @@ def expected_static_proof(
     validator_path = registry_rule["validator_path"]
     configured_rules = artifact_rule.get("derivation_rules")
     if is_authority_root:
-        derivation_rules = copy.deepcopy(external_root["source_of_truth_derivation"]["rules"])
-        derivation_rules[0]["source_sha256"] = external_root_hash
+        derivation_rules = [
+            {**rule, "source_sha256": _sha(repository_root / rule["source"])}
+            for rule in external_root["source_of_truth_derivation"]["rules"]
+        ]
     elif configured_rules:
         derivation_rules = [
             {**rule, "source_sha256": _sha(repository_root / rule["source"])}
@@ -260,10 +262,15 @@ def validate_artifact_proofs(
     plan_lattice["predicate"] = "artifact-contract-proof"
     if plan_lattice != TRUST_ROOT_BOUNDARY:
         return [_finding("RMAP-ARTIFACT-PROOF-CONSUMER", AUTHORITY_PATH, "plan and external trust-root permission lattices differ")]
-    actual_authority_hash = _sha(authority_path)
     root_identity = external_root["immutable_identity"]
-    if external_root.get("artifact_path") != authority_relative or root_identity.get("artifact_sha256") != actual_authority_hash or root_identity.get("authority_revision") != authority_registry.get("authority_revision") or authority_hashes.get(authority_relative) != actual_authority_hash:
-        return [_finding("RMAP-ARTIFACT-PROOF-IDENTITY", AUTHORITY_PATH, "authority registry does not match the external VDD Skill trust root")]
+    if external_root.get("artifact_path") != authority_relative or root_identity != {
+        "mode": "semantic-root-policy",
+        "algorithm": "vdd-root-policy-v1",
+        "artifact_sha256": None,
+        "authority_revision": "vdd-artifact-proof-root-policy.v2",
+        "manifest_path": "schemas/authority-manifest.v1.json",
+    } or authority_hashes.get(authority_relative) != _sha(authority_path):
+        return [_finding("RMAP-ARTIFACT-PROOF-IDENTITY", AUTHORITY_PATH, "authority registry is not governed by the fixed semantic VDD trust-root policy")]
     if external_root["staleness_propagation"].get("invalidates") != TRUST_ROOT_INVALIDATES:
         return [_finding("RMAP-ARTIFACT-PROOF-STALENESS", AUTHORITY_PATH, "external trust-root invalidation closure is not exact")]
     if external_root["consumer_authorization_boundary"] != TRUST_ROOT_BOUNDARY:

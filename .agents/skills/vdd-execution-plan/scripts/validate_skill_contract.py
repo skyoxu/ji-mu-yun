@@ -9,24 +9,36 @@ import json
 import re
 import sys
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
 CONTRACT_PATH = Path("scripts/skill-contract.json")
 HASH_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
-TRUST_ROOT_ID = "repository-maintenance-tdd-adapter"
-TRUST_ROOT_AUTHORITY_PATH = "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json"
-TRUST_ROOT_PREDECESSOR_SHA256 = "sha256:2c0c297c20fbf46daaea5eca1836c9b3e51ce9699749eae2152cafd57a6b2544"
-TRUST_ROOT_AUTHORITY_REVISION = "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202"
-TRUST_ROOT_STANDARD_PATH = ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md"
-TRUST_ROOT_STANDARD_SHA256 = "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140"
-TRUST_ROOT_EXTERNAL_PATH = ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json"
-TRUST_ROOT_DIAGNOSTIC_VERIFIER_PATH = Path.home() / ".codex" / "skills" / "run-phase-bootstrap-review" / "scripts" / "verify_artifact_proof_boundary.py"
-TRUST_ROOT_VALIDATOR_PATH = ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py"
-TRUST_ROOT_NEGATIVE_TEST_PATH = ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py"
-TRUST_ROOT_SCHEMA_PATH = "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json"
-TRUST_ROOT_FAILURE_IDS = [
+ARTIFACT_PROOF_REQUIRED_FIELDS = [
+    "artifact_path",
+    "artifact_kind",
+    "proof_scope",
+    "finding_ids",
+    "dimension_verdicts",
+    "schema_producer_authority",
+    "immutable_identity",
+    "source_of_truth_derivation",
+    "independent_recomputation",
+    "staleness_propagation",
+    "recovery_supersession",
+    "consumer_authorization_boundary",
+]
+ARTIFACT_PROOF_DIMENSIONS = [
+    "schema_producer_authority",
+    "immutable_identity",
+    "source_of_truth_derivation",
+    "independent_recomputation",
+    "staleness_propagation",
+    "recovery_supersession",
+    "consumer_authorization_boundary",
+]
+ARTIFACT_PROOF_FAILURE_IDS = [
     "VDD-ARTIFACT-PROOF-PRODUCER",
     "VDD-ARTIFACT-PROOF-IDENTITY",
     "VDD-ARTIFACT-PROOF-DERIVATION",
@@ -36,13 +48,13 @@ TRUST_ROOT_FAILURE_IDS = [
     "VDD-ARTIFACT-PROOF-CONSUMER",
     "VDD-ARTIFACT-PROOF-APPLICABILITY",
 ]
-TRUST_ROOT_INVALIDATES = [
+ARTIFACT_PROOF_INVALIDATES = [
     "artifact-proof-registry",
     "runtime-artifact-type-proof",
     "plan-repair-verified",
     "plan-ready",
 ]
-TRUST_ROOT_EXCLUSIONS = [
+ARTIFACT_PROOF_EXCLUSIONS = [
     "plan-ready",
     "slice-ready",
     "bootstrap-review",
@@ -50,6 +62,9 @@ TRUST_ROOT_EXCLUSIONS = [
     "protected-handoff",
     "release-ready",
 ]
+ARTIFACT_PROOF_AUTHORITY_PATH = ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md"
+ARTIFACT_PROOF_AUTHORITY_FILE = Path("references/strict-vdd-standard.md")
+ARTIFACT_PROOF_SEMANTIC_FIELD = "/3-authority-intent-kernels-and-executable-contracts"
 
 
 def finding(rule_id: str, target: str, message: str) -> dict[str, str]:
@@ -82,105 +97,257 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def is_safe_relative_path(value: Any) -> bool:
+    if not isinstance(value, str) or not value or "\\" in value:
+        return False
+    path = PurePosixPath(value)
+    return not path.is_absolute() and ".." not in path.parts and "." not in path.parts
+
+
+def is_policy_owned_package_path(value: Any, package_relative: str) -> bool:
+    return value in {
+        package_relative,
+        f".agents/skills/vdd-execution-plan/{package_relative}",
+    }
+
+
 def validate_artifact_proof_trust_roots(
-    skill_root: Path, contract: dict[str, Any]
+    skill_root: Path,
+    contract: dict[str, Any],
+    proof: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
-    trust_roots = contract.get("artifact_proof_trust_roots")
-    if not isinstance(trust_roots, dict) or set(trust_roots) != {TRUST_ROOT_ID}:
-        return [finding("VDD-ARTIFACT-PROOF-PRODUCER", str(CONTRACT_PATH), "the exact trust-root registry is required")]
-    root = trust_roots[TRUST_ROOT_ID]
-    required_fields = {
-        "artifact_path", "artifact_kind", "proof_scope", "finding_ids", "dimension_verdicts", "schema_producer_authority",
-        "immutable_identity", "source_of_truth_derivation", "independent_recomputation",
-        "staleness_propagation", "recovery_supersession", "consumer_authorization_boundary",
+    policy = contract.get("artifact_proof_root_policy")
+    policy_fields = {
+        "schema_version",
+        "fixture_path",
+        "required_fields",
+        "required_dimensions",
+        "authority_path",
+        "authority_sha256",
+        "semantic_policy_field",
+        "identity_mode",
+        "identity_algorithm",
+        "derivation",
+        "validator_path",
+        "negative_test_path",
+        "callable",
+        "expected_failure_ids",
+        "required_invalidates",
+        "required_lineage_fields",
+        "required_exclusions",
     }
-    if not isinstance(root, dict) or set(root) != required_fields:
-        return [finding("VDD-ARTIFACT-PROOF-PRODUCER", TRUST_ROOT_ID, "trust root must use the complete artifact-proof template")]
-    expected_verdicts = {
-        "schema_producer_authority": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-PRODUCER"]},
-        "immutable_identity": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-IDENTITY"]},
-        "source_of_truth_derivation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-DERIVATION"]},
-        "independent_recomputation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-RULE"]},
-        "staleness_propagation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-STALENESS"]},
-        "recovery_supersession": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-LINEAGE"]},
-        "consumer_authorization_boundary": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-CONSUMER"]},
-    }
-    if root.get("proof_scope") != "static-contract" or root.get("dimension_verdicts") != expected_verdicts:
-        return [finding("VDD-ARTIFACT-PROOF-APPLICABILITY", TRUST_ROOT_ID, "trust root requires seven exact executable PASS verdicts")]
-    producer = root.get("schema_producer_authority")
+    if (
+        not isinstance(policy, dict)
+        or set(policy) != policy_fields
+        or policy.get("schema_version") != "vdd.artifact-proof-root-policy.v1"
+        or policy.get("required_fields") != ARTIFACT_PROOF_REQUIRED_FIELDS
+        or policy.get("required_dimensions") != ARTIFACT_PROOF_DIMENSIONS
+        or policy.get("identity_mode") != "semantic-root-policy"
+        or policy.get("identity_algorithm") != "vdd-root-policy-v1"
+        or policy.get("derivation") != "semantic-policy-reference"
+        or policy.get("authority_path") != ARTIFACT_PROOF_AUTHORITY_PATH
+        or policy.get("semantic_policy_field") != ARTIFACT_PROOF_SEMANTIC_FIELD
+        or policy.get("callable") != "validate_artifact_proof_trust_roots"
+        or policy.get("expected_failure_ids") != ARTIFACT_PROOF_FAILURE_IDS
+        or policy.get("required_invalidates") != ARTIFACT_PROOF_INVALIDATES
+        or policy.get("required_lineage_fields")
+        != ["artifact_path", "immutable_identity", "recovery_supersession"]
+        or policy.get("required_exclusions") != ARTIFACT_PROOF_EXCLUSIONS
+        or not is_safe_relative_path(policy.get("fixture_path"))
+        or not HASH_PATTERN.fullmatch(str(policy.get("authority_sha256")))
+        or not is_safe_relative_path(policy.get("validator_path"))
+        or not is_safe_relative_path(policy.get("negative_test_path"))
+    ):
+        return [
+            finding(
+                "VDD-ARTIFACT-PROOF-PRODUCER",
+                str(CONTRACT_PATH),
+                "the generic artifact-proof root policy is invalid",
+            )
+        ]
+
+    target = str(policy["fixture_path"])
+    if proof is None:
+        try:
+            fixture = load_json(skill_root / policy["fixture_path"])
+        except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+            fixture = None
+        if (
+            not isinstance(fixture, dict)
+            or fixture.get("schema_version") != "vdd.artifact-proof-root-fixture.v1"
+            or not isinstance(fixture.get("root_id"), str)
+            or not fixture["root_id"]
+            or not isinstance(fixture.get("proof"), dict)
+        ):
+            return [
+                finding(
+                    "VDD-ARTIFACT-PROOF-PRODUCER",
+                    target,
+                    "the detached artifact-proof fixture is invalid",
+                )
+            ]
+        proof = fixture["proof"]
+
+    if set(proof) != set(ARTIFACT_PROOF_REQUIRED_FIELDS):
+        return [finding("VDD-ARTIFACT-PROOF-PRODUCER", target, "root must use the complete artifact-proof template")]
+    verdicts = proof.get("dimension_verdicts")
+    if (
+        proof.get("proof_scope") != "static-contract"
+        or not isinstance(verdicts, dict)
+        or set(verdicts) != set(ARTIFACT_PROOF_DIMENSIONS)
+        or any(
+            not isinstance(verdicts[dimension], dict)
+            or set(verdicts[dimension]) != {"status", "evidence_rule_ids"}
+            or verdicts[dimension].get("status") != "PASS"
+            or not isinstance(verdicts[dimension].get("evidence_rule_ids"), list)
+            or not verdicts[dimension]["evidence_rule_ids"]
+            or any(not isinstance(rule_id, str) or not rule_id for rule_id in verdicts[dimension]["evidence_rule_ids"])
+            for dimension in ARTIFACT_PROOF_DIMENSIONS
+        )
+    ):
+        return [finding("VDD-ARTIFACT-PROOF-APPLICABILITY", target, "root requires complete executable PASS verdicts")]
+
+    producer = proof.get("schema_producer_authority")
     expected_producer = {
-        "authority_path": TRUST_ROOT_STANDARD_PATH,
+        "authority_path": policy["authority_path"],
         "authority_category": "protocol_authority",
-        "authority_sha256": TRUST_ROOT_STANDARD_SHA256,
+        "authority_sha256": policy["authority_sha256"],
         "producer_kind": "manual-authority",
         "generator_path": None,
         "generator_sha256": None,
     }
-    if root.get("artifact_path") != TRUST_ROOT_AUTHORITY_PATH or root.get("artifact_kind") != "normative" or root.get("finding_ids") != ["RMAP-1600-UNIFORM-ARTIFACT-PROOF"] or producer != expected_producer or sha256_file(skill_root / "references/strict-vdd-standard.md") != TRUST_ROOT_STANDARD_SHA256:
-        return [finding("VDD-ARTIFACT-PROOF-PRODUCER", TRUST_ROOT_ID, "producer authority is not the strict VDD protocol authority")]
-    identity = root.get("immutable_identity")
-    if not isinstance(identity, dict) or set(identity) != {"mode", "algorithm", "artifact_sha256", "authority_revision", "manifest_path"} or identity.get("mode") != "authority-root" or identity.get("algorithm") != "sha256-bytes" or not HASH_PATTERN.fullmatch(str(identity.get("artifact_sha256"))) or identity.get("authority_revision") != TRUST_ROOT_AUTHORITY_REVISION or identity.get("manifest_path") != "schemas/authority-manifest.v1.json":
-        return [finding("VDD-ARTIFACT-PROOF-IDENTITY", TRUST_ROOT_ID, "immutable authority identity is invalid")]
+    if (
+        not is_safe_relative_path(proof.get("artifact_path"))
+        or proof.get("artifact_kind") != "normative"
+        or not isinstance(proof.get("finding_ids"), list)
+        or not proof["finding_ids"]
+        or any(not isinstance(item, str) or not item for item in proof["finding_ids"])
+        or producer != expected_producer
+        or sha256_file(skill_root / ARTIFACT_PROOF_AUTHORITY_FILE) != policy["authority_sha256"]
+    ):
+        return [finding("VDD-ARTIFACT-PROOF-PRODUCER", target, "producer authority is not the generic VDD protocol authority")]
+    identity = proof.get("immutable_identity")
+    if (
+        not isinstance(identity, dict)
+        or set(identity) != {"mode", "algorithm", "artifact_sha256", "authority_revision", "manifest_path"}
+        or identity.get("mode") != policy["identity_mode"]
+        or identity.get("algorithm") != policy["identity_algorithm"]
+        or identity.get("artifact_sha256") is not None
+        or not isinstance(identity.get("authority_revision"), str)
+        or not identity["authority_revision"]
+        or not is_safe_relative_path(identity.get("manifest_path"))
+    ):
+        return [finding("VDD-ARTIFACT-PROOF-IDENTITY", target, "semantic root identity is invalid")]
     expected_input = {
-        "source": TRUST_ROOT_EXTERNAL_PATH,
-        "source_sha256": None,
-        "field": "/proof/immutable_identity/artifact_sha256",
-        "target_field": "$bytes",
-        "derivation": "external-hash-pin",
+        "source": policy["authority_path"],
+        "source_sha256": policy["authority_sha256"],
+        "field": policy["semantic_policy_field"],
+        "target_field": "$policy",
+        "derivation": policy["derivation"],
     }
-    derivation = root.get("source_of_truth_derivation")
+    derivation = proof.get("source_of_truth_derivation")
     if derivation != {"rules": [expected_input]}:
-        return [finding("VDD-ARTIFACT-PROOF-DERIVATION", TRUST_ROOT_ID, "trust-root derivation is not the declared self-reference-safe hash pin")]
-    recomputation = root.get("independent_recomputation")
-    expected_recomputation = {
-        "rule_id": "vdd-skill-artifact-proof-trust-root.v1",
-        "validator_path": TRUST_ROOT_VALIDATOR_PATH,
-        "validator_sha256": sha256_file(skill_root / "scripts/validate_skill_contract.py"),
-        "callable": "validate_artifact_proof_trust_roots",
-        "negative_test_path": TRUST_ROOT_NEGATIVE_TEST_PATH,
-        "negative_test_sha256": sha256_file(skill_root / "scripts/tests/test_validate_skill_contract.py"),
-        "expected_failure_ids": TRUST_ROOT_FAILURE_IDS,
-    }
-    if recomputation != expected_recomputation:
-        return [finding("VDD-ARTIFACT-PROOF-RULE", TRUST_ROOT_ID, "independent recomputation identity is stale or incomplete")]
-    stale = root.get("staleness_propagation")
-    expected_stale = {
-        "inputs": [expected_input],
-        "invalidates": TRUST_ROOT_INVALIDATES,
-        "regeneration_command_id": "rmap-refresh-projections",
-        "revalidation_command_id": "rmap-plan-repair-validate",
-    }
-    if stale != expected_stale:
-        return [finding("VDD-ARTIFACT-PROOF-STALENESS", TRUST_ROOT_ID, "staleness closure is not exact")]
-    recovery = root.get("recovery_supersession")
-    expected_recovery = {
-        "history_policy": "append-only-successor-no-rewrite",
-        "schema_path": TRUST_ROOT_SCHEMA_PATH,
-        "lineage_fields": ["artifact_path", "immutable_identity", "recovery_supersession"],
-        "predecessor_policy": "external-vdd-skill-contract-revision",
-        "lifecycle_status": "supersedes",
-        "predecessor_sha256": TRUST_ROOT_PREDECESSOR_SHA256,
-    }
-    if recovery != expected_recovery:
-        return [finding("VDD-ARTIFACT-PROOF-LINEAGE", TRUST_ROOT_ID, "predecessor lineage is not the pinned append-only predecessor")]
-    boundary = root.get("consumer_authorization_boundary")
-    expected_boundary = {
-        "consumers": ["composite plan validator"],
-        "predicate": "artifact-contract-proof",
-        "authorizes": [],
-        "does_not_authorize": TRUST_ROOT_EXCLUSIONS,
-    }
-    if boundary != expected_boundary:
-        return [finding("VDD-ARTIFACT-PROOF-CONSUMER", TRUST_ROOT_ID, "trust-root permission lattice is not exact zero authority")]
-    external_root_path = skill_root.parents[2] / TRUST_ROOT_EXTERNAL_PATH
-    if external_root_path.is_file():
-        try:
-            external_document = load_json(external_root_path)
-            external_proof = external_document.get("proof")
-        except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
-            external_proof = None
-        if not isinstance(external_proof, dict) or external_proof != root:
-            return [finding("VDD-ARTIFACT-PROOF-IDENTITY", TRUST_ROOT_ID, "Skill trust-root mirror differs from Bootstrap-owned root")]
+        return [finding("VDD-ARTIFACT-PROOF-DERIVATION", target, "root must bind semantic policy instead of regenerable projection bytes")]
+    recomputation = proof.get("independent_recomputation")
+    if (
+        not isinstance(recomputation, dict)
+        or set(recomputation)
+        != {"rule_id", "validator_path", "validator_sha256", "callable", "negative_test_path", "negative_test_sha256", "expected_failure_ids"}
+        or not isinstance(recomputation.get("rule_id"), str)
+        or not recomputation["rule_id"]
+        or not is_policy_owned_package_path(
+            recomputation.get("validator_path"), policy["validator_path"]
+        )
+        or recomputation.get("validator_sha256") != sha256_file(skill_root / policy["validator_path"])
+        or recomputation.get("callable") != policy["callable"]
+        or not is_policy_owned_package_path(
+            recomputation.get("negative_test_path"), policy["negative_test_path"]
+        )
+        or recomputation.get("negative_test_sha256") != sha256_file(skill_root / policy["negative_test_path"])
+        or recomputation.get("expected_failure_ids") != ARTIFACT_PROOF_FAILURE_IDS
+    ):
+        return [finding("VDD-ARTIFACT-PROOF-RULE", target, "independent recomputation identity is stale or incomplete")]
+    stale = proof.get("staleness_propagation")
+    if (
+        not isinstance(stale, dict)
+        or set(stale) != {"inputs", "invalidates", "regeneration_command_id", "revalidation_command_id"}
+        or stale.get("inputs") != [expected_input]
+        or stale.get("invalidates") != ARTIFACT_PROOF_INVALIDATES
+        or not isinstance(stale.get("regeneration_command_id"), str)
+        or not stale["regeneration_command_id"]
+        or not isinstance(stale.get("revalidation_command_id"), str)
+        or not stale["revalidation_command_id"]
+    ):
+        return [finding("VDD-ARTIFACT-PROOF-STALENESS", target, "staleness closure is not exact")]
+    recovery = proof.get("recovery_supersession")
+    if (
+        not isinstance(recovery, dict)
+        or set(recovery)
+        != {"history_policy", "schema_path", "lineage_fields", "predecessor_policy", "lifecycle_status", "predecessor_sha256"}
+        or recovery.get("history_policy") != "append-only-successor-no-rewrite"
+        or not is_safe_relative_path(recovery.get("schema_path"))
+        or recovery.get("lineage_fields") != policy["required_lineage_fields"]
+        or not isinstance(recovery.get("predecessor_policy"), str)
+        or not recovery["predecessor_policy"]
+        or recovery.get("lifecycle_status") != "supersedes"
+        or not HASH_PATTERN.fullmatch(str(recovery.get("predecessor_sha256")))
+    ):
+        return [finding("VDD-ARTIFACT-PROOF-LINEAGE", target, "append-only predecessor lineage is invalid")]
+    boundary = proof.get("consumer_authorization_boundary")
+    if (
+        not isinstance(boundary, dict)
+        or set(boundary) != {"consumers", "predicate", "authorizes", "does_not_authorize"}
+        or not isinstance(boundary.get("consumers"), list)
+        or not boundary["consumers"]
+        or any(not isinstance(item, str) or not item for item in boundary["consumers"])
+        or not isinstance(boundary.get("predicate"), str)
+        or not boundary["predicate"]
+        or boundary.get("authorizes") != []
+        or boundary.get("does_not_authorize") != ARTIFACT_PROOF_EXCLUSIONS
+    ):
+        return [finding("VDD-ARTIFACT-PROOF-CONSUMER", target, "root permission lattice is not exact zero authority")]
+    return []
+
+
+def validate_execution_plan_report_index_fixture(
+    fixture_path: Path,
+) -> list[dict[str, str]]:
+    try:
+        document = load_json(fixture_path)
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+        return [finding("VDD-REPORT-INDEX", str(fixture_path), "detached report-index fixture is not valid JSON")]
+    if (
+        not isinstance(document, dict)
+        or set(document) != {"schema_version", "entries"}
+        or document.get("schema_version") != "jimuyun.execution-plan-95-report-index.v1"
+        or not isinstance(document.get("entries"), list)
+    ):
+        return [finding("VDD-REPORT-INDEX", str(fixture_path), "detached report-index fixture has an invalid envelope")]
+    entries = document["entries"]
+    if entries != sorted(entries, key=lambda item: str(item.get("plan_directory", "")).casefold() if isinstance(item, dict) else ""):
+        return [finding("VDD-REPORT-INDEX", str(fixture_path), "report-index entries must be case-insensitively sorted")]
+    seen: set[str] = set()
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {"plan_directory", "report_filename"}:
+            return [finding("VDD-REPORT-INDEX", str(fixture_path), "report-index entry shape is invalid")]
+        plan_directory = entry["plan_directory"]
+        report_filename = entry["report_filename"]
+        if (
+            not isinstance(plan_directory, str)
+            or not plan_directory
+            or "/" in plan_directory
+            or "\\" in plan_directory
+            or plan_directory in {".", ".."}
+            or plan_directory.casefold() in seen
+            or not isinstance(report_filename, str)
+            or not report_filename.startswith("95-")
+            or not report_filename.endswith(".md")
+            or "/" in report_filename
+            or "\\" in report_filename
+            or report_filename in {".", ".."}
+        ):
+            return [finding("VDD-REPORT-INDEX", str(fixture_path), "report-index entry is unsafe or ambiguous")]
+        seen.add(plan_directory.casefold())
     return []
 
 

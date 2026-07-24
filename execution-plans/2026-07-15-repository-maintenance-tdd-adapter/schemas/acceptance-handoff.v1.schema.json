@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rmap.acceptance-handoff.v1",
+  "type": "object",
+  "required": ["schema_version", "plan_id", "state", "implementation_result", "candidate_hash", "authorizes", "does_not_authorize"],
+  "properties": {
+    "schema_version": {"const": "rmap.acceptance-handoff.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "state": {"const": "implementation-complete"},
+    "implementation_result": {"type": "string", "pattern": "^logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S7/.+/implementation-complete-result\\.json$"},
+    "candidate_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "authorizes": {"const": []},
+    "does_not_authorize": {"type": "array", "minItems": 4}
+  },
+  "additionalProperties": false
+}

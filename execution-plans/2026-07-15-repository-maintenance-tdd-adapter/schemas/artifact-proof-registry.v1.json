@@ -94,7 +94,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -236,7 +236,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -379,7 +379,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -521,7 +521,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -663,7 +663,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -804,7 +804,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -946,7 +946,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -1088,7 +1088,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -1230,7 +1230,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -1372,7 +1372,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -1514,7 +1514,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -1657,7 +1657,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -1772,36 +1772,36 @@
       "schema_producer_authority": {
         "authority_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
         "authority_category": "protocol_authority",
-        "authority_sha256": "sha256:638f92a8e687adde9910612970240952e018ad31d3a82ada4f31d1896cad504a",
+        "authority_sha256": "sha256:e44a386e6ddc35ba76a27ec5223e6b0349823a7b5250f3baa22c9a464fff28a8",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
       },
       "immutable_identity": {
-        "mode": "authority-root",
-        "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
-        "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
+        "mode": "semantic-root-policy",
+        "algorithm": "vdd-root-policy-v1",
+        "artifact_sha256": null,
+        "authority_revision": "vdd-artifact-proof-root-policy.v2",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
       "source_of_truth_derivation": {
         "rules": [
           {
-            "source": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-            "source_sha256": "sha256:638f92a8e687adde9910612970240952e018ad31d3a82ada4f31d1896cad504a",
-            "field": "/proof/immutable_identity/artifact_sha256",
-            "target_field": "$bytes",
-            "derivation": "external-hash-pin"
+            "source": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
+            "source_sha256": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+            "field": "/3-authority-intent-kernels-and-executable-contracts",
+            "target_field": "$policy",
+            "derivation": "semantic-policy-reference"
           }
         ]
       },
       "independent_recomputation": {
         "rule_id": "vdd-skill-artifact-proof-trust-root.v1",
         "validator_path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
-        "validator_sha256": "sha256:53e742efa6a512245cf7ecc52c3fa40284bc79a345229117563f8960ff902e1b",
+        "validator_sha256": "sha256:4e02c926793237aacc6497b6bd0266637b1c7ba05366be5ce953b6743f27a58d",
         "callable": "validate_artifact_proof_trust_roots",
         "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
-        "negative_test_sha256": "sha256:6962bf68883310bbee276beff3530995f7c9a3d186ba8a18deeb3c05f6d26468",
+        "negative_test_sha256": "sha256:72641954a9dbf9791cfb3b05141ab1d4490ff2e54f12dc5da1d59ea7b8701c35",
         "expected_failure_ids": [
           "VDD-ARTIFACT-PROOF-PRODUCER",
           "VDD-ARTIFACT-PROOF-IDENTITY",
@@ -1816,11 +1816,11 @@
       "staleness_propagation": {
         "inputs": [
           {
-            "source": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-            "source_sha256": "sha256:638f92a8e687adde9910612970240952e018ad31d3a82ada4f31d1896cad504a",
-            "field": "/proof/immutable_identity/artifact_sha256",
-            "target_field": "$bytes",
-            "derivation": "external-hash-pin"
+            "source": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
+            "source_sha256": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+            "field": "/3-authority-intent-kernels-and-executable-contracts",
+            "target_field": "$policy",
+            "derivation": "semantic-policy-reference"
           }
         ],
         "invalidates": [
@@ -1940,7 +1940,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -2056,7 +2056,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "authority_category": "machine_owners",
-        "authority_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
+        "authority_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
         "producer_kind": "generated-projection",
         "generator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
         "generator_sha256": "sha256:a8c4a9db13e0c30bffa1e9991cf20bb3b38004b8456f3b39cf7757c0475961e5"
@@ -2072,7 +2072,7 @@
         "rules": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
+            "source_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -2082,7 +2082,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -2101,7 +2101,7 @@
         "inputs": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
+            "source_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -2207,7 +2207,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:908cdbd2fd081857cf6a3f73a7dc78be0133e99890953db34496f14953b21d3b",
+        "artifact_sha256": "sha256:02b9dff12fdb65d638c0048d5d6bf4ada89e59b333c1b6008d948f62bf03d99a",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -2225,7 +2225,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -2368,7 +2368,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -2511,7 +2511,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -2653,7 +2653,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -2795,7 +2795,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -2935,7 +2935,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -3083,7 +3083,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -3231,7 +3231,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -3375,7 +3375,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -3490,7 +3490,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "authority_category": "machine_owners",
-        "authority_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
+        "authority_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
         "producer_kind": "generated-projection",
         "generator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
         "generator_sha256": "sha256:a8c4a9db13e0c30bffa1e9991cf20bb3b38004b8456f3b39cf7757c0475961e5"
@@ -3506,7 +3506,7 @@
         "rules": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
+            "source_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -3516,7 +3516,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -3535,7 +3535,7 @@
         "inputs": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
+            "source_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -3641,7 +3641,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "artifact_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -3659,7 +3659,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -3801,7 +3801,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -3946,7 +3946,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -4088,7 +4088,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -4230,7 +4230,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -4372,7 +4372,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -4514,7 +4514,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -4656,7 +4656,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
@@ -4798,7 +4798,7 @@
       "independent_recomputation": {
         "rule_id": "artifact-proof-package.v1",
         "validator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "validator_sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21",
+        "validator_sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634",
         "callable": "validate_artifact_proofs",
         "negative_test_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "negative_test_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",

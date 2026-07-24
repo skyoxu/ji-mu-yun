@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Any
 
 from candidate_diff_guards import bytes_hash, scope_policy
+from candidate_lineage_guards import value_hash
+from protocol_guards import load_protocol_run
+from validate_all import current_candidate_identity
 
 
 def _value_hash(value: Any) -> str:
@@ -49,6 +52,63 @@ def _owner(contract: dict[str, Any], root: Path, plan: Path, path: str) -> str:
     raise ValueError(f"committed candidate path is outside S0-S6 write closure: {path}")
 
 
+def _file_hash(path: Path) -> str:
+    return bytes_hash(path.read_bytes())
+
+
+def _candidate_evidence(run_dir: Path, current: dict[str, str]) -> dict[str, Any]:
+    """Build the S6 candidate entity; validation envelopes remain separate."""
+    bundle, findings = load_protocol_run(Path(__file__).resolve().parents[1], run_dir)
+    if findings:
+        raise ValueError(f"candidate protocol evidence is invalid: {findings}")
+    stages = {
+        stage: json.loads((run_dir / f"{stage}-result.json").read_text(encoding="utf-8"))
+        for stage in ("red", "green", "refactor")
+    }
+    contexts = bundle.get("contexts", [])
+    if not contexts:
+        raise ValueError("candidate protocol has no persisted context")
+    final_context = contexts[-1]
+    attempt = next((item for item in bundle.get("attempts", []) if item.get("adapter_decision", {}).get("decision") == "accepted_for_validation" and item.get("adapter_decision", {}).get("stage") == "refactor"), None)
+    if attempt is None:
+        raise ValueError("candidate protocol has no accepted refactor attempt")
+    attempt_id = attempt["adapter_decision"]["attempt_id"]
+    events = bundle.get("events", [])
+    if not events:
+        raise ValueError("candidate protocol has no canonical event")
+    context_id = final_context["context_manifest"]["capsule_id"]
+    capsule_id = final_context["slice_capsule"]["capsule_id"]
+    identity = {key: value for key, value in current.items() if key not in {"plan_hash", "source_hash"}}
+    identity.update({
+        "candidate_diff_manifest_hash": _file_hash(run_dir / "changed-files.json"),
+        "candidate_lineage_manifest_hash": _file_hash(run_dir / "candidate-lineage-manifest.json"),
+        "test_diff_hash": _file_hash(run_dir / "test-diff.patch"),
+        "red_run_id": stages["red"]["run_id"],
+        "green_run_id": stages["green"]["run_id"],
+        "refactor_run_id": stages["refactor"]["run_id"],
+        "final_context_manifest_hash": _file_hash(run_dir / "context" / context_id / "context-manifest.v1.json"),
+        "final_capsule_hash": _file_hash(run_dir / "context" / capsule_id / "slice-capsule.v1.json"),
+        "attempt_ledger_manifest_hash": _file_hash(run_dir / "attempt-ledger-manifest.v1.json"),
+        "run_events_hash": _file_hash(run_dir / "run-events.jsonl"),
+        "final_attempt_event_hash": value_hash(events[-1]),
+        "accepted_attempt_id": attempt_id,
+        "accepted_attempt_decision_hash": _file_hash(run_dir / "attempts" / attempt_id / "adapter-decision.v1.json"),
+    })
+    return {
+        "schema_version": "jimuyun.tdd-result.v1",
+        "predicate": "implementation-candidate",
+        "status": "pass",
+        "plan_hash": current["plan_hash"],
+        "source_hash": current["source_hash"],
+        "slice_id": "RMAP-S6",
+        "run_id": run_dir.name,
+        "authority_revision": current["head"],
+        "candidate_identity": identity,
+        "authorizes": [],
+        "does_not_authorize": ["implementation-authorized", "implementation-complete", "acceptance-passed", "archived"],
+    }
+
+
 def build(plan: Path, run_dir: Path) -> dict[str, Any]:
     root = plan.parents[1]
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
@@ -75,6 +135,8 @@ def build(plan: Path, run_dir: Path) -> dict[str, Any]:
     for name, value in (("committed-candidate-range.json", range_map), ("changed-files.json", manifest), ("candidate-lineage-manifest.json", lineage)):
         (run_dir / name).write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     (run_dir / "test-diff.patch").write_bytes(patch)
+    candidate = _candidate_evidence(run_dir, current_candidate_identity("RMAP-S6"))
+    (run_dir / "candidate-evidence.json").write_text(json.dumps(candidate, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     return manifest
 
 

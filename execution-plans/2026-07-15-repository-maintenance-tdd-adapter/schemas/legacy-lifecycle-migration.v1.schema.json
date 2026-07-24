@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rmap.legacy-lifecycle-migration.v1",
+  "type": "object",
+  "required": ["schema_version", "plan_id", "pre_implementation_authorization", "reason", "authorizes", "does_not_authorize"],
+  "properties": {
+    "schema_version": {"const": "rmap.legacy-lifecycle-migration.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "pre_implementation_authorization": {"const": "legacy-not-retroactive"},
+    "reason": {"type": "string", "minLength": 1},
+    "authorizes": {"const": []},
+    "does_not_authorize": {"type": "array", "minItems": 4}
+  },
+  "additionalProperties": false
+}

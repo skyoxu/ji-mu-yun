@@ -16,25 +16,25 @@
       "../2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py": "sha256:0bca3489c3ed2c3175c0c09589caef16259f81317892743f69f528e229ed4210",
       "../../agentbuild.txt": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807",
       "../../AGENTS.md": "sha256:dc675dc913ecf918f20fa19a7d8082b7fe18b6db21ae5ae5f5d56f2f67ef0d12",
-      "../../.agents/skills/vdd-execution-plan/references/strict-vdd-standard.md": "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140",
+      "../../.agents/skills/vdd-execution-plan/references/strict-vdd-standard.md": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
       "../2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md": "sha256:e3f0f05ef426aada395843dace58410b3ddfbcb39326e96ae562cad9eb7cfc35",
       "../2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json": "sha256:ca42e682cd6077a13b61d261ca75f70d98b1717547324c71c40b92c16de4048a",
       "00-index.md": "sha256:495bd5176c006c870b6799cf26b176bf45e9ed2a4d0aa4707e274f2059c08529",
       "01-intent-authority-and-non-goals.md": "sha256:cc563f15712704c195bafa80c3e7bf433fdc688c4b1d9da321102a658423e741",
       "02-executable-contracts-and-invariants.md": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
       "03-validators-fixtures-and-control-gates.md": "sha256:fe2b102834c2d63148987a39733fc2cb47386df236c3bbc1b7bdd6dd5a2e986a",
-      "04-behavior-slices-and-implementation-order.md": "sha256:81fb4fba4bb5c17c846ca75ef445fcb1d8757fb12afc97730fbdfdca26dc6c8e",
+      "04-behavior-slices-and-implementation-order.md": "sha256:70813ca2d54cce3557574e6255cf736f92024e35fb685fd7a09ef1c80d4a7ea2",
       "05-diagnostics-repair-and-reentry.md": "sha256:b27ed10bb013ce670b7c45d4322fddc1c5c4d67356a08b683873cf24995feed0",
-      "06-testing-observability-and-evidence.md": "sha256:1a8a598ba52cf9e57364e942f5fe3c7a47d2dd4d241e2d4ed69855b51c84bda0",
+      "06-testing-observability-and-evidence.md": "sha256:e2ecedbeaf477b6823411056d70323eaa6e50b417562135e77e42813b846713a",
       "96-global-review-and-validation.md": "sha256:a4b97ae7ad12d464baa28d2c40ff727771e5ab41e00e522884dce0b954c8c252",
       "schemas/clarification-decisions.v1.json": "sha256:43cbafb22f8f2350928b8a294a23ab41bb170b3f8775b82c78a27aac57ee8d88",
       "schemas/review-blocking-state.v1.json": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
-      "schemas/acceptance-contracts.v1.json": "sha256:2cde5b346ba502fde333d3edbf18f9f8cfc66facf457a5b6a1f876e5936f84d4",
+      "schemas/acceptance-contracts.v1.json": "sha256:b22efb43332feef4bfffce20564d2438eed6f630236472edf880a81122fc0c23",
       "../../.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json": "sha256:7dc81b5d86763959fefaa4057c24913384a817d6a54ddeb4004d46bdbb8c0acc",
       "../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
       "../../docs/standards/bootstrap-review-control-plane.md": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e",
       "../../.agents/skills/run-phase-bootstrap-review/SKILL.md": "sha256:7e86fbfd1acf231f1dfd6a07f909da3c6a2d9ed1f7e351fa10da90124a9d6f69",
-      "../../.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py": "sha256:26ba741ed4754380b776996cf0d2bf03538b7e4e63fcdad3fba24b4267b023fd",
+      "../../.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
       "../../.agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py": "sha256:afbe840b25c016c14a3be98178b30a21ef668fb328b98977ad6d693fcfa36623",
       "../../.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json": "sha256:55b75323c95daae0532a06b06c95de3ef0389746d8456901f26b7ef1c6ef908a"
     },
@@ -150,8 +150,31 @@
     "does_not_authorize": [
       "slice-ready",
       "implementation-candidate",
-      "implementation-accepted"
+      "implementation-complete"
     ]
+  },
+  "execution_replay_policy": {
+    "targeted_validation": {
+      "allowed_slices": [
+        "RMAP-S6",
+        "RMAP-S7"
+      ],
+      "must_run_in_order": true,
+      "evidence_marker": "targeted-validation.v1.json",
+      "authorizes": [],
+      "does_not_authorize": [
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-complete",
+        "acceptance-passed",
+        "archived"
+      ]
+    },
+    "authoritative_full_replay": {
+      "start_slice": "RMAP-S0",
+      "requires_all_slices": true,
+      "authorizes": []
+    }
   },
   "acceptance_policy": {
     "open_accepted_p0_p1_blocks": true,
@@ -251,6 +274,9 @@
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json"
         ]
       },
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py"
+      ],
       "forbidden_changes": [
         "logs/phase-a-innernet/**",
         "runtime/phase-a/**",
@@ -350,6 +376,9 @@
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/**"
         ]
       },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/SKILL.md"
+      ],
       "forbidden_changes": [
         ".agents/skills/bmad-quick-dev/**",
         ".agents/skills/gds-quick-dev/**",
@@ -457,6 +486,9 @@
           "docs/adr/ADR-0042-artifact-proof-trust-root-rotation-boundary.md"
         ]
       },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
       "forbidden_changes": [
         "scripts/sc/**",
         "scripts/python/**",
@@ -533,6 +565,9 @@
           "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json"
         ]
       },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_contract.py"
+      ],
       "forbidden_changes": [
         "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/*.md",
         "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/**",
@@ -605,6 +640,9 @@
           "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/implementation-contract.v1.json"
         ]
       },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0707_contract.py"
+      ],
       "forbidden_changes": [
         "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/*.md",
         "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/schemas/**"
@@ -676,6 +714,9 @@
           "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/implementation-contract.v1.json"
         ]
       },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0711_contract.py"
+      ],
       "forbidden_changes": [
         "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/*.md",
         "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/tools/**",
@@ -772,6 +813,9 @@
           "docs/standards/repository-maintenance-agent-protocol.md"
         ]
       },
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_builder.py"
+      ],
       "forbidden_changes": [
         "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bootstrap_review.py",
         "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/schemas/**"
@@ -832,7 +876,7 @@
     },
     {
       "slice_id": "RMAP-S7",
-      "title": "Implementation acceptance and handoff exclusion",
+      "title": "Implementation completion and non-authorizing acceptance handoff",
       "requirement_ids": [
         "RMAP-011",
         "RMAP-013",
@@ -862,13 +906,15 @@
           "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/**"
         ]
       },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
       "forbidden_changes": [
         "runtime/phase-a/**",
         "PhaseA.Platform/**"
       ],
       "execution_read_set": [
-        "logs/tdd-adapter/<plan-id>/<slice-id>/<run-id>/**",
-        "logs/ci/<bootstrap-run>/**"
+        "logs/tdd-adapter/<plan-id>/<slice-id>/<run-id>/**"
       ],
       "dependency_closure": [
         "implementation-contract.v1.json",
@@ -877,31 +923,27 @@
         ".agents/skills/quick-dev-tdd-adapter/**",
         "schemas/candidate-lineage-manifest.v1.schema.json",
         "schemas/candidate-supersession-proof.v1.schema.json",
-        "schemas/review-policy-reentry.v1.json",
+        "schemas/acceptance-handoff.v1.schema.json",
         "schemas/candidate-slice-effect.v1.schema.json"
       ],
       "tdd": {
         "red": {
-          "command_id": "rmap-adapter-tests",
-          "expected_failure_family": "open_review_disposition",
+          "command_id": "rmap-s7-controlled-red",
+          "expected_failure_family": "acceptance_handoff_authorization_escalation",
           "expected_failure_ids": [
-            "RMAP-REVIEW-P2-OPEN"
+            "RMAP-ACCEPTANCE-HANDOFF-AUTHORITY"
           ],
-          "test_selector": "test_open_review_disposition_is_rejected",
+          "test_selector": "test_acceptance_handoff_authorization_escalation_is_rejected",
           "expected_exit": "nonzero"
         },
         "green": {
-          "command_id": "rmap-s7-slice-validate",
+          "command_id": "rmap-validator-tests",
           "expected_exit": "zero"
         },
         "refactor": {
           "invocations": [
             {
               "command_id": "rmap-adapter-tests",
-              "expected_exit": "zero"
-            },
-            {
-              "command_id": "rmap-s7-slice-validate",
               "expected_exit": "zero"
             }
           ]
@@ -910,8 +952,8 @@
       "review": {
         "profile": "bootstrap-implementation-conformance"
       },
-      "post_refactor_command_id": "rmap-s7-acceptance-validate",
-      "exit_predicate": "implementation-accepted",
+      "post_refactor_command_id": "rmap-s7-completion-validate",
+      "exit_predicate": "implementation-complete",
       "phase_id": "P3"
     }
   ],
@@ -936,6 +978,7 @@
     },
     "protocol_run_artifacts": [
       "changed-files.json",
+      "candidate-evidence.json",
       "test-diff.patch",
       "red-result.json",
       "green-result.json",

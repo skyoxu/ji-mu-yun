@@ -18,7 +18,7 @@ Executable acceptance owner: [`schemas/acceptance-contracts.v1.json`](schemas/ac
 | RMAP-010 | Emit an exact cumulative Git/attempt-fold candidate envelope that authorizes Bootstrap review only. | evidence maintainer | P1 | RMAP-ACC-010 | active |
 | RMAP-011 | Keep implementation backends neutral and without review/done/commit authority. | backend-contract maintainer | P1 | RMAP-ACC-011 | active |
 | RMAP-012 | Preserve Bootstrap as the single semantic-review authority and consume its repository-owned finalized-run envelope. | review integration maintainer | P3 | RMAP-ACC-012 | active |
-| RMAP-013 | Expose exact plan-ready, slice-ready, implementation-candidate, and implementation-accepted predicates. | plan validator maintainer | P0 | RMAP-ACC-013 | active |
+| RMAP-013 | Expose exact plan-ready, slice-ready, implementation-candidate, and implementation-complete predicates. | plan validator maintainer | P0 | RMAP-ACC-013 | active |
 | RMAP-014 | Freeze Git/index/closure identity and immutable S0-S6 run lineage for byte-verifiable cumulative candidate reconstruction. | baseline maintainer | P1 | RMAP-ACC-014 | active |
 | RMAP-015 | Recover from append-only evidence with stale predecessor and normally initialized successor runs. | recovery maintainer | P1 | RMAP-ACC-015 | active |
 | RMAP-016 | Consume authoritative S6 supersession proof plus current finalized Bootstrap/runtime disposition evidence. | acceptance maintainer | P3 | RMAP-ACC-016 | active |

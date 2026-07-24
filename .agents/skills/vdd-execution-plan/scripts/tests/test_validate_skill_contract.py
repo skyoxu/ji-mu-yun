@@ -25,6 +25,11 @@ def load_validator():
     return module
 
 
+def load_artifact_proof_fixture() -> dict:
+    fixture = SKILL_ROOT / "scripts" / "fixtures" / "artifact-proof-root-policy-pass.json"
+    return json.loads(fixture.read_text(encoding="utf-8"))["proof"]
+
+
 class SkillContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -36,51 +41,51 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual([], result["findings"])
 
     def test_execution_plan_report_index_policy_is_bound(self) -> None:
-        repository_root = SKILL_ROOT.parents[2]
-        index_path = repository_root / "execution-plans/95-implementation-report-index.v1.json"
-        index = json.loads(index_path.read_text(encoding="utf-8"))
-        self.assertEqual(
-            "jimuyun.execution-plan-95-report-index.v1",
-            index.get("schema_version"),
-        )
-        entries = index.get("entries")
-        self.assertIsInstance(entries, list)
-        self.assertEqual(
-            sorted(entries, key=lambda item: item["plan_directory"].casefold()),
-            entries,
-        )
-        for entry in entries:
-            self.assertEqual({"plan_directory", "report_filename"}, set(entry))
-            report_name = entry["report_filename"]
-            self.assertEqual(report_name, Path(report_name).name)
-            report = repository_root / "execution-plans" / entry["plan_directory"] / report_name
-            self.assertTrue(report.is_file(), report)
+        fixture = SKILL_ROOT / "scripts" / "fixtures" / "implementation-report-index-pass.json"
+        self.assertEqual([], self.validator.validate_execution_plan_report_index_fixture(fixture))
 
         skill_text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("inspect only the named target directory", skill_text)
         self.assertIn("same pre-implementation change", skill_text)
         self.assertIn("non-authoritative path hint", skill_text)
 
-    def test_artifact_proof_trust_root_dimensions_fail_independently(self) -> None:
+    def test_lifecycle_state_contract_binds_owners_and_negative_cases(self) -> None:
+        contract = self.validator.load_contract(SKILL_ROOT)
+        self.assertIn("references/lifecycle-state-contract.md", contract["required_files"])
+        lifecycle = (SKILL_ROOT / "references/lifecycle-state-contract.md").read_text(encoding="utf-8")
+        for required in (
+            "implementation-authorized",
+            "implementation-complete",
+            "acceptance-passed",
+            "archived",
+            "bootstrap-three-rounds",
+            "user-confirmed-override",
+            "legacy-not-retroactive",
+        ):
+            self.assertIn(required, lifecycle)
+        self.assertIn("outside the plan directory and every Quick Dev write root", lifecycle)
+        self.assertIn("cannot authorize acceptance, handoff, release, or archive", lifecycle)
+
+    def test_artifact_proof_root_policy_dimensions_fail_independently(self) -> None:
         contract = json.loads((SKILL_ROOT / "scripts/skill-contract.json").read_text(encoding="utf-8"))
         mutations = {
             "VDD-ARTIFACT-PROOF-PRODUCER": lambda root: root["schema_producer_authority"].__setitem__("authority_path", "AGENTS.md"),
-            "VDD-ARTIFACT-PROOF-IDENTITY": lambda root: root["immutable_identity"].__setitem__("authority_revision", "sha256:" + "0" * 64),
+            "VDD-ARTIFACT-PROOF-IDENTITY": lambda root: root["immutable_identity"].__setitem__("authority_revision", ""),
             "VDD-ARTIFACT-PROOF-DERIVATION": lambda root: root["source_of_truth_derivation"]["rules"][0].__setitem__("source", "AGENTS.md"),
             "VDD-ARTIFACT-PROOF-RULE": lambda root: root["independent_recomputation"].__setitem__("callable", "missing_callable"),
             "VDD-ARTIFACT-PROOF-STALENESS": lambda root: root["staleness_propagation"].__setitem__("invalidates", ["artifact-proof-registry"]),
-            "VDD-ARTIFACT-PROOF-LINEAGE": lambda root: root["recovery_supersession"].__setitem__("predecessor_sha256", "sha256:" + "1" * 64),
+            "VDD-ARTIFACT-PROOF-LINEAGE": lambda root: root["recovery_supersession"].__setitem__("predecessor_sha256", "not-a-hash"),
             "VDD-ARTIFACT-PROOF-CONSUMER": lambda root: root["consumer_authorization_boundary"].__setitem__("authorizes", ["plan-ready"]),
             "VDD-ARTIFACT-PROOF-APPLICABILITY": lambda root: root["dimension_verdicts"]["immutable_identity"].__setitem__("status", "N/A"),
         }
         for expected_rule, mutate in mutations.items():
             with self.subTest(expected_rule=expected_rule):
-                candidate = copy.deepcopy(contract)
-                mutate(candidate["artifact_proof_trust_roots"]["repository-maintenance-tdd-adapter"])
-                findings = self.validator.validate_artifact_proof_trust_roots(SKILL_ROOT, candidate)
+                candidate = copy.deepcopy(load_artifact_proof_fixture())
+                mutate(candidate)
+                findings = self.validator.validate_artifact_proof_trust_roots(SKILL_ROOT, contract, candidate)
                 self.assertEqual([expected_rule], [item["rule_id"] for item in findings])
 
-    def test_artifact_proof_trust_root_producer_source_hash_is_pinned(self) -> None:
+    def test_artifact_proof_root_policy_producer_source_hash_is_pinned(self) -> None:
         contract = json.loads((SKILL_ROOT / "scripts/skill-contract.json").read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory() as tmp:
             mutated = Path(tmp) / "skill"
@@ -89,6 +94,16 @@ class SkillContractTests(unittest.TestCase):
             standard.write_bytes(standard.read_bytes() + b"\nproducer-source-mutation\n")
             findings = self.validator.validate_artifact_proof_trust_roots(mutated, contract)
         self.assertEqual(["VDD-ARTIFACT-PROOF-PRODUCER"], [item["rule_id"] for item in findings])
+
+    def test_semantic_root_policy_does_not_pin_regenerable_plan_bytes(self) -> None:
+        contract = self.validator.load_contract(SKILL_ROOT)
+        root = load_artifact_proof_fixture()
+        self.assertIsNone(root["immutable_identity"]["artifact_sha256"])
+        self.assertEqual("semantic-root-policy", root["immutable_identity"]["mode"])
+        self.assertEqual(
+            "semantic-policy-reference",
+            root["source_of_truth_derivation"]["rules"][0]["derivation"],
+        )
 
     def test_pass_result_fixture_is_valid(self) -> None:
         fixture = SKILL_ROOT / "scripts" / "fixtures" / "validation-result-pass.json"
@@ -873,15 +888,15 @@ class SkillContractTests(unittest.TestCase):
             ["VDD-SKILL-CONTRACT"], [item["rule_id"] for item in result["findings"]]
         )
 
-    def test_artifact_proof_trust_root_permission_escalation_is_rejected(self) -> None:
+    def test_artifact_proof_root_policy_permission_escalation_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             mutated = Path(tmp) / "skill"
             shutil.copytree(SKILL_ROOT, mutated)
-            target = mutated / "scripts" / "skill-contract.json"
-            contract = json.loads(target.read_text(encoding="utf-8"))
-            contract["artifact_proof_trust_roots"]["repository-maintenance-tdd-adapter"]["consumer_authorization_boundary"]["authorizes"] = ["plan-ready"]
+            target = mutated / "scripts" / "fixtures" / "artifact-proof-root-policy-pass.json"
+            fixture = json.loads(target.read_text(encoding="utf-8"))
+            fixture["proof"]["consumer_authorization_boundary"]["authorizes"] = ["plan-ready"]
             target.write_text(
-                json.dumps(contract, indent=2) + "\n", encoding="utf-8", newline="\n"
+                json.dumps(fixture, indent=2) + "\n", encoding="utf-8", newline="\n"
             )
             result = self.validator.validate_skill(mutated)
         self.assertFalse(result["ok"])

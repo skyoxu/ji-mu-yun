@@ -59,7 +59,7 @@ Work:
 - bind plan-mandated checks through existing Bootstrap extension points and consume only the repository Skill's finalized-run validation envelope;
 - perform semantic review only with explicit authorization;
 - repair all accepted P0/P1 and consume runtime Bootstrap disposition evidence for every accepted P2;
-- run the plan-local `implementation-accepted` predicate.
+- run the plan-local `implementation-complete` predicate and emit a non-authorizing acceptance handoff.
 - resolve the unique `95-*.md` through the non-authoritative repository index without scanning unrelated plan directories, and append the overall implementation result only after that current terminal predicate passes.
 
 Exit: S7 proves one active S6 candidate through recovery/events/successor evidence independently of its own run ID, no open accepted P0/P1 remains, runtime P2 disposition/verifier evidence is complete, no high-risk/expired deferral remains, the fresh plan-local envelope authorizes only implementation acceptance, and the subsequently appended 95 result accurately reports but does not authorize that outcome.

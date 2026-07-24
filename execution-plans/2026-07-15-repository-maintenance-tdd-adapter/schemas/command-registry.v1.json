@@ -430,6 +430,18 @@
       "timeout_seconds": 60
     },
     {
+      "id": "rmap-s7-controlled-red",
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py",
+        "--failure-id",
+        "RMAP-ACCEPTANCE-HANDOFF-AUTHORITY"
+      ],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 60
+    },
+    {
       "id": "rmap-s6-identity-validate",
       "executable": "py",
       "argv": ["-3", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py"],
@@ -514,7 +526,7 @@
         "--candidate-result",
         {
           "type": "run_path",
-          "value": "tdd-adapter/<plan-id>/RMAP-S6/<run-id>/candidate-result.json"
+      "value": "tdd-adapter/<plan-id>/RMAP-S6/<run-id>/candidate-evidence.json"
         }
       ],
       "cwd": {
@@ -568,7 +580,7 @@
       "slice_id": "RMAP-S7"
     },
     {
-      "id": "rmap-s7-acceptance-validate",
+      "id": "rmap-s7-completion-validate",
       "executable": "py",
       "argv": [
         "-3",
@@ -577,7 +589,7 @@
           "value": "tools/validate_all.py"
         },
         "--predicate",
-        "implementation-accepted",
+        "implementation-complete",
         "--slice-id",
         "RMAP-S7",
         "--run-dir",
@@ -603,25 +615,20 @@
         "--candidate-result",
         {
           "type": "run_path",
-          "value": "tdd-adapter/<plan-id>/RMAP-S6/<candidate-run-id>/candidate-result.json"
+      "value": "tdd-adapter/<plan-id>/RMAP-S6/<candidate-run-id>/candidate-evidence.json"
         },
-        "--candidate-ref",
+        "--output",
         {
           "type": "run_path",
-          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>/candidate-result-ref.json"
-        },
-        "--bootstrap-run",
-        {
-          "type": "run_path",
-          "value": "ci/<date>/<bootstrap-run>"
+          "value": "tdd-adapter/<plan-id>/<slice-id>/<run-id>/implementation-complete-result.json"
         }
       ],
       "cwd": {
         "type": "repo_path",
         "value": "."
       },
-      "timeout_seconds": 180,
-      "declared_predicate": "implementation-accepted",
+      "timeout_seconds": 300,
+      "declared_predicate": "implementation-complete",
       "slice_id": "RMAP-S7"
     },
     {

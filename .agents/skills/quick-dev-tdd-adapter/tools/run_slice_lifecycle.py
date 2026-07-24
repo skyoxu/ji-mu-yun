@@ -32,12 +32,17 @@ def _command(path: str) -> dict[str, Any]:
 
 
 def _run(workspace: Path, command: dict[str, Any]) -> int:
-    completed = subprocess.run([command["executable"], *command["argv"]], cwd=workspace / command["cwd"], shell=False, check=False, capture_output=True, timeout=command["timeout_seconds"])
+    print(json.dumps({"event": "command-start", "command_id": command["id"]}), flush=True)
+    completed = subprocess.run([command["executable"], *command["argv"]], cwd=workspace / command["cwd"], shell=False, check=False, timeout=command["timeout_seconds"])
+    print(json.dumps({"event": "command-finished", "command_id": command["id"], "exit_code": completed.returncode}), flush=True)
     return completed.returncode
 
 
 def _run_terminal(workspace: Path, command: dict[str, Any]) -> subprocess.CompletedProcess[bytes]:
-    return subprocess.run([command["executable"], *command["argv"]], cwd=workspace / command["cwd"], shell=False, check=False, capture_output=True, timeout=command["timeout_seconds"])
+    print(json.dumps({"event": "terminal-start", "command_id": command["id"]}), flush=True)
+    completed = subprocess.run([command["executable"], *command["argv"]], cwd=workspace / command["cwd"], shell=False, check=False, capture_output=True, timeout=command["timeout_seconds"])
+    print(json.dumps({"event": "terminal-finished", "command_id": command["id"], "exit_code": completed.returncode}), flush=True)
+    return completed
 
 
 def _projection(plan_dir: Path):

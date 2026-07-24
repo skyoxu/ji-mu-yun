@@ -132,12 +132,12 @@
       "predicate": "implementation-candidate",
       "run_id": "RMAP-S6-RUN-001"
     },
-    "candidate_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RMAP-S6-RUN-001/candidate-result.json",
+    "candidate_path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RMAP-S6-RUN-001/candidate-evidence.json",
     "candidate_ref": {
       "schema_version": "jimuyun.candidate-result-ref.v1",
       "slice_id": "RMAP-S6",
       "run_id": "RMAP-S6-RUN-001",
-      "path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RMAP-S6-RUN-001/candidate-result.json",
+      "path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RMAP-S6-RUN-001/candidate-evidence.json",
       "sha256": "sha256:409019b5fa18d02c4951d9c0984d9b7c74bf570c9195582fccc0dc0b452a2d9f",
       "candidate_hash": "sha256:409019b5fa18d02c4951d9c0984d9b7c74bf570c9195582fccc0dc0b452a2d9f",
       "predicate": "implementation-candidate",

@@ -4,6 +4,7 @@
     "SKILL.md",
     "agents/openai.yaml",
     "references/clarification-gate.md",
+    "references/lifecycle-state-contract.md",
     "references/strict-vdd-standard.md",
     "references/skill-compliance-protocol.md",
     "scripts/clarification_state.py",
@@ -12,6 +13,8 @@
     "scripts/fixtures/clarification-cases.json",
     "scripts/fixtures/validation-result-pass.json",
     "scripts/fixtures/validation-result-stale.json",
+    "scripts/fixtures/artifact-proof-root-policy-pass.json",
+    "scripts/fixtures/implementation-report-index-pass.json",
     "scripts/fixtures/compliance-scenarios.json",
     "scripts/fixtures/compliance-trace-pass.jsonl",
     "scripts/fixtures/compliance-trace-implementation-first.jsonl",
@@ -28,6 +31,7 @@
       "## Complete the pre-writing clarification gate",
       "## Establish authority before writing",
       "## Build the VDD control chain",
+      "## Enforce lifecycle ownership",
       "## Put verification in the control position",
       "## Repair workflow",
       "## Creation workflow",
@@ -68,6 +72,7 @@
   "required_links": {
     "SKILL.md": [
       "references/clarification-gate.md",
+      "references/lifecycle-state-contract.md",
       "references/strict-vdd-standard.md",
       "references/skill-compliance-protocol.md",
       "scripts/clarification_state.py",
@@ -77,6 +82,13 @@
     "references/clarification-gate.md": [
       "scripts/clarification_state.py",
       "scripts/fixtures/clarification-state-pass.json"
+    ],
+    "references/lifecycle-state-contract.md": [
+      "# Lifecycle State Contract",
+      "## Implementation Authorization",
+      "## Completion, Acceptance, And Archive",
+      "## Migration",
+      "## Required Negative Cases"
     ],
     "agents/openai.yaml": [
       "$vdd-execution-plan"
@@ -122,114 +134,70 @@
       }
     }
   },
-  "artifact_proof_trust_roots": {
-    "repository-maintenance-tdd-adapter": {
-      "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-      "artifact_kind": "normative",
-      "proof_scope": "static-contract",
-      "finding_ids": [
-        "RMAP-1600-UNIFORM-ARTIFACT-PROOF"
-      ],
-      "dimension_verdicts": {
-        "schema_producer_authority": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-PRODUCER"]},
-        "immutable_identity": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-IDENTITY"]},
-        "source_of_truth_derivation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-DERIVATION"]},
-        "independent_recomputation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-RULE"]},
-        "staleness_propagation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-STALENESS"]},
-        "recovery_supersession": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-LINEAGE"]},
-        "consumer_authorization_boundary": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-CONSUMER"]}
-      },
-      "schema_producer_authority": {
-        "authority_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
-        "authority_category": "protocol_authority",
-        "authority_sha256": "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140",
-        "producer_kind": "manual-authority",
-        "generator_path": null,
-        "generator_sha256": null
-      },
-      "immutable_identity": {
-        "mode": "authority-root",
-        "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
-        "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
-        "manifest_path": "schemas/authority-manifest.v1.json"
-      },
-      "source_of_truth_derivation": {
-        "rules": [
-          {
-            "source": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-            "source_sha256": null,
-            "field": "/proof/immutable_identity/artifact_sha256",
-            "target_field": "$bytes",
-            "derivation": "external-hash-pin"
-          }
-        ]
-      },
-      "independent_recomputation": {
-        "rule_id": "vdd-skill-artifact-proof-trust-root.v1",
-        "validator_path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
-          "validator_sha256": "sha256:53e742efa6a512245cf7ecc52c3fa40284bc79a345229117563f8960ff902e1b",
-        "callable": "validate_artifact_proof_trust_roots",
-        "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
-        "negative_test_sha256": "sha256:6962bf68883310bbee276beff3530995f7c9a3d186ba8a18deeb3c05f6d26468",
-        "expected_failure_ids": [
-          "VDD-ARTIFACT-PROOF-PRODUCER",
-          "VDD-ARTIFACT-PROOF-IDENTITY",
-          "VDD-ARTIFACT-PROOF-DERIVATION",
-          "VDD-ARTIFACT-PROOF-RULE",
-          "VDD-ARTIFACT-PROOF-STALENESS",
-          "VDD-ARTIFACT-PROOF-LINEAGE",
-          "VDD-ARTIFACT-PROOF-CONSUMER",
-          "VDD-ARTIFACT-PROOF-APPLICABILITY"
-        ]
-      },
-      "staleness_propagation": {
-        "inputs": [
-          {
-            "source": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
-            "source_sha256": null,
-            "field": "/proof/immutable_identity/artifact_sha256",
-            "target_field": "$bytes",
-            "derivation": "external-hash-pin"
-          }
-        ],
-        "invalidates": [
-          "artifact-proof-registry",
-          "runtime-artifact-type-proof",
-          "plan-repair-verified",
-          "plan-ready"
-        ],
-        "regeneration_command_id": "rmap-refresh-projections",
-        "revalidation_command_id": "rmap-plan-repair-validate"
-      },
-      "recovery_supersession": {
-        "history_policy": "append-only-successor-no-rewrite",
-        "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
-        "lineage_fields": [
-          "artifact_path",
-          "immutable_identity",
-          "recovery_supersession"
-        ],
-        "predecessor_policy": "external-vdd-skill-contract-revision",
-        "lifecycle_status": "supersedes",
-        "predecessor_sha256": "sha256:2c0c297c20fbf46daaea5eca1836c9b3e51ce9699749eae2152cafd57a6b2544"
-      },
-      "consumer_authorization_boundary": {
-        "consumers": [
-          "composite plan validator"
-        ],
-        "predicate": "artifact-contract-proof",
-        "authorizes": [],
-        "does_not_authorize": [
-          "plan-ready",
-          "slice-ready",
-          "bootstrap-review",
-          "implementation-accepted",
-          "protected-handoff",
-          "release-ready"
-        ]
-      }
-    }
+  "artifact_proof_root_policy": {
+    "schema_version": "vdd.artifact-proof-root-policy.v1",
+    "fixture_path": "scripts/fixtures/artifact-proof-root-policy-pass.json",
+    "required_fields": [
+      "artifact_path",
+      "artifact_kind",
+      "proof_scope",
+      "finding_ids",
+      "dimension_verdicts",
+      "schema_producer_authority",
+      "immutable_identity",
+      "source_of_truth_derivation",
+      "independent_recomputation",
+      "staleness_propagation",
+      "recovery_supersession",
+      "consumer_authorization_boundary"
+    ],
+    "required_dimensions": [
+      "schema_producer_authority",
+      "immutable_identity",
+      "source_of_truth_derivation",
+      "independent_recomputation",
+      "staleness_propagation",
+      "recovery_supersession",
+      "consumer_authorization_boundary"
+    ],
+    "authority_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
+    "authority_sha256": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+    "semantic_policy_field": "/3-authority-intent-kernels-and-executable-contracts",
+    "identity_mode": "semantic-root-policy",
+    "identity_algorithm": "vdd-root-policy-v1",
+    "derivation": "semantic-policy-reference",
+    "validator_path": "scripts/validate_skill_contract.py",
+    "negative_test_path": "scripts/tests/test_validate_skill_contract.py",
+    "callable": "validate_artifact_proof_trust_roots",
+    "expected_failure_ids": [
+      "VDD-ARTIFACT-PROOF-PRODUCER",
+      "VDD-ARTIFACT-PROOF-IDENTITY",
+      "VDD-ARTIFACT-PROOF-DERIVATION",
+      "VDD-ARTIFACT-PROOF-RULE",
+      "VDD-ARTIFACT-PROOF-STALENESS",
+      "VDD-ARTIFACT-PROOF-LINEAGE",
+      "VDD-ARTIFACT-PROOF-CONSUMER",
+      "VDD-ARTIFACT-PROOF-APPLICABILITY"
+    ],
+    "required_invalidates": [
+      "artifact-proof-registry",
+      "runtime-artifact-type-proof",
+      "plan-repair-verified",
+      "plan-ready"
+    ],
+    "required_lineage_fields": [
+      "artifact_path",
+      "immutable_identity",
+      "recovery_supersession"
+    ],
+    "required_exclusions": [
+      "plan-ready",
+      "slice-ready",
+      "bootstrap-review",
+      "implementation-accepted",
+      "protected-handoff",
+      "release-ready"
+    ]
   },
   "clarification": {
     "schema_version": "vdd.clarification-state.v1",

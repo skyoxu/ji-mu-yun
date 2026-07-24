@@ -215,3 +215,19 @@ def glob_patterns_overlap(left: str, right: str) -> bool:
         return _segment_intersects(left_part, right_part) and intersects(left_index + 1, right_index + 1)
 
     return intersects(0, 0)
+
+
+def validate_execution_snapshot_paths(plan_root: Path, slice_id: str, paths: Any, write_paths: list[Any]) -> list[dict[str, str]]:
+    if not isinstance(paths, list) or not paths:
+        return [{"rule_id": "RMAP-EXECUTION-SNAPSHOT", "target": slice_id, "message": "execution snapshot paths are missing"}]
+    findings: list[dict[str, str]] = []
+    repository_root = plan_root.parents[1]
+    for snapshot_path in paths:
+        if not isinstance(snapshot_path, str) or not snapshot_path or any(token in snapshot_path for token in ("*", "?", "[", "]")):
+            findings.append({"rule_id": "RMAP-EXECUTION-SNAPSHOT", "target": slice_id, "message": "execution snapshot path must be explicit"})
+            continue
+        if contained_file(repository_root, snapshot_path) is None:
+            findings.append({"rule_id": "RMAP-EXECUTION-SNAPSHOT", "target": snapshot_path, "message": "execution snapshot path must be an existing repository file"})
+        if not any(isinstance(write_path, str) and glob_patterns_overlap(snapshot_path, write_path) for write_path in write_paths):
+            findings.append({"rule_id": "RMAP-EXECUTION-SNAPSHOT", "target": snapshot_path, "message": "execution snapshot path is outside the slice write set"})
+    return findings

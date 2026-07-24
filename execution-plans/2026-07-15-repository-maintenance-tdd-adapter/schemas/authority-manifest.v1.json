@@ -35,11 +35,11 @@
     "protocol_authority": [
       {
         "path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
-        "sha256": "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140"
+        "sha256": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72"
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
-        "sha256": "sha256:09d2aa892686e056a67365595a361f4c81231657f94b19dc44eddfff63ab2f7d"
+        "sha256": "sha256:1fdf4df7cafb130e251be98df712161f9e6e949a9a79d7582d0d33b765aa029c"
       }
     ],
     "review_policy_authority": [
@@ -53,7 +53,7 @@
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "sha256": "sha256:26ba741ed4754380b776996cf0d2bf03538b7e4e63fcdad3fba24b4267b023fd"
+        "sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
@@ -61,7 +61,7 @@
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
-        "sha256": "sha256:3555348a5359ad3b9a0aaaf0ae2db1190a9ccad2813f7092a006f2001b3b230f"
+        "sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
@@ -151,7 +151,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md",
-        "sha256": "sha256:81fb4fba4bb5c17c846ca75ef445fcb1d8757fb12afc97730fbdfdca26dc6c8e"
+        "sha256": "sha256:70813ca2d54cce3557574e6255cf736f92024e35fb685fd7a09ef1c80d4a7ea2"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/05-diagnostics-repair-and-reentry.md",
@@ -159,11 +159,11 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/06-testing-observability-and-evidence.md",
-        "sha256": "sha256:1a8a598ba52cf9e57364e942f5fe3c7a47d2dd4d241e2d4ed69855b51c84bda0"
+        "sha256": "sha256:e2ecedbeaf477b6823411056d70323eaa6e50b417562135e77e42813b846713a"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/07-implementation-phases.md",
-        "sha256": "sha256:4b1cfe508c4ee68489a52c83784a56c38bcf9b0aebf17a65f71deed4ea8574c6"
+        "sha256": "sha256:29f06d6e457472ff9ff6a28086e9e5d1ec6fe434092b4dcedd33e0d7c191cf25"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/08-risks-dod-and-glossary.md",
@@ -175,7 +175,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/97-requirements-ledger.md",
-        "sha256": "sha256:56a5b4a6936a80a3d7d0541aa4ea1a650653e3a9db3caa297634d99bb9596cee"
+        "sha256": "sha256:2e1c3a9a789094e010e1cee19b0b6b4140dfef50277742ea0ab3e8da9572c4d9"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/98-source-to-split-audit.md",
@@ -189,11 +189,11 @@
     "machine_owners": [
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
-        "sha256": "sha256:c4242b63316181c60ccf2d1328641d9782763f95e60c967f3ecaa3c9dd5159dd"
+        "sha256": "sha256:84306844c61390503ecc2d38fbc90a8fafbf540ba8905c66ad4dc11a2c90f84c"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
-        "sha256": "sha256:f51b585e1d538c4eb1c9c44c2a509d5632aacbc95f0f9c24fbaa4e368d3ad2df"
+        "sha256": "sha256:842b3bbdf276d980f208a1b2efed89d80e0829ab1fab9c6af77fd7d1ab139a6d"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirements.v1.json",
@@ -205,15 +205,15 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
-        "sha256": "sha256:917b533a10a3527c3b7f9efce0ebff69f1e7d20b2b2d42dda0fd43989c8c8dd1"
+        "sha256": "sha256:53e18c2df2da0be19e1588486b12b825f75e96ca75d3f105c03999778210a97a"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
-        "sha256": "sha256:6e841a804776b851bbf9a2d2c7613a57cf2a21dcc45dc2033bdaf13de7a1601b"
+        "sha256": "sha256:9cf8e59c6ed698e08249d11ed7ecbd71ee0cc548306dc5952df50e9b5efb5d74"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
-        "sha256": "sha256:2cde5b346ba502fde333d3edbf18f9f8cfc66facf457a5b6a1f876e5936f84d4"
+        "sha256": "sha256:b22efb43332feef4bfffce20564d2438eed6f630236472edf880a81122fc0c23"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/clarification-decisions.v1.json",
@@ -225,7 +225,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
-        "sha256": "sha256:becaa415ebfa04767a1c5d107b23dfb08593c0a4289becb69522d5ac3fcf94c4"
+        "sha256": "sha256:74c24d52df0b03c7c11a8dbb263dd11db42a7bec372787844242a25c66577af1"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/shadow-backfill.v1.json",
@@ -237,7 +237,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/validation-result.v1.schema.json",
-        "sha256": "sha256:52b7030abb9513ec5acf40a8a3e66cc7168252d8cceeb7eb422369f270072097"
+        "sha256": "sha256:b96eeb63f3a90962eb7f6c9d3a77aeffaf7e1efe7c054250ca08e1f1778824a6"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diagnostic.v1.schema.json",
@@ -245,7 +245,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
-        "sha256": "sha256:7ffec47dc88d065abab59866000fb97522d1f7cc3be28e64dce3e4e1bc7239a6"
+        "sha256": "sha256:f5fa9c57ec235ff17292a8ad0e72deb5ccbeb1654eee3057bbc0bf2d10120fed"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/capsule-attempt-cases.v1.json",
@@ -257,11 +257,11 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-result-ref.v1.schema.json",
-        "sha256": "sha256:f5c51360e417426b11ca3a42470479e62fd2eafef759b5910a805dd25b50484d"
+        "sha256": "sha256:e16db242053e8d09c12c4d075f9dd4d7bd765104292d0cfc772a6dda231f07b3"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/candidate-diff-cases.v1.json",
-        "sha256": "sha256:634ba5f8c8801440a2a56796bcce75d8eb02d37cf597d61ea8005387b539abbe"
+        "sha256": "sha256:6d2f94c3f7bc268d408e89c693346538d93a7815f5aad1dfad5a22fc0f09af6d"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
@@ -285,11 +285,11 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
-        "sha256": "sha256:908cdbd2fd081857cf6a3f73a7dc78be0133e99890953db34496f14953b21d3b"
+        "sha256": "sha256:02b9dff12fdb65d638c0048d5d6bf4ada89e59b333c1b6008d948f62bf03d99a"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
-        "sha256": "sha256:bcee54f0d40e62453613e0cf76a04beb76112362e5e088a5f1749926e1cd2b07"
+        "sha256": "sha256:c17e05083d828cccb4d350b9355c67b4e8a5f20c3f49ee81ebb547af646e9677"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
@@ -297,7 +297,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json",
-        "sha256": "sha256:803f20e3b2c6de7dd28d1f4189156538bf776b5f16b2fd53572a2ee70d9c6702"
+        "sha256": "sha256:71b50870e024b7085fb0763d4a9d7d9ad50bb126e6bd7898f0d8a87f202fc9f5"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
@@ -313,7 +313,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-        "sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1"
+        "sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/stage-evidence-projection.v1.schema.json",
@@ -321,7 +321,7 @@
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/schemas/implementation-contract.v1.schema.json",
-        "sha256": "sha256:715d20e85ec99be5e482e067fdef0bef85d2499dcef89d7d0ee6f7591531e37a"
+        "sha256": "sha256:6c888afcb7e3809f7cce67577e08dd4c11ae016090e519382a4627f1a03cad54"
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/schemas/context-manifest.v1.schema.json",
@@ -363,27 +363,27 @@
     "execution_dependencies": [
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py",
-        "sha256": "sha256:061a81b1a9360abde028fab44eafac3aa5b630d6ffd8240d4acd7d22fd615e65"
+        "sha256": "sha256:e3f9b6f299f2a435a55c5ca039f3cfdb842f8fab0d722774f3c000840c90dd76"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
-        "sha256": "sha256:ae2a2b9e346c0ea47e7fb12da9eadc9b82c624f311176e462eafd7b55f82bd5c"
+        "sha256": "sha256:82dde6d037800d085b51b0daf913f5689d3b9ede6e46106dc375a851f20ea01f"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
-        "sha256": "sha256:5fc523fd8cd115e08d7370e8e28cfea29fcc148f8f2dbdc71a29261a2eb0fd37"
+        "sha256": "sha256:80d2f76b0e22622eddbcb78a64bfe34690329f2f8b402986f96eeccaaa4671aa"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/contract_guards.py",
-        "sha256": "sha256:4a65ba0d4992b9fc4701864c69392b617b57fbdb36f4e82c6fd9766e2985fd8d"
+        "sha256": "sha256:f7b85d5f2482332a5de11c7324f588710867d3d5221036a3754f6ccdfa74346b"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/evidence_guards.py",
-        "sha256": "sha256:fc6596b7198d79e39831510c1c9f214455b0c1bd5530604112f00a805fb7f3d6"
+        "sha256": "sha256:4ded206087bf6cab7d19fad76a915c01fa06a6b1c9e4a50b5910faaac470f6e3"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
-        "sha256": "sha256:11079ca42d114372bdc895abb64fb1f95393601b0c07381afbda7c931ebfd081"
+        "sha256": "sha256:ca9e2f8ac468ed43a056cf37facdb1bf88d76a9011161e7f0d57bdc4c473586a"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py",
@@ -399,7 +399,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
-        "sha256": "sha256:3a902bf6c7e9c26dcd7b95d38233a774151f3f693048eb558a2bcc7ccd83a776"
+        "sha256": "sha256:487c3498cd92e5d9a0d3e45ffd30150004ffb5db61bcf04ce1473eaca2a25b32"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_guards.py",
@@ -455,15 +455,15 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_guards.py",
-        "sha256": "sha256:f5b38e78c80d68f463743bfe7be21ca97d339b9b318d7cd39b46b810685dfe21"
+        "sha256": "sha256:82de55660dda4989d719c27a66f8eb32830ea38c236692e5ad8e2434f670e634"
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
-        "sha256": "sha256:53e742efa6a512245cf7ecc52c3fa40284bc79a345229117563f8960ff902e1b"
+        "sha256": "sha256:4e02c926793237aacc6497b6bd0266637b1c7ba05366be5ce953b6743f27a58d"
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
-        "sha256": "sha256:6962bf68883310bbee276beff3530995f7c9a3d186ba8a18deeb3c05f6d26468"
+        "sha256": "sha256:72641954a9dbf9791cfb3b05141ab1d4490ff2e54f12dc5da1d59ea7b8701c35"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
@@ -491,7 +491,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py",
-        "sha256": "sha256:addb68d999e8b1928377a103d175b5e1ab1fcdd6fe0f70318e203ba624a9797f"
+        "sha256": "sha256:e4097829ce56911c254cdfeeac876c76ccd017aa5e92f23d976a004e1b46c1ff"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_validation_result_guards.py",

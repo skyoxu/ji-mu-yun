@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 TOOLS = Path(__file__).resolve().parents[1]
@@ -21,6 +22,7 @@ def load(name: str):
 ROUTER = load("route_plan_directory")
 BUILDER = load("build_slice_invocation")
 LIFECYCLE = load("run_slice_lifecycle")
+CONTROLLER = load("persistent_plan_loop")
 
 
 class PlanDirectoryLoopTests(unittest.TestCase):
@@ -44,14 +46,83 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             (stale / "slice-ready-result.json").write_text(json.dumps({"predicate": "slice-ready", "status": "pass", "contract_hash": "sha256:stale"}), encoding="utf-8")
             self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
-    def test_router_routes_s7_to_external_envelope(self) -> None:
+    def test_router_routes_s7_as_an_ordinary_completion_slice(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); slices = [{"slice_id": "S0", "depends_on": []}, {"slice_id": "RMAP-S7", "depends_on": ["S0"]}]
             plan = self._plan(root, slices)
             contract_hash = "sha256:" + __import__("hashlib").sha256((plan / "implementation-contract.v1.json").read_bytes()).hexdigest()
             result = root / "logs/tdd-adapter/target/S0/current"; result.mkdir(parents=True)
             (result / "slice-ready-result.json").write_text(json.dumps({"predicate": "slice-ready", "status": "pass", "contract_hash": contract_hash}), encoding="utf-8")
-            self.assertEqual("await-external-envelope", ROUTER.route(root, plan)["next_action"])
+            self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
+    def test_router_replays_stale_implementation_candidate_before_s7(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            slices = [
+                {"slice_id": "RMAP-S6", "depends_on": [], "exit_predicate": "implementation-candidate"},
+                {"slice_id": "RMAP-S7", "depends_on": ["RMAP-S6"]},
+            ]
+            plan = self._plan(root, slices)
+            evidence = root / "logs/tdd-adapter/target/RMAP-S6/old"; evidence.mkdir(parents=True)
+            (evidence / "implementation-candidate-result.json").write_text("{}", encoding="utf-8")
+            (evidence / "candidate-evidence.json").write_text("{}", encoding="utf-8")
+            (evidence / "implementation-candidate-result.json").write_text(json.dumps({
+                "predicate": "implementation-candidate", "status": "pass",
+                "candidate_hash": "sha256:stale",
+                "current_candidate_hash": "sha256:current", "predicate_input_root": "sha256:current",
+            }), encoding="utf-8")
+            self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
+    def test_router_ignores_targeted_validation_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            run = root / "logs/tdd-adapter/target/S0/targeted"; run.mkdir(parents=True)
+            contract_hash = "sha256:" + __import__("hashlib").sha256((plan / "implementation-contract.v1.json").read_bytes()).hexdigest()
+            (run / "slice-ready-result.json").write_text(json.dumps({"predicate": "slice-ready", "status": "pass", "contract_hash": contract_hash}), encoding="utf-8")
+            (run / "targeted-validation.v1.json").write_text("{}", encoding="utf-8")
+            self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
+    def test_router_replays_authority_stale_implementation_candidate_before_s7(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            slices = [
+                {"slice_id": "RMAP-S6", "depends_on": [], "exit_predicate": "implementation-candidate"},
+                {"slice_id": "RMAP-S7", "depends_on": ["RMAP-S6"]},
+            ]
+            plan = self._plan(root, slices)
+            evidence = root / "logs/tdd-adapter/target/RMAP-S6/old"; evidence.mkdir(parents=True)
+            current = {
+                "candidate_hash": "sha256:current",
+                "predicate_input_root": "sha256:current",
+                "authority_root": "sha256:current-authority",
+                "validator_root": "sha256:current-validator",
+                "validator_version": "validator-v1",
+                "closure_definition_hash": "sha256:current-closure",
+            }
+            stale = dict(current, authority_root="sha256:stale-authority")
+            stale.update({"predicate": "implementation-candidate", "status": "pass"})
+            (evidence / "implementation-candidate-result.json").write_text(json.dumps(stale), encoding="utf-8")
+            (evidence / "candidate-evidence.json").write_text("{}", encoding="utf-8")
+            with mock.patch.object(ROUTER, "_validation_snapshot", return_value=current):
+                self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
+    def test_controller_consumes_only_explicit_snapshot_declaration(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{
+                "slice_id": "RMAP-S7",
+                "depends_on": [],
+                "allowed_changes": {"production": [], "tests": ["tools/tests/**"], "documentation": []},
+                "execution_snapshot_paths": ["tools/tests/test_final.py"],
+            }])
+            self.assertEqual("tools/tests/test_final.py", CONTROLLER._snapshot(plan, "RMAP-S7"))
+
+    def test_controller_rejects_missing_snapshot_declaration(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "RMAP-S7", "depends_on": [], "allowed_changes": {}}])
+            with self.assertRaisesRegex(ValueError, "declared execution snapshot"):
+                CONTROLLER._snapshot(plan, "RMAP-S7")
 
     def test_builder_expands_run_path_and_serializes_base64_context(self) -> None:
         plan = REPOSITORY_ROOT / "execution-plans/2026-07-15-repository-maintenance-tdd-adapter"

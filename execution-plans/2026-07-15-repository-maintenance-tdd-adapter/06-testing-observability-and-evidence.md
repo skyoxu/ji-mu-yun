@@ -109,7 +109,7 @@ attempt-ledger-manifest.v1.json
 
 Every file binds the same run, plan, contract, slice, source, validator, command registry, and candidate identities. Stage files also bind the accepted attempt decision and Capsule/context identities while recording command identity, observed exit, timestamp, and predecessor-stage hash; RED records the declared selector and stable failures. The S6 candidate directory contains a schema-valid cumulative `changed-files.json`, `candidate-lineage-manifest.json`, reproducible `test-diff.patch`, final context/Capsule, attempt-ledger manifest, raw event-log hash, final canonical event hash, accepted-attempt folds, and accepted decisions. The S7 run contains `candidate-result-ref.json` plus a supersession proof referencing current recovery/events/successors; it never infers activity from its own run ID.
 
-Every slice command receives `--run-dir`, `--red-result`, `--green-result`, and `--refactor-result`; implicit latest selection and repository-wide evidence scans are forbidden. S6 additionally receives `--candidate-result`. Only S7 receives both `--candidate-ref` and `--bootstrap-run`; its `--candidate-result` uses an explicit independent `<candidate-run-id>`.
+Every slice command receives `--run-dir`, `--red-result`, `--green-result`, and `--refactor-result`; implicit latest selection and repository-wide evidence scans are forbidden. S6 and S7 receive an explicit `--candidate-result`; S7 uses an independent `<candidate-run-id>` and does not consume a Bootstrap run.
 
 Raw clarification and repair evidence remains under `logs/**`, but clean-checkout authorization consumes only minimized projections in `schemas/clarification-decisions.v1.json`, immutable `schemas/review-blocking-state.v1.json`, `schemas/review-policy-reentry.v1.json`, and `schemas/shadow-protected-baseline.v1.json`.
 
@@ -123,7 +123,7 @@ An overall implementation entry records the terminal predicate and current resul
 
 ## Candidate Envelope
 
-The candidate result authorizes only `bootstrap-review`. It explicitly excludes `implementation-accepted`, protected handoff, and release. It binds its S6 run ID, cumulative candidate diff manifest, test patch, final context-manifest hash, final Capsule hash, attempt-ledger manifest hash, raw `run-events.jsonl` hash, final canonical event hash, accepted-attempt fold, accepted refactor attempt ID, and accepted decision hash. Its worktree identity covers declared write, forbidden, read, dependency, and authority closure through S6; unrelated work outside that closure remains excluded, while Git index or monitored dependency drift blocks.
+The candidate result authorizes nothing. It explicitly excludes implementation authorization, implementation completion, acceptance, and archive. It binds its S6 run ID, cumulative candidate diff manifest, test patch, final context-manifest hash, final Capsule hash, attempt-ledger manifest hash, raw `run-events.jsonl` hash, final canonical event hash, accepted-attempt fold, accepted refactor attempt ID, and accepted decision hash. Its worktree identity covers declared write, forbidden, read, dependency, and authority closure through S6; unrelated work outside that closure remains excluded, while Git index or monitored dependency drift blocks.
 
 ## Plan Validation Evidence
 

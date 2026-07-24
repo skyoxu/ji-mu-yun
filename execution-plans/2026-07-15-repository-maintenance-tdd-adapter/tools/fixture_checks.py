@@ -108,9 +108,7 @@ def evaluate_synchronized_trust_root_fixture(plan_root: Path, fixture_id: str) -
         clone_plan = _copy_fixture_repository(plan_root, Path(tmp) / "repo")
         repository_root = clone_plan.parents[1]
         authority_path = clone_plan / AUTHORITY_PATH
-        contract_path = repository_root / SKILL_CONTRACT_PATH
         authority = _json(authority_path)
-        contract = _json(contract_path)
         root_document_path = repository_root / TRUST_ROOT_PATH
         root_document = _json(root_document_path)
         root = root_document["proof"]
@@ -138,9 +136,7 @@ def evaluate_synchronized_trust_root_fixture(plan_root: Path, fixture_id: str) -
         root["immutable_identity"]["artifact_sha256"] = _sha(authority_path)
         if root_changed:
             root_document["proof"] = root
-            contract["artifact_proof_trust_roots"]["repository-maintenance-tdd-adapter"] = copy.deepcopy(root)
             _write_json(root_document_path, root_document)
-            _write_json(contract_path, contract)
         return _validate_synchronized_artifact_fixture(clone_plan)
 
 

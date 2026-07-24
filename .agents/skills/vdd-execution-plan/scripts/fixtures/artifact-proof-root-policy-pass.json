@@ -1,21 +1,21 @@
 {
-  "schema_version": "jimuyun.artifact-proof-authority-root.v1",
-  "root_id": "artifact-proof-root.v1",
+  "schema_version": "vdd.artifact-proof-root-fixture.v1",
+  "root_id": "detached-artifact-proof-root",
   "proof": {
-    "artifact_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
+    "artifact_path": "detached-plan/schemas/artifact-proof-authority.v1.json",
     "artifact_kind": "normative",
     "proof_scope": "static-contract",
     "finding_ids": [
-      "RMAP-1600-UNIFORM-ARTIFACT-PROOF"
+      "ARTIFACT-PROOF-CONTRACT"
     ],
     "dimension_verdicts": {
-      "schema_producer_authority": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-PRODUCER"]},
-      "immutable_identity": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-IDENTITY"]},
-      "source_of_truth_derivation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-DERIVATION"]},
-      "independent_recomputation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-RULE"]},
-      "staleness_propagation": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-STALENESS"]},
-      "recovery_supersession": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-LINEAGE"]},
-      "consumer_authorization_boundary": {"status": "PASS", "evidence_rule_ids": ["RMAP-ARTIFACT-PROOF-CONSUMER"]}
+      "schema_producer_authority": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-PRODUCER"]},
+      "immutable_identity": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-IDENTITY"]},
+      "source_of_truth_derivation": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-DERIVATION"]},
+      "independent_recomputation": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-RULE"]},
+      "staleness_propagation": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-STALENESS"]},
+      "recovery_supersession": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-LINEAGE"]},
+      "consumer_authorization_boundary": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-CONSUMER"]}
     },
     "schema_producer_authority": {
       "authority_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
@@ -44,11 +44,11 @@
       ]
     },
     "independent_recomputation": {
-      "rule_id": "vdd-skill-artifact-proof-trust-root.v1",
-      "validator_path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
-        "validator_sha256": "sha256:4e02c926793237aacc6497b6bd0266637b1c7ba05366be5ce953b6743f27a58d",
+      "rule_id": "vdd-skill-artifact-proof-root-policy.v1",
+      "validator_path": "scripts/validate_skill_contract.py",
+      "validator_sha256": "sha256:4e02c926793237aacc6497b6bd0266637b1c7ba05366be5ce953b6743f27a58d",
       "callable": "validate_artifact_proof_trust_roots",
-      "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+      "negative_test_path": "scripts/tests/test_validate_skill_contract.py",
       "negative_test_sha256": "sha256:72641954a9dbf9791cfb3b05141ab1d4490ff2e54f12dc5da1d59ea7b8701c35",
       "expected_failure_ids": [
         "VDD-ARTIFACT-PROOF-PRODUCER",
@@ -77,12 +77,12 @@
         "plan-repair-verified",
         "plan-ready"
       ],
-      "regeneration_command_id": "rmap-refresh-projections",
-      "revalidation_command_id": "rmap-plan-repair-validate"
+      "regeneration_command_id": "refresh-projections",
+      "revalidation_command_id": "validate-plan-repair"
     },
     "recovery_supersession": {
       "history_policy": "append-only-successor-no-rewrite",
-      "schema_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof.v1.schema.json",
+      "schema_path": "detached-plan/schemas/artifact-proof.v1.schema.json",
       "lineage_fields": [
         "artifact_path",
         "immutable_identity",
@@ -90,11 +90,11 @@
       ],
       "predecessor_policy": "external-vdd-skill-contract-revision",
       "lifecycle_status": "supersedes",
-      "predecessor_sha256": "sha256:2c0c297c20fbf46daaea5eca1836c9b3e51ce9699749eae2152cafd57a6b2544"
+      "predecessor_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
     },
     "consumer_authorization_boundary": {
       "consumers": [
-        "composite plan validator"
+        "composite-plan-validator"
       ],
       "predicate": "artifact-contract-proof",
       "authorizes": [],

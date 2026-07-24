@@ -1,0 +1,13 @@
+{
+  "schema_version": "jimuyun.execution-plan-95-report-index.v1",
+  "entries": [
+    {
+      "plan_directory": "alpha-plan",
+      "report_filename": "95-implementation-report.md"
+    },
+    {
+      "plan_directory": "beta-plan",
+      "report_filename": "95-evolution-report.md"
+    }
+  ]
+}

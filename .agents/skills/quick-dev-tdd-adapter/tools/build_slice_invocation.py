@@ -5,6 +5,7 @@ import base64
 import hashlib
 import importlib.util
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,7 +31,21 @@ def _load_candidate_identity(plan: Path, slice_id: str) -> dict[str, str]:
     return identity
 
 
-def _expand(value: Any, *, plan_rel: str, plan_id: str, slice_id: str, run_id: str) -> str:
+def _candidate_run_id(repository_root: Path, plan_id: str) -> str:
+    candidates = sorted((repository_root / "logs" / "tdd-adapter" / plan_id / "RMAP-S6").glob("*/candidate-evidence.json"), key=lambda path: path.stat().st_mtime, reverse=True)
+    for candidate in candidates:
+        try:
+            value = json.loads(candidate.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if (candidate.parent / "targeted-validation.v1.json").is_file() and os.environ.get("JIMUYUN_TDD_EXECUTION_MODE") != "targeted-validation":
+            continue
+        if value.get("predicate") == "implementation-candidate" and value.get("status") == "pass":
+            return candidate.parent.name
+    raise ValueError("current implementation candidate is unavailable")
+
+
+def _expand(value: Any, *, plan_rel: str, plan_id: str, slice_id: str, run_id: str, candidate_run_id: str) -> str:
     if isinstance(value, str):
         return value
     if not isinstance(value, dict) or set(value) != {"type", "value"}:
@@ -45,7 +60,8 @@ def _expand(value: Any, *, plan_rel: str, plan_id: str, slice_id: str, run_id: s
     if kind == "run_path":
         expanded = (raw.replace("<plan-id>", plan_id)
                        .replace("<slice-id>", slice_id)
-                       .replace("<run-id>", run_id))
+                       .replace("<run-id>", run_id)
+                       .replace("<candidate-run-id>", candidate_run_id))
         return expanded if expanded.startswith("logs/") else f"logs/{expanded}"
     raise ValueError("unsupported command placeholder")
 
@@ -79,7 +95,7 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
     if selected is None:
         raise ValueError("slice is missing")
     plan_rel = plan.relative_to(root).as_posix()
-    values = {"plan_rel": plan_rel, "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id}
+    values = {"plan_rel": plan_rel, "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "candidate_run_id": _candidate_run_id(root, contract["plan_id"]) if slice_id == "RMAP-S7" else ""}
     commands = {item["id"]: item for item in registry["commands"]}
     tdd = selected["tdd"]
     red = _descriptor(commands, tdd["red"]["command_id"], **values)

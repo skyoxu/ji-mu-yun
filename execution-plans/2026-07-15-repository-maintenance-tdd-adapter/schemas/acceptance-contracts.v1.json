@@ -370,7 +370,7 @@
       ],
       "phase_id": "P3",
       "positive_command_ids": [
-        "rmap-s7-acceptance-validate"
+        "rmap-s7-completion-validate"
       ],
       "negative_fixture_ids": [
         "candidate-supersession-stale"
@@ -385,10 +385,10 @@
         "stable-rule-id",
         "candidate-result-ref",
         "non-superseded-predecessor-run",
-        "runtime-p2-dispositions",
-        "runtime-verifier-source-when-applicable"
+        "acceptance-handoff",
+        "non-authorizing-handoff"
       ],
-      "exit_predicate": "implementation-accepted"
+      "exit_predicate": "implementation-complete"
     },
     {
       "acceptance_id": "RMAP-ACC-017",

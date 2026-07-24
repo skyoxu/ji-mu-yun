@@ -24,10 +24,12 @@ After the target plan's current declared terminal predicate passes, append its o
 1. Run `tools/loop_plan_directory.py` before every expensive action. It reads only the explicit target directory and its plan-local evidence and emits one next action.
 2. For `run-slice`, generate a plan-local `run_context` and invoke `tools/run_slice_lifecycle.py`; it uses the shared `LifecycleRunner` and `stage_artifact_composer`. Never handwrite stage, Capsule, attempt, or ledger JSON.
 3. Run the declared RED command and require its expected nonzero failure before a production write; then run GREEN, REFACTOR, and the plan-local slice predicate.
-4. After `slice-ready`, route the next unlocked slice automatically. Stop only at the plan-local terminal predicate, `external-repair-required`, `await-external-envelope`, or a repeated failure fingerprint.
-5. S7 may read and validate a referenced finalized Bootstrap envelope, but this Skill never launches Bootstrap Review, changes review evidence, or creates a successor policy.
+4. After `slice-ready`, route the next unlocked slice automatically. Stop only at the plan-local terminal predicate, `external-repair-required`, or a repeated failure fingerprint.
+5. A plan may consume an already-published implementation authorization before its first implementation slice. This Skill never launches Bootstrap Review, changes review evidence, or creates a successor policy. Its terminal result may only be `implementation-complete`; acceptance remains external.
 
-Use the bounded driver for a declared slice write set:
+Use `tools/persistent_plan_loop.py` for unattended execution. It re-routes after every completed slice and consumes only the slice's explicit, no-wildcard `execution_snapshot_paths` declaration. The plan validator requires that declaration to name an existing repository file covered by that slice's allowed write set; a missing or invalid declaration fails closed. Its state file belongs under `logs/tdd-adapter/<plan-id>/controller/`.
+
+Use the bounded driver for one declared slice write set:
 
 ```powershell
 py -3 .agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py `

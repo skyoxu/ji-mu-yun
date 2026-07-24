@@ -1,9 +1,9 @@
 {
   "schema_version": "rmap.requirement-quality.v2",
   "requirements_hash": "sha256:fe0601a8244cb9dcfee4db4344003f411c2d570417a1d1c4c9720e04b1f1886a",
-  "acceptance_contracts_hash": "sha256:2cde5b346ba502fde333d3edbf18f9f8cfc66facf457a5b6a1f876e5936f84d4",
+  "acceptance_contracts_hash": "sha256:b22efb43332feef4bfffce20564d2438eed6f630236472edf880a81122fc0c23",
   "validator_version": "rmap-plan-validator.v2",
-  "generated_at": "2026-07-22T07:16:22.468284Z",
+  "generated_at": "2026-07-23T10:34:08.580331Z",
   "requirements": [
     {
       "requirement_id": "RMAP-001",

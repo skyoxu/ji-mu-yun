@@ -1158,7 +1158,7 @@
       "source_path": null,
       "source_derivation": "N/A",
       "source_reason_code": "EXTERNAL_ROOT_AUTHORITY",
-      "lifecycle_status": "unchanged",
+      "lifecycle_status": "supersedes",
       "predecessor_sha256": "sha256:7d5a73e75a47d25d1752ce128423ff9a8e429b714439931811529603ed6b2140",
       "invalidates": [
         "plan-repair-verified",
@@ -2080,6 +2080,36 @@
       ]
     },
     {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-handoff.v1.schema.json",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "machine-contract",
+      "type_contract_id": "machine-contract",
+      "producer_category": "derived-machine-owner",
+      "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "source_derivation": "consumer-discovered",
+      "source_reason_code": null,
+      "lifecycle_status": "new",
+      "predecessor_sha256": null,
+      "invalidates": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-accepted"
+      ],
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-candidate",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    },
+    {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
       "classification": "IN-CLOSURE",
       "artifact_type": "machine-contract",
@@ -2298,7 +2328,7 @@
       "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/authority-manifest.v1.json",
       "source_derivation": "manifest-category-bound",
       "source_reason_code": null,
-      "lifecycle_status": "unchanged",
+      "lifecycle_status": "supersedes",
       "predecessor_sha256": "sha256:f5c51360e417426b11ca3a42470479e62fd2eafef759b5910a805dd25b50484d",
       "invalidates": [
         "plan-repair-verified",
@@ -2480,6 +2510,96 @@
       "source_reason_code": null,
       "lifecycle_status": "unchanged",
       "predecessor_sha256": "sha256:7ec3cf6c49355c38e92ad198927743c6be1e795581514c7467c3ef30fdbaa0d2",
+      "invalidates": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-accepted"
+      ],
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-candidate",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-authorization.v1.schema.json",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "machine-contract",
+      "type_contract_id": "machine-contract",
+      "producer_category": "derived-machine-owner",
+      "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "source_derivation": "consumer-discovered",
+      "source_reason_code": null,
+      "lifecycle_status": "new",
+      "predecessor_sha256": null,
+      "invalidates": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-accepted"
+      ],
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-candidate",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.json",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "machine-contract",
+      "type_contract_id": "machine-contract",
+      "producer_category": "derived-machine-owner",
+      "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "source_derivation": "consumer-discovered",
+      "source_reason_code": null,
+      "lifecycle_status": "new",
+      "predecessor_sha256": null,
+      "invalidates": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-accepted"
+      ],
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-candidate",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.schema.json",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "machine-contract",
+      "type_contract_id": "machine-contract",
+      "producer_category": "derived-machine-owner",
+      "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "source_derivation": "consumer-discovered",
+      "source_reason_code": null,
+      "lifecycle_status": "new",
+      "predecessor_sha256": null,
       "invalidates": [
         "plan-repair-verified",
         "plan-ready",
@@ -3318,7 +3438,7 @@
       "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/authority-manifest.v1.json",
       "source_derivation": "manifest-category-bound",
       "source_reason_code": null,
-      "lifecycle_status": "unchanged",
+      "lifecycle_status": "supersedes",
       "predecessor_sha256": "sha256:4a65ba0d4992b9fc4701864c69392b617b57fbdb36f4e82c6fd9766e2985fd8d",
       "invalidates": [
         "plan-repair-verified",
@@ -3378,7 +3498,7 @@
       "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/authority-manifest.v1.json",
       "source_derivation": "manifest-category-bound",
       "source_reason_code": null,
-      "lifecycle_status": "unchanged",
+      "lifecycle_status": "supersedes",
       "predecessor_sha256": "sha256:fc6596b7198d79e39831510c1c9f214455b0c1bd5530604112f00a805fb7f3d6",
       "invalidates": [
         "plan-repair-verified",
@@ -3410,6 +3530,36 @@
       "source_reason_code": null,
       "lifecycle_status": "supersedes",
       "predecessor_sha256": "sha256:d306df48b6c235f1f28c5bc68fcf7d41aa3f17186936076054f93e82ec64a1d2",
+      "invalidates": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-accepted"
+      ],
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-candidate",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/lifecycle_state_guards.py",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "validator",
+      "type_contract_id": "validator",
+      "producer_category": "derived-machine-owner",
+      "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "source_derivation": "consumer-discovered",
+      "source_reason_code": null,
+      "lifecycle_status": "new",
+      "predecessor_sha256": null,
       "invalidates": [
         "plan-repair-verified",
         "plan-ready",
@@ -3760,6 +3910,36 @@
       ]
     },
     {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_freshness.py",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "validator",
+      "type_contract_id": "validator",
+      "producer_category": "derived-machine-owner",
+      "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "source_derivation": "consumer-discovered",
+      "source_reason_code": null,
+      "lifecycle_status": "new",
+      "predecessor_sha256": null,
+      "invalidates": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-accepted"
+      ],
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-candidate",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    },
+    {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
       "classification": "IN-CLOSURE",
       "artifact_type": "validator",
@@ -3920,6 +4100,66 @@
       "source_reason_code": null,
       "lifecycle_status": "supersedes",
       "predecessor_sha256": "sha256:34040eb651b7f0c9130ce6b75e3fbd84144de9baec059b125493405d8929a361",
+      "invalidates": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-accepted"
+      ],
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-candidate",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_evidence_boundary.py",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "validator-test",
+      "type_contract_id": "validator-test",
+      "producer_category": "derived-machine-owner",
+      "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "source_derivation": "consumer-discovered",
+      "source_reason_code": null,
+      "lifecycle_status": "new",
+      "predecessor_sha256": null,
+      "invalidates": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-accepted"
+      ],
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-repair-verified",
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-candidate",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_lifecycle_state_guards.py",
+      "classification": "IN-CLOSURE",
+      "artifact_type": "validator-test",
+      "type_contract_id": "validator-test",
+      "producer_category": "derived-machine-owner",
+      "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "source_derivation": "consumer-discovered",
+      "source_reason_code": null,
+      "lifecycle_status": "new",
+      "predecessor_sha256": null,
       "invalidates": [
         "plan-repair-verified",
         "plan-ready",
@@ -4216,6 +4456,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-handoff.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
@@ -4230,6 +4471,9 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/create-baseline-manifest.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diagnostic.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-authorization.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
@@ -4261,6 +4505,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/current_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/evidence_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_artifact_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_cases.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_mutations.py",
@@ -4272,12 +4517,15 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_freshness.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_baseline_bridge.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_evidence_boundary.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_s2_red_probe_contract.py",
@@ -4287,6 +4535,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py"
       ],
       "excluded": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/94-lifecycle-state-redesign-proposal.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
@@ -4295,7 +4544,8 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
-        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/targeted_slice_validation.py"
       ]
     },
     "plan-ready": {
@@ -4363,6 +4613,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-handoff.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
@@ -4377,6 +4628,9 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/create-baseline-manifest.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diagnostic.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-authorization.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
@@ -4408,6 +4662,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/current_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/evidence_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_artifact_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_cases.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_mutations.py",
@@ -4419,12 +4674,15 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_freshness.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_baseline_bridge.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_evidence_boundary.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_s2_red_probe_contract.py",
@@ -4434,6 +4692,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py"
       ],
       "excluded": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/94-lifecycle-state-redesign-proposal.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
@@ -4442,7 +4701,8 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
-        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/targeted_slice_validation.py"
       ]
     },
     "slice-ready": {
@@ -4510,6 +4770,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-handoff.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
@@ -4524,6 +4785,9 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/create-baseline-manifest.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diagnostic.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-authorization.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
@@ -4555,6 +4819,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/current_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/evidence_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_artifact_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_cases.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_mutations.py",
@@ -4566,12 +4831,15 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_freshness.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_baseline_bridge.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_evidence_boundary.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_s2_red_probe_contract.py",
@@ -4581,6 +4849,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py"
       ],
       "excluded": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/94-lifecycle-state-redesign-proposal.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
@@ -4589,7 +4858,8 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
-        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/targeted_slice_validation.py"
       ]
     },
     "implementation-candidate": {
@@ -4657,6 +4927,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-handoff.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
@@ -4671,6 +4942,9 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/create-baseline-manifest.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diagnostic.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-authorization.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
@@ -4702,6 +4976,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/current_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/evidence_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_artifact_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_cases.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_mutations.py",
@@ -4713,12 +4988,15 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_freshness.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_baseline_bridge.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_evidence_boundary.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_s2_red_probe_contract.py",
@@ -4728,6 +5006,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py"
       ],
       "excluded": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/94-lifecycle-state-redesign-proposal.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
@@ -4736,7 +5015,8 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
-        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/targeted_slice_validation.py"
       ]
     },
     "implementation-accepted": {
@@ -4804,6 +5084,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-handoff.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
@@ -4818,6 +5099,9 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/create-baseline-manifest.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diagnostic.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-authorization.v1.schema.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.json",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
@@ -4849,6 +5133,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/current_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/evidence_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_artifact_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_cases.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_mutations.py",
@@ -4860,12 +5145,15 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_freshness.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_baseline_bridge.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_evidence_boundary.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_lifecycle_state_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_s2_red_probe_contract.py",
@@ -4875,6 +5163,7 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validation_result_guards.py"
       ],
       "excluded": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/94-lifecycle-state-redesign-proposal.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
@@ -4883,11 +5172,23 @@
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
         "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
-        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/targeted_slice_validation.py"
       ]
     }
   },
   "excluded": [
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/94-lifecycle-state-redesign-proposal.md",
+      "classification": "OUT-OF-CLOSURE",
+      "reason_code": "NOT_CONSUMED_BY_AUTHORIZING_PREDICATE",
+      "machine_checks": [
+        "not-read-by-validator",
+        "not-in-predicate-hash",
+        "authorizes-none"
+      ],
+      "authorizes": []
+    },
     {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
       "classification": "OUT-OF-CLOSURE",
@@ -4986,6 +5287,17 @@
         "authorizes-none"
       ],
       "authorizes": []
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/targeted_slice_validation.py",
+      "classification": "OUT-OF-CLOSURE",
+      "reason_code": "NOT_CONSUMED_BY_AUTHORIZING_PREDICATE",
+      "machine_checks": [
+        "not-read-by-validator",
+        "not-in-predicate-hash",
+        "authorizes-none"
+      ],
+      "authorizes": []
     }
   ],
   "candidate_hash_scope": {
@@ -5054,6 +5366,7 @@
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-handoff.v1.schema.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
@@ -5068,6 +5381,9 @@
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/create-baseline-manifest.v1.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diagnostic.v1.schema.json",
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-authorization.v1.schema.json",
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.json",
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/legacy-lifecycle-migration.v1.schema.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
@@ -5099,6 +5415,7 @@
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/current_state_guards.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/evidence_guards.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/lifecycle_state_guards.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_artifact_guards.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_cases.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_mutations.py",
@@ -5110,12 +5427,15 @@
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/runtime_artifact_proof_guards.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py",
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_freshness.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_baseline_bridge.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_evidence_boundary.py",
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_lifecycle_state_guards.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
       "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_s2_red_probe_contract.py",

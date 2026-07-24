@@ -2,8 +2,59 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
+import sys
+
+
+_IMPLEMENTATION_CANDIDATE_ROOTS = (
+    "candidate_hash",
+    "predicate_input_root",
+    "authority_root",
+    "validator_root",
+    "validator_version",
+    "closure_definition_hash",
+)
+
+
+def _validation_snapshot(plan_dir: Path, slice_id: str | None = None) -> dict[str, str] | None:
+    """Load the explicit plan's optional, read-only current-state projection.
+
+    An implementation-candidate result is intentionally not contract-hash
+    bound.  Plans that declare this predicate must instead expose the complete
+    current root set through ``tools/validate_all.py::validation_snapshot``.
+    Missing or malformed projections fail closed so a generic router never
+    promotes an old candidate after a control-plane authority change.
+    """
+    validator = plan_dir / "tools" / "validate_all.py"
+    if not validator.is_file():
+        return None
+    module_name = f"_tdd_adapter_plan_snapshot_{hashlib.sha256(str(plan_dir).encode('utf-8')).hexdigest()}"
+    spec = importlib.util.spec_from_file_location(module_name, validator)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    previous_path = list(sys.path)
+    try:
+        sys.path.insert(0, str(validator.parent))
+        spec.loader.exec_module(module)
+        snapshot = module.slice_validation_snapshot(slice_id) if slice_id else module.validation_snapshot()
+    except (AttributeError, ImportError, OSError, ValueError):
+        return None
+    finally:
+        sys.path[:] = previous_path
+        sys.modules.pop(module_name, None)
+    if not isinstance(snapshot, dict):
+        return None
+    values = {key: snapshot.get(key) for key in _IMPLEMENTATION_CANDIDATE_ROOTS}
+    return values if all(isinstance(value, str) and value for value in values.values()) else None
+
+
+def _implementation_candidate_current(result: dict[str, object], current: dict[str, str] | None) -> bool:
+    if current is None:
+        return False
+    return all(result.get(key) == current[key] for key in _IMPLEMENTATION_CANDIDATE_ROOTS)
 
 
 def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
@@ -41,15 +92,18 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 continue
+            if (result_path.parent / "targeted-validation.v1.json").is_file():
+                continue
             contract_current = result.get("contract_hash") == contract_hash
-            candidate_hash = result.get("candidate_hash")
-            candidate_current = (
-                isinstance(candidate_hash, str)
-                and candidate_hash == result.get("current_candidate_hash")
-                and candidate_hash == result.get("predicate_input_root")
-            )
-            required_artifact = result_path.with_name("candidate-result.json") if exit_predicate == "implementation-candidate" else None
-            if result.get("predicate") == exit_predicate and result.get("status") == "pass" and (contract_current or candidate_current) and (required_artifact is None or required_artifact.is_file()):
+            required_artifact = result_path.with_name("candidate-evidence.json") if exit_predicate == "implementation-candidate" else None
+            current = contract_current
+            if all(key in result for key in _IMPLEMENTATION_CANDIDATE_ROOTS):
+                # RMAP validation envelopes (including slice-ready) own
+                # freshness through current roots rather than contract_hash.
+                # Compare every root, not only the candidate hash, so a
+                # control-plane authority update cannot be skipped.
+                current = _implementation_candidate_current(result, _validation_snapshot(target, slice_id))
+            if result.get("predicate") == exit_predicate and result.get("status") == "pass" and current and (required_artifact is None or required_artifact.is_file()):
                 completed.add(slice_id)
                 break
     for slice_item in contract["slices"]:
@@ -58,8 +112,6 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
             continue
         if not set(slice_item.get("depends_on", [])).issubset(completed):
             continue
-        if slice_id == "RMAP-S7":
-            return {"next_action": "await-external-envelope", "slice_id": slice_id, "authorizes": []}
         return {"next_action": "run-slice", "slice_id": slice_id, "authorizes": []}
     return {"next_action": "validate-terminal", "authorizes": []}
 

@@ -14,7 +14,9 @@ TOOLS = Path(__file__).resolve().parent
 
 
 def _run(arguments: list[str]) -> None:
-    completed = subprocess.run([sys.executable, *arguments], shell=False, check=False)
+    print(json.dumps({"event": "helper-start", "helper": Path(arguments[0]).name}), flush=True)
+    completed = subprocess.run([sys.executable, *arguments], shell=False, check=False, timeout=900)
+    print(json.dumps({"event": "helper-finished", "helper": Path(arguments[0]).name, "exit_code": completed.returncode}), flush=True)
     if completed.returncode:
         raise RuntimeError(f"lifecycle helper failed with exit code {completed.returncode}")
 

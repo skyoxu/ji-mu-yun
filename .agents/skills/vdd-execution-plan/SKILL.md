@@ -7,7 +7,7 @@ description: Clarify requirements before creating, restructuring, or repairing e
 
 Build execution plans in which executable verification controls development. Do not treat a plan as VDD merely because it contains testing sections.
 
-Before acting, read [references/strict-vdd-standard.md](references/strict-vdd-standard.md) and [references/clarification-gate.md](references/clarification-gate.md) completely. Apply repository instructions and more specific nested instructions first.
+Before acting, read [references/strict-vdd-standard.md](references/strict-vdd-standard.md), [references/clarification-gate.md](references/clarification-gate.md), and [references/lifecycle-state-contract.md](references/lifecycle-state-contract.md) completely. Apply repository instructions and more specific nested instructions first.
 
 When maintaining or evaluating this Skill itself, also read [references/skill-compliance-protocol.md](references/skill-compliance-protocol.md) and use `scripts/validate_skill_contract.py`.
 
@@ -92,6 +92,12 @@ Route failures to the earliest invalid layer:
 
 Never force every failure back only to the validator. Never weaken a validator to match an implementation without a contract change and a regression counterexample.
 
+## Enforce lifecycle ownership
+
+Every new plan must implement the lifecycle in [references/lifecycle-state-contract.md](references/lifecycle-state-contract.md). VDD owns `draft` and `plan-ready`; a plan-local transition validator owns `implementation-authorized`; Quick Dev may end only at `implementation-complete`; the acceptance Skill owns `acceptance-passed`; and the archive Skill owns `archived`.
+
+Do not allow Bootstrap to publish a plan state. A plan-local validator may consume three finalized Bootstrap envelopes, or a current operator-confirmed override outside the plan and Quick Dev write roots, to authorize implementation. The override is implementation-only and must never imply acceptance, handoff, release, or archive.
+
 ## Required plan artifacts
 
 Adapt names to repository convention, but preserve these ownership roles:
@@ -130,6 +136,7 @@ At minimum, machine artifacts must represent:
 - diagnostic records with failed rule, candidate hash, failure family, repair owner, rerun command, and next allowed state;
 - phase-exit evidence and cross-run predecessor/supersession lineage;
 - explicit distinction between plan readiness, phase authorization, implementation acceptance, and release authority.
+- the lifecycle-state transition graph, producer ownership, acceptance handoff, and the required negative transition cases.
 
 ## Put verification in the control position
 

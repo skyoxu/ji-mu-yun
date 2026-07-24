@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rmap.implementation-authorization.v1",
+  "type": "object",
+  "required": ["schema_version", "plan_id", "state", "mode", "candidate_hash", "authorizes", "does_not_authorize"],
+  "properties": {
+    "schema_version": {"const": "rmap.implementation-authorization.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "state": {"const": "implementation-authorized"},
+    "mode": {"enum": ["bootstrap-three-rounds", "user-confirmed-override"]},
+    "candidate_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "bootstrap_envelopes": {"type": "array", "minItems": 3, "maxItems": 3},
+    "operator_override_path": {"type": "string", "pattern": "^(?!execution-plans/2026-07-15-repository-maintenance-tdd-adapter/)(?!\\.agents/skills/quick-dev-tdd-adapter/).+"},
+    "authorizes": {"const": ["implementation-authorized"]},
+    "does_not_authorize": {"type": "array", "minItems": 4}
+  },
+  "additionalProperties": false
+}

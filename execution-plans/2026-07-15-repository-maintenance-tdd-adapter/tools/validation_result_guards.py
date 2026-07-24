@@ -99,7 +99,7 @@ def build_result(
         "predecessor_run_id": predecessor_result.get("run_id") if predecessor_result else None,
         "supersedes_run_id": predecessor_result.get("run_id") if predecessor_result else None,
         "predecessor_result_hash": value_hash(predecessor_result) if predecessor_result else None,
-        "capabilities": capabilities or {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_accepted", "release_ready")},
+        "capabilities": capabilities or {name: False for name in ("common_schema_skill_owned", "adapter_operational", "old_plan_backfill_complete", "implementation_complete", "release_ready")},
         "authorizes": authorizes if passed else [],
         "does_not_authorize": excludes if passed else all_exclusions,
         "checks": checks, "diagnostics": findings,
