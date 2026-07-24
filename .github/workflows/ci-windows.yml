@@ -61,6 +61,14 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: VDD Skill package and unit tests (hard gate)
+        shell: pwsh
+        run: |
+          py -3 -B .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          py -3 -B -m unittest discover -s .agents/skills/vdd-execution-plan/scripts/tests -p "test_*.py" -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Hard gates bundle (Python)
         shell: pwsh
         run: |

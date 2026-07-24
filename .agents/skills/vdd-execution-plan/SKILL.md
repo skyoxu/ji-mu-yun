@@ -1,6 +1,6 @@
 ---
 name: vdd-execution-plan
-description: Create or repair a verification-driven execution plan with a profile proportionate to a trusted solo-maintainer change. Use for implementation plans, plan repair, lifecycle routing, or resumable plan control.
+description: Create or repair a complete verification-driven execution-plan directory when the user explicitly requests that outcome. Do not use for direct implementation of one standalone requirements Markdown file.
 ---
 
 # VDD Execution Plan
@@ -8,6 +8,10 @@ description: Create or repair a verification-driven execution plan with a profil
 Create plans that make observable behavior and current validation decide completion. This repository is maintained by one trusted person and an AI assistant: do not add multi-writer, signer, reviewer-identity, or adversarial-custody controls unless a separate requirement explicitly needs them.
 
 Before acting, read [references/solo-maintainer-vdd-standard.md](references/solo-maintainer-vdd-standard.md), [references/clarification-gate.md](references/clarification-gate.md), and [references/lifecycle-state-contract.md](references/lifecycle-state-contract.md). When maintaining this Skill, also run `py -3 scripts/validate_skill_contract.py --skill-root <skill-root>` and its unit tests.
+
+## Route Input Before Profile
+
+One standalone requirements Markdown file routes to direct implementation and creates no VDD directory, lifecycle bundle, 95 report, or Bootstrap run. Only an explicit request to create a complete execution-plan directory routes to VDD `create`; only an explicit request to repair a complete existing directory routes to VDD `repair`. Never infer either VDD route from file contents or growing task complexity.
 
 ## Choose The Profile First
 
@@ -25,7 +29,7 @@ Do not create fixed `00-08`/`96-99` books, custom schemas, a custom validator, m
 
 Inspect repository authority, current state, relevant callers, protected paths, and existing tests before asking. Ask only when an answer changes scope, compatibility, destructive behavior, protected-path approval, or acceptance. Zero questions is valid.
 
-An initial explicit write authorization is enough to begin writing when no material blocker remains. Persist a minimized clarification/resume record only when an unresolved decision must survive a session boundary; do not create an active-run registry, cross-process lock, or identity attestation by default. `clarification_state.py` is an optional single-writer resume helper, not a default plan artifact.
+An initial explicit write authorization is enough to begin writing when no material blocker remains. Persist a minimized clarification/resume record only when an unresolved decision must survive a session boundary; do not create an active-run registry, cross-process lock, or identity attestation by default. `clarification_state.py` is an optional single-writer resume helper, not a default plan artifact. Its current state uses typed, acyclic CQ dependencies and explicit invalidate/reopen; legacy state is hash-bound and read-only, and sensitive current state terminates in a sanitized quarantine envelope.
 
 ## Lifecycle And Implementation
 

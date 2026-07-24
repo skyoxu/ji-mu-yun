@@ -1,0 +1,7 @@
+{
+  "schema_version": "vdd.clarification-state.v1",
+  "run_id": "legacy-fixture-1",
+  "target": "execution-plans/example",
+  "mode": "repair",
+  "status": "closed"
+}

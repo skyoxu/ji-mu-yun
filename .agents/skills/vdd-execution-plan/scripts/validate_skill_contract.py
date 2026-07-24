@@ -10,6 +10,67 @@ from pathlib import Path
 from typing import Any
 
 
+EXPECTED_INPUT_ROUTES = {
+    "single-requirements-markdown": {
+        "outcome": "direct-implementation",
+        "vdd_mode": None,
+        "creates_vdd_directory": False,
+        "requires_explicit_vdd_request": False,
+        "implicit_artifacts": [],
+    },
+    "explicit-complete-directory-create": {
+        "outcome": "vdd-create",
+        "vdd_mode": "create",
+        "creates_vdd_directory": True,
+        "requires_explicit_vdd_request": True,
+    },
+    "explicit-complete-directory-repair": {
+        "outcome": "vdd-repair",
+        "vdd_mode": "repair",
+        "creates_vdd_directory": False,
+        "requires_explicit_vdd_request": True,
+    },
+}
+
+EXPECTED_ROUTE_TEXT = {
+    "SKILL.md": (
+        "One standalone requirements Markdown file routes to direct implementation",
+        "Only an explicit request to create a complete execution-plan directory routes to VDD",
+    ),
+    "agents/openai.yaml": (
+        "only for an explicit request to create or repair a complete execution-plan directory",
+        "route one standalone requirements Markdown file to direct implementation",
+    ),
+}
+
+EXPECTED_OBSOLETE_FIXTURES = [
+    "clarification-cases.json",
+    "clarification-state-pass.json",
+    "compliance-scenarios.json",
+    "compliance-trace-pass.jsonl",
+    "compliance-trace-write-before-clarification.jsonl",
+    "compliance-trace-implementation-first.jsonl",
+]
+
+OBSOLETE_FIXTURE_MARKERS = (
+    '"question_ids"',
+    '"same_level_exhausted"',
+    '"dimension_scores"',
+    '"exit_attestation"',
+    '"explicit_write_permission"',
+    "VDD-CLARIFICATION-QUESTION-COUNT",
+    "VDD-CLARIFICATION-CONFIDENCE",
+)
+
+EXPECTED_LEGACY_FIXTURE = {
+    "schema_version": "vdd.clarification-state.v1",
+    "run_id": "legacy-fixture-1",
+    "target": "execution-plans/example",
+    "mode": "repair",
+    "status": "closed",
+}
+
+
 def load_json(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
@@ -56,6 +117,56 @@ def validate_lifecycle(skill_root: Path, contract: dict[str, Any]) -> list[dict[
     compatibility = lifecycle.get("compatibility_adapter")
     if not isinstance(compatibility, dict) or compatibility.get("accepts_legacy_input") is not True or compatibility.get("emits_legacy_output") is not False:
         findings.append(finding("VDD-LIFECYCLE-COMPATIBILITY", str(path), "legacy compatibility must be read-only"))
+    return findings
+
+
+def validate_input_routes(skill_root: Path, contract: dict[str, Any]) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    if contract.get("input_routes") != EXPECTED_INPUT_ROUTES:
+        findings.append(
+            finding(
+                "VDD-INPUT-ROUTING",
+                "scripts/skill-contract.json",
+                "standalone requirements and explicit complete-directory routes must remain distinct",
+            )
+        )
+    for relative, phrases in EXPECTED_ROUTE_TEXT.items():
+        path = skill_root / relative
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            findings.append(finding("VDD-INPUT-ROUTING", relative, str(exc)))
+            continue
+        for phrase in phrases:
+            if phrase not in text:
+                findings.append(finding("VDD-INPUT-ROUTING", relative, f"missing route statement: {phrase}"))
+    return findings
+
+
+def validate_clarification_fixtures(skill_root: Path, contract: dict[str, Any]) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    fixture_root = skill_root / "scripts" / "fixtures"
+    if contract.get("forbidden_fixture_names") != EXPECTED_OBSOLETE_FIXTURES:
+        findings.append(finding("VDD-OBSOLETE-FIXTURE", "scripts/skill-contract.json", "obsolete fixture names must remain forbidden"))
+    for name in EXPECTED_OBSOLETE_FIXTURES:
+        if (fixture_root / name).exists():
+            findings.append(finding("VDD-OBSOLETE-FIXTURE", str(fixture_root / name), "inactive strict clarification fixture is forbidden"))
+    for fixture in sorted(path for path in fixture_root.rglob("*") if path.is_file() and path.suffix in {".json", ".jsonl"}):
+        try:
+            text = fixture.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            findings.append(finding("VDD-OBSOLETE-FIXTURE", str(fixture), str(exc)))
+            continue
+        if any(marker in text for marker in OBSOLETE_FIXTURE_MARKERS):
+            findings.append(finding("VDD-OBSOLETE-FIXTURE", str(fixture), "fixture contains retired strict clarification controls"))
+    path = fixture_root / "clarification-legacy-v1.json"
+    try:
+        data = load_json(path)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        findings.append(finding("VDD-LEGACY-FIXTURE", str(path), str(exc)))
+    else:
+        if data != EXPECTED_LEGACY_FIXTURE:
+            findings.append(finding("VDD-LEGACY-FIXTURE", str(path), "legacy fixture must remain minimal and read-only"))
     return findings
 
 
@@ -124,7 +235,7 @@ def validate_generic_source(skill_root: Path, contract: dict[str, Any]) -> list[
 
 
 def validate_skill(skill_root: Path) -> dict[str, Any]:
-    checks = ["required-files", "required-headings", "static-lifecycle", "profile-cases", "generic-source"]
+    checks = ["required-files", "required-headings", "input-routing", "static-lifecycle", "profile-cases", "clarification-fixtures", "generic-source"]
     findings: list[dict[str, str]] = []
     try:
         contract = load_contract(skill_root)
@@ -132,6 +243,7 @@ def validate_skill(skill_root: Path) -> dict[str, Any]:
         return result([finding("VDD-SKILL-CONTRACT", str(skill_root), str(exc))], checks)
     if set(contract.get("profiles", {})) != {"standard", "resumable", "self-hosted"}:
         findings.append(finding("VDD-PROFILES", "scripts/skill-contract.json", "exactly three profiles are required"))
+    findings.extend(validate_input_routes(skill_root, contract))
     for relative in contract["required_files"]:
         if not (skill_root / relative).is_file():
             findings.append(finding("VDD-SKILL-FILE", relative, "required file is missing"))
@@ -145,6 +257,7 @@ def validate_skill(skill_root: Path) -> dict[str, Any]:
                 findings.append(finding("VDD-SKILL-HEADING", relative, f"missing heading: {heading}"))
     findings.extend(validate_lifecycle(skill_root, contract))
     findings.extend(validate_profile_cases(skill_root, contract))
+    findings.extend(validate_clarification_fixtures(skill_root, contract))
     findings.extend(validate_generic_source(skill_root, contract))
     return result(findings, checks)
 

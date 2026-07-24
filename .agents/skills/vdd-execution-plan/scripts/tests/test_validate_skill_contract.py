@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import shutil
 import tempfile
 import unittest
@@ -35,6 +36,59 @@ class SkillContractTests(unittest.TestCase):
         hosted = set(contract["profiles"]["self-hosted"])
         self.assertTrue(standard < resumable < hosted)
         self.assertNotIn("implementation_report", standard)
+
+    def test_route_outcome_mutation_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "scripts" / "skill-contract.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["input_routes"]["single-requirements-markdown"]["outcome"] = "vdd-create"
+            path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+            result = self.validator.validate_skill(copied)
+            self.assertIn("VDD-INPUT-ROUTING", {item["rule_id"] for item in result["findings"]})
+
+    def test_skill_route_text_mutation_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "SKILL.md"
+            text = path.read_text(encoding="utf-8").replace(
+                "One standalone requirements Markdown file routes to direct implementation",
+                "One standalone requirements Markdown file routes to VDD create",
+            )
+            path.write_text(text, encoding="utf-8", newline="\n")
+            result = self.validator.validate_skill(copied)
+            self.assertIn("VDD-INPUT-ROUTING", {item["rule_id"] for item in result["findings"]})
+
+    def test_legacy_fixture_cannot_reintroduce_strict_controls(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "scripts" / "fixtures" / "clarification-legacy-v1.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["confidence"] = 95
+            path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+            result = self.validator.validate_skill(copied)
+            self.assertIn("VDD-LEGACY-FIXTURE", {item["rule_id"] for item in result["findings"]})
+
+    def test_obsolete_clarification_fixture_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "scripts" / "fixtures" / "clarification-cases.json"
+            path.write_text("{}\n", encoding="utf-8", newline="\n")
+            result = self.validator.validate_skill(copied)
+            self.assertIn("VDD-OBSOLETE-FIXTURE", {item["rule_id"] for item in result["findings"]})
+
+    def test_renamed_strict_clarification_fixture_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "scripts" / "fixtures" / "renamed-legacy-control.json"
+            path.write_text(json.dumps({"exit_attestation": {"explicit_write_permission": True}}), encoding="utf-8", newline="\n")
+            result = self.validator.validate_skill(copied)
+            self.assertIn("VDD-OBSOLETE-FIXTURE", {item["rule_id"] for item in result["findings"]})
 
     def test_missing_profile_case_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -119,6 +173,42 @@ class SkillContractTests(unittest.TestCase):
             path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
             result = self.validator.validate_skill(copied)
             self.assertIn("VDD-PROFILE-CASES-BEHAVIOR", {item["rule_id"] for item in result["findings"]})
+
+    def test_excluded_recovery_architecture_is_absent(self) -> None:
+        sources = {
+            path.relative_to(SKILL_ROOT).as_posix(): path.read_text(encoding="utf-8")
+            for path in SKILL_ROOT.rglob("*")
+            if path.is_file()
+            and path.suffix in {".py", ".json", ".jsonl", ".yaml"}
+            if "tests" not in path.parts
+        }
+        for forbidden in (
+            r"events\.jsonl",
+            r"\bprevious_hash\b",
+            r"\bevent_hash\b",
+            r"import\s+msvcrt",
+            r"\btarget_registry\b",
+            r"\bsignature\b",
+            r"\bgeneration\b",
+            r"\bcommitted_pointer\b",
+            r"\bpromotion_transaction\b",
+        ):
+            with self.subTest(forbidden=forbidden):
+                offenders = [relative for relative, source in sources.items() if re.search(forbidden, source)]
+                self.assertEqual([], offenders)
+
+    def test_inactive_strict_clarification_fixtures_are_absent(self) -> None:
+        fixture_root = SKILL_ROOT / "scripts" / "fixtures"
+        for name in (
+            "clarification-cases.json",
+            "clarification-state-pass.json",
+            "compliance-scenarios.json",
+            "compliance-trace-pass.jsonl",
+            "compliance-trace-write-before-clarification.jsonl",
+            "compliance-trace-implementation-first.jsonl",
+        ):
+            with self.subTest(name=name):
+                self.assertFalse((fixture_root / name).exists())
 
 
 if __name__ == "__main__":
