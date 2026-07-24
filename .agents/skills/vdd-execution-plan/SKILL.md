@@ -1,227 +1,54 @@
 ---
 name: vdd-execution-plan
-description: Clarify requirements before creating, restructuring, or repairing execution-plan document directories under strict Verification-Driven Development (VDD). Use when the user asks to create a VDD implementation plan, verification-driven execution plan, plan directory, executable contract/validator/behavior-slice workflow, or when the prompt names an existing execution-plan directory that must be audited and repaired across all Markdown, schemas, fixtures, validators, tests, ledgers, and source-coverage artifacts.
+description: Create or repair a verification-driven execution plan with a profile proportionate to a trusted solo-maintainer change. Use for implementation plans, plan repair, lifecycle routing, or resumable plan control.
 ---
 
 # VDD Execution Plan
 
-Build execution plans in which executable verification controls development. Do not treat a plan as VDD merely because it contains testing sections.
+Create plans that make observable behavior and current validation decide completion. This repository is maintained by one trusted person and an AI assistant: do not add multi-writer, signer, reviewer-identity, or adversarial-custody controls unless a separate requirement explicitly needs them.
 
-Before acting, read [references/strict-vdd-standard.md](references/strict-vdd-standard.md), [references/clarification-gate.md](references/clarification-gate.md), and [references/lifecycle-state-contract.md](references/lifecycle-state-contract.md) completely. Apply repository instructions and more specific nested instructions first.
+Before acting, read [references/solo-maintainer-vdd-standard.md](references/solo-maintainer-vdd-standard.md), [references/clarification-gate.md](references/clarification-gate.md), and [references/lifecycle-state-contract.md](references/lifecycle-state-contract.md). When maintaining this Skill, also run `py -3 scripts/validate_skill_contract.py --skill-root <skill-root>` and its unit tests.
 
-When maintaining or evaluating this Skill itself, also read [references/skill-compliance-protocol.md](references/skill-compliance-protocol.md) and use `scripts/validate_skill_contract.py`.
+## Choose The Profile First
 
-## Select the mode
+Choose the least complex profile that serves a real consumer. Record the selected profile and reason in the plan.
 
-Choose exactly one mode.
+| Profile | Use when | Required additions |
+| --- | --- | --- |
+| `standard` | Ordinary feature, fix, documentation change, or bounded refactor | One compact plan document, lifecycle state, Git baseline/current scope, implementation slice(s), one RED or declared legacy-regression path, targeted commands, and one terminal full validation command. |
+| `resumable` | Work crosses sessions, has dependent slices, or can leave partial state | `standard` plus compact resume state, dependency-scoped slice status, recovery instructions, and an indexed append-only `95-*.md` report. |
+| `self-hosted` | The work changes VDD, Quick Dev, acceptance/review routing, or a controlling validator | `resumable` plus only the protocol fixtures and migration checks consumed by the changed workflow. Stabilize the changed layer with targeted checks before one end-to-end replay. |
 
-### Repair an existing directory
+Do not create fixed `00-08`/`96-99` books, custom schemas, a custom validator, mutation fixtures, a 95 report, Bootstrap Review, trust roots, attempt ledgers, or effect-fold records for a `standard` plan unless a concrete consumer cannot use an existing repository command or contract. One owner artifact may map requirements, sources, acceptance, and coverage.
 
-Use repair mode when the prompt names a directory and it exists.
+## Clarify Only Material Boundaries
 
-- Treat the complete directory as the target. Do not sample files.
-- Include any original monolith, source requirement, recovery index, schema, fixture, validator, test, ledger, and coverage file required to prove semantic preservation.
-- Repair every affected artifact needed for a coherent VDD control chain. Do not limit the change to the document where the first defect appears.
-- Preserve historical review output and generated evidence. Add new run-scoped sidecars instead of rewriting history.
+Inspect repository authority, current state, relevant callers, protected paths, and existing tests before asking. Ask only when an answer changes scope, compatibility, destructive behavior, protected-path approval, or acceptance. Zero questions is valid.
 
-### Create a directory
+An initial explicit write authorization is enough to begin writing when no material blocker remains. Persist a minimized clarification/resume record only when an unresolved decision must survive a session boundary; do not create an active-run registry, cross-process lock, or identity attestation by default. `clarification_state.py` is an optional single-writer resume helper, not a default plan artifact.
 
-Use create mode when the user asks for a new plan or names a target that does not exist.
+## Lifecycle And Implementation
 
-- Honor an explicit target path or directory name.
-- Otherwise follow the repository naming convention, normally `execution-plans/YYYY-MM-DD-<slug>/`.
-- Start the plan as `draft`. Promote it to `plan-ready` only after its composite validator and negative fixtures pass.
+Use the static transition contract in [references/lifecycle-state-contract.json](references/lifecycle-state-contract.json):
 
-If the named target is ambiguous between a file and directory, inspect local context first. Ask only when choosing would materially alter authority or overwrite unrelated work.
+`draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived`
 
-## Resolve the target implementation report
+VDD owns `draft` and `plan-ready`. The maintainer may explicitly publish `implementation-authorized` without Bootstrap evidence. Bootstrap Review is optional supplemental evidence and never publishes a lifecycle state. Quick Dev may publish only `implementation-complete`; acceptance and archive are separately owned. New plans emit no old state names; repair plans may read them only through the documented compatibility adapter.
 
-Before enumerating plan content, read `execution-plans/95-implementation-report-index.v1.json` and look up the exact target plan directory. On a valid hit, verify that the indexed `report_filename` is a basename matching `95-*.md`, resolves inside the target, and exists before reading it. Treat the index as a non-authoritative path hint, never as plan, acceptance, completion, or release authority.
+For each slice, name its intended behavior, RED or controlled negative command, GREEN/acceptance command, declared downstream dependents, and recovery action. Existing behavior found after implementation uses a declared legacy/regression path: never invent historical RED evidence. A RED command must not rely on the slice's GREEN output or a future slice.
 
-On an index miss, inspect only the named target directory for `95-*.md`; never traverse all of `execution-plans/`. A duplicate, stale, escaping, or ambiguous entry is a repair defect. Preserve unrelated index entries. When Quick Dev creates a report, the report and its index entry must be written in the same pre-implementation change before the target is validated and its affected identities are refrozen.
+During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
 
-## Complete the pre-writing clarification gate
+## Candidate, Review, And Reports
 
-For create and repair modes, complete the gate in [references/clarification-gate.md](references/clarification-gate.md) before writing or modifying the target plan, schemas, fixtures, validators, tests, or product code. Pure read-only review does not trigger this write gate.
+Use a declared Git baseline plus either a frozen commit range or a complete scoped worktree identity. A dirty identity binds `HEAD`, canonical scoped tracked/index diff hash, and a manifest of relevant untracked paths and content hashes. Bind current contracts, implementation, and validators; exclude append-only logs and explanatory reports from normative hashes. Preserve old evidence as historical after invalidation.
 
-1. Load authority and inspect the current state read-only. Find discoverable answers instead of asking the user.
-2. Persist clarification state outside the target plan with `scripts/clarification_state.py` under the repository evidence root, normally `logs/vdd-clarifications/<target-slug>/<run-id>/`. Coordination uses one repository-canonical target registry and cross-process lock independent of the selected evidence root; multiple local Codex sessions must resume the same active target run.
-3. Discuss unresolved boundaries in dependency order. Each question round normally contains at least five same-level questions, stable `CQ-NNN` identities, a recommendation per question, and a confidence assessment. Fewer questions require an explicit same-level exhaustion reason; never invent filler.
-4. Continue until the user explicitly states both that no further clarification is needed and that writing may begin. Agreement, encouragement, urgency, a high confidence score, or an initial prompt that pre-authorizes writing is not an exit.
-5. Fail closed in headless mode. A caller may relay questions and resume the same run, but it may not simulate user confirmation or select a fast/express path.
-6. Recheck authority and target hashes before writing. Invalidate the exit and reopen affected questions when relevant inputs changed.
+Review is optional unless requested by the maintainer or a protected-path rule requires it. Batch accepted findings, run deterministic targeted checks, and do not rerun a complete semantic review for P2-only findings automatically. Review validates the supplied requirements or implementation; it is not an unbounded discovery loop.
 
-The LLM may suggest ending clarification only at confidence `>= 90`, with no open blockers and all required boundary dimensions grounded. The user remains the only exit authority. If the user explicitly exits with blockers still open, writing may begin only in `draft`; clarification exit never proves `plan-ready`.
+`resumable` and `self-hosted` plans create `95-*.md` before implementation and add its entry to `execution-plans/95-implementation-report-index.v1.json` in the same change. The report is append-only, non-authorizing, records corrections and the final implementation result, and is excluded from candidate hashes. `standard` may omit it unless requested.
 
-## Establish authority before writing
+Keep the package generic. Never read a mutable live execution-plan directory or embed dated plan names, plan-local paths, RMAP IDs, live plan hashes, user-profile paths, or machine-specific paths. Detached fixtures prove package behavior; repository-level tools own live 95-index containment and existence checks.
 
-After the clarification gate exits, bind the confirmed boundary snapshot to the plan authority:
+## Completion
 
-1. Re-read the repository routing instructions, current-state sources, standards indexes, architecture/ADR indexes, and relevant recovery files needed by the confirmed scope.
-2. Inspect the target or neighboring execution plans without blind-scanning unrelated documentation.
-3. Identify the approved intent source, current-state authority, durable standards, protected paths, downstream consumers, and non-goals. If BMad artifacts exist, inherit `SPEC.md`/companions/`.memlog.md`, stable `CAP-N`, `ARCHITECTURE-SPINE.md` `AD-n`, FR/NFR/UX-DR coverage, stories, and baseline commits without duplicating their authority.
-4. Check Git status. Preserve unrelated user changes and never rewrite generated history.
-5. For Phase service work, obey protected-path approval, compatibility, evidence, and UTF-8 rules from `AGENTS.md`.
-
-Do not let plan prose become a second authority for an existing contract. Reference the durable owner and bind it by stable ID/hash where required.
-
-## Build the VDD control chain
-
-Implement this lifecycle:
-
-```text
-intent and invariants
-  -> explicit spec delta plus executable contracts and acceptance identities
-  -> validator plus positive/negative/mutation fixtures
-  -> observed validator RED for the missing behavior
-  -> smallest behavior slice
-  -> implementation work
-  -> fresh hash-bound validation evidence
-       -> pass: authorize the next transition
-       -> fail: structured diagnosis -> repair -> new hash-bound validation run
-```
-
-Route failures to the earliest invalid layer:
-
-- wrong intent -> intent/authority;
-- wrong contract -> executable contract;
-- false or incomplete oracle -> validator/fixture;
-- wrong decomposition -> behavior slice;
-- behavior defect -> implementation;
-- stale or conflicting evidence -> recovery/re-entry gate.
-
-Never force every failure back only to the validator. Never weaken a validator to match an implementation without a contract change and a regression counterexample.
-
-## Enforce lifecycle ownership
-
-Every new plan must implement the lifecycle in [references/lifecycle-state-contract.md](references/lifecycle-state-contract.md). VDD owns `draft` and `plan-ready`; a plan-local transition validator owns `implementation-authorized`; Quick Dev may end only at `implementation-complete`; the acceptance Skill owns `acceptance-passed`; and the archive Skill owns `archived`.
-
-Do not allow Bootstrap to publish a plan state. A plan-local validator may consume three finalized Bootstrap envelopes, or a current operator-confirmed override outside the plan and Quick Dev write roots, to authorize implementation. The override is implementation-only and must never imply acceptance, handoff, release, or archive.
-
-## Required plan artifacts
-
-Adapt names to repository convention, but preserve these ownership roles:
-
-```text
-00-index.md
-01-intent-authority-and-non-goals.md
-02-executable-contracts-and-invariants.md
-03-validators-fixtures-and-control-gates.md
-04-behavior-slices-and-implementation-order.md
-05-diagnostics-repair-and-reentry.md
-06-testing-observability-and-evidence.md
-07-implementation-phases.md
-08-risks-dod-and-glossary.md
-96-global-review-and-validation.md
-97-requirements-ledger.md
-98-source-to-split-audit.md
-99-source-coverage.md
-schemas/
-fixtures/
-tools/validate_all.py
-tools/tests/
-```
-
-Existing plans may use a different split. Repair ownership and links rather than renaming files mechanically.
-
-At minimum, machine artifacts must represent:
-
-- stable requirement IDs, owner, first phase, acceptance ID, status, and source refs;
-- `ADDED`, `MODIFIED`, `REMOVED`, or `RENAMED` deltas against the prior source/spec revision and hash;
-- plan status and phase-transition predicates;
-- executable contract schemas and allowed vocabularies;
-- positive, negative, boundary, stale-evidence, and mutation fixtures;
-- a repair baseline manifest with target/source/validator hashes and preserved baseline failures;
-- a requirement-quality checklist separate from implementation tests;
-- diagnostic records with failed rule, candidate hash, failure family, repair owner, rerun command, and next allowed state;
-- phase-exit evidence and cross-run predecessor/supersession lineage;
-- explicit distinction between plan readiness, phase authorization, implementation acceptance, and release authority.
-- the lifecycle-state transition graph, producer ownership, acceptance handoff, and the required negative transition cases.
-
-## Put verification in the control position
-
-Create one version-controlled composite entry such as `tools/validate_all.py`. It must:
-
-- run structural, semantic, schema, link, source-coverage, fixture, unit, and mutation checks;
-- return nonzero unless the requested readiness predicate passes;
-- emit machine-readable rule IDs and bounded diagnostics;
-- reject stale inputs, missing context classes, open blockers, orphan requirements, duplicate owners, uncovered acceptance IDs, and invalid phase transitions;
-- distinguish a successful command invocation from a passed plan/phase status;
-- never live only under `logs/`;
-- never claim implementation completion from plan consistency.
-
-Its authorizing output must use a versioned result envelope with run/predicate/status, candidate/current/source hashes, validator version, rule-level checks, diagnostics, `authorizes`, and `does_not_authorize`. A `pass` with mismatched hashes, skipped required checks, an unregistered predicate, or authority sets that differ from the predicate's exact machine contract is invalid.
-
-Do not build a keyword-count validator. Parse the actual contracts and prove both valid and invalid fixtures. Test the validator by mutating required books, owners, phases, schemas, evidence, state transitions, hashes, and failure classifications.
-
-Before implementation authorization, run at least one invalid or mutation fixture and observe the expected stable failure ID. A test merely written or a validator source marker does not prove RED.
-
-If a protected or independent verifier is required, separate it from the repository-local plan validator. Freeze its rule/version identity before it authorizes downstream work.
-
-## Control LLM-assisted review
-
-When the plan uses LLM reviewers:
-
-- reviewers produce candidates only;
-- zero candidates are valid; never require a minimum finding count;
-- a deterministic gateway validates exact evidence, current hashes, failure tuple, context closure, guard analysis, authority, consumer, validator, severity, and scope;
-- dedup identity includes evidence root, failure tuple, finding family, route/version, and authority revision so distinct failures on the same lines are not collapsed;
-- P0/P1 require an independent verifier; P2 remains advisory unless policy explicitly says otherwise;
-- required context classes map to concrete manifest artifacts rather than self-reported labels;
-- execution model, reasoning, tool probe, process/session identity, and reviewer/verifier separation are attested when they affect authority;
-- complete-read is described as an attestation unless tool traces independently prove it.
-
-## Repair workflow
-
-1. Inventory every target artifact and its inbound/outbound authority links.
-2. Write a baseline manifest with relative paths, hashes, source/validator versions, and current state; then run existing validators/tests read-only and preserve baseline failures.
-3. Declare explicit requirement/spec deltas and build a gap matrix against every section of the strict VDD standard.
-4. Repair intent, contracts, validators, fixtures, slices, diagnostics, ledgers, source coverage, and status claims in dependency order against a new candidate.
-5. Keep generated views derived from machine owners; regenerate them only through their owner tool.
-6. Run the composite validator, targeted tests, and all declared mutation cases against current hashes.
-7. Confirm deliberate counterexamples fail with expected IDs and the repaired candidate produces a fresh valid result envelope.
-8. If target or authority hashes changed after baseline capture, mark old evidence stale and start a new run/baseline.
-9. Recheck Git status and report unrelated dirty files separately.
-
-Do not close a gap with prose if its consumer is executable. Do not mark a finding closed without a stable fix reference, validation method, current evidence, and source authority.
-
-## Creation workflow
-
-1. Write intent, authority, non-goals, current-state boundary, and irreversible decisions.
-2. Create the requirement registry and source coverage map before expanding detailed books.
-3. Define spec deltas where prior behavior exists, executable contracts, state machines, acceptance IDs, requirement-quality checks, and failure families.
-4. Implement the plan-local composite validator and positive/negative fixtures; observe the expected RED before authorizing product implementation.
-5. Split work into thin vertical behavior slices, each naming consumed contracts, tests, evidence, rollback, and predecessor gate.
-6. Define diagnostics, repair, re-entry, idempotency, evidence freshness, and cross-run lineage.
-7. Add implementation phases, risks, stop conditions, DoD, global review, source audit, and coverage closure.
-8. Run validation and retain `draft` if any required check is missing, skipped without authority, or open.
-
-## Completion contract
-
-Do not claim success until:
-
-- every required artifact exists and has one clear owner;
-- every active requirement maps exactly once to source, owner, phase, executable acceptance, and evidence intent;
-- the composite validator and its tests pass;
-- declared invalid/mutation cases fail with the expected stable rule IDs;
-- the full proof command was freshly run against current candidate/source/validator hashes and its result envelope was parsed;
-- no open blocker is hidden by a clean process exit;
-- no validator, runtime config, or gate executable exists only in ignored runtime evidence;
-- no future capability is documented as current;
-- plan-ready, phase-authorized, code-complete, and release-ready remain distinct states;
-- the final report states commands run, evidence written, residual gaps, and files changed.
-
-If a production-grade schema validator, independent verifier, required context, or protected-path approval is unavailable, fail closed or leave the plan in `draft` with an explicit recheck condition.
-
-## Maintain and evaluate this Skill
-
-Use [references/skill-compliance-protocol.md](references/skill-compliance-protocol.md) for no-guidance, supportive, neutral, and competing scenarios. The shipped deterministic fixtures prove package contracts and action ordering; they do not prove fresh-context or cross-model behavior.
-
-Run:
-
-```text
-py -3 scripts/validate_skill_contract.py --skill-root <skill-root>
-py -3 -m unittest discover -s scripts/tests -p "test_*.py" -v
-```
-
-Keep zero findings valid, preserve stable failure IDs, and add a regression fixture whenever a real shortcut or rationalization is discovered. Report package validation, deterministic fixture validation, fresh-context observation, and cross-model stability as separate evidence levels.
+Do not claim completion until the selected profile's required artifacts exist, each active requirement has an observable acceptance path, the declared RED/negative or legacy path is recorded, targeted repairs are stable, and the current terminal full validation passed. `plan-ready`, `implementation-authorized`, `implementation-complete`, `acceptance-passed`, and `archived` remain distinct.
