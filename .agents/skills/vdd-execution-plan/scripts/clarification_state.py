@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -11,7 +12,7 @@ import re
 import sys
 import tempfile
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
@@ -24,20 +25,28 @@ DECISION_ID_PATTERN = re.compile(r"^CQ-[0-9]{3,}$")
 DECISION_KINDS = {"fact_gap", "user_decision", "authority_conflict"}
 SAFE_TOKEN_METADATA_KEYS = {"token_count", "token_counts", "token_budget", "token_usage", "max_tokens", "min_tokens"}
 SENSITIVE_KEY_PATTERN = re.compile(
-    r"^(?:token|secret|password|credential|authorization|api_key|private_key|raw_user|conversation|email|phone"
-    r"|(?:access|refresh|api|auth|bearer|session)_token|(?:client|signing)_secret|.+_(?:secret|password|credential|email|phone|api_key|private_key|token))$"
+    r"^(?:(?:.*_)?(?:tokens?|secrets?|passwords?|credentials?|authorization)(?:_.*)?"
+    r"|(?:api|private)_keys?(?:_.*)?|raw_user(?:_.*)?|conversation(?:_.*)?"
+    r"|(?:email|phone)(?:_.*)?|.*_(?:email|phone))$"
 )
 SENSITIVE_VALUE_PATTERNS = (
     re.compile(r"\bbearer\s+[A-Za-z0-9._~+/=-]{16,}\b", re.I),
-    re.compile(r"\bbasic\s+[A-Za-z0-9+/]{8,}={0,2}\b", re.I),
     re.compile(r"\beyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b"),
     re.compile(r"\bsk-[A-Za-z0-9_-]{12,}\b", re.I),
+    re.compile(r"\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}\b", re.I),
     re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{12,}\b", re.I),
+    re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b", re.I),
     re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b", re.I),
     re.compile(r"\bglpat-[A-Za-z0-9_-]{12,}\b", re.I),
-    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b"),
+    re.compile(r"\bAIza[0-9A-Za-z_-]{30,}\b"),
+    re.compile(r"\b[a-z][a-z0-9+.-]*://[^\s/@:]+:[^\s/@]+@", re.I),
+    re.compile(r"\baws_secret_access_key\s*[:=]\s*[A-Za-z0-9/+=]{32,}\b", re.I),
     re.compile(r"BEGIN\s+[^\r\n]*PRIVATE\s+KEY", re.I),
 )
+BASIC_CREDENTIAL_PATTERN = re.compile(r"\bbasic\s+([A-Za-z0-9+/]+={0,2})(?![A-Za-z0-9+/=])", re.I)
+WINDOWS_RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", *(f"COM{index}" for index in range(1, 10)), *(f"LPT{index}" for index in range(1, 10))}
+WINDOWS_INVALID_SEGMENT_CHARS = frozenset('<>:"\\|?*')
 
 
 def now() -> str:
@@ -57,25 +66,27 @@ def digest(raw: bytes) -> str:
 
 def decode_json_object(raw: bytes) -> tuple[dict[str, Any], bool, bool]:
     duplicate_key = False
-    sensitive = False
+    discarded_values: list[Any] = []
 
     def object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-        nonlocal duplicate_key, sensitive
+        nonlocal duplicate_key
         value: dict[str, Any] = {}
         seen: set[str] = set()
         for key, child in pairs:
             if key in seen:
                 duplicate_key = True
+                discarded_values.append(value[key])
             seen.add(key)
-            if is_sensitive_key(key) or contains_sensitive(child):
-                sensitive = True
             value[key] = child
         return value
 
-    value = json.loads(raw.decode("utf-8"), object_pairs_hook=object_pairs)
+    try:
+        value = json.loads(raw.decode("utf-8"), object_pairs_hook=object_pairs)
+    except RecursionError as exc:
+        raise fail("VDD-CLARIFICATION-SCHEMA", "JSON nesting exceeds the supported depth") from exc
     if not isinstance(value, dict):
         raise fail("VDD-CLARIFICATION-SCHEMA", "JSON root must be an object")
-    return value, duplicate_key, sensitive or contains_sensitive(value)
+    return value, duplicate_key, contains_sensitive(value) or contains_sensitive(discarded_values)
 
 
 def load_json_bytes(path: Path) -> tuple[bytes, dict[str, Any], bool, bool]:
@@ -110,7 +121,9 @@ def ensure_inside(root: Path, candidate: Path) -> Path:
 
 
 def normalize_key(value: str) -> str:
-    separated = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", value).replace("-", "_")
+    acronym_separated = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", value)
+    separated = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", acronym_separated)
+    separated = re.sub(r"[^A-Za-z0-9]+", "_", separated)
     return re.sub(r"_+", "_", separated).strip("_").casefold()
 
 
@@ -120,15 +133,43 @@ def is_sensitive_key(value: str) -> bool:
 
 
 def is_sensitive_value(value: str) -> bool:
-    return any(pattern.search(value) is not None for pattern in SENSITIVE_VALUE_PATTERNS)
+    if any(pattern.search(value) is not None for pattern in SENSITIVE_VALUE_PATTERNS):
+        return True
+    for match in BASIC_CREDENTIAL_PATTERN.finditer(value):
+        encoded = match.group(1)
+        padded = encoded + "=" * ((4 - len(encoded) % 4) % 4)
+        try:
+            decoded = base64.b64decode(padded, validate=True)
+        except (ValueError, TypeError):
+            continue
+        if b":" in decoded:
+            return True
+    return False
 
 
 def contains_sensitive(value: Any) -> bool:
-    if isinstance(value, dict):
-        return any(is_sensitive_key(str(key)) or contains_sensitive(child) for key, child in value.items())
-    if isinstance(value, list):
-        return any(contains_sensitive(child) for child in value)
-    return isinstance(value, str) and is_sensitive_value(value)
+    pending = [value]
+    seen_containers: set[int] = set()
+    while pending:
+        current = pending.pop()
+        if isinstance(current, dict):
+            identity = id(current)
+            if identity in seen_containers:
+                continue
+            seen_containers.add(identity)
+            for key, child in current.items():
+                if is_sensitive_key(str(key)):
+                    return True
+                pending.append(child)
+        elif isinstance(current, list):
+            identity = id(current)
+            if identity in seen_containers:
+                continue
+            seen_containers.add(identity)
+            pending.extend(current)
+        elif isinstance(current, str) and is_sensitive_value(current):
+            return True
+    return False
 
 
 def validate_hash(value: Any, field: str) -> None:
@@ -222,7 +263,7 @@ def validate_state(data: dict[str, Any]) -> list[dict[str, str]]:
         or data["status"] not in {"active", "closed", "invalidated"}
     ):
         findings.append({"rule_id": "VDD-CLARIFICATION-SCHEMA", "detail": "invalid state vocabulary"})
-    if not isinstance(data["run_id"], str) or not RUN_ID_PATTERN.fullmatch(data["run_id"]):
+    if not isinstance(data["run_id"], str) or not is_valid_run_id(data["run_id"]):
         findings.append({"rule_id": "VDD-CLARIFICATION-SCHEMA", "detail": "invalid run_id"})
     for field in ("project_root", "evidence_root", "target", "updated_at"):
         if not isinstance(data[field], str) or not data[field]:
@@ -230,29 +271,32 @@ def validate_state(data: dict[str, Any]) -> list[dict[str, str]]:
     for field in ("authority_hash", "target_hash"):
         if not isinstance(data[field], str) or not HASH_PATTERN.fullmatch(data[field]):
             findings.append({"rule_id": "VDD-CLARIFICATION-SCHEMA", "detail": f"invalid {field}"})
-    findings.extend(validate_decisions(data["decisions"]))
+    decision_findings = validate_decisions(data["decisions"])
+    findings.extend(decision_findings)
+    if not decision_findings and data.get("status") == "closed":
+        open_material = [item["id"] for item in data["decisions"] if item["material"] and item["status"] != "resolved"]
+        if open_material:
+            findings.append(
+                {
+                    "rule_id": "VDD-CLARIFICATION-STATE",
+                    "detail": "closed state contains unresolved material decisions",
+                }
+            )
     return findings
 
 
-def validate_current_identity(data: dict[str, Any]) -> list[dict[str, str]]:
+def validate_current_location_identity(data: dict[str, Any]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     if data.get("schema_version") != SCHEMA_VERSION:
         findings.append({"rule_id": "VDD-CLARIFICATION-SCHEMA", "detail": "invalid current schema"})
-    if not isinstance(data.get("run_id"), str) or not RUN_ID_PATTERN.fullmatch(data["run_id"]):
+    if not isinstance(data.get("run_id"), str) or not is_valid_run_id(data["run_id"]):
         findings.append({"rule_id": "VDD-CLARIFICATION-SCHEMA", "detail": "invalid run_id"})
-    mode = data.get("mode")
-    status = data.get("status")
-    if not isinstance(mode, str) or mode not in {"create", "repair"} or not isinstance(status, str) or status not in {"active", "closed", "invalidated"}:
-        findings.append({"rule_id": "VDD-CLARIFICATION-SCHEMA", "detail": "invalid state vocabulary"})
     for field in ("target", "project_root", "evidence_root"):
         if not isinstance(data.get(field), str) or not data[field]:
             findings.append({"rule_id": "VDD-CLARIFICATION-SCHEMA", "detail": f"invalid {field}"})
     target = data.get("target")
     if isinstance(target, str) and not is_valid_target(target):
         findings.append({"rule_id": "VDD-CLARIFICATION-SCHEMA", "detail": "invalid target"})
-    for field in ("authority_hash", "target_hash"):
-        if not isinstance(data.get(field), str) or not HASH_PATTERN.fullmatch(data[field]):
-            findings.append({"rule_id": "VDD-CLARIFICATION-SCHEMA", "detail": f"invalid {field}"})
     return findings
 
 
@@ -270,10 +314,29 @@ def validate_quarantine(data: dict[str, Any]) -> bool:
     )
 
 
+def is_valid_windows_segment(value: str) -> bool:
+    if not value or value.endswith((" ", ".")):
+        return False
+    if any(ord(character) < 32 or character in WINDOWS_INVALID_SEGMENT_CHARS for character in value):
+        return False
+    return value.split(".", 1)[0].upper() not in WINDOWS_RESERVED_NAMES
+
+
+def is_valid_run_id(value: str) -> bool:
+    return RUN_ID_PATTERN.fullmatch(value) is not None and is_valid_windows_segment(value)
+
+
 def is_valid_target(value: str) -> bool:
-    normalized = value.replace("\\", "/")
-    target_path = Path(normalized)
-    return bool(normalized) and normalized == value and not target_path.is_absolute() and ".." not in target_path.parts
+    if not value or "\\" in value:
+        return False
+    target_path = PurePosixPath(value)
+    parts = target_path.parts
+    return (
+        not target_path.is_absolute()
+        and bool(parts)
+        and target_path.as_posix() == value
+        and all(part not in {".", ".."} and is_valid_windows_segment(part) for part in parts)
+    )
 
 
 def resolve_state_argument(project_root: Path, value: str) -> Path:
@@ -337,7 +400,7 @@ def read_current_state(path: Path, project_root: Path) -> tuple[dict[str, Any], 
         raise fail("VDD-CLARIFICATION-LEGACY-READ-ONLY", "legacy state requires inspect-legacy")
     if schema_version != SCHEMA_VERSION:
         raise fail("VDD-CLARIFICATION-SCHEMA", "unknown clarification schema")
-    identity_findings = validate_current_identity(data)
+    identity_findings = validate_current_location_identity(data)
     if identity_findings:
         raise fail(identity_findings[0]["rule_id"], identity_findings[0]["detail"])
     validate_state_location(resolved, root, data)
@@ -359,7 +422,7 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
     target = str(args.target).replace("\\", "/")
     if not is_valid_target(target):
         raise fail("VDD-CLARIFICATION-PATH", "target must be a project-relative path")
-    if not RUN_ID_PATTERN.fullmatch(args.run_id):
+    if not is_valid_run_id(args.run_id):
         raise fail("VDD-CLARIFICATION-SCHEMA", "invalid run_id")
     evidence = Path(args.evidence_root) if args.evidence_root else Path("logs") / "vdd-resume"
     evidence_root = ensure_inside(root, root / evidence)
@@ -369,6 +432,7 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
         immutable_identity = {
             "project_root": str(root),
             "evidence_root": str(evidence_root.relative_to(root)),
+            "run_id": args.run_id,
             "target": target,
             "mode": args.mode,
         }
@@ -487,7 +551,7 @@ def validate_legacy_state(data: dict[str, Any], project_root: Path, path: Path) 
     if (
         schema_version not in LEGACY_SCHEMA_VERSIONS
         or not isinstance(run_id, str)
-        or not RUN_ID_PATTERN.fullmatch(run_id)
+        or not is_valid_run_id(run_id)
         or not isinstance(target, str)
         or not is_valid_target(target)
         or not isinstance(mode, str)
@@ -596,7 +660,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         payload = args.handler(args)
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError, RecursionError) as exc:
         payload = {
             "status": "error",
             "rule_id": getattr(exc, "rule_id", "VDD-CLARIFICATION-IO"),

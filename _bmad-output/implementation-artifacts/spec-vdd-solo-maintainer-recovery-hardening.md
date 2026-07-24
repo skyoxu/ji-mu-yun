@@ -3,10 +3,11 @@ title: 'VDD Solo-Maintainer Recovery Hardening'
 type: 'refactor'
 created: '2026-07-24'
 status: 'done'
-review_loop_iteration: 0
+review_loop_iteration: 1
 baseline_commit: '00c2cf7fd03fa9111cfe332281efcf580f51ec7d'
 context:
   - 'AGENTS.md'
+  - 'docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md'
   - 'execution-plans/2026-07-24-vdd-solo-maintainer-recovery-hardening-requirements.md'
 ---
 
@@ -63,7 +64,19 @@ context:
 - Given any current or legacy state operation, only a valid contained current state can mutate, and no sensitive value is exposed.
 - Given the completed patch, no excluded proof-system entrypoint or field exists and all declared verification commands pass.
 
+### Review Findings
+
+- [x] [Review][Patch] Detect common credential formats and sensitive key variants before persistence or status output. [`.agents/skills/vdd-execution-plan/scripts/clarification_state.py:27`]
+- [x] [Review][Patch] Require decoded Basic authorization data instead of quarantining benign Basic-authentication wording. [`.agents/skills/vdd-execution-plan/scripts/clarification_state.py:135`]
+- [x] [Review][Patch] Quarantine sensitive location-bound current state before validating non-location vocabulary. [`.agents/skills/vdd-execution-plan/scripts/clarification_state.py:288`]
+- [x] [Review][Patch] Reject noncanonical Windows target and run identities and bind `run_id` as immutable identity. [`.agents/skills/vdd-execution-plan/scripts/clarification_state.py:317`]
+- [x] [Review][Patch] Reject closed state containing unresolved material decisions. [`.agents/skills/vdd-execution-plan/scripts/clarification_state.py:241`]
+- [x] [Review][Patch] Return a JSON error envelope for excessive JSON nesting without recursive sensitive scanning. [`.agents/skills/vdd-execution-plan/scripts/clarification_state.py:150`]
+- [x] [Review][Patch] Record the clarification persistence and quarantine security boundary in ADR-0043. [`docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md:1`]
+
 ## Spec Change Log
+
+- 2026-07-24: Closed seven post-commit review findings with focused regression coverage and ADR-0043.
 
 ## Design Notes
 

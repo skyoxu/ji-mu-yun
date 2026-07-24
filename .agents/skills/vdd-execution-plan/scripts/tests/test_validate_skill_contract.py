@@ -61,6 +61,15 @@ class SkillContractTests(unittest.TestCase):
             result = self.validator.validate_skill(copied)
             self.assertIn("VDD-INPUT-ROUTING", {item["rule_id"] for item in result["findings"]})
 
+    def test_clarification_security_regression_suite_is_required(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "scripts" / "tests" / "test_clarification_state_review_regressions.py"
+            path.unlink()
+            result = self.validator.validate_skill(copied)
+            self.assertIn("VDD-SKILL-FILE", {item["rule_id"] for item in result["findings"]})
+
     def test_legacy_fixture_cannot_reintroduce_strict_controls(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             copied = Path(tmp) / "skill"

@@ -25,6 +25,7 @@
     "scripts/validate_skill_contract.py",
     "scripts/fixtures/profile-cases.json",
     "scripts/tests/test_clarification_state_concurrency.py",
+    "scripts/tests/test_clarification_state_review_regressions.py",
     "scripts/tests/test_validate_skill_contract.py"
   ],
   "required_headings": {

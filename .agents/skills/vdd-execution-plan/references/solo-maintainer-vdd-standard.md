@@ -6,6 +6,7 @@ Verification-driven planning means a plan names observable behavior, current val
 
 - Route one standalone requirements Markdown file to direct implementation. Enter VDD `create` or `repair` only for an explicit request concerning a complete execution-plan directory.
 - Preserve the repository-owned Skill and plan-local authority boundary accepted in `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`; this routing does not grant Bootstrap or acceptance authority.
+- Follow the optional clarification recovery and sensitive quarantine boundary accepted in `docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md`.
 - Preserve repository instructions, UTF-8, path containment, protected-path approval, sensitive-data minimization, current Git identity, and additive historical evidence.
 - Select `standard`, `resumable`, or `self-hosted` before choosing plan artifacts.
 - Keep intent, scope, non-goals, authority, implementation slices, RED/negative or legacy-regression evidence, targeted validation, and one terminal full validation actionable.
