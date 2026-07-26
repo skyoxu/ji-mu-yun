@@ -1,0 +1,25 @@
+{
+  "schema_version": "kwi.authority-manifest.v1",
+  "plan_id": "knowledge-locator-workflow-integration",
+  "git_baseline": "b823ab2af4253bfc4dfdfefb627ddde831ca067c",
+  "sources": [
+    {"path": "AGENTS.md", "role": "authority", "sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"},
+    {"path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md", "role": "authority", "sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111"},
+    {"path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md", "role": "authority", "sha256": "755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"},
+    {"path": "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md", "role": "authority", "sha256": "3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43"},
+    {"path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md", "role": "authority", "sha256": "f00a514bc41e1881f3a3f6a25226b9d757600b19412ab5233b9b6d819d2742fe"},
+    {"path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/00-index.md", "role": "authority", "sha256": "9955f4f205bc92a11c7bf93ebfd04d6e8eb5fd2f94a6d24e7ac4dd661771cdda"},
+    {"path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/requirements-ledger.v1.json", "role": "authority", "sha256": "363c9e1bc5c4de8104873286a184ec6ccc02bfd652187e04a24fcd05dc6a2036"},
+    {"path": "docs/standards/bootstrap-review-control-plane.md", "role": "implementation-target", "sha256": "0f4639c2fdc0e4ab6b8342f517f2b96a431387ba6eb1d98985da8872361ce687"},
+    {"path": "docs/standards/repository-maintenance-agent-protocol.md", "role": "implementation-target", "sha256": "94cffef015f48d32e6370fabb14f75367399d8cc3b55f15e083f2a3ad1900574"},
+    {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "role": "implementation-target", "sha256": "bd74c669a2966f39be743672c650322cb97cb9515aa797491f5aab34ff0cb27e"},
+    {"path": ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md", "role": "implementation-target", "sha256": "de3e1036a27b4c555d032369c10ac9e8af702014e519562213b25770d6b75909"},
+    {"path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md", "role": "implementation-target", "sha256": "77f62beecf8f16a27443996bb8f52b7637e60e331426e78d4800eefde66a1224"},
+    {"path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py", "role": "implementation-target", "sha256": "d2aa85225c66761bc68ed3e29276fcf68aea7b1791484a0698d4108b2d326809"},
+    {"path": ".agents/skills/run-phase-bootstrap-review/SKILL.md", "role": "implementation-target", "sha256": "5791cc6cf161aa33dbef11cd57fba831bc1a23b01098e0d7dd48a1ea51b2ae15"},
+    {"path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", "role": "implementation-target", "sha256": "869455371997a07a1ad1b836a63150769834f55bf8c2525a34f5ba1123ec0fc3"},
+    {"path": ".agents/skills/maintain-knowledge-base/SKILL.md", "role": "implementation-target", "sha256": "fcc7b7fb9d163ffcd2d23e2b66a3ca35c2071a8be86616ce32ac0972166a1427"},
+    {"path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-locator-request.v1.schema.json", "role": "migration-source", "sha256": "c2e3c1d75f835c47df534bc4bf1028f97d98ed3405c1fb299c806be4328718f3"},
+    {"path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-locator-result.v1.schema.json", "role": "migration-source", "sha256": "781c0634066df9909da140667397b9df1a01aa40f0269fc4247e9c47cb062c48"}
+  ]
+}

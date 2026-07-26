@@ -1,0 +1,9 @@
+{
+  "schema_version": "jimuyun.knowledge-consumer-policies.v1",
+  "policy_revision": "knowledge-consumer-policies.v1",
+  "policies": [
+    {"consumer": "vdd", "domains": ["toolchain", "phase"], "path_prefixes": [".agents/skills/", "docs/", "execution-plans/"], "required_modules": ["repository-rules"], "optional_modules": ["existing-workflow"], "max_candidates": 12, "minimum_confidence": "medium"},
+    {"consumer": "quick-dev", "domains": ["toolchain", "phase"], "path_prefixes": [".agents/skills/", "docs/", "execution-plans/", "knowledge/", "scripts/python/"], "required_modules": ["vdd-frozen-context"], "optional_modules": [], "max_candidates": 0, "minimum_confidence": "not-applicable"},
+    {"consumer": "bootstrap", "domains": ["toolchain", "phase"], "path_prefixes": [".agents/skills/", "docs/", "execution-plans/", "knowledge/"], "required_modules": ["profile-context"], "optional_modules": ["knowledge-context"], "max_candidates": 24, "minimum_confidence": "medium"}
+  ]
+}

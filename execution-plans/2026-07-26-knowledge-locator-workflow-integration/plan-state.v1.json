@@ -1,0 +1,63 @@
+{
+  "schema_version": "vdd.plan-state.v2",
+  "plan_id": "knowledge-locator-workflow-integration",
+  "profile": "self-hosted",
+  "status": "implementation-complete",
+  "authorizes": [
+    "plan-ready",
+    "implementation-authorized",
+    "implementation-complete"
+  ],
+  "git_baseline": {
+    "head": "b823ab2af4253bfc4dfdfefb627ddde831ca067c",
+    "tree": "849ad1d921d289ffe8aa94a6823afcee522b90b6",
+    "scope": "pre-plan clean repository baseline"
+  },
+  "status_history": [
+    {
+      "status": "draft",
+      "reason": "Self-hosted directory created; plan-ready predicate has not yet been published.",
+      "evidence": []
+    },
+    {
+      "status": "plan-ready",
+      "reason": "The complete self-hosted directory passed its deterministic plan validator.",
+      "evidence": [
+        "tools/validate_plan.py --publish-plan-ready"
+      ]
+    },
+    {
+      "status": "plan-ready",
+      "reason": "Corrected the future Quick Dev contract-validator command arity and revalidated the plan without changing lifecycle authority.",
+      "evidence": [
+        "tools/tests/test_validate_plan.py",
+        "tools/validate_plan.py"
+      ]
+    },
+    {
+      "status": "plan-ready",
+      "reason": "Added adapter-owned semantic-fit consumption decisions and rejected-candidate completeness gates without changing Locator authority or lifecycle state.",
+      "evidence": [
+        "01-requirements-and-acceptance.md",
+        "fixtures/protocol-cases.v1.json",
+        "tools/tests/test_validate_plan.py",
+        "tools/validate_plan.py"
+      ]
+    },
+    {
+      "status": "implementation-authorized",
+      "reason": "The maintainer explicitly authorized implementation of this plan directory.",
+      "evidence": [
+        "user authorization: $quick-dev-tdd-adapter now implement the 2026-07-26 plan"
+      ]
+    },
+    {
+      "status": "implementation-complete",
+      "reason": "RMAP-S7 passed the registered terminal integration predicate with current TDD evidence.",
+      "evidence": [
+        "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S7/RUN-20260726T150205-451378Z/implementation-complete-result.json",
+        "scripts/python/validate_knowledge_workflow_integration.py"
+      ]
+    }
+  ]
+}

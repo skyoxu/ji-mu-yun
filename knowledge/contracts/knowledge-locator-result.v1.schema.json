@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-locator-result.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "request_id", "status", "snapshot", "candidates"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.knowledge-locator-result.v1"},
+    "request_id": {"type": "string", "minLength": 1},
+    "status": {"enum": ["matched", "insufficient_match", "blocked"]},
+    "snapshot": {"type": "object"},
+    "candidates": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "anchor", "line_start", "line_end", "source_sha256", "provenance", "rank_evidence"], "properties": {"path": {"type": "string"}, "anchor": {"type": "string"}, "line_start": {"type": "integer", "minimum": 1}, "line_end": {"type": "integer", "minimum": 1}, "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "provenance": {"type": "array"}, "rank_evidence": {"type": "object"}}}}
+  }
+}

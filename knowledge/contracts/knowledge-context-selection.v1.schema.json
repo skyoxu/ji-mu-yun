@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-context-selection.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "consumer", "request_sha256", "result_sha256", "decisions"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.knowledge-context-selection.v1"},
+    "consumer": {"enum": ["vdd", "quick-dev", "bootstrap"]},
+    "request_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "result_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "decisions": {"type": "array", "items": {"$ref": "knowledge-consumption-decision.v1.schema.json"}}
+  }
+}

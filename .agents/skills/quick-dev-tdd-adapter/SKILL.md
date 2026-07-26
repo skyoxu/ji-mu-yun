@@ -27,6 +27,13 @@ After the target plan's current declared terminal predicate passes, append its o
 4. After `slice-ready`, route the next unlocked slice automatically. Stop only at the plan-local terminal predicate, `external-repair-required`, or a repeated failure fingerprint.
 5. A plan may consume an already-published implementation authorization before its first implementation slice. This Skill never launches Bootstrap Review, changes review evidence, or creates a successor policy. Its terminal result may only be `implementation-complete`; acceptance remains external.
 
+## Knowledge Consumption
+
+When a VDD plan contains frozen knowledge context, verify its accepted decisions
+and source hashes before RED. Do not issue a new Locator query or expand its
+paths, candidates, classifications, or satisfied modules. Any difference routes
+to VDD repair. See `references/knowledge-consumption.md`.
+
 Use `tools/persistent_plan_loop.py` for unattended execution. It re-routes after every completed slice and consumes only the slice's explicit, no-wildcard `execution_snapshot_paths` declaration. The plan validator requires that declaration to name an existing repository file covered by that slice's allowed write set; a missing or invalid declaration fails closed. Its state file belongs under `logs/tdd-adapter/<plan-id>/controller/`.
 
 Use the bounded driver for one declared slice write set:

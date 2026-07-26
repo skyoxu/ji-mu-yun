@@ -3179,6 +3179,21 @@ class BootstrapReviewCliTests(unittest.TestCase):
             ]),
         )
 
+class BootstrapKnowledgeContextTests(unittest.TestCase):
+    def test_rejected_candidate_cannot_satisfy_required_context_class(self) -> None:
+        module_path = REPOSITORY_ROOT / ".agents" / "skills" / "run-phase-bootstrap-review" / "scripts" / "knowledge_context.py"
+        if not module_path.is_file():
+            self.fail("KWI-CONSUMPTION-INSUFFICIENT-SPECIFICITY: Bootstrap knowledge context adapter is missing")
+        spec = importlib.util.spec_from_file_location("bootstrap_knowledge_context", module_path)
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        result = module.select_context(
+            required_classes=["repository-rules"],
+            decisions=[{"decision": "rejected", "satisfies": []}],
+        )
+        self.assertEqual("incomplete", result["status"])
+
 
 if __name__ == "__main__":
     unittest.main()

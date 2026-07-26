@@ -1,0 +1,259 @@
+{
+  "schema_version": "kwi.implementation-contract.v1",
+  "plan_id": "knowledge-locator-workflow-integration",
+  "profile": "self-hosted",
+  "command_registry": "command-registry.v1.json",
+  "backend": {
+    "hidden_state": false
+  },
+  "adapter_bridge": {
+    "runner": "tools/knowledge_workflow_slice_bridge.py",
+    "protocol": "kwi.knowledge-workflow-tdd-bridge.v1"
+  },
+  "protocol_artifacts": {
+    "context_layout": "context/<capsule-id>",
+    "attempt_layout": "attempts/<attempt-id>"
+  },
+  "authority": {
+    "index": "00-index.md",
+    "requirements": "01-requirements-and-acceptance.md",
+    "authority_manifest": "authority-manifest.v1.json"
+  },
+  "ownership": {
+    "knowledge_decision": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+    "vdd_owner": ".agents/skills/vdd-execution-plan",
+    "quick_dev_owner": ".agents/skills/quick-dev-tdd-adapter",
+    "bootstrap_owner": ".agents/skills/run-phase-bootstrap-review",
+    "maintenance_owner": ".agents/skills/maintain-knowledge-base",
+    "runtime_evidence": "logs/tdd-adapter/knowledge-locator-workflow-integration"
+  },
+  "lifecycle": {
+    "states": ["draft", "plan-ready", "implementation-authorized", "implementation-complete", "acceptance-passed", "archived"],
+    "plan_authorizes": ["plan-ready"],
+    "quick_dev_authorizes": ["implementation-complete"],
+    "bootstrap_authorizes": []
+  },
+  "global_forbidden_changes": [
+    "logs/phase-a-innernet/**",
+    "runtime/phase-a/**",
+    "PhaseA.Platform/**",
+    "PhaseA.Platform.Tests/**",
+    "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**"
+  ],
+  "terminal_validation": {
+    "command_id": "knowledge-workflow-terminal",
+    "required_slice": "RMAP-S7",
+    "authorizes": ["implementation-complete"],
+    "does_not_authorize": ["acceptance-passed", "archived", "handoff", "release", "deployment"]
+  },
+  "slices": [
+    {
+      "slice_id": "RMAP-S0",
+      "phase_id": "P0",
+      "title": "ADR and stable authority boundary",
+      "requirement_ids": ["KWI-001", "KWI-002"],
+      "acceptance_ids": ["KWI-ACC-001", "KWI-ACC-002"],
+      "source_refs": ["01-requirements-and-acceptance.md#requirements-and-acceptance"],
+      "depends_on": [],
+      "allowed_changes": {
+        "production": [],
+        "tests": ["scripts/python/tests/test_knowledge_locator_authority.py"],
+        "documentation": ["docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md", "docs/architecture/ADR_INDEX_PHASE.md", "docs/standards/_index.md"]
+      },
+      "execution_snapshot_paths": ["docs/architecture/ADR_INDEX_PHASE.md"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**"],
+      "execution_read_set": ["AGENTS.md", "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md", "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md", "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md", "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md"],
+      "dependency_closure": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/**"],
+      "tdd": {
+        "red": {"command_id": "authority-boundary-test", "test_selector": "test_missing_adr_blocks", "mode": "legacy-regression", "expected_exit": "zero", "expected_failure_family": "knowledge_authority_missing", "expected_failure_ids": ["KWI-AUTH-ADR-MISSING"]},
+        "green": {"command_id": "authority-boundary-test", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "locator-contract-suite", "expected_exit": "zero"}]}
+      },
+      "review": {"profile": "bootstrap-upstream-plan"},
+      "post_refactor_command_id": "locator-contract-suite",
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "slice_id": "RMAP-S1",
+      "phase_id": "P0",
+      "title": "Stable contracts, policies, catalogs and index contract",
+      "requirement_ids": ["KWI-003", "KWI-004"],
+      "acceptance_ids": ["KWI-ACC-003", "KWI-ACC-004"],
+      "source_refs": ["01-requirements-and-acceptance.md#requirements-and-acceptance"],
+      "depends_on": ["RMAP-S0"],
+      "allowed_changes": {
+        "production": ["knowledge/contracts/**", "knowledge/policies/**", "knowledge/catalogs/**", "knowledge/indexes/**", ".agents/skills/maintain-knowledge-base/SKILL.md", ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py"],
+        "tests": ["scripts/python/tests/test_knowledge_locator_contracts.py", ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py"],
+        "documentation": ["docs/standards/repository-maintenance-agent-protocol.md"]
+      },
+      "execution_snapshot_paths": [".agents/skills/maintain-knowledge-base/SKILL.md"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**"],
+      "execution_read_set": ["execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-locator-request.v1.schema.json", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-locator-result.v1.schema.json", ".agents/skills/maintain-knowledge-base/SKILL.md"],
+      "dependency_closure": ["knowledge/**", ".agents/skills/maintain-knowledge-base/**", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/**"],
+      "tdd": {
+        "red": {"command_id": "stable-contract-test", "test_selector": "test_llm_owned_envelope_is_rejected", "mode": "legacy-regression", "expected_exit": "zero", "expected_failure_family": "trusted_envelope_violation", "expected_failure_ids": ["KWI-CONTRACT-LLM-OWNER"]},
+        "green": {"command_id": "stable-contract-test", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "locator-contract-suite", "expected_exit": "zero"}, {"command_id": "maintenance-suite", "expected_exit": "zero"}]}
+      },
+      "review": {"profile": "bootstrap-skill-route"},
+      "post_refactor_command_id": "locator-contract-suite",
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "slice_id": "RMAP-S2",
+      "phase_id": "P1",
+      "title": "Deterministic Locator CLI and index builder",
+      "requirement_ids": ["KWI-005", "KWI-006", "KWI-007", "KWI-008", "KWI-009"],
+      "acceptance_ids": ["KWI-ACC-005", "KWI-ACC-006", "KWI-ACC-007", "KWI-ACC-008", "KWI-ACC-009"],
+      "source_refs": ["01-requirements-and-acceptance.md#requirements-and-acceptance"],
+      "depends_on": ["RMAP-S1"],
+      "allowed_changes": {
+        "production": ["scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py", "scripts/python/build_knowledge_index.py"],
+        "tests": ["scripts/python/tests/test_knowledge_locator_core.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/fixtures/protocol-cases.v1.json"],
+        "documentation": ["docs/standards/repository-maintenance-agent-protocol.md"]
+      },
+      "execution_snapshot_paths": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/fixtures/protocol-cases.v1.json"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**", "scripts/sc/_llm_backend.py"],
+      "execution_read_set": ["knowledge/contracts/**", "knowledge/policies/**", "knowledge/catalogs/**", "knowledge/indexes/**", "scripts/sc/_llm_backend.py"],
+      "dependency_closure": ["knowledge/**", "scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py", "scripts/python/build_knowledge_index.py", "scripts/python/tests/test_knowledge_locator.py"],
+      "tdd": {
+        "red": {"command_id": "locator-core-test", "test_selector": "test_stable_tie_break_and_location_only_output", "mode": "legacy-regression", "expected_exit": "zero", "expected_failure_family": "locator_order_missing", "expected_failure_ids": ["KWI-LOCATOR-ORDER"]},
+        "green": {"command_id": "locator-core-test", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "index-publication-test", "expected_exit": "zero"}, {"command_id": "locator-full-suite", "expected_exit": "zero"}]}
+      },
+      "review": {"profile": "bootstrap-focused-change"},
+      "post_refactor_command_id": "locator-full-suite",
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "slice_id": "RMAP-S3",
+      "phase_id": "P1",
+      "title": "VDD knowledge preflight adapter",
+      "requirement_ids": ["KWI-010", "KWI-011", "KWI-021"],
+      "acceptance_ids": ["KWI-ACC-010", "KWI-ACC-011", "KWI-ACC-021"],
+      "source_refs": ["01-requirements-and-acceptance.md#requirements-and-acceptance"],
+      "depends_on": ["RMAP-S2"],
+      "allowed_changes": {
+        "production": [".agents/skills/vdd-execution-plan/SKILL.md", ".agents/skills/vdd-execution-plan/references/knowledge-consumption.md", ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py", ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py", ".agents/skills/vdd-execution-plan/scripts/skill-contract.json", ".agents/skills/vdd-execution-plan/agents/openai.yaml"],
+        "tests": [".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py", ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py"],
+        "documentation": []
+      },
+      "execution_snapshot_paths": [".agents/skills/vdd-execution-plan/SKILL.md"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**"],
+      "execution_read_set": [".agents/skills/vdd-execution-plan/**", "knowledge/contracts/**", "knowledge/policies/**", "scripts/python/knowledge_locator.py"],
+      "dependency_closure": [".agents/skills/vdd-execution-plan/**", "knowledge/**", "scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py"],
+      "tdd": {
+        "red": {"command_id": "vdd-adapter-test", "test_selector": "test_all_rejected_candidates_block_plan_ready", "mode": "legacy-regression", "expected_exit": "zero", "expected_failure_family": "knowledge_consumption_incomplete", "expected_failure_ids": ["KWI-CONSUMPTION-REQUIRED-UNCOVERED"]},
+        "green": {"command_id": "vdd-adapter-test", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "vdd-full-suite", "expected_exit": "zero"}, {"command_id": "vdd-skill-contract", "expected_exit": "zero"}]}
+      },
+      "review": {"profile": "bootstrap-skill-route"},
+      "post_refactor_command_id": "vdd-full-suite",
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "slice_id": "RMAP-S4",
+      "phase_id": "P2",
+      "title": "Quick Dev verify-bound knowledge adapter",
+      "requirement_ids": ["KWI-012", "KWI-013", "KWI-022"],
+      "acceptance_ids": ["KWI-ACC-012", "KWI-ACC-013", "KWI-ACC-022"],
+      "source_refs": ["01-requirements-and-acceptance.md#requirements-and-acceptance"],
+      "depends_on": ["RMAP-S3"],
+      "allowed_changes": {
+        "production": [".agents/skills/quick-dev-tdd-adapter/SKILL.md", ".agents/skills/quick-dev-tdd-adapter/references/knowledge-consumption.md", ".agents/skills/quick-dev-tdd-adapter/tools/**", ".agents/skills/quick-dev-tdd-adapter/schemas/**"],
+        "tests": [".agents/skills/quick-dev-tdd-adapter/tools/tests/**"],
+        "documentation": ["docs/standards/repository-maintenance-agent-protocol.md"]
+      },
+      "execution_snapshot_paths": [".agents/skills/quick-dev-tdd-adapter/SKILL.md"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**"],
+      "execution_read_set": [".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/vdd-execution-plan/**", "knowledge/contracts/**", "scripts/python/knowledge_locator.py"],
+      "dependency_closure": [".agents/skills/quick-dev-tdd-adapter/**", "knowledge/**", "scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py"],
+      "tdd": {
+        "red": {"command_id": "quick-dev-adapter-test", "test_selector": "test_locator_result_or_consumption_decision_cannot_expand_frozen_context", "mode": "legacy-regression", "expected_exit": "zero", "expected_failure_family": "knowledge_scope_expansion", "expected_failure_ids": ["KWI-QUICK-SCOPE-EXPANSION"]},
+        "green": {"command_id": "quick-dev-adapter-test", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "quick-dev-full-suite", "expected_exit": "zero"}, {"command_id": "quick-dev-contract", "expected_exit": "zero"}]}
+      },
+      "review": {"profile": "bootstrap-skill-route"},
+      "post_refactor_command_id": "quick-dev-full-suite",
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "slice_id": "RMAP-S5",
+      "phase_id": "P2",
+      "title": "Bootstrap prepare knowledge adapter",
+      "requirement_ids": ["KWI-014", "KWI-015", "KWI-016", "KWI-023"],
+      "acceptance_ids": ["KWI-ACC-014", "KWI-ACC-015", "KWI-ACC-016", "KWI-ACC-023"],
+      "source_refs": ["01-requirements-and-acceptance.md#requirements-and-acceptance"],
+      "depends_on": ["RMAP-S4"],
+      "allowed_changes": {
+        "production": [".agents/skills/run-phase-bootstrap-review/SKILL.md", ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json", ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-knowledge-context.v1.schema.json", ".agents/skills/run-phase-bootstrap-review/agents/openai.yaml"],
+        "tests": [".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"],
+        "documentation": ["docs/standards/bootstrap-review-control-plane.md", "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md"]
+      },
+      "execution_snapshot_paths": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**"],
+      "execution_read_set": [".agents/skills/run-phase-bootstrap-review/**", "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md", "docs/standards/bootstrap-review-control-plane.md", "knowledge/contracts/**", "knowledge/policies/**", "scripts/python/knowledge_locator.py"],
+      "dependency_closure": [".agents/skills/run-phase-bootstrap-review/**", "knowledge/**", "scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py"],
+      "tdd": {
+        "red": {"command_id": "bootstrap-adapter-test", "test_selector": "test_rejected_candidate_cannot_satisfy_required_context_class", "mode": "legacy-regression", "expected_exit": "zero", "expected_failure_family": "knowledge_context_incomplete", "expected_failure_ids": ["KWI-CONSUMPTION-INSUFFICIENT-SPECIFICITY"]},
+        "green": {"command_id": "bootstrap-adapter-test", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "bootstrap-full-suite", "expected_exit": "zero"}]}
+      },
+      "review": {"profile": "bootstrap-skill-route"},
+      "post_refactor_command_id": "bootstrap-full-suite",
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "slice_id": "RMAP-S6",
+      "phase_id": "P3",
+      "title": "Maintenance, migration and shadow rollout",
+      "requirement_ids": ["KWI-017", "KWI-018", "KWI-019"],
+      "acceptance_ids": ["KWI-ACC-017", "KWI-ACC-018", "KWI-ACC-019"],
+      "source_refs": ["01-requirements-and-acceptance.md#requirements-and-acceptance"],
+      "depends_on": ["RMAP-S5"],
+      "allowed_changes": {
+        "production": [".agents/skills/maintain-knowledge-base/**", "scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py", "scripts/python/build_knowledge_index.py"],
+        "tests": ["scripts/python/tests/test_knowledge_workflow_migration.py", ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/fixtures/migration-cases.v1.json"],
+        "documentation": ["docs/standards/repository-maintenance-agent-protocol.md"]
+      },
+      "execution_snapshot_paths": [".agents/skills/maintain-knowledge-base/SKILL.md"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**"],
+      "execution_read_set": [".agents/skills/maintain-knowledge-base/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**", "knowledge/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**"],
+      "dependency_closure": ["knowledge/**", "scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py", "scripts/python/build_knowledge_index.py", "scripts/python/tests/test_knowledge_workflow_migration.py"],
+      "tdd": {
+        "red": {"command_id": "migration-integration-test", "test_selector": "test_stale_catalog_requires_explicit_maintenance", "mode": "legacy-regression", "expected_exit": "zero", "expected_failure_family": "knowledge_refresh_required", "expected_failure_ids": ["KWI-MIGRATION-REFRESH"]},
+        "green": {"command_id": "migration-integration-test", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "migration-full-suite", "expected_exit": "zero"}, {"command_id": "maintenance-suite", "expected_exit": "zero"}]}
+      },
+      "review": {"profile": "bootstrap-implementation-conformance"},
+      "post_refactor_command_id": "migration-full-suite",
+      "exit_predicate": "implementation-candidate"
+    },
+    {
+      "slice_id": "RMAP-S7",
+      "phase_id": "P3",
+      "title": "Terminal integration predicate and completion publication",
+      "requirement_ids": ["KWI-020"],
+      "acceptance_ids": ["KWI-ACC-020"],
+      "source_refs": ["01-requirements-and-acceptance.md#requirements-and-acceptance"],
+      "depends_on": ["RMAP-S6"],
+      "allowed_changes": {
+        "production": ["scripts/python/validate_knowledge_workflow_integration.py"],
+        "tests": ["scripts/python/tests/test_knowledge_workflow_terminal.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_plan.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_all.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/tests/**"],
+        "documentation": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/95-implementation-evolution-and-completion-report.md", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/plan-state.v1.json", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/resume-state.v1.json"]
+      },
+      "execution_snapshot_paths": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_plan.py"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**"],
+      "execution_read_set": ["knowledge/**", "scripts/python/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**", ".agents/skills/maintain-knowledge-base/**"],
+      "dependency_closure": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/**", "knowledge/**", "scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py", "scripts/python/build_knowledge_index.py", "scripts/python/validate_knowledge_workflow_integration.py", "scripts/python/tests/test_knowledge_workflow_terminal.py"],
+      "tdd": {
+        "red": {"command_id": "terminal-integration-test", "test_selector": "test_terminal_requires_all_consumers", "mode": "legacy-regression", "expected_exit": "zero", "expected_failure_family": "terminal_consumer_incomplete", "expected_failure_ids": ["KWI-TERMINAL-CONSUMER"]},
+        "green": {"command_id": "knowledge-workflow-terminal", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "plan-validator-tests", "expected_exit": "zero"}, {"command_id": "knowledge-workflow-terminal", "expected_exit": "zero"}]}
+      },
+      "review": {"profile": "bootstrap-implementation-conformance"},
+      "post_refactor_command_id": "knowledge-workflow-terminal",
+      "exit_predicate": "implementation-complete"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": "kwi.migration-cases.v1",
+  "cases": [
+    {"case_id": "dated-locator-contract", "source": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-locator-request.v1.schema.json", "target": "knowledge/contracts/knowledge-locator-request.v1.schema.json", "mode": "read-only-compatible", "historical_bytes_mutated": false},
+    {"case_id": "dated-maintenance-schema-route", "source": ".agents/skills/maintain-knowledge-base/SKILL.md", "target": "knowledge/contracts/knowledge-maintenance-request.v1.schema.json", "mode": "stable-runtime-owner", "historical_bytes_mutated": false},
+    {"case_id": "legacy-vdd-plan-without-context", "source": "existing execution-plan", "target": "new-plan knowledge-context.v1", "mode": "legacy-readable-new-plans-enforced", "historical_bytes_mutated": false},
+    {"case_id": "legacy-quick-dev-capsule", "source": "existing capsule without knowledge binding", "target": "new capsule knowledge binding", "mode": "legacy-readable-no-authority-upgrade", "historical_bytes_mutated": false},
+    {"case_id": "finalized-bootstrap-run", "source": "finalized review without knowledge context", "target": "new prepare-time knowledge binding", "mode": "historical-byte-preserving", "historical_bytes_mutated": false},
+    {"case_id": "stale-catalog-refresh", "source": "catalog pinned to predecessor main", "target": "explicit maintain-knowledge-base refresh", "mode": "fail-then-explicit-refresh", "historical_bytes_mutated": false}
+  ]
+}

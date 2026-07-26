@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-consumption-decision.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["owner", "candidate", "decision", "satisfies", "rejection_reason"],
+  "properties": {
+    "owner": {"const": "adapter"},
+    "candidate": {"type": "object", "additionalProperties": false, "required": ["path", "source_sha256"], "properties": {"path": {"type": "string"}, "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}},
+    "decision": {"enum": ["accepted", "rejected"]},
+    "satisfies": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "rejection_reason": {"type": ["string", "null"], "enum": ["wrong_domain", "insufficient_specificity", "authority_conflict", "duplicate", null]}
+  },
+  "allOf": [
+    {"if": {"properties": {"decision": {"const": "accepted"}}}, "then": {"properties": {"satisfies": {"minItems": 1}, "rejection_reason": {"const": null}}}},
+    {"if": {"properties": {"decision": {"const": "rejected"}}}, "then": {"properties": {"satisfies": {"maxItems": 0}, "rejection_reason": {"type": "string"}}}}
+  ]
+}

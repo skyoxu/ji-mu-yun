@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-locator-request.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "request_id", "consumer", "query", "snapshot", "policy_revision"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.knowledge-locator-request.v1"},
+    "request_id": {"type": "string", "minLength": 1},
+    "consumer": {"enum": ["vdd", "quick-dev", "bootstrap"]},
+    "query": {"type": "string", "minLength": 1},
+    "snapshot": {"type": "object", "additionalProperties": false, "required": ["ref", "commit"], "properties": {"ref": {"const": "refs/heads/main"}, "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}}},
+    "policy_revision": {"type": "string", "minLength": 1}
+  }
+}

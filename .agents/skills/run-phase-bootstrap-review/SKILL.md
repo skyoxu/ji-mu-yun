@@ -75,6 +75,8 @@ Round 2 and Round 3 also require `--predecessor-run-dir` and a hash-bound `--rep
 
 Prepare freezes Git HEAD, Git index, direct artifacts, execution read set, dependency closure, context graph, cost estimate, and, for Codex Exec, `artifact-view.v1`. A replacement for a stale run uses a new review ID and fresh snapshot; the new run does not inherit stale state.
 
+When knowledge context is supplied, prepare evaluates adapter-owned consumption decisions before freezing the Artifact View. Only accepted decisions with nonempty satisfied context classes may augment required context; rejected decisions remain metadata and cannot satisfy profile completeness. Children never invoke Locator after prepare.
+
 An abandoned Codex Exec run with no gate and incomplete required layers may be replaced at the same round after repairing the execution defect. Preserve the abandoned evidence and carry any valid partial finding into repair evidence or the replacement review scope; this exception does not reset a gated or completed semantic round.
 
 ## Complete Deterministic Preflight

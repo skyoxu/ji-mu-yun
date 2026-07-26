@@ -11,9 +11,9 @@ promote dirty-worktree bytes as repository facts.
 
 ## Workflow
 
-1. Read `AGENTS.md`, the maintenance request/result schemas in
-   `execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/`,
-   and the existing knowledge catalog.
+1. Read `AGENTS.md`, the stable maintenance-compatible contracts under
+   `knowledge/contracts/`, and the existing knowledge catalog. The dated
+   2026-07-25 schemas are read-only migration inputs, not runtime owners.
 2. Pin `refs/heads/main` with `git rev-parse refs/heads/main`. Reject a request
    whose declared `main_commit` differs. Do not fetch or change branches.
 3. Use `existing-only` without a target to refresh only catalog entries already
@@ -31,8 +31,8 @@ promote dirty-worktree bytes as repository facts.
 
 ```powershell
 py -3 .agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py `
-  --request request.json --catalog knowledge/catalog.v1.json `
-  --output knowledge/derived-index.v1.json --repo-root .
+  --request request.json --catalog knowledge/catalogs/repository-knowledge-catalog.v1.json `
+  --output knowledge/indexes/derived-index.v1.json --repo-root .
 ```
 
 The request must conform to `knowledge-maintenance-request.v1`. The catalog is

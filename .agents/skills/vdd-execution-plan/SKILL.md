@@ -43,6 +43,15 @@ For each slice, name its intended behavior, RED or controlled negative command, 
 
 During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
 
+## Knowledge Preflight
+
+After mandatory authority reads and before freezing plan sources, invoke the
+trusted VDD knowledge preflight. It consumes only location-only Locator
+recommendations that VDD has reread and hash-verified. Record one adapter-owned
+accepted or rejected decision per candidate. Required knowledge modules without
+an accepted decision block `plan-ready`; optional insufficient matches remain
+explicit and non-authorizing. See `references/knowledge-consumption.md`.
+
 ## Candidate, Review, And Reports
 
 Use a declared Git baseline plus either a frozen commit range or a complete scoped worktree identity. A dirty identity binds `HEAD`, canonical scoped tracked/index diff hash, and a manifest of relevant untracked paths and content hashes. Bind current contracts, implementation, and validators; exclude append-only logs and explanatory reports from normative hashes. Preserve old evidence as historical after invalidation.

@@ -1,0 +1,20 @@
+{
+  "schema_version": "vdd.resume-state.v2",
+  "plan_id": "knowledge-locator-workflow-integration",
+  "profile": "self-hosted",
+  "current_slice": null,
+  "slice_status": {
+    "RMAP-S0": "completed",
+    "RMAP-S1": "completed",
+    "RMAP-S2": "completed",
+    "RMAP-S3": "completed",
+    "RMAP-S4": "completed",
+    "RMAP-S5": "completed",
+    "RMAP-S6": "completed",
+    "RMAP-S7": "completed"
+  },
+  "invalidated_slices": [],
+  "next_action": "Await external acceptance; do not infer acceptance, release, archive, or deployment from implementation completion.",
+  "recovery": "Re-read 00-index.md, plan-state.v1.json, resume-state.v1.json, implementation-contract.v1.json, and the current RMAP-S7 terminal evidence; rerun scripts/python/validate_knowledge_workflow_integration.py before any successor acceptance activity; preserve failed evidence under logs/tdd-adapter/knowledge-locator-workflow-integration/.",
+  "live_phase_paths_allowed": false
+}
