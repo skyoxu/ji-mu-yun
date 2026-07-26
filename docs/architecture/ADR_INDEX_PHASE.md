@@ -12,6 +12,9 @@ This index tracks Phase service ADRs for the hosted Phase A/B platform and Phase
 - ADR-0037: Shared LLM And Codex Execution Entrypoints - `docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md`
 - ADR-0038: Evidence Sidecars And Account-Scoped Readback (includes source-boundary manifests, hash verification, and raw-prompt exclusion) - `docs/adr/ADR-0038-phase-evidence-sidecars-readback.md`
 - ADR-0039: Phase Runtime, Caddy, And Recovery Order - `docs/adr/ADR-0039-phase-runtime-caddy-recovery.md`
+- ADR-0044: Knowledge Projection Authority And E2 Hosted Context Envelope (extends ADR-0037; complements ADR-0038; supersedes neither) - `docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md`
+- ADR-0046: Knowledge Context Protected Integration Merge Decision (extends ADR-0044; preserves the 2026-07-11 BH-HANDOFF boundary) - `docs/adr/ADR-0046-knowledge-context-protected-integration-merge.md`
+- ADR-0047: E2 Hosted Context Readiness Declaration (extends ADR-0044 readiness evidence; does not authorize operational deployment) - `docs/adr/ADR-0047-e2-hosted-context-readiness-declaration.md`
 
 ## Proposed
 

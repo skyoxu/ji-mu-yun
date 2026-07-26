@@ -6411,6 +6411,78 @@ public sealed class PhaseAMetadataStore
         return result is null or DBNull ? null : Convert.ToInt64(result);
     }
 
+    public async Task<bool> SaveHostedContextManifestAsync(HostedContextManifestRecord record, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT OR IGNORE INTO hosted_context_manifests
+            (manifest_id, account_id, project_id, operation_key, snapshot_id, policy_revision, key_id, signature, nonce, expires_utc, created_utc)
+            VALUES ($manifest_id, $account_id, $project_id, $operation_key, $snapshot_id, $policy_revision, $key_id, $signature, $nonce, $expires_utc, $created_utc);
+            """;
+        command.Parameters.AddWithValue("$manifest_id", record.ManifestId);
+        command.Parameters.AddWithValue("$account_id", record.AccountId);
+        command.Parameters.AddWithValue("$project_id", record.ProjectId);
+        command.Parameters.AddWithValue("$operation_key", record.OperationKey);
+        command.Parameters.AddWithValue("$snapshot_id", record.SnapshotId);
+        command.Parameters.AddWithValue("$policy_revision", record.PolicyRevision);
+        command.Parameters.AddWithValue("$key_id", record.KeyId);
+        command.Parameters.AddWithValue("$signature", record.Signature);
+        command.Parameters.AddWithValue("$nonce", record.Nonce);
+        command.Parameters.AddWithValue("$expires_utc", record.ExpiresUtc);
+        command.Parameters.AddWithValue("$created_utc", record.CreatedUtc);
+        return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+    }
+
+    public async Task<bool> TryConsumeHostedContextNonceAsync(string manifestId, string accountId, string projectId, string operationKey, string nonce, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT OR IGNORE INTO hosted_context_nonce_consumptions (manifest_id, nonce, consumed_utc)
+            SELECT manifest_id, nonce, $consumed_utc
+            FROM hosted_context_manifests
+            WHERE manifest_id = $manifest_id AND account_id = $account_id AND project_id = $project_id
+              AND operation_key = $operation_key AND nonce = $nonce AND expires_utc > $consumed_utc;
+            """;
+        command.Parameters.AddWithValue("$manifest_id", manifestId);
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$operation_key", operationKey);
+        command.Parameters.AddWithValue("$nonce", nonce);
+        command.Parameters.AddWithValue("$consumed_utc", DateTimeOffset.UtcNow.ToString("O"));
+        return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+    }
+
+    public async Task<bool> ValidateAndConsumeHostedContextAsync(HostedContextManifestRecord record, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT OR IGNORE INTO hosted_context_nonce_consumptions (manifest_id, nonce, consumed_utc)
+            SELECT manifest_id, nonce, $now
+            FROM hosted_context_manifests
+            WHERE manifest_id = $manifest_id AND account_id = $account_id AND project_id = $project_id
+              AND operation_key = $operation_key AND snapshot_id = $snapshot_id AND policy_revision = $policy_revision
+              AND key_id = $key_id AND signature = $signature AND nonce = $nonce
+              AND expires_utc = $expires_utc AND created_utc = $created_utc AND expires_utc > $now;
+            """;
+        command.Parameters.AddWithValue("$manifest_id", record.ManifestId);
+        command.Parameters.AddWithValue("$account_id", record.AccountId);
+        command.Parameters.AddWithValue("$project_id", record.ProjectId);
+        command.Parameters.AddWithValue("$operation_key", record.OperationKey);
+        command.Parameters.AddWithValue("$snapshot_id", record.SnapshotId);
+        command.Parameters.AddWithValue("$policy_revision", record.PolicyRevision);
+        command.Parameters.AddWithValue("$key_id", record.KeyId);
+        command.Parameters.AddWithValue("$signature", record.Signature);
+        command.Parameters.AddWithValue("$nonce", record.Nonce);
+        command.Parameters.AddWithValue("$expires_utc", record.ExpiresUtc);
+        command.Parameters.AddWithValue("$created_utc", record.CreatedUtc);
+        command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
+        return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+    }
+
     private static string NewId()
     {
         return Guid.NewGuid().ToString("N");

@@ -1,9 +1,11 @@
+using System.Text;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Projects;
@@ -88,6 +90,41 @@ public sealed class ProjectDraftImportServiceTests
         codex.Prompts.Should().NotBeEmpty();
         codex.Prompts[0].Should().Contain("This is a pure text-to-JSON extraction task.");
         codex.Prompts[0].Should().Contain("Do not inspect the repository, docs, workflow files, rules files, or any external context.");
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_ShouldBindEnvelopeToAnalysisAndCoverageCalls()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var engine = new CapturingLlmRouteEngine();
+        var issuer = new HostedContextManifestIssuer(store, new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+        {
+            ["test-key"] = "test-hosted-context-signing-secret"
+        }));
+        var service = new ProjectDraftImportService(
+            store, options, new FakeCodex("{}"), null, null, new ProjectWorkspaceSeeder(options), engine,
+            contextManifestIssuer: issuer);
+
+        await service.AnalyzeAsync(accountId, projectId, "draft.txt", Encoding.UTF8.GetBytes("make a game"), "gpt-5.4");
+
+        engine.Requests.Select(request => request.OperationKey).Should().ContainInOrder(
+            "llm:draft-analysis", "llm:draft-coverage", "llm:draft-coverage-retry");
+        foreach (var request in engine.Requests)
+        {
+            request.ContextEnvelope.Should().NotBeNull();
+            var envelope = request.ContextEnvelope!;
+            envelope.AccountId.Should().Be(accountId);
+            envelope.ProjectId.Should().Be(projectId);
+            envelope.OperationKey.Should().Be(request.OperationKey);
+            envelope.SignatureKeyId.Should().Be("test-key");
+        }
     }
 
     [Fact]
@@ -431,6 +468,17 @@ public sealed class ProjectDraftImportServiceTests
             LastPrompt = prompt;
             Prompts.Add(prompt);
             return Task.FromResult(new CodexChatClientResult(true, _reply, null, 0, "", ""));
+        }
+    }
+
+    private sealed class CapturingLlmRouteEngine : ILlmRouteEngine
+    {
+        public List<LlmRouteRequest> Requests { get; } = [];
+
+        public Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
+        {
+            Requests.Add(request);
+            return Task.FromResult(new LlmRouteResult(true, "{}", "{}", request.Model, null, null, 0, "", "", null, 1, request.Prompt.Length, Encoding.UTF8.GetByteCount(request.Prompt), 1));
         }
     }
 

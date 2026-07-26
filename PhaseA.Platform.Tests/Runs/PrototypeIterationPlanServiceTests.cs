@@ -118,7 +118,6 @@ public sealed class PrototypeIterationPlanServiceTests : IDisposable
             new PrototypeIterationPlanRequest(
                 "Please complete the first full playable loop: stable movement, visible encounter trigger, one battle, reward 3 choices, then return to the map.",
                 "completion_suggestion"));
-
         result.Status.Should().Be("ready");
         result.OperationStatus.Should().Be("created_run");
         result.LatestEvaluation.Should().NotBeNull();
@@ -131,6 +130,50 @@ public sealed class PrototypeIterationPlanServiceTests : IDisposable
         latest.Should().NotBeNull();
         latest!.LatestEvaluation.Should().NotBeNull();
         latest.LatestEvaluation!.Decision.Should().Be(result.LatestEvaluation.Decision);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldIssueHostedContextEnvelope_ForModelBackedIterationGoalPlan()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var engine = new CapturingLlmRouteEngine(new SuccessfulRpgPlanCodexClient());
+        var service = new PrototypeIterationPlanService(
+            store,
+            new PrototypeRouteStateWriter(),
+            null,
+            llmRouteEngine: engine,
+            contextManifestIssuer: issuer);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Please complete the first full playable loop: stable movement, visible encounter trigger, one battle, reward 3 choices, then return to the map.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        engine.Requests.Should().Contain(request => request.OperationKey == "llm:goal-plan");
+        foreach (var request in engine.Requests.Where(request => request.OperationKey == "llm:goal-plan"))
+        {
+            request.ContextEnvelope.Should().NotBeNull();
+            request.ContextEnvelope!.AccountId.Should().Be(accountId);
+            request.ContextEnvelope.ProjectId.Should().Be(projectId);
+            request.ContextEnvelope.OperationKey.Should().Be(request.OperationKey);
+            request.ContextEnvelope.SignatureKeyId.Should().Be("test-key");
+        }
     }
 
     [Fact]
@@ -2824,6 +2867,24 @@ public sealed class PrototypeIterationPlanServiceTests : IDisposable
             }
             """;
             return Task.FromResult(new CodexChatClientResult(true, json, null, 0, "", ""));
+        }
+    }
+
+    private sealed class CapturingLlmRouteEngine : ILlmRouteEngine
+    {
+        private readonly ILlmRouteEngine _inner;
+
+        public CapturingLlmRouteEngine(ICodexChatClient client)
+        {
+            _inner = new LlmRouteEngine(client);
+        }
+
+        public List<LlmRouteRequest> Requests { get; } = [];
+
+        public Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
+        {
+            Requests.Add(request);
+            return _inner.CompleteAsync(request, cancellationToken);
         }
     }
 

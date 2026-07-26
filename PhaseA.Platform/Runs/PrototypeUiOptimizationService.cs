@@ -20,6 +20,9 @@ public sealed class PrototypeUiOptimizationService
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly TimeSpan _executionTimeout;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
+    private readonly HostedContextGatePolicy _contextGatePolicy;
+    private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
     public PrototypeUiOptimizationService(
         PhaseAMetadataStore metadataStore,
@@ -36,7 +39,10 @@ public sealed class PrototypeUiOptimizationService
         IProjectWorkspaceSeeder workspaceSeeder,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         TimeSpan? executionTimeout = null,
-        HeavyRunnerQueueService? heavyRunnerQueue = null)
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -45,6 +51,9 @@ public sealed class PrototypeUiOptimizationService
         _keyPoolService = keyPoolService;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
+        _contextManifestIssuer = contextManifestIssuer;
+        _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
+        _contextManifestValidator = contextManifestValidator;
     }
 
     public async Task<PrototypeUiOptimizationResult> RunAsync(
@@ -113,14 +122,40 @@ public sealed class PrototypeUiOptimizationService
             var model = PrototypeModelPolicy.Normalize(request?.Model);
             var prompt = BuildPrompt(project);
             await File.WriteAllTextAsync(promptAbsolutePath, prompt, System.Text.Encoding.UTF8, CancellationToken.None);
-            var command = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
+            HostedContextEnvelope? envelope = null;
+            if (_contextManifestIssuer is not null)
+            {
+                var snapshotId = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(string.Join(
+                    "\n",
+                    project.ProjectId,
+                    project.AccountId,
+                    runId,
+                    "codex:prototype-ui-optimization",
+                    prompt)))).ToLowerInvariant();
+                envelope = await _contextManifestIssuer.IssueAsync(
+                    new HostedContextManifestIssue(
+                        project.AccountId,
+                        project.ProjectId,
+                        "codex:prototype-ui-optimization",
+                        snapshotId,
+                        "prototype-ui-optimization.v1",
+                        TimeSpan.FromMinutes(5)),
+                    cancellationToken);
+            }
+
+            var command = await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(
                 projectRoot,
                 outputAbsolutePath,
                 prompt,
                 model,
                 "high",
                 Sandbox: "workspace-write",
-                Json: true));
+                Json: true,
+                OperationKey: "codex:prototype-ui-optimization",
+                ContextEnvelope: envelope),
+                _contextGatePolicy,
+                _contextManifestValidator,
+                cancellationToken);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
             using var timeout = new CancellationTokenSource(_executionTimeout);
             await _metadataStore.UpdateRunProgressAsync(runId, "running", "generation", "\u6b63\u5728\u8fd0\u884c UI \u4f18\u5316\u8def\u7531\u3002", CancellationToken.None);

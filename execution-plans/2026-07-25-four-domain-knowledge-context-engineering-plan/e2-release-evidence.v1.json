@@ -1,0 +1,21 @@
+{
+  "schema_version": "jimuyun.e2-release-evidence.v1",
+  "status": "current",
+  "source_snapshot_id": "03c54fc67253d67a4a9264c3c4bf795cc78e0a67e1cf60c8f0bb999ce1061410",
+  "authorization": "ADR-0047",
+  "declaration_scope": "repository and plan-local E2 readiness only; no operational deployment",
+  "manifest_signature_lifecycle": true,
+  "targeted_tests_passed": true,
+  "rollback_evidence_current": true,
+  "validation": {
+    "manifest_and_shared_entrypoints": "dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj --no-restore --filter FullyQualifiedName~HostedContextManifestIssuerTests|FullyQualifiedName~HostedContextManifestStoreTests|FullyQualifiedName~HostedContextManifestSignatureServiceTests|FullyQualifiedName~LlmRouteEngineTests|FullyQualifiedName~CodexHostedProcessCommandFactoryTests (21/21)",
+    "route_callers": "dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj --no-restore --filter FullyQualifiedName~ProjectWebPreviewSemanticAdapterServiceTests|FullyQualifiedName~SkillActionServiceTests|FullyQualifiedName~GameDesignDocumentServiceTests.CreateAsync_ShouldWriteGddWithBmadContextAndArtifact (12/12)",
+    "full_platform_partition_1": "non-Runs namespace partition: 767/767",
+    "full_platform_partition_2": "Runs namespace partition: 846/846"
+  },
+  "rollback": {
+    "mechanism": "server-owned HostedContextGatePolicy override removal from enforce",
+    "evidence": "HostedContextGatePolicy_CreateWithOverrides_ShouldPreserveDefaults and current check_e2_readiness source-derived gate evaluation",
+    "operational_action": "A runtime rollout decision is required before changing a running service policy."
+  }
+}

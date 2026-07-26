@@ -117,7 +117,7 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py run-
   --model <profile-allowed model>
 ```
 
-Each child must execute its same-session Artifact View handshake before semantic work and return only a structured candidate response. The runner validates binding and schema, then atomically writes the formal role output. Failed attempts remain under `attempts/<attempt-id>/` and never replace formal evidence.
+Each child must execute its same-session Artifact View handshake before semantic work and return only a structured candidate response. The runner validates binding and schema, then atomically writes the formal role output. Completed coverage is valid only when `requiredArtifacts` and `readArtifacts` both exactly equal the frozen manifest's ordered artifact list, `missingArtifacts=[]`, and no coverage list contains duplicates. Every completed reviewer or verifier payload receives one final frozen-authority validation immediately before publication; a failure at that boundary leaves the prior formal bytes unchanged and records a failed attempt. An explicit child `status=failed` may publish its validated failure reason while remaining retryable. Verifier output additionally requires exact blocker evidence and complete `contextRead` coverage against the frozen gate before publication. The verifier runtime prompt derives and re-emits every full inclusive blocker range and all `contextRead` references from the hash-bound candidate sidecar; it must not rely on a start-line-only summary in a saved prompt. Failed attempts remain under `attempts/<attempt-id>/` and never replace completed formal evidence.
 
 For Codex Exec, the child reads every artifact from the frozen Artifact View `snapshotPath` and cites `originalPath`. The runtime prompt names the absolute run directory and manifest. The child must not read live originals, edit formal reviewer/verifier outputs, or invoke `validate-layer`; those are parent control-plane responsibilities.
 
@@ -131,6 +131,15 @@ After all three layers validate, run `gate`. Report accepted and rejected counts
 
 When gate returns `awaiting_verification`, run one independent verifier through `run-layer --role independent_verifier` or the approved external verifier boundary. The verifier must cover each blocker's exact evidence and every `contextRead` reference.
 
+If `inspect-run` reports `recover-invalid-verifier`, use the explicit append-only recovery command before retrying:
+
+```text
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py recover-verifier \
+  --run-dir <run>
+```
+
+This command is only for a completed Codex verifier output that fails current semantic validation. It archives the exact rejected bytes and opens a retry through a process event without clearing the formal file. It refuses valid, finalized, sealed, active-attempt, manual, or specialized-agent state. After recovery, follow `inspect-run`; do not edit verifier output or process evidence by hand.
+
 Do not rerun gate over saved verifier decisions or reopen a finalized run.
 
 ## Dispose P2 And Finalize
@@ -140,7 +149,7 @@ Before finalizing accepted P2 findings, provide `p2-dispositions.json` covering 
 - Every P2 is `fixed`, `refuted`, or `deferred`.
 - High-risk P2 cannot be deferred.
 - Deferral requires a schema-valid authorized owner reference chained to the profile-bound authority-root registry, future expiry, non-impact evidence, a root-authorized command descriptor, current recheck evidence, and a recheck trigger. Successful closure-process evidence is required only when the disposition becomes fixed or refuted.
-- Execute registered P2 commands only through `run-p2-command`. It uses argument arrays with `shell=False`, a contained working directory, and the environment allowlist; it appends a hash-chained process event and binds actual stdout/stderr bytes. A handwritten `exitCode: 0` result is invalid.
+- Execute registered P2 commands only through `run-p2-command`. It uses argument arrays with `shell=False`, a contained working directory, and the environment allowlist; it appends a hash-chained process event and binds actual stdout/stderr bytes. Each process result anchors its own `eventHash` in the shared append-only log, so later valid appends do not stale earlier results; legacy whole-log hash references remain read-only compatible. A handwritten `exitCode: 0` result is invalid.
 - An expired deferral blocks automatically.
 
 Finalize only after independent P0/P1 decisions and complete P2 dispositions. A final result cannot contain an open accepted P0/P1.
@@ -180,7 +189,7 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py seal
   [--successor <run>]
 ```
 
-Finalized runs cannot be abandoned. Superseded runs identify a successor. A seal never changes reviewer, verifier, gate, event, lease, or final evidence.
+Finalized runs cannot be abandoned. A run with an active event-backed attempt or acquired lease cannot be sealed; inspect, reattach, or record terminal recovery evidence first. The incomplete-abandoned replacement exception applies only when no active event-backed attempt remains. Superseded runs identify a successor. A seal never changes reviewer, verifier, gate, event, lease, or final evidence.
 
 ## Validate Skill Changes
 

@@ -1,0 +1,43 @@
+{
+  "expected_failure_code": "modified_signed_payload",
+  "expected_result": "fail",
+  "fixture_id": "modified-signed-payload",
+  "kind": "negative",
+  "payload": {
+    "account_id": "acct-a",
+    "assembly_status": "complete",
+    "cache_root": "C:/synthetic/cache/phasea-knowledge/acct-a/project-a",
+    "computed_payload_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "current_project_snapshot_id": "project-snapshot-1",
+    "effective_capabilities": [
+      "read_source"
+    ],
+    "identity_mode": "project-bound",
+    "inventory_source_snapshot_id": "snapshot-1",
+    "known_capabilities": [
+      "read_source",
+      "write_project"
+    ],
+    "known_policy_revisions": [
+      "route-policy-1",
+      "profile-1"
+    ],
+    "nonce_status": "unused",
+    "policy_revision": "route-policy-1",
+    "project_id": "project-a",
+    "project_restrictions": [
+      "read_only"
+    ],
+    "project_snapshot_id": "project-snapshot-1",
+    "recovery_order_contract_id": "hosted-route-recovery-order.v1",
+    "release_source_snapshot_id": "snapshot-1",
+    "required_omitted": false,
+    "signature_payload_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "source_boundary_evidence": true,
+    "source_boundary_mode": "required",
+    "source_project_id": "project-a",
+    "workspace_id": "workspace-a",
+    "workspace_root": "C:/synthetic/hosted/acct-a/project-a"
+  },
+  "schema_version": "jimuyun.knowledge-fixture.v1"
+}

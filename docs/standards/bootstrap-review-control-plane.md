@@ -45,7 +45,11 @@ The implementation backend never owns review acceptance, severity, done, commit,
 - Command templates use typed placeholders; untyped string interpolation into executable arguments is prohibited.
 - Codex Exec sets the current attempt directory as the sandbox workspace root and grants `workspace-write` only there for handshake and candidate evidence. The repository root is not the child workspace. Formal outputs remain parent-owned, and no reviewed or unrelated repository path is child-writable.
 - Manual and specialized-agent modes remain external execution boundaries. The repository runner v1 owns only isolated Codex Exec execution.
-- The runner atomically writes formal reviewer or verifier sidecars from schema-valid child candidate output. The model cannot directly overwrite formal role output.
+- The runner atomically writes formal reviewer or verifier sidecars from schema-valid child candidate output. The model cannot directly overwrite formal role output. Completed reviewer and verifier payloads revalidate frozen launch authority immediately before publication; if that pre-publication check fails, the prior formal bytes remain unchanged and the attempt fails. A validated explicit child failure may publish `status=failed` and its `failureReason` without becoming a completed output.
+- Completed reviewer coverage requires `requiredArtifacts` and `readArtifacts` to equal the frozen manifest's ordered artifact list exactly, with `missingArtifacts=[]`; duplicate or reordered coverage is invalid.
+- The verifier runtime prompt derives each blocker's full inclusive evidence range and complete `contextRead` set from the frozen, hash-bound candidate sidecar. A saved or generated start-line-only summary is not sufficient execution input, and one `evidenceChecked` reference must cover the entire finding range.
+- Before publishing verifier output, the parent validates its binding, exact blocker evidence coverage, and complete `contextRead` coverage against the frozen gate. A semantic failure appends failed-attempt evidence and leaves formal output unchanged.
+- A completed semantically invalid Codex verifier output may be reopened only through `recover-verifier` under ADR-0045. The command preserves the rejected bytes in a unique hash-bound recovery directory, appends a `verifier-recovery-opened` process event, and does not clear the formal file. Valid, finalized, sealed, active-attempt, or non-Codex verifier state cannot use this recovery lane.
 
 ## Artifact View And Access Proof
 
@@ -70,13 +74,17 @@ The implementation backend never owns review acceptance, severity, done, commit,
 
 Each process attempt has a unique immutable directory containing request, process result, stdout, stderr, token usage, and structured candidate output. `process-events.jsonl` records append-only lifecycle events. Codex Exec children return structured candidates only; they never edit formal reviewer/verifier outputs or invoke the formal validator. The parent preserves a failed payload's `failureReason` and atomically owns formal output validation.
 
+Verifier recovery directories are immutable execution evidence. An open recovery is valid only while the live formal verifier bytes still equal the archived rejected hash. Its process event projects the verifier lease to `failed`, allowing a new reservation; only a later semantically valid publication and `attempt-completed` event close it. Finalize and finalized-run validation fail closed on an open or stale recovery lineage.
+
+P2 command results reference both their immutable event sidecar and the shared append-only process log. New results anchor the event's hash rather than the mutable whole-log byte hash; validation replays the complete chain and requires the anchored event exactly once. Later valid appends therefore preserve earlier results. Legacy whole-log hash references remain valid while their exact historical log bytes are still current.
+
 Lifecycle state is split into three dimensions:
 
 - Run execution: prepared, preflight-failed, authorized, layers-running, layers-incomplete, awaiting-verification, finalized, abandoned.
 - Run relationship: active, superseded, replaced-after-probe-failure.
 - Change cycle: review-required, repair-required, next-round-authorized, accepted, manual-pause, closed.
 
-`list-runs` and `inspect-run` are reproducible views. `seal-run` adds an immutable annotation; it never rewrites reviewer, verifier, gate, event, lease, or final evidence. Finalized runs cannot be abandoned. Superseded runs identify their successor.
+`list-runs` and `inspect-run` are reproducible views. `seal-run` adds an immutable annotation; it never rewrites reviewer, verifier, gate, event, lease, or final evidence. Finalized runs cannot be abandoned. A run with an active event-backed attempt or acquired lease cannot be sealed; the operator must inspect, reattach, or record terminal recovery evidence first. The incomplete-abandoned same-round replacement exception applies only when no active event-backed attempt remains. Superseded runs identify their successor.
 
 ## Repair Closure
 
@@ -115,5 +123,6 @@ Protocol changes require:
 - Generic schema and fixture tests.
 - Finalized-run envelope success, stale-profile, stale-artifact, and non-authorizing boundary tests.
 - 2026-07-12 Whole-directory compatibility validation.
-- Targeted Windows access, case-collision, reparse, atomic-write, event-rebuild, drift, repair-closure, and stale-replacement tests.
+- Targeted Windows access, case-collision, reparse, atomic-write, event-rebuild, pre-publication reviewer drift, multi-result P2 append, repair-closure, and stale-replacement tests.
+- Verifier pre-publication semantic and frozen-authority validation, rejected-byte preservation, recovery idempotence, retry reopening, valid-output refusal, and recovery-lineage finalization tests.
 - A fresh `bootstrap-skill-route` review after deterministic checks pass.

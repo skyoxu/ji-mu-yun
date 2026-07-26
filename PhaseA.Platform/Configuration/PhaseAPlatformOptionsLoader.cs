@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 
 namespace PhaseA.Platform.Configuration;
 
@@ -41,6 +42,7 @@ public static class PhaseAPlatformOptionsLoader
         var adminTokenHash = GetOptionalString(get, "PHASEA_ADMIN_TOKEN_HASH");
         var ticketSigningSecret = GetOptionalString(get, "PHASEA_TICKET_SIGNING_SECRET");
         var webPreviewSigningSecret = GetOptionalString(get, "PHASEA_WEB_PREVIEW_SIGNING_SECRET");
+        var hostedContextSigningKeyRing = ParseHostedContextSigningKeyRing(get);
         var maxConcurrentChats = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS", 8);
         var maxConcurrentChatsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", 1);
         var maxConcurrentQuestionForms = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS", 4);
@@ -89,6 +91,7 @@ public static class PhaseAPlatformOptionsLoader
             adminTokenHash,
             ticketSigningSecret,
             webPreviewSigningSecret,
+            hostedContextSigningKeyRing,
             maxConcurrentChats,
             maxConcurrentChatsPerAccount,
             maxConcurrentQuestionForms,
@@ -126,6 +129,61 @@ public static class PhaseAPlatformOptionsLoader
     {
         var value = get(name);
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static HostedContextSigningKeyRing? ParseHostedContextSigningKeyRing(Func<string, string?> get)
+    {
+        var activeKeyId = GetOptionalString(get, "PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID");
+        var rawKeys = GetOptionalString(get, "PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON");
+        if (activeKeyId is null && rawKeys is null)
+        {
+            return null;
+        }
+        if (activeKeyId is null || rawKeys is null)
+        {
+            throw new PhaseAPlatformConfigException("Hosted Context signing key ring requires both active key id and keys JSON.");
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(rawKeys);
+            if (document.RootElement.ValueKind != JsonValueKind.Array || document.RootElement.GetArrayLength() == 0)
+            {
+                throw new PhaseAPlatformConfigException("Hosted Context signing keys JSON must be a non-empty array.");
+            }
+
+            var keys = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var item in document.RootElement.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object ||
+                    item.EnumerateObject().Any(property => property.Name is not "key_id" and not "secret") ||
+                    !item.TryGetProperty("key_id", out var keyIdElement) ||
+                    !item.TryGetProperty("secret", out var secretElement) ||
+                    keyIdElement.ValueKind != JsonValueKind.String ||
+                    secretElement.ValueKind != JsonValueKind.String)
+                {
+                    throw new PhaseAPlatformConfigException("Hosted Context signing keys JSON contains an invalid key entry.");
+                }
+
+                var keyId = keyIdElement.GetString()?.Trim();
+                var secret = secretElement.GetString();
+                if (string.IsNullOrWhiteSpace(keyId) || string.IsNullOrWhiteSpace(secret) || !keys.TryAdd(keyId, secret))
+                {
+                    throw new PhaseAPlatformConfigException("Hosted Context signing keys JSON contains an empty or duplicate key entry.");
+                }
+            }
+
+            if (!keys.ContainsKey(activeKeyId))
+            {
+                throw new PhaseAPlatformConfigException("Hosted Context active signing key is not present in the key ring.");
+            }
+
+            return new HostedContextSigningKeyRing(activeKeyId, keys);
+        }
+        catch (JsonException)
+        {
+            throw new PhaseAPlatformConfigException("Hosted Context signing keys JSON is invalid.");
+        }
     }
 
     private static int GetPositiveInt(Func<string, string?> get, string name, int defaultValue)

@@ -1,0 +1,55 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "py",
+        "-3",
+        "tools/build_hosted_inventory.py",
+        "--output-dir",
+        "<output>"
+      ],
+      "command_id": "inventory-build",
+      "mode": "read-only-source-scan"
+    },
+    {
+      "argv": [
+        "py",
+        "-3",
+        "tools/build_reference_vector.py",
+        "--output",
+        "<output>"
+      ],
+      "command_id": "reference-vector-build",
+      "mode": "plan-local-synthetic-generation"
+    },
+    {
+      "argv": [
+        "py",
+        "-3",
+        "tools/validate_whole_directory.py"
+      ],
+      "command_id": "plan-validate",
+      "mode": "plan-local-validation"
+    },
+    {
+      "argv": [
+        "py",
+        "-3",
+        "tools/validate_whole_directory.py",
+        "--publish-plan-ready"
+      ],
+      "command_id": "plan-ready-publish",
+      "mode": "plan-local-state-transition"
+    },
+    {
+      "argv": [
+        "py",
+        "-3",
+        "scripts/python/validate_execution_plan_report_index.py"
+      ],
+      "command_id": "report-index-validate",
+      "mode": "repository-read-only"
+    }
+  ],
+  "schema_version": "jimuyun.knowledge-plan-command-registry.v1"
+}

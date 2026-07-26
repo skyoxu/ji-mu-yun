@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -33,6 +34,9 @@ public sealed partial class PrototypeQuickFixService
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
+    private readonly HostedContextGatePolicy _contextGatePolicy;
+    private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
     public PrototypeQuickFixService(
         PhaseAMetadataStore metadataStore,
@@ -63,7 +67,10 @@ public sealed partial class PrototypeQuickFixService
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         TimeSpan? executionTimeout = null,
-        HeavyRunnerQueueService? heavyRunnerQueue = null)
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -76,6 +83,9 @@ public sealed partial class PrototypeQuickFixService
         _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _contextManifestIssuer = contextManifestIssuer;
+        _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
+        _contextManifestValidator = contextManifestValidator;
     }
 
     public async Task<PrototypeFeedbackResult> SubmitAsync(
@@ -230,7 +240,8 @@ public sealed partial class PrototypeQuickFixService
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
-            var codexResult = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, executionWorkspace.CodexOutputPath, model, executionWorkspace.RootPath), runtimeCredential).WithRunId(runId), timeout.Token);
+            var codexCommand = await BuildCodexCommandAsync(prompt, executionWorkspace.CodexOutputPath, model, executionWorkspace.RootPath, project, runId, timeout.Token);
+            var codexResult = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(codexCommand, runtimeCredential).WithRunId(runId), timeout.Token);
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
             if (executionWorkspace.SyncBack)
             {
@@ -1482,14 +1493,47 @@ public sealed partial class PrototypeQuickFixService
             """;
     }
 
-    private HostedProcessCommand BuildCodexCommand(string prompt, string outputPath, string model, string repositoryRoot)
+    private async Task<HostedProcessCommand> BuildCodexCommandAsync(
+        string prompt,
+        string outputPath,
+        string model,
+        string repositoryRoot,
+        ProjectSnapshot project,
+        string runId,
+        CancellationToken cancellationToken)
     {
-        return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
+        HostedContextEnvelope? envelope = null;
+        if (_contextManifestIssuer is not null)
+        {
+            var snapshotId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(
+                "\n",
+                project.ProjectId,
+                project.AccountId,
+                runId,
+                "codex:prototype-quick-fix",
+                prompt)))).ToLowerInvariant();
+            envelope = await _contextManifestIssuer.IssueAsync(
+                new HostedContextManifestIssue(
+                    project.AccountId,
+                    project.ProjectId,
+                    "codex:prototype-quick-fix",
+                    snapshotId,
+                    "prototype-quick-fix.v1",
+                    TimeSpan.FromMinutes(5)),
+                cancellationToken);
+        }
+
+        return await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(
             repositoryRoot,
             outputPath,
             prompt,
             model,
-            ReasoningEffort));
+            ReasoningEffort,
+            OperationKey: "codex:prototype-quick-fix",
+            ContextEnvelope: envelope),
+            _contextGatePolicy,
+            _contextManifestValidator,
+            cancellationToken);
     }
 
     private static string BuildCodexPrompt(

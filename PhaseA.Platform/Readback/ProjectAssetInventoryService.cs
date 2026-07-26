@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -67,6 +68,7 @@ public sealed partial class ProjectAssetInventoryService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly RunCancellationService _runCancellation;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ProjectAssetInventoryService(
         PhaseAMetadataStore metadataStore,
@@ -83,7 +85,8 @@ public sealed partial class ProjectAssetInventoryService
         IProjectWorkspaceSeeder workspaceSeeder,
         ILlmRouteEngine? llmRouteEngine = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
-        RunCancellationService? runCancellation = null)
+        RunCancellationService? runCancellation = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -91,6 +94,7 @@ public sealed partial class ProjectAssetInventoryService
         _workspaceSeeder = workspaceSeeder;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _runCancellation = runCancellation ?? new RunCancellationService();
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<ProjectAssetInventoryResult?> GetInventoryAsync(
@@ -313,6 +317,41 @@ public sealed partial class ProjectAssetInventoryService
         {
             var normalizedModel = PrototypeModelPolicy.Normalize(model);
             var prompt = BuildLlmJudgementPrompt(project, usedAssets, candidates);
+            HostedContextEnvelope? envelope = null;
+            if (_contextManifestIssuer is not null)
+            {
+                try
+                {
+                    var snapshotId = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(string.Join(
+                        "\n",
+                        project.ProjectId,
+                        project.AccountId,
+                        "llm:asset-inventory-judgement",
+                        prompt)))).ToLowerInvariant();
+                    envelope = await _contextManifestIssuer.IssueAsync(
+                        new HostedContextManifestIssue(
+                            project.AccountId,
+                            project.ProjectId,
+                            "llm:asset-inventory-judgement",
+                            snapshotId,
+                            "asset-inventory.v1",
+                            TimeSpan.FromMinutes(5)),
+                        runToken);
+                }
+                catch (InvalidOperationException)
+                {
+                    await _metadataStore.CompleteRunAsync(
+                        runId,
+                        "failed",
+                        0,
+                        "",
+                        "context_manifest_issue_failed",
+                        System.Text.Json.JsonSerializer.Serialize(new { run_type = RunType, failure_code = "context_manifest_issue_failed" }),
+                        CancellationToken.None);
+                    return candidates.Select(candidate => candidate with { LlmJudgementStatus = "context_manifest_issue_failed" }).ToArray();
+                }
+            }
+
             var completion = await _llmRouteEngine.CompleteAsync(
                 new LlmRouteRequest(
                     EnsureAssetInventoryPromptWorkspace(project),
@@ -321,7 +360,9 @@ public sealed partial class ProjectAssetInventoryService
                     prompt,
                     null,
                     project.AccountId,
-                    RequireJsonObject: true),
+                    RequireJsonObject: true,
+                    OperationKey: "llm:asset-inventory-judgement",
+                    ContextEnvelope: envelope),
                 runToken);
             string? judgementFailureCode = null;
             var judged = completion.Succeeded

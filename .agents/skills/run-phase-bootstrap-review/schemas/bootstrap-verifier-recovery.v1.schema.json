@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-verifier-recovery.v1.schema.json",
+  "title": "Bootstrap Verifier Recovery v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "recoveryId",
+    "reviewId",
+    "routeVersion",
+    "controlPlaneRevision",
+    "authorityRevision",
+    "inputHash",
+    "operationId",
+    "role",
+    "rejectedAttemptId",
+    "completedEventHash",
+    "gateStateHash",
+    "candidatesHash",
+    "rejectedOutput",
+    "semanticFailure",
+    "openedAt",
+    "authorizes",
+    "doesNotAuthorize"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-verifier-recovery.v1"},
+    "recoveryId": {"type": "string", "pattern": "^verifier-recovery-[0-9]{8}T[0-9]{6}-[0-9]{8}$"},
+    "reviewId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "routeVersion": {"type": "string", "minLength": 1},
+    "controlPlaneRevision": {"const": "bootstrap-control-plane.v2"},
+    "authorityRevision": {"type": "string", "minLength": 1},
+    "inputHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "operationId": {"const": "verifier"},
+    "role": {"const": "independent_verifier"},
+    "rejectedAttemptId": {"type": "string", "minLength": 3},
+    "completedEventHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "gateStateHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "candidatesHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "rejectedOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "sizeBytes"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^verifier-recoveries/[^/]+/rejected-verifier-output\\.json$"},
+        "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "sizeBytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "semanticFailure": {"type": "string", "minLength": 1},
+    "openedAt": {"type": "string", "format": "date-time"},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "plan-acceptance",
+          "implementation-acceptance",
+          "protected-handoff",
+          "release",
+          "commit",
+          "done"
+        ]
+      }
+    }
+  }
+}

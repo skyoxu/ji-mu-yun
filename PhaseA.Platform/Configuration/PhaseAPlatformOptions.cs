@@ -1,5 +1,9 @@
 namespace PhaseA.Platform.Configuration;
 
+public sealed record HostedContextSigningKeyRing(
+    string ActiveKeyId,
+    IReadOnlyDictionary<string, string> Keys);
+
 public sealed record PhaseAPlatformOptions(
     string HostedWorkspaceRoot,
     int HostedProjectLimit,
@@ -22,6 +26,7 @@ public sealed record PhaseAPlatformOptions(
     string? AdminTokenHash,
     string? TicketSigningSecret,
     string? WebPreviewSigningSecret,
+    HostedContextSigningKeyRing? HostedContextSigningKeyRing,
     int MaxConcurrentChats,
     int MaxConcurrentChatsPerAccount,
     int MaxConcurrentQuestionForms,

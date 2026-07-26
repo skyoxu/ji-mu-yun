@@ -1511,7 +1511,14 @@ public sealed class ArtifactReadbackServiceTests
               ]
             }
             """);
-        var service = new ProjectAssetInventoryService(store, options, codex, new NoopWorkspaceSeeder());
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var llm = new CapturingLlmRouteEngine(codex);
+        var service = new ProjectAssetInventoryService(store, options, codex, new NoopWorkspaceSeeder(), llm, contextManifestIssuer: issuer);
 
         var result = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.4");
         var preview = await service.ReadPreviewAsync(accountId, projectId, "res://Game.Godot/Assets/player.png");
@@ -1534,6 +1541,12 @@ public sealed class ArtifactReadbackServiceTests
         codex.LastPrompt.Should().Contain("lightweight prototype component slots");
         codex.LastPrompt.Should().Contain("HudView");
         codex.LastPrompt.Should().Contain("not ECS");
+        llm.LastRequest!.OperationKey.Should().Be("llm:asset-inventory-judgement");
+        llm.LastRequest.ContextEnvelope.Should().NotBeNull();
+        llm.LastRequest.ContextEnvelope!.AccountId.Should().Be(accountId);
+        llm.LastRequest.ContextEnvelope.ProjectId.Should().Be(projectId);
+        llm.LastRequest.ContextEnvelope.OperationKey.Should().Be("llm:asset-inventory-judgement");
+        llm.LastRequest.ContextEnvelope.SignatureKeyId.Should().Be("test-key");
         preview!.ContentType.Should().Be("image/png");
         preview.FileName.Should().Be("player.png");
     }
@@ -2818,6 +2831,24 @@ public sealed class ArtifactReadbackServiceTests
             {
                 Directory.Delete(Path, recursive: true);
             }
+        }
+    }
+
+    private sealed class CapturingLlmRouteEngine : ILlmRouteEngine
+    {
+        private readonly ILlmRouteEngine _inner;
+
+        public CapturingLlmRouteEngine(ICodexChatClient client)
+        {
+            _inner = new LlmRouteEngine(client);
+        }
+
+        public LlmRouteRequest? LastRequest { get; private set; }
+
+        public Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
+        {
+            LastRequest = request;
+            return _inner.CompleteAsync(request, cancellationToken);
         }
     }
 

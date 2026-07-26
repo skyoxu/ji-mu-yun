@@ -19,7 +19,9 @@ public sealed record LlmRouteRequest(
     string Prompt,
     CodexChatClientOptions? Options = null,
     string? BillingAccountId = null,
-    bool RequireJsonObject = false);
+    bool RequireJsonObject = false,
+    string? OperationKey = null,
+    HostedContextEnvelope? ContextEnvelope = null);
 
 public sealed record LlmRouteResult(
     bool Succeeded,
@@ -35,15 +37,23 @@ public sealed record LlmRouteResult(
     long DurationMs,
     int PromptLength,
     int PromptUtf8Bytes,
-    int EstimatedPromptTokens);
+    int EstimatedPromptTokens,
+    string? ContextGateWouldBlockCode = null);
 
 public sealed class LlmRouteEngine : ILlmRouteEngine
 {
     private readonly ICodexChatClient _codexChatClient;
+    private readonly HostedContextGatePolicy _contextGatePolicy;
+    private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
-    public LlmRouteEngine(ICodexChatClient codexChatClient)
+    public LlmRouteEngine(
+        ICodexChatClient codexChatClient,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
     {
         _codexChatClient = codexChatClient;
+        _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
+        _contextManifestValidator = contextManifestValidator;
     }
 
     public async Task<LlmRouteResult> CompleteAsync(
@@ -54,6 +64,22 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Purpose);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Model);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Prompt);
+
+        var operationKey = string.IsNullOrWhiteSpace(request.OperationKey) ? $"llm:{request.Purpose}" : request.OperationKey;
+        var gateMode = _contextGatePolicy.Resolve(operationKey);
+        var gate = HostedContextGate.Evaluate(gateMode, request.ContextEnvelope);
+        if (!gate.Allowed)
+        {
+            return new LlmRouteResult(false, null, null, request.Model, gate.FailureCode, "context_gate", 0, "", "", null, 0, request.Prompt.Length, Encoding.UTF8.GetByteCount(request.Prompt), EstimateTokensFromUtf8Bytes(Encoding.UTF8.GetByteCount(request.Prompt)));
+        }
+
+        if (gateMode == HostedContextGateMode.Enforce &&
+            (request.ContextEnvelope is null ||
+             _contextManifestValidator is null ||
+             !await _contextManifestValidator.ValidateAndConsumeAsync(request.ContextEnvelope, operationKey, cancellationToken)))
+        {
+            return new LlmRouteResult(false, null, null, request.Model, "context_manifest_invalid", "context_gate", 0, "", "", null, 0, request.Prompt.Length, Encoding.UTF8.GetByteCount(request.Prompt), EstimateTokensFromUtf8Bytes(Encoding.UTF8.GetByteCount(request.Prompt)));
+        }
 
         Directory.CreateDirectory(request.WorkspaceRoot);
         var stopwatch = Stopwatch.StartNew();
@@ -75,19 +101,19 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
 
         if (!request.RequireJsonObject)
         {
-            PersistTelemetry(request, completion, request.Purpose, stopwatch.ElapsedMilliseconds, null);
-            return FromCodexResult(request, completion, null, null, stopwatch.ElapsedMilliseconds);
+            PersistTelemetry(request, completion, request.Purpose, stopwatch.ElapsedMilliseconds, null, gate.WouldBlockFailureCode);
+            return FromCodexResult(request, completion, null, null, stopwatch.ElapsedMilliseconds, gate.WouldBlockFailureCode);
         }
 
         var json = ExtractFirstJsonObject(completion.AssistantMessage);
         if (string.IsNullOrWhiteSpace(json) || !IsValidJsonObject(json))
         {
-            PersistTelemetry(request, completion, $"{request.Purpose}-json-parse", stopwatch.ElapsedMilliseconds, "llm_json_parse_failed");
-            return FromCodexResult(request, completion, json, "llm_json_parse_failed", stopwatch.ElapsedMilliseconds);
+            PersistTelemetry(request, completion, $"{request.Purpose}-json-parse", stopwatch.ElapsedMilliseconds, "llm_json_parse_failed", gate.WouldBlockFailureCode);
+            return FromCodexResult(request, completion, json, "llm_json_parse_failed", stopwatch.ElapsedMilliseconds, gate.WouldBlockFailureCode);
         }
 
-        PersistTelemetry(request, completion, request.Purpose, stopwatch.ElapsedMilliseconds, null);
-        return FromCodexResult(request, completion, json, null, stopwatch.ElapsedMilliseconds);
+        PersistTelemetry(request, completion, request.Purpose, stopwatch.ElapsedMilliseconds, null, gate.WouldBlockFailureCode);
+        return FromCodexResult(request, completion, json, null, stopwatch.ElapsedMilliseconds, gate.WouldBlockFailureCode);
     }
 
     public static string? ExtractFirstJsonObject(string? text)
@@ -155,7 +181,8 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
         CodexChatClientResult completion,
         string? jsonObjectText,
         string? failureCode,
-        long durationMs)
+        long durationMs,
+        string? contextGateWouldBlockCode = null)
     {
         var promptUtf8Bytes = Encoding.UTF8.GetByteCount(request.Prompt);
         return new LlmRouteResult(
@@ -172,7 +199,8 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
             durationMs,
             request.Prompt.Length,
             promptUtf8Bytes,
-            EstimateTokensFromUtf8Bytes(promptUtf8Bytes));
+            EstimateTokensFromUtf8Bytes(promptUtf8Bytes),
+            contextGateWouldBlockCode);
     }
 
     private static bool IsValidJsonObject(string json)
@@ -193,7 +221,8 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
         CodexChatClientResult completion,
         string purpose,
         long durationMs,
-        string? failureCode)
+        string? failureCode,
+        string? contextGateWouldBlockCode = null)
     {
         try
         {
@@ -213,6 +242,7 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
                 estimatedPromptTokens = EstimateTokensFromUtf8Bytes(promptUtf8Bytes),
                 requireJsonObject = request.RequireJsonObject,
                 failureCode,
+                contextGateWouldBlockCode,
                 failureCategory = ClassifyFailure(failureCode, completion.ExitCode, completion.AssistantMessage),
                 completion.ExitCode,
                 durationMs,

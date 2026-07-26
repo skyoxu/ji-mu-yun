@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Security.Cryptography;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Workflow;
@@ -19,6 +20,7 @@ public sealed class PrototypeRepairPlanService
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly PrototypeContractService _contractService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public PrototypeRepairPlanService(
         PhaseAMetadataStore metadataStore,
@@ -34,13 +36,15 @@ public sealed class PrototypeRepairPlanService
         PrototypeRouteStateWriter stateWriter,
         PrototypeContractService? contractService = null,
         ICodexChatClient? codexChatClient = null,
-        ILlmRouteEngine? llmRouteEngine = null)
+        ILlmRouteEngine? llmRouteEngine = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _quickFixService = quickFixService;
         _stateWriter = stateWriter;
         _contractService = contractService ?? new PrototypeContractService();
         _llmRouteEngine = llmRouteEngine ?? (codexChatClient is null ? null : new LlmRouteEngine(codexChatClient));
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<PrototypeRepairPlanResult> CreateAsync(
@@ -521,15 +525,39 @@ public sealed class PrototypeRepairPlanService
             return [];
         }
 
+        var prompt = BuildRpgRepairGoalPrompt(project, context);
+        HostedContextEnvelope? envelope = null;
+        if (_contextManifestIssuer is not null)
+        {
+            try
+            {
+                envelope = await _contextManifestIssuer.IssueAsync(
+                    new HostedContextManifestIssue(
+                        project.AccountId,
+                        project.ProjectId,
+                        "llm:repair-plan",
+                        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, prompt)))).ToLowerInvariant(),
+                        "repair-plan.v1",
+                        TimeSpan.FromMinutes(5)),
+                    cancellationToken);
+            }
+            catch (InvalidOperationException)
+            {
+                return [];
+            }
+        }
+
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
                 EnsureRepairPlanPromptWorkspace(project),
                 "repair-plan",
                 PrototypeModelPolicy.Normalize("gpt-5.4"),
-                BuildRpgRepairGoalPrompt(project, context),
+                prompt,
                 RepairPlanningCodexOptions,
                 project.AccountId,
-                RequireJsonObject: true),
+                RequireJsonObject: true,
+                OperationKey: "llm:repair-plan",
+                ContextEnvelope: envelope),
             cancellationToken);
         if (!completion.Succeeded)
         {

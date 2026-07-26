@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Security.Cryptography;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -20,6 +21,9 @@ public sealed class SkillActionService
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
+    private readonly HostedContextGatePolicy _contextGatePolicy;
+    private readonly IHostedContextManifestValidator? _contextManifestValidator;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly HeavyRunnerQueueService? _assetRunnerQueue;
     private readonly RunCancellationService _runCancellation;
@@ -35,7 +39,10 @@ public sealed class SkillActionService
         ILlmRouteEngine? llmRouteEngine = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null,
-        RunCancellationService? runCancellation = null)
+        RunCancellationService? runCancellation = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -45,6 +52,9 @@ public sealed class SkillActionService
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _llmRouteEngine = llmRouteEngine;
+        _contextManifestIssuer = contextManifestIssuer;
+        _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
+        _contextManifestValidator = contextManifestValidator;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _assetRunnerQueue = assetRunnerQueue;
         _runCancellation = runCancellation ?? new RunCancellationService();
@@ -138,16 +148,41 @@ public sealed class SkillActionService
 
         var prompt = BuildPrompt(action, project, request);
         var sandbox = isWorkspaceWrite ? "workspace-write" : "read-only";
-        var routeResult = _llmRouteEngine is null || isWorkspaceWrite
-            ? await RunLegacyCodexProcessAsync(runId, project, outputAbsolutePath, prompt, sandbox, ReasoningEffortFor(request), runToken)
-            : await _llmRouteEngine.CompleteAsync(
+        var useCodexProcess = _llmRouteEngine is null || isWorkspaceWrite;
+        var operationKey = useCodexProcess ? "codex:skill-action" : "llm:skill-action";
+        HostedContextEnvelope? envelope = null;
+        if (_contextManifestIssuer is not null)
+        {
+            try
+            {
+                envelope = await _contextManifestIssuer.IssueAsync(new HostedContextManifestIssue(
+                    project.AccountId,
+                    project.ProjectId,
+                    operationKey,
+                    Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, runId, action.ActionId, request.Input, prompt)))).ToLowerInvariant(),
+                    "skill-action.v1",
+                    TimeSpan.FromMinutes(5)), runToken);
+            }
+            catch (InvalidOperationException)
+            {
+                envelope = null;
+            }
+        }
+
+        var routeResult = _contextManifestIssuer is not null && envelope is null
+            ? new LlmRouteResult(false, null, null, "gpt-5.4", "context_manifest_issue_failed", "context_gate", 1, "", "", null, 0, prompt.Length, Encoding.UTF8.GetByteCount(prompt), 0)
+            : useCodexProcess
+            ? await RunLegacyCodexProcessAsync(runId, project, outputAbsolutePath, prompt, sandbox, ReasoningEffortFor(request), envelope, runToken)
+            : await _llmRouteEngine!.CompleteAsync(
                 new LlmRouteRequest(
                     project.RepoPath,
                     "skill-action",
                     "gpt-5.4",
                     prompt,
                     new CodexChatClientOptions(IgnoreRules: false, ReasoningEffort: "high"),
-                    project.AccountId),
+                    project.AccountId,
+                    OperationKey: operationKey,
+                    ContextEnvelope: envelope),
                 runToken);
         var output = FirstNonEmpty(routeResult.AssistantMessage, routeResult.Stderr, routeResult.Stdout, "");
         await File.WriteAllTextAsync(outputAbsolutePath, output, Encoding.UTF8, runToken);
@@ -218,12 +253,14 @@ public sealed class SkillActionService
         string prompt,
         string sandbox,
         string reasoningEffort,
+        HostedContextEnvelope? envelope,
         CancellationToken cancellationToken)
     {
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
-        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(project.RepoPath, outputAbsolutePath, prompt, sandbox, reasoningEffort), runtimeCredential).WithRunId(runId), cancellationToken);
+        var command = await BuildCodexCommandAsync(project, outputAbsolutePath, prompt, sandbox, reasoningEffort, envelope, cancellationToken);
+        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(command, runtimeCredential).WithRunId(runId), cancellationToken);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var output = File.Exists(outputAbsolutePath)
             ? await File.ReadAllTextAsync(outputAbsolutePath, Encoding.UTF8, cancellationToken)
@@ -254,15 +291,27 @@ public sealed class SkillActionService
             Math.Max(1, (int)Math.Ceiling(Encoding.UTF8.GetByteCount(prompt) / 4.0d)));
     }
 
-    private HostedProcessCommand BuildCodexCommand(string repositoryRoot, string outputPath, string prompt, string sandbox, string reasoningEffort)
+    private async Task<HostedProcessCommand> BuildCodexCommandAsync(
+        ProjectSnapshot project,
+        string outputPath,
+        string prompt,
+        string sandbox,
+        string reasoningEffort,
+        HostedContextEnvelope? envelope,
+        CancellationToken cancellationToken)
     {
-        return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
-            repositoryRoot,
+        return await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(
+            project.RepoPath,
             outputPath,
             prompt,
             "gpt-5.4",
             reasoningEffort,
-            Sandbox: sandbox));
+            Sandbox: sandbox,
+            OperationKey: "codex:skill-action",
+            ContextEnvelope: envelope),
+            _contextGatePolicy,
+            _contextManifestValidator,
+            cancellationToken);
     }
 
     private static string ReasoningEffortFor(SkillActionRunRequest request)

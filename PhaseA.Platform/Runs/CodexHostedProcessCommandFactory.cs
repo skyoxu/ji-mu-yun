@@ -13,17 +13,24 @@ public sealed record CodexHostedProcessRequest(
     bool ApprovalNever = true,
     string OutputArgument = "-o",
     string ChangeDirectoryArgument = "--cd",
-    IReadOnlyDictionary<string, string>? ExtraEnvironment = null);
+    IReadOnlyDictionary<string, string>? ExtraEnvironment = null,
+    string? OperationKey = null,
+    HostedContextEnvelope? ContextEnvelope = null);
 
 public static class CodexHostedProcessCommandFactory
 {
-    public static HostedProcessCommand Build(CodexHostedProcessRequest request)
+    public static HostedProcessCommand Build(CodexHostedProcessRequest request, HostedContextGatePolicy? contextGatePolicy = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.RepositoryRoot);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.OutputPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Prompt);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Model);
+        var gate = HostedContextGate.Evaluate((contextGatePolicy ?? new HostedContextGatePolicy()).Resolve(request.OperationKey), request.ContextEnvelope);
+        if (!gate.Allowed)
+        {
+            throw new InvalidOperationException(gate.FailureCode);
+        }
 
         var sandbox = string.IsNullOrWhiteSpace(request.Sandbox) ? "workspace-write" : request.Sandbox.Trim();
         var arguments = new List<string> { "exec" };
@@ -69,6 +76,32 @@ public static class CodexHostedProcessCommandFactory
         }
 
         return new HostedProcessCommand(ResolveCodexCommand(), arguments, request.RepositoryRoot, environment, request.Prompt);
+    }
+
+    public static async Task<HostedProcessCommand> BuildAsync(
+        CodexHostedProcessRequest request,
+        HostedContextGatePolicy? contextGatePolicy,
+        IHostedContextManifestValidator? contextManifestValidator,
+        CancellationToken cancellationToken = default)
+    {
+        var command = Build(request, contextGatePolicy);
+        var gateMode = (contextGatePolicy ?? new HostedContextGatePolicy()).Resolve(request.OperationKey);
+        if (gateMode != HostedContextGateMode.Enforce)
+        {
+            return command;
+        }
+
+        if (request.ContextEnvelope is null ||
+            contextManifestValidator is null ||
+            !await contextManifestValidator.ValidateAndConsumeAsync(
+                request.ContextEnvelope,
+                request.OperationKey ?? string.Empty,
+                cancellationToken))
+        {
+            throw new InvalidOperationException("context_manifest_invalid");
+        }
+
+        return command;
     }
 
     public static HostedProcessCommand ApplyRuntime(HostedProcessCommand command, AiCodeMirrorRuntimeCredential credential)

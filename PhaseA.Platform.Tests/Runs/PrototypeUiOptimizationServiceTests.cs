@@ -2,6 +2,7 @@ using FluentAssertions;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
@@ -67,11 +68,35 @@ public sealed class PrototypeUiOptimizationServiceTests
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var validator = new CapturingManifestValidator();
+        var policy = new HostedContextGatePolicy(new Dictionary<string, HostedContextGateMode>
+        {
+            ["codex:prototype-ui-optimization"] = HostedContextGateMode.Enforce
+        });
+        var service = new PrototypeUiOptimizationService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            contextManifestIssuer: issuer,
+            contextGatePolicy: policy,
+            contextManifestValidator: validator);
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
         result.Status.Should().Be("succeeded");
+        validator.Envelope.Should().NotBeNull();
+        validator.Envelope!.AccountId.Should().Be(accountId);
+        validator.Envelope.ProjectId.Should().Be(projectId);
+        validator.Envelope.OperationKey.Should().Be("codex:prototype-ui-optimization");
+        validator.Envelope.SignatureKeyId.Should().Be("test-key");
+        validator.OperationKey.Should().Be("codex:prototype-ui-optimization");
         runner.Commands.Should().HaveCount(3);
         runner.Commands[0].Arguments.Should().Contain("--sandbox");
         runner.Commands[0].Arguments.Should().Contain("workspace-write");
@@ -1066,6 +1091,22 @@ script = ExtResource("1_hud")
             }
 
             return Task.FromResult(new HostedProcessResult(9, "direct scene smoke failed", ""));
+        }
+    }
+
+    private sealed class CapturingManifestValidator : IHostedContextManifestValidator
+    {
+        public HostedContextEnvelope? Envelope { get; private set; }
+        public string? OperationKey { get; private set; }
+
+        public Task<bool> ValidateAndConsumeAsync(
+            HostedContextEnvelope envelope,
+            string operationKey,
+            CancellationToken cancellationToken = default)
+        {
+            Envelope = envelope;
+            OperationKey = operationKey;
+            return Task.FromResult(true);
         }
     }
 

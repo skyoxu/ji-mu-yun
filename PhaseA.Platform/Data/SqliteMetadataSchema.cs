@@ -45,6 +45,13 @@ public static class SqliteMetadataSchema
         await AddColumnIfMissingAsync(
             connection,
             transaction,
+            "hosted_context_manifests",
+            "key_id",
+            "ALTER TABLE hosted_context_manifests ADD COLUMN key_id TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
             "accounts",
             "spend_limit_cny",
             "ALTER TABLE accounts ADD COLUMN spend_limit_cny TEXT NULL;",
@@ -1455,6 +1462,30 @@ public static class SqliteMetadataSchema
             project_deleted_utc TEXT NULL
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS hosted_context_manifests (
+            manifest_id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            operation_key TEXT NOT NULL,
+            snapshot_id TEXT NOT NULL,
+            policy_revision TEXT NOT NULL,
+            key_id TEXT NOT NULL,
+            signature TEXT NOT NULL,
+            nonce TEXT NOT NULL,
+            expires_utc TEXT NOT NULL,
+            created_utc TEXT NOT NULL
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS hosted_context_nonce_consumptions (
+            manifest_id TEXT NOT NULL,
+            nonce TEXT NOT NULL,
+            consumed_utc TEXT NOT NULL,
+            PRIMARY KEY (manifest_id, nonce),
+            FOREIGN KEY (manifest_id) REFERENCES hosted_context_manifests(manifest_id)
+        );
+        """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_projects_account_last_activity ON projects(account_id, last_activity_utc DESC, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_game_type_match_failures_created ON project_game_type_match_failures(created_utc DESC);",
@@ -1482,6 +1513,7 @@ public static class SqliteMetadataSchema
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_diagnostic_spool_diagnostic_id ON project_diagnostic_spool(diagnostic_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_triage_severity_updated ON project_diagnostic_spool(triage_status, severity, updated_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_account_project_triage ON project_diagnostic_spool(account_id, project_id, triage_status);",
+        "CREATE INDEX IF NOT EXISTS ix_hosted_context_manifests_account_project ON hosted_context_manifests(account_id, project_id, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_deleted_lookup ON project_diagnostic_spool(project_tombstone_id, deletion_event_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_route_family_created ON project_diagnostic_spool(route_id, failure_family, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_retention_cleanup ON project_diagnostic_spool(retention_class, triage_status, updated_utc DESC);",

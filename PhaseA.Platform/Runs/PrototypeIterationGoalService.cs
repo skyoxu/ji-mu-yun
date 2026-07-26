@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Security.Cryptography;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -25,6 +26,9 @@ public sealed class PrototypeIterationGoalService
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
+    private readonly HostedContextGatePolicy _contextGatePolicy;
+    private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
     public PrototypeIterationGoalService(
         PhaseAMetadataStore metadataStore,
@@ -45,7 +49,10 @@ public sealed class PrototypeIterationGoalService
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         TimeSpan? executionTimeout = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
-        PrototypeContractFreezeService? contractFreezeService = null)
+        PrototypeContractFreezeService? contractFreezeService = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -58,6 +65,9 @@ public sealed class PrototypeIterationGoalService
         _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _contextManifestIssuer = contextManifestIssuer;
+        _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
+        _contextManifestValidator = contextManifestValidator;
     }
 
     public async Task<PrototypeIterationGoalExecutionResult> ExecuteNextAsync(
@@ -315,7 +325,8 @@ public sealed class PrototypeIterationGoalService
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
-            var codexResult = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, codexRuntimeOutputPath, model, project.RepoPath), runtimeCredential).WithRunId(runId), timeout.Token);
+            var codexCommand = await BuildCodexCommandAsync(prompt, codexRuntimeOutputPath, model, project, runId, timeout.Token);
+            var codexResult = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(codexCommand, runtimeCredential).WithRunId(runId), timeout.Token);
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
             if (File.Exists(codexRuntimeOutputPath))
             {
@@ -798,14 +809,46 @@ public sealed class PrototypeIterationGoalService
         return needles.Any(needle => text.Contains(needle, StringComparison.OrdinalIgnoreCase));
     }
 
-    private HostedProcessCommand BuildCodexCommand(string prompt, string outputPath, string model, string repositoryRoot)
+    private async Task<HostedProcessCommand> BuildCodexCommandAsync(
+        string prompt,
+        string outputPath,
+        string model,
+        ProjectSnapshot project,
+        string runId,
+        CancellationToken cancellationToken)
     {
-        return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
-            repositoryRoot,
+        HostedContextEnvelope? envelope = null;
+        if (_contextManifestIssuer is not null)
+        {
+            var snapshotId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(
+                "\n",
+                project.ProjectId,
+                project.AccountId,
+                runId,
+                "codex:prototype-iteration-goal",
+                prompt)))).ToLowerInvariant();
+            envelope = await _contextManifestIssuer.IssueAsync(
+                new HostedContextManifestIssue(
+                    project.AccountId,
+                    project.ProjectId,
+                    "codex:prototype-iteration-goal",
+                    snapshotId,
+                    "prototype-iteration-goal.v1",
+                    TimeSpan.FromMinutes(5)),
+                cancellationToken);
+        }
+
+        return await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(
+            project.RepoPath,
             outputPath,
             prompt,
             model,
-            ReasoningEffort));
+            ReasoningEffort,
+            OperationKey: "codex:prototype-iteration-goal",
+            ContextEnvelope: envelope),
+            _contextGatePolicy,
+            _contextManifestValidator,
+            cancellationToken);
     }
 
     private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)

@@ -1751,10 +1751,21 @@ public sealed class PrototypeWorkflowTests : IDisposable
                 "reason": "prototype_main_menu_navigation_failed",
                 "scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
               }
-            }
-            """);
+        }
+        """);
         var runner = new FakeHostedProcessRunner();
-        var service = Service(store, options, runner);
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var validator = new CapturingManifestValidator();
+        var policy = new HostedContextGatePolicy(new Dictionary<string, HostedContextGateMode>
+        {
+            ["codex:prototype-post-validation-repair"] = HostedContextGateMode.Enforce
+        });
+        var service = Service(store, options, runner, contextManifestIssuer: issuer, contextGatePolicy: policy, contextManifestValidator: validator);
 
         var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
         await WaitForCommandsAsync(runner, 3);
@@ -1767,6 +1778,12 @@ public sealed class PrototypeWorkflowTests : IDisposable
         runner.Commands[0].StandardInput.Should().Contain("rpg_start_button_missing");
         repairRun!.Status.Should().Be("succeeded");
         repairRun.EvidenceJson.Should().Contain("\"repair_mode\":\"post_validation\"");
+        validator.Envelope.Should().NotBeNull();
+        validator.Envelope!.AccountId.Should().Be(accountId);
+        validator.Envelope.ProjectId.Should().Be(projectId);
+        validator.Envelope.OperationKey.Should().Be("codex:prototype-post-validation-repair");
+        validator.Envelope.SignatureKeyId.Should().Be("test-key");
+        validator.OperationKey.Should().Be("codex:prototype-post-validation-repair");
     }
 
     [Fact]
@@ -2264,7 +2281,10 @@ public sealed class PrototypeWorkflowTests : IDisposable
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         HeavyRunnerQueueService? prototypeCreationQueue = null,
         TimeSpan? creationTotalTimeout = null,
-        TimeSpan? creationInactivityTimeout = null)
+        TimeSpan? creationInactivityTimeout = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
     {
         return new PrototypeWorkflowService(
             store,
@@ -2280,7 +2300,10 @@ public sealed class PrototypeWorkflowTests : IDisposable
             heavyRunnerQueue: heavyRunnerQueue,
             prototypeCreationQueue: prototypeCreationQueue,
             creationTotalTimeout: creationTotalTimeout,
-            creationInactivityTimeout: creationInactivityTimeout);
+            creationInactivityTimeout: creationInactivityTimeout,
+            contextManifestIssuer: contextManifestIssuer,
+            contextGatePolicy: contextGatePolicy,
+            contextManifestValidator: contextManifestValidator);
     }
 
     private static async Task WaitForCommandsAsync(FakeHostedProcessRunner runner, int expectedCount)
@@ -2361,6 +2384,22 @@ public sealed class PrototypeWorkflowTests : IDisposable
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, content);
+    }
+
+    private sealed class CapturingManifestValidator : IHostedContextManifestValidator
+    {
+        public HostedContextEnvelope? Envelope { get; private set; }
+        public string? OperationKey { get; private set; }
+
+        public Task<bool> ValidateAndConsumeAsync(
+            HostedContextEnvelope envelope,
+            string operationKey,
+            CancellationToken cancellationToken = default)
+        {
+            Envelope = envelope;
+            OperationKey = operationKey;
+            return Task.FromResult(true);
+        }
     }
 
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner

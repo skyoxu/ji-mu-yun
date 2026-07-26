@@ -1,0 +1,41 @@
+{
+  "$id": "jimuyun.scope-gate-result.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "e2_readiness": {
+      "type": "boolean"
+    },
+    "failure_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "gate_mode": {
+      "enum": [
+        "legacy",
+        "observe",
+        "enforce"
+      ]
+    },
+    "result": {
+      "enum": [
+        "allow",
+        "observe",
+        "block"
+      ]
+    },
+    "schema_version": {
+      "const": "jimuyun.scope-gate-result.v1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "gate_mode",
+    "result",
+    "failure_code",
+    "e2_readiness"
+  ],
+  "type": "object"
+}

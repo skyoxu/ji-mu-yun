@@ -57,6 +57,36 @@ public sealed class GameDesignSceneRouteServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldIssueHostedContextEnvelope_ForSceneRouteDraft()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "RPG");
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var llm = new FakeLlmRouteEngine(ValidSceneRouteJson());
+        var service = new GameDesignSceneRouteService(store, options, llm, contextManifestIssuer: issuer);
+
+        var result = await service.CreateAsync(account.AccountId, projectId, new GameDesignSceneRouteDraftRequest("route", [], "gpt-5.4"));
+
+        result!.Source.Should().Be("agent");
+        llm.LastRequest!.OperationKey.Should().Be("llm:gdd-scene-route-draft");
+        llm.LastRequest.ContextEnvelope.Should().NotBeNull();
+        llm.LastRequest.ContextEnvelope!.AccountId.Should().Be(account.AccountId);
+        llm.LastRequest.ContextEnvelope.ProjectId.Should().Be(projectId);
+        llm.LastRequest.ContextEnvelope.OperationKey.Should().Be("llm:gdd-scene-route-draft");
+        llm.LastRequest.ContextEnvelope.SignatureKeyId.Should().Be("test-key");
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldReturnFallbackSceneRoute_WhenLlmFails()
     {
         using var workspace = new TempWorkspace();

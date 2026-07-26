@@ -1,0 +1,143 @@
+{
+  "$id": "jimuyun.knowledge-maintenance-request.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "append_only_log": {
+      "type": "boolean"
+    },
+    "authority": {
+      "additionalProperties": false,
+      "properties": {
+        "authority_ref": {
+          "const": "refs/heads/main"
+        },
+        "dirty_worktree_authority": {
+          "type": "boolean"
+        },
+        "implicit_fetch": {
+          "type": "boolean"
+        },
+        "main_commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "authority_ref",
+        "main_commit",
+        "implicit_fetch",
+        "dirty_worktree_authority"
+      ],
+      "type": "object"
+    },
+    "discovery_policy": {
+      "enum": [
+        "existing-entries-only",
+        "target-scoped"
+      ]
+    },
+    "knowledge_snapshot_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "knowledge_write_classes": {
+      "items": {
+        "enum": [
+          "projection",
+          "index",
+          "lkg-pointer",
+          "maintenance-log"
+        ]
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "log_root": {
+      "const": "logs/knowledge-context"
+    },
+    "mode": {
+      "enum": [
+        "existing-only",
+        "targeted"
+      ]
+    },
+    "request_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "jimuyun.knowledge-maintenance-request.v1"
+    },
+    "skill_id": {
+      "const": "maintain-knowledge-base"
+    },
+    "source_write_policy": {
+      "enum": [
+        "forbidden",
+        "requested"
+      ]
+    },
+    "target": {
+      "additionalProperties": false,
+      "properties": {
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "none",
+            "execution-plan",
+            "cli",
+            "skill",
+            "tool",
+            "mcp",
+            "document-directory"
+          ]
+        },
+        "repo_relative_path": {
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "snapshot_kind": {
+          "enum": [
+            "none",
+            "main",
+            "worktree"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "repo_relative_path",
+        "snapshot_kind",
+        "content_sha256"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "skill_id",
+    "mode",
+    "authority",
+    "knowledge_snapshot_id",
+    "target",
+    "discovery_policy",
+    "source_write_policy",
+    "knowledge_write_classes",
+    "append_only_log",
+    "log_root"
+  ],
+  "type": "object"
+}

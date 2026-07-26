@@ -1,0 +1,19 @@
+{
+  "schema_version": "jimuyun.derived-knowledge-catalog.v1",
+  "domain": "toolchain",
+  "authority_ref": "refs/heads/main",
+  "main_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+  "entries": [
+    {
+      "entry_id": "toolchain.agent-routing",
+      "source_path": "AGENTS.md",
+      "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"
+    },
+    {
+      "entry_id": "toolchain.product-overview",
+      "source_path": "README.md",
+      "source_sha256": "e38c75e4c4b4644b2ed735cdc335526c800ddfe989ecb59a4e019fb68c8c1779"
+    }
+  ],
+  "lkg_snapshot_id": "toolchain-main-7584f295c1b4"
+}

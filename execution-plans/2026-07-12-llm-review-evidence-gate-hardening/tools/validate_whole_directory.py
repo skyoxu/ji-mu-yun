@@ -821,6 +821,9 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
         "command_list_runs",
         "command_inspect_run",
         "command_seal_run",
+        "completed readArtifacts must exactly match prepared manifest order",
+        "A run with an active attempt or acquired lease cannot be sealed",
+        "revalidate frozen authority before publishing verifier evidence",
     ]
     for marker in required_source_markers:
         if marker not in source:
@@ -842,7 +845,10 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
         "test_finalize_rejects_verifier_evidence_outside_scope",
         "test_gate_schema_rejects_awaiting_verification_without_blocker",
         "test_gate_rejects_placeholder_failure_tuple",
-        "test_gate_accepts_completed_coverage_in_any_order",
+        "test_gate_rejects_completed_coverage_out_of_manifest_order",
+        "test_gate_rejects_duplicate_completed_coverage",
+        "test_active_attempt_blocks_abandon_and_same_round_replacement",
+        "test_verifier_authority_drift_before_publication_preserves_formal_output",
         "test_finalize_rejects_unrelated_in_scope_verifier_evidence",
         "test_gate_rejects_non_finite_json_confidence",
         "test_finalize_requires_whole_artifact_for_path_only_context",

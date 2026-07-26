@@ -1,0 +1,74 @@
+{
+  "$id": "jimuyun.knowledge-requirements.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "requirements": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "acceptance_ref": {
+            "pattern": "^acceptance://KC-[0-9]{3}/.+$",
+            "type": "string"
+          },
+          "owner_slice": {
+            "pattern": "^K(?:[0-9]|1[0-4])$",
+            "type": "string"
+          },
+          "production_write_policy": {
+            "enum": [
+              "forbidden",
+              "blocked_until_gate",
+              "separate_authorization"
+            ]
+          },
+          "requirement": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "requirement_id": {
+            "pattern": "^KC-[0-9]{3}$",
+            "type": "string"
+          },
+          "source_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "status": {
+            "const": "active"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "requirement",
+          "owner_slice",
+          "acceptance_ref",
+          "source_refs",
+          "status",
+          "production_write_policy"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "jimuyun.knowledge-requirements.v1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "plan_id",
+    "requirements"
+  ],
+  "type": "object"
+}

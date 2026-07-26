@@ -104,6 +104,70 @@ public sealed class GameDesignQuestionFormServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldIssueHostedContextEnvelope_ForQuestionFormDispatch()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var llm = new FakeLlmRouteEngine(ValidSchemaJson());
+        var service = new GameDesignQuestionFormService(store, options, llm, contextManifestIssuer: issuer);
+
+        var result = await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+
+        result!.Source.Should().Be("agent");
+        llm.LastRequest!.OperationKey.Should().Be("llm:gdd-question-form");
+        llm.LastRequest.ContextEnvelope.Should().NotBeNull();
+        llm.LastRequest.ContextEnvelope!.AccountId.Should().Be(account.AccountId);
+        llm.LastRequest.ContextEnvelope.ProjectId.Should().Be(projectId);
+        llm.LastRequest.ContextEnvelope.OperationKey.Should().Be("llm:gdd-question-form");
+        llm.LastRequest.ContextEnvelope.SignatureKeyId.Should().Be("test-key");
+        llm.LastRequest.ContextEnvelope.Signature.Should().NotBeNullOrWhiteSpace();
+        llm.LastRequest.ContextEnvelope.Nonce.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldIssueHostedContextEnvelope_ForCacheDecisionDispatch()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var llm = new FakeLlmRouteEngine(new[] { ValidSchemaJson(), "{\"rebuild\":false}" });
+        var service = new GameDesignQuestionFormService(store, options, llm, contextManifestIssuer: issuer);
+
+        await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+        var cached = await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+
+        cached!.Source.Should().Be("agent");
+        llm.CallCount.Should().Be(2);
+        llm.LastRequest!.OperationKey.Should().Be("llm:gdd-question-form-cache-decision");
+        llm.LastRequest.ContextEnvelope.Should().NotBeNull();
+        llm.LastRequest.ContextEnvelope!.AccountId.Should().Be(account.AccountId);
+        llm.LastRequest.ContextEnvelope.ProjectId.Should().Be(projectId);
+        llm.LastRequest.ContextEnvelope.OperationKey.Should().Be("llm:gdd-question-form-cache-decision");
+        llm.LastRequest.ContextEnvelope.SignatureKeyId.Should().Be("test-key");
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldReturnFallbackSchema_WhenLlmFails()
     {
         using var workspace = new TempWorkspace();

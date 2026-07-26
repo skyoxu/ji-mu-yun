@@ -34,6 +34,14 @@ await SqliteMetadataSchema.InitializeAsync(connectionString);
 
 builder.Services.AddSingleton(options);
 builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
+if (options.HostedContextSigningKeyRing is { } hostedContextKeyRing)
+{
+    builder.Services.AddSingleton(new HostedContextManifestSignatureService(
+        hostedContextKeyRing.ActiveKeyId,
+        hostedContextKeyRing.Keys));
+    builder.Services.AddSingleton<HostedContextManifestIssuer>();
+    builder.Services.AddSingleton<IHostedContextManifestValidator, HostedContextManifestValidator>();
+}
 builder.Services.AddSingleton<ProjectRuleCatalog>();
 builder.Services.AddSingleton<GameTypeTemplateCatalog>();
 builder.Services.AddSingleton<GameTypeGuideCatalog>();
@@ -129,7 +137,47 @@ builder.Services.AddHttpClient<IAiCodeMirrorBillingClient, AiCodeMirrorBillingCl
 builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
 builder.Services.AddHttpClient<IAiCodeMirrorResponsesClient, AiCodeMirrorResponsesClient>();
 builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
-builder.Services.AddSingleton<ILlmRouteEngine, LlmRouteEngine>();
+if (options.HostedContextSigningKeyRing is not null)
+{
+    var hostedContextGatePolicy = HostedContextGatePolicy.CreateWithOverrides(new Dictionary<string, HostedContextGateMode>(StringComparer.Ordinal)
+    {
+        ["llm:gdd-question-form"] = HostedContextGateMode.Enforce,
+        ["llm:gdd-question-form-cache-decision"] = HostedContextGateMode.Enforce,
+        ["llm:project-workflow-route-intent"] = HostedContextGateMode.Enforce,
+        ["llm:gdd-scene-route-draft"] = HostedContextGateMode.Enforce,
+        ["llm:gdd-requirement-map"] = HostedContextGateMode.Enforce,
+        ["llm:draft-analysis"] = HostedContextGateMode.Enforce,
+        ["llm:draft-coverage"] = HostedContextGateMode.Enforce,
+        ["llm:draft-coverage-retry"] = HostedContextGateMode.Enforce,
+        ["llm:project-chat"] = HostedContextGateMode.Enforce,
+        ["llm:project-asset-library-skill-selection"] = HostedContextGateMode.Enforce,
+        ["llm:repair-plan"] = HostedContextGateMode.Enforce,
+        ["llm:planning-analysis"] = HostedContextGateMode.Enforce,
+        ["llm:goal-plan"] = HostedContextGateMode.Enforce,
+        ["llm:prototype-skeleton-regeneration-guard"] = HostedContextGateMode.Enforce,
+        ["llm:plan-evaluation"] = HostedContextGateMode.Enforce,
+        ["llm:gdd-next-step-review"] = HostedContextGateMode.Enforce,
+        ["llm:asset-inventory-judgement"] = HostedContextGateMode.Enforce,
+        ["codex:prototype-iteration-goal"] = HostedContextGateMode.Enforce,
+        ["codex:prototype-quick-fix"] = HostedContextGateMode.Enforce,
+        ["codex:prototype-post-validation-repair"] = HostedContextGateMode.Enforce,
+        ["codex:prototype-ui-optimization"] = HostedContextGateMode.Enforce,
+        ["codex:gdd-document-generation"] = HostedContextGateMode.Enforce,
+        ["codex:web-preview-dedicated-adapter"] = HostedContextGateMode.Enforce,
+        ["codex:web-preview-semantic-adapter"] = HostedContextGateMode.Enforce,
+        ["codex:skill-action"] = HostedContextGateMode.Enforce,
+        ["llm:skill-action"] = HostedContextGateMode.Enforce
+    });
+    builder.Services.AddSingleton(hostedContextGatePolicy);
+    builder.Services.AddSingleton<ILlmRouteEngine>(serviceProvider => new LlmRouteEngine(
+        serviceProvider.GetRequiredService<ICodexChatClient>(),
+        hostedContextGatePolicy,
+        serviceProvider.GetRequiredService<IHostedContextManifestValidator>()));
+}
+else
+{
+    builder.Services.AddSingleton<ILlmRouteEngine, LlmRouteEngine>();
+}
 builder.Services.AddSingleton(new ChatConcurrencyLimiter(
     options.MaxConcurrentChats,
     options.MaxConcurrentChatsPerAccount));

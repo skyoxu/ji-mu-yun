@@ -1045,7 +1045,14 @@ public sealed class GddMilestoneStepServiceTests
           "summary": "已根据 M1 反馈调整 M2 的首波节奏。"
         }
         """;
-        var service = Service(store, options, new FakeLlmRouteEngine(reviewJson));
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var llm = new FakeLlmRouteEngine(reviewJson);
+        var service = Service(store, options, llm, contextManifestIssuer: issuer);
 
         var plan = await service.ExecuteCurrentStepAsync(accountId, projectId);
         plan!.Plan!.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
@@ -1066,6 +1073,11 @@ public sealed class GddMilestoneStepServiceTests
         adjustedSpec.Should().Contain("Player can validate a slower first wave");
         adjustedSpec.Should().Contain("Tune the wave spawner");
         next.ReviewSummary.Should().Contain("调整 M2");
+        llm.LastRequest!.OperationKey.Should().Be("llm:gdd-next-step-review");
+        llm.LastRequest.ContextEnvelope.Should().NotBeNull();
+        llm.LastRequest.ContextEnvelope!.AccountId.Should().Be(accountId);
+        llm.LastRequest.ContextEnvelope.ProjectId.Should().Be(projectId);
+        llm.LastRequest.ContextEnvelope.SignatureKeyId.Should().Be("test-key");
     }
 
     [Fact]
@@ -1680,7 +1692,8 @@ public sealed class GddMilestoneStepServiceTests
         """,
         IPrototypeLightweightValidationService? validationService = null,
         FakeHostedProcessRunner? runner = null,
-        IPrototypeFromGddWorkflow? prototypeWorkflow = null)
+        IPrototypeFromGddWorkflow? prototypeWorkflow = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         runner ??= new FakeHostedProcessRunner(runnerOutput);
         return new GddMilestoneStepService(
@@ -1689,7 +1702,8 @@ public sealed class GddMilestoneStepServiceTests
             new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), new PrototypeRouteStateWriter()),
             llmRouteEngine,
             validationService,
-            prototypeWorkflowService: prototypeWorkflow);
+            prototypeWorkflowService: prototypeWorkflow,
+            contextManifestIssuer: contextManifestIssuer);
     }
 
     private static PrototypeWorkflowResult ValidationResult(string runId, string status, int exitCode, string stdout = "", string stderr = "")
@@ -2305,8 +2319,11 @@ public sealed class DemoPrototype
             _json = json;
         }
 
+        public LlmRouteRequest? LastRequest { get; private set; }
+
         public Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
         {
+            LastRequest = request;
             return Task.FromResult(new LlmRouteResult(
                 true,
                 _json,

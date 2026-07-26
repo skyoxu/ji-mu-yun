@@ -532,13 +532,26 @@ public sealed class GddToModuleBackendContractServiceTests
           ]
         }
         """);
-        var service = new GameDesignRequirementMapService(fixture.Store, engine);
+        var issuer = new HostedContextManifestIssuer(
+            fixture.Store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var service = new GameDesignRequirementMapService(fixture.Store, engine, issuer);
 
         var result = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest(Model: "gpt-5.1-codex"));
 
         result.Status.Should().Be("ready");
         engine.Requests.Should().ContainSingle();
         engine.Requests[0].RequireJsonObject.Should().BeTrue();
+        engine.Requests[0].OperationKey.Should().Be("llm:gdd-requirement-map");
+        engine.Requests[0].ContextEnvelope.Should().NotBeNull();
+        var envelope = engine.Requests[0].ContextEnvelope!;
+        envelope.AccountId.Should().Be(fixture.AccountId);
+        envelope.ProjectId.Should().Be(fixture.ProjectId);
+        envelope.OperationKey.Should().Be("llm:gdd-requirement-map");
+        envelope.SignatureKeyId.Should().Be("test-key");
         engine.Requests[0].Prompt.Should().NotContain("docs/game-type-guides/");
         result.Requirements[1].CapabilityDomainIds.Should().Contain("ui_overlays_feedback");
         result.Requirements[1].GodotUiUpdateOwnership.Should().NotBeNull();

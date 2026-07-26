@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -25,6 +26,7 @@ public sealed class GddMilestoneStepService
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly IPrototypeLightweightValidationService? _lightweightValidationService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public GddMilestoneStepService(
         PhaseAMetadataStore metadataStore,
@@ -34,7 +36,8 @@ public sealed class GddMilestoneStepService
         IPrototypeLightweightValidationService? lightweightValidationService = null,
         PrototypeEngineeringClosureService? engineeringClosure = null,
         IPrototypeFromGddWorkflow? prototypeWorkflowService = null,
-        PrototypeRouteStateWriter? routeStateWriter = null)
+        PrototypeRouteStateWriter? routeStateWriter = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _iterationGoalService = iterationGoalService;
@@ -44,6 +47,7 @@ public sealed class GddMilestoneStepService
         _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
         _lightweightValidationService = lightweightValidationService;
         _llmRouteEngine = llmRouteEngine;
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<GddMilestoneStepPlanResult?> GetOrCreateLatestAsync(
@@ -1931,13 +1935,24 @@ public sealed class GddMilestoneStepService
             Planning outline excerpt:
             {{Trim(gddText, 4000)}}
             """;
+        var envelope = await TryIssueContextManifestAsync(project, prompt, cancellationToken);
+        if (_contextManifestIssuer is not null && envelope is null)
+        {
+            return fallback with
+            {
+                Summary = fallback.Summary + " Hosted Context manifest issuance failed; the original next step remains unchanged."
+            };
+        }
+
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
                 project.RepoPath,
                 "gdd-next-step-review",
                 string.IsNullOrWhiteSpace(model) ? "gpt-5.5" : model.Trim(),
                 prompt,
-                RequireJsonObject: true),
+                RequireJsonObject: true,
+                OperationKey: "llm:gdd-next-step-review",
+                ContextEnvelope: envelope),
             cancellationToken);
         if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
         {
@@ -1981,6 +1996,40 @@ public sealed class GddMilestoneStepService
             {
                 Summary = fallback.Summary + " 本次调整建议无法解析，按原策划继续。"
             };
+        }
+    }
+
+    private async Task<HostedContextEnvelope?> TryIssueContextManifestAsync(
+        ProjectSnapshot project,
+        string prompt,
+        CancellationToken cancellationToken)
+    {
+        if (_contextManifestIssuer is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var snapshotId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(
+                "\n",
+                project.ProjectId,
+                project.AccountId,
+                "llm:gdd-next-step-review",
+                prompt)))).ToLowerInvariant();
+            return await _contextManifestIssuer.IssueAsync(
+                new HostedContextManifestIssue(
+                    project.AccountId,
+                    project.ProjectId,
+                    "llm:gdd-next-step-review",
+                    snapshotId,
+                    "gdd-milestone-step.v1",
+                    TimeSpan.FromMinutes(5)),
+                cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
         }
     }
 

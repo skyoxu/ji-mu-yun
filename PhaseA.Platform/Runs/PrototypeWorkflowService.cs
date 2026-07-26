@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Security.Cryptography;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -42,6 +43,9 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
     private readonly HeavyRunnerQueueService _prototypeCreationQueue;
     private readonly TimeSpan _creationTotalTimeout;
     private readonly TimeSpan _creationInactivityTimeout;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
+    private readonly HostedContextGatePolicy _contextGatePolicy;
+    private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
     public PrototypeWorkflowService(
         PhaseAMetadataStore metadataStore,
@@ -76,7 +80,10 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService? prototypeCreationQueue = null,
         TimeSpan? creationTotalTimeout = null,
         TimeSpan? creationInactivityTimeout = null,
-        PrototypeContractFreezeService? contractFreezeService = null)
+        PrototypeContractFreezeService? contractFreezeService = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -98,6 +105,9 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         _prototypeCreationQueue = prototypeCreationQueue ?? _heavyRunnerQueue;
         _creationTotalTimeout = creationTotalTimeout ?? DefaultCreationTotalTimeout;
         _creationInactivityTimeout = creationInactivityTimeout ?? DefaultCreationInactivityTimeout;
+        _contextManifestIssuer = contextManifestIssuer;
+        _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
+        _contextManifestValidator = contextManifestValidator;
     }
 
     public async Task<PrototypeWorkflowResult> RunAsync(string accountId, string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
@@ -1464,7 +1474,15 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         {
             using var timeout = new CancellationTokenSource(RepairExecutionTimeout);
             codexResult = await _processRunner.RunAsync(
-                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, projectExecutionGuide, failedRun, contract, godotDiagnostic, godotCleanup), outputPath, normalizedModel, project.RepoPath), runtimeCredential).WithRunId(runId),
+                CodexHostedProcessCommandFactory.ApplyRuntime(
+                    await BuildCodexRepairCommandAsync(
+                        BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, projectExecutionGuide, failedRun, contract, godotDiagnostic, godotCleanup),
+                        outputPath,
+                        normalizedModel,
+                        project,
+                        runId,
+                        timeout.Token),
+                    runtimeCredential).WithRunId(runId),
                 timeout.Token);
         }
         catch (OperationCanceledException)
@@ -1581,10 +1599,37 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         return _metadataStore.UpdateRunProgressAsync(runId, step, substep, label, cancellationToken);
     }
 
-    private HostedProcessCommand BuildCodexRepairCommand(string prompt, string outputPath, string model, string repositoryRoot)
+    private async Task<HostedProcessCommand> BuildCodexRepairCommandAsync(
+        string prompt,
+        string outputPath,
+        string model,
+        ProjectSnapshot project,
+        string runId,
+        CancellationToken cancellationToken)
     {
-        return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
-            repositoryRoot,
+        HostedContextEnvelope? envelope = null;
+        if (_contextManifestIssuer is not null)
+        {
+            var snapshotId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(
+                "\n",
+                project.ProjectId,
+                project.AccountId,
+                runId,
+                "codex:prototype-post-validation-repair",
+                prompt)))).ToLowerInvariant();
+            envelope = await _contextManifestIssuer.IssueAsync(
+                new HostedContextManifestIssue(
+                    project.AccountId,
+                    project.ProjectId,
+                    "codex:prototype-post-validation-repair",
+                    snapshotId,
+                    "prototype-workflow-post-validation-repair.v1",
+                    TimeSpan.FromMinutes(5)),
+                cancellationToken);
+        }
+
+        return await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(
+            project.RepoPath,
             outputPath,
             prompt,
             model,
@@ -1592,7 +1637,12 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             ExtraEnvironment: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["PATH"] = CodexHostedProcessCommandFactory.ResolvePathWithRipgrep()
-            }));
+            },
+            OperationKey: "codex:prototype-post-validation-repair",
+            ContextEnvelope: envelope),
+            _contextGatePolicy,
+            _contextManifestValidator,
+            cancellationToken);
     }
 
     private static string CreateShortRuntimeOutputPath(string runId)

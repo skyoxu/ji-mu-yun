@@ -1,4 +1,5 @@
 using System.Text;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -44,6 +45,7 @@ public sealed class ProjectDraftImportService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly RunCancellationService _runCancellation;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ProjectDraftImportService(
         PhaseAMetadataStore metadataStore,
@@ -62,7 +64,8 @@ public sealed class ProjectDraftImportService
         IProjectWorkspaceSeeder workspaceSeeder,
         ILlmRouteEngine? llmRouteEngine = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
-        RunCancellationService? runCancellation = null)
+        RunCancellationService? runCancellation = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -72,6 +75,7 @@ public sealed class ProjectDraftImportService
         _workspaceSeeder = workspaceSeeder;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _runCancellation = runCancellation ?? new RunCancellationService();
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<ProjectDraftImportResult> AnalyzeAsync(
@@ -128,16 +132,21 @@ public sealed class ProjectDraftImportService
             if (shouldUseCodex)
             {
                 var prompt = BuildAnalysisPrompt(project, text);
-                var analysis = await _llmRouteEngine.CompleteAsync(
-                    new LlmRouteRequest(
-                        EnsureDraftPromptWorkspace(project.ProjectId, "analysis"),
-                        "draft-analysis",
-                        normalizedModel,
-                        prompt,
-                        DraftAnalysisCodexOptions,
-                        project.AccountId,
-                        RequireJsonObject: true),
-                    runToken);
+                var analysisEnvelope = await IssueEnvelopeAsync(project, "llm:draft-analysis", text, runToken);
+                var analysis = _contextManifestIssuer is not null && analysisEnvelope is null
+                    ? FailedLlmResult(normalizedModel, prompt, "context_manifest_issue_failed")
+                    : await _llmRouteEngine.CompleteAsync(
+                        new LlmRouteRequest(
+                            EnsureDraftPromptWorkspace(project.ProjectId, "analysis"),
+                            "draft-analysis",
+                            normalizedModel,
+                            prompt,
+                            DraftAnalysisCodexOptions,
+                            project.AccountId,
+                            RequireJsonObject: true,
+                            OperationKey: "llm:draft-analysis",
+                            ContextEnvelope: analysisEnvelope),
+                        runToken);
                 completion = analysis.RawResult ?? new CodexChatClientResult(
                     analysis.Succeeded,
                     analysis.AssistantMessage,
@@ -380,7 +389,9 @@ public sealed class ProjectDraftImportService
         ProjectDraftImportResult analyzed,
         CancellationToken cancellationToken)
     {
-        var directResult = await AnalyzeCoverageWithResponsesApiAsync(project, model, draftText, analyzed, cancellationToken);
+        var directResult = _contextManifestIssuer is null
+            ? await AnalyzeCoverageWithResponsesApiAsync(project, model, draftText, analyzed, cancellationToken)
+            : null;
         if (directResult is not null)
         {
             return directResult;
@@ -389,16 +400,21 @@ public sealed class ProjectDraftImportService
         var prompt = BuildCoveragePrompt(project, draftText, analyzed);
         var coverageOptions = DraftAnalysisCodexOptions with { OutputSchemaPath = CoverageSchemaPath };
         var coverageRoot = EnsureDraftPromptWorkspace(project.ProjectId, "coverage");
-        var completion = await _llmRouteEngine.CompleteAsync(
-            new LlmRouteRequest(
-                coverageRoot,
-                "draft-coverage",
-                model,
-                prompt,
-                coverageOptions,
-                project.AccountId,
-                RequireJsonObject: true),
-            cancellationToken);
+        var coverageEnvelope = await IssueEnvelopeAsync(project, "llm:draft-coverage", draftText, cancellationToken);
+        var completion = _contextManifestIssuer is not null && coverageEnvelope is null
+            ? FailedLlmResult(model, prompt, "context_manifest_issue_failed")
+            : await _llmRouteEngine.CompleteAsync(
+                new LlmRouteRequest(
+                    coverageRoot,
+                    "draft-coverage",
+                    model,
+                    prompt,
+                    coverageOptions,
+                    project.AccountId,
+                    RequireJsonObject: true,
+                    OperationKey: "llm:draft-coverage",
+                    ContextEnvelope: coverageEnvelope),
+                cancellationToken);
         var attempts = 1;
         if (completion.Succeeded)
         {
@@ -411,16 +427,22 @@ public sealed class ProjectDraftImportService
 
         if (ShouldRetryCoverage(completion))
         {
-            completion = await _llmRouteEngine.CompleteAsync(
-                new LlmRouteRequest(
-                    coverageRoot,
-                    "draft-coverage-retry",
-                    model,
-                    BuildCoverageRetryPrompt(project, draftText, analyzed),
-                    coverageOptions,
-                    project.AccountId,
-                    RequireJsonObject: true),
-                cancellationToken);
+            var retryPrompt = BuildCoverageRetryPrompt(project, draftText, analyzed);
+            var retryEnvelope = await IssueEnvelopeAsync(project, "llm:draft-coverage-retry", draftText, cancellationToken);
+            completion = _contextManifestIssuer is not null && retryEnvelope is null
+                ? FailedLlmResult(model, retryPrompt, "context_manifest_issue_failed")
+                : await _llmRouteEngine.CompleteAsync(
+                    new LlmRouteRequest(
+                        coverageRoot,
+                        "draft-coverage-retry",
+                        model,
+                        retryPrompt,
+                        coverageOptions,
+                        project.AccountId,
+                        RequireJsonObject: true,
+                        OperationKey: "llm:draft-coverage-retry",
+                        ContextEnvelope: retryEnvelope),
+                    cancellationToken);
             attempts++;
             if (completion.Succeeded)
             {
@@ -445,6 +467,40 @@ public sealed class ProjectDraftImportService
             completion.ExitCode,
             attempts,
             completion.AssistantMessage ?? completion.Stderr ?? completion.Stdout);
+    }
+
+    private async Task<HostedContextEnvelope?> IssueEnvelopeAsync(
+        ProjectSnapshot project,
+        string operationKey,
+        string draftText,
+        CancellationToken cancellationToken)
+    {
+        if (_contextManifestIssuer is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return await _contextManifestIssuer.IssueAsync(
+                new HostedContextManifestIssue(
+                    project.AccountId,
+                    project.ProjectId,
+                    operationKey,
+                    Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, SHA256.HashData(Encoding.UTF8.GetBytes(draftText)))))).ToLowerInvariant(),
+                    "prototype-draft-analysis.v1",
+                    TimeSpan.FromMinutes(5)),
+                cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    private static LlmRouteResult FailedLlmResult(string model, string prompt, string failureCode)
+    {
+        return new LlmRouteResult(false, null, null, model, failureCode, null, 1, "", "", null, 0, prompt.Length, Encoding.UTF8.GetByteCount(prompt), 0);
     }
 
     private static bool ShouldRetryCoverage(LlmRouteResult completion)

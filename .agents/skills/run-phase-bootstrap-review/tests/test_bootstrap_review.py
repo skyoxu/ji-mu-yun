@@ -305,6 +305,121 @@ class BootstrapReviewCliTests(unittest.TestCase):
             ),
         )
 
+    def complete_codex_gate_with_blocker(self) -> tuple[dict, dict]:
+        self.prepare(execution_mode="codex-exec")
+        self.complete_preflight()
+        self.authorize_launch()
+        for layer in bootstrap.LAYERS:
+            output = self.read_json(f"reviewer-outputs/{layer}.json")
+            output["status"] = "completed"
+            output["coverage"]["readArtifacts"] = output["coverage"]["requiredArtifacts"]
+            output["coverage"]["missingArtifacts"] = []
+            output["candidates"] = [self.candidate()] if layer == "blind_hunter" else []
+            self.write_json(f"reviewer-outputs/{layer}.json", output)
+            self.complete_process_lease(f"reviewer:{layer}", layer)
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        return self.read_json("review-input.json"), self.read_json("review-candidates.json")["findings"][0]
+
+    def verifier_attempt_candidate(
+        self, manifest: dict, attempt_id: str, decisions: list[dict]
+    ) -> tuple[dict, Path]:
+        attempt_dir = self.run_dir / "attempts" / attempt_id
+        attempt_dir.mkdir(parents=True, exist_ok=False)
+        handshake = bootstrap.access_handshake_payload(
+            self.run_dir, manifest, "independent_verifier"
+        )
+        self.write_json(f"attempts/{attempt_id}/access-handshake.json", handshake)
+        identity = bootstrap.process_creation_identity(os.getpid())
+        self.assertIsNotNone(identity)
+        self.write_json(
+            f"attempts/{attempt_id}/process-result.json",
+            {
+                "schemaVersion": "bootstrap-process-result.v1",
+                "attemptId": attempt_id,
+                "pid": os.getpid(),
+                "exitCode": 0,
+                "completedAt": bootstrap.utc_now(),
+            },
+        )
+        write_set = [(self.run_dir / "verifier-output.json").relative_to(self.repo).as_posix()]
+        bootstrap.append_process_event(
+            self.run_dir,
+            {
+                "eventType": "attempt-started",
+                "timestamp": bootstrap.utc_now(),
+                "attemptId": attempt_id,
+                "operationId": "verifier",
+                "role": "independent_verifier",
+                "pid": os.getpid(),
+                "processIdentity": identity,
+                "writeSet": write_set,
+            },
+        )
+        return (
+            {
+                "schemaVersion": "bootstrap-layer-candidate.v1",
+                "attemptId": attempt_id,
+                "role": "independent_verifier",
+                "inputHash": manifest["inputHash"],
+                "accessHandshakeHash": handshake["handshakeHash"],
+                "payload": {"decisions": decisions},
+            },
+            attempt_dir,
+        )
+
+    def reviewer_attempt_candidate(
+        self,
+        manifest: dict,
+        attempt_id: str,
+        role: str,
+        payload: dict,
+    ) -> tuple[dict, Path]:
+        attempt_dir = self.run_dir / "attempts" / attempt_id
+        attempt_dir.mkdir(parents=True, exist_ok=False)
+        handshake = bootstrap.access_handshake_payload(self.run_dir, manifest, role)
+        self.write_json(f"attempts/{attempt_id}/access-handshake.json", handshake)
+        identity = bootstrap.process_creation_identity(os.getpid())
+        self.assertIsNotNone(identity)
+        self.write_json(
+            f"attempts/{attempt_id}/process-result.json",
+            {
+                "schemaVersion": "bootstrap-process-result.v1",
+                "attemptId": attempt_id,
+                "pid": os.getpid(),
+                "exitCode": 0,
+                "completedAt": bootstrap.utc_now(),
+            },
+        )
+        write_set = [
+            (self.run_dir / "reviewer-outputs" / f"{role}.json")
+            .relative_to(self.repo)
+            .as_posix()
+        ]
+        bootstrap.append_process_event(
+            self.run_dir,
+            {
+                "eventType": "attempt-started",
+                "timestamp": bootstrap.utc_now(),
+                "attemptId": attempt_id,
+                "operationId": f"reviewer:{role}",
+                "role": role,
+                "pid": os.getpid(),
+                "processIdentity": identity,
+                "writeSet": write_set,
+            },
+        )
+        return (
+            {
+                "schemaVersion": "bootstrap-layer-candidate.v1",
+                "attemptId": attempt_id,
+                "role": role,
+                "inputHash": manifest["inputHash"],
+                "accessHandshakeHash": handshake["handshakeHash"],
+                "payload": payload,
+            },
+            attempt_dir,
+        )
+
     def candidate(self, candidate_id: str = "BOOT-CANDIDATE-001", severity: str = "P1") -> dict:
         manifest = self.read_json("review-input.json")
         artifact = manifest["artifacts"][0]
@@ -785,14 +900,31 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(["acceptance_auditor"], gate["failedLayers"])
         self.assertIn("coverage_invalid", gate["layerFailures"][0]["reason"])
 
-    def test_gate_accepts_completed_coverage_in_any_order(self) -> None:
+    def test_gate_rejects_completed_coverage_out_of_manifest_order(self) -> None:
         self.prepare()
         self.complete_layers()
         output = self.read_json("reviewer-outputs/acceptance_auditor.json")
         output["coverage"]["readArtifacts"] = list(reversed(output["coverage"]["readArtifacts"]))
         self.write_json("reviewer-outputs/acceptance_auditor.json", output)
         self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
-        self.assertEqual("clean", self.read_json("review-gate-result.json")["status"])
+        gate = self.read_json("review-gate-result.json")
+        self.assertEqual("incomplete", gate["status"])
+        self.assertEqual(["acceptance_auditor"], gate["failedLayers"])
+        self.assertIn("prepared manifest order", gate["layerFailures"][0]["reason"])
+
+    def test_gate_rejects_duplicate_completed_coverage(self) -> None:
+        self.prepare()
+        self.complete_layers()
+        output = self.read_json("reviewer-outputs/acceptance_auditor.json")
+        output["coverage"]["readArtifacts"].append(
+            output["coverage"]["readArtifacts"][0]
+        )
+        self.write_json("reviewer-outputs/acceptance_auditor.json", output)
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        gate = self.read_json("review-gate-result.json")
+        self.assertEqual("incomplete", gate["status"])
+        self.assertEqual(["acceptance_auditor"], gate["failedLayers"])
+        self.assertIn("duplicates", gate["layerFailures"][0]["reason"])
 
     def test_gate_maps_failed_missing_context_layer_to_incomplete(self) -> None:
         self.prepare()
@@ -1746,6 +1878,53 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertTrue((abandoned / "run-seal.json").is_file())
         self.assertTrue((self.run_dir / "review-input.json").is_file())
 
+    def test_active_attempt_blocks_abandon_and_same_round_replacement(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        self.complete_preflight()
+        self.authorize_launch()
+        manifest = self.read_json("review-input.json")
+        formal = (
+            self.run_dir / "reviewer-outputs" / "blind_hunter.json"
+        ).relative_to(self.repo).as_posix()
+        bootstrap.append_process_event(
+            self.run_dir,
+            {
+                "eventType": "attempt-started",
+                "timestamp": bootstrap.utc_now(),
+                "attemptId": "live-reviewer",
+                "operationId": "reviewer:blind_hunter",
+                "role": "blind_hunter",
+                "pid": os.getpid(),
+                "processIdentity": bootstrap.process_creation_identity(os.getpid()),
+                "writeSet": [formal],
+            },
+        )
+
+        self.assertEqual(
+            1,
+            bootstrap.main(
+                [
+                    "seal-run",
+                    "--run-dir",
+                    str(self.run_dir),
+                    "--state",
+                    "abandoned",
+                    "--reason",
+                    "operator-replaced-run",
+                ]
+            ),
+        )
+        self.assertFalse((self.run_dir / "run-seal.json").exists())
+
+        self.run_dir = self.repo / "bootstrap-run-live-attempt-replacement"
+        self.prepare(
+            execution_mode="codex-exec",
+            review_id="upstream-live-attempt-replacement",
+            change_id=manifest["changeId"],
+            expected_result=1,
+        )
+        self.assertFalse((self.run_dir / "review-input.json").exists())
+
     def test_inspect_run_routes_passed_codex_preflight_to_access_proof(self) -> None:
         self.prepare(execution_mode="codex-exec")
         self.complete_preflight()
@@ -1907,6 +2086,72 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn("Do not edit formal output files", prompt)
         self.assertNotIn("fill\n`reviewer-outputs/blind_hunter.json`", prompt)
 
+    def test_verifier_prompt_lists_full_finding_range_and_context_requirements(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        blocker = {
+            "findingId": "BSR-FULLRANGE001",
+            "artifact": "upstream-plan/plan.md",
+            "startLine": 1,
+            "endLine": 3,
+            "contextRead": [
+                "upstream-plan/plan.md:1-2",
+                "upstream-plan/zz-unrelated.md",
+            ],
+        }
+
+        prompt = bootstrap.verifier_prompt(self.run_dir, manifest, [blocker])
+
+        self.assertIn("Required finding evidence: `upstream-plan/plan.md:1-3`", prompt)
+        self.assertIn("one `evidenceChecked` reference must cover the entire inclusive", prompt)
+        self.assertIn("`upstream-plan/plan.md:1-2`", prompt)
+        self.assertIn("`upstream-plan/zz-unrelated.md`", prompt)
+
+    def test_codex_verifier_runtime_expands_frozen_requirements_for_legacy_prompt(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        attempt_dir = self.run_dir / "attempts" / "verifier-prompt-contract"
+        attempt_dir.mkdir(parents=True)
+        helper_path, request_path, output_path = bootstrap.materialize_access_handshake_helper(
+            self.run_dir, manifest, "independent_verifier", attempt_dir
+        )
+        (self.run_dir / "verification-prompt.md").write_text(
+            "# Legacy verifier prompt\n\n- BSR-FULLRANGE001: upstream-plan/plan.md:1\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        blocker = {
+            "findingId": "BSR-FULLRANGE001",
+            "artifact": "upstream-plan/plan.md",
+            "startLine": 1,
+            "endLine": 3,
+            "contextRead": [
+                "upstream-plan/plan.md:1-2",
+                "upstream-plan/zz-unrelated.md",
+            ],
+        }
+
+        with mock.patch.object(
+            bootstrap,
+            "load_gate_blockers",
+            return_value={blocker["findingId"]: blocker},
+        ):
+            prompt = bootstrap.runner_prompt(
+                self.run_dir,
+                manifest,
+                "independent_verifier",
+                "verifier-prompt-contract",
+                helper_path,
+                request_path,
+                output_path,
+            )
+
+        self.assertIn("# Legacy verifier prompt", prompt)
+        self.assertIn("# Frozen Gate Evidence Requirements", prompt)
+        self.assertIn("Required finding evidence: `upstream-plan/plan.md:1-3`", prompt)
+        self.assertIn("`upstream-plan/plan.md:1-2`", prompt)
+        self.assertIn("`upstream-plan/zz-unrelated.md`", prompt)
+
     def test_parent_rejects_forged_run_local_access_handshake(self) -> None:
         self.prepare(execution_mode="codex-exec")
         manifest = self.read_json("review-input.json")
@@ -1998,6 +2243,343 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "Assigned context is unavailable",
             self.read_json("reviewer-outputs/blind_hunter.json")["failureReason"],
         )
+
+    def test_reviewer_authority_drift_before_publication_preserves_formal_output(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        self.complete_preflight()
+        self.authorize_launch()
+        manifest = self.read_json("review-input.json")
+        required = [item["artifact"] for item in manifest["artifacts"]]
+        payload = {
+            "status": "completed",
+            "coverage": {
+                "requiredArtifacts": required,
+                "readArtifacts": required,
+                "missingArtifacts": [],
+            },
+            "candidates": [self.candidate()],
+        }
+        candidate, attempt_dir = self.reviewer_attempt_candidate(
+            manifest,
+            "reviewer-prepublication-drift",
+            "blind_hunter",
+            payload,
+        )
+        formal_path = self.run_dir / "reviewer-outputs" / "blind_hunter.json"
+        formal_before = formal_path.read_bytes()
+
+        with mock.patch.object(
+            bootstrap,
+            "run_codex_attempt",
+            return_value=(candidate, attempt_dir),
+        ), mock.patch.object(
+            bootstrap,
+            "validate_launch_authorization",
+            side_effect=[None, bootstrap.BootstrapError("Frozen authority changed before publication")],
+        ) as validate_authority:
+            self.assertEqual(
+                1,
+                bootstrap.main(
+                    [
+                        "run-layer",
+                        "--run-dir",
+                        str(self.run_dir),
+                        "--role",
+                        "blind_hunter",
+                        "--codex-command",
+                        "test-codex-command",
+                        "--model",
+                        manifest["codexExecPolicy"]["preferredModel"],
+                    ]
+                ),
+            )
+
+        self.assertEqual(2, validate_authority.call_count)
+        self.assertEqual(formal_before, formal_path.read_bytes())
+        attempt_events = [
+            event
+            for event in bootstrap.read_process_events(self.run_dir)
+            if event.get("attemptId") == attempt_dir.name
+        ]
+        self.assertEqual("attempt-failed", attempt_events[-1]["eventType"])
+        self.assertFalse(any(event["eventType"] == "attempt-completed" for event in attempt_events))
+
+    def test_verifier_authority_drift_before_publication_preserves_formal_output(self) -> None:
+        manifest, finding = self.complete_codex_gate_with_blocker()
+        valid_decision = {
+            "findingId": finding["findingId"],
+            "decision": "confirmed",
+            "reason": "The exact finding and required context were both checked",
+            "evidenceChecked": ["upstream-plan/plan.md:1", "upstream-plan/plan.md:3"],
+        }
+        candidate, attempt_dir = self.verifier_attempt_candidate(
+            manifest, "verifier-prepublication-drift", [valid_decision]
+        )
+        formal_path = self.run_dir / "verifier-output.json"
+        formal_before = formal_path.read_bytes()
+
+        with mock.patch.object(
+            bootstrap,
+            "run_codex_attempt",
+            return_value=(candidate, attempt_dir),
+        ), mock.patch.object(
+            bootstrap,
+            "validate_launch_authorization",
+            side_effect=[None, bootstrap.BootstrapError("Frozen authority changed before publication")],
+        ) as validate_authority:
+            self.assertEqual(
+                1,
+                bootstrap.main(
+                    [
+                        "run-layer",
+                        "--run-dir",
+                        str(self.run_dir),
+                        "--role",
+                        "independent_verifier",
+                        "--codex-command",
+                        "test-codex-command",
+                        "--model",
+                        manifest["codexExecPolicy"]["preferredModel"],
+                    ]
+                ),
+            )
+
+        self.assertEqual(2, validate_authority.call_count)
+        self.assertEqual(formal_before, formal_path.read_bytes())
+        attempt_events = [
+            event
+            for event in bootstrap.read_process_events(self.run_dir)
+            if event.get("attemptId") == attempt_dir.name
+        ]
+        self.assertEqual("attempt-failed", attempt_events[-1]["eventType"])
+        self.assertFalse(any(event["eventType"] == "attempt-completed" for event in attempt_events))
+
+    def test_verifier_semantic_failure_does_not_replace_formal_output(self) -> None:
+        manifest, finding = self.complete_codex_gate_with_blocker()
+        invalid_decision = {
+            "findingId": finding["findingId"],
+            "decision": "confirmed",
+            "reason": "The child cited context but omitted the exact finding span",
+            "evidenceChecked": ["upstream-plan/plan.md:1"],
+        }
+        candidate, attempt_dir = self.verifier_attempt_candidate(
+            manifest, "invalid-verifier-semantic", [invalid_decision]
+        )
+        formal_path = self.run_dir / "verifier-output.json"
+        formal_before = formal_path.read_bytes()
+
+        with mock.patch.object(
+            bootstrap, "run_codex_attempt", return_value=(candidate, attempt_dir)
+        ):
+            self.assertEqual(
+                1,
+                bootstrap.main(
+                    [
+                        "run-layer",
+                        "--run-dir",
+                        str(self.run_dir),
+                        "--role",
+                        "independent_verifier",
+                        "--codex-command",
+                        "test-codex-command",
+                        "--model",
+                        manifest["codexExecPolicy"]["preferredModel"],
+                    ]
+                ),
+            )
+
+        self.assertEqual(formal_before, formal_path.read_bytes())
+        attempt_events = [
+            event
+            for event in bootstrap.read_process_events(self.run_dir)
+            if event.get("attemptId") == attempt_dir.name
+        ]
+        self.assertEqual("attempt-failed", attempt_events[-1]["eventType"])
+        self.assertFalse(any(event["eventType"] == "attempt-completed" for event in attempt_events))
+
+    def test_append_only_verifier_recovery_reopens_retry_and_finalizes(self) -> None:
+        manifest, finding = self.complete_codex_gate_with_blocker()
+        invalid_decision = {
+            "findingId": finding["findingId"],
+            "decision": "confirmed",
+            "reason": "Legacy runner accepted split evidence that did not cover the finding span",
+            "evidenceChecked": ["upstream-plan/plan.md:1"],
+        }
+        _candidate, legacy_attempt = self.verifier_attempt_candidate(
+            manifest, "legacy-invalid-verifier", [invalid_decision]
+        )
+        verifier = self.read_json("verifier-output.json")
+        verifier["decisions"] = [invalid_decision]
+        self.write_json("verifier-output.json", verifier)
+        identity = bootstrap.process_creation_identity(os.getpid())
+        self.assertIsNotNone(identity)
+        write_set = [(self.run_dir / "verifier-output.json").relative_to(self.repo).as_posix()]
+        bootstrap.append_process_event(
+            self.run_dir,
+            {
+                "eventType": "attempt-completed",
+                "timestamp": bootstrap.utc_now(),
+                "attemptId": legacy_attempt.name,
+                "operationId": "verifier",
+                "role": "independent_verifier",
+                "pid": os.getpid(),
+                "processIdentity": identity,
+                "writeSet": write_set,
+            },
+        )
+        bootstrap.rebuild_process_leases_from_events(self.run_dir, manifest)
+        rejected_before = (self.run_dir / "verifier-output.json").read_bytes()
+        self.assertEqual(
+            "recover-invalid-verifier",
+            bootstrap.classify_run(self.run_dir, manifest)["nextAction"],
+        )
+
+        self.assertEqual(
+            0,
+            bootstrap.main(["recover-verifier", "--run-dir", str(self.run_dir)]),
+        )
+        self.assertEqual(rejected_before, (self.run_dir / "verifier-output.json").read_bytes())
+        recovery_events = [
+            event
+            for event in bootstrap.read_process_events(self.run_dir)
+            if event.get("eventType") == bootstrap.VERIFIER_RECOVERY_EVENT
+        ]
+        self.assertEqual(1, len(recovery_events))
+        recovery_path = self.run_dir / recovery_events[0]["recoveryPath"]
+        recovery = json.loads(recovery_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            [],
+            bootstrap.schema_validation_errors(
+                "bootstrap-verifier-recovery.v1.schema.json", recovery
+            ),
+        )
+        rejected_path = self.run_dir / recovery["rejectedOutput"]["path"]
+        self.assertEqual(rejected_before, rejected_path.read_bytes())
+        invalid_recovery = dict(recovery)
+        invalid_recovery["unexpected"] = True
+        self.assertTrue(
+            bootstrap.schema_validation_errors(
+                "bootstrap-verifier-recovery.v1.schema.json", invalid_recovery
+            )
+        )
+        verifier_lease = next(
+            item
+            for item in self.read_json("process-leases.json")["leases"]
+            if item["operationId"] == "verifier"
+        )
+        self.assertEqual("failed", verifier_lease["state"])
+        self.assertEqual(
+            "run-independent-verifier",
+            bootstrap.classify_run(self.run_dir, manifest)["nextAction"],
+        )
+        self.assertEqual(
+            0,
+            bootstrap.main(["recover-verifier", "--run-dir", str(self.run_dir)]),
+        )
+        self.assertEqual(
+            1,
+            sum(
+                event.get("eventType") == bootstrap.VERIFIER_RECOVERY_EVENT
+                for event in bootstrap.read_process_events(self.run_dir)
+            ),
+        )
+
+        bootstrap.reserve_codex_attempt(
+            self.run_dir,
+            manifest,
+            "independent_verifier",
+            "recovery-reservation",
+            "verifier",
+            self.run_dir / "verifier-output.json",
+            write_set,
+        )
+        bootstrap.append_attempt_event_and_rebuild(
+            self.run_dir,
+            manifest,
+            {
+                "eventType": "attempt-failed",
+                "timestamp": bootstrap.utc_now(),
+                "attemptId": "recovery-reservation",
+                "operationId": "verifier",
+                "role": "independent_verifier",
+                "pid": os.getpid(),
+                "processIdentity": identity,
+                "writeSet": write_set,
+                "note": "Test releases the reopened reservation",
+            },
+        )
+
+        valid_decision = {
+            "findingId": finding["findingId"],
+            "decision": "confirmed",
+            "reason": "The exact finding and required context were both checked",
+            "evidenceChecked": ["upstream-plan/plan.md:1", "upstream-plan/plan.md:3"],
+        }
+        candidate, retry_attempt = self.verifier_attempt_candidate(
+            manifest, "valid-verifier-retry", [valid_decision]
+        )
+        with mock.patch.object(
+            bootstrap, "run_codex_attempt", return_value=(candidate, retry_attempt)
+        ):
+            self.assertEqual(
+                0,
+                bootstrap.main(
+                    [
+                        "run-layer",
+                        "--run-dir",
+                        str(self.run_dir),
+                        "--role",
+                        "independent_verifier",
+                        "--codex-command",
+                        "test-codex-command",
+                        "--model",
+                        manifest["codexExecPolicy"]["preferredModel"],
+                    ]
+                ),
+            )
+        self.assertEqual([valid_decision], self.read_json("verifier-output.json")["decisions"])
+        self.assertEqual("finalize", bootstrap.classify_run(self.run_dir, manifest)["nextAction"])
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        self.assertEqual("blocked", self.read_json("review-gate-result.json")["status"])
+
+    def test_recover_verifier_rejects_valid_completed_output(self) -> None:
+        manifest, finding = self.complete_codex_gate_with_blocker()
+        valid_decision = {
+            "findingId": finding["findingId"],
+            "decision": "confirmed",
+            "reason": "The complete evidence set confirms the reachable failure",
+            "evidenceChecked": ["upstream-plan/plan.md:1", "upstream-plan/plan.md:3"],
+        }
+        _candidate, attempt_dir = self.verifier_attempt_candidate(
+            manifest, "valid-completed-verifier", [valid_decision]
+        )
+        verifier = self.read_json("verifier-output.json")
+        verifier["decisions"] = [valid_decision]
+        self.write_json("verifier-output.json", verifier)
+        identity = bootstrap.process_creation_identity(os.getpid())
+        self.assertIsNotNone(identity)
+        bootstrap.append_process_event(
+            self.run_dir,
+            {
+                "eventType": "attempt-completed",
+                "timestamp": bootstrap.utc_now(),
+                "attemptId": attempt_dir.name,
+                "operationId": "verifier",
+                "role": "independent_verifier",
+                "pid": os.getpid(),
+                "processIdentity": identity,
+                "writeSet": [
+                    (self.run_dir / "verifier-output.json").relative_to(self.repo).as_posix()
+                ],
+            },
+        )
+        bootstrap.rebuild_process_leases_from_events(self.run_dir, manifest)
+
+        self.assertEqual(
+            1,
+            bootstrap.main(["recover-verifier", "--run-dir", str(self.run_dir)]),
+        )
+        self.assertFalse((self.run_dir / "verifier-recoveries").exists())
 
     def test_git_index_drift_blocks_launch_authorization(self) -> None:
         self.prepare()
@@ -2151,6 +2733,75 @@ class BootstrapReviewCliTests(unittest.TestCase):
             )
         p2["dispositions"][0]["closureProcessResultRef"] = closure_process_ref
         self.write_json("p2-dispositions.json", p2)
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        self.assertEqual("clean", self.read_json("review-gate-result.json")["status"])
+
+    def test_multiple_p2_process_results_survive_later_log_appends(self) -> None:
+        self.prepare()
+        first = self.candidate("BOOT-CANDIDATE-001", "P2")
+        second = self.candidate("BOOT-CANDIDATE-002", "P2")
+        second["triggerInput"] = "A second independent P2 closure is required"
+        self.complete_layers({"blind_hunter": [first, second]})
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        findings = self.read_json("review-candidates.json")["findings"]
+        finding_ids = sorted(item["findingId"] for item in findings)
+        self.assertEqual(2, len(finding_ids))
+        manifest = self.read_json("review-input.json")
+        _registry_path, registry_ref = self.write_p2_registry(manifest)
+        process_refs = {
+            finding_id: self.run_p2_command(finding_id, "closure-command")
+            for finding_id in finding_ids
+        }
+        dispositions = {
+            "schemaVersion": "bootstrap-p2-dispositions.v1",
+            "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"],
+            "candidateHash": manifest["authorityContextHash"],
+            "policyRevision": manifest["policyRevision"],
+            "authorityRevision": manifest["authorityRevision"],
+            "findingIds": finding_ids,
+            "dispositions": [
+                {
+                    "findingId": finding_id,
+                    "status": "fixed",
+                    "risk": "normal",
+                    "reason": "The registered closure command passed",
+                    "closureCommandId": "closure-command",
+                    "closureCommandRegistryRef": registry_ref,
+                    "closureProcessResultRef": process_refs[finding_id],
+                }
+                for finding_id in finding_ids
+            ],
+        }
+        self.write_json("p2-dispositions.json", dispositions)
+
+        for reference in process_refs.values():
+            process = json.loads((self.repo / reference["path"]).read_text(encoding="utf-8"))
+            self.assertEqual({"path", "eventHash"}, set(process["processLogRef"]))
+        validated = bootstrap.validate_p2_dispositions(self.run_dir, manifest, findings)
+        self.assertEqual(finding_ids, sorted(validated))
+
+        first_reference = process_refs[finding_ids[0]]
+        legacy_process = json.loads(
+            (self.repo / first_reference["path"]).read_text(encoding="utf-8")
+        )
+        process_log_path = self.run_dir / "p2-process-events.jsonl"
+        legacy_process["processLogRef"] = {
+            "path": process_log_path.relative_to(self.repo).as_posix(),
+            "sha256": bootstrap.file_hash(process_log_path),
+        }
+        legacy_path = self.repo / "legacy-p2-process-result.json"
+        legacy_path.write_text(json.dumps(legacy_process), encoding="utf-8", newline="\n")
+        dispositions["dispositions"][0]["closureProcessResultRef"] = {
+            "path": legacy_path.relative_to(self.repo).as_posix(),
+            "sha256": bootstrap.file_hash(legacy_path),
+        }
+        self.write_json("p2-dispositions.json", dispositions)
+        legacy_validated = bootstrap.validate_p2_dispositions(self.run_dir, manifest, findings)
+        self.assertEqual(finding_ids, sorted(legacy_validated))
+
+        dispositions["dispositions"][0]["closureProcessResultRef"] = first_reference
+        self.write_json("p2-dispositions.json", dispositions)
         self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
         self.assertEqual("clean", self.read_json("review-gate-result.json")["status"])
 

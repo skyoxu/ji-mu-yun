@@ -69,6 +69,7 @@ FINALIZED_DOES_NOT_AUTHORIZE = [
     "commit",
     "done",
 ]
+VERIFIER_RECOVERY_EVENT = "verifier-recovery-opened"
 
 ACCESS_HANDSHAKE_HELPER = r'''#!/usr/bin/env python3
 from __future__ import annotations
@@ -937,6 +938,7 @@ def validate_review_cycle(
     counted_change = []
     for path, item in same_change:
         gate_started = (path / "review-gate-result.json").is_file()
+        event_backed_attempts = active_attempts(read_process_events(path))
         seal_path = path / "run-seal.json"
         seal = read_json(seal_path) if seal_path.is_file() else None
         incomplete_abandoned_codex_run = (
@@ -944,6 +946,7 @@ def validate_review_cycle(
             and isinstance(seal, dict)
             and seal.get("state") == "abandoned"
             and not gate_started
+            and not event_backed_attempts
             and not all(
                 (path / "reviewer-outputs" / f"{layer}.json").is_file()
                 and read_json(path / "reviewer-outputs" / f"{layer}.json").get("status") == "completed"
@@ -953,14 +956,16 @@ def validate_review_cycle(
         if incomplete_abandoned_codex_run:
             continue
         authorization_exists = (path / "review-launch-authorization.json").is_file()
-        reviewer_process_started = False
+        reviewer_process_started = any(
+            event.get("role") in LAYERS for event in event_backed_attempts.values()
+        )
         lease_path = path / item.get("processLeasePolicy", {}).get("sidecar", "process-leases.json")
         if lease_path.is_file():
             try:
                 lease_state = read_json(lease_path)
             except BootstrapError:
                 lease_state = {}
-            reviewer_process_started = any(
+            reviewer_process_started |= any(
                 isinstance(lease, dict) and lease.get("role") in LAYERS
                 for lease in lease_state.get("leases", [])
             )
@@ -2487,6 +2492,10 @@ def rebuild_process_leases_from_events(run_dir: Path, manifest: dict[str, Any]) 
             leases[operation_id]["updatedAt"] = event["timestamp"]
             if event.get("note"):
                 leases[operation_id]["note"] = event["note"]
+        elif event_type == VERIFIER_RECOVERY_EVENT and operation_id == "verifier" and operation_id in leases:
+            leases[operation_id]["state"] = "failed"
+            leases[operation_id]["updatedAt"] = event["timestamp"]
+            leases[operation_id]["note"] = event["note"]
     write_json(
         process_lease_path(run_dir, manifest),
         {
@@ -2516,6 +2525,132 @@ def formal_output_is_completed(formal_path: Path, role: str) -> bool:
     return isinstance(decisions, list) and bool(decisions)
 
 
+def load_gate_blockers(
+    run_dir: Path, manifest: dict[str, Any]
+) -> dict[str, dict[str, Any]]:
+    gate = read_json(run_dir / "review-gate-state.json")
+    validate_gate_state(gate, manifest)
+    candidate_doc = read_json(run_dir / "review-candidates.json")
+    if gate.get("candidatesHash") != value_hash(candidate_doc):
+        raise BootstrapError("review-candidates.json changed after gate")
+    findings = candidate_doc.get("findings") if isinstance(candidate_doc, dict) else None
+    if not isinstance(findings, list):
+        raise BootstrapError("review-candidates.json is invalid")
+    blockers = {
+        item.get("findingId"): item
+        for item in findings
+        if isinstance(item, dict)
+        and isinstance(item.get("findingId"), str)
+        and item.get("proposedSeverity") in {"P0", "P1"}
+    }
+    if len(blockers) != sum(
+        isinstance(item, dict) and item.get("proposedSeverity") in {"P0", "P1"}
+        for item in findings
+    ):
+        raise BootstrapError("review-candidates.json has duplicate or invalid blocker IDs")
+    if gate.get("blockerCandidateCount") != len(blockers):
+        raise BootstrapError("Gate blocker count does not match review-candidates.json")
+    return blockers
+
+
+def validate_verifier_recovery_events(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    blockers: dict[str, dict[str, Any]] | None = None,
+    events: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    events = read_process_events(run_dir) if events is None else events
+    recovery_root = run_dir / "verifier-recoveries"
+    last_completion_index = -1
+    latest_record: dict[str, Any] | None = None
+    latest_recovery_index = -1
+
+    for index, event in enumerate(events):
+        if (
+            event.get("eventType") == "attempt-completed"
+            and event.get("operationId") == "verifier"
+            and event.get("role") == "independent_verifier"
+        ):
+            last_completion_index = index
+            continue
+        if event.get("eventType") != VERIFIER_RECOVERY_EVENT:
+            continue
+        if last_completion_index < 0:
+            raise BootstrapError("Verifier recovery has no preceding completed verifier attempt")
+        completed_event = events[last_completion_index]
+        required_event_fields = {
+            "schemaVersion", "eventType", "timestamp", "attemptId", "operationId", "role",
+            "pid", "processIdentity", "writeSet", "recoveryId", "recoveryPath",
+            "recoveryHash", "rejectedOutputHash", "note",
+        }
+        if set(event) != required_event_fields:
+            raise BootstrapError("Verifier recovery process event shape is invalid")
+        if (
+            event.get("operationId") != "verifier"
+            or event.get("role") != "independent_verifier"
+            or event.get("attemptId") != completed_event.get("attemptId")
+        ):
+            raise BootstrapError("Verifier recovery process event is not bound to the completed attempt")
+        record_path = ensure_within(
+            run_dir / str(event.get("recoveryPath", "")), recovery_root, "Verifier recovery record"
+        )
+        if not record_path.is_file() or file_hash(record_path) != event.get("recoveryHash"):
+            raise BootstrapError("Verifier recovery record is missing or stale")
+        record = read_json(record_path)
+        errors = schema_validation_errors("bootstrap-verifier-recovery.v1.schema.json", record)
+        expected = {
+            "recoveryId": event.get("recoveryId"),
+            "reviewId": manifest["reviewId"],
+            "routeVersion": manifest["routeVersion"],
+            "controlPlaneRevision": manifest["controlPlaneRevision"],
+            "authorityRevision": manifest["authorityRevision"],
+            "inputHash": manifest["inputHash"],
+            "operationId": "verifier",
+            "role": "independent_verifier",
+            "rejectedAttemptId": completed_event.get("attemptId"),
+            "completedEventHash": value_hash(completed_event),
+            "gateStateHash": file_hash(run_dir / "review-gate-state.json"),
+            "candidatesHash": file_hash(run_dir / "review-candidates.json"),
+            "authorizes": [],
+            "doesNotAuthorize": FINALIZED_DOES_NOT_AUTHORIZE,
+        }
+        errors.extend(
+            f"{key} does not match verifier recovery authority"
+            for key, value in expected.items()
+            if not isinstance(record, dict) or record.get(key) != value
+        )
+        if errors:
+            raise BootstrapError("Verifier recovery record is invalid: " + "; ".join(errors))
+        rejected_ref = record["rejectedOutput"]
+        rejected_path = ensure_within(
+            run_dir / rejected_ref["path"], recovery_root, "Rejected verifier output"
+        )
+        if (
+            not rejected_path.is_file()
+            or file_hash(rejected_path) != rejected_ref["sha256"]
+            or rejected_path.stat().st_size != rejected_ref["sizeBytes"]
+            or rejected_ref["sha256"] != event.get("rejectedOutputHash")
+        ):
+            raise BootstrapError("Rejected verifier output recovery evidence is missing or stale")
+        if blockers is None:
+            blockers = load_gate_blockers(run_dir, manifest)
+        try:
+            validate_verifier(read_json(rejected_path), manifest, blockers)
+        except BootstrapError:
+            pass
+        else:
+            raise BootstrapError("Verifier recovery archived an output that passes semantic validation")
+        latest_record = record
+        latest_recovery_index = index
+
+    return {
+        "open": latest_recovery_index > last_completion_index,
+        "latestRecord": latest_record,
+        "latestRecoveryIndex": latest_recovery_index,
+        "latestCompletionIndex": last_completion_index,
+    }
+
+
 def reserve_codex_attempt(
     run_dir: Path,
     manifest: dict[str, Any],
@@ -2533,14 +2668,24 @@ def reserve_codex_attempt(
     # ADR-0041: execution facts are authoritative, so check and reserve under one lock.
     with process_lease_lock(run_dir):
         events = read_process_events(run_dir)
-        if any(
+        recovery = (
+            validate_verifier_recovery_events(run_dir, manifest, events=events)
+            if role == "independent_verifier"
+            else {"open": False}
+        )
+        operation_completed = any(
             event.get("eventType") == "attempt-completed"
             and event.get("operationId") == operation_id
             for event in events
-        ):
+        )
+        if operation_completed and not recovery["open"]:
             raise BootstrapError(f"Operation {operation_id} is already completed and cannot be rerun")
-        if formal_output_is_completed(formal_path, role):
+        if formal_output_is_completed(formal_path, role) and not recovery["open"]:
             raise BootstrapError(f"Formal output for {role} is already completed and cannot be overwritten")
+        if recovery["open"]:
+            rejected_hash = recovery["latestRecord"]["rejectedOutput"]["sha256"]
+            if not formal_path.is_file() or file_hash(formal_path) != rejected_hash:
+                raise BootstrapError("Rejected verifier output changed after recovery was opened")
         if role in LAYERS and any(
             (run_dir / name).is_file()
             for name in ("review-gate-state.json", "review-gate-result.json")
@@ -2607,6 +2752,33 @@ def record_attempt_rejection(
     )
 
 
+def verifier_evidence_requirements(blockers: list[dict[str, Any]]) -> str:
+    if not blockers:
+        return "- None"
+    sections: list[str] = []
+    for blocker in blockers:
+        finding_reference = (
+            f"{blocker['artifact']}:{blocker['startLine']}"
+            + (
+                f"-{blocker['endLine']}"
+                if blocker["endLine"] != blocker["startLine"]
+                else ""
+            )
+        )
+        context_references = "\n".join(
+            f"  - `{reference}`" for reference in blocker["contextRead"]
+        )
+        sections.append(
+            f"### `{blocker['findingId']}`\n"
+            f"- Required finding evidence: `{finding_reference}`\n"
+            "- Coverage rule: one `evidenceChecked` reference must cover the entire inclusive "
+            "finding range above; split partial references do not satisfy it.\n"
+            "- Required `contextRead` coverage:\n"
+            f"{context_references}"
+        )
+    return "\n\n".join(sections)
+
+
 def runner_prompt(
     run_dir: Path,
     manifest: dict[str, Any],
@@ -2623,6 +2795,16 @@ def runner_prompt(
     )
     if not prompt_path.is_file():
         raise BootstrapError(f"Role prompt is missing: {prompt_path}")
+    verifier_requirements = ""
+    if role == "independent_verifier":
+        blockers = list(load_gate_blockers(run_dir, manifest).values())
+        verifier_requirements = (
+            "\n\n# Frozen Gate Evidence Requirements\n\n"
+            "These requirements are derived from the hash-bound `review-candidates.json`, not "
+            "from a shortened candidate summary. A path-only context reference requires whole-"
+            "artifact coverage.\n\n"
+            + verifier_evidence_requirements(blockers)
+        )
     handshake_command = [
         "py", "-3", str(helper_path),
         "--request", str(handshake_request_path), "--out", str(handshake_path),
@@ -2647,6 +2829,7 @@ def runner_prompt(
         f"role={role}, inputHash={manifest['inputHash']}, accessHandshakeHash, and payload. "
         "For a reviewer, payload contains status, coverage, candidates, and failureReason when failed. "
         "For the verifier, payload contains decisions."
+        + verifier_requirements
     )
 
 
@@ -2866,6 +3049,10 @@ def command_run_layer(args: argparse.Namespace) -> int:
             errors = schema_validation_errors("bootstrap-verifier-output.v1.schema.json", formal)
             if errors:
                 raise BootstrapError("Verifier candidate is invalid: " + "; ".join(errors))
+            # ADR-0045: semantic coverage must pass before parent-owned formal evidence changes.
+            validate_verifier(formal, manifest, load_gate_blockers(run_dir, manifest))
+            # ADR-0045: revalidate frozen authority before publishing verifier evidence.
+            validate_launch_authorization(run_dir, manifest)
             write_json(run_dir / "verifier-output.json", formal)
         else:
             formal = reviewer_template(args.role, manifest)
@@ -2873,15 +3060,19 @@ def command_run_layer(args: argparse.Namespace) -> int:
                 formal[field] = payload.get(field)
             if payload.get("status") == "failed":
                 formal["failureReason"] = payload.get("failureReason")
-            errors = validate_binding(formal, manifest, args.role)
-            for item in formal.get("candidates", []) if isinstance(formal.get("candidates"), list) else []:
-                code, reason = candidate_reason(item, manifest, repository_root)
-                if code:
-                    errors.append(f"{code}: {reason}")
-            if errors:
-                raise BootstrapError("Reviewer candidate is invalid: " + "; ".join(errors))
+            status = formal.get("status")
+            validate_reviewer_output(
+                formal,
+                manifest,
+                args.role,
+                repository_root,
+                require_completed=status == "completed",
+            )
+            # ADR-0041: revalidate frozen authority before publishing completed evidence.
+            validate_launch_authorization(run_dir, manifest)
             write_json(run_dir / "reviewer-outputs" / f"{args.role}.json", formal)
-            command_validate_layer(argparse.Namespace(run_dir=str(run_dir), layer=args.role))
+            if status == "failed":
+                raise BootstrapError(str(formal["failureReason"]))
     except BootstrapError as exc:
         append_attempt_event_and_rebuild(
             run_dir, manifest,
@@ -2944,12 +3135,18 @@ def validate_binding(output: Any, manifest: dict[str, Any], layer: str) -> list[
             read_set = set(read_artifacts)
             missing_set = set(missing_artifacts)
             expected_set = set(expected_artifacts)
+            if len(read_artifacts) != len(read_set) or len(missing_artifacts) != len(missing_set):
+                errors.append("coverage_invalid: coverage artifact lists cannot contain duplicates")
             if read_set & missing_set or read_set | missing_set != expected_set:
                 errors.append("coverage_invalid: readArtifacts and missingArtifacts must partition requiredArtifacts")
             if output.get("status") == "pending" and (read_artifacts or missing_artifacts != expected_artifacts):
                 errors.append("coverage_invalid: pending coverage must leave every artifact missing")
-            if output.get("status") == "completed" and (read_set != expected_set or missing_artifacts):
-                errors.append("coverage_invalid: completed coverage requires every artifact to be read")
+            if output.get("status") == "completed" and (
+                read_artifacts != expected_artifacts or missing_artifacts
+            ):
+                errors.append(
+                    "coverage_invalid: completed readArtifacts must exactly match prepared manifest order"
+                )
     return errors
 
 
@@ -2960,8 +3157,21 @@ def command_validate_layer(args: argparse.Namespace) -> int:
     if layer not in manifest["requiredLayers"]:
         raise BootstrapError(f"Reviewer layer is not required by this review: {layer}")
     output = read_json(run_dir / "reviewer-outputs" / f"{layer}.json")
+    validate_reviewer_output(output, manifest, layer, repository_root, require_completed=True)
+    print(f"Validated reviewer output: {layer}")
+    return 0
+
+
+def validate_reviewer_output(
+    output: Any,
+    manifest: dict[str, Any],
+    layer: str,
+    repository_root: Path,
+    *,
+    require_completed: bool,
+) -> None:
     errors = validate_binding(output, manifest, layer)
-    if isinstance(output, dict) and output.get("status") != "completed":
+    if require_completed and isinstance(output, dict) and output.get("status") != "completed":
         errors.append("status_invalid: validate-layer requires a completed reviewer output")
     if not errors and isinstance(output, dict):
         for candidate in output.get("candidates", []):
@@ -2970,8 +3180,6 @@ def command_validate_layer(args: argparse.Namespace) -> int:
                 errors.append(f"{reason_code}: {reason}")
     if errors:
         raise BootstrapError(f"Reviewer output is invalid for {layer}: " + "; ".join(errors))
-    print(f"Validated reviewer output: {layer}")
-    return 0
 
 
 def validate_scope_references(
@@ -3151,7 +3359,6 @@ def finding_from_candidate(candidate: dict[str, Any], layer: str, manifest: dict
 
 
 def verifier_prompt(run_dir: Path, manifest: dict[str, Any], blockers: list[dict[str, Any]]) -> str:
-    ids = "\n".join(f"- `{item['findingId']}`: {item['artifact']}:{item['startLine']}" for item in blockers) or "- None"
     if manifest["executionMode"] == "codex-exec":
         output_contract = f"""Assigned run directory: `{run_dir}`
 Artifact View manifest: `{run_dir / manifest['artifactView']['manifestPath']}`
@@ -3185,8 +3392,8 @@ Use `reason` for the concise evidence-based conclusion; do not use `rationale`. 
 `unverifiedClass` only when `decision` is `unverified`.
 {output_contract}
 
-Candidates:
-{ids}
+Candidates and frozen evidence requirements:
+{verifier_evidence_requirements(blockers)}
 """
 
 
@@ -3420,6 +3627,123 @@ def validate_verifier(
     if missing:
         raise BootstrapError(f"Verifier decisions are missing for: {', '.join(sorted(missing))}")
     return decisions
+
+
+def command_recover_verifier(args: argparse.Namespace) -> int:
+    run_dir, manifest, repository_root = load_run(args.run_dir)
+    if manifest["executionMode"] != "codex-exec":
+        raise BootstrapError("recover-verifier is only valid for codex-exec runs")
+    validate_launch_authorization(run_dir, manifest)
+    result_path = run_dir / "review-gate-result.json"
+    existing_result = read_json(result_path)
+    if existing_result.get("schemaVersion") == "review-result.v1":
+        raise BootstrapError("A finalized review cannot reopen verifier execution")
+    if existing_result.get("status") != "awaiting_verification":
+        raise BootstrapError("Verifier recovery requires an awaiting_verification gate result")
+    if (run_dir / "run-seal.json").is_file():
+        raise BootstrapError("A sealed review run cannot reopen verifier execution")
+    blockers = load_gate_blockers(run_dir, manifest)
+    if not blockers:
+        raise BootstrapError("Verifier recovery requires at least one accepted P0/P1 blocker")
+
+    formal_path = run_dir / "verifier-output.json"
+    with process_lease_lock(run_dir):
+        events = read_process_events(run_dir)
+        recovery = validate_verifier_recovery_events(
+            run_dir, manifest, blockers=blockers, events=events
+        )
+        if recovery["open"]:
+            record = recovery["latestRecord"]
+            print(f"Verifier recovery is already open: {record['recoveryId']}")
+            return 0
+        if any(
+            event.get("operationId") == "verifier"
+            for event in active_attempts(events).values()
+        ):
+            raise BootstrapError("A verifier attempt is active; reattach or inspect it before recovery")
+        completion_index = recovery["latestCompletionIndex"]
+        if completion_index < 0:
+            raise BootstrapError("No completed verifier operation exists to recover")
+        completed_event = events[completion_index]
+        rejected_bytes = formal_path.read_bytes()
+        if not rejected_bytes:
+            raise BootstrapError("Completed verifier output is empty and cannot be recovered")
+        try:
+            rejected_output = read_json(formal_path)
+            validate_verifier(rejected_output, manifest, blockers)
+        except BootstrapError as exc:
+            semantic_failure = str(exc)
+        else:
+            raise BootstrapError(
+                "Verifier output passes semantic validation; a valid completed operation cannot be reopened"
+            )
+
+        recovery_id = (
+            "verifier-recovery-"
+            + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+            + f"-{time.time_ns() % 100000000:08d}"
+        )
+        recovery_dir = run_dir / "verifier-recoveries" / recovery_id
+        recovery_dir.mkdir(parents=True, exist_ok=False)
+        rejected_path = recovery_dir / "rejected-verifier-output.json"
+        atomic_write_bytes(rejected_path, rejected_bytes)
+        rejected_hash = file_hash(rejected_path)
+        record_path = recovery_dir / "recovery.json"
+        record = {
+            "schemaVersion": "bootstrap-verifier-recovery.v1",
+            "recoveryId": recovery_id,
+            "reviewId": manifest["reviewId"],
+            "routeVersion": manifest["routeVersion"],
+            "controlPlaneRevision": manifest["controlPlaneRevision"],
+            "authorityRevision": manifest["authorityRevision"],
+            "inputHash": manifest["inputHash"],
+            "operationId": "verifier",
+            "role": "independent_verifier",
+            "rejectedAttemptId": completed_event["attemptId"],
+            "completedEventHash": value_hash(completed_event),
+            "gateStateHash": file_hash(run_dir / "review-gate-state.json"),
+            "candidatesHash": file_hash(run_dir / "review-candidates.json"),
+            "rejectedOutput": {
+                "path": rejected_path.relative_to(run_dir).as_posix(),
+                "sha256": rejected_hash,
+                "sizeBytes": len(rejected_bytes),
+            },
+            "semanticFailure": semantic_failure,
+            "openedAt": utc_now(),
+            "authorizes": [],
+            "doesNotAuthorize": FINALIZED_DOES_NOT_AUTHORIZE,
+        }
+        errors = schema_validation_errors("bootstrap-verifier-recovery.v1.schema.json", record)
+        if errors:
+            raise BootstrapError("Cannot create verifier recovery record: " + "; ".join(errors))
+        write_json(record_path, record)
+        process_identity = process_creation_identity(os.getpid())
+        if process_identity is None:
+            raise BootstrapError("Cannot capture controller identity for verifier recovery")
+        formal_write_set = [repository_relative_path(formal_path, repository_root)]
+        append_process_event(
+            run_dir,
+            {
+                "eventType": VERIFIER_RECOVERY_EVENT,
+                "timestamp": utc_now(),
+                "attemptId": completed_event["attemptId"],
+                "operationId": "verifier",
+                "role": "independent_verifier",
+                "pid": os.getpid(),
+                "processIdentity": process_identity,
+                "writeSet": formal_write_set,
+                "recoveryId": recovery_id,
+                "recoveryPath": record_path.relative_to(run_dir).as_posix(),
+                "recoveryHash": file_hash(record_path),
+                "rejectedOutputHash": rejected_hash,
+                "note": semantic_failure,
+            },
+        )
+        rebuild_process_leases_from_events(run_dir, manifest)
+    if formal_path.read_bytes() != rejected_bytes:
+        raise BootstrapError("Verifier recovery changed the rejected formal output")
+    print(f"Opened append-only verifier recovery: {record_path}")
+    return 0
 
 
 def load_typed_repository_reference(
@@ -3723,8 +4047,12 @@ def validate_p2_dispositions(
         )
         log_reference = process.get("processLogRef")
         log_path: Path | None = None
-        if not isinstance(log_reference, dict) or set(log_reference) != {"path", "sha256"}:
-            errors.append(f"{label} process log must be an exact path/hash reference")
+        anchored_event_hash: str | None = None
+        if not isinstance(log_reference, dict) or set(log_reference) not in (
+            {"path", "sha256"},
+            {"path", "eventHash"},
+        ):
+            errors.append(f"{label} process log must bind its path and log hash or event hash")
         else:
             try:
                 log_path = ensure_within(
@@ -3735,12 +4063,14 @@ def validate_p2_dispositions(
             except BootstrapError as exc:
                 errors.append(str(exc))
                 log_path = None
-            if (
-                log_path is not None
-                and (
-                    log_path != (run_dir / "p2-process-events.jsonl").resolve()
-                    or not log_path.is_file()
-                    or file_hash(log_path) != log_reference.get("sha256")
+            legacy_log_hash = log_reference.get("sha256")
+            anchored_event_hash = log_reference.get("eventHash")
+            if log_path is not None and (
+                log_path != (run_dir / "p2-process-events.jsonl").resolve()
+                or not log_path.is_file()
+                or (
+                    legacy_log_hash is not None
+                    and file_hash(log_path) != legacy_log_hash
                 )
             ):
                 errors.append(f"{label} process log is missing, stale, or outside the runner-owned path")
@@ -3775,6 +4105,8 @@ def validate_p2_dispositions(
                 or process.get("observedAt") != event.get("observedAt")
             ):
                 errors.append(f"{label} result does not derive from its process event")
+            if anchored_event_hash is not None and event.get("eventHash") != anchored_event_hash:
+                errors.append(f"{label} process log anchor does not match its process event")
             for stream in ("stdout", "stderr"):
                 stream_path_key = f"{stream}Path"
                 stream_hash_key = f"{stream}Hash"
@@ -3933,6 +4265,9 @@ def validate_finalized_run_evidence(
         for finding_id, finding in finding_map.items()
         if finding.get("proposedSeverity") in {"P0", "P1"}
     }
+    recovery = validate_verifier_recovery_events(run_dir, manifest, blockers=blockers)
+    if recovery["open"]:
+        raise BootstrapError("Finalized run retains an open verifier recovery")
     verifier_path = run_dir / "verifier-output.json"
     validate_verifier(read_json(verifier_path), manifest, blockers)
     p2_dispositions = validate_p2_dispositions(run_dir, manifest, findings)
@@ -4185,6 +4520,9 @@ def command_finalize(args: argparse.Namespace) -> int:
         if prepared is None or file_hash(ensure_within(repository_root / artifact, repository_root, "Finding artifact")) != prepared["sha256"]:
             raise BootstrapError(f"Finding evidence became stale before finalize: {artifact}")
     blockers = {item["findingId"]: item for item in findings if item.get("proposedSeverity") in {"P0", "P1"}}
+    recovery = validate_verifier_recovery_events(run_dir, manifest, blockers=blockers)
+    if recovery["open"]:
+        raise BootstrapError("Cannot finalize while verifier recovery is open")
     if blockers:
         validate_required_process_leases(
             run_dir,
@@ -4470,7 +4808,7 @@ def command_run_p2_command(args: argparse.Namespace) -> int:
         },
         "processLogRef": {
             "path": log_path.relative_to(repository_root).as_posix(),
-            "sha256": file_hash(log_path),
+            "eventHash": event["eventHash"],
         },
         "stdoutHash": file_hash(stdout_path),
         "stderrHash": file_hash(stderr_path),
@@ -4580,6 +4918,38 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
                 next_action = "authorize-launch"
     if expired_p2:
         next_action = "expired-p2-deferral-blocks"
+    verifier_recovery_state = "none"
+    if relationship == "active" and execution_state == "awaiting-verification":
+        try:
+            blockers = load_gate_blockers(run_dir, manifest)
+            recovery = validate_verifier_recovery_events(run_dir, manifest, blockers=blockers)
+            verifier_recovery_state = "open" if recovery["open"] else (
+                "closed" if recovery["latestRecord"] is not None else "none"
+            )
+            verifier_valid = False
+            try:
+                validate_verifier(read_json(run_dir / "verifier-output.json"), manifest, blockers)
+            except BootstrapError:
+                pass
+            else:
+                verifier_valid = True
+            effective_completion = (
+                recovery["latestCompletionIndex"] >= 0
+                and recovery["latestCompletionIndex"] > recovery["latestRecoveryIndex"]
+            )
+            if recovery["open"]:
+                next_action = "run-independent-verifier"
+            elif verifier_valid and (
+                manifest.get("executionMode") != "codex-exec" or effective_completion
+            ):
+                next_action = "finalize"
+            elif not verifier_valid and effective_completion:
+                next_action = "recover-invalid-verifier"
+            else:
+                next_action = "run-independent-verifier"
+        except (BootstrapError, ControlPlaneError):
+            verifier_recovery_state = "invalid"
+            next_action = "inspect-verifier-recovery-evidence"
     return {
         "runDirectory": run_dir.as_posix(),
         "reviewId": manifest.get("reviewId"),
@@ -4592,6 +4962,7 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
         "activeAttempts": sorted(active),
         "acquiredLeases": sorted(value for value in acquired_leases if isinstance(value, str)),
         "nextAction": next_action,
+        "verifierRecoveryState": verifier_recovery_state,
     }
 
 
@@ -4617,6 +4988,9 @@ def write_run_summary(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]
         "signals": {
             "retry": sum(event.get("eventType") == "attempt-failed" for event in events),
             "stale": sum(event.get("eventType") == "attempt-stale" for event in events),
+            "verifierRecovery": sum(
+                event.get("eventType") == VERIFIER_RECOVERY_EVENT for event in events
+            ),
             "accessProof": (run_dir / "access-proof.json").is_file(),
         },
         "evidenceHashes": {
@@ -4682,6 +5056,10 @@ def command_seal_run(args: argparse.Namespace) -> int:
     if seal_path.exists():
         raise BootstrapError("Run seal is immutable and already exists")
     classification = classify_run(run_dir, manifest)
+    if classification["activeAttempts"] or classification["acquiredLeases"]:
+        raise BootstrapError(
+            "A run with an active attempt or acquired lease cannot be sealed; inspect or recover it first"
+        )
     if classification["runExecutionState"] == "finalized" and args.state == "abandoned":
         raise BootstrapError("A finalized run cannot be sealed as abandoned")
     if args.state == "superseded" and not args.successor:
@@ -4792,6 +5170,12 @@ def build_parser() -> argparse.ArgumentParser:
     run_layer.add_argument("--codex-command", required=True)
     run_layer.add_argument("--model")
     run_layer.set_defaults(handler=command_run_layer)
+    recover_verifier = subparsers.add_parser(
+        "recover-verifier",
+        help="Archive a semantically invalid completed verifier output and reopen one retry lane",
+    )
+    recover_verifier.add_argument("--run-dir", required=True)
+    recover_verifier.set_defaults(handler=command_recover_verifier)
     lease = subparsers.add_parser(
         "process-lease",
         help="Acquire, release, or inspect a long-running review process lease",

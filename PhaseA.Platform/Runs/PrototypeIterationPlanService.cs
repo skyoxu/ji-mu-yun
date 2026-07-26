@@ -50,6 +50,7 @@ public sealed class PrototypeIterationPlanService
     private readonly GameDesignRequirementMapService _requirementMapService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly GameTypeTemplateCatalog? _templateCatalog;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public PrototypeIterationPlanService(PhaseAMetadataStore metadataStore)
         : this(metadataStore, new PrototypeRouteStateWriter(), new PrototypeContractService(), null, null)
@@ -64,7 +65,8 @@ public sealed class PrototypeIterationPlanService
         ILlmRouteEngine? llmRouteEngine = null,
         GameTypeTemplateCatalog? templateCatalog = null,
         PrototypeContractFreezeService? contractFreezeService = null,
-        GameDesignRequirementMapService? requirementMapService = null)
+        GameDesignRequirementMapService? requirementMapService = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _routeStateWriter = routeStateWriter;
@@ -73,6 +75,7 @@ public sealed class PrototypeIterationPlanService
         _requirementMapService = requirementMapService ?? new GameDesignRequirementMapService(metadataStore);
         _llmRouteEngine = llmRouteEngine ?? (codexChatClient is null ? null : new LlmRouteEngine(codexChatClient));
         _templateCatalog = templateCatalog;
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<PrototypeIterationPlanResult> CreateAsync(
@@ -1323,6 +1326,23 @@ public sealed class PrototypeIterationPlanService
         var modelPrompt = BuildPlanningAnalysisPrompt(project, routeProfile, projectExecutionGuide, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "planning-analysis");
         var options = PlanningCodexOptions with { OutputSchemaPath = PlanningAnalysisSchemaPath };
+        var envelope = await TryIssueContextManifestAsync(project, "llm:planning-analysis", modelPrompt, cancellationToken);
+        if (_contextManifestIssuer is not null && envelope is null)
+        {
+            if (routeStrategy.RequiresModelBackedIterationPlanning &&
+                !AllowsSoftPlanningAnalysisFallback(routeStrategy) &&
+                !IsDeterministicRpgRegenerationRequest(sourceKind, message, regenerationGuidance))
+            {
+                throw new PrototypeIterationPlanLlmException("planning_analysis_context_manifest_issue_failed");
+            }
+
+            return fallback with
+            {
+                AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, "planning_analysis_context_manifest_issue_failed"),
+                StageTelemetry = [BuildSkippedTelemetry("planning-analysis", model, "context_manifest_issue_failed")]
+            };
+        }
+
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
                 promptRoot,
@@ -1331,7 +1351,9 @@ public sealed class PrototypeIterationPlanService
                 modelPrompt,
                 options,
                 project.AccountId,
-                RequireJsonObject: true),
+                RequireJsonObject: true,
+                OperationKey: "llm:planning-analysis",
+                ContextEnvelope: envelope),
             cancellationToken);
         if (!completion.Succeeded)
         {
@@ -1391,6 +1413,12 @@ public sealed class PrototypeIterationPlanService
         var prompt = BuildRpgGoalRefinementPrompt(project, routeProfile, projectExecutionGuide, planningContext, message, scaffold, regenerationGuidance);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "goal-plan");
         var options = PlanningCodexOptions with { OutputSchemaPath = GoalPlanSchemaPath };
+        var envelope = await TryIssueContextManifestAsync(project, "llm:goal-plan", prompt, cancellationToken);
+        if (_contextManifestIssuer is not null && envelope is null)
+        {
+            throw new PrototypeIterationPlanLlmException("goal_plan_context_manifest_issue_failed");
+        }
+
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
                 promptRoot,
@@ -1399,7 +1427,9 @@ public sealed class PrototypeIterationPlanService
                 prompt,
                 options,
                 project.AccountId,
-                RequireJsonObject: true),
+                RequireJsonObject: true,
+                OperationKey: "llm:goal-plan",
+                ContextEnvelope: envelope),
             cancellationToken);
         if (!completion.Succeeded)
         {
@@ -3074,6 +3104,12 @@ public sealed class PrototypeIterationPlanService
             {{string.Join("\n", newGoals)}}
             """;
 
+        var envelope = await TryIssueContextManifestAsync(project, "llm:prototype-skeleton-regeneration-guard", prompt, cancellationToken);
+        if (_contextManifestIssuer is not null && envelope is null)
+        {
+            return PrototypeSkeletonRegenerationDecision.NotRequired();
+        }
+
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
                 promptRoot,
@@ -3082,7 +3118,9 @@ public sealed class PrototypeIterationPlanService
                 prompt,
                 PlanningCodexOptions,
                 project.AccountId,
-                RequireJsonObject: true),
+                RequireJsonObject: true,
+                OperationKey: "llm:prototype-skeleton-regeneration-guard",
+                ContextEnvelope: envelope),
             cancellationToken);
         if (!completion.Succeeded)
         {
@@ -3142,15 +3180,24 @@ public sealed class PrototypeIterationPlanService
         var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "plan-evaluation");
         var options = PlanningCodexOptions with { OutputSchemaPath = EvaluationSchemaPath };
+        var prompt = BuildRpgPlanEvaluationPrompt(project, routeProfile, projectExecutionGuide, details, prototypeProgress, routeContext.PlanningAnalysis);
+        var envelope = await TryIssueContextManifestAsync(project, "llm:plan-evaluation", prompt, cancellationToken);
+        if (_contextManifestIssuer is not null && envelope is null)
+        {
+            return BuildLlmFailedEvaluation("plan_evaluation_context_manifest_issue_failed");
+        }
+
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
                 promptRoot,
                 "plan-evaluation",
                 model,
-                BuildRpgPlanEvaluationPrompt(project, routeProfile, projectExecutionGuide, details, prototypeProgress, routeContext.PlanningAnalysis),
+                prompt,
                 options,
                 project.AccountId,
-                RequireJsonObject: true),
+                RequireJsonObject: true,
+                OperationKey: "llm:plan-evaluation",
+                ContextEnvelope: envelope),
             cancellationToken);
         if (!completion.Succeeded)
         {
@@ -3164,6 +3211,41 @@ public sealed class PrototypeIterationPlanService
         }
 
         return parsed;
+    }
+
+    private async Task<HostedContextEnvelope?> TryIssueContextManifestAsync(
+        ProjectSnapshot project,
+        string operationKey,
+        string prompt,
+        CancellationToken cancellationToken)
+    {
+        if (_contextManifestIssuer is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var snapshotId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(
+                "\n",
+                project.ProjectId,
+                project.AccountId,
+                operationKey,
+                prompt)))).ToLowerInvariant();
+            return await _contextManifestIssuer.IssueAsync(
+                new HostedContextManifestIssue(
+                    project.AccountId,
+                    project.ProjectId,
+                    operationKey,
+                    snapshotId,
+                    "prototype-iteration-plan.v1",
+                    TimeSpan.FromMinutes(5)),
+                cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildGoals(string message, string sourceKind)

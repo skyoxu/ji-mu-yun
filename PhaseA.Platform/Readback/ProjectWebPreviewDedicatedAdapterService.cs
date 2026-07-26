@@ -38,13 +38,19 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
     private readonly PhaseAPlatformOptions _options;
     private readonly IHostedProcessRunner? _processRunner;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
+    private readonly HostedContextGatePolicy _contextGatePolicy;
+    private readonly IHostedContextManifestValidator? _contextManifestValidator;
     private readonly bool _enableCodex;
 
     public ProjectWebPreviewDedicatedAdapterService(
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner,
-        AiCodeMirrorKeyPoolService? keyPoolService = null)
-        : this(options, processRunner, keyPoolService, enableCodex: true)
+        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
+        : this(options, processRunner, keyPoolService, contextManifestIssuer, contextGatePolicy, contextManifestValidator, enableCodex: true)
     {
     }
 
@@ -52,17 +58,23 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
         PhaseAPlatformOptions options,
         IHostedProcessRunner? processRunner,
         AiCodeMirrorKeyPoolService? keyPoolService,
+        HostedContextManifestIssuer? contextManifestIssuer,
+        HostedContextGatePolicy? contextGatePolicy,
+        IHostedContextManifestValidator? contextManifestValidator,
         bool enableCodex)
     {
         _options = options;
         _processRunner = processRunner;
         _keyPoolService = keyPoolService;
+        _contextManifestIssuer = contextManifestIssuer;
+        _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
+        _contextManifestValidator = contextManifestValidator;
         _enableCodex = enableCodex;
     }
 
     public static ProjectWebPreviewDedicatedAdapterService DeterministicOnly(PhaseAPlatformOptions options)
     {
-        return new ProjectWebPreviewDedicatedAdapterService(options, null, null, enableCodex: false);
+        return new ProjectWebPreviewDedicatedAdapterService(options, null, null, null, null, null, enableCodex: false);
     }
 
     public async Task<ProjectWebPreviewDedicatedAdapterResult> ResolveAsync(
@@ -169,10 +181,24 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
         CancellationToken cancellationToken)
     {
         var model = CodexModelCatalog.DefaultModel();
-        var command = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
+        var prompt = BuildGenerationPrompt(request, fallbackMainScript);
+        HostedContextEnvelope? envelope = null;
+        if (_contextManifestIssuer is not null)
+        {
+            var snapshotId = ComputeStringSha256(string.Join("\n", request.Project.ProjectId, request.AccountId, request.RunId, request.PackageSha256, prompt));
+            envelope = await _contextManifestIssuer.IssueAsync(new HostedContextManifestIssue(
+                request.AccountId,
+                request.Project.ProjectId,
+                "codex:web-preview-dedicated-adapter",
+                snapshotId,
+                "web-preview-dedicated-adapter.v1",
+                TimeSpan.FromMinutes(5)), cancellationToken);
+        }
+
+        var command = await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(
             request.ProjectRoot,
             outputPath,
-            BuildGenerationPrompt(request, fallbackMainScript),
+            prompt,
             model,
             ReasoningEffort,
             Json: false,
@@ -180,7 +206,12 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
             ExtraEnvironment: new Dictionary<string, string>
             {
                 ["PATH"] = CodexHostedProcessCommandFactory.ResolvePathWithRipgrep()
-            }));
+            },
+            OperationKey: "codex:web-preview-dedicated-adapter",
+            ContextEnvelope: envelope),
+            _contextGatePolicy,
+            _contextManifestValidator,
+            cancellationToken);
         var credential = await ResolveRuntimeCredentialAsync(request.AccountId, cancellationToken);
         var result = await _processRunner!.RunAsync(
             CodexHostedProcessCommandFactory.ApplyRuntime(command, credential)

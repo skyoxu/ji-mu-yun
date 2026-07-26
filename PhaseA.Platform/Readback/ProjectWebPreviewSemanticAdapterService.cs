@@ -35,13 +35,19 @@ public sealed class ProjectWebPreviewSemanticAdapterService
     private readonly PhaseAPlatformOptions _options;
     private readonly IHostedProcessRunner? _processRunner;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
+    private readonly HostedContextGatePolicy _contextGatePolicy;
+    private readonly IHostedContextManifestValidator? _contextManifestValidator;
     private readonly bool _enableCodex;
 
     public ProjectWebPreviewSemanticAdapterService(
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner,
-        AiCodeMirrorKeyPoolService? keyPoolService = null)
-        : this(options, processRunner, keyPoolService, enableCodex: true)
+        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
+        : this(options, processRunner, keyPoolService, contextManifestIssuer, contextGatePolicy, contextManifestValidator, enableCodex: true)
     {
     }
 
@@ -49,17 +55,23 @@ public sealed class ProjectWebPreviewSemanticAdapterService
         PhaseAPlatformOptions options,
         IHostedProcessRunner? processRunner,
         AiCodeMirrorKeyPoolService? keyPoolService,
+        HostedContextManifestIssuer? contextManifestIssuer,
+        HostedContextGatePolicy? contextGatePolicy,
+        IHostedContextManifestValidator? contextManifestValidator,
         bool enableCodex)
     {
         _options = options;
         _processRunner = processRunner;
         _keyPoolService = keyPoolService;
+        _contextManifestIssuer = contextManifestIssuer;
+        _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
+        _contextManifestValidator = contextManifestValidator;
         _enableCodex = enableCodex;
     }
 
     public static ProjectWebPreviewSemanticAdapterService DeterministicOnly(PhaseAPlatformOptions options)
     {
-        return new ProjectWebPreviewSemanticAdapterService(options, null, null, enableCodex: false);
+        return new ProjectWebPreviewSemanticAdapterService(options, null, null, null, null, null, enableCodex: false);
     }
 
     public async Task<ProjectWebPreviewSemanticAdapterResult> ResolveAsync(
@@ -143,11 +155,11 @@ public sealed class ProjectWebPreviewSemanticAdapterService
             try
             {
                 codexRun = await RunCodexAsync(
-                    request,
-                    outputPath,
-                    BuildGenerationPrompt(request, previous),
-                    "workspace-write",
-                    cancellationToken);
+                request,
+                outputPath,
+                BuildGenerationPrompt(request, previous),
+                "workspace-write",
+                cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -274,7 +286,20 @@ public sealed class ProjectWebPreviewSemanticAdapterService
         CancellationToken cancellationToken)
     {
         var model = CodexModelCatalog.DefaultModel();
-        var command = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
+        HostedContextEnvelope? envelope = null;
+        if (_contextManifestIssuer is not null)
+        {
+            var snapshotId = ComputeStringSha256(string.Join("\n", request.Project.ProjectId, request.AccountId, request.RunId, request.PackageSha256, "codex:web-preview-semantic-adapter", prompt));
+            envelope = await _contextManifestIssuer.IssueAsync(new HostedContextManifestIssue(
+                request.AccountId,
+                request.Project.ProjectId,
+                "codex:web-preview-semantic-adapter",
+                snapshotId,
+                "web-preview-semantic-adapter.v1",
+                TimeSpan.FromMinutes(5)), cancellationToken);
+        }
+
+        var command = await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(
             request.ProjectRoot,
             outputPath,
             prompt,
@@ -284,7 +309,12 @@ public sealed class ProjectWebPreviewSemanticAdapterService
             ExtraEnvironment: new Dictionary<string, string>
             {
                 ["PATH"] = CodexHostedProcessCommandFactory.ResolvePathWithRipgrep()
-            }));
+            },
+            OperationKey: "codex:web-preview-semantic-adapter",
+            ContextEnvelope: envelope),
+            _contextGatePolicy,
+            _contextManifestValidator,
+            cancellationToken);
         var credential = await ResolveRuntimeCredentialAsync(request.AccountId, cancellationToken);
         var result = await _processRunner!.RunAsync(
             CodexHostedProcessCommandFactory.ApplyRuntime(command, credential)

@@ -52,6 +52,9 @@ public sealed class GameDesignDocumentService
     private readonly ProjectGameTypeMatchBackfillService? _gameTypeMatchBackfill;
     private readonly TimeSpan _executionTimeout;
     private readonly TimeSpan _modelCapacityRetryDelay;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
+    private readonly HostedContextGatePolicy _contextGatePolicy;
+    private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
     private sealed record SelectedGameTypeDesignTemplate(
         BmadGameTypeDesignEntry Entry,
@@ -68,7 +71,10 @@ public sealed class GameDesignDocumentService
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         ProjectGameTypeMatchBackfillService? gameTypeMatchBackfill = null,
         TimeSpan? executionTimeout = null,
-        TimeSpan? modelCapacityRetryDelay = null)
+        TimeSpan? modelCapacityRetryDelay = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null,
+        HostedContextGatePolicy? contextGatePolicy = null,
+        IHostedContextManifestValidator? contextManifestValidator = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -80,6 +86,9 @@ public sealed class GameDesignDocumentService
         _gameTypeMatchBackfill = gameTypeMatchBackfill;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
         _modelCapacityRetryDelay = modelCapacityRetryDelay ?? DefaultModelCapacityRetryDelay;
+        _contextManifestIssuer = contextManifestIssuer;
+        _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
+        _contextManifestValidator = contextManifestValidator;
     }
 
     public Task<GameDesignDocumentResult> CreateAsync(
@@ -270,7 +279,7 @@ public sealed class GameDesignDocumentService
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None);
-            var codexRun = await RunCodexWithModelCapacityRetriesAsync(runId, prompt, runtimeOutputPath, model, project.RepoPath, runtimeCredential, timeout.Token);
+            var codexRun = await RunCodexWithModelCapacityRetriesAsync(runId, prompt, runtimeOutputPath, model, project, runtimeCredential, timeout.Token);
             var codexResult = codexRun.Result;
             var modelCapacityRetryCount = codexRun.ModelCapacityRetryCount;
 
@@ -685,7 +694,7 @@ public sealed class GameDesignDocumentService
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None);
-            var codexRun = await RunCodexWithModelCapacityRetriesAsync(runId, prompt, runtimeOutputPath, model, project.RepoPath, runtimeCredential, timeout.Token);
+            var codexRun = await RunCodexWithModelCapacityRetriesAsync(runId, prompt, runtimeOutputPath, model, project, runtimeCredential, timeout.Token);
             var codexResult = codexRun.Result;
             var modelCapacityRetryCount = codexRun.ModelCapacityRetryCount;
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None));
@@ -914,7 +923,7 @@ public sealed class GameDesignDocumentService
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None);
-            var codexRun = await RunCodexWithModelCapacityRetriesAsync(runId, prompt, runtimeOutputPath, model, project.RepoPath, runtimeCredential, timeout.Token);
+            var codexRun = await RunCodexWithModelCapacityRetriesAsync(runId, prompt, runtimeOutputPath, model, project, runtimeCredential, timeout.Token);
             var codexResult = codexRun.Result;
             var modelCapacityRetryCount = codexRun.ModelCapacityRetryCount;
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None));
@@ -1255,7 +1264,7 @@ public sealed class GameDesignDocumentService
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None);
-            var codexRun = await RunCodexWithModelCapacityRetriesAsync(runId, prompt, runtimeOutputPath, model, project.RepoPath, runtimeCredential, timeout.Token);
+            var codexRun = await RunCodexWithModelCapacityRetriesAsync(runId, prompt, runtimeOutputPath, model, project, runtimeCredential, timeout.Token);
             var codexResult = codexRun.Result;
             var modelCapacityRetryCount = codexRun.ModelCapacityRetryCount;
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None));
@@ -1640,10 +1649,37 @@ public sealed class GameDesignDocumentService
         return builder.ToString().TrimEnd();
     }
 
-    private HostedProcessCommand BuildCodexCommand(string prompt, string outputPath, string model, string repositoryRoot)
+    private async Task<HostedProcessCommand> BuildCodexCommandAsync(
+        string prompt,
+        string outputPath,
+        string model,
+        ProjectSnapshot project,
+        string runId,
+        CancellationToken cancellationToken)
     {
-        return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
-            repositoryRoot,
+        HostedContextEnvelope? envelope = null;
+        if (_contextManifestIssuer is not null)
+        {
+            var snapshotId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(
+                "\n",
+                project.ProjectId,
+                project.AccountId,
+                runId,
+                "codex:gdd-document-generation",
+                prompt)))).ToLowerInvariant();
+            envelope = await _contextManifestIssuer.IssueAsync(
+                new HostedContextManifestIssue(
+                    project.AccountId,
+                    project.ProjectId,
+                    "codex:gdd-document-generation",
+                    snapshotId,
+                    "game-design-document.v1",
+                    TimeSpan.FromMinutes(5)),
+                cancellationToken);
+        }
+
+        return await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(
+            project.RepoPath,
             outputPath,
             prompt,
             model,
@@ -1651,7 +1687,12 @@ public sealed class GameDesignDocumentService
             ExtraEnvironment: new Dictionary<string, string>
             {
                 ["PATH"] = CodexHostedProcessCommandFactory.ResolvePathWithRipgrep()
-            }));
+            },
+            OperationKey: "codex:gdd-document-generation",
+            ContextEnvelope: envelope),
+            _contextGatePolicy,
+            _contextManifestValidator,
+            cancellationToken);
     }
 
     private static bool IsModelCapacityFailure(HostedProcessResult result)
@@ -1882,12 +1923,14 @@ public sealed class GameDesignDocumentService
         string prompt,
         string runtimeOutputPath,
         string model,
-        string repositoryRoot,
+        ProjectSnapshot project,
         AiCodeMirrorRuntimeCredential runtimeCredential,
         CancellationToken cancellationToken)
     {
         var result = await _processRunner.RunAsync(
-            CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, runtimeOutputPath, model, repositoryRoot), runtimeCredential).WithRunId(runId),
+            CodexHostedProcessCommandFactory.ApplyRuntime(
+                await BuildCodexCommandAsync(prompt, runtimeOutputPath, model, project, runId, cancellationToken),
+                runtimeCredential).WithRunId(runId),
             cancellationToken);
         var retryCount = 0;
         while (result.ExitCode != 0 &&
@@ -1907,7 +1950,9 @@ public sealed class GameDesignDocumentService
             }
 
             result = await _processRunner.RunAsync(
-                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, runtimeOutputPath, model, repositoryRoot), runtimeCredential).WithRunId(runId),
+                CodexHostedProcessCommandFactory.ApplyRuntime(
+                    await BuildCodexCommandAsync(prompt, runtimeOutputPath, model, project, runId, cancellationToken),
+                    runtimeCredential).WithRunId(runId),
                 cancellationToken);
         }
 

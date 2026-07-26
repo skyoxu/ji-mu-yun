@@ -2,6 +2,7 @@ using System.Text.Json;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
@@ -136,7 +137,26 @@ public sealed record DemoPrototypeState;
         stateWriter.WriteProjectExecutionGuide(project!, contract, "docs/prototypes/2026-05-20-contract.md", "contract", "prototype-7day-playable", "prototype-run", "succeeded");
         stateWriter.WritePrototypeState(project!, PrototypeBaselineState());
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var validator = new CapturingManifestValidator();
+        var policy = new HostedContextGatePolicy(new Dictionary<string, HostedContextGateMode>
+        {
+            ["codex:prototype-iteration-goal"] = HostedContextGateMode.Enforce
+        });
+        var service = new PrototypeIterationGoalService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            stateWriter,
+            contextManifestIssuer: issuer,
+            contextGatePolicy: policy,
+            contextManifestValidator: validator);
 
         var targetGoal = FindGoal((await store.GetLatestProjectIterationSessionAsync(projectId))!, "field navigation and stable control");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
@@ -161,6 +181,12 @@ public sealed record DemoPrototypeState;
         details.LatestEvaluation.Should().NotBeNull();
         details.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
         details.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("succeeded");
+        validator.Envelope.Should().NotBeNull();
+        validator.Envelope!.AccountId.Should().Be(accountId);
+        validator.Envelope.ProjectId.Should().Be(projectId);
+        validator.Envelope.OperationKey.Should().Be("codex:prototype-iteration-goal");
+        validator.Envelope.SignatureKeyId.Should().Be("test-key");
+        validator.OperationKey.Should().Be("codex:prototype-iteration-goal");
         var codexCommand = runner.Commands.Single(command => command.Arguments.LastOrDefault() == "-");
         codexCommand.StandardInput.Should().Contain("prototype-baseline");
         codexCommand.StandardInput.Should().Contain("Project Execution Guide");
@@ -3620,6 +3646,22 @@ public sealed class MapScene
         return command.Arguments.Any(argument =>
             string.Equals(Path.GetFileName(argument), scriptFileName, StringComparison.OrdinalIgnoreCase) ||
             argument.Replace('\\', '/').EndsWith("/" + scriptFileName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private sealed class CapturingManifestValidator : IHostedContextManifestValidator
+    {
+        public HostedContextEnvelope? Envelope { get; private set; }
+        public string? OperationKey { get; private set; }
+
+        public Task<bool> ValidateAndConsumeAsync(
+            HostedContextEnvelope envelope,
+            string operationKey,
+            CancellationToken cancellationToken = default)
+        {
+            Envelope = envelope;
+            OperationKey = operationKey;
+            return Task.FromResult(true);
+        }
     }
 
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner

@@ -28,6 +28,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.DeliveryProfile.Should().Be("fast-ship");
         options.AdminUsername.Should().Be("admin");
         options.WebPreviewSigningSecret.Should().BeNull();
+        options.HostedContextSigningKeyRing.Should().BeNull();
         options.MaxConcurrentChats.Should().Be(8);
         options.MaxConcurrentChatsPerAccount.Should().Be(1);
         options.MaxConcurrentQuestionForms.Should().Be(4);
@@ -70,6 +71,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_ADMIN_TOKEN_HASH"] = "token-hash",
             ["PHASEA_TICKET_SIGNING_SECRET"] = "ticket-secret",
             ["PHASEA_WEB_PREVIEW_SIGNING_SECRET"] = "web-preview-secret",
+            ["PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID"] = "current",
+            ["PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON"] = "[{\"key_id\":\"previous\",\"secret\":\"previous-secret\"},{\"key_id\":\"current\",\"secret\":\"current-secret\"}]",
             ["PHASEA_MAX_CONCURRENT_CHATS"] = "9",
             ["PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT"] = "3",
             ["PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS"] = "5",
@@ -105,6 +108,9 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.AdminTokenHash.Should().Be("token-hash");
         options.TicketSigningSecret.Should().Be("ticket-secret");
         options.WebPreviewSigningSecret.Should().Be("web-preview-secret");
+        options.HostedContextSigningKeyRing.Should().NotBeNull();
+        options.HostedContextSigningKeyRing!.ActiveKeyId.Should().Be("current");
+        options.HostedContextSigningKeyRing.Keys.Should().ContainKeys("previous", "current");
         options.MaxConcurrentChats.Should().Be(9);
         options.MaxConcurrentChatsPerAccount.Should().Be(3);
         options.MaxConcurrentQuestionForms.Should().Be(5);
@@ -155,6 +161,33 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         act.Should().Throw<PhaseAPlatformConfigException>();
     }
 
+    [Theory]
+    [InlineData("PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID", "current")]
+    [InlineData("PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON", "[]")]
+    public void FromDictionary_FailsClosed_ForIncompleteHostedContextKeyRing(string key, string value)
+    {
+        var act = () => PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?> { [key] = value });
+
+        act.Should().Throw<PhaseAPlatformConfigException>();
+    }
+
+    [Theory]
+    [InlineData("not-json")]
+    [InlineData("[{\"key_id\":\"current\",\"secret\":\"one\"},{\"key_id\":\"current\",\"secret\":\"two\"}]")]
+    [InlineData("[{\"key_id\":\"current\",\"secret\":\"\"}]")]
+    public void FromDictionary_FailsClosed_ForMalformedHostedContextKeyRing(string keysJson)
+    {
+        var values = new Dictionary<string, string?>
+        {
+            ["PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID"] = "current",
+            ["PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON"] = keysJson
+        };
+
+        var act = () => PhaseAPlatformOptionsLoader.FromDictionary(values);
+
+        act.Should().Throw<PhaseAPlatformConfigException>();
+    }
+
     [Fact]
     public void WorkspacePathPolicy_RejectsEscapingPaths()
     {
@@ -183,5 +216,22 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         hostReadIndex.Should().BeGreaterThan(fileReadIndex);
         source.Should().Contain("$env:PHASEA_WEB_PREVIEW_SIGNING_SECRET = $resolvedWebPreviewSecret");
         source.Should().Contain("$psi.Environment['PHASEA_WEB_PREVIEW_SIGNING_SECRET'] = $env:PHASEA_WEB_PREVIEW_SIGNING_SECRET");
+    }
+
+    [Fact]
+    public void StartPhaseA_HostedContextKeyRingRequiresPairAndOnlyPassesDedicatedValues()
+    {
+        var scriptPath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..", "..", "..", "..", "runtime", "phase-a", "start-phasea.ps1"));
+        var source = File.ReadAllText(scriptPath);
+
+        source.Should().Contain("Resolve-HostEnvironmentValue 'PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID'");
+        source.Should().Contain("Resolve-HostEnvironmentValue 'PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON'");
+        source.Should().Contain("phasea_hosted_context_signing_key_ring_incomplete");
+        source.Should().Contain("$psi.Environment['PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID'] = $env:PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID");
+        source.Should().Contain("$psi.Environment['PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON'] = $env:PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON");
+        source.Should().NotContain("PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID = $env:PHASEA_TICKET_SIGNING_SECRET");
+        source.Should().NotContain("PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID = $env:PHASEA_WEB_PREVIEW_SIGNING_SECRET");
     }
 }

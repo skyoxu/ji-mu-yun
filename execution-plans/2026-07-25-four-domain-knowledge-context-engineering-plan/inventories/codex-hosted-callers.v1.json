@@ -1,0 +1,117 @@
+{
+  "callers": [
+    {
+      "callsite_fingerprint": "6182e887f5838827eb6d9eab552ae16e39fa2325fd7aabe4dafdc2d23ede19dc",
+      "callsite_id": "codex-hosted:6182e887f5838827eb6d",
+      "column": 29,
+      "context_envelope_status": "unassessed",
+      "line": 198,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "reachability_status": "unassessed",
+      "source_sha256": "8928854f0b73a5c0f4ed1bf170e0b7bb62c992c0b46869922e32ace581db8a1b",
+      "symbol": "CodexHostedProcessCommandFactory.Build/BuildAsync"
+    },
+    {
+      "callsite_fingerprint": "4cb27a35c3f50b41ce0cd1b311a217282dc8efad684d63725143d8a780086a9a",
+      "callsite_id": "codex-hosted:4cb27a35c3f50b41ce0c",
+      "column": 29,
+      "context_envelope_status": "unassessed",
+      "line": 302,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "reachability_status": "unassessed",
+      "source_sha256": "5ae746a2e10ac9d87343c18b53780f61c3b20813bee071386bb6fe86d7916a55",
+      "symbol": "CodexHostedProcessCommandFactory.Build/BuildAsync"
+    },
+    {
+      "callsite_fingerprint": "3a33e8fd768718fd5dccb398f92565f9929ae3b68919c8a26c47a6065df3126f",
+      "callsite_id": "codex-hosted:3a33e8fd768718fd5dcc",
+      "column": 22,
+      "context_envelope_status": "unassessed",
+      "line": 1681,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "reachability_status": "unassessed",
+      "source_sha256": "47ee6e01da7d191983e520f85f339433ebf5923e8a65dabdade54303291cebb7",
+      "symbol": "CodexHostedProcessCommandFactory.Build/BuildAsync"
+    },
+    {
+      "callsite_fingerprint": "70d30e4c25f29d36fa613a523596b9f56c5fd897f4d9a0089df4b8b4ddc0cfd5",
+      "callsite_id": "codex-hosted:70d30e4c25f29d36fa61",
+      "column": 16,
+      "context_envelope_status": "unassessed",
+      "line": 294,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Runs/PrototypeFeedbackIterationService.cs",
+      "reachability_status": "unassessed",
+      "source_sha256": "54efe3439e64e88ea37143092d805d9c46c5a8906160e1113652ee012bd611fb",
+      "symbol": "CodexHostedProcessCommandFactory.Build/BuildAsync"
+    },
+    {
+      "callsite_fingerprint": "b07c2a1659445595f40a8c933b50ea4592489da0a617a60f24a00e322ced16fd",
+      "callsite_id": "codex-hosted:b07c2a1659445595f40a",
+      "column": 22,
+      "context_envelope_status": "unassessed",
+      "line": 841,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "reachability_status": "unassessed",
+      "source_sha256": "f0ceda1090febe843331a797cc6ced5cc2898d7f02ebf1513368716f20bfb53a",
+      "symbol": "CodexHostedProcessCommandFactory.Build/BuildAsync"
+    },
+    {
+      "callsite_fingerprint": "3820485f1ea7b75b1491a8243e77d6e2101fb126f5621b754174ca31b9feeeeb",
+      "callsite_id": "codex-hosted:3820485f1ea7b75b1491",
+      "column": 22,
+      "context_envelope_status": "unassessed",
+      "line": 1526,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "reachability_status": "unassessed",
+      "source_sha256": "65a101327638557a589a5a6ea058250a5b86f7a08aa1d964725842b195c534b0",
+      "symbol": "CodexHostedProcessCommandFactory.Build/BuildAsync"
+    },
+    {
+      "callsite_fingerprint": "3b17c93162c290c7aa69c885d5b5947fd0af798f4195bf2d150273ac939b026f",
+      "callsite_id": "codex-hosted:3b17c93162c290c7aa69",
+      "column": 33,
+      "context_envelope_status": "unassessed",
+      "line": 146,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "reachability_status": "unassessed",
+      "source_sha256": "551aa983a6b293d84a51c2fe291316cd41353198978b6125a20778e85757f675",
+      "symbol": "CodexHostedProcessCommandFactory.Build/BuildAsync"
+    },
+    {
+      "callsite_fingerprint": "64c176fc9792c70f0e7b0d29975f0bcfb4dd5ba93da5911aad096797d8760bf5",
+      "callsite_id": "codex-hosted:64c176fc9792c70f0e7b",
+      "column": 22,
+      "context_envelope_status": "unassessed",
+      "line": 1631,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "reachability_status": "unassessed",
+      "source_sha256": "df02e31ce903c51b2ce508989cd684961db345207ddad1ef798df270182a0195",
+      "symbol": "CodexHostedProcessCommandFactory.Build/BuildAsync"
+    },
+    {
+      "callsite_fingerprint": "34f1ed3b1c9fedbdfcdafb390d3768b4c3d137289ac563b36da5d03bf7f6afc1",
+      "callsite_id": "codex-hosted:34f1ed3b1c9fedbdfcda",
+      "column": 22,
+      "context_envelope_status": "unassessed",
+      "line": 303,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Skills/SkillActionService.cs",
+      "reachability_status": "unassessed",
+      "source_sha256": "7f0a8b10417ce3519e86f67bfade8c8a78ce8b5c6ae9beaf14ab0692884d4915",
+      "symbol": "CodexHostedProcessCommandFactory.Build/BuildAsync"
+    }
+  ],
+  "entrypoint_family": "codex-hosted",
+  "excluded_candidates": [],
+  "generated_by": "tools/build_hosted_inventory.py@hosted-inventory-scanner.v1",
+  "schema_version": "jimuyun.hosted-caller-inventory.v1",
+  "source_snapshot_id": "03c54fc67253d67a4a9264c3c4bf795cc78e0a67e1cf60c8f0bb999ce1061410"
+}

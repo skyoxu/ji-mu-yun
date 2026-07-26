@@ -1,0 +1,155 @@
+{
+  "callers": [
+    {
+      "callsite_fingerprint": "b9e24004d87a754087a876d71f6a2051dd522fc286fbb159d5177186f665ad79",
+      "callsite_id": "python-backend:b9e24004d87a754087a8",
+      "column": 23,
+      "context_envelope_status": "unassessed",
+      "line": 1257,
+      "migration_status": "unassessed",
+      "path": "scripts/python/run_prototype_workflow.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "3a496c8306585f7036ed164cba95f5df9cec66a4681a7f0cb20123dc59188e71",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "344fed3b0781bf91ea9134669f8e2ec2e7ff573305e8491a35a9ddbc6daa1637",
+      "callsite_id": "python-backend:344fed3b0781bf91ea91",
+      "column": 27,
+      "context_envelope_status": "unassessed",
+      "line": 2478,
+      "migration_status": "unassessed",
+      "path": "scripts/python/run_prototype_workflow.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "3a496c8306585f7036ed164cba95f5df9cec66a4681a7f0cb20123dc59188e71",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "f2bc18068b3e32166ea201b092fdd6287306eb9ee8e034cfcd9936e93ac20706",
+      "callsite_id": "python-backend:f2bc18068b3e32166ea2",
+      "column": 12,
+      "context_envelope_status": "unassessed",
+      "line": 45,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/_acceptance_refs_helpers.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "26f2283eecb4474fe63e3a2f7f3315476ef08e9c5979a2e0c65e54dec16a0a62",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "49f3ce4ea1c08fec0e928e46ba6859a71c30bebfa7ce67f4dc86d70a29e41a12",
+      "callsite_id": "python-backend:49f3ce4ea1c08fec0e92",
+      "column": 23,
+      "context_envelope_status": "unassessed",
+      "line": 223,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/_acceptance_semantics_align.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "1df4ebce113dff4383374fbbff763f3325f3fbffc01cfab7c830cb05f601323a",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "547e3f12f9fd25591c36e3437a99801114cab011f4372f83aafff299aff74638",
+      "callsite_id": "python-backend:547e3f12f9fd25591c36",
+      "column": 12,
+      "context_envelope_status": "unassessed",
+      "line": 101,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/_llm_review_exec.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "5ad827b545e75ba22319fa019430e6dd21cc09254b72cb2d45de89f4200dbc08",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "2343081131123145f5b4ba330fae83cf92819d588d8b3f0393a837ccd0fbaa6e",
+      "callsite_id": "python-backend:2343081131123145f5b4",
+      "column": 12,
+      "context_envelope_status": "unassessed",
+      "line": 22,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/_obligations_extract_helpers.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "2e26cb5798842fbf6ab0455063cbbabe01376db35944a710eece735a1a98975c",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "48699b16199db589cf8d37e88142e870a5113d829fe882a88f91288a33853555",
+      "callsite_id": "python-backend:48699b16199db589cf8d",
+      "column": 12,
+      "context_envelope_status": "unassessed",
+      "line": 248,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/_overlay_generator_prompting.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "62fcf1f5fc237749a29e2d8d1b5e126145ba42841135cf7b9022f1347340eca4",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "4c2ae83464a36ee040ea02411d027ea4a9a7bf5cafda244f4eeb91ae0fffe68c",
+      "callsite_id": "python-backend:4c2ae83464a36ee040ea",
+      "column": 12,
+      "context_envelope_status": "unassessed",
+      "line": 21,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/_subtasks_coverage_llm.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "34550e7a0c09c804eaf5782758083f82bdf9f6ad08bb15420d9f1672db1737f5",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "a1ad5c539b4710892995919fcfcbb13f6f217fc6f2b906255fb2cb0a7fcc9f5d",
+      "callsite_id": "python-backend:a1ad5c539b4710892995",
+      "column": 12,
+      "context_envelope_status": "unassessed",
+      "line": 95,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/llm_generate_red_test.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "e90f26306f40090faec804e003fab4abfba6c0bf6df716f82aa7214141a4ef03",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "0977fc5c8bb9d9b97cf406a23a383190cb1038857952c1b4297bcaa23d2bcd4a",
+      "callsite_id": "python-backend:0977fc5c8bb9d9b97cf4",
+      "column": 12,
+      "context_envelope_status": "unassessed",
+      "line": 50,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/llm_generate_tests_from_acceptance_refs.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "028221062ab1f138ba6417f47ad8cb4a4d6c02d0d189aead9a53375a654562d1",
+      "symbol": "run_llm_exec"
+    },
+    {
+      "callsite_fingerprint": "f6808019c55f445004e254fea73dbec7326d613248e7431ea8c3c0d70a3b7106",
+      "callsite_id": "python-backend:f6808019c55f445004e2",
+      "column": 12,
+      "context_envelope_status": "unassessed",
+      "line": 60,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/llm_semantic_gate_all.py",
+      "reachability_status": "unassessed",
+      "source_sha256": "6e0bea569a959353cd0aaac56b1c2d29ddd4ff08b8b192d86c3a0ca3c7e46f76",
+      "symbol": "run_llm_exec"
+    }
+  ],
+  "entrypoint_family": "python-backend",
+  "excluded_candidates": [
+    {
+      "callsite_fingerprint": "adc1a1e3b601c2215d07da8c0f3cd637a4c0d380b6397ec75b87d86d2fa1f8f5",
+      "callsite_id": "python-backend:adc1a1e3b601c2215d07",
+      "column": 5,
+      "context_envelope_status": "unassessed",
+      "line": 100,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/_llm_backend.py",
+      "reachability_status": "unassessed",
+      "reason": "entrypoint-definition",
+      "source_sha256": "fc2bb1a13b0d89c9ae60975ef65c4f96012cb5ee3c2c99ba902a186545c3eeb0",
+      "symbol": "run_llm_exec"
+    }
+  ],
+  "generated_by": "tools/build_hosted_inventory.py@hosted-inventory-scanner.v1",
+  "schema_version": "jimuyun.hosted-caller-inventory.v1",
+  "source_snapshot_id": "03c54fc67253d67a4a9264c3c4bf795cc78e0a67e1cf60c8f0bb999ce1061410"
+}

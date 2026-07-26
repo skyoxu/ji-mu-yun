@@ -152,6 +152,7 @@ CLI 会重验 Git revision、Git index、artifact hashes、Artifact View、acces
 - 每个 reviewer 保存输出后必须重新读取自己的 JSON，并执行 `validate-layer --run-dir <run-dir> --layer <role>`；只有命令零退出才算该层完成。失败时由同一 reviewer 修正自己的输出或将该层保留为失败，主会话不得代修。
 - 使用仓库自有 `run-layer` 时，runner 通过 UTF-8 stdin 启动显式指定的单个模型，使用参数数组、`shell=False`、环境白名单和类型化占位符。它不隐藏 provider 调度、不自动循环 fallback；首选失败后若要使用 `gpt-5.5` 或 `gpt-5.4`，必须由 operator 发起新命令并保留上一 attempt evidence。`gpt-5.6-sol` 禁止用于 reviewer/verifier。
 - `process-events.jsonl` 是执行事实权威；`process-leases.json` 由 event 重建，仅为 7-12 compatibility view。工具等待超时但 PID 仍 alive 时只能 inspect/reattach/poll，不得启动相同 operation。失败 attempt 不得覆盖 formal role output。
+- completed reviewer payload 在写入 formal sidecar 前必须再次通过 frozen launch authority 与完整 layer validation；这一步失败时 formal bytes 保持原状。模型显式返回的 schema-valid `status=failed` 可以保存 failure reason，但仍记录 failed attempt 且不阻断 retry。
 
 仓库 runner 示例：
 
@@ -177,7 +178,7 @@ py -3 -c "from pathlib import Path; print(Path(r'<run-dir>/reviewer-prompts/blin
 
 1. 打开对应 prompt；
 2. 使用用户选择的 reviewer/session 手工执行；
-3. 保留 template 中所有绑定字段；逐个读取 manifest artifact 后，将其从 `coverage.missingArtifacts` 移到 `coverage.readArtifacts`；只有 required artifact 全部已读才把 `status` 改为 `completed`；
+3. 保留 template 中所有绑定字段；逐个读取 frozen manifest artifact，并按 manifest 有序列表填充 `coverage.readArtifacts`；只有 `readArtifacts` 与 `requiredArtifacts` 均和该有序列表完全相等、`missingArtifacts=[]` 且三个列表均无重复项时，才把 `status` 改为 `completed`；
 4. 没有 finding 时保存合法空数组，不删除输出文件；
 5. Preserve the manifest-bound routeVersion; update the template status to completed or failed; do not add gateway-owned fingerprint, unverified disposition, or other gateway/verifier-generated fields.
 6. 禁止把“至少输出十条”或任何固定 finding 数量作为完成条件；固定数量最多只能用于首轮内部假设探索，最终只保存通过事实门禁的 candidate，零 candidate 合法。
@@ -191,7 +192,7 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
   --layer <blind_hunter|edge_case_hunter|acceptance_auditor>
 ```
 
-该命令不运行 gate、不生成 candidate/rejection sidecar，也不修改 reviewer JSON；它只接受 `status=completed`。`pending`/`failed` 必须非零退出，`completed` 还必须满足 `missingArtifacts=[]` 且 required/read artifact 集合完全相等。
+该命令不运行 gate、不生成 candidate/rejection sidecar，也不修改 reviewer JSON；它只接受 `status=completed`。`pending`/`failed` 必须非零退出，`completed` 还必须满足 `missingArtifacts=[]`，并且 `requiredArtifacts`、`readArtifacts` 均与 frozen manifest 的有序 artifact 列表完全相等；任何重复或反序都必须失败。
 
 manual/specialized-agent 仍使用 prompt 与 JSON 外部交换边界；`codex-exec` 的正式交换边界是 child structured candidate -> runner schema/binding validation -> atomic formal role output。模型不得直接覆盖正式 reviewer/verifier JSON。
 
@@ -232,6 +233,19 @@ Dedup fingerprint 绑定 hash-bound artifact、inclusive line range、exact evid
    path-only context 表示整文件，不能用单行引用替代；
 6. 保存到 run directory 的 `verifier-output.json`。
 
+`gate` 生成的 verifier prompt 与 `run-layer` runtime wrapper 都必须从 hash-bound `review-candidates.json` 展开每个 blocker 的完整 inclusive range 和全部 `contextRead`。其中 finding range 必须由单个 `evidenceChecked` reference 完整覆盖，不能用多个局部 reference 拼接；runtime wrapper 不得依赖旧 prompt 中仅显示 start line 的候选摘要。
+
+仓库 runner 在替换正式 `verifier-output.json` 前，必须以冻结 gate blocker 集合执行完整 `validate_verifier(...)`，然后在紧邻发布前再执行 `validate_launch_authorization(...)`。Schema、binding、finding 精确证据、任一 `contextRead` coverage 失败或 frozen authority drift 时，只追加 `attempt-failed` 和 attempt-local evidence，正式输出保持原字节不变。
+
+如果旧版 runner 已经把 schema-valid 但语义无效的 verifier 输出记为 completed，`inspect-run` 会返回 `recover-invalid-verifier`。此时只能使用：
+
+```powershell
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py recover-verifier `
+  --run-dir <run-dir>
+```
+
+该命令只接受 active、未 finalized、未 sealed、`awaiting_verification` 的 `codex-exec` run。它把 rejected formal 原始 bytes 保存到唯一 `verifier-recoveries/<recovery-id>/`，写入 hash-bound recovery record，追加 `verifier-recovery-opened` event，并把派生 verifier lease 投影为 failed；它不清空 formal。有效 verifier、无 completed verifier、live attempt、manual/specialized-agent run 均拒绝恢复。恢复后重新执行独立 verifier；只有新输出通过完整语义校验并追加 `attempt-completed`，恢复才闭合。
+
 ## 7. Finalize
 
 ```powershell
@@ -239,7 +253,7 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
   --run-dir logs/ci/2026-07-12/review-gateway-bootstrap-gdd-to-module-manual-001
 ```
 
-存在 accepted P2 时，finalize 前必须提供 `p2-dispositions.json`，对 exact P2 set 逐项声明 `fixed|refuted|deferred`。高风险 P2 不得延期；owner authority 必须链到 profile hash-bound authority root，closure command 必须绑定 executable/argv/cwd/runner descriptor。使用仓库 Skill 的 `run-p2-command` 执行，成功证据必须从 append-only process event、真实 stdout/stderr 和 descriptor hash 重算；手写 `exitCode: 0` 无效。延期还必须提供未来 expiry、non-impact evidence、当前 recheck evidence 和 trigger，到期后自动阻断；转为 fixed/refuted 时必须提供成功 closure-process evidence。最终结果不得存在开放 accepted P0/P1，P2 必须全部处置。
+存在 accepted P2 时，finalize 前必须提供 `p2-dispositions.json`，对 exact P2 set 逐项声明 `fixed|refuted|deferred`。高风险 P2 不得延期；owner authority 必须链到 profile hash-bound authority root，closure command 必须绑定 executable/argv/cwd/runner descriptor。使用仓库 Skill 的 `run-p2-command` 执行，成功证据必须从 append-only process event、真实 stdout/stderr 和 descriptor hash 重算；每个新结果以自身 `eventHash` 锚定共享日志，后续合法 append 不会使已有结果 stale，旧 whole-log hash 结果仅保留兼容读取。手写 `exitCode: 0` 无效。延期还必须提供未来 expiry、non-impact evidence、当前 recheck evidence 和 trigger，到期后自动阻断；转为 fixed/refuted 时必须提供成功 closure-process evidence。最终结果不得存在开放 accepted P0/P1，P2 必须全部处置。
 
 最终输出：
 
@@ -262,6 +276,8 @@ Bootstrap manifest、gate 中间结果、candidate/rejection/disposition/metrics
 5. 默认完整轮次上限为两轮；最终轮出现新的 P0/P1 或 authority/context graph 改变时，最多允许第三轮；
 6. P2-only 不自动触发完整复审；达到三轮仍未闭合时进入 `manual_pause`，不得继续自动循环。
 
+`seal-run` 只能在没有 active event-backed attempt 且没有 acquired lease 时写入。如果 attempt 仍活跃，operator 必须先 inspect/reattach；如果进程已死亡，先记录 terminal/stale 执行事实并重建 lease view。incomplete-abandoned 的同轮替换例外只适用于不再存在 active event-backed attempt 的 run。
+
 Round 2/3 的 `repair-closure.json` 是当前计划的 implementation-contract 实例；通用 schema 归仓库 Skill。prepare 校验 predecessor identity、finalized finding exact set、evidence path 和 proof-family，authorize-launch 再校验 evidence/current source/validator hash、Git index、write-set、execution read-set、dependency closure 与 context freshness。遗漏任何 finalized finding 或 evidence 漂移时，reviewer event/lease 数量必须保持为零。
 
 用户可以显式要求新的 Review，但普通授权不能绕过 profile 的三轮硬上限；继续需要新的 policy decision，而不是沿用旧 run。
@@ -280,6 +296,7 @@ py -3 C:/Users/Administrator/.codex/skills/.system/skill-creator/scripts/quick_v
 - `prepare` 失败：先检查 scope/out-dir 边界；
 - `gate` incomplete：检查 required reviewer 文件、stale hash 和 rejection reason；
 - `finalize` 失败：检查每个 P0/P1 是否恰有一个 verifier decision；
+- `inspect-run` 返回 `recover-invalid-verifier`：先运行 `recover-verifier`，确认 rejected bytes/recovery event 已保存，再按新的 verifier attempt 重试；禁止手工清空 formal 或删除 completed event；
 - 目标文件发生变化：完成批量修复和 targeted deterministic validation 后，再重新 prepare 新 review ID；不复用旧 input hash，也不因单条 finding 立即重跑。
 
 ## 验收标准
@@ -301,6 +318,10 @@ py -3 C:/Users/Administrator/.codex/skills/.system/skill-creator/scripts/quick_v
 - Given implementation profile 未声明 plan-bound required check，When prepare，Then在写 manifest 前失败。
 - Given同一 change 已有 round 1，When换 review ID 再 prepare round 1，Then失败；round 4 永远失败。
 - Given codex-exec 父进程可读但 child access handshake 失败，When prove-access/run-layer，Then语义阶段不形成正式 candidate，formal output 保持 pending。
+- Given completed reviewer/verifier payload 在最后一次 frozen-authority 校验前发生漂移，When parent 准备发布 formal output，Then attempt 失败且原 formal bytes 不变；Given child 显式返回合法 `status=failed`，Then保存 failure reason 且保持可重试。
 - Given两个 active attempt 的 write-set 不重叠，When并发运行，Then允许；Given formal write-set 重叠，Then第二个 attempt 在启动 child 前失败。
+- Given run 存在 active event-backed attempt 或 acquired lease，When 执行 `seal-run`，Then 在写入 seal 前失败；Given 旧 abandoned evidence 与 active attempt 同时存在，When 准备同 `changeId` 的替换 Round 1，Then prepare 失败。
 - Given Git index、execution read-set 或 dependency closure 漂移，When authorize-launch/run-layer/gate/finalize，Then旧 run fail closed。
 - Given run 需要恢复，When执行 `list-runs`/`inspect-run`，Then分别输出 run execution、run relationship、change-cycle state 和 nextAction，不依赖 hidden state。
+- Given verifier child 返回 schema-valid 但未覆盖精确 finding/context 的 decision，When parent 接收 candidate，Then attempt 失败且 formal verifier bytes 不变；Given 旧 completed formal 存在同类语义错误，When `recover-verifier`，Then rejected bytes/hash 与追加式 event 被保留、有效 formal/finalized run 不能被重开、成功重试后才允许 finalize。
+- Given 两个 accepted P2 分别生成成功 process result，When第二条命令追加共享日志并 finalize，Then第一条结果仍由其 event hash 唯一定位且两条 disposition 同时有效。

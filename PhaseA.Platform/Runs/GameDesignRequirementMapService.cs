@@ -27,11 +27,16 @@ public sealed class GameDesignRequirementMapService
     private static readonly Regex RequirementLineRegex = new(@"^\s*(?:[-*]|\d+[\.\)、:：])\s*(?<text>.+)$", RegexOptions.Compiled);
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly ILlmRouteEngine? _llmRouteEngine;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
-    public GameDesignRequirementMapService(PhaseAMetadataStore metadataStore, ILlmRouteEngine? llmRouteEngine = null)
+    public GameDesignRequirementMapService(
+        PhaseAMetadataStore metadataStore,
+        ILlmRouteEngine? llmRouteEngine = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _llmRouteEngine = llmRouteEngine;
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<GameDesignRequirementMapResult?> GetLatestAsync(string accountId, string projectId, CancellationToken cancellationToken = default)
@@ -598,6 +603,26 @@ public sealed class GameDesignRequirementMapService
             return FallbackRequirements(deterministicRequirements, "llm_unavailable", [], forbiddenSourceScan, persistedPrompt);
         }
 
+        HostedContextEnvelope? envelope;
+        try
+        {
+            envelope = _contextManifestIssuer is null
+                ? null
+                : await _contextManifestIssuer.IssueAsync(
+                    new HostedContextManifestIssue(
+                        project.AccountId,
+                        project.ProjectId,
+                        "llm:gdd-requirement-map",
+                        BuildContextSnapshotId(project, gddText, sceneRoot, deterministicRequirements),
+                        "gdd-requirement-map.v1",
+                        TimeSpan.FromMinutes(5)),
+                    cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            return FallbackRequirements(deterministicRequirements, "context_manifest_issue_failed", [], forbiddenSourceScan, persistedPrompt);
+        }
+
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
                 project.RepoPath,
@@ -606,7 +631,9 @@ public sealed class GameDesignRequirementMapService
                 prompt,
                 new CodexChatClientOptions(ReasoningEffort: "low"),
                 project.AccountId,
-                RequireJsonObject: true),
+                RequireJsonObject: true,
+                OperationKey: "llm:gdd-requirement-map",
+                ContextEnvelope: envelope),
             cancellationToken);
         var promptEvidence = new object[] { new { kind = "log", path = "logs/phase-a-chat/", purpose = "gdd-requirement-map" } };
         if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
@@ -670,6 +697,17 @@ public sealed class GameDesignRequirementMapService
         {
             return FallbackRequirements(deterministicRequirements, "llm_json_parse_failed", promptEvidence, forbiddenSourceScan, persistedPrompt);
         }
+    }
+
+    private static string BuildContextSnapshotId(
+        ProjectSnapshot project,
+        string gddText,
+        JsonElement sceneRoot,
+        IReadOnlyList<GameDesignRequirementRow> deterministicRequirements)
+    {
+        var sceneHash = ReadString(sceneRoot, "confirmed_scene_route_hash");
+        var requirementFloor = string.Join("\n", deterministicRequirements.Select(item => item.RequirementId));
+        return Sha256(string.Join("\n", project.ProjectId, project.AccountId, Sha256(NormalizeText(gddText)), sceneHash, requirementFloor));
     }
 
     private static string BuildStructuredRequirementPrompt(

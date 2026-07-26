@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -34,6 +36,7 @@ public sealed class ProjectWorkflowRouteService
     private readonly ProjectAssetInventoryService _assetInventory;
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly ProjectRouteStateArtifactService _routeStateArtifacts;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ProjectWorkflowRouteService(
         PhaseAMetadataStore metadataStore,
@@ -43,7 +46,8 @@ public sealed class ProjectWorkflowRouteService
         ProjectPackageService packages,
         ProjectAssetInventoryService assetInventory,
         ILlmRouteEngine llmRouteEngine,
-        ProjectRouteStateArtifactService? routeStateArtifacts = null)
+        ProjectRouteStateArtifactService? routeStateArtifacts = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -53,6 +57,7 @@ public sealed class ProjectWorkflowRouteService
         _assetInventory = assetInventory;
         _llmRouteEngine = llmRouteEngine;
         _routeStateArtifacts = routeStateArtifacts ?? new ProjectRouteStateArtifactService();
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<ProjectWorkflowRouteResult?> QueryAsync(
@@ -152,6 +157,26 @@ public sealed class ProjectWorkflowRouteService
         }
 
         var prompt = BuildIntentPrompt(project, message);
+        HostedContextEnvelope? envelope;
+        try
+        {
+            envelope = _contextManifestIssuer is null
+                ? null
+                : await _contextManifestIssuer.IssueAsync(
+                    new HostedContextManifestIssue(
+                        accountId,
+                        project.ProjectId,
+                        "llm:project-workflow-route-intent",
+                        BuildContextSnapshotId(project),
+                        "project-workflow-route-intent.v1",
+                        TimeSpan.FromMinutes(5)),
+                    cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            return new ProjectWorkflowIntentResult(false, "general_chat", "intent_classifier_unavailable", "", "llm_failed", "context_manifest_issue_failed");
+        }
+
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
                 WorkspaceRoot: ResolveLlmWorkspace(project),
@@ -160,7 +185,9 @@ public sealed class ProjectWorkflowRouteService
                 Prompt: prompt,
                 Options: new CodexChatClientOptions(ReasoningEffort: "low"),
                 BillingAccountId: accountId,
-                RequireJsonObject: true),
+                RequireJsonObject: true,
+                OperationKey: "llm:project-workflow-route-intent",
+                ContextEnvelope: envelope),
             cancellationToken);
 
         if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
@@ -193,6 +220,12 @@ public sealed class ProjectWorkflowRouteService
         {
             return new ProjectWorkflowIntentResult(false, "general_chat", "intent_json_parse_failed", "", "llm_failed", "llm_json_parse_failed");
         }
+    }
+
+    private static string BuildContextSnapshotId(ProjectSnapshot project)
+    {
+        var source = string.Join("\n", project.ProjectId, project.AccountId, project.GameName, project.GameTypeSource, project.WorkspaceId);
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source))).ToLowerInvariant();
     }
 
     private static IReadOnlyList<ProjectWorkflowRouteStep> BuildSteps(ProjectWorkflowState state)

@@ -1,3 +1,4 @@
+using System.Text;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -320,6 +321,33 @@ public sealed class ProjectWorkflowRouteServiceTests
     }
 
     [Fact]
+    public async Task ClassifyIntentAsync_ShouldIssueHostedContextEnvelope()
+    {
+        var fixture = await WorkflowFixture.CreateAsync();
+        var llm = new CapturingLlmRouteEngine("""{"shouldRoute":true,"intent":"next_step","routeReason":"next","feedbackSummary":""}""");
+        var issuer = new HostedContextManifestIssuer(
+            fixture.Store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var service = fixture.CreateService(llm, issuer);
+
+        var result = await service.ClassifyIntentAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new ProjectWorkflowIntentRequest("普通策划问题", "gpt-5.5"));
+
+        result.ShouldRoute.Should().BeTrue();
+        llm.LastRequest!.OperationKey.Should().Be("llm:project-workflow-route-intent");
+        llm.LastRequest.ContextEnvelope.Should().NotBeNull();
+        llm.LastRequest.ContextEnvelope!.AccountId.Should().Be(fixture.AccountId);
+        llm.LastRequest.ContextEnvelope.ProjectId.Should().Be(fixture.ProjectId);
+        llm.LastRequest.ContextEnvelope.OperationKey.Should().Be("llm:project-workflow-route-intent");
+        llm.LastRequest.ContextEnvelope.SignatureKeyId.Should().Be("test-key");
+    }
+
+    [Fact]
     public async Task ClassifyIntentAsync_WhenUserAsksHowToStartCreatingGame_RoutesWithoutLlm()
     {
         var fixture = await WorkflowFixture.CreateAsync("""{"shouldRoute":false,"intent":"general_chat","routeReason":"","feedbackSummary":""}""");
@@ -399,6 +427,13 @@ public sealed class ProjectWorkflowRouteServiceTests
         public string ProjectId { get; }
 
         public ProjectWorkflowRouteService Service { get; }
+
+        public ProjectWorkflowRouteService CreateService(
+            ILlmRouteEngine llmRouteEngine,
+            HostedContextManifestIssuer? contextManifestIssuer = null)
+        {
+            return CreateService(Store, Options, null, llmRouteEngine, contextManifestIssuer);
+        }
 
         public static async Task<WorkflowFixture> CreateAsync(string? llmJson = null, string gameTypeSource = "RPG")
         {
@@ -505,7 +540,12 @@ public sealed class ProjectWorkflowRouteServiceTests
             _repoRoot.Dispose();
         }
 
-        private static ProjectWorkflowRouteService CreateService(PhaseAMetadataStore store, PhaseAPlatformOptions options, string? llmJson)
+        private static ProjectWorkflowRouteService CreateService(
+            PhaseAMetadataStore store,
+            PhaseAPlatformOptions options,
+            string? llmJson,
+            ILlmRouteEngine? llmRouteEngine = null,
+            HostedContextManifestIssuer? contextManifestIssuer = null)
         {
             var codex = new FakeCodexClient(llmJson);
             var workflow = new PrototypeWorkflowService(
@@ -523,7 +563,7 @@ public sealed class ProjectWorkflowRouteServiceTests
             var repair = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), llmRouteEngine: new LlmRouteEngine(codex));
             var packages = new ProjectPackageService(store, options);
             var inventory = new ProjectAssetInventoryService(store, options, codex, new ProjectWorkspaceSeeder(options), new LlmRouteEngine(codex));
-            return new ProjectWorkflowRouteService(store, options, workflow, repair, packages, inventory, new LlmRouteEngine(codex));
+            return new ProjectWorkflowRouteService(store, options, workflow, repair, packages, inventory, llmRouteEngine ?? new LlmRouteEngine(codex), contextManifestIssuer: contextManifestIssuer);
         }
 
         private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameTypeSource)
@@ -540,6 +580,17 @@ public sealed class ProjectWorkflowRouteServiceTests
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             throw new InvalidOperationException("This test should not execute hosted processes.");
+        }
+    }
+
+    private sealed class CapturingLlmRouteEngine(string json) : ILlmRouteEngine
+    {
+        public LlmRouteRequest? LastRequest { get; private set; }
+
+        public Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
+        {
+            LastRequest = request;
+            return Task.FromResult(new LlmRouteResult(true, json, json, request.Model, null, null, 0, "", "", null, 1, request.Prompt.Length, Encoding.UTF8.GetByteCount(request.Prompt), 1));
         }
     }
 

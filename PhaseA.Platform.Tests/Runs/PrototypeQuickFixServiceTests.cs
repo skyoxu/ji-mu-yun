@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Runs;
@@ -408,7 +409,26 @@ REMAINING: none
         EnsureRpgSmokeSceneFile(project!.RepoPath);
         WritePrototypeSmokeState(project);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var issuer = new HostedContextManifestIssuer(
+            store,
+            new HostedContextManifestSignatureService("test-key", new Dictionary<string, string>
+            {
+                ["test-key"] = "test-hosted-context-signing-secret"
+            }));
+        var validator = new CapturingManifestValidator();
+        var policy = new HostedContextGatePolicy(new Dictionary<string, HostedContextGateMode>
+        {
+            ["codex:prototype-quick-fix"] = HostedContextGateMode.Enforce
+        });
+        var service = new PrototypeQuickFixService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            new SkillActionCatalog(),
+            contextManifestIssuer: issuer,
+            contextGatePolicy: policy,
+            contextManifestValidator: validator);
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -418,6 +438,12 @@ REMAINING: none
         result.AssistantMessage.Should().Contain("快速修复已完成");
         run!.RunType.Should().Be("prototype-quick-fix");
         run.Status.Should().Be("completed");
+        validator.Envelope.Should().NotBeNull();
+        validator.Envelope!.AccountId.Should().Be(accountId);
+        validator.Envelope.ProjectId.Should().Be(projectId);
+        validator.Envelope.OperationKey.Should().Be("codex:prototype-quick-fix");
+        validator.Envelope.SignatureKeyId.Should().Be("test-key");
+        validator.OperationKey.Should().Be("codex:prototype-quick-fix");
         var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
         codexCommand.Arguments.Should().Contain(["exec", "--sandbox", "workspace-write", "-m", "gpt-5.4"]);
         codexCommand.Arguments.Should().Contain(["-c", "model_reasoning_effort=\"low\""]);
@@ -4654,6 +4680,22 @@ public static class PrototypeCatalog
         return command.Arguments.Any(argument =>
             string.Equals(Path.GetFileName(argument), scriptFileName, StringComparison.OrdinalIgnoreCase) ||
             argument.Replace('\\', '/').EndsWith("/" + scriptFileName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private sealed class CapturingManifestValidator : IHostedContextManifestValidator
+    {
+        public HostedContextEnvelope? Envelope { get; private set; }
+        public string? OperationKey { get; private set; }
+
+        public Task<bool> ValidateAndConsumeAsync(
+            HostedContextEnvelope envelope,
+            string operationKey,
+            CancellationToken cancellationToken = default)
+        {
+            Envelope = envelope;
+            OperationKey = operationKey;
+            return Task.FromResult(true);
+        }
     }
 
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner

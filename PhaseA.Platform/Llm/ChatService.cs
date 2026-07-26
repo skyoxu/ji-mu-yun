@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Runs;
@@ -28,6 +30,7 @@ public sealed class ChatService
     private readonly SkillActionCatalog _skillActionCatalog;
     private readonly ChatConcurrencyLimiter _concurrencyLimiter;
     private readonly RunCancellationService _runCancellation;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ChatService(
         PhaseAMetadataStore metadataStore,
@@ -51,7 +54,8 @@ public sealed class ChatService
         SkillActionCatalog skillActionCatalog,
         ILlmRouteEngine? llmRouteEngine = null,
         ChatConcurrencyLimiter? concurrencyLimiter = null,
-        RunCancellationService? runCancellation = null)
+        RunCancellationService? runCancellation = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -63,6 +67,7 @@ public sealed class ChatService
         _skillActionCatalog = skillActionCatalog;
         _concurrencyLimiter = concurrencyLimiter ?? new ChatConcurrencyLimiter();
         _runCancellation = runCancellation ?? new RunCancellationService();
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<ChatResult> SendAsync(string accountId, string projectId, ChatRequest request, CancellationToken cancellationToken = default)
@@ -211,15 +216,39 @@ public sealed class ChatService
         var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, runToken);
         var memorySummary = memory?.MemorySummary;
         var prompt = BuildCodexPrompt(project, request, skillAction, memorySummary);
-        var completion = await _llmRouteEngine.CompleteAsync(
-            new LlmRouteRequest(
-                project.RepoPath,
-                "project-chat",
-                model,
-                prompt,
-                null,
-                project.AccountId),
-            runToken);
+        HostedContextEnvelope? envelope = null;
+        if (_contextManifestIssuer is not null)
+        {
+            try
+            {
+                envelope = await _contextManifestIssuer.IssueAsync(
+                    new HostedContextManifestIssue(
+                        project.AccountId,
+                        project.ProjectId,
+                        "llm:project-chat",
+                        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, request.Message, memorySummary)))).ToLowerInvariant(),
+                        "project-chat.v1",
+                        TimeSpan.FromMinutes(5)),
+                    runToken);
+            }
+            catch (InvalidOperationException)
+            {
+                envelope = null;
+            }
+        }
+        var completion = _contextManifestIssuer is not null && envelope is null
+            ? new LlmRouteResult(false, null, null, model, "context_manifest_issue_failed", null, 1, "", "", null, 0, prompt.Length, Encoding.UTF8.GetByteCount(prompt), 0)
+            : await _llmRouteEngine.CompleteAsync(
+                new LlmRouteRequest(
+                    project.RepoPath,
+                    "project-chat",
+                    model,
+                    prompt,
+                    null,
+                    project.AccountId,
+                    OperationKey: "llm:project-chat",
+                    ContextEnvelope: envelope),
+                runToken);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
         var stdout = sanitizedAssistantMessage ?? "";

@@ -23,6 +23,13 @@ def _run(arguments: list[str]) -> None:
 
 def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> None:
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    bridge = contract.get("adapter_bridge")
+    if isinstance(bridge, dict) and isinstance(bridge.get("runner"), str):
+        runner = plan / bridge["runner"]
+        if not runner.is_file():
+            raise ValueError("declared plan-local adapter bridge is missing")
+        _run([str(runner), "--repository-root", str(root), "--plan-dir", str(plan), "--slice-id", slice_id, "--snapshot-path", *snapshots])
+        return
     run_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
     evidence = root / "logs" / "tdd-adapter" / contract["plan_id"]
     run_dir = evidence / slice_id / run_id

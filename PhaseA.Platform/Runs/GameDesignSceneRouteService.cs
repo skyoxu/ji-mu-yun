@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -23,6 +25,7 @@ public sealed class GameDesignSceneRouteService
     private readonly QuestionFormConcurrencyLimiter _concurrencyLimiter;
     private readonly ProjectGameTypeMatchBackfillService? _gameTypeMatchBackfill;
     private readonly TimeSpan _sceneRouteGenerationTimeout;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public GameDesignSceneRouteService(
         PhaseAMetadataStore metadataStore,
@@ -30,7 +33,8 @@ public sealed class GameDesignSceneRouteService
         ILlmRouteEngine llmRouteEngine,
         QuestionFormConcurrencyLimiter? concurrencyLimiter = null,
         ProjectGameTypeMatchBackfillService? gameTypeMatchBackfill = null,
-        TimeSpan? sceneRouteGenerationTimeout = null)
+        TimeSpan? sceneRouteGenerationTimeout = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -38,6 +42,7 @@ public sealed class GameDesignSceneRouteService
         _concurrencyLimiter = concurrencyLimiter ?? new QuestionFormConcurrencyLimiter();
         _gameTypeMatchBackfill = gameTypeMatchBackfill;
         _sceneRouteGenerationTimeout = sceneRouteGenerationTimeout ?? DefaultSceneRouteGenerationTimeout;
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<GameDesignSceneRouteDraftResult?> CreateAsync(
@@ -73,6 +78,26 @@ public sealed class GameDesignSceneRouteService
         await using var lease = concurrency.Lease;
         using var timeout = new CancellationTokenSource(_sceneRouteGenerationTimeout);
         using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
+        HostedContextEnvelope? envelope;
+        try
+        {
+            envelope = _contextManifestIssuer is null
+                ? null
+                : await _contextManifestIssuer.IssueAsync(
+                    new HostedContextManifestIssue(
+                        accountId,
+                        project.ProjectId,
+                        "llm:gdd-scene-route-draft",
+                        BuildContextSnapshotId(project),
+                        SchemaVersion,
+                        TimeSpan.FromMinutes(5)),
+                    linkedCancellation.Token);
+        }
+        catch (InvalidOperationException)
+        {
+            return Fallback(project, "context_manifest_issue_failed");
+        }
+
         LlmRouteResult completion;
         try
         {
@@ -84,7 +109,9 @@ public sealed class GameDesignSceneRouteService
                     Prompt: BuildPrompt(project, message, answers),
                     Options: new CodexChatClientOptions(ReasoningEffort: "low"),
                     BillingAccountId: accountId,
-                    RequireJsonObject: true),
+                    RequireJsonObject: true,
+                    OperationKey: "llm:gdd-scene-route-draft",
+                    ContextEnvelope: envelope),
                 linkedCancellation.Token);
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
@@ -115,6 +142,12 @@ public sealed class GameDesignSceneRouteService
         {
             return Fallback(project, "invalid_json");
         }
+    }
+
+    private static string BuildContextSnapshotId(ProjectSnapshot project)
+    {
+        var source = string.Join("\n", project.ProjectId, project.AccountId, project.GameName, project.GameTypeSource, project.WorkspaceId);
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source))).ToLowerInvariant();
     }
 
     internal static GameDesignSceneRouteDocument? NormalizeSubmittedSceneRoute(GameDesignSceneRouteDocument? sceneRoute)

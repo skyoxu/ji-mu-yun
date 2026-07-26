@@ -32,6 +32,7 @@ public sealed class ProjectAssetLibraryService
     private readonly HttpClient _httpClient;
     private readonly IHostedProcessRunner _processRunner;
     private readonly PrototypeEngineeringClosureService _engineeringClosure;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ProjectAssetLibraryService(
         PhaseAMetadataStore metadataStore,
@@ -42,7 +43,8 @@ public sealed class ProjectAssetLibraryService
         AssetGenerationConcurrencyLimiter? assetConcurrencyLimiter = null,
         HttpClient? httpClient = null,
         IHostedProcessRunner? processRunner = null,
-        PrototypeEngineeringClosureService? engineeringClosure = null)
+        PrototypeEngineeringClosureService? engineeringClosure = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -56,6 +58,7 @@ public sealed class ProjectAssetLibraryService
         });
         _processRunner = processRunner ?? new HostedProcessRunner();
         _engineeringClosure = engineeringClosure ?? new PrototypeEngineeringClosureService();
+        _contextManifestIssuer = contextManifestIssuer;
     }
 
     public async Task<ProjectAssetLibraryResult?> ReadAsync(
@@ -1529,6 +1532,27 @@ public sealed class ProjectAssetLibraryService
             """;
         try
         {
+            HostedContextEnvelope? envelope = null;
+            if (_contextManifestIssuer is not null)
+            {
+                try
+                {
+                    envelope = await _contextManifestIssuer.IssueAsync(
+                        new HostedContextManifestIssue(
+                            project.AccountId,
+                            project.ProjectId,
+                            "llm:project-asset-library-skill-selection",
+                            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, unit.InstanceName, unit.NodeType, unit.ScenePath, unit.ResourcePath, unit.Kind, unit.IntendedUse, unit.Reason, floatingPrompt)))).ToLowerInvariant(),
+                            "project-asset-library-skill-selection.v1",
+                            TimeSpan.FromMinutes(5)),
+                        cancellationToken);
+                }
+                catch (InvalidOperationException)
+                {
+                    return ResolveActionIdHeuristic(unit, floatingPrompt);
+                }
+            }
+
             var decision = await _llmRouteEngine.CompleteAsync(
                 new LlmRouteRequest(
                     EnsureAssetLibraryDecisionWorkspace(project),
@@ -1537,7 +1561,9 @@ public sealed class ProjectAssetLibraryService
                     prompt,
                     null,
                     project.AccountId,
-                    RequireJsonObject: true),
+                    RequireJsonObject: true,
+                    OperationKey: "llm:project-asset-library-skill-selection",
+                    ContextEnvelope: envelope),
                 cancellationToken);
             if (!decision.Succeeded)
             {

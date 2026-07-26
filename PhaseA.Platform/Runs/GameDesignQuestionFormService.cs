@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -22,6 +24,7 @@ public sealed class GameDesignQuestionFormService
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly ILlmRouteEngine _llmRouteEngine;
+    private readonly HostedContextManifestIssuer? _contextManifestIssuer;
     private readonly QuestionFormConcurrencyLimiter _concurrencyLimiter;
     private readonly TimeSpan _schemaGenerationTimeout;
     private readonly TimeSpan _lastWaiterCleanupTimeout;
@@ -126,11 +129,13 @@ public sealed class GameDesignQuestionFormService
         ILlmRouteEngine llmRouteEngine,
         QuestionFormConcurrencyLimiter? concurrencyLimiter = null,
         TimeSpan? schemaGenerationTimeout = null,
-        TimeSpan? lastWaiterCleanupTimeout = null)
+        TimeSpan? lastWaiterCleanupTimeout = null,
+        HostedContextManifestIssuer? contextManifestIssuer = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _llmRouteEngine = llmRouteEngine;
+        _contextManifestIssuer = contextManifestIssuer;
         _concurrencyLimiter = concurrencyLimiter ?? new QuestionFormConcurrencyLimiter();
         _schemaGenerationTimeout = schemaGenerationTimeout ?? DefaultSchemaGenerationTimeout;
         _lastWaiterCleanupTimeout = lastWaiterCleanupTimeout ?? DefaultLastWaiterCleanupTimeout;
@@ -297,6 +302,26 @@ public sealed class GameDesignQuestionFormService
         using var timeout = new CancellationTokenSource(_schemaGenerationTimeout);
         using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
         var prompt = BuildPrompt(project);
+        HostedContextEnvelope? envelope;
+        try
+        {
+            envelope = _contextManifestIssuer is null
+                ? null
+                : await _contextManifestIssuer.IssueAsync(
+                    new HostedContextManifestIssue(
+                        accountId,
+                        project.ProjectId,
+                        "llm:gdd-question-form",
+                        BuildContextSnapshotId(project),
+                        SchemaVersion,
+                        TimeSpan.FromMinutes(5)),
+                    linkedCancellation.Token);
+        }
+        catch (InvalidOperationException)
+        {
+            return Cache(cacheKey, Fallback(project, "context_manifest_issue_failed"), FallbackSchemaCacheTtl);
+        }
+
         LlmRouteResult completion;
         try
         {
@@ -308,7 +333,9 @@ public sealed class GameDesignQuestionFormService
                     Prompt: prompt,
                     Options: new CodexChatClientOptions(ReasoningEffort: "low"),
                     BillingAccountId: accountId,
-                    RequireJsonObject: true),
+                    RequireJsonObject: true,
+                    OperationKey: "llm:gdd-question-form",
+                    ContextEnvelope: envelope),
                 linkedCancellation.Token);
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
@@ -357,6 +384,26 @@ public sealed class GameDesignQuestionFormService
         string accountId,
         CancellationToken cancellationToken)
     {
+        HostedContextEnvelope? envelope;
+        try
+        {
+            envelope = _contextManifestIssuer is null
+                ? null
+                : await _contextManifestIssuer.IssueAsync(
+                    new HostedContextManifestIssue(
+                        accountId,
+                        project.ProjectId,
+                        "llm:gdd-question-form-cache-decision",
+                        BuildContextSnapshotId(project),
+                        "gdd-question-form-cache-decision.v1",
+                        TimeSpan.FromMinutes(5)),
+                    cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            return true;
+        }
+
         try
         {
             var completion = await _llmRouteEngine.CompleteAsync(
@@ -367,7 +414,9 @@ public sealed class GameDesignQuestionFormService
                     Prompt: BuildCacheDecisionPrompt(project, cached),
                     Options: new CodexChatClientOptions(ReasoningEffort: "low"),
                     BillingAccountId: accountId,
-                    RequireJsonObject: true),
+                    RequireJsonObject: true,
+                    OperationKey: "llm:gdd-question-form-cache-decision",
+                    ContextEnvelope: envelope),
                 cancellationToken);
 
             if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
@@ -432,6 +481,21 @@ public sealed class GameDesignQuestionFormService
         }
 
         return Path.Combine(_options.HostedWorkspaceRoot, "_gdd-question-form");
+    }
+
+    private static string BuildContextSnapshotId(ProjectSnapshot project)
+    {
+        var payload = string.Join("\n", [
+            project.AccountId,
+            project.ProjectId,
+            project.WorkspaceId,
+            project.GameTypeSource,
+            project.TemplateRuleId,
+            project.AllowedWorkflowsJson,
+            project.BootstrapStatus,
+            project.GameTypeMatchJson
+        ]);
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
     }
 
     private static string BuildPrompt(ProjectSnapshot project)

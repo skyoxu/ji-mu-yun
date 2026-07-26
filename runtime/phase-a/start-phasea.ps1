@@ -78,6 +78,22 @@ if ([string]::IsNullOrWhiteSpace($env:PHASEA_TICKET_SIGNING_SECRET)) {
   $env:PHASEA_TICKET_SIGNING_SECRET = $resolvedTicketSigningSecret
 }
 
+$hostedContextActiveKeyId = $env:PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID
+if ([string]::IsNullOrWhiteSpace($hostedContextActiveKeyId)) {
+  $hostedContextActiveKeyId = Resolve-HostEnvironmentValue 'PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID'
+}
+$hostedContextKeysJson = $env:PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON
+if ([string]::IsNullOrWhiteSpace($hostedContextKeysJson)) {
+  $hostedContextKeysJson = Resolve-HostEnvironmentValue 'PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON'
+}
+if ([string]::IsNullOrWhiteSpace($hostedContextActiveKeyId) -xor [string]::IsNullOrWhiteSpace($hostedContextKeysJson)) {
+  throw "phasea_hosted_context_signing_key_ring_incomplete"
+}
+if (![string]::IsNullOrWhiteSpace($hostedContextActiveKeyId)) {
+  $env:PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID = $hostedContextActiveKeyId
+  $env:PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON = $hostedContextKeysJson
+}
+
 $webPreviewSecretFile = 'C:\jimuyun\logs\phase-a-innernet\data\web-preview-signing-secret.txt'
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $webPreviewSecretFile) | Out-Null
 $resolvedWebPreviewSecret = $null
@@ -205,6 +221,10 @@ $psi.Environment['PHASEA_REPOSITORY_ROOT'] = $env:PHASEA_REPOSITORY_ROOT
 $psi.Environment['PHASEA_ADMIN_TOKEN_HASH'] = $env:PHASEA_ADMIN_TOKEN_HASH
 $psi.Environment['PHASEA_TICKET_SIGNING_SECRET'] = $env:PHASEA_TICKET_SIGNING_SECRET
 $psi.Environment['PHASEA_WEB_PREVIEW_SIGNING_SECRET'] = $env:PHASEA_WEB_PREVIEW_SIGNING_SECRET
+if (![string]::IsNullOrWhiteSpace($env:PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID)) {
+  $psi.Environment['PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID'] = $env:PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID
+  $psi.Environment['PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON'] = $env:PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON
+}
 $psi.Environment['PHASEA_CODEX_COMMAND'] = $env:PHASEA_CODEX_COMMAND
 $psi.Environment['PHASEA_RIPGREP_DIR'] = $env:PHASEA_RIPGREP_DIR
 $psi.Environment['GODOT_BIN'] = $env:GODOT_BIN

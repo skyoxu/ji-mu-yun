@@ -1,0 +1,36 @@
+{
+  "excluded_candidates": [
+    {
+      "callsite_fingerprint": "6fbca4a4d94347a23c3670548e9f3aaa88efe011b4359fb3e5f97aa74a7458a9",
+      "callsite_id": "direct-llm-invocation:6fbca4a4d94347a23c36",
+      "column": 25,
+      "context_envelope_status": "unassessed",
+      "line": 45,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Llm/CodexCliChatClient.cs",
+      "reachability_status": "unassessed",
+      "reason": "shared-read-only-llm-client",
+      "rule_id": "process_start_info",
+      "source_sha256": "3ad04898cfa6f0c35aa94fd8c406b373cfc3745670ba79400ffbd1780149217a",
+      "symbol": "process_start_info"
+    },
+    {
+      "callsite_fingerprint": "5997e30415ae6485f2c08c5963195b4140fe40739a204be6ec96ec5df30e9727",
+      "callsite_id": "direct-llm-invocation:5997e30415ae6485f2c0",
+      "column": 25,
+      "context_envelope_status": "unassessed",
+      "line": 24,
+      "migration_status": "unassessed",
+      "path": "PhaseA.Platform/Runs/HostedProcessRunner.cs",
+      "reachability_status": "unassessed",
+      "reason": "shared-process-runner",
+      "rule_id": "process_start_info",
+      "source_sha256": "bdfa2fb9a0fbd9b1faeaafa0ae257832558790fa33d45b838ddb5f26eaccb216",
+      "symbol": "process_start_info"
+    }
+  ],
+  "generated_by": "tools/build_hosted_inventory.py@hosted-inventory-scanner.v1",
+  "schema_version": "jimuyun.direct-llm-invocation-violations.v1",
+  "source_snapshot_id": "03c54fc67253d67a4a9264c3c4bf795cc78e0a67e1cf60c8f0bb999ce1061410",
+  "violations": []
+}
