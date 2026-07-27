@@ -1,0 +1,10 @@
+{
+  "schema_version": "refactor-acceptance.authority-manifest.v1",
+  "sources": [
+    {"path": "AGENTS.md", "role": "repository-rules", "sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"},
+    {"path": "execution-plans/2026-07-15-refactor-implementation-acceptance-skill-requirements.md", "role": "requirements", "sha256": "be6a7c00bff4e78b55014341839cfe1a2f98ccf02de01d72c44da73a8ec71456"},
+    {"path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md", "role": "bootstrap-authority", "sha256": "755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"},
+    {"path": "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md", "role": "vdd-authority", "sha256": "3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43"},
+    {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "role": "plan-creator", "sha256": "0124dda1bd301a8c9c4eec1080a5bf94a50fcdefe7da610cef9813c570a7ede7"}
+  ]
+}

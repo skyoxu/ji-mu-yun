@@ -1502,5 +1502,5 @@
   ],
   "generated_by": "tools/build_hosted_migration_ledger.py@v1",
   "schema_version": "jimuyun.hosted-callsite-migration-ledger.v1",
-  "source_snapshot_id": "03c54fc67253d67a4a9264c3c4bf795cc78e0a67e1cf60c8f0bb999ce1061410"
+  "source_snapshot_id": "85a76dbcff1943623a2f016e4d8b75651dda05b83ebd8d8fc4ea672935fa3ff3"
 }

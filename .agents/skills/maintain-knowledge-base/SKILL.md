@@ -15,15 +15,18 @@ promote dirty-worktree bytes as repository facts.
    `knowledge/contracts/`, and the existing knowledge catalog. The dated
    2026-07-25 schemas are read-only migration inputs, not runtime owners.
 2. Pin `refs/heads/main` with `git rev-parse refs/heads/main`. Reject a request
-   whose declared `main_commit` differs. Do not fetch or change branches.
+   whose declared `main_commit` differs. Treat catalog `source_snapshot` as
+   provenance for the derived index, not as the commit containing the catalog
+   itself. Do not fetch or change branches.
 3. Use `existing-only` without a target to refresh only catalog entries already
    registered. Do not discover absent files.
 4. Use `targeted` only with one explicit repository-relative target. Read main
    blobs as facts; worktree-only target content may be recorded only as a
    `provisional` candidate.
 5. Run `scripts/maintain_knowledge.py` with the request, catalog, derived
-   output and append-only log root. Re-read output hashes before claiming a
-   result.
+   output and append-only log root. When it reports a stale catalog snapshot,
+   use its `suggested_catalog_source_snapshot` to regenerate the catalog from
+   current main facts, then re-read output hashes before claiming a result.
 6. Report source locations and hashes, not generated factual answers. Preserve
    failed result sidecars under `logs/knowledge-context/`.
 

@@ -32,6 +32,60 @@ class VddKnowledgePreflightTests(unittest.TestCase):
         self.assertEqual("blocked", result["status"])
         self.assertEqual(["repository-rules"], result["missing_required_modules"])
 
+    def test_matched_locator_candidate_allows_required_module(self) -> None:
+        module = load_preflight()
+        snapshot = {"ref": "refs/heads/main", "commit": "a" * 40}
+        result = module.evaluate_preflight(
+            {
+                "required_modules": ["repository-rules"],
+                "locator_request": {
+                    "schema_version": "jimuyun.knowledge-locator-request.v1",
+                    "request_id": "request-1",
+                    "snapshot": snapshot,
+                },
+                "locator_result": {
+                    "schema_version": "jimuyun.knowledge-locator-result.v1",
+                    "request_id": "request-1",
+                    "snapshot": snapshot,
+                    "status": "matched",
+                    "candidates": [{"path": "AGENTS.md", "source_sha256": "b" * 64}],
+                },
+                "decisions": [{
+                    "decision": "accepted",
+                    "satisfies": ["repository-rules"],
+                    "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64},
+                }],
+            }
+        )
+        self.assertEqual("ready", result["status"])
+
+    def test_snapshot_mismatch_blocks_preflight(self) -> None:
+        module = load_preflight()
+        result = module.evaluate_preflight(
+            {
+                "required_modules": [],
+                "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "request-1", "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}},
+                "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "request-1", "snapshot": {"ref": "refs/heads/main", "commit": "b" * 40}, "status": "matched", "candidates": []},
+                "decisions": [],
+            }
+        )
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual("locator_snapshot_mismatch", result["failure_code"])
+
+    def test_accepted_candidate_outside_locator_result_blocks_preflight(self) -> None:
+        module = load_preflight()
+        snapshot = {"ref": "refs/heads/main", "commit": "a" * 40}
+        result = module.evaluate_preflight(
+            {
+                "required_modules": ["repository-rules"],
+                "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "request-1", "snapshot": snapshot},
+                "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "request-1", "snapshot": snapshot, "status": "matched", "candidates": [{"path": "README.md", "source_sha256": "a" * 64}]},
+                "decisions": [{"decision": "accepted", "satisfies": ["repository-rules"], "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64}}],
+            }
+        )
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual("accepted_candidate_not_locator_bound", result["failure_code"])
+
 
 if __name__ == "__main__":
     unittest.main()

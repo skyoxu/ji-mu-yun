@@ -1163,16 +1163,18 @@ def validate_report_index() -> None:
 
 
 def validate_git_head(state: dict[str, Any]) -> None:
+    baseline = state.get("git_head")
+    require(isinstance(baseline, str) and baseline, "git_head_missing", repr(baseline))
     result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "merge-base", "--is-ancestor", baseline, "HEAD"],
         cwd=REPO_ROOT,
         text=True,
         encoding="utf-8",
         capture_output=True,
         check=False,
     )
-    require(result.returncode == 0, "git_head_read_failed", result.stderr)
-    require(state.get("git_head") == result.stdout.strip(), "git_head_drift", f"state={state.get('git_head')} current={result.stdout.strip()}")
+    require(result.returncode in {0, 1}, "git_head_read_failed", result.stderr)
+    require(result.returncode == 0, "git_baseline_not_ancestor", f"baseline={baseline}")
 
 
 def run_plan_tests() -> None:

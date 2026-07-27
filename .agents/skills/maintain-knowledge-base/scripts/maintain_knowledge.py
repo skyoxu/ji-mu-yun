@@ -30,6 +30,20 @@ def safe_relative(value: str) -> str:
     return pure.as_posix()
 
 
+def catalog_source_snapshot(catalog: dict) -> dict | None:
+    snapshot = catalog.get("source_snapshot")
+    if snapshot is None:
+        return None
+    if not isinstance(snapshot, dict):
+        raise ValueError("invalid_catalog_source_snapshot")
+    if snapshot.get("ref") != "refs/heads/main" or not isinstance(snapshot.get("commit"), str) or len(snapshot["commit"]) != 40:
+        raise ValueError("invalid_catalog_source_snapshot")
+    sources = snapshot.get("sources")
+    if not isinstance(sources, list):
+        raise ValueError("invalid_catalog_source_snapshot")
+    return snapshot
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--request", type=Path, required=True)
@@ -43,6 +57,8 @@ def main() -> int:
     repo = args.repo_root.resolve()
     failure = None
     entries_result: list[dict] = []
+    suggested_sources: list[dict] = []
+    snapshot_status = "legacy"
     try:
         if request.get("schema_version") != "jimuyun.knowledge-maintenance-request.v1" or request.get("skill_id") != "maintain-knowledge-base":
             raise ValueError("invalid_request")
@@ -67,6 +83,12 @@ def main() -> int:
             ]
         if not isinstance(raw_entries, list):
             raise ValueError("invalid_catalog")
+        recorded_snapshot = catalog_source_snapshot(catalog)
+        recorded_sources = {
+            safe_relative(str(item.get("path", ""))): item.get("sha256")
+            for item in (recorded_snapshot or {}).get("sources", [])
+            if isinstance(item, dict)
+        }
         selected = raw_entries
         if mode == "targeted":
             prefix = safe_relative(str(target.get("repo_relative_path") or "")).rstrip("/")
@@ -83,20 +105,24 @@ def main() -> int:
                 continue
             after = sha256(blob.stdout)
             disposition = "unchanged" if before == after else "updated"
+            suggested_sources.append({"path": source_path, "sha256": after})
             entries_result.append({"entry_id": entry_id, "source_path": source_path, "source_snapshot_kind": "main", "disposition": disposition, "authority_status": "main-backed", "before_sha256": before, "after_sha256": after, "changed_fields": [] if disposition == "unchanged" else ["source_sha256"]})
         if mode == "targeted" and not selected and target.get("snapshot_kind") == "worktree":
             source_path = safe_relative(str(target.get("repo_relative_path")))
             worktree = repo / source_path
             if worktree.is_file():
                 entries_result.append({"entry_id": f"candidate.{source_path.replace('/', '.')}", "source_path": source_path, "source_snapshot_kind": "worktree", "disposition": "candidate", "authority_status": "provisional", "before_sha256": None, "after_sha256": sha256(worktree.read_bytes()), "changed_fields": ["candidate_source"]})
-        status = "updated" if any(item["disposition"] in {"updated", "missing", "candidate"} for item in entries_result) else "unchanged"
+        if recorded_snapshot is not None:
+            actual_sources = {item["path"]: item["sha256"] for item in suggested_sources}
+            snapshot_status = "current" if recorded_sources == actual_sources else "stale"
+        status = "updated" if any(item["disposition"] in {"updated", "missing", "candidate"} for item in entries_result) or snapshot_status == "stale" else "unchanged"
     except (KeyError, ValueError, subprocess.CalledProcessError) as exc:
         failure = str(exc)
         main_commit = authority.get("main_commit", "") if "authority" in locals() else ""
         mode = request.get("mode", "existing-only")
         status = "failed"
     advances_lkg = status == "updated" and not failure and any(item["authority_status"] == "main-backed" and item["disposition"] == "updated" for item in entries_result)
-    result = {"schema_version": "jimuyun.knowledge-maintenance-result.v1", "request_id": request.get("request_id", "invalid"), "mode": mode, "main_commit": main_commit, "status": status, "before_snapshot_id": request.get("knowledge_snapshot_id", "invalid"), "after_snapshot_id": request.get("knowledge_snapshot_id", "invalid") if status != "updated" else sha256(json.dumps(entries_result, sort_keys=True).encode()), "entries": entries_result, "lkg_disposition": "advanced" if advances_lkg else "preserved", "source_mutation_count": 0, "log": {"append_only": True, "log_ref": "", "main_commit": main_commit, "failure_code": failure}}
+    result = {"schema_version": "jimuyun.knowledge-maintenance-result.v1", "request_id": request.get("request_id", "invalid"), "mode": mode, "main_commit": main_commit, "status": status, "before_snapshot_id": request.get("knowledge_snapshot_id", "invalid"), "after_snapshot_id": request.get("knowledge_snapshot_id", "invalid") if status != "updated" else sha256(json.dumps(entries_result, sort_keys=True).encode()), "entries": entries_result, "catalog_source_snapshot_status": snapshot_status, "suggested_catalog_source_snapshot": {"ref": "refs/heads/main", "commit": main_commit, "sources": sorted(suggested_sources, key=lambda item: item["path"])} if not failure else None, "lkg_disposition": "advanced" if advances_lkg else "preserved", "source_mutation_count": 0, "log": {"append_only": True, "log_ref": "", "main_commit": main_commit, "failure_code": failure}}
     timestamp = datetime.now(timezone.utc)
     log_date = timestamp.strftime("%Y-%m-%d")
     log_name = f"result-{timestamp.strftime('%H%M%S%f')}.v1.json"

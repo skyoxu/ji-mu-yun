@@ -23,7 +23,7 @@
   "current_slice": null,
   "invalidated_slices": [],
   "live_workspace_allowed": false,
-  "next_action": "All K0-K14 implementation slices have current local evidence and the Quick Dev completion predicate published implementation-complete. K13 readiness is true for source snapshot 03c54fc67253d67a4a9264c3c4bf795cc78e0a67e1cf60c8f0bb999ce1061410 under ADR-0047's non-operational declaration scope. K14's domain catalogs and maintain-knowledge-base Skill pass isolated main-pinned, closed-world, provisional, incremental/LKG, retention, and compatibility tests. The next lifecycle action is a separate acceptance decision; no live deployment is authorized by this state.",
+  "next_action": "All K0-K14 implementation slices retain local implementation evidence. The current inventory snapshot 85a76dbcff1943623a2f016e4d8b75651dda05b83ebd8d8fc4ea672935fa3ff3 invalidates the prior K13 release-evidence binding, so check_e2_readiness.py reports ready=false until new source-bound release evidence is explicitly formed and authorized. K14's domain catalogs and maintain-knowledge-base Skill pass isolated main-pinned, closed-world, provisional, incremental/LKG, retention, and compatibility tests. The next lifecycle action is a separate acceptance decision; no live deployment is authorized by this state.",
   "plan_id": "jimuyun-four-domain-knowledge-context.v1",
   "production_code_allowed": false,
   "profile": "resumable",

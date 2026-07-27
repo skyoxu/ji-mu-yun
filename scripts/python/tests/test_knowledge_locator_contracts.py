@@ -25,15 +25,16 @@ class KnowledgeLocatorContractTests(unittest.TestCase):
         consumers = {item.get("consumer") for item in policies.get("policies", [])}
         self.assertEqual({"vdd", "quick-dev", "bootstrap"}, consumers, "KWI-CONTRACT-LLM-OWNER: trusted consumer policies are incomplete")
 
-    def test_catalog_bootstraps_main_pinned_repository_rules(self) -> None:
+    def test_catalog_binds_source_snapshot_not_its_own_commit(self) -> None:
         catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
-        main = subprocess.check_output(["git", "rev-parse", "refs/heads/main"], cwd=REPOSITORY_ROOT, text=True, encoding="utf-8").strip()
         self.assertEqual("refs/heads/main", catalog.get("authority_ref"))
-        self.assertEqual(main, catalog.get("main_commit"))
+        snapshot = catalog.get("source_snapshot", {})
+        self.assertEqual("refs/heads/main", snapshot.get("ref"))
+        self.assertRegex(snapshot.get("commit", ""), r"^[0-9a-f]{40}$")
         entry = next((item for item in catalog.get("entries", []) if item.get("entry_id") == "repository-rules"), None)
         self.assertIsNotNone(entry, "KWI-CATALOG-BOOTSTRAP: repository rules must be indexed")
-        main_bytes = subprocess.check_output(["git", "show", f"{main}:AGENTS.md"], cwd=REPOSITORY_ROOT)
-        self.assertEqual(hashlib.sha256(main_bytes).hexdigest(), entry.get("source_sha256"))
+        snapshot_bytes = subprocess.check_output(["git", "show", f"{snapshot['commit']}:AGENTS.md"], cwd=REPOSITORY_ROOT)
+        self.assertEqual(hashlib.sha256(snapshot_bytes).hexdigest(), entry.get("source_sha256"))
 
 
 if __name__ == "__main__":

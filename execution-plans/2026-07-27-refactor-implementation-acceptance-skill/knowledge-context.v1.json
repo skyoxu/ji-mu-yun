@@ -1,0 +1,13 @@
+{
+  "schema_version": "refactor-acceptance.vdd-knowledge-preflight.v1",
+  "consumer": "vdd",
+  "request_sha256": "sha256:19527b21258469eb764cb56d148aa1a44229fb5e7ccee4866ae7043da3eca29e",
+  "result_sha256": "sha256:75eb8f3c54b553f1b69e4f6aba6f970acd0f8cacdd3a682d021d3b4532280566",
+  "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "vdd-refactor-acceptance-20260727", "consumer": "vdd", "query": "refactor implementation acceptance skill bootstrap phase service policy", "snapshot": {"ref": "refs/heads/main", "commit": "108d3112e7c701e97014842600068a912236b7f3"}, "policy_revision": "knowledge-consumer-policies.v1"},
+  "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "vdd-refactor-acceptance-20260727", "status": "matched", "snapshot": {"ref": "refs/heads/main", "commit": "108d3112e7c701e97014842600068a912236b7f3"}, "candidates": [{"path": "AGENTS.md", "anchor": "Repository Guide", "line_start": 1, "line_end": 1, "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 2}}]},
+  "decisions": [{"owner": "adapter", "candidate": {"path": "AGENTS.md", "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"}, "decision": "accepted", "satisfies": ["repository-rules"], "rejection_reason": null}],
+  "required_modules": ["repository-rules"],
+  "missing_required_modules": [],
+  "status": "ready",
+  "reread_verification": {"path": "AGENTS.md", "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd", "snapshot": "refs/heads/main@108d3112e7c701e97014842600068a912236b7f3"}
+}

@@ -69,3 +69,9 @@ This report is append-only continuity evidence. It has `authorizes: []` and cann
 - The first completion publication exposed that `00-index.md` was incorrectly included in candidate implementation identity even though it only projects lifecycle state.
 - Excluded the index, state, resume record, and append-only report from candidate implementation inputs. The terminal test now uses a declared legacy-regression replay because its RED was already observed before this contract repair.
 - All slice evidence must be replayed against this final contract before the implementation-complete projection is treated as current.
+
+## 2026-07-27: Catalog bootstrap and Locator result-contract repair
+
+- Added the main-pinned `repository-rules` catalog seed and verified it through the maintenance Skill without promoting dirty worktree source bytes as facts.
+- Updated the Locator CLI to return the stable request-bound location-only result envelope required by `knowledge/contracts/knowledge-locator-result.v1.schema.json`.
+- Replayed RMAP-S0 through RMAP-S7 under the current identity. `RUN-20260727T021207-941188` passed the registered terminal predicate; this remains implementation completion evidence only and authorizes no acceptance, release, deployment, handoff, or archive.

@@ -45,12 +45,14 @@ During repair, first stabilize the smallest affected layer. A slice-local change
 
 ## Knowledge Preflight
 
-After mandatory authority reads and before freezing plan sources, invoke the
-trusted VDD knowledge preflight. It consumes only location-only Locator
-recommendations that VDD has reread and hash-verified. Record one adapter-owned
-accepted or rejected decision per candidate. Required knowledge modules without
-an accepted decision block `plan-ready`; optional insufficient matches remain
-explicit and non-authorizing. See `references/knowledge-consumption.md`.
+After mandatory authority reads and before freezing plan sources, run the
+mandatory knowledge-consumption sequence in
+`references/knowledge-consumption.md`. The sequence invokes
+`scripts/python/knowledge_locator.py` through JSON stdin, then invokes this
+Skill's `scripts/vdd_knowledge_preflight.py` with the request, result, and
+adapter-owned decisions. A required module without a matched, reread,
+hash-verified Locator candidate blocks `plan-ready`; optional insufficient
+matches remain explicit and non-authorizing.
 
 ## Candidate, Review, And Reports
 

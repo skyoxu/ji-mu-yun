@@ -95,7 +95,39 @@ def last_known_good(root: Path) -> dict[str, Any]:
     return json.loads((root / "generations" / f"{pointer['generation_id']}.json").read_text(encoding="utf-8"))
 
 
-def require_fresh_catalog(catalog: dict[str, Any], current_main_commit: str) -> dict[str, str]:
-    if catalog.get("authority_ref") != "refs/heads/main" or catalog.get("main_commit") != current_main_commit:
+def catalog_source_snapshot(catalog: dict[str, Any]) -> dict[str, Any] | None:
+    snapshot = catalog.get("source_snapshot")
+    if not isinstance(snapshot, dict) or snapshot.get("ref") != "refs/heads/main":
+        return None
+    commit = snapshot.get("commit")
+    sources = snapshot.get("sources")
+    if not isinstance(commit, str) or len(commit) != 40 or not isinstance(sources, list):
+        return None
+    return snapshot
+
+
+def require_fresh_catalog(catalog: dict[str, Any], current_sources: dict[str, str] | str) -> dict[str, str]:
+    """Check source content freshness without binding a cache to its own commit."""
+    if catalog.get("authority_ref") != "refs/heads/main":
         return {"status": "knowledge_refresh_required"}
+    if isinstance(current_sources, str):
+        # Compatibility path for historical callers while they migrate to the
+        # source-snapshot contract.
+        return {"status": "current"} if catalog.get("main_commit") == current_sources else {"status": "knowledge_refresh_required"}
+    snapshot = catalog_source_snapshot(catalog)
+    if snapshot is None:
+        return {"status": "knowledge_refresh_required"}
+    expected: dict[str, str] = {}
+    for item in snapshot["sources"]:
+        if not isinstance(item, dict) or not isinstance(item.get("path"), str) or not isinstance(item.get("sha256"), str):
+            return {"status": "knowledge_refresh_required"}
+        expected[item["path"]] = item["sha256"]
+    if not expected or any(current_sources.get(path) != digest for path, digest in expected.items()):
+        return {"status": "knowledge_refresh_required"}
+    for entry in catalog.get("entries", []):
+        if not isinstance(entry, dict):
+            return {"status": "knowledge_refresh_required"}
+        path = entry.get("source_path") or entry.get("path")
+        if not isinstance(path, str) or expected.get(path) != entry.get("source_sha256"):
+            return {"status": "knowledge_refresh_required"}
     return {"status": "current"}

@@ -89,6 +89,23 @@ def main() -> int:
         assert legacy.returncode == 0, legacy.stderr + legacy.stdout
         assert json.loads(output_path.read_text(encoding="utf-8"))["status"] == "unchanged"
 
+        modern_catalog = {
+            "source_snapshot": {
+                "ref": "refs/heads/main",
+                "commit": "0" * 40,
+                "sources": [{"path": "docs/fact.md", "sha256": "0" * 64}],
+            },
+            "entries": [{"entry_id": "fact", "source_path": "docs/fact.md", "source_sha256": sha256(b"main fact\n")}],
+        }
+        write_json(catalog_path, modern_catalog)
+        modern = execute(repo, request_path, catalog_path, output_path)
+        assert modern.returncode == 0, modern.stderr + modern.stdout
+        modern_result = json.loads(output_path.read_text(encoding="utf-8"))
+        assert modern_result["status"] == "updated"
+        assert modern_result["catalog_source_snapshot_status"] == "stale"
+        assert modern_result["suggested_catalog_source_snapshot"]["commit"] == commit
+        assert modern_result["suggested_catalog_source_snapshot"]["sources"] == [{"path": "docs/fact.md", "sha256": sha256(b"main fact\n")}]
+
         write_json(request_path, request("0" * 40))
         rejected = execute(repo, request_path, catalog_path, output_path)
         assert rejected.returncode == 2

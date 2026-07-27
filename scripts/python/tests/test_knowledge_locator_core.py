@@ -60,23 +60,55 @@ class KnowledgeLocatorCoreTests(unittest.TestCase):
             "schema_version": "jimuyun.knowledge-locator-request.v1",
             "request_id": "test-request",
             "consumer": "vdd",
-            "query": "repository rules",
+            "query": "unmatched locator query",
             "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40},
             "policy_revision": "test-policy",
         }
-        with tempfile.TemporaryDirectory() as raw:
-            catalog = Path(raw) / "catalog.json"
-            catalog.write_text(json.dumps({"entries": []}), encoding="utf-8", newline="\n")
-            result = subprocess.run(
-                [sys.executable, "-B", str(CLI_PATH), "--catalog", str(catalog)],
-                input=json.dumps(request), text=True, capture_output=True, check=False,
-            )
+        catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json").read_text(encoding="utf-8"))
+        request["snapshot"] = {"ref": catalog["source_snapshot"]["ref"], "commit": catalog["source_snapshot"]["commit"]}
+        result = subprocess.run(
+            [sys.executable, "-B", str(CLI_PATH), "--catalog", str(REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json")],
+            input=json.dumps(request), text=True, capture_output=True, check=False,
+        )
         self.assertEqual(0, result.returncode, result.stderr)
         output = json.loads(result.stdout)
         self.assertEqual("jimuyun.knowledge-locator-result.v1", output.get("schema_version"))
         self.assertEqual(request["request_id"], output.get("request_id"))
         self.assertEqual(request["snapshot"], output.get("snapshot"))
         self.assertEqual("insufficient_match", output.get("status"))
+
+    def test_catalog_covers_gdd_prototype_route_module(self) -> None:
+        core = load_core()
+        catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json").read_text(encoding="utf-8"))
+        result = core.locate({"query": "GDD prototype route"}, catalog, max_candidates=12)
+        self.assertEqual("matched", result["status"])
+        self.assertIn("docs/architecture/phase-service/prototype-routes-and-recovery.md", [item["path"] for item in result["candidates"]])
+
+    def test_cli_blocks_stale_catalog_or_snapshot_mismatch(self) -> None:
+        request = {
+            "schema_version": "jimuyun.knowledge-locator-request.v1",
+            "request_id": "test-request",
+            "consumer": "vdd",
+            "query": "repository rules",
+            "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40},
+            "policy_revision": "test-policy",
+        }
+        catalog = {
+            "authority_ref": "refs/heads/main",
+            "source_snapshot": {"ref": "refs/heads/main", "commit": "b" * 40, "sources": []},
+            "entries": [],
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "catalog.json"
+            path.write_text(json.dumps(catalog), encoding="utf-8", newline="\n")
+            result = subprocess.run(
+                [sys.executable, "-B", str(CLI_PATH), "--catalog", str(path)],
+                input=json.dumps(request), text=True, capture_output=True, check=False,
+            )
+        self.assertEqual(0, result.returncode, result.stderr)
+        output = json.loads(result.stdout)
+        self.assertEqual("blocked", output["status"])
+        self.assertEqual([], output["candidates"])
 
 
 if __name__ == "__main__":

@@ -1447,6 +1447,11 @@
       "size_bytes": 4831
     },
     {
+      "path": "scripts/python/_knowledge_locator_core.py",
+      "sha256": "7b21260b6f44b88c6f976b8a7c45bdf2b76e41d7d619243f6cbf2eb19e956006",
+      "size_bytes": 6521
+    },
+    {
       "path": "scripts/python/_obligations_freeze_pipeline_common.py",
       "sha256": "2ca0f10ac0353eebe8cc9598580a04822c5f29b156fdbdc28f4c3c4ca1cdbe89",
       "size_bytes": 7338
@@ -1565,6 +1570,11 @@
       "path": "scripts/python/build_gdd_to_module_acceptance_matrix.py",
       "sha256": "18b64fb1cf64f7da993c4f8471acc9c32c08b5365c23379960cd5525af9a58c1",
       "size_bytes": 56380
+    },
+    {
+      "path": "scripts/python/build_knowledge_index.py",
+      "sha256": "38984bce60c8e5fc25438d675bea08a2fa003a65fad96c886f84550f03bb7985",
+      "size_bytes": 795
     },
     {
       "path": "scripts/python/build_obligations_jitter_summary.py",
@@ -1830,6 +1840,11 @@
       "path": "scripts/python/inspect_run.py",
       "sha256": "c4b53db32d3bf6ce420a116eaa8c5f6bcb208834b3245a33604759008964d904",
       "size_bytes": 49179
+    },
+    {
+      "path": "scripts/python/knowledge_locator.py",
+      "sha256": "8a39fa8c2f2dff049b4c2bb942f6ec903b27a534eddc6ad697a232b0a4299e48",
+      "size_bytes": 2011
     },
     {
       "path": "scripts/python/local_hard_checks_harness.py",
@@ -2215,6 +2230,11 @@
       "path": "scripts/python/validate_execution_plan_report_index.py",
       "sha256": "1169433e5a3eeac73346374344fa796715d2e3870f56bd60209f657b7347c94e",
       "size_bytes": 3961
+    },
+    {
+      "path": "scripts/python/validate_knowledge_workflow_integration.py",
+      "sha256": "6eaea217345f5883c792f5f17528238562ab9c4afac7f1fe00b450ac94402698",
+      "size_bytes": 5280
     },
     {
       "path": "scripts/python/validate_overlay_execution.py",
@@ -2940,5 +2960,5 @@
   "scanner_revision": "hosted-inventory-scanner.v1",
   "schema_version": "jimuyun.knowledge-source-snapshot.v1",
   "snapshot_mode": "working-tree",
-  "source_snapshot_id": "03c54fc67253d67a4a9264c3c4bf795cc78e0a67e1cf60c8f0bb999ce1061410"
+  "source_snapshot_id": "85a76dbcff1943623a2f016e4d8b75651dda05b83ebd8d8fc4ea672935fa3ff3"
 }

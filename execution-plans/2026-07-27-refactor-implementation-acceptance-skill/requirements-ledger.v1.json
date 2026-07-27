@@ -1,0 +1,16 @@
+{
+  "schema_version": "refactor-acceptance.requirements-ledger.v1",
+  "source": {
+    "path": "execution-plans/2026-07-15-refactor-implementation-acceptance-skill-requirements.md",
+    "sha256": "be6a7c00bff4e78b55014341839cfe1a2f98ccf02de01d72c44da73a8ec71456"
+  },
+  "atomic_requirement_set": {"prefix": "RA-SKILL-", "first": 1, "last": 73, "zero_pad": 3},
+  "coverage": [
+    {"slice_id": "S0-bootstrap-companion", "source_sections": ["2.2", "9", "12.1"], "ra_ids": [12, 20, 24, 25, 30, 35, 36, 38, 41, 42, 43, 48, 49, 50, 51, 52, 53, 54, 61, 67]},
+    {"slice_id": "S1-deterministic-core", "source_sections": ["3", "4", "5.1", "5.3", "10.1"], "ra_ids": [1, 2, 3, 11, 13, 15, 16, 21, 23, 26, 27, 28, 32, 33, 34, 46, 47, 55, 56, 58, 65, 66, 68, 69, 70, 71, 72, 73]},
+    {"slice_id": "S2-matrix-phase", "source_sections": ["6", "7", "8"], "ra_ids": [4, 5, 6, 7, 8, 9, 10, 14, 17, 18, 29, 44, 57, 62, 63, 64]},
+    {"slice_id": "S3-execution-control", "source_sections": ["10.2", "10.4", "11"], "ra_ids": [19, 31, 45, 59]},
+    {"slice_id": "S4-bootstrap-integration", "source_sections": ["9"], "ra_ids": [37, 39, 40, 60]},
+    {"slice_id": "S5-finalize-release-candidate", "source_sections": ["12.2", "13", "14"], "ra_ids": [22]}
+  ]
+}

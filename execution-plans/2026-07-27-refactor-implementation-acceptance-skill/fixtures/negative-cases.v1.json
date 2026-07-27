@@ -1,0 +1,11 @@
+{
+  "schema_version": "refactor-acceptance.plan-fixtures.v1",
+  "cases": [
+    {"id": "knowledge-required-module-uncovered", "expected": "draft", "failure_code": "KWI-CONSUMPTION-REQUIRED-UNCOVERED"},
+    {"id": "pure-godot-candidate", "expected": "unsupported_code_review_domain"},
+    {"id": "semantic-partition-without-companion", "expected": "candidate-only"},
+    {"id": "controlled-command-unbounded-write", "expected": "blocked"},
+    {"id": "bootstrap-clean-without-matrix", "expected": "not-authorizing"},
+    {"id": "changed-phase-csharp-coverage-below-85", "expected": "blocked"}
+  ]
+}
