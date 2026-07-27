@@ -301,6 +301,10 @@ py -3 C:/Users/Administrator/.codex/skills/.system/skill-creator/scripts/quick_v
 
 ## 验收标准
 
+## Companion Capability
+
+`bootstrap-implementation-conformance` may expose `acceptance-inventory-attestation@1.0` for a consumer whose immutable requirement decision requires positive inventory attestation. Operators must verify the profile declaration's producer role and schema hash before launch. This companion is produced by the existing `acceptance_auditor` path; it is not a separate reviewer invocation and no consumer-private receipt can authorize a Bootstrap launch.
+
 - Given 用户只执行 prepare，When比较目标 scope hash，Then前后完全一致。
 - Given 用户保存三个合法空输出，When gate，Then clean result 合法。
 - Given P0/P1 缺 verifier 决策，When finalize，Then fail closed。

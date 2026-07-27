@@ -1492,6 +1492,41 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(1, result)
         self.assertFalse((self.run_dir / "review-input.json").exists())
 
+    def test_implementation_profile_gate_fails_closed_without_acceptance_companion(self) -> None:
+        self.prepare(profile="bootstrap-implementation-conformance")
+        self.complete_layers()
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        gate = self.read_json("review-gate-result.json")
+        self.assertEqual("incomplete", gate["status"])
+        self.assertEqual(["acceptance_auditor"], gate["failedLayers"])
+        self.assertTrue(gate["layerFailures"][0]["reason"].startswith("companion_missing:"))
+
+    def test_implementation_profile_gate_accepts_parent_owned_companion_bundle(self) -> None:
+        self.prepare(profile="bootstrap-implementation-conformance")
+        self.complete_layers()
+        manifest = self.read_json("review-input.json")
+        reviewer = self.read_json("reviewer-outputs/acceptance_auditor.json")
+        reviewer["attemptId"] = "acceptance-auditor-parent-attempt"
+        self.write_json("reviewer-outputs/acceptance_auditor.json", reviewer)
+        attestation = {
+            "schemaVersion": "bootstrap-acceptance-inventory-attestation.v1",
+            "reviewId": manifest["reviewId"],
+            "attemptId": "acceptance-auditor-parent-attempt",
+            "inputHash": manifest["inputHash"],
+            "capabilityId": "acceptance-inventory-attestation",
+            "capabilityVersion": "1.0",
+            "producerRole": "acceptance_auditor",
+            "status": "complete",
+            "scopeHash": bootstrap.acceptance_attestation_scope_hash(manifest),
+            "coverage": [],
+        }
+        bundle = bootstrap.build_acceptance_auditor_role_bundle(
+            reviewer, attestation, attestation["attemptId"], manifest
+        )
+        self.write_json("reviewer-outputs/acceptance_auditor.role-bundle.json", bundle)
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        self.assertEqual("clean", self.read_json("review-gate-result.json")["status"])
+
     def test_authorize_launch_rejects_authority_drift_without_sidecar(self) -> None:
         self.prepare()
         self.complete_preflight()

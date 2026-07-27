@@ -16,8 +16,12 @@ REPOSITORY_ROOT = PLAN_ROOT.parents[1]
 KNOWLEDGE_SCRIPTS = REPOSITORY_ROOT / "scripts" / "python"
 if str(KNOWLEDGE_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(KNOWLEDGE_SCRIPTS))
+ACCEPTANCE_SKILL_SCRIPTS = REPOSITORY_ROOT / ".agents" / "skills" / "run-refactor-implementation-acceptance" / "scripts"
+if str(ACCEPTANCE_SKILL_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(ACCEPTANCE_SKILL_SCRIPTS))
 
 from knowledge_context_validation import validate_context
+from requirement_inventory import RequirementInventoryError, extract_requirement_inventory
 
 SOURCE = "execution-plans/2026-07-15-refactor-implementation-acceptance-skill-requirements.md"
 SLICES = [
@@ -28,6 +32,7 @@ SLICES = [
     "S4-bootstrap-integration",
     "S5-finalize-release-candidate",
 ]
+RMAP_SLICES = [f"RMAP-S{index}" for index in range(6)]
 FORBIDDEN = {"logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", SOURCE}
 
 
@@ -98,8 +103,13 @@ def validate_resume_dependencies(contract: dict, resume: dict) -> bool:
     slices = contract.get("slices")
     if not isinstance(statuses, dict) or not isinstance(slices, list):
         return False
+    rmap_to_business = {
+        item.get("slice_id"): item.get("id")
+        for item in slices
+        if isinstance(item, dict) and isinstance(item.get("slice_id"), str) and isinstance(item.get("id"), str)
+    }
     dependencies = {
-        item.get("id"): item.get("depends_on")
+        item.get("id"): [rmap_to_business.get(value, value) for value in item.get("depends_on", [])]
         for item in slices
         if isinstance(item, dict) and isinstance(item.get("id"), str) and isinstance(item.get("depends_on"), list)
     }
@@ -121,6 +131,7 @@ def validate() -> list[str]:
         "implementation-contract.v1.json", "knowledge-context.v1.json", "authority-manifest.v1.json",
         "plan-state.v1.json", "resume-state.v1.json", "fixtures/negative-cases.v1.json",
         "tools/bootstrap-preflight-commands.v1.json",
+        "command-registry.v1.json", "tools/validate_all.py", "tools/validate_slice.py", "tools/refactor_acceptance_slice_bridge.py",
         "95-implementation-evolution-and-completion-report.md",
     ]
     for relative in required:
@@ -136,6 +147,13 @@ def validate() -> list[str]:
     ids = [value for item in ledger.get("coverage", []) for value in item.get("ra_ids", [])]
     if sorted(ids) != list(range(1, 74)):
         findings.append("RIA-PLAN-RA-COVERAGE")
+    try:
+        extracted = extract_requirement_inventory(REPOSITORY_ROOT / SOURCE, SOURCE)
+        extracted_ids = [item["id"] for item in extracted["requirements"]]
+        if extracted_ids != [f"RA-SKILL-{number:03d}" for number in range(1, 74)]:
+            findings.append("RIA-PLAN-RA-ATOMIC-EXTRACTION")
+    except (OSError, RequirementInventoryError):
+        findings.append("RIA-PLAN-RA-ATOMIC-EXTRACTION")
 
     if not validate_authority_manifest(load("authority-manifest.v1.json")):
         findings.append("RIA-PLAN-AUTHORITY-MANIFEST")
@@ -148,7 +166,14 @@ def validate() -> list[str]:
         findings.append("RIA-PLAN-FORBIDDEN")
     else:
         by_id = {item["id"]: item for item in contract["slices"]}
-        if by_id["S4-bootstrap-integration"].get("depends_on") != SLICES[:4] or by_id["S5-finalize-release-candidate"].get("depends_on") != SLICES[:5]:
+        if (
+            contract.get("command_registry") != "command-registry.v1.json"
+            or contract.get("adapter_bridge", {}).get("runner") != "tools/refactor_acceptance_slice_bridge.py"
+            or [item.get("slice_id") for item in contract["slices"]] != RMAP_SLICES
+            or any(item.get("exit_predicate") != "slice-ready" or not item.get("execution_snapshot_paths") for item in contract["slices"])
+            or by_id["S4-bootstrap-integration"].get("depends_on") != RMAP_SLICES[:4]
+            or by_id["S5-finalize-release-candidate"].get("depends_on") != RMAP_SLICES[:5]
+        ):
             findings.append("RIA-PLAN-SLICE-DEPENDENCIES")
 
     context = load("knowledge-context.v1.json")
@@ -183,6 +208,10 @@ def validate() -> list[str]:
     command_ids = {item.get("id") for item in registry.get("commands", []) if isinstance(item, dict)}
     if command_ids != expected_commands:
         findings.append("RIA-PLAN-PREFLIGHT-REGISTRY")
+    execution_registry = load("command-registry.v1.json")
+    execution_command_ids = {item.get("id") for item in execution_registry.get("commands", []) if isinstance(item, dict)}
+    if execution_command_ids != {"s0-companion-red", "s0-companion-suite", "bootstrap-regression-suite", "s1-core-red", "s1-core-suite", "s2-matrix-red", "s2-matrix-suite", "s3-control-red", "s3-control-suite", "s4-bootstrap-red", "s4-bootstrap-suite", "s5-package-red", "s5-package-suite", "plan-validator"}:
+        findings.append("RIA-PLAN-EXECUTION-REGISTRY")
     return findings
 
 

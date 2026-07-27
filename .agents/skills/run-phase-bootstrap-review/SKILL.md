@@ -201,6 +201,8 @@ Finalized runs cannot be abandoned. A run with an active event-backed attempt or
 
 ## Validate Skill Changes
 
+For a profile-declared companion, verify its capability ID/version, producer role, and schema hash through the repository Skill. Do not implement a consumer-owned semantic runner or bypass the existing `acceptance_auditor` launch authorization.
+
 Run all of these after changing the control plane:
 
 ```text

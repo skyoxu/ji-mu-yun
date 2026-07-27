@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Check ID Lineage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "checks", "events", "authorizes"],
+  "properties": {
+    "schemaVersion": {"const": "check-id-lineage.v1"},
+    "checks": {"type": "array"},
+    "events": {"type": "array"},
+    "authorizes": {"const": []}
+  }
+}

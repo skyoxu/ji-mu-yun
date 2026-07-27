@@ -106,6 +106,10 @@ The `bootstrap-finalized-run-validation.v1` envelope binds review/change/round i
 
 Plans consume this envelope instead of reimplementing a partial Bootstrap profile or lifecycle validator. The consumer calls the repository producer, compares the full saved and recomputed envelope except `generatedAt`, and then applies only its own candidate and predicate rules. A plan-local validator remains solely responsible for its own candidate and acceptance predicates. Envelope validation alone cannot clear a review-cycle manual pause or create a new semantic-review round. Re-entry after the hard limit additionally requires a schema-valid successor policy decision and authorization event. The event binds a current authority source chained to the profile-bound authority root, root-authorized signer and actor/role, exact old/new review and change lineage, policy, authority, consumer, scope, issuance/expiry, predecessor, and revocation state; it cannot be reused for a different decision because it also binds the decision ID. The consuming plan derives independence from a new change/policy/authority/review/input lineage and must not trust a run-local root, saved minimal envelope, arbitrary event JSON, or an `independent=true` assertion.
 
+## Acceptance Inventory Attestation Companion
+
+`bootstrap-implementation-conformance` declares the optional `acceptance-inventory-attestation@1.0` capability. The declaration binds its producer role (`acceptance_auditor`) and the exact bytes of `bootstrap-acceptance-inventory-attestation.v1.schema.json`. A consumer may request this capability only after its own immutable requirement decision says it is required; matching a profile name or merely finding a schema file is insufficient. Missing, duplicate, or stale capability declarations fail closed. The companion remains Bootstrap-owned and does not create a second semantic reviewer, Artifact View, or launch path.
+
 ## Migration
 
 - New plans bootstrap this protocol and own only their contract instances, predicates, fixtures, and evidence.

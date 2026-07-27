@@ -598,7 +598,120 @@ def load_profile(name: str) -> dict[str, Any]:
     revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
     if profile.get("policyRevision") != value_hash(revision_payload):
         raise BootstrapError("Bootstrap profile policyRevision does not match its canonical content")
+    if name == "bootstrap-implementation-conformance":
+        required_companion_capability(
+            profile, "acceptance-inventory-attestation", "1.0", "acceptance_auditor"
+        )
     return profile
+
+
+def required_companion_capability(
+    profile: dict[str, Any], capability_id: str, capability_version: str, producer_role: str,
+) -> dict[str, str]:
+    """Resolve one profile-declared companion and bind it to its exact schema bytes."""
+    capabilities = profile.get("companionCapabilities")
+    if not isinstance(capabilities, list):
+        raise BootstrapError("Bootstrap profile does not declare companion capabilities")
+    matches = [
+        item for item in capabilities
+        if isinstance(item, dict)
+        and item.get("capabilityId") == capability_id
+        and item.get("capabilityVersion") == capability_version
+        and item.get("producerRole") == producer_role
+    ]
+    if len(matches) != 1:
+        raise BootstrapError("Bootstrap companion capability is not uniquely declared")
+    capability = matches[0]
+    schema_path, schema_hash = capability.get("schemaPath"), capability.get("schemaHash")
+    if not isinstance(schema_path, str) or not isinstance(schema_hash, str):
+        raise BootstrapError("Bootstrap companion capability has an invalid schema binding")
+    schema = (REPOSITORY_ROOT / schema_path).resolve()
+    try:
+        schema.relative_to(SKILL_ROOT.resolve())
+    except ValueError as exc:
+        raise BootstrapError("Bootstrap companion schema escapes the repository Skill") from exc
+    if not schema.is_file() or file_hash(schema) != schema_hash:
+        raise BootstrapError("Bootstrap companion capability schema hash is stale")
+    return {"capabilityId": capability_id, "capabilityVersion": capability_version, "producerRole": producer_role, "schemaPath": schema_path, "schemaHash": schema_hash}
+
+
+def requires_acceptance_inventory_attestation(manifest: dict[str, Any]) -> bool:
+    """Return whether this frozen profile declares the S0 companion capability."""
+    profile = load_profile(manifest["profileName"])
+    return any(
+        isinstance(item, dict)
+        and item.get("capabilityId") == "acceptance-inventory-attestation"
+        and item.get("capabilityVersion") == "1.0"
+        and item.get("producerRole") == "acceptance_auditor"
+        for item in profile.get("companionCapabilities", [])
+    )
+
+
+def acceptance_attestation_scope_hash(manifest: dict[str, Any]) -> str:
+    """Bind the companion to the immutable review scope in either execution mode."""
+    artifact_view = manifest.get("artifactView")
+    if isinstance(artifact_view, dict) and isinstance(artifact_view.get("manifestHash"), str):
+        return artifact_view["manifestHash"]
+    artifacts = manifest.get("artifacts")
+    if not isinstance(artifacts, list):
+        raise BootstrapError("Acceptance Auditor companion has no frozen review scope")
+    return value_hash(artifacts)
+
+
+def build_acceptance_auditor_role_bundle(
+    reviewer_output: dict[str, Any],
+    inventory_attestation: dict[str, Any],
+    attempt_id: str,
+    manifest: dict[str, Any],
+) -> dict[str, Any]:
+    """Bind one Acceptance Auditor output and companion to the frozen Artifact View."""
+    if not isinstance(attempt_id, str) or not attempt_id:
+        raise BootstrapError("Acceptance Auditor bundle has an invalid attempt identity")
+    expected = {
+        "schemaVersion": "bootstrap-reviewer-output.v1",
+        "reviewerLayer": "acceptance_auditor",
+    }
+    if not isinstance(reviewer_output, dict) or any(reviewer_output.get(key) != value for key, value in expected.items()):
+        raise BootstrapError("Acceptance Auditor bundle has an invalid reviewer output")
+    if not isinstance(inventory_attestation, dict) or inventory_attestation.get("schemaVersion") != "bootstrap-acceptance-inventory-attestation.v1":
+        raise BootstrapError("Acceptance Auditor bundle has an invalid inventory attestation")
+    errors = schema_validation_errors(
+        "bootstrap-acceptance-inventory-attestation.v1.schema.json", inventory_attestation
+    )
+    if errors:
+        raise BootstrapError("Acceptance Auditor inventory attestation violates schema: " + "; ".join(errors))
+    bindings = ("reviewId", "inputHash")
+    if (
+        any(reviewer_output.get(key) != inventory_attestation.get(key) for key in bindings)
+        or reviewer_output.get("attemptId") != attempt_id
+        or inventory_attestation.get("attemptId") != attempt_id
+    ):
+        raise BootstrapError("Acceptance Auditor bundle crosses review input or attempt identity")
+    if any(reviewer_output.get(key) != manifest.get(key) for key in bindings):
+        raise BootstrapError("Acceptance Auditor bundle does not bind the current review input")
+    if inventory_attestation.get("status") != "complete":
+        raise BootstrapError("Acceptance Auditor inventory attestation is incomplete")
+    if inventory_attestation.get("capabilityId") != "acceptance-inventory-attestation" or inventory_attestation.get("capabilityVersion") != "1.0" or inventory_attestation.get("producerRole") != "acceptance_auditor":
+        raise BootstrapError("Acceptance Auditor bundle capability identity is invalid")
+    profile = load_profile(manifest["profileName"])
+    required_companion_capability(
+        profile, "acceptance-inventory-attestation", "1.0", "acceptance_auditor"
+    )
+    if inventory_attestation.get("scopeHash") != acceptance_attestation_scope_hash(manifest):
+        raise BootstrapError("Acceptance Auditor inventory attestation scope is stale")
+    bundle = {
+        "schemaVersion": "bootstrap-acceptance-auditor-role-bundle.v1",
+        "reviewId": reviewer_output["reviewId"],
+        "attemptId": attempt_id,
+        "inputHash": reviewer_output["inputHash"],
+        "reviewerOutput": reviewer_output,
+        "inventoryAttestation": inventory_attestation,
+        "authorizes": [],
+    }
+    errors = schema_validation_errors("bootstrap-acceptance-auditor-role-bundle.v1.schema.json", bundle)
+    if errors:
+        raise BootstrapError("Acceptance Auditor role bundle violates schema: " + "; ".join(errors))
+    return bundle
 
 
 def collect_scope(repository_root: Path, scopes: list[str], out_dir: Path) -> tuple[list[str], list[dict[str, Any]]]:
@@ -1340,9 +1453,11 @@ Do not write verifier decisions or gateway-owned dispositions.
 """
 
 
-def reviewer_template(layer: str, manifest: dict[str, Any]) -> dict[str, Any]:
+def reviewer_template(
+    layer: str, manifest: dict[str, Any], *, attempt_id: str | None = None,
+) -> dict[str, Any]:
     required_artifacts = [item["artifact"] for item in manifest["artifacts"]]
-    return {
+    output = {
         "schemaVersion": "bootstrap-reviewer-output.v1",
         "reviewId": manifest["reviewId"],
         "reviewerLayer": layer,
@@ -1357,6 +1472,9 @@ def reviewer_template(layer: str, manifest: dict[str, Any]) -> dict[str, Any]:
         },
         "candidates": [],
     }
+    if attempt_id is not None:
+        output["attemptId"] = attempt_id
+    return output
 
 
 def preflight_template(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -2894,7 +3012,12 @@ def runner_prompt(
         f"Return raw JSON only with schemaVersion=bootstrap-layer-candidate.v1, attemptId={attempt_id}, "
         f"role={role}, inputHash={manifest['inputHash']}, accessHandshakeHash, and payload. "
         "For a reviewer, payload contains status, coverage, candidates, and failureReason when failed. "
-        "For the verifier, payload contains decisions."
+        + (
+            "For acceptance_auditor, payload must also contain inventoryAttestation using "
+            "bootstrap-acceptance-inventory-attestation.v1, bound to this attempt and Artifact View. "
+            if role == "acceptance_auditor" and requires_acceptance_inventory_attestation(manifest) else ""
+        )
+        + "For the verifier, payload contains decisions."
         + verifier_requirements
     )
 
@@ -2919,6 +3042,13 @@ def run_codex_attempt(
     formal_write_set = [
         repository_relative_path(formal_path, Path(manifest["repositoryRoot"]))
     ]
+    if role == "acceptance_auditor" and requires_acceptance_inventory_attestation(manifest):
+        formal_write_set.append(
+            repository_relative_path(
+                run_dir / "reviewer-outputs" / "acceptance_auditor.role-bundle.json",
+                Path(manifest["repositoryRoot"]),
+            )
+        )
     attempt_id = f"{role}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}-{time.time_ns() % 100000000:08d}"
     attempt_dir = run_dir / "attempts" / attempt_id
     attempt_dir.mkdir(parents=True, exist_ok=False)
@@ -3102,6 +3232,15 @@ def command_run_layer(args: argparse.Namespace) -> int:
     )
     operation_id = "verifier" if args.role == "independent_verifier" else f"reviewer:{args.role}"
     process_result = read_json(attempt_dir / "process-result.json")
+    event_write_set = [repository_relative_path(
+        run_dir / ("verifier-output.json" if args.role == "independent_verifier" else f"reviewer-outputs/{args.role}.json"),
+        Path(manifest["repositoryRoot"]),
+    )]
+    if args.role == "acceptance_auditor" and requires_acceptance_inventory_attestation(manifest):
+        event_write_set.append(repository_relative_path(
+            run_dir / "reviewer-outputs" / "acceptance_auditor.role-bundle.json",
+            Path(manifest["repositoryRoot"]),
+        ))
     identity = next(
         event["processIdentity"]
         for event in reversed(read_process_events(run_dir))
@@ -3121,7 +3260,7 @@ def command_run_layer(args: argparse.Namespace) -> int:
             validate_launch_authorization(run_dir, manifest)
             write_json(run_dir / "verifier-output.json", formal)
         else:
-            formal = reviewer_template(args.role, manifest)
+            formal = reviewer_template(args.role, manifest, attempt_id=attempt_dir.name)
             for field in ("status", "coverage", "candidates"):
                 formal[field] = payload.get(field)
             if payload.get("status") == "failed":
@@ -3136,6 +3275,21 @@ def command_run_layer(args: argparse.Namespace) -> int:
             )
             # ADR-0041: revalidate frozen authority before publishing completed evidence.
             validate_launch_authorization(run_dir, manifest)
+            if (
+                args.role == "acceptance_auditor"
+                and status == "completed"
+                and requires_acceptance_inventory_attestation(manifest)
+            ):
+                bundle = build_acceptance_auditor_role_bundle(
+                    formal,
+                    payload.get("inventoryAttestation"),
+                    attempt_dir.name,
+                    manifest,
+                )
+                write_json(
+                    run_dir / "reviewer-outputs" / "acceptance_auditor.role-bundle.json",
+                    bundle,
+                )
             write_json(run_dir / "reviewer-outputs" / f"{args.role}.json", formal)
             if status == "failed":
                 raise BootstrapError(str(formal["failureReason"]))
@@ -3144,20 +3298,14 @@ def command_run_layer(args: argparse.Namespace) -> int:
             run_dir, manifest,
             {"eventType": "attempt-failed", "timestamp": utc_now(), "attemptId": attempt_dir.name,
              "operationId": operation_id, "role": args.role, "pid": process_result["pid"],
-             "processIdentity": identity, "writeSet": [repository_relative_path(
-                 run_dir / ("verifier-output.json" if args.role == "independent_verifier" else f"reviewer-outputs/{args.role}.json"),
-                 Path(manifest["repositoryRoot"]),
-             )], "note": str(exc)},
+              "processIdentity": identity, "writeSet": event_write_set, "note": str(exc)},
         )
         raise
     append_attempt_event_and_rebuild(
         run_dir, manifest,
         {"eventType": "attempt-completed", "timestamp": utc_now(), "attemptId": attempt_dir.name,
          "operationId": operation_id, "role": args.role, "pid": process_result["pid"],
-         "processIdentity": identity, "writeSet": [repository_relative_path(
-             run_dir / ("verifier-output.json" if args.role == "independent_verifier" else f"reviewer-outputs/{args.role}.json"),
-             Path(manifest["repositoryRoot"]),
-         )]},
+          "processIdentity": identity, "writeSet": event_write_set},
     )
     print(f"Completed repository-owned layer runner: {args.role}")
     return 0
@@ -3178,7 +3326,7 @@ def validate_binding(output: Any, manifest: dict[str, Any], layer: str) -> list[
         "inputHash": manifest["inputHash"],
     }
     errors.extend(f"schema_invalid: {key} binding mismatch" for key, value in expected.items() if output.get(key) != value)
-    allowed = set(expected) | {"status", "failureReason", "coverage", "candidates"}
+    allowed = set(expected) | {"attemptId", "status", "failureReason", "coverage", "candidates"}
     if set(output) - allowed:
         errors.append("schema_invalid: unexpected reviewer output fields")
     if output.get("status") not in {"pending", "completed", "failed"}:
@@ -3496,6 +3644,30 @@ def evaluate_reviewer_outputs(
             layer_failures.append({"reviewerLayer": layer, "reason": str(exc)})
             continue
         binding_errors = validate_binding(output, manifest, layer)
+        if (
+            not binding_errors
+            and layer == "acceptance_auditor"
+            and output.get("status") == "completed"
+            and requires_acceptance_inventory_attestation(manifest)
+        ):
+            bundle_path = run_dir / "reviewer-outputs" / "acceptance_auditor.role-bundle.json"
+            if not bundle_path.is_file():
+                binding_errors.append("companion_missing: Acceptance Auditor role bundle is missing")
+            else:
+                try:
+                    bundle = read_json(bundle_path)
+                    if not isinstance(bundle, dict):
+                        raise BootstrapError("Acceptance Auditor role bundle is not an object")
+                    rebuilt = build_acceptance_auditor_role_bundle(
+                        output,
+                        bundle.get("inventoryAttestation"),
+                        bundle.get("attemptId"),
+                        manifest,
+                    )
+                    if bundle != rebuilt:
+                        raise BootstrapError("Acceptance Auditor role bundle does not match parent-owned formal output")
+                except BootstrapError as exc:
+                    binding_errors.append("companion_invalid: " + str(exc))
         if binding_errors or output.get("status") != "completed":
             failed.append(layer)
             reason = "; ".join(binding_errors) or str(output.get("failureReason", "Layer did not complete"))

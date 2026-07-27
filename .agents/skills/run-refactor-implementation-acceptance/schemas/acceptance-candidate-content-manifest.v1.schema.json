@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Acceptance Candidate Content Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "coverageGaps", "authorizes", "files"],
+  "properties": {
+    "schemaVersion": {"const": "acceptance-candidate-content-manifest.v1"},
+    "status": {"enum": ["complete", "partial", "unavailable"]},
+    "coverageGaps": {"type": "array"},
+    "authorizes": {"const": []},
+    "files": {"type": "array", "items": {"type": "object", "required": ["change_type", "roles", "baseline_path", "baseline_sha256", "candidate_path", "candidate_sha256", "inclusion_reason"], "properties": {"change_type": {"enum": ["unchanged", "added", "modified", "deleted", "renamed", "untracked"]}}}}
+  }
+}

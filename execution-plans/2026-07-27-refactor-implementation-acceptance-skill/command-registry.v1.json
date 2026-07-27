@@ -1,0 +1,19 @@
+{
+  "schema_version": "ria.command-registry.v1",
+  "commands": [
+    {"id":"s0-companion-red","executable":"py","argv":["-3","-B",".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py","--failure-id","RIA-S0-COMPANION-PROTOCOL-ABSENT"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":30,"shell":false},
+    {"id":"s0-companion-suite","executable":"py","argv":["-3","-B","-m","unittest","discover","-s",".agents/skills/run-phase-bootstrap-review/tests","-p","test_bootstrap_companion*.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"bootstrap-regression-suite","executable":"py","argv":["-3","-B",".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py","BootstrapReviewCliTests.test_implementation_profile_gate_fails_closed_without_acceptance_companion","BootstrapReviewCliTests.test_implementation_profile_gate_accepts_parent_owned_companion_bundle"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":180,"shell":false},
+    {"id":"s1-core-red","executable":"py","argv":["-3","-B",".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py","--failure-id","RIA-S1-REFRESH-REQUIRES-CURRENT-GREEN"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":30,"shell":false},
+    {"id":"s1-core-suite","executable":"py","argv":["-3","-B","-m","unittest","discover","-s",".agents/skills/run-refactor-implementation-acceptance/tests","-p","test_*.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s2-matrix-red","executable":"py","argv":["-3","-B",".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py","--failure-id","RIA-S2-REFRESH-REQUIRES-CURRENT-GREEN"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":30,"shell":false},
+    {"id":"s2-matrix-suite","executable":"py","argv":["-3","-B","-m","unittest","discover","-s",".agents/skills/run-refactor-implementation-acceptance/tests","-p","test_matrix_*.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s3-control-red","executable":"py","argv":["-3","-B",".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py","--failure-id","RIA-S3-REFRESH-REQUIRES-CURRENT-GREEN"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":30,"shell":false},
+    {"id":"s3-control-suite","executable":"py","argv":["-3","-B",".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s4-bootstrap-red","executable":"py","argv":["-3","-B",".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py","--failure-id","RIA-S4-REFRESH-REQUIRES-CURRENT-GREEN"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":30,"shell":false},
+    {"id":"s4-bootstrap-suite","executable":"py","argv":["-3","-B","-m","unittest","discover","-s",".agents/skills/run-refactor-implementation-acceptance/tests","-p","test_bootstrap_*.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":300,"shell":false},
+    {"id":"s5-package-red","executable":"py","argv":["-3","-B",".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py","--failure-id","RIA-S5-REFRESH-REQUIRES-CURRENT-GREEN"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":30,"shell":false},
+    {"id":"s5-package-suite","executable":"py","argv":["-3","-B",".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":600,"shell":false},
+    {"id":"plan-validator","executable":"py","argv":["-3","-B","execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py"],"cwd":{"type":"repo_path","value":"."},"timeout_seconds":120,"shell":false}
+  ]
+}

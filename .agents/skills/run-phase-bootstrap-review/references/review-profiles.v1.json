@@ -142,10 +142,19 @@
     },
     "bootstrap-implementation-conformance": {
       "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
-      "policyRevision": "sha256:1407f7bd3d4a57ae3e1d72f52424a7a739101b957d97c2855cc111b257884400",
+      "policyRevision": "sha256:cf2e6630699af9637bcd74c742d11103100ce189acda1c869d9c52768fade14e",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
+      "companionCapabilities": [
+        {
+          "capabilityId": "acceptance-inventory-attestation",
+          "capabilityVersion": "1.0",
+          "producerRole": "acceptance_auditor",
+          "schemaPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+          "schemaHash": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"
+        }
+      ],
       "reviewObjectType": "implementation-conformance",
       "reviewDepth": "contract-to-runtime-closure",
       "requiredContextClasses": [

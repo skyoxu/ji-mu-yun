@@ -25,3 +25,14 @@ This append-only continuity report has `authorizes: []`. It cannot publish plan 
 
 - The maintainer explicitly published `implementation-authorized` after the plan-local validator and its five tests passed.
 - This transition authorizes implementation work only. It does not authorize implementation completion, target acceptance, protected handoff, release, deployment, or archive.
+
+## 2026-07-28: Completion-audit repair
+
+- A source-level completion audit found that the previously passing package checks did not prove the full public CLI state-transition surface required by Section 12.2, and that requirements inventory extraction could not publish an append-only immutable artifact.
+- The initial S1 completion evidence is retained as historical. S1 and its declared downstream slices are reopened for a source-conformant repair; this report entry remains non-authorizing.
+
+## 2026-07-28: Implementation terminal validation
+
+- Replayed S1 through S5 with fresh append-only RED, GREEN, REFACTOR, and slice-ready evidence after the CLI/inventory repair.
+- The terminal router reported `validate-terminal`; package validation, plan validation, whole-directory validation, the 86-test Skill suite, and `git diff --check` passed.
+- This is an `implementation-complete` record only. It does not authorize acceptance-passed, target handoff, release, deployment, or archive.

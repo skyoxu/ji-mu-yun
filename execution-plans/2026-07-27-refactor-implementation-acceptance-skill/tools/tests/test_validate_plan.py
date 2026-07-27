@@ -40,6 +40,7 @@ class RefactorAcceptancePlanTests(unittest.TestCase):
         contract = validator.load("implementation-contract.v1.json")
         resume = validator.load("resume-state.v1.json")
         invalid = copy.deepcopy(resume)
+        invalid["slice_status"]["S1-deterministic-core"] = "pending"
         invalid["slice_status"]["S2-matrix-phase"] = "in_progress"
         self.assertFalse(validator.validate_resume_dependencies(contract, invalid))
 

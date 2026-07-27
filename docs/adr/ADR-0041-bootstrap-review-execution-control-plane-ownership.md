@@ -19,6 +19,7 @@ Bootstrap Review uses a documented protocol with stateless adapters and explicit
 - `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/` is a compatibility adapter and migration fixture, not the durable implementation owner.
 - `logs/` owns append-only run, attempt, review, audit, and recovery evidence.
 - The external global `run-phase-bootstrap-review` Skill is a revision-bound thin route into the repository-owned Skill.
+- Profile-declared formal companions, including `acceptance-inventory-attestation@1.0`, remain repository-owned Bootstrap protocol capabilities. Consumers bind and import their outputs but cannot create a competing reviewer, schema, launch authorization, or Artifact View.
 
 The runner is an execution backend only. It does not own candidate acceptance, severity, review completion, done state, commit, handoff, or release authority. It must not become a hidden provider scheduler and must support evidence-based recovery without hidden mutable state.
 

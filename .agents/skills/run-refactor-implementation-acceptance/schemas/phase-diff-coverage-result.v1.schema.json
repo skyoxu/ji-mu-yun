@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Phase Diff Coverage Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "acceptanceRunId", "candidateContentManifestHash", "changedLineSetHash", "coverageReportPath", "coverageReportHash", "minimumChangedLineCoveragePct", "counts", "status", "authorizes"],
+  "properties": {
+    "schemaVersion": {"const": "phase-diff-coverage-result.v1"},
+    "status": {"enum": ["passed", "failed", "incomplete", "not_applicable", "stale"]},
+    "minimumChangedLineCoveragePct": {"const": 85.0},
+    "counts": {"type": "object", "required": ["measurableChangedExecutableLines", "coveredChangedExecutableLines"]},
+    "authorizes": {"const": []}
+  }
+}
