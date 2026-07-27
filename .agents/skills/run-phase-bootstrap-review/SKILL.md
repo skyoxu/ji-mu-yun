@@ -77,6 +77,12 @@ Prepare freezes Git HEAD, Git index, direct artifacts, execution read set, depen
 
 When knowledge context is supplied, prepare evaluates adapter-owned consumption decisions before freezing the Artifact View. Only accepted decisions with nonempty satisfied context classes may augment required context; rejected decisions remain metadata and cannot satisfy profile completeness. Children never invoke Locator after prepare.
 
+Pass the VDD-owned file through `prepare --knowledge-context <repo-relative-path>`.
+Prepare verifies every accepted candidate is already in scope with the exact
+source hash, then records the context hash and selected candidates in the
+frozen manifest. Bootstrap does not create a new Locator query or promote a
+candidate on its own.
+
 An abandoned Codex Exec run with no gate and incomplete required layers may be replaced at the same round after repairing the execution defect. Preserve the abandoned evidence and carry any valid partial finding into repair evidence or the replacement review scope; this exception does not reset a gated or completed semantic round.
 
 ## Complete Deterministic Preflight

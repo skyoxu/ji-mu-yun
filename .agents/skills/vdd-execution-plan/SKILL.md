@@ -54,6 +54,11 @@ adapter-owned decisions. A required module without a matched, reread,
 hash-verified Locator candidate blocks `plan-ready`; optional insufficient
 matches remain explicit and non-authorizing.
 
+Use `scripts/prepare_knowledge_context.py` to create the request and frozen
+Locator result. Its `--accept` arguments are explicit adapter decisions; it
+never promotes a search result automatically. Run `vdd_knowledge_preflight.py`
+on the emitted context before publishing `plan-ready`.
+
 ## Candidate, Review, And Reports
 
 Use a declared Git baseline plus either a frozen commit range or a complete scoped worktree identity. A dirty identity binds `HEAD`, canonical scoped tracked/index diff hash, and a manifest of relevant untracked paths and content hashes. Bind current contracts, implementation, and validators; exclude append-only logs and explanatory reports from normative hashes. Preserve old evidence as historical after invalidation.

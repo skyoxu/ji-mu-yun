@@ -40,11 +40,17 @@ from _control_plane import (  # noqa: E402
     render_codex_command,
     validate_artifact_view,
 )
+from knowledge_context import select_context  # noqa: E402
 
 
 CONTROL_PLANE_REVISION = "bootstrap-control-plane.v2"
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
+
+from knowledge_context_validation import validate_context  # noqa: E402
+
 PLAN_ROOT = SKILL_ROOT
 PROFILE_PATH = SKILL_ROOT / "references" / "review-profiles.v1.json"
 AUTHORITY_ROOT_PATH = SKILL_ROOT / "references" / "authority-roots.v1.json"
@@ -1400,6 +1406,56 @@ def prepared_artifact_set(
     return sorted(selected)
 
 
+def freeze_knowledge_context(repository_root: Path, raw_path: str | None, artifacts: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if raw_path is None:
+        return None
+    path = ensure_within(repository_root / raw_path, repository_root, "Knowledge context")
+    document = read_json(path)
+    validation_error = validate_context(
+        document,
+        repository_root=repository_root,
+        verify_catalog=True,
+        verify_sources=False,
+    )
+    if validation_error:
+        raise BootstrapError(f"Knowledge context is not VDD/Locator-bound: {validation_error}")
+    decisions = document.get("decisions") if isinstance(document, dict) else None
+    if not isinstance(decisions, list):
+        raise BootstrapError("Knowledge context decisions are invalid")
+    selected = select_context(required_classes=[], decisions=decisions)
+    known = {item["artifact"]: item["sha256"] for item in artifacts}
+    accepted: list[dict[str, str]] = []
+    for decision in selected["accepted"]:
+        candidate = decision.get("candidate", {})
+        candidate_path = candidate.get("path") if isinstance(candidate, dict) else None
+        candidate_hash = candidate.get("source_sha256") if isinstance(candidate, dict) else None
+        if not isinstance(candidate_path, str) or known.get(candidate_path) != HASH_PREFIX + str(candidate_hash):
+            raise BootstrapError("Accepted knowledge candidate is not hash-bound in review scope")
+        accepted.append({
+            "path": candidate_path,
+            "source_sha256": candidate_hash,
+            "satisfies": list(decision["satisfies"]),
+        })
+    return {"path": path.relative_to(repository_root.resolve()).as_posix(), "sha256": file_hash(path), "accepted": accepted, "rejectedCount": len(selected["rejected"])}
+
+
+def augment_context_class_artifacts(
+    context_class_artifacts: dict[str, list[str]],
+    knowledge_context: dict[str, Any] | None,
+    required_classes: list[str],
+) -> dict[str, list[str]]:
+    """Add only already-scoped VDD candidates to explicitly mapped profile classes."""
+    if knowledge_context is None:
+        return context_class_artifacts
+    augmented = {name: list(paths) for name, paths in context_class_artifacts.items()}
+    required = set(required_classes)
+    for candidate in knowledge_context["accepted"]:
+        for context_class in candidate["satisfies"]:
+            if context_class in required and candidate["path"] not in augmented[context_class]:
+                augmented[context_class].append(candidate["path"])
+    return {name: sorted(paths) for name, paths in augmented.items()}
+
+
 def repair_binding_hashes(
     artifacts: list[dict[str, Any]],
     context_classes: dict[str, list[str]],
@@ -1517,9 +1573,18 @@ def command_prepare(args: argparse.Namespace) -> int:
         predecessor_path = ensure_within(predecessor_candidate, repository_root, "Predecessor run")
         predecessor_run = predecessor_path.relative_to(repository_root).as_posix()
     profile = load_profile(args.profile)
-    scopes, artifacts = collect_scope(repository_root, args.scope, out_dir)
+    scope_inputs = list(args.scope)
+    if args.knowledge_context:
+        # Reviewers receive the bound request/result/decision document itself,
+        # not only the selected-candidate summary in review-input.json.
+        scope_inputs.append(args.knowledge_context)
+    scopes, artifacts = collect_scope(repository_root, scope_inputs, out_dir)
+    knowledge_context = freeze_knowledge_context(repository_root, args.knowledge_context, artifacts)
     context_class_artifacts = build_context_class_artifacts(
         repository_root, args.context_class, profile["requiredContextClasses"], artifacts, args.profile
+    )
+    context_class_artifacts = augment_context_class_artifacts(
+        context_class_artifacts, knowledge_context, profile["requiredContextClasses"]
     )
     plan_bound_checks = build_plan_bound_required_checks(
         repository_root, args.required_check, artifacts, args.profile, profile
@@ -1593,6 +1658,7 @@ def command_prepare(args: argparse.Namespace) -> int:
         "executionMode": args.execution_mode,
         "requiredContextClasses": profile["requiredContextClasses"],
         "contextClassArtifacts": context_class_artifacts,
+        "knowledgeContext": knowledge_context,
         "authorityContextHash": context_hash,
         "completenessPolicy": profile["completenessPolicy"],
         "scope": scopes,
@@ -5103,6 +5169,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Bind a required context class to an in-scope file or directory as <class>=<scope>",
     )
+    prepare.add_argument("--knowledge-context", help="Repository-relative VDD-owned context to validate and freeze")
     prepare.add_argument(
         "--write-set", action="append", default=[],
         help="Declare a repository-relative path that this change may write",

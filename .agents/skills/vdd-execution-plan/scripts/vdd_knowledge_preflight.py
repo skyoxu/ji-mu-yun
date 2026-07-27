@@ -10,6 +10,13 @@ from pathlib import Path
 from typing import Any
 
 
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
+
+from knowledge_context_validation import canonical_hash, validate_context  # noqa: E402
+
+
 def _sha(value: Any) -> str:
     return "sha256:" + hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
@@ -33,64 +40,41 @@ def evaluate_consumption(*, required_modules: list[str], decisions: list[dict[st
     return {"status": "blocked" if missing else "ready", "missing_required_modules": missing, "decisions": normalized}
 
 
-def evaluate_preflight(payload: dict[str, Any]) -> dict[str, Any]:
+def evaluate_preflight(payload: dict[str, Any], *, repository_root: Path | None = None) -> dict[str, Any]:
     """Validate that VDD decisions consume, rather than expand, Locator output."""
-    result = evaluate_consumption(
-        required_modules=payload.get("required_modules", []),
-        decisions=payload.get("decisions", []),
+    try:
+        result = evaluate_consumption(
+            required_modules=payload.get("required_modules", []),
+            decisions=payload.get("decisions", []),
+        )
+    except (AttributeError, TypeError, ValueError):
+        return {
+            "status": "blocked",
+            "missing_required_modules": [],
+            "decisions": [],
+            "failure_code": "consumption_decision_invalid",
+        }
+    failure_code = validate_context(
+        payload,
+        repository_root=repository_root,
+        verify_catalog=repository_root is not None,
+        verify_sources=repository_root is not None,
     )
-    request = payload.get("locator_request")
-    locator_result = payload.get("locator_result")
-    if not isinstance(request, dict) or not isinstance(locator_result, dict):
+    if failure_code:
         result["status"] = "blocked"
-        result["failure_code"] = "locator_binding_missing"
-        return result
-    if request.get("schema_version") != "jimuyun.knowledge-locator-request.v1" or locator_result.get("schema_version") != "jimuyun.knowledge-locator-result.v1":
-        result["status"] = "blocked"
-        result["failure_code"] = "locator_schema_invalid"
-        return result
-    if request.get("request_id") != locator_result.get("request_id"):
-        result["status"] = "blocked"
-        result["failure_code"] = "locator_request_id_mismatch"
-        return result
-    if request.get("snapshot") != locator_result.get("snapshot"):
-        result["status"] = "blocked"
-        result["failure_code"] = "locator_snapshot_mismatch"
-        return result
-    candidates = locator_result.get("candidates", [])
-    if not isinstance(candidates, list):
-        result["status"] = "blocked"
-        result["failure_code"] = "locator_candidates_invalid"
-        return result
-    available = {
-        (candidate.get("path"), candidate.get("source_sha256"))
-        for candidate in candidates
-        if isinstance(candidate, dict)
-    }
-    for decision in payload.get("decisions", []):
-        if decision.get("decision") != "accepted":
-            continue
-        candidate = decision.get("candidate")
-        if not isinstance(candidate, dict) or (
-            candidate.get("path"), candidate.get("source_sha256")
-        ) not in available:
-            result["status"] = "blocked"
-            result["failure_code"] = "accepted_candidate_not_locator_bound"
-            return result
-    if result["status"] == "ready" and locator_result.get("status") != "matched":
-        result["status"] = "blocked"
-        result["failure_code"] = "locator_result_not_matched"
+        result["failure_code"] = failure_code
     return result
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True)
+    parser.add_argument("--repository-root", type=Path, default=Path.cwd())
     args = parser.parse_args()
     payload = json.loads(args.input.read_text(encoding="utf-8"))
-    result = evaluate_preflight(payload)
+    result = evaluate_preflight(payload, repository_root=args.repository_root.resolve())
     result["schema_version"] = "jimuyun.vdd-knowledge-preflight.v1"
-    result["input_sha256"] = _sha(payload)
+    result["input_sha256"] = canonical_hash(payload)
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0 if result["status"] == "ready" else 2
 

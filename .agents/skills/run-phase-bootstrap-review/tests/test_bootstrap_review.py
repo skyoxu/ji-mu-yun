@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import concurrent.futures
+import hashlib
 import json
 import math
 import os
@@ -64,6 +65,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         change_id: str = "upstream-change-001",
         review_round: int = 1,
         predecessor_run: Path | None = None,
+        knowledge_context: Path | None = None,
         expected_result: int = 0,
     ) -> None:
         profile_contract = bootstrap.load_profile(profile)
@@ -74,6 +76,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         if profile_contract["planBoundCheckPolicy"]["required"]:
             required_check_args = ["--required-check", f"implementation-proof={self.scope}"]
         predecessor_args = [] if predecessor_run is None else ["--predecessor-run-dir", str(predecessor_run)]
+        knowledge_args = [] if knowledge_context is None else ["--knowledge-context", str(knowledge_context.relative_to(self.repo))]
         repair_closure_args = []
         if 1 < review_round <= bootstrap.REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"] and predecessor_run is not None:
             repository_root = self.repo.resolve()
@@ -150,6 +153,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 "--profile", profile,
                 "--scope", str(self.scope),
                 *context_args,
+                *knowledge_args,
                 *required_check_args,
                 "--execution-mode", execution_mode,
                 "--semantic-review-exclusivity", "no-other-semantic-review-in-cycle",
@@ -3179,6 +3183,22 @@ class BootstrapReviewCliTests(unittest.TestCase):
             ]),
         )
 
+    def test_prepare_adds_knowledge_context_to_artifact_view(self) -> None:
+        context = self.repo / "knowledge-context.v1.json"
+        context.write_text(json.dumps({
+            "decisions": [{
+                "decision": "accepted", "satisfies": ["repository-rules"],
+                "candidate": {
+                    "path": "upstream-plan/plan.md",
+                    "source_sha256": hashlib.sha256(self.target.read_bytes()).hexdigest(),
+                },
+            }],
+        }), encoding="utf-8", newline="\n")
+        with mock.patch.object(bootstrap, "validate_context", return_value=None):
+            self.prepare(knowledge_context=context)
+        artifacts = {item["artifact"] for item in self.read_json("review-input.json")["artifacts"]}
+        self.assertIn("knowledge-context.v1.json", artifacts)
+
 class BootstrapKnowledgeContextTests(unittest.TestCase):
     def test_rejected_candidate_cannot_satisfy_required_context_class(self) -> None:
         module_path = REPOSITORY_ROOT / ".agents" / "skills" / "run-phase-bootstrap-review" / "scripts" / "knowledge_context.py"
@@ -3193,6 +3213,35 @@ class BootstrapKnowledgeContextTests(unittest.TestCase):
             decisions=[{"decision": "rejected", "satisfies": []}],
         )
         self.assertEqual("incomplete", result["status"])
+
+    def test_prepare_freezes_only_hash_bound_accepted_context(self) -> None:
+        import hashlib
+        import tempfile
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            source = root / "AGENTS.md"
+            source.write_text("rules\n", encoding="utf-8", newline="\n")
+            context = root / "knowledge-context.json"
+            context.write_text(json.dumps({"decisions": [{"decision": "accepted", "satisfies": ["repository-rules"], "candidate": {"path": "AGENTS.md", "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}}]}), encoding="utf-8", newline="\n")
+            with mock.patch.object(bootstrap, "validate_context", return_value=None):
+                frozen = bootstrap.freeze_knowledge_context(root, "knowledge-context.json", [{"artifact": "AGENTS.md", "sha256": bootstrap.file_hash(source)}])
+            self.assertEqual([{"path": "AGENTS.md", "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(), "satisfies": ["repository-rules"]}], frozen["accepted"])
+
+    def test_prepare_rejects_context_that_fails_shared_provenance_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            context = root / "knowledge-context.json"
+            context.write_text(json.dumps({"decisions": []}), encoding="utf-8", newline="\n")
+            with mock.patch.object(bootstrap, "validate_context", return_value="catalog_stale"):
+                with self.assertRaisesRegex(bootstrap.BootstrapError, "catalog_stale"):
+                    bootstrap.freeze_knowledge_context(root, "knowledge-context.json", [])
+
+    def test_knowledge_context_augments_but_never_replaces_profile_mapping(self) -> None:
+        mapped = {"repository-rules": ["README.md"], "tests": ["tests/test_a.py"]}
+        context = {"accepted": [{"path": "AGENTS.md", "source_sha256": "a" * 64, "satisfies": ["repository-rules", "unknown"]}]}
+        actual = bootstrap.augment_context_class_artifacts(mapped, context, ["repository-rules", "tests"])
+        self.assertEqual(["AGENTS.md", "README.md"], actual["repository-rules"])
+        self.assertEqual(["tests/test_a.py"], actual["tests"])
 
 
 if __name__ == "__main__":

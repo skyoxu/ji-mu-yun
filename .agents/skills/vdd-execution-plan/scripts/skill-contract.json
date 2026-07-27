@@ -21,6 +21,7 @@
     "references/skill-compliance-protocol.md",
     "scripts/clarification_state.py",
     "scripts/vdd_knowledge_preflight.py",
+    "scripts/prepare_knowledge_context.py",
     "scripts/skill-contract.json",
     "scripts/fixtures/clarification-legacy-v1.json",
     "scripts/validate_skill_contract.py",

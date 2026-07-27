@@ -18,6 +18,16 @@ _IMPLEMENTATION_CANDIDATE_ROOTS = (
 )
 
 
+def _verify_plan_context(repository_root: Path, plan_dir: Path) -> dict[str, object]:
+    path = Path(__file__).with_name("knowledge_context.py")
+    spec = importlib.util.spec_from_file_location("quick_dev_bound_knowledge_context", path)
+    if spec is None or spec.loader is None:
+        return {"status": "vdd-repair", "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE"}
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.verify_plan_context(repository_root, plan_dir)
+
+
 def _validation_snapshot(plan_dir: Path, slice_id: str | None = None) -> dict[str, str] | None:
     """Load the explicit plan's optional, read-only current-state projection.
 
@@ -64,6 +74,9 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
         target.relative_to(execution_root)
     except ValueError as exc:
         raise ValueError("plan directory must stay under execution-plans") from exc
+    knowledge = _verify_plan_context(repository_root, target)
+    if knowledge["status"] == "vdd-repair":
+        return {"next_action": "external-repair-required", "reason": knowledge["failure_code"], "authorizes": []}
     contract_path = target / "implementation-contract.v1.json"
     contract_bytes = contract_path.read_bytes()
     contract = json.loads(contract_bytes.decode("utf-8"))

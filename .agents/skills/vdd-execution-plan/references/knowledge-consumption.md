@@ -13,9 +13,11 @@ this required sequence:
 5. Reread every recommended source at the bound source snapshot and verify its
    bytes against the candidate `source_sha256`. Record an adapter-owned
    accepted or rejected decision for each candidate.
-6. Run `scripts/vdd_knowledge_preflight.py`. The input must contain the
-   `locator_request`, `locator_result`, required modules, and decisions. An
-   accepted decision must name a path/hash returned by that Locator result.
+6. Run `scripts/prepare_knowledge_context.py`, which performs the same
+   preflight before writing the context. Its nonzero exit blocks `plan-ready`.
+   The emitted input contains the `locator_request`, `locator_result`, required
+   modules, and decisions. An accepted decision must name a path/hash returned
+   by that Locator result.
 
 Required knowledge modules must have an accepted decision. An insufficient
 optional module remains explicit and non-authorizing. VDD still reads user

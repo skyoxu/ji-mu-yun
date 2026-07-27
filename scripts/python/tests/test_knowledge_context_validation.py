@@ -1,0 +1,64 @@
+from __future__ import annotations
+
+import sys
+import unittest
+from pathlib import Path
+
+
+SCRIPT_ROOT = Path(__file__).resolve().parents[1]
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+
+from knowledge_context_validation import canonical_hash, validate_context
+
+
+def payload(*, path: str = "AGENTS.md", digest: str = "a" * 64) -> dict:
+    request = {
+        "schema_version": "jimuyun.knowledge-locator-request.v1",
+        "request_id": "context-validation-1",
+        "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40},
+    }
+    result = {
+        "schema_version": "jimuyun.knowledge-locator-result.v1",
+        "request_id": "context-validation-1",
+        "snapshot": request["snapshot"],
+        "status": "matched",
+        "candidates": [{"path": path, "source_sha256": digest}],
+    }
+    return {
+        "schema_version": "jimuyun.vdd-knowledge-context.v1",
+        "locator_request": request,
+        "locator_result": result,
+        "required_modules": ["repository-rules"],
+        "decisions": [{
+            "decision": "accepted", "satisfies": ["repository-rules"],
+            "candidate": {"path": path, "source_sha256": digest},
+            "rejection_reason": None,
+        }],
+        "request_sha256": canonical_hash(request),
+        "result_sha256": canonical_hash(result),
+    }
+
+
+class KnowledgeContextValidationTests(unittest.TestCase):
+    def test_rejects_forged_accepted_candidate(self) -> None:
+        document = payload()
+        document["decisions"][0]["candidate"]["path"] = "README.md"
+        self.assertEqual("accepted_candidate_not_locator_bound", validate_context(document))
+
+    def test_rejects_path_escape_before_source_read(self) -> None:
+        document = payload(path="../outside.md")
+        self.assertEqual(
+            "candidate_path_outside_repository",
+            validate_context(document, repository_root=Path.cwd(), verify_sources=True),
+        )
+
+    def test_requires_a_decision_for_every_locator_candidate(self) -> None:
+        document = payload()
+        document["locator_result"]["candidates"].append({"path": "README.md", "source_sha256": "b" * 64})
+        document["result_sha256"] = canonical_hash(document["locator_result"])
+        self.assertEqual("locator_candidate_decision_missing", validate_context(document))
+
+
+if __name__ == "__main__":
+    unittest.main()

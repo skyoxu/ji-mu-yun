@@ -34,6 +34,10 @@ and source hashes before RED. Do not issue a new Locator query or expand its
 paths, candidates, classifications, or satisfied modules. Any difference routes
 to VDD repair. See `references/knowledge-consumption.md`.
 
+`tools/route_plan_directory.py` verifies a declared
+`knowledge-context.v1.json` before any slice can start. A binding or source
+hash mismatch routes to VDD repair.
+
 Use `tools/persistent_plan_loop.py` for unattended execution. It re-routes after every completed slice and consumes only the slice's explicit, no-wildcard `execution_snapshot_paths` declaration. The plan validator requires that declaration to name an existing repository file covered by that slice's allowed write set; a missing or invalid declaration fails closed. Its state file belongs under `logs/tdd-adapter/<plan-id>/controller/`.
 
 Use the bounded driver for one declared slice write set:
