@@ -74,6 +74,14 @@ class CoverageTests(unittest.TestCase):
         findings = validate_plan.validate_commands(registry, contract)
         self.assertIn("KWI-PLAN-QUICK-CONTRACT-COMMAND", _rule_ids(findings))
 
+    def test_terminal_preflight_command_must_fit_bootstrap_timeout(self) -> None:
+        registry = copy.deepcopy(_load("command-registry.v1.json"))
+        contract = _load("implementation-contract.v1.json")
+        command = next(item for item in registry["commands"] if item["id"] == "knowledge-workflow-terminal")
+        command["timeout_seconds"] = 901
+        findings = validate_plan.validate_commands(registry, contract)
+        self.assertIn("KWI-PLAN-BOOTSTRAP-PREFLIGHT-TIMEOUT", _rule_ids(findings))
+
     def test_quick_dev_adapter_boundary_is_required(self) -> None:
         contract = copy.deepcopy(_load("implementation-contract.v1.json"))
         contract["backend"]["hidden_state"] = True

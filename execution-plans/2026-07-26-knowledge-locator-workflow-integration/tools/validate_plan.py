@@ -448,6 +448,9 @@ def validate_commands(
     expected_contract_argument = {"type": "plan_path", "value": "implementation-contract.v1.json"}
     if not isinstance(quick_contract, dict) or quick_contract.get("argv", [])[-1:] != [expected_contract_argument]:
         findings.append(_finding("KWI-PLAN-QUICK-CONTRACT-COMMAND", "quick-dev-contract", "Quick Dev contract validation must receive the current plan contract"))
+    terminal_command = by_id.get("knowledge-workflow-terminal")
+    if not isinstance(terminal_command, dict) or terminal_command.get("timeout_seconds", 901) > 900:
+        findings.append(_finding("KWI-PLAN-BOOTSTRAP-PREFLIGHT-TIMEOUT", "knowledge-workflow-terminal", "Bootstrap preflight commands must not exceed 900 seconds"))
     index_guard = by_id.get("index-publication-test")
     expected_index_selector = "test_index_build_concurrency_atomic_publish_and_lkg_recovery"
     if (
