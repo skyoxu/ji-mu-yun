@@ -181,6 +181,15 @@ class AuthorityTests(unittest.TestCase):
         )
         self.assertIn("KWI-PLAN-UPSTREAM-AUTHORITY", _rule_ids(findings))
 
+    def test_successor_policy_reentry_is_consumed_and_lineage_bound(self) -> None:
+        self.assertEqual([], validate_plan.validate_successor_reentry(validate_plan.REPOSITORY_ROOT))
+        decision = json.loads(
+            (validate_plan.REPOSITORY_ROOT / validate_plan.SUCCESSOR_POLICY_DECISION).read_text(encoding="utf-8")
+        )
+        decision["successorChangeId"] = "wrong-successor-change"
+        findings = validate_plan.validate_successor_reentry(validate_plan.REPOSITORY_ROOT, decision)
+        self.assertIn("KWI-PLAN-SUCCESSOR-REENTRY", _rule_ids(findings))
+
 
 class MigrationFixtureTests(unittest.TestCase):
     def test_historical_migration_bytes_must_be_preserved(self) -> None:

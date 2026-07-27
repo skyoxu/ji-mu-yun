@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import re
 import subprocess
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable
@@ -74,6 +76,11 @@ REQUIRED_MIGRATION_SOURCES = {
     "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-locator-request.v1.schema.json",
     "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-locator-result.v1.schema.json",
 }
+SUCCESSOR_POLICY_DECISION = (
+    "decision-logs/2026-07-27-knowledge-locator-workflow-successor/policy-decision.json"
+)
+SUCCESSOR_REVIEW_ID = "knowledge-locator-workflow-plan-r3b-20260727"
+SUCCESSOR_CHANGE_ID = "knowledge-locator-workflow-repair-v2"
 PROTOCOL_CASES = {
     "adapter-owned-envelope": "positive",
     "llm-owned-envelope": "negative",
@@ -676,6 +683,36 @@ def validate_report_index(repository_root: Path) -> list[dict[str, str]]:
     return []
 
 
+def validate_successor_reentry(
+    repository_root: Path, decision: dict[str, Any] | None = None
+) -> list[dict[str, str]]:
+    """Consume the root-owned successor decision without granting plan authority."""
+    path = repository_root / SUCCESSOR_POLICY_DECISION
+    try:
+        if decision is None:
+            decision = strict_load(path)
+        module_path = repository_root / ".agents" / "skills" / "run-phase-bootstrap-review" / "scripts" / "bootstrap_review.py"
+        spec = importlib.util.spec_from_file_location("kwi_successor_control_plane", module_path)
+        if spec is None or spec.loader is None:
+            raise ValueError("bootstrap successor validator is unavailable")
+        module = importlib.util.module_from_spec(spec)
+        previous_path = list(sys.path)
+        try:
+            sys.path.insert(0, str(module_path.parent))
+            spec.loader.exec_module(module)
+        finally:
+            sys.path[:] = previous_path
+        module.validate_successor_policy_authorization(repository_root, decision)
+        if (
+            decision.get("supersededReviewId") != SUCCESSOR_REVIEW_ID
+            or decision.get("successorChangeId") != SUCCESSOR_CHANGE_ID
+        ):
+            raise ValueError("successor decision does not bind the expected review lineage")
+    except Exception as exc:
+        return [_finding("KWI-PLAN-SUCCESSOR-REENTRY", SUCCESSOR_POLICY_DECISION, str(exc))]
+    return []
+
+
 def validate_directory(
     plan_root: Path = PLAN_ROOT, repository_root: Path = REPOSITORY_ROOT
 ) -> dict[str, Any]:
@@ -716,6 +753,7 @@ def validate_directory(
         findings.extend(validate_migration_fixtures(migration))
     if manifest is not None and state is not None:
         findings.extend(validate_authority(manifest, state, repository_root))
+    findings.extend(validate_successor_reentry(repository_root))
     findings.extend(validate_report_index(repository_root))
     status = state.get("status") if isinstance(state, dict) else None
     return {
@@ -732,6 +770,7 @@ def validate_directory(
             "structured-command-registry",
             "protocol-and-migration-fixtures",
             "authority-and-git-baseline",
+            "successor-policy-reentry",
             "implementation-report-index",
         ],
         "findings": findings,

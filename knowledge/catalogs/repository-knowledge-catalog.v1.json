@@ -3,7 +3,7 @@
   "authority_ref": "refs/heads/main",
   "source_snapshot": {
     "ref": "refs/heads/main",
-    "commit": "d16840754631c016f54c410ed32424cd992636cd",
+    "commit": "cb156e25f2cf95bbb739e4176f50e254dbe2f84b",
     "sources": [
       {"path": "AGENTS.md", "sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"},
       {"path": "docs/architecture/phase-service/_index.md", "sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474"},
