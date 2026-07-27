@@ -5,7 +5,7 @@ import json
 import sys
 from pathlib import Path
 
-from _knowledge_locator_core import locate
+from _knowledge_locator_core import bind_result_to_request, locate
 
 
 def main() -> int:
@@ -15,7 +15,8 @@ def main() -> int:
     args = parser.parse_args()
     request = json.load(sys.stdin)
     catalog = json.loads(args.catalog.read_text(encoding="utf-8"))
-    print(json.dumps(locate(request, catalog, max_candidates=args.max_candidates), ensure_ascii=False, sort_keys=True))
+    result = bind_result_to_request(request, locate(request, catalog, max_candidates=args.max_candidates))
+    print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0
 
 

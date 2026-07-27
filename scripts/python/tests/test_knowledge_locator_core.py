@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +11,7 @@ from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 CORE_PATH = REPOSITORY_ROOT / "scripts" / "python" / "_knowledge_locator_core.py"
+CLI_PATH = REPOSITORY_ROOT / "scripts" / "python" / "knowledge_locator.py"
 
 
 def load_core():
@@ -50,6 +54,29 @@ class KnowledgeLocatorCoreTests(unittest.TestCase):
             self.assertTrue((index / "current.json").is_file())
             self.assertEqual(generation["generation_id"], core.publish_index_generation(index, {"entries": []}, "snapshot-a", "policy-v1")["generation_id"])
             self.assertEqual(generation["generation_id"], core.last_known_good(index)["generation_id"])
+
+    def test_cli_emits_request_bound_stable_result(self) -> None:
+        request = {
+            "schema_version": "jimuyun.knowledge-locator-request.v1",
+            "request_id": "test-request",
+            "consumer": "vdd",
+            "query": "repository rules",
+            "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40},
+            "policy_revision": "test-policy",
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            catalog = Path(raw) / "catalog.json"
+            catalog.write_text(json.dumps({"entries": []}), encoding="utf-8", newline="\n")
+            result = subprocess.run(
+                [sys.executable, "-B", str(CLI_PATH), "--catalog", str(catalog)],
+                input=json.dumps(request), text=True, capture_output=True, check=False,
+            )
+        self.assertEqual(0, result.returncode, result.stderr)
+        output = json.loads(result.stdout)
+        self.assertEqual("jimuyun.knowledge-locator-result.v1", output.get("schema_version"))
+        self.assertEqual(request["request_id"], output.get("request_id"))
+        self.assertEqual(request["snapshot"], output.get("snapshot"))
+        self.assertEqual("insufficient_match", output.get("status"))
 
 
 if __name__ == "__main__":

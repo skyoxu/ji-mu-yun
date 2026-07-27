@@ -1,0 +1,29 @@
+{
+  "after_snapshot_id": "catalog-bootstrap-108d3112",
+  "before_snapshot_id": "catalog-bootstrap-108d3112",
+  "entries": [
+    {
+      "after_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd",
+      "authority_status": "main-backed",
+      "before_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "repository-rules",
+      "source_path": "AGENTS.md",
+      "source_snapshot_kind": "main"
+    }
+  ],
+  "lkg_disposition": "preserved",
+  "log": {
+    "append_only": true,
+    "failure_code": null,
+    "log_ref": "logs/knowledge-context/2026-07-27/vdd-catalog-bootstrap-20260727/result-015909758164.v1.json",
+    "main_commit": "108d3112e7c701e97014842600068a912236b7f3"
+  },
+  "main_commit": "108d3112e7c701e97014842600068a912236b7f3",
+  "mode": "existing-only",
+  "request_id": "vdd-catalog-bootstrap-20260727",
+  "schema_version": "jimuyun.knowledge-maintenance-result.v1",
+  "source_mutation_count": 0,
+  "status": "unchanged"
+}

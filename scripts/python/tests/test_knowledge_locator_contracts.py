@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -8,6 +10,7 @@ from pathlib import Path
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 CONSUMPTION_SCHEMA_PATH = REPOSITORY_ROOT / "knowledge" / "contracts" / "knowledge-consumption-decision.v1.schema.json"
 POLICY_PATH = REPOSITORY_ROOT / "knowledge" / "policies" / "consumer-policies.v1.json"
+CATALOG_PATH = REPOSITORY_ROOT / "knowledge" / "catalogs" / "repository-knowledge-catalog.v1.json"
 
 
 class KnowledgeLocatorContractTests(unittest.TestCase):
@@ -21,6 +24,16 @@ class KnowledgeLocatorContractTests(unittest.TestCase):
         policies = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
         consumers = {item.get("consumer") for item in policies.get("policies", [])}
         self.assertEqual({"vdd", "quick-dev", "bootstrap"}, consumers, "KWI-CONTRACT-LLM-OWNER: trusted consumer policies are incomplete")
+
+    def test_catalog_bootstraps_main_pinned_repository_rules(self) -> None:
+        catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+        main = subprocess.check_output(["git", "rev-parse", "refs/heads/main"], cwd=REPOSITORY_ROOT, text=True, encoding="utf-8").strip()
+        self.assertEqual("refs/heads/main", catalog.get("authority_ref"))
+        self.assertEqual(main, catalog.get("main_commit"))
+        entry = next((item for item in catalog.get("entries", []) if item.get("entry_id") == "repository-rules"), None)
+        self.assertIsNotNone(entry, "KWI-CATALOG-BOOTSTRAP: repository rules must be indexed")
+        main_bytes = subprocess.check_output(["git", "show", f"{main}:AGENTS.md"], cwd=REPOSITORY_ROOT)
+        self.assertEqual(hashlib.sha256(main_bytes).hexdigest(), entry.get("source_sha256"))
 
 
 if __name__ == "__main__":

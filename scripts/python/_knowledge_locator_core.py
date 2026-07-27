@@ -50,6 +50,25 @@ def locate(request: dict[str, Any], catalog: dict[str, Any], *, max_candidates: 
     return {"status": "matched" if selected else "insufficient_match", "candidates": selected}
 
 
+def bind_result_to_request(request: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
+    """Project a location-only core result into the stable CLI envelope."""
+    request_id = request.get("request_id")
+    snapshot = request.get("snapshot")
+    if not isinstance(request_id, str) or not request_id or not isinstance(snapshot, dict):
+        raise ValueError("invalid_locator_request")
+    status = result.get("status")
+    candidates = result.get("candidates")
+    if status not in {"matched", "insufficient_match", "blocked"} or not isinstance(candidates, list):
+        raise ValueError("invalid_locator_result")
+    return {
+        "schema_version": "jimuyun.knowledge-locator-result.v1",
+        "request_id": request_id,
+        "status": status,
+        "snapshot": snapshot,
+        "candidates": candidates,
+    }
+
+
 def _atomic_json(path: Path, value: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", newline="\n", delete=False, dir=path.parent, suffix=".tmp") as handle:

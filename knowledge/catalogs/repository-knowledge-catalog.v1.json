@@ -1,5 +1,14 @@
 {
   "schema_version": "jimuyun.repository-knowledge-catalog.v1",
   "authority_ref": "refs/heads/main",
-  "entries": []
+  "main_commit": "108d3112e7c701e97014842600068a912236b7f3",
+  "entries": [
+    {
+      "entry_id": "repository-rules",
+      "source_path": "AGENTS.md",
+      "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd",
+      "anchor": "Repository Guide",
+      "content": "Repository Guide Phase service first repository rules execution plans protected paths shared LLM Codex entrypoints runtime recovery and evidence."
+    }
+  ]
 }
