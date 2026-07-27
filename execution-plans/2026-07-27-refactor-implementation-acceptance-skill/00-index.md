@@ -1,6 +1,6 @@
 # Refactor Implementation Acceptance Skill Execution Plan
 
-- Status: plan-ready
+- Status: implementation-authorized
 - Profile: self-hosted
 - Profile reason: This work creates an acceptance-owning Skill and changes the Bootstrap companion, authorization, and validation-control contracts it consumes.
 - Plan ID: `refactor-implementation-acceptance-skill`
@@ -8,8 +8,8 @@
 - Source requirements SHA-256: `be6a7c00bff4e78b55014341839cfe1a2f98ccf02de01d72c44da73a8ec71456`
 - Git baseline: `108d3112e7c701e97014842600068a912236b7f3`
 - Goal: deliver a read-only-by-default `run-refactor-implementation-acceptance` Skill that evaluates implementation acceptance clauses, Phase-service policy coverage, phase gates, and DoD without becoming a second semantic-review or release authority.
-- Current step: complete plan passed VDD knowledge preflight and awaits explicit implementation authorization.
-- Recovery command: `py -3 -B tools/validate_plan.py --require-plan-ready`
+- Current step: implementation is authorized; begin S0-bootstrap-companion or isolated S1-deterministic-core work.
+- Recovery command: `py -3 -B tools/validate_plan.py`
 
 ## Scope
 

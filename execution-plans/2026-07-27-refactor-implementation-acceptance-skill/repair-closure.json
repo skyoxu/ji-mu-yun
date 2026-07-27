@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/ci/2026-07-27/review-gateway-bootstrap-refactor-implementation-acceptance-plan-r1b-20260727",
+  "predecessorInputHash": "sha256:fbeee660e05a775017b12b23da2d8717a3c9b7ab1b892ec6bb170bf3ceee2a5f",
+  "predecessorResultHash": "sha256:53b377343ef188502683c2053734ba1a00bbcddde81e06849bc7a989d3e6d3f2",
+  "findingIds": ["BSR-2FA3C540F75B1260", "BSR-8D982BD0A953B826", "BSR-F8A58CD46E9727E0"],
+  "items": [
+    {
+      "findingId": "BSR-2FA3C540F75B1260",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "authority-predicate",
+      "reason": "The manifest now pins the current VDD Skill bytes and the plan validator rejects any stale authority source.",
+      "fixRefs": ["execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json", "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py"],
+      "validationCommands": ["py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py --require-plan-ready", "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py"],
+      "evidence": [
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json", "sha256": "sha256:393fd31473f35b75424951a064da3f2a151174f53225aa98c196ffd2c61ac21c"},
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py", "sha256": "sha256:de15a32020cd9b18e3c0f34acc597da353d0931c9f2ddda6a9919ce5b7ac55dc"},
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py", "sha256": "sha256:672931a5bafc1737c4bf00ad8c5348fdda04ffbd150edf2e7ee6c611a3e05605"}
+      ]
+    },
+    {
+      "findingId": "BSR-8D982BD0A953B826",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "authority-predicate",
+      "reason": "Authority-manifest validation now compares every declared source against current repository bytes before plan-ready succeeds.",
+      "fixRefs": ["execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py", "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py"],
+      "validationCommands": ["py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py --require-plan-ready", "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py"],
+      "evidence": [
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json", "sha256": "sha256:393fd31473f35b75424951a064da3f2a151174f53225aa98c196ffd2c61ac21c"},
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py", "sha256": "sha256:de15a32020cd9b18e3c0f34acc597da353d0931c9f2ddda6a9919ce5b7ac55dc"},
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py", "sha256": "sha256:672931a5bafc1737c4bf00ad8c5348fdda04ffbd150edf2e7ee6c611a3e05605"}
+      ]
+    },
+    {
+      "findingId": "BSR-F8A58CD46E9727E0",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "authority-predicate",
+      "reason": "The regression test mutates a declared authority hash and proves that the plan validator fails closed.",
+      "fixRefs": ["execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py"],
+      "validationCommands": ["py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py"],
+      "evidence": [
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json", "sha256": "sha256:393fd31473f35b75424951a064da3f2a151174f53225aa98c196ffd2c61ac21c"},
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py", "sha256": "sha256:de15a32020cd9b18e3c0f34acc597da353d0931c9f2ddda6a9919ce5b7ac55dc"},
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py", "sha256": "sha256:672931a5bafc1737c4bf00ad8c5348fdda04ffbd150edf2e7ee6c611a3e05605"}
+      ]
+    }
+  ],
+  "currentBindings": {"candidateHash": "sha256:3ef85754d94c370b109ca01c93ec67d792de40cdd5fb438df037355cf9090bf5", "sourceHash": "sha256:d06c6be410bf85da4d562b895318b682d443cb2d1c4db57adeef9fe268634396", "validatorHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"},
+  "gitIndexHash": "sha256:9ed49f04eb3786c9bc887fc53dc81afe4a18071a131351106c64248da78cfb12",
+  "writeSetHash": "sha256:fdcfc92e4bf19ae77674aa1a9958c904655ef73ef12850c68b2122a192f4534c",
+  "executionReadSetHash": "sha256:87642dd217b134ae7a5314c106925e43c8f6a55ad5497add1fdaa8227db4df5b",
+  "dependencyClosureHash": "sha256:87642dd217b134ae7a5314c106925e43c8f6a55ad5497add1fdaa8227db4df5b"
+}

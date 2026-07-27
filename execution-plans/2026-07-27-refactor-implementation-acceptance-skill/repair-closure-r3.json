@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/ci/2026-07-27/review-gateway-bootstrap-refactor-implementation-acceptance-plan-r2-20260727",
+  "predecessorInputHash": "sha256:c4c61f9734a2641fe3a22d0ff134a07e5662f529ec810a01177abf83aa78a404",
+  "predecessorResultHash": "sha256:1dd5cd14ef2ec85dcb36631b2cd80e370f8336f936ea80a65cab4c6940fc3819",
+  "findingIds": ["BSR-B31193D163B9E0B2", "BSR-E3854F25DB082C72"],
+  "items": [
+    {"findingId": "BSR-B31193D163B9E0B2", "disposition": "fixed", "risk": "normal", "proofFamily": "regression", "reason": "Resume-state dependency closure now rejects a non-pending slice whose prerequisites are not completed.", "fixRefs": ["execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py", "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py"], "validationCommands": ["py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py --require-plan-ready", "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py"], "evidence": [{"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py", "sha256": "sha256:c64ce50026b50c9911f3775744bc11c5966d758b7e98548547ea389610220924"}, {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py", "sha256": "sha256:c4c7f1f57c23e044b8d7fefe110d5a2bbe376d62040f32e9d0c4d5c1e5f9ef94"}]},
+    {"findingId": "BSR-E3854F25DB082C72", "disposition": "refuted", "risk": "normal", "proofFamily": "authority-predicate", "reason": "Independent verification established that the exact S4 and S5 dependency predicates preserve the declared authorization boundary.", "fixRefs": ["execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json"], "validationCommands": ["py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py --require-plan-ready"], "evidence": [{"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py", "sha256": "sha256:c64ce50026b50c9911f3775744bc11c5966d758b7e98548547ea389610220924"}]}
+  ],
+  "currentBindings": {"candidateHash": "sha256:81e38c65a7474048f208271e907d0dc26399058a6e4c35d3dadb445a9160ef33", "sourceHash": "sha256:d06c6be410bf85da4d562b895318b682d443cb2d1c4db57adeef9fe268634396", "validatorHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"},
+  "gitIndexHash": "sha256:9ed49f04eb3786c9bc887fc53dc81afe4a18071a131351106c64248da78cfb12",
+  "writeSetHash": "sha256:fdcfc92e4bf19ae77674aa1a9958c904655ef73ef12850c68b2122a192f4534c",
+  "executionReadSetHash": "sha256:87642dd217b134ae7a5314c106925e43c8f6a55ad5497add1fdaa8227db4df5b",
+  "dependencyClosureHash": "sha256:87642dd217b134ae7a5314c106925e43c8f6a55ad5497add1fdaa8227db4df5b"
+}

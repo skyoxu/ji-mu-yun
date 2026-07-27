@@ -30,6 +30,19 @@ class RefactorAcceptancePlanTests(unittest.TestCase):
         stale["locator_request"]["snapshot"]["commit"] = "0" * 40
         self.assertFalse(validator.validate_knowledge_context(stale, catalog))
 
+    def test_stale_authority_manifest_is_rejected(self) -> None:
+        manifest = validator.load("authority-manifest.v1.json")
+        stale = copy.deepcopy(manifest)
+        stale["sources"][-1]["sha256"] = "0" * 64
+        self.assertFalse(validator.validate_authority_manifest(stale))
+
+    def test_resume_rejects_unmet_slice_dependency(self) -> None:
+        contract = validator.load("implementation-contract.v1.json")
+        resume = validator.load("resume-state.v1.json")
+        invalid = copy.deepcopy(resume)
+        invalid["slice_status"]["S2-matrix-phase"] = "in_progress"
+        self.assertFalse(validator.validate_resume_dependencies(contract, invalid))
+
 
 if __name__ == "__main__":
     unittest.main()
