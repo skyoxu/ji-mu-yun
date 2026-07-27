@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import copy
+import json
 import unittest
 from pathlib import Path
 
@@ -20,6 +22,13 @@ class RefactorAcceptancePlanTests(unittest.TestCase):
         ledger = validator.load("requirements-ledger.v1.json")
         ids = [value for item in ledger["coverage"] for value in item["ra_ids"]]
         self.assertEqual(list(range(1, 74)), sorted(ids))
+
+    def test_stale_knowledge_snapshot_is_rejected(self) -> None:
+        context = validator.load("knowledge-context.v1.json")
+        catalog = json.loads((validator.REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json").read_text(encoding="utf-8"))
+        stale = copy.deepcopy(context)
+        stale["locator_request"]["snapshot"]["commit"] = "0" * 40
+        self.assertFalse(validator.validate_knowledge_context(stale, catalog))
 
 
 if __name__ == "__main__":

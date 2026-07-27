@@ -6,6 +6,8 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -29,6 +31,59 @@ def load(relative: str) -> dict:
 
 def sha256(relative: str) -> str:
     return hashlib.sha256((REPOSITORY_ROOT / relative).read_bytes()).hexdigest()
+
+
+def object_sha256(value: object) -> str:
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def locate(request: dict) -> dict:
+    completed = subprocess.run(
+        [sys.executable, "-B", str(REPOSITORY_ROOT / "scripts/python/knowledge_locator.py")],
+        input=json.dumps(request),
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise ValueError("locator invocation failed")
+    return json.loads(completed.stdout)
+
+
+def validate_knowledge_context(context: dict, catalog: dict) -> bool:
+    request = context.get("locator_request")
+    result = context.get("locator_result")
+    source_snapshot = catalog.get("source_snapshot")
+    if not isinstance(request, dict) or not isinstance(result, dict) or not isinstance(source_snapshot, dict):
+        return False
+    expected_snapshot = {key: source_snapshot.get(key) for key in ("ref", "commit")}
+    if request.get("snapshot") != expected_snapshot or result.get("snapshot") != expected_snapshot:
+        return False
+    if context.get("request_sha256") != object_sha256(request) or context.get("result_sha256") != object_sha256(result):
+        return False
+    try:
+        if locate(request) != result:
+            return False
+    except (ValueError, json.JSONDecodeError):
+        return False
+    candidates = result.get("candidates")
+    decisions = context.get("decisions")
+    if not isinstance(candidates, list) or not isinstance(decisions, list) or len(candidates) != len(decisions):
+        return False
+    candidate_ids = [(item.get("path"), item.get("source_sha256")) for item in candidates if isinstance(item, dict)]
+    decision_ids = [(item.get("candidate", {}).get("path"), item.get("candidate", {}).get("source_sha256")) for item in decisions if isinstance(item, dict)]
+    if candidate_ids != decision_ids or len(candidate_ids) != len(candidates):
+        return False
+    for decision in decisions:
+        accepted = decision.get("decision") == "accepted"
+        if accepted:
+            if decision.get("candidate", {}).get("path") != "AGENTS.md" or decision.get("satisfies") != ["repository-rules"] or decision.get("rejection_reason") is not None:
+                return False
+        elif decision.get("decision") != "rejected" or decision.get("satisfies") != [] or not isinstance(decision.get("rejection_reason"), str):
+            return False
+    return True
 
 
 def validate() -> list[str]:
@@ -65,16 +120,14 @@ def validate() -> list[str]:
             findings.append("RIA-PLAN-SLICE-DEPENDENCIES")
 
     context = load("knowledge-context.v1.json")
+    catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json").read_text(encoding="utf-8"))
     state = load("plan-state.v1.json")
     index = (PLAN_ROOT / "00-index.md").read_text(encoding="utf-8")
     if state.get("status") == "draft":
         if context.get("status") != "blocked" or context.get("missing_required_modules") != ["repository-rules"] or context.get("decisions") != []:
             findings.append("RIA-PLAN-KNOWLEDGE-CONTEXT")
     elif state.get("status") == "plan-ready":
-        decisions = context.get("decisions", [])
-        accepted = [item for item in decisions if item.get("decision") == "accepted" and item.get("satisfies") == ["repository-rules"]]
-        candidate = accepted[0].get("candidate", {}) if len(accepted) == 1 else {}
-        if context.get("status") != "ready" or context.get("missing_required_modules") != [] or context.get("locator_result", {}).get("status") != "matched" or candidate != {"path": "AGENTS.md", "source_sha256": sha256("AGENTS.md")}:
+        if context.get("status") != "ready" or context.get("missing_required_modules") != [] or not validate_knowledge_context(context, catalog):
             findings.append("RIA-PLAN-KNOWLEDGE-CONTEXT")
     else:
         findings.append("RIA-PLAN-KNOWLEDGE-CONTEXT")

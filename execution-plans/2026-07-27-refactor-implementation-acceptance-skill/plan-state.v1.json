@@ -8,5 +8,6 @@
   "status_history": [
     {"status": "draft", "reason": "VDD knowledge preflight was blocked before catalog bootstrap and CLI contract repair.", "evidence": ["knowledge-context.v1.json"]},
     {"status": "plan-ready", "reason": "VDD reread and hash-verified the main-pinned repository-rules candidate selected by the stable Locator.", "evidence": ["knowledge-context.v1.json", "knowledge/indexes/derived-index.v1.json"]}
+    ,{"status": "plan-ready", "reason": "Knowledge context was refreshed from the current catalog source snapshot; every Locator candidate now has an adapter-owned decision.", "evidence": ["knowledge-context.v1.json", "tools/validate_plan.py --require-plan-ready"]}
   ]
 }
