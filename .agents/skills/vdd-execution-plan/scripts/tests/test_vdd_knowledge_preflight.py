@@ -52,7 +52,7 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             self.fail("KWI-CONSUMPTION-REQUIRED-UNCOVERED: VDD knowledge preflight is missing")
         result = module.evaluate_consumption(
             required_modules=["repository-rules"],
-            decisions=[{"decision": "rejected", "satisfies": []}],
+            decisions=[{"owner": "adapter", "decision": "rejected", "satisfies": [], "rejection_reason": "wrong_domain"}],
         )
         self.assertEqual("blocked", result["status"])
         self.assertEqual(["repository-rules"], result["missing_required_modules"])
@@ -76,6 +76,7 @@ class VddKnowledgePreflightTests(unittest.TestCase):
                     "candidates": [{"path": "AGENTS.md", "source_sha256": "b" * 64}],
                 },
                 "decisions": [{
+                    "owner": "adapter",
                     "decision": "accepted",
                     "satisfies": ["repository-rules"],
                     "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64},
@@ -105,7 +106,7 @@ class VddKnowledgePreflightTests(unittest.TestCase):
                 "required_modules": ["repository-rules"],
                 "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "request-1", "snapshot": snapshot},
                 "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "request-1", "snapshot": snapshot, "status": "matched", "candidates": [{"path": "README.md", "source_sha256": "a" * 64}]},
-                "decisions": [{"decision": "accepted", "satisfies": ["repository-rules"], "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64}}],
+                "decisions": [{"owner": "adapter", "decision": "accepted", "satisfies": ["repository-rules"], "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64}}],
             }
         ))
         self.assertEqual("blocked", result["status"])

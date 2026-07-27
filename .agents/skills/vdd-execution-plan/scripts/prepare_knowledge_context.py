@@ -45,7 +45,7 @@ def main() -> int:
         if not separator or not path or not modules:
             raise SystemExit("--accept must be candidate-path=module[,module]")
         accepted[path] = [item for item in modules.split(",") if item]
-    decisions = [{"owner": "adapter", "candidate": {"path": item.get("path"), "source_sha256": item.get("source_sha256")}, "decision": "accepted" if accepted.get(item.get("path")) else "rejected", "satisfies": accepted.get(item.get("path"), []), "rejection_reason": None if accepted.get(item.get("path")) else "not-selected-by-vdd-adapter"} for item in result.get("candidates", [])]
+    decisions = [{"owner": "adapter", "candidate": {"path": item.get("path"), "source_sha256": item.get("source_sha256")}, "decision": "accepted" if accepted.get(item.get("path")) else "rejected", "satisfies": accepted.get(item.get("path"), []), "rejection_reason": None if accepted.get(item.get("path")) else "insufficient_specificity"} for item in result.get("candidates", [])]
     payload = {
         "schema_version": "jimuyun.vdd-knowledge-context.v1",
         "locator_request": request,

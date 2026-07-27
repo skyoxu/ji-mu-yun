@@ -105,8 +105,6 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 continue
-            if (result_path.parent / "targeted-validation.v1.json").is_file():
-                continue
             contract_current = result.get("contract_hash") == contract_hash
             required_artifact = result_path.with_name("candidate-evidence.json") if exit_predicate == "implementation-candidate" else None
             current = contract_current

@@ -31,6 +31,7 @@ def payload(*, path: str = "AGENTS.md", digest: str = "a" * 64) -> dict:
         "locator_result": result,
         "required_modules": ["repository-rules"],
         "decisions": [{
+            "owner": "adapter",
             "decision": "accepted", "satisfies": ["repository-rules"],
             "candidate": {"path": path, "source_sha256": digest},
             "rejection_reason": None,
@@ -58,6 +59,25 @@ class KnowledgeContextValidationTests(unittest.TestCase):
         document["locator_result"]["candidates"].append({"path": "README.md", "source_sha256": "b" * 64})
         document["result_sha256"] = canonical_hash(document["locator_result"])
         self.assertEqual("locator_candidate_decision_missing", validate_context(document))
+
+    def test_rejects_non_adapter_decision_owner(self) -> None:
+        document = payload()
+        document["decisions"][0]["owner"] = "llm"
+        self.assertEqual("consumption_decision_owner_invalid", validate_context(document))
+
+    def test_requires_accepted_coverage_for_each_required_module(self) -> None:
+        document = payload()
+        document["required_modules"] = ["repository-rules", "phase-service"]
+        self.assertEqual("required_modules_unsatisfied", validate_context(document))
+
+    def test_rejects_unregistered_rejection_reason(self) -> None:
+        document = payload()
+        document["decisions"][0].update({
+            "decision": "rejected",
+            "satisfies": [],
+            "rejection_reason": "not-selected-by-vdd-adapter",
+        })
+        self.assertEqual("rejected_candidate_invalid", validate_context(document))
 
 
 if __name__ == "__main__":

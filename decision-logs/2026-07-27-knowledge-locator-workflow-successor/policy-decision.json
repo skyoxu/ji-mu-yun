@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "bootstrap-successor-policy-decision.v1",
+  "decisionId": "knowledge-locator-repair-decision-20260727",
+  "supersededReviewId": "knowledge-locator-workflow-plan-r3b-20260727",
+  "supersededChangeId": "knowledge-locator-workflow-plan-v1",
+  "successorChangeId": "knowledge-locator-workflow-repair-v2",
+  "policyRevision": "sha256:d4077a8c91b9b271ff3607548b3575d1616d14dc3c10733849856959ee6ebc0a",
+  "authorityRevision": "d16840754631c016f54c410ed32424cd992636cd",
+  "authorizationEventRef": {
+    "path": "decision-logs/2026-07-27-knowledge-locator-workflow-successor/authorization-event.json",
+    "sha256": "sha256:afc8ef85dcfae7167ecd56401a9f77b2901702a017917e9c6bbddc9caefa8d04"
+  },
+  "authorizationEventId": "knowledge-locator-repair-event-20260727",
+  "consumer": "repository-maintenance-tdd-adapter-plan-reentry",
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "plan-ready",
+    "slice-ready",
+    "bootstrap-review",
+    "implementation-accepted",
+    "protected-handoff",
+    "release-ready"
+  ],
+  "decidedAt": "2026-07-27T08:32:00Z"
+}

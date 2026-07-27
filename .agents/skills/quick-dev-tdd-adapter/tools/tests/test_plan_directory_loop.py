@@ -73,14 +73,14 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             }), encoding="utf-8")
             self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
-    def test_router_ignores_targeted_validation_evidence(self) -> None:
+    def test_router_accepts_current_slice_evidence_with_targeted_validation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
             run = root / "logs/tdd-adapter/target/S0/targeted"; run.mkdir(parents=True)
             contract_hash = "sha256:" + __import__("hashlib").sha256((plan / "implementation-contract.v1.json").read_bytes()).hexdigest()
             (run / "slice-ready-result.json").write_text(json.dumps({"predicate": "slice-ready", "status": "pass", "contract_hash": contract_hash}), encoding="utf-8")
             (run / "targeted-validation.v1.json").write_text("{}", encoding="utf-8")
-            self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+            self.assertEqual("validate-terminal", ROUTER.route(root, plan)["next_action"])
 
     def test_router_replays_authority_stale_implementation_candidate_before_s7(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

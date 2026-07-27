@@ -20,6 +20,13 @@ CATALOG_RELATIVE = Path("knowledge/catalogs/repository-knowledge-catalog.v1.json
 REQUEST_SCHEMA = "jimuyun.knowledge-locator-request.v1"
 RESULT_SCHEMA = "jimuyun.knowledge-locator-result.v1"
 CONTEXT_SCHEMA = "jimuyun.vdd-knowledge-context.v1"
+DECISION_OWNER = "adapter"
+REJECTION_REASONS = {
+    "wrong_domain",
+    "insufficient_specificity",
+    "authority_conflict",
+    "duplicate",
+}
 
 
 def canonical_hash(value: Any) -> str:
@@ -115,9 +122,12 @@ def validate_context(
         available.add(key)
     seen: set[tuple[str, str]] = set()
     accepted: list[tuple[str, str]] = []
+    satisfied_modules: set[str] = set()
     for decision in decisions:
         if not isinstance(decision, dict) or not isinstance(decision.get("candidate"), dict):
             return "consumption_decision_invalid"
+        if decision.get("owner") != DECISION_OWNER:
+            return "consumption_decision_owner_invalid"
         candidate = decision["candidate"]
         key = (candidate.get("path"), candidate.get("source_sha256"))
         if key not in available:
@@ -132,13 +142,16 @@ def validate_context(
             if not satisfies:
                 return "accepted_candidate_missing_coverage"
             accepted.append(key)
+            satisfied_modules.update(satisfies)
         elif decision.get("decision") == "rejected":
-            if satisfies or not isinstance(decision.get("rejection_reason"), str) or not decision["rejection_reason"]:
+            if satisfies or decision.get("rejection_reason") not in REJECTION_REASONS:
                 return "rejected_candidate_invalid"
         else:
             return "consumption_decision_invalid"
     if seen != available:
         return "locator_candidate_decision_missing"
+    if not set(required_modules).issubset(satisfied_modules):
+        return "required_modules_unsatisfied"
     if repository_root is None:
         return None
     repository_root = repository_root.resolve()
