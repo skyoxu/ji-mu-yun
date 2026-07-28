@@ -17,7 +17,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from agent_to_agent_review import write_agent_review
 from _agent_review_policy import apply_agent_review_policy, apply_agent_review_signal
@@ -72,6 +72,8 @@ from _pipeline_support import (
 )
 from _llm_review_cli import parse_agent_timeout_overrides, resolve_agents
 from _change_scope import classify_change_scope_between_snapshots
+from _git_snapshot import current_git_fingerprint as _current_git_fingerprint, git_snapshots_match
+from _llm_review_identity import is_complete_llm_input_identity
 from _pipeline_history import collect_recent_failure_summary
 
 from _repair_approval import resolve_approval_state
@@ -82,19 +84,50 @@ from _taskmaster import resolve_triplet
 from _technical_debt import write_low_priority_debt_artifacts
 from _llm_review_tier import resolve_llm_review_tier_plan
 from _summary_schema import SummarySchemaError, validate_pipeline_summary
-from _util import repo_root, write_json, write_text
+from _util import repo_root, run_cmd, write_json, write_text
 from _active_task_sidecar import write_active_task_sidecar as _write_active_task_sidecar_impl
 
 
 def current_git_fingerprint() -> dict[str, Any]:
-    from _util import repo_root, run_cmd
+    return _current_git_fingerprint()
 
-    rc_head, out_head = run_cmd(["git", "rev-parse", "HEAD"], cwd=repo_root(), timeout_sec=30)
-    rc_status, out_status = run_cmd(["git", "status", "--short"], cwd=repo_root(), timeout_sec=30)
-    return {
-        "head": out_head.strip() if rc_head == 0 else "",
-        "status_short": sorted([line.rstrip() for line in out_status.splitlines() if line.strip()]) if rc_status == 0 else [],
-    }
+
+def _invalidate_inherited_steps_for_snapshot_change(
+    *,
+    summary: dict[str, Any],
+    marathon_state: dict[str, Any] | None,
+    source_execution_context: dict[str, Any] | None,
+    current_git: dict[str, Any],
+) -> bool:
+    if not isinstance(marathon_state, dict):
+        return False
+    source_git = (
+        source_execution_context.get("git")
+        if isinstance(source_execution_context, dict) and isinstance(source_execution_context.get("git"), dict)
+        else {}
+    )
+    if git_snapshots_match(source_git, current_git):
+        return False
+    summary["steps"] = []
+    summary["status"] = "ok"
+    summary["run_type"] = "full"
+    summary["reason"] = "in_progress"
+    summary["reuse_mode"] = "none"
+    marathon_state["steps"] = {}
+    marathon_state["status"] = "running"
+    marathon_state["last_failed_step"] = ""
+    marathon_state["next_step_name"] = "sc-test"
+    marathon_state["stop_reason"] = ""
+    diagnostics = marathon_state.setdefault("diagnostics", {})
+    if isinstance(diagnostics, dict):
+        source_identity = source_git.get("content_identity") if isinstance(source_git.get("content_identity"), dict) else {}
+        current_identity = current_git.get("content_identity") if isinstance(current_git.get("content_identity"), dict) else {}
+        diagnostics["inherited_steps_invalidated"] = {
+            "reason": "git_snapshot_changed",
+            "source_snapshot_sha256": str(source_identity.get("snapshot_sha256") or ""),
+            "current_snapshot_sha256": str(current_identity.get("snapshot_sha256") or ""),
+        }
+    return True
 
 
 def _normalize_cmd_for_reuse(cmd: list[str]) -> list[str]:
@@ -649,8 +682,6 @@ def _find_recent_deterministic_green_llm_not_clean_run(
     logs_root = repo_root() / "logs" / "ci"
     if not logs_root.exists():
         return None
-    current_head = str(git_fingerprint.get("head") or "").strip()
-    current_status = sorted([str(line).rstrip() for line in (git_fingerprint.get("status_short") or []) if str(line).strip()])
     current_out_dir_resolved = current_out_dir.resolve()
     candidates = sorted(
         [item for item in logs_root.rglob(f"sc-review-pipeline-task-{task_id}-*") if item.is_dir()],
@@ -673,8 +704,7 @@ def _find_recent_deterministic_green_llm_not_clean_run(
         if _normalize_profile_value(execution_context.get("security_profile")) != security_profile:
             continue
         git_info = execution_context.get("git") if isinstance(execution_context.get("git"), dict) else {}
-        previous_status = sorted([str(line).rstrip() for line in (git_info.get("status_short") or []) if str(line).strip()])
-        exact_snapshot_match = str(git_info.get("head") or "").strip() == current_head and previous_status == current_status
+        exact_snapshot_match = git_snapshots_match(git_info, git_fingerprint)
         change_scope = (
             {
                 "deterministic_strategy": "reuse-latest",
@@ -976,9 +1006,73 @@ def _refresh_summary_meta(summary: dict[str, Any], *, script_start_monotonic: fl
         summary.pop("step_duration_totals", None)
         summary.pop("step_duration_avg", None)
         summary.pop("dominant_cost_phase", None)
+    llm_metrics = _collect_llm_review_metrics(summary)
+    if llm_metrics:
+        summary["llm_review_metrics"] = llm_metrics
+    else:
+        summary.pop("llm_review_metrics", None)
     recommended_action, recommended_action_why = _derive_summary_recommendation(summary)
     summary["recommended_action"] = recommended_action
     summary["recommended_action_why"] = recommended_action_why
+
+
+def _collect_llm_review_metrics(summary: dict[str, Any]) -> dict[str, Any]:
+    steps = summary.get("steps") if isinstance(summary.get("steps"), list) else []
+    llm_step = next(
+        (step for step in steps if isinstance(step, dict) and str(step.get("name") or "").strip() == "sc-llm-review"),
+        None,
+    )
+    if not isinstance(llm_step, dict):
+        return {}
+    summary_path = _resolve_summary_path(str(llm_step.get("summary_file") or "").strip())
+    if summary_path is None:
+        return {}
+    child = _read_json(summary_path)
+    metrics = child.get("review_metrics") if isinstance(child.get("review_metrics"), dict) else {}
+    identity = child.get("input_identity") if isinstance(child.get("input_identity"), dict) else {}
+    if not metrics:
+        return {}
+    return {
+        **metrics,
+        "input_identity_hash": str(identity.get("input_identity_hash") or ""),
+        "input_identity_complete": bool(identity.get("complete") is True),
+        "pipeline_reuse_mode": str(summary.get("reuse_mode") or "none"),
+        "llm_result_reused": str(summary.get("reuse_mode") or "none") == "full-clean-reuse",
+    }
+
+
+def _build_current_llm_input_identity(
+    *,
+    out_dir: Path,
+    planned_steps: list[tuple[str, list[str], int, bool]],
+) -> dict[str, Any]:
+    llm_step = next(
+        (
+            (cmd, skipped)
+            for step_name, cmd, _timeout_sec, skipped in planned_steps
+            if step_name == "sc-llm-review"
+        ),
+        None,
+    )
+    if llm_step is None or llm_step[1]:
+        return {}
+    probe_dir = out_dir / f"llm-input-identity-probe-{uuid.uuid4().hex}"
+    probe_cmd = [*llm_step[0], "--prompts-only"]
+    previous_override = os.environ.get("SC_LLM_REVIEW_OUT_DIR")
+    os.environ["SC_LLM_REVIEW_OUT_DIR"] = str(probe_dir)
+    try:
+        rc, output = run_cmd(probe_cmd, cwd=repo_root(), timeout_sec=180)
+    finally:
+        if previous_override is None:
+            os.environ.pop("SC_LLM_REVIEW_OUT_DIR", None)
+        else:
+            os.environ["SC_LLM_REVIEW_OUT_DIR"] = previous_override
+    write_text(out_dir / "llm-input-identity-probe.log", output)
+    if rc != 0:
+        return {}
+    payload = _read_json(probe_dir / "summary.json")
+    identity = payload.get("input_identity") if isinstance(payload.get("input_identity"), dict) else {}
+    return identity if is_complete_llm_input_identity(identity) else {}
 
 
 def _find_reusable_sc_test_step(
@@ -993,8 +1087,6 @@ def _find_reusable_sc_test_step(
     logs_root = repo_root() / "logs" / "ci"
     if not logs_root.exists():
         return None
-    current_head = str(git_fingerprint.get("head") or "").strip()
-    current_status = sorted([str(line).rstrip() for line in (git_fingerprint.get("status_short") or []) if str(line).strip()])
     normalized_planned_cmd = _normalize_cmd_for_reuse(planned_cmd)
     candidates = sorted(
         [item for item in logs_root.rglob(f"sc-review-pipeline-task-{task_id}-*") if item.is_dir()],
@@ -1015,8 +1107,7 @@ def _find_reusable_sc_test_step(
         if str(execution_context.get("security_profile") or "").strip().lower() != security_profile:
             continue
         git_info = execution_context.get("git") if isinstance(execution_context.get("git"), dict) else {}
-        previous_status = sorted([str(line).rstrip() for line in (git_info.get("status_short") or []) if str(line).strip()])
-        exact_snapshot_match = str(git_info.get("head") or "").strip() == current_head and previous_status == current_status
+        exact_snapshot_match = git_snapshots_match(git_info, git_fingerprint)
         change_scope = (
             {
                 "sc_test_reuse_allowed": True,
@@ -1091,12 +1182,12 @@ def _find_reusable_clean_pipeline_steps(
     security_profile: str,
     planned_steps: list[tuple[str, list[str], int, bool]],
     git_fingerprint: dict[str, Any],
+    current_llm_input_identity: dict[str, Any] | None = None,
+    current_llm_input_identity_factory: Callable[[], dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]] | None:
     logs_root = repo_root() / "logs" / "ci"
     if not logs_root.exists():
         return None
-    current_head = str(git_fingerprint.get("head") or "").strip()
-    current_status = sorted([str(line).rstrip() for line in (git_fingerprint.get("status_short") or []) if str(line).strip()])
     normalized_planned = {
         step_name: _normalize_cmd_for_reuse(cmd)
         for step_name, cmd, _timeout_sec, skipped in planned_steps
@@ -1109,6 +1200,8 @@ def _find_reusable_clean_pipeline_steps(
         key=lambda item: item.stat().st_mtime,
         reverse=True,
     )
+    current_identity = current_llm_input_identity if isinstance(current_llm_input_identity, dict) else {}
+    identity_factory_called = False
     for candidate in candidates:
         if candidate.resolve() == out_dir.resolve():
             continue
@@ -1127,8 +1220,7 @@ def _find_reusable_clean_pipeline_steps(
         if str(execution_context.get("security_profile") or "").strip().lower() != security_profile:
             continue
         git_info = execution_context.get("git") if isinstance(execution_context.get("git"), dict) else {}
-        previous_status = sorted([str(line).rstrip() for line in (git_info.get("status_short") or []) if str(line).strip()])
-        exact_snapshot_match = str(git_info.get("head") or "").strip() == current_head and previous_status == current_status
+        exact_snapshot_match = git_snapshots_match(git_info, git_fingerprint)
         change_scope = (
             {
                 "deterministic_strategy": "reuse-latest",
@@ -1148,6 +1240,23 @@ def _find_reusable_clean_pipeline_steps(
         }
         llm_step = step_map.get("sc-llm-review")
         if not isinstance(llm_step, dict) or not _llm_step_is_clean(llm_step):
+            continue
+        source_llm_summary_path = _resolve_summary_path(str(llm_step.get("summary_file") or "").strip())
+        source_llm_summary = _read_json(source_llm_summary_path) if source_llm_summary_path is not None else {}
+        source_identity = source_llm_summary.get("input_identity") if isinstance(source_llm_summary.get("input_identity"), dict) else {}
+        if not is_complete_llm_input_identity(source_identity):
+            continue
+        if not current_identity and current_llm_input_identity_factory is not None and not identity_factory_called:
+            identity_factory_called = True
+            generated_identity = current_llm_input_identity_factory()
+            current_identity = generated_identity if isinstance(generated_identity, dict) else {}
+        llm_identity_matches = (
+            exact_snapshot_match
+            and is_complete_llm_input_identity(source_identity)
+            and is_complete_llm_input_identity(current_identity)
+            and source_identity == current_identity
+        )
+        if not llm_identity_matches:
             continue
         reused_steps: list[dict[str, Any]] = []
         for step_name, planned_cmd in normalized_planned.items():
@@ -1205,12 +1314,11 @@ def _find_reusable_deterministic_steps_from_llm_only_failure(
     security_profile: str,
     planned_steps: list[tuple[str, list[str], int, bool]],
     git_fingerprint: dict[str, Any],
+    require_llm_not_clean: bool = True,
 ) -> list[dict[str, Any]] | None:
     logs_root = repo_root() / "logs" / "ci"
     if not logs_root.exists():
         return None
-    current_head = str(git_fingerprint.get("head") or "").strip()
-    current_status = sorted([str(line).rstrip() for line in (git_fingerprint.get("status_short") or []) if str(line).strip()])
     planned_map = {
         step_name: _normalize_cmd_for_reuse(cmd)
         for step_name, cmd, _timeout_sec, skipped in planned_steps
@@ -1239,8 +1347,7 @@ def _find_reusable_deterministic_steps_from_llm_only_failure(
         if str(execution_context.get("security_profile") or "").strip().lower() != security_profile:
             continue
         git_info = execution_context.get("git") if isinstance(execution_context.get("git"), dict) else {}
-        previous_status = sorted([str(line).rstrip() for line in (git_info.get("status_short") or []) if str(line).strip()])
-        exact_snapshot_match = str(git_info.get("head") or "").strip() == current_head and previous_status == current_status
+        exact_snapshot_match = git_snapshots_match(git_info, git_fingerprint)
         change_scope = (
             {
                 "deterministic_strategy": "reuse-latest",
@@ -1264,7 +1371,7 @@ def _find_reusable_deterministic_steps_from_llm_only_failure(
         if not isinstance(llm_step, dict):
             continue
         llm_step_status = str(llm_step.get("status") or "").strip().lower()
-        if llm_step_status == "ok" and _llm_step_is_clean(llm_step):
+        if require_llm_not_clean and llm_step_status == "ok" and _llm_step_is_clean(llm_step):
             continue
         reused_steps: list[dict[str, Any]] = []
         for step_name, planned_cmd in planned_map.items():
@@ -1327,8 +1434,6 @@ def _find_reusable_successful_acceptance_step(
     logs_root = repo_root() / "logs" / "ci"
     if not logs_root.exists():
         return None
-    current_head = str(git_fingerprint.get("head") or "").strip()
-    current_status = sorted([str(line).rstrip() for line in (git_fingerprint.get("status_short") or []) if str(line).strip()])
     normalized_planned_cmd = _normalize_cmd_for_reuse(planned_cmd)
     candidates = sorted(
         [item for item in logs_root.rglob(f"sc-review-pipeline-task-{task_id}-*") if item.is_dir()],
@@ -1347,8 +1452,7 @@ def _find_reusable_successful_acceptance_step(
         if _normalize_profile_value(execution_context.get("security_profile")) != security_profile:
             continue
         git_info = execution_context.get("git") if isinstance(execution_context.get("git"), dict) else {}
-        previous_status = sorted([str(line).rstrip() for line in (git_info.get("status_short") or []) if str(line).strip()])
-        exact_snapshot_match = str(git_info.get("head") or "").strip() == current_head and previous_status == current_status
+        exact_snapshot_match = git_snapshots_match(git_info, git_fingerprint)
         change_scope = (
             {
                 "deterministic_strategy": "reuse-latest",
@@ -1952,6 +2056,13 @@ def main() -> int:
         print(f"[sc-review-pipeline] ERROR: {exc}")
         return 2
     current_git = current_git_fingerprint()
+    if args.resume or args.fork:
+        _invalidate_inherited_steps_for_snapshot_change(
+            summary=summary,
+            marathon_state=marathon_state,
+            source_execution_context=source_execution_context,
+            current_git=current_git,
+        )
     profile_floor_decision: dict[str, Any] | None = None
     change_scope_for_floor: dict[str, Any] = {}
     if not bool(args.resume or args.abort or args.fork):
@@ -2173,6 +2284,7 @@ def main() -> int:
             current_summary,
             script_start_monotonic=script_start_monotonic,
         ),
+        git_fingerprint=current_git,
     )
     if not session.persist():
         return 2
@@ -2316,6 +2428,10 @@ def main() -> int:
             security_profile=security_profile,
             planned_steps=steps,
             git_fingerprint=current_git,
+            current_llm_input_identity_factory=lambda: _build_current_llm_input_identity(
+                out_dir=out_dir,
+                planned_steps=steps,
+            ),
         )
         if reusable_pipeline_steps:
             _set_reuse_mode(session.summary, "full-clean-reuse")
@@ -2340,6 +2456,7 @@ def main() -> int:
             security_profile=security_profile,
             planned_steps=steps,
             git_fingerprint=current_git,
+            require_llm_not_clean=False,
         )
         if reusable_deterministic_steps:
             _set_reuse_mode(session.summary, "deterministic-only-reuse")
@@ -2419,6 +2536,20 @@ def main() -> int:
     step_rc = session.execute_steps(steps, resume_or_fork=bool(args.resume or args.fork))
     if step_rc is not None:
         return step_rc
+    finished_git = current_git_fingerprint()
+    if not git_snapshots_match(current_git, finished_git):
+        session.summary["status"] = "fail"
+        session.marathon_state["status"] = "stopped"
+        session.marathon_state["stop_reason"] = "git_snapshot_changed_during_run"
+        diagnostics = session.marathon_state.setdefault("diagnostics", {})
+        if isinstance(diagnostics, dict):
+            start_identity = current_git.get("content_identity") if isinstance(current_git.get("content_identity"), dict) else {}
+            finish_identity = finished_git.get("content_identity") if isinstance(finished_git.get("content_identity"), dict) else {}
+            diagnostics["input_snapshot_drift"] = {
+                "reason": "git_snapshot_changed_during_run",
+                "start_snapshot_sha256": str(start_identity.get("snapshot_sha256") or ""),
+                "finish_snapshot_sha256": str(finish_identity.get("snapshot_sha256") or ""),
+            }
     final_rc = session.finish()
     try:
         write_low_priority_debt_artifacts(

@@ -24,6 +24,9 @@ def _sync_summary_recovery_recommendation(summary: dict[str, Any], active_task_p
         if value is None:
             summary.pop(key, None)
             continue
+        if key == "recommended_command" and not str(value or "").strip():
+            summary.pop(key, None)
+            continue
         if isinstance(value, dict):
             summary[key] = dict(value)
         elif isinstance(value, list):
@@ -74,6 +77,7 @@ class PipelineSession:
     cap_step_timeout: Callable[[int, dict[str, Any]], int]
     run_agent_review_post_hook: Callable[..., tuple[int, dict[str, Any]]]
     refresh_summary_meta: Callable[[dict[str, Any]], None]
+    git_fingerprint: dict[str, Any] | None = None
 
     def _should_publish_recovery_sidecars(self) -> bool:
         return not bool(getattr(self.args, "dry_run", False)) and has_materialized_pipeline_steps(self.summary)
@@ -202,6 +206,7 @@ class PipelineSession:
             repair_guide=repair_guide,
             marathon_state=self.marathon_state,
             approval_state=approval_state,
+            git_fingerprint=self.git_fingerprint,
         )
         if isinstance(execution_context_payload, dict) and str(self.summary.get("failure_kind") or "").strip():
             execution_context_payload["failure_kind"] = str(self.summary.get("failure_kind") or "").strip()
@@ -272,17 +277,18 @@ class PipelineSession:
                             self.out_dir / "execution-context.json",
                             {
                                 **self.build_execution_context(
-                                task_id=self.task_id,
-                                requested_run_id=self.requested_run_id,
-                                run_id=self.run_id,
-                                out_dir=self.out_dir,
-                                delivery_profile=self.delivery_profile,
-                                security_profile=self.security_profile,
-                                llm_review_context=self.llm_review_context,
-                                summary=self.summary,
-                                repair_guide=repair_guide,
-                                marathon_state=self.marathon_state,
-                                approval_state=approval_state,
+                                    task_id=self.task_id,
+                                    requested_run_id=self.requested_run_id,
+                                    run_id=self.run_id,
+                                    out_dir=self.out_dir,
+                                    delivery_profile=self.delivery_profile,
+                                    security_profile=self.security_profile,
+                                    llm_review_context=self.llm_review_context,
+                                    summary=self.summary,
+                                    repair_guide=repair_guide,
+                                    marathon_state=self.marathon_state,
+                                    approval_state=approval_state,
+                                    git_fingerprint=self.git_fingerprint,
                                 ),
                                 "failure_kind": str(self.summary.get("failure_kind") or "").strip(),
                             },

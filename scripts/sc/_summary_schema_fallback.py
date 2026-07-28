@@ -4,6 +4,7 @@ import re
 from typing import Any
 
 from _summary_schema_local_hard_checks import validate_local_hard_checks_without_jsonschema as _validate_local_hard_checks_impl
+from _llm_review_identity import validate_pipeline_llm_review_metrics
 
 RUN_ID_RE = re.compile(r"^([A-Fa-f0-9]{32}|[A-Za-z0-9][A-Za-z0-9._:-]{2,127})$")
 TASK_ID_RE = re.compile(r"^[0-9]+$")
@@ -91,6 +92,7 @@ def validate_pipeline_without_jsonschema(payload: dict[str, Any]) -> list[str]:
         "step_duration_totals",
         "step_duration_avg",
         "dominant_cost_phase",
+        "llm_review_metrics",
     }
     for key in required:
         if key not in payload:
@@ -175,6 +177,8 @@ def validate_pipeline_without_jsonschema(payload: dict[str, Any]) -> list[str]:
                         errors.append(f"$.{key}.{sub_key}: must be number >= 0")
     if "dominant_cost_phase" in payload and not _is_non_empty_string(payload.get("dominant_cost_phase")):
         errors.append("$.dominant_cost_phase: must be non-empty string when present")
+    if "llm_review_metrics" in payload:
+        errors.extend(validate_pipeline_llm_review_metrics(payload.get("llm_review_metrics"), base_path="$.llm_review_metrics"))
 
     steps = payload.get("steps")
     if not isinstance(steps, list):

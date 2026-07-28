@@ -27,6 +27,7 @@ from _delivery_profile import (
 from _llm_review_cli import resolve_agents as resolve_llm_review_agents
 from _llm_backend import KNOWN_LLM_BACKENDS, resolve_llm_backend
 from _change_scope import classify_change_scope_between_snapshots
+from _git_snapshot import current_git_fingerprint as _current_git_fingerprint, git_snapshots_match
 from _risk_profile_floor import derive_delivery_profile_floor, requires_security_auditor_for_change_scope
 from _util import ci_dir, repo_root, run_cmd, split_csv, write_json, write_text
 
@@ -189,12 +190,7 @@ def _changed_paths_hit_reviewer_anchors(changed_paths: list[str]) -> bool:
 
 
 def current_git_fingerprint() -> dict[str, Any]:
-    rc_head, out_head = run_cmd(["git", "rev-parse", "HEAD"], cwd=repo_root(), timeout_sec=30)
-    rc_status, out_status = run_cmd(["git", "status", "--short"], cwd=repo_root(), timeout_sec=30)
-    return {
-        "head": out_head.strip() if rc_head == 0 else "",
-        "status_short": sorted([line.rstrip() for line in out_status.splitlines() if line.strip()]) if rc_status == 0 else [],
-    }
+    return _current_git_fingerprint()
 
 
 def _step_status(summary: dict[str, Any], step_name: str) -> str:
@@ -213,12 +209,7 @@ def find_pipeline_step_dict(summary_payload: dict[str, Any], step_name: str) -> 
 
 def _git_snapshot_matches(execution_context: dict[str, Any]) -> bool:
     git_info = execution_context.get("git") if isinstance(execution_context.get("git"), dict) else {}
-    previous = {
-        "head": str(git_info.get("head") or "").strip(),
-        "status_short": sorted([str(line).rstrip() for line in (git_info.get("status_short") or []) if str(line).strip()]),
-    }
-    current = current_git_fingerprint()
-    return previous == current
+    return git_snapshots_match(git_info, current_git_fingerprint())
 
 
 def _resolve_latest_pipeline_files(task_id: str) -> tuple[dict[str, Any], Path | None, Path | None, Path | None]:
@@ -463,86 +454,11 @@ def try_skip_when_latest_pipeline_already_clean(
     script_start: float,
     budget_min: int,
 ) -> dict[str, Any] | None:
-    latest_payload = resolve_latest_pipeline_payload(task_id)
-    latest_out_dir = Path(str(latest_payload.get("latest_out_dir") or "").strip()) if latest_payload else None
-    summary_file = Path(str(latest_payload.get("summary_path") or "").strip()) if latest_payload else None
-    execution_context_file = Path(str(latest_payload.get("execution_context_path") or "").strip()) if latest_payload else None
-    if not latest_out_dir or not latest_out_dir.exists() or not summary_file or not summary_file.exists() or not execution_context_file or not execution_context_file.exists():
-        return None
-    summary = read_json(summary_file)
-    execution_context = read_json(execution_context_file)
-    if not summary or not execution_context:
-        return None
-    if str(summary.get("status") or "").strip().lower() != "ok":
-        return None
-    if str(execution_context.get("delivery_profile") or "").strip().lower() != str(delivery_profile).strip().lower():
-        return None
-    if str(execution_context.get("security_profile") or "").strip().lower() != str(security_profile).strip().lower():
-        return None
-    if _step_status(summary, "sc-test") != "ok" or _step_status(summary, "sc-acceptance-check") != "ok" or _step_status(summary, "sc-llm-review") != "ok":
-        return None
-    llm_step = find_pipeline_step_dict(summary, "sc-llm-review")
-    llm_summary_path = Path(str(llm_step.get("summary_file") or "")).resolve() if str(llm_step.get("summary_file") or "").strip() else None
-    if llm_summary_path is None or not llm_summary_path.exists():
-        return None
-    verdicts = parse_llm_verdicts(llm_summary_path)
-    if not verdicts or any(verdict != "OK" for verdict in verdicts.values()):
-        return None
-
-    agent_review = read_json(latest_out_dir / "agent-review.json")
-    review_verdict = str(agent_review.get("review_verdict") or "").strip().lower()
-    if review_verdict in {"needs-fix", "block"}:
-        return None
-
-    current_git = current_git_fingerprint()
-    previous_git = execution_context.get("git") if isinstance(execution_context.get("git"), dict) else {}
-    previous_status = sorted([str(line).rstrip() for line in (previous_git.get("status_short") or []) if str(line).strip()])
-    exact_git_match = str(previous_git.get("head") or "").strip() == str(current_git.get("head") or "").strip() and previous_status == sorted(
-        [str(line).rstrip() for line in (current_git.get("status_short") or []) if str(line).strip()]
-    )
-    change_scope = (
-        {"deterministic_strategy": "reuse-latest", "changed_paths": [], "unsafe_paths": []}
-        if exact_git_match
-        else classify_change_scope_between_snapshots(previous_git=previous_git, current_git=current_git)
-    )
-    if not exact_git_match and str(change_scope.get("deterministic_strategy") or "").strip() != "reuse-latest":
-        return None
-
-    remaining_before = remain_sec(script_start, budget_min)
-    log_file = out_dir / "pipeline-clean-skip.log"
-    write_text(
-        log_file,
-        "\n".join(
-            [
-                "[needs-fix-fast] latest pipeline already clean; skipping rerun"
-                if exact_git_match
-                else "[needs-fix-fast] latest pipeline already clean after non-task doc delta; skipping rerun",
-                f"task_id={task_id}",
-                f"run_id={str(latest_payload.get('run_id') or '').strip()}",
-                f"summary_file={summary_file}",
-                f"execution_context_file={execution_context_file}",
-                f"change_scope_strategy={str(change_scope.get('deterministic_strategy') or '').strip()}",
-                f"changed_paths={json.dumps(change_scope.get('changed_paths') or [], ensure_ascii=False)}",
-                f"SC_NEEDS_FIX_FAST status=ok out={out_dir}",
-            ]
-        )
-        + "\n",
-    )
-    return {
-        "name": "pipeline-clean-skip",
-        "status": "reused",
-        "rc": 0,
-        "duration_sec": 0.0,
-        "remaining_before_sec": int(max(0, remaining_before)),
-        "remaining_after_sec": int(remain_sec(script_start, budget_min)),
-        "cmd": [],
-        "log_file": str(log_file),
-        "reported_out_dir": str(latest_out_dir),
-        "summary_file": str(summary_file),
-        "reused_run_id": str(latest_payload.get("run_id") or "").strip(),
-        "reuse_reason": "latest_pipeline_already_clean" if exact_git_match else "latest_pipeline_already_clean_docs_only_delta",
-        "change_scope": change_scope,
-    }
+    # ADR-0049 keeps full-result authorization in run_review_pipeline. This
+    # wrapper cannot reconstruct the exact prompt/runtime identity, so it must
+    # delegate instead of treating Git state or a docs-only delta as sufficient.
+    del task_id, delivery_profile, security_profile, out_dir, script_start, budget_min
+    return None
 
 
 def try_stop_when_latest_llm_unknown_without_anchor_fix(
@@ -576,10 +492,7 @@ def try_stop_when_latest_llm_unknown_without_anchor_fix(
         return None
     current_git = current_git_fingerprint()
     previous_git = execution_context.get("git") if isinstance(execution_context.get("git"), dict) else {}
-    previous_status = sorted([str(line).rstrip() for line in (previous_git.get("status_short") or []) if str(line).strip()])
-    exact_git_match = str(previous_git.get("head") or "").strip() == str(current_git.get("head") or "").strip() and previous_status == sorted(
-        [str(line).rstrip() for line in (current_git.get("status_short") or []) if str(line).strip()]
-    )
+    exact_git_match = git_snapshots_match(previous_git, current_git)
     change_scope = (
         {"deterministic_strategy": "reuse-latest", "changed_paths": [], "unsafe_paths": []}
         if exact_git_match
@@ -870,7 +783,21 @@ def try_reuse_matching_minimal_acceptance_step(
         if str(plan_scope.get("change_fingerprint") or "").strip() != target_fingerprint:
             continue
         timeline = payload.get("timeline") if isinstance(payload.get("timeline"), list) else []
-        deterministic_step = next((row for row in timeline if isinstance(row, dict) and str(row.get("summary_file") or "").strip()), None)
+        deterministic_step = next(
+            (
+                row
+                for row in timeline
+                if isinstance(row, dict)
+                and str(row.get("name") or "").strip() == "pipeline-deterministic-minimal-acceptance"
+                and str(row.get("status") or "").strip().lower() == "ok"
+                and isinstance(row.get("rc"), int)
+                and not isinstance(row.get("rc"), bool)
+                and row.get("rc") == 0
+                and list(row.get("cmd") or []) == list(planned_cmd)
+                and str(row.get("summary_file") or "").strip()
+            ),
+            None,
+        )
         if not isinstance(deterministic_step, dict):
             continue
         summary_file_raw = str(deterministic_step.get("summary_file") or "").strip()
@@ -880,6 +807,14 @@ def try_reuse_matching_minimal_acceptance_step(
         summary_file = Path(summary_file_raw)
         reported_out_dir = Path(reported_out_dir_raw)
         if not summary_file.exists() or not reported_out_dir.exists():
+            continue
+        try:
+            if summary_file.resolve().parent != reported_out_dir.resolve():
+                continue
+        except OSError:
+            continue
+        child_summary = read_json(summary_file)
+        if str(child_summary.get("status") or "").strip().lower() != "ok":
             continue
         remaining_before = remain_sec(script_start, budget_min)
         log_file = out_dir / "pipeline-deterministic.log"

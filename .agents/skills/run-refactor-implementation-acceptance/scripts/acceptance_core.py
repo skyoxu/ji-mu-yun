@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -35,13 +36,216 @@ def _hash(value: Any, field: str) -> None:
 
 
 def _relative(value: Any, field: str) -> None:
-    if not isinstance(value, str) or not value or Path(value).is_absolute() or ".." in Path(value).parts:
+    if (
+        not isinstance(value, str)
+        or not value
+        or "\0" in value
+        or Path(value).is_absolute()
+        or ".." in Path(value).parts
+    ):
         raise InputError(f"{field} must be a repository-relative path")
 
 
 def _normalized_relative(value: Any, field: str) -> str:
     _relative(value, field)
     return value.replace("\\", "/")
+
+
+def _content_hash(payload: bytes) -> str:
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def _git(repository_root: Path, *arguments: str) -> bytes:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repository_root), *arguments],
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise InputError("Git is unavailable for immutable manifest verification") from exc
+    if result.returncode != 0:
+        raise InputError("Git object lookup failed during immutable manifest verification")
+    return result.stdout
+
+
+def _git_repository_root(target_root: Path) -> Path:
+    output = _git(target_root, "rev-parse", "--show-toplevel")
+    try:
+        repository_root = Path(output.decode("utf-8").strip()).resolve()
+        target_root.resolve().relative_to(repository_root)
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise InputError("target is not contained by the resolved Git repository") from exc
+    return repository_root
+
+
+def _resolve_commit(repository_root: Path, revision: str, field: str) -> str:
+    if not isinstance(revision, str) or not revision.strip() or "\0" in revision:
+        raise InputError(f"{field} does not resolve to an immutable Git commit")
+    try:
+        output = _git(repository_root, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
+        commit = output.decode("ascii", errors="strict").strip()
+    except (InputError, UnicodeDecodeError) as exc:
+        raise InputError(f"{field} does not resolve to an immutable Git commit") from exc
+    if re.fullmatch(r"[0-9a-f]{40,64}", commit) is None:
+        raise InputError(f"{field} does not resolve to an immutable Git commit")
+    return commit
+
+
+def _git_blob(repository_root: Path, commit: str, path: str, field: str) -> bytes:
+    normalized = _normalized_relative(path, field)
+    try:
+        return _git(repository_root, "cat-file", "blob", f"{commit}:{normalized}")
+    except InputError as exc:
+        raise InputError(f"{field} is missing from its declared Git revision") from exc
+
+
+def _git_path_exists(repository_root: Path, commit: str, path: str, field: str) -> bool:
+    normalized = _normalized_relative(path, field)
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repository_root), "cat-file", "-e", f"{commit}:{normalized}"],
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise InputError("Git is unavailable for immutable manifest verification") from exc
+    return result.returncode == 0
+
+
+def _verify_hash(payload: bytes, expected: str, field: str) -> None:
+    if _content_hash(payload) != expected:
+        raise InputError(f"{field} does not match the declared file bytes")
+
+
+def verify_manifest_bytes(
+    target_root: Path,
+    run_input: dict[str, Any],
+    baseline: dict[str, Any],
+    candidate: dict[str, Any],
+) -> dict[str, Any]:
+    """Verify manifest hashes against immutable Git blobs or a frozen snapshot."""
+    baseline_files = baseline.get("files", [])
+    candidate_files = candidate.get("files", [])
+    needs_git = bool(baseline_files) or run_input["candidate_mode"] == "commit"
+    repository_root = _git_repository_root(target_root) if needs_git else None
+    baseline_commit = ""
+    candidate_commit = ""
+
+    if baseline_files or run_input["candidate_mode"] == "commit":
+        assert repository_root is not None
+        baseline_commit = _resolve_commit(repository_root, run_input["baseline_revision"], "baseline_revision")
+    if baseline_files:
+        for item in baseline_files:
+            payload = _git_blob(repository_root, baseline_commit, item["path"], "baseline manifest path")
+            _verify_hash(payload, item["sha256"], f"baseline manifest hash for {item['path']}")
+
+    candidate_mode = run_input["candidate_mode"]
+    if candidate_mode == "commit":
+        assert repository_root is not None
+        candidate_commit = _resolve_commit(repository_root, run_input["candidate_revision"], "candidate_revision")
+        present = [item for item in candidate_files if item.get("candidate_path") is not None]
+        for item in present:
+            path = item["candidate_path"]
+            payload = _git_blob(repository_root, candidate_commit, path, "candidate manifest path")
+            _verify_hash(payload, item["candidate_sha256"], f"candidate manifest hash for {path}")
+        for item in candidate_files:
+            old_path = item.get("baseline_path")
+            if item.get("change_type") not in {"deleted", "renamed"} or old_path is None:
+                continue
+            if item.get("change_type") == "renamed" and old_path == item.get("candidate_path"):
+                continue
+            if _git_path_exists(repository_root, candidate_commit, old_path, "candidate tombstone path"):
+                raise InputError(f"candidate revision still contains removed path: {old_path}")
+        return {
+            "schemaVersion": "acceptance-candidate-custody.v1",
+            "candidateMode": candidate_mode,
+            "baselineResolvedCommit": baseline_commit,
+            "candidateResolvedCommit": candidate_commit,
+            "snapshotPath": "",
+            "snapshotManifestHash": "",
+            "authorizes": [],
+        }
+
+    snapshot_relative = run_input.get("candidate_frozen_snapshot_path")
+    if not isinstance(snapshot_relative, str) or not snapshot_relative.strip():
+        raise InputError(f"{candidate_mode} requires candidate_frozen_snapshot_path")
+    _relative(snapshot_relative, "candidate_frozen_snapshot_path")
+    normalized_snapshot = snapshot_relative.replace("\\", "/").rstrip("/")
+    expected_snapshot = f".acceptance-snapshots/{run_input['run_id']}"
+    if normalized_snapshot != expected_snapshot:
+        raise InputError(f"candidate_frozen_snapshot_path must equal {expected_snapshot}")
+    unresolved_snapshot_root = target_root / Path(snapshot_relative)
+    cursor = target_root
+    for part in Path(snapshot_relative).parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise InputError("candidate_frozen_snapshot_path cannot traverse a symlink")
+    snapshot_root = unresolved_snapshot_root.resolve()
+    try:
+        snapshot_root.relative_to(target_root)
+    except ValueError as exc:
+        raise InputError("candidate_frozen_snapshot_path escapes the declared target root") from exc
+    if snapshot_root == target_root or not snapshot_root.is_dir():
+        raise InputError("candidate_frozen_snapshot_path must name a contained snapshot directory")
+    for item in candidate_files:
+        path = item.get("candidate_path")
+        if path is None:
+            old_path = item.get("baseline_path")
+            if old_path is not None:
+                old_file = snapshot_root / Path(_normalized_relative(old_path, "candidate tombstone path"))
+                if old_file.exists() or old_file.is_symlink():
+                    raise InputError(f"candidate snapshot still contains removed path: {old_path}")
+            continue
+        normalized = _normalized_relative(path, "candidate manifest path")
+        unresolved_file = snapshot_root / Path(normalized)
+        cursor = snapshot_root
+        for part in Path(normalized).parts:
+            cursor = cursor / part
+            if cursor.is_symlink():
+                raise InputError(f"candidate snapshot path cannot traverse a symlink: {path}")
+        frozen_file = unresolved_file.resolve()
+        try:
+            frozen_file.relative_to(snapshot_root)
+        except ValueError as exc:
+            raise InputError(f"candidate snapshot path escapes its frozen root: {path}") from exc
+        if not frozen_file.is_file():
+            raise InputError(f"candidate snapshot file is missing: {path}")
+        try:
+            payload = frozen_file.read_bytes()
+        except OSError as exc:
+            raise InputError(f"candidate snapshot file is unreadable: {path}") from exc
+        _verify_hash(payload, item["candidate_sha256"], f"candidate manifest hash for {path}")
+        old_path = item.get("baseline_path")
+        if item.get("change_type") == "renamed" and old_path is not None and old_path != path:
+            old_file = snapshot_root / Path(_normalized_relative(old_path, "candidate tombstone path"))
+            if old_file.exists() or old_file.is_symlink():
+                raise InputError(f"candidate snapshot still contains removed path: {old_path}")
+    snapshot_binding = {
+        "snapshot_path": normalized_snapshot,
+        "run_id": run_input["run_id"],
+        "candidate_manifest_hash": canonical_hash(candidate),
+        "files": [
+            {
+                "change_type": item.get("change_type"),
+                "baseline_path": item.get("baseline_path"),
+                "candidate_path": item.get("candidate_path"),
+                "candidate_sha256": item.get("candidate_sha256"),
+            }
+            for item in candidate_files
+        ],
+    }
+    return {
+        "schemaVersion": "acceptance-candidate-custody.v1",
+        "candidateMode": candidate_mode,
+        "baselineResolvedCommit": baseline_commit,
+        "candidateResolvedCommit": "",
+        "snapshotPath": normalized_snapshot,
+        "snapshotManifestHash": canonical_hash(snapshot_binding),
+        "authorizes": [],
+    }
 
 
 def parse_run_input(value: Any) -> dict[str, Any]:
@@ -72,6 +276,10 @@ def validate_run_input(value: Any) -> None:
         raise InputError("run input lacks required fields: " + ", ".join(sorted(missing)))
     if parsed.get("candidate_mode") not in _CANDIDATE_MODES:
         raise InputError("run input candidate_mode is required")
+    if "\0" in parsed["baseline_revision"] or "\0" in parsed["candidate_revision"]:
+        raise InputError("run input revisions cannot contain NUL")
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", parsed["run_id"]) is None:
+        raise InputError("run input run_id is invalid")
     if not isinstance(parsed.get("target_plan_paths"), list) or not parsed["target_plan_paths"]:
         raise InputError("run input target_plan_paths is required")
     if parsed.get("code_review_domain") != "phase_service":
@@ -80,6 +288,13 @@ def validate_run_input(value: Any) -> None:
         _hash(parsed[field], field)
     for field in ("baseline_content_manifest_path", "candidate_content_manifest_path", "code_review_policy_path"):
         _relative(parsed[field], field)
+    snapshot_path = parsed.get("candidate_frozen_snapshot_path")
+    if parsed["candidate_mode"] in {"dirty_worktree", "proposed_commit_set"}:
+        normalized_snapshot = _normalized_relative(snapshot_path, "candidate_frozen_snapshot_path").rstrip("/")
+        if normalized_snapshot != f".acceptance-snapshots/{parsed['run_id']}":
+            raise InputError("candidate_frozen_snapshot_path must use the run-scoped .acceptance-snapshots namespace")
+    elif snapshot_path is not None:
+        raise InputError("commit mode cannot declare candidate_frozen_snapshot_path")
     for field in ("allowed_write_roots", "forbidden_write_roots", "changed_paths", "affected_consumer_refs"):
         if not isinstance(parsed.get(field), list):
             raise InputError(f"run input {field} is required")

@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -16,6 +17,27 @@ from _repair_guidance import build_execution_context, build_repair_guide, render
 
 
 class RepairGuidanceTests(unittest.TestCase):
+    def test_build_execution_context_should_preserve_empty_captured_git_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir, mock.patch(
+            "_repair_guidance._run_git",
+            side_effect=lambda args: " M changed-after-start.txt" if args == ["status", "--short"] else "later-head",
+        ):
+            payload = build_execution_context(
+                task_id="1",
+                requested_run_id="abc",
+                run_id="def",
+                out_dir=Path(tmpdir),
+                delivery_profile="fast-ship",
+                security_profile="host-safe",
+                llm_review_context={},
+                summary={"status": "ok", "steps": []},
+                git_fingerprint={"head": "captured-head", "status_short": []},
+            )
+
+        self.assertEqual("captured-head", payload["git"]["head"])
+        self.assertEqual([], payload["git"]["status_short"])
+        self.assertFalse(payload["git"]["dirty"])
+
     def test_build_execution_context_should_expose_marathon_recovery_pointers(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)

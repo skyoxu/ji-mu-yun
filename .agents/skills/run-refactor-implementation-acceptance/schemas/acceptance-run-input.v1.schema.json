@@ -3,5 +3,15 @@
   "title": "Acceptance Run Input",
   "type": "object",
   "required": ["run_id", "created_utc", "change_id", "target", "target_plan_paths", "baseline_revision", "candidate_revision", "candidate_mode", "execution_mode", "baseline_content_manifest_path", "baseline_content_manifest_hash", "candidate_content_manifest_path", "candidate_content_manifest_hash", "code_review_domain", "code_review_policy_path", "code_review_policy_hash", "target_plan_hash", "validator_hash", "adapter_id", "adapter_version", "adapter_hash"],
-  "properties": {"execution_mode": {"enum": ["evidence_only", "controlled_validation"]}, "candidate_mode": {"enum": ["commit", "dirty_worktree", "proposed_commit_set"]}, "code_review_domain": {"const": "phase_service"}}
+  "properties": {
+    "execution_mode": {"enum": ["evidence_only", "controlled_validation"]},
+    "candidate_mode": {"enum": ["commit", "dirty_worktree", "proposed_commit_set"]},
+    "candidate_frozen_snapshot_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\.acceptance-snapshots/[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "description": "Required by prepare-run for new dirty_worktree and proposed_commit_set inputs; optional here so historical v1 artifacts remain readable."
+    },
+    "code_review_domain": {"const": "phase_service"}
+  }
 }

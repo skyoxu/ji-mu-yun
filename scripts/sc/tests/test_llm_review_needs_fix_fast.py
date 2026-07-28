@@ -238,7 +238,7 @@ class NeedsFixFastDeterministicReuseTests(unittest.TestCase):
             assert step is not None
             self.assertEqual("reused", step["status"])
             self.assertEqual(0, int(step["rc"]))
-            self.assertEqual(str(out_dir), step["reported_out_dir"])
+            self.assertTrue(out_dir.samefile(Path(step["reported_out_dir"])))
             self.assertEqual("run-a", step["reused_run_id"])
 
     def test_try_reuse_latest_deterministic_step_should_reject_git_snapshot_mismatch(self) -> None:
@@ -665,6 +665,51 @@ class NeedsFixFastBudgetGuardTests(unittest.TestCase):
 
 
 class NeedsFixFastMinimalAcceptanceTests(unittest.TestCase):
+    def test_minimal_acceptance_reuse_requires_successful_equivalent_step_and_child_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source_dir = root / "logs" / "ci" / "2026-04-01" / "sc-needs-fix-fast-task-56"
+            child_dir = source_dir / "acceptance"
+            child_dir.mkdir(parents=True)
+            child_summary = child_dir / "summary.json"
+            planned_cmd = ["py", "-3", "scripts/sc/acceptance_check.py", "--only", "adr"]
+            source_payload = {
+                "args": {"delivery_profile": "fast-ship", "security_profile": "host-safe"},
+                "deterministic_plan": {"mode": "minimal-acceptance", "change_scope": {"change_fingerprint": "fingerprint"}},
+                "timeline": [{
+                    "name": "pipeline-deterministic-minimal-acceptance",
+                    "status": "fail",
+                    "rc": 1,
+                    "cmd": planned_cmd,
+                    "reported_out_dir": str(child_dir),
+                    "summary_file": str(child_summary),
+                }],
+            }
+            child_summary.write_text(json.dumps({"status": "ok"}), encoding="utf-8")
+            (source_dir / "summary.json").write_text(json.dumps(source_payload), encoding="utf-8")
+            kwargs = {
+                "task_id": "56",
+                "delivery_profile": "fast-ship",
+                "security_profile": "host-safe",
+                "planned_cmd": planned_cmd,
+                "out_dir": root / "current",
+                "change_scope": {"change_fingerprint": "fingerprint"},
+                "script_start": needs_fix_fast.time.monotonic(),
+                "budget_min": 10,
+            }
+
+            with mock.patch.object(needs_fix_fast, "repo_root", return_value=root):
+                self.assertIsNone(needs_fix_fast.try_reuse_matching_minimal_acceptance_step(**kwargs))
+                source_payload["timeline"][0].update({"status": "ok", "rc": 0})
+                child_summary.write_text(json.dumps({"status": "fail"}), encoding="utf-8")
+                (source_dir / "summary.json").write_text(json.dumps(source_payload), encoding="utf-8")
+                self.assertIsNone(needs_fix_fast.try_reuse_matching_minimal_acceptance_step(**kwargs))
+                child_summary.write_text(json.dumps({"status": "ok"}), encoding="utf-8")
+                reused = needs_fix_fast.try_reuse_matching_minimal_acceptance_step(**kwargs)
+
+            self.assertIsNotNone(reused)
+            self.assertEqual("reused", reused["status"])
+
     def test_main_should_switch_to_minimal_acceptance_plan_for_semantic_only_changes(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -1127,7 +1172,7 @@ class NeedsFixFastTargetedTimeoutTests(unittest.TestCase):
 
 
 class NeedsFixFastAlreadyCleanTests(unittest.TestCase):
-    def test_main_should_noop_when_latest_pipeline_is_already_clean_and_only_docs_changed(self) -> None:
+    def test_wrapper_should_delegate_clean_result_reuse_to_pipeline_even_for_docs_delta(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             latest_out_dir = root / "logs" / "ci" / "2026-04-05" / "sc-review-pipeline-task-56-run-ok"
@@ -1198,46 +1243,17 @@ class NeedsFixFastAlreadyCleanTests(unittest.TestCase):
             )
 
             out_dir = root / "logs" / "ci" / "2026-04-06" / "sc-needs-fix-fast-task-56"
-            argv = [
-                "llm_review_needs_fix_fast.py",
-                "--task-id",
-                "56",
-                "--delivery-profile",
-                "fast-ship",
-            ]
-            with (
-                mock.patch.object(sys, "argv", argv),
-                mock.patch.object(needs_fix_fast, "repo_root", return_value=root),
-                mock.patch.object(needs_fix_fast, "ci_dir", return_value=out_dir),
-                mock.patch.object(
-                    needs_fix_fast,
-                    "current_git_fingerprint",
-                    return_value={"head": "current-head", "status_short": []},
-                ),
-                mock.patch.object(
-                    needs_fix_fast,
-                    "classify_change_scope_between_snapshots",
-                    return_value={
-                        "deterministic_strategy": "reuse-latest",
-                        "changed_paths": ["decision-logs/task-56.md"],
-                        "unsafe_paths": [],
-                    },
-                ),
-                mock.patch.object(needs_fix_fast, "run_step") as run_step_mock,
-            ):
-                rc = needs_fix_fast.main()
+            result = needs_fix_fast.try_skip_when_latest_pipeline_already_clean(
+                task_id="56",
+                delivery_profile="fast-ship",
+                security_profile="host-safe",
+                out_dir=out_dir,
+                script_start=0.0,
+                budget_min=10,
+            )
+            self.assertIsNone(result)
 
-            self.assertEqual(0, rc)
-            run_step_mock.assert_not_called()
-            summary = json.loads((out_dir / "summary.json").read_text(encoding="utf-8"))
-            self.assertEqual("ok", summary["status"])
-            self.assertEqual("latest_pipeline_already_clean", summary["reason"])
-            self.assertEqual("continue", summary["recommended_action"])
-            self.assertIn("already clean", summary["recommended_action_why"].lower())
-            self.assertEqual("reuse-latest", summary["change_scope"]["deterministic_strategy"])
-            self.assertEqual("pipeline-clean-skip", summary["timeline"][0]["name"])
-
-    def test_main_should_noop_for_final_pass_when_latest_pipeline_is_already_clean(self) -> None:
+    def test_wrapper_should_delegate_final_pass_clean_result_reuse_to_pipeline(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             latest_out_dir = root / "logs" / "ci" / "2026-04-05" / "sc-review-pipeline-task-56-run-ok"
@@ -1312,29 +1328,15 @@ class NeedsFixFastAlreadyCleanTests(unittest.TestCase):
             )
 
             out_dir = root / "logs" / "ci" / "2026-04-06" / "sc-needs-fix-fast-task-56"
-            argv = [
-                "llm_review_needs_fix_fast.py",
-                "--task-id",
-                "56",
-                "--delivery-profile",
-                "standard",
-                "--final-pass",
-            ]
-            with (
-                mock.patch.object(sys, "argv", argv),
-                mock.patch.object(needs_fix_fast, "repo_root", return_value=root),
-                mock.patch.object(needs_fix_fast, "ci_dir", return_value=out_dir),
-                mock.patch.object(needs_fix_fast, "current_git_fingerprint", return_value={"head": "same-head", "status_short": []}),
-                mock.patch.object(needs_fix_fast, "run_step") as run_step_mock,
-            ):
-                rc = needs_fix_fast.main()
-
-            self.assertEqual(0, rc)
-            run_step_mock.assert_not_called()
-            summary = json.loads((out_dir / "summary.json").read_text(encoding="utf-8"))
-            self.assertEqual("ok", summary["status"])
-            self.assertEqual("latest_pipeline_already_clean", summary["reason"])
-            self.assertEqual("pipeline-clean-skip", summary["timeline"][0]["name"])
+            result = needs_fix_fast.try_skip_when_latest_pipeline_already_clean(
+                task_id="56",
+                delivery_profile="standard",
+                security_profile="strict",
+                out_dir=out_dir,
+                script_start=0.0,
+                budget_min=10,
+            )
+            self.assertIsNone(result)
 
 
 class NeedsFixFastUnknownStopLossTests(unittest.TestCase):

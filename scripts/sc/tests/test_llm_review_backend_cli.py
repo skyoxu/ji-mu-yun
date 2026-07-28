@@ -67,7 +67,7 @@ class LlmReviewBackendCliTests(unittest.TestCase):
             timeout_sec=900,
             agent_timeout_sec=300,
             prompt_max_chars=32000,
-            self_check=True,
+            self_check=False,
             dry_run_plan=False,
             prompts_only=False,
             llm_backend="openai-api",

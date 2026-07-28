@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from _llm_review_identity import validate_pipeline_llm_review_metrics
+
 
 RUN_ID_RE = re.compile(r"^[A-Fa-f0-9]{32}$")
 TASK_ID_RE = re.compile(r"^[0-9]+$")
@@ -98,6 +100,7 @@ def validate_pipeline_execution_context_without_jsonschema(payload: dict[str, An
         "latest_summary_signals",
         "chapter6_hints",
         "llm_review",
+        "llm_review_metrics",
         "approval",
         "diagnostics",
     }
@@ -144,6 +147,8 @@ def validate_pipeline_execution_context_without_jsonschema(payload: dict[str, An
         errors.append("$.finished_at_utc: must be string when present")
     if "security_profile" in payload and str(payload.get("security_profile") or "") not in {"strict", "host-safe"}:
         errors.append("$.security_profile: must be one of ['strict', 'host-safe'] when present")
+    if "llm_review_metrics" in payload:
+        errors.extend(validate_pipeline_llm_review_metrics(payload.get("llm_review_metrics"), base_path="$.llm_review_metrics"))
     if not isinstance(payload.get("failed_step"), str):
         errors.append("$.failed_step: must be string")
     for key in ("paths", "git", "recovery", "marathon", "agent_review", "llm_review"):

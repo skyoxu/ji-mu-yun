@@ -6,7 +6,15 @@ Engine for sc-llm-review.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import importlib.metadata
+import json
+import os
+import shutil
+import subprocess
 import time
+import tomllib
+from pathlib import Path
 from typing import Any
 
 from _acceptance_artifacts import build_acceptance_evidence
@@ -22,6 +30,12 @@ from _llm_review_cli import (
     validate_args,
 )
 from _llm_review_exec import auto_resolve_commit_for_task, build_diff_context, run_codex_exec
+from _llm_review_identity import (
+    LLM_INPUT_IDENTITY_SCHEMA,
+    LLM_REVIEW_METRICS_SCHEMA,
+    LLM_RUNTIME_IDENTITY_SCHEMA,
+    canonical_hash,
+)
 from _llm_review_models import ReviewResult
 from _llm_review_prompting import (
     agent_prompt,
@@ -39,6 +53,214 @@ from _util import ci_dir, repo_rel, repo_root, write_json, write_text
 
 _SEMANTIC_AGENT = "semantic-equivalence-auditor"
 _DEFERRED_REASON_CODE = "deferred_until_prior_reviewers_clean"
+
+
+def _sha256_text(value: str) -> str:
+    return "sha256:" + hashlib.sha256(str(value or "").encode("utf-8")).hexdigest()
+
+
+def _canonical_hash(value: Any) -> str:
+    return canonical_hash(value)
+
+
+def _hash_optional_file(path: Path) -> str:
+    try:
+        return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else "absent"
+    except OSError:
+        return "unresolved"
+
+
+def _command_version_sha256(executable: str) -> str:
+    try:
+        result = subprocess.run(
+            [executable, "--version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return "unresolved"
+    if result.returncode != 0 or not result.stdout:
+        return "unresolved"
+    return "sha256:" + hashlib.sha256(bytes(result.stdout)).hexdigest()
+
+
+def _backend_adapter_sha256() -> str:
+    payload = bytearray()
+    for name in ("_llm_backend.py", "_llm_review_exec.py"):
+        path = Path(__file__).resolve().with_name(name)
+        try:
+            payload.extend(name.encode("ascii"))
+            payload.extend(b"\0")
+            payload.extend(path.read_bytes())
+            payload.extend(b"\0")
+        except OSError:
+            return "unresolved"
+    return "sha256:" + hashlib.sha256(bytes(payload)).hexdigest()
+
+
+def _runtime_input_descriptor(args: argparse.Namespace) -> dict[str, Any]:
+    backend = str(getattr(args, "llm_backend", "") or "").strip()
+    model = "unresolved"
+    config_sha256 = "not-applicable"
+    executable_sha256 = "not-applicable"
+    version_sha256 = "not-applicable"
+    endpoint_sha256 = "not-applicable"
+    sdk_version = ""
+    errors: list[str] = []
+    adapter_sha256 = _backend_adapter_sha256()
+    if adapter_sha256 == "unresolved":
+        errors.append("backend_adapter_unreadable")
+    if backend == "openai-api":
+        model = str(os.environ.get("SC_OPENAI_MODEL") or os.environ.get("OPENAI_MODEL") or "gpt-5").strip() or "gpt-5"
+        endpoint = str(os.environ.get("OPENAI_BASE_URL") or "https://api.openai.com/v1").strip()
+        endpoint_sha256 = _sha256_text(endpoint)
+        try:
+            sdk_version = importlib.metadata.version("openai")
+            version_sha256 = _sha256_text(sdk_version)
+        except importlib.metadata.PackageNotFoundError:
+            sdk_version = "unresolved"
+            version_sha256 = "unresolved"
+            errors.append("openai_sdk_unresolved")
+        # Credential/account identity is deliberately not persisted. Without an
+        # explicit non-secret cache scope, API results are not reusable.
+        errors.append("openai_credential_scope_unbound")
+    elif backend == "codex-cli":
+        codex_root = Path(str(os.environ.get("CODEX_HOME") or (Path.home() / ".codex")))
+        config_path = codex_root / "config.toml"
+        config_sha256 = _hash_optional_file(config_path)
+        executable = shutil.which("codex")
+        if executable:
+            executable_sha256 = _hash_optional_file(Path(executable))
+            version_sha256 = _command_version_sha256(executable)
+        else:
+            executable_sha256 = "unresolved"
+            version_sha256 = "unresolved"
+            errors.append("codex_executable_unresolved")
+        try:
+            config_payload = tomllib.loads(config_path.read_text(encoding="utf-8")) if config_path.is_file() else {}
+            model = str(config_payload.get("model") or "").strip() or "unresolved"
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError):
+            model = "unresolved"
+            errors.append("codex_config_unreadable")
+        if config_sha256 in {"absent", "unresolved"}:
+            errors.append("codex_config_unbound")
+        if model == "unresolved":
+            errors.append("codex_model_unresolved")
+        if executable_sha256 == "unresolved":
+            errors.append("codex_executable_unreadable")
+        if version_sha256 == "unresolved":
+            errors.append("codex_version_unresolved")
+    else:
+        errors.append("backend_unresolved")
+    return {
+        "schema_version": LLM_RUNTIME_IDENTITY_SCHEMA,
+        "backend": backend,
+        "model": model,
+        "reasoning_effort": str(getattr(args, "model_reasoning_effort", "") or "").strip(),
+        "sandbox": "read-only",
+        "prompt_transport": "stdin",
+        "config_sha256": config_sha256,
+        "backend_executable_sha256": executable_sha256,
+        "backend_version_sha256": version_sha256,
+        "backend_adapter_sha256": adapter_sha256,
+        "endpoint_sha256": endpoint_sha256,
+        "sdk_version": sdk_version,
+        "complete": not errors,
+        "error_codes": sorted(set(errors)),
+    }
+
+
+def _review_out_dir(default_name: str) -> Path:
+    requested = str(os.environ.get("SC_LLM_REVIEW_OUT_DIR") or "").strip()
+    if not requested:
+        return ci_dir(default_name)
+    candidate = Path(requested).resolve()
+    allowed_root = (repo_root() / "logs" / "ci").resolve()
+    try:
+        candidate.relative_to(allowed_root)
+    except ValueError as exc:
+        raise ValueError("SC_LLM_REVIEW_OUT_DIR must stay beneath logs/ci") from exc
+    candidate.mkdir(parents=True, exist_ok=True)
+    return candidate
+
+
+def _build_review_metrics(
+    results: list[ReviewResult],
+    *,
+    args: argparse.Namespace,
+    requested_agents: list[str],
+    security_profile: str,
+    threat_model: str,
+    template_meta: dict[str, Any],
+    runtime: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    prompt_rows: list[dict[str, Any]] = []
+    prompt_chars_by_agent: dict[str, int] = {}
+    status_counts: dict[str, int] = {}
+    llm_invocation_count = 0
+    llm_duration_sec_total = 0.0
+    output_chars_total = 0
+    prompt_truncated_agents: list[str] = []
+    for result in results:
+        status = str(result.status or "unknown").strip().lower() or "unknown"
+        status_counts[status] = status_counts.get(status, 0) + 1
+        details = result.details if isinstance(result.details, dict) else {}
+        prompt_sha256 = str(details.get("prompt_sha256") or "").strip()
+        prompt_chars = int(details.get("prompt_chars") or 0)
+        if prompt_sha256:
+            prompt_rows.append({"agent": result.agent, "prompt_sha256": prompt_sha256})
+            prompt_chars_by_agent[result.agent] = prompt_chars
+        if details.get("llm_invoked") is True:
+            llm_invocation_count += 1
+        llm_duration_sec_total += float(details.get("llm_duration_sec") or 0.0)
+        output_chars_total += int(details.get("output_chars") or 0)
+        prompt_budget = details.get("prompt_budget") if isinstance(details.get("prompt_budget"), dict) else {}
+        if prompt_budget.get("truncated") is True:
+            prompt_truncated_agents.append(result.agent)
+
+    requested_llm_agents = [agent for agent in requested_agents if agent not in DETERMINISTIC_AGENTS]
+    observed_prompt_agents = {row["agent"] for row in prompt_rows}
+    identity_payload = {
+        "schema_version": LLM_INPUT_IDENTITY_SCHEMA,
+        "requested_agents": list(requested_agents),
+        "prompt_set": prompt_rows,
+        "runtime": runtime,
+        "delivery_profile": str(getattr(args, "delivery_profile", "") or "").strip(),
+        "security_profile": security_profile,
+        "threat_model": threat_model,
+        "review_profile": str(getattr(args, "review_profile", "") or "").strip(),
+        "template_sha256": str(template_meta.get("review_template_sha256") or "absent"),
+        "diff_mode": str(getattr(args, "diff_mode", "") or "").strip(),
+        "semantic_gate": str(getattr(args, "semantic_gate", "") or "").strip(),
+        "prompt_max_chars": int(getattr(args, "prompt_max_chars", 0) or 0),
+        "prompt_budget_gate": str(getattr(args, "prompt_budget_gate", "") or "").strip(),
+        "skip_agent_prompts": bool(getattr(args, "skip_agent_prompts", False)),
+    }
+    identity_complete = set(requested_llm_agents).issubset(observed_prompt_agents) and runtime.get("complete") is True
+    input_identity = {
+        **identity_payload,
+        "complete": identity_complete,
+        "input_identity_hash": _canonical_hash(identity_payload) if identity_complete else "",
+    }
+    metrics = {
+        "schema_version": LLM_REVIEW_METRICS_SCHEMA,
+        "requested_reviewer_count": len(requested_agents),
+        "result_count": len(results),
+        "status_counts": status_counts,
+        "llm_invocation_count": llm_invocation_count,
+        "llm_duration_sec_total": round(llm_duration_sec_total, 3),
+        "prompt_chars_total": sum(prompt_chars_by_agent.values()),
+        "prompt_chars_max": max(prompt_chars_by_agent.values(), default=0),
+        "prompt_chars_by_agent": prompt_chars_by_agent,
+        "prompt_set_sha256": _canonical_hash(prompt_rows),
+        "prompt_truncated_count": len(prompt_truncated_agents),
+        "prompt_truncated_agents": prompt_truncated_agents,
+        "output_chars_total": output_chars_total,
+        "runtime": runtime,
+    }
+    return metrics, input_identity
 
 
 def _prompt_shape_for_agent(
@@ -270,7 +492,7 @@ def main() -> int:
     if str(args.model_reasoning_effort or "").strip():
         codex_configs.append(f'model_reasoning_effort="{str(args.model_reasoning_effort).strip()}"')
 
-    out_dir = ci_dir(f"sc-llm-review-task-{triplet.task_id}") if triplet else ci_dir("sc-llm-review")
+    out_dir = _review_out_dir(f"sc-llm-review-task-{triplet.task_id}" if triplet else "sc-llm-review")
     claude_agents_root = resolve_claude_agents_root(args.claude_agents_root)
     security_profile = resolve_security_profile(args.security_profile)
     requested_agents = resolve_agents(args.agents, str(args.semantic_gate or "skip").strip().lower())
@@ -279,6 +501,7 @@ def main() -> int:
     per_agent_overrides = parse_agent_timeout_overrides(args.agent_timeouts)
     total_timeout_sec = int(args.timeout_sec)
     per_agent_timeout_sec = int(args.agent_timeout_sec)
+    runtime_input = _runtime_input_descriptor(args)
 
     threat_model = resolve_threat_model(args.threat_model)
     threat_ctx = build_threat_model_context(threat_model)
@@ -296,6 +519,7 @@ def main() -> int:
         if p.is_file():
             review_template = truncate(strip_emoji(read_text(p)), max_chars=8_000)
             template_meta["review_template_source"] = template_path_arg.replace("\\", "/")
+            template_meta["review_template_sha256"] = _sha256_text(review_template)
         else:
             template_meta["review_template_source"] = None
             template_meta["review_template_error"] = f"missing:{template_path_arg}"
@@ -304,6 +528,7 @@ def main() -> int:
         if p.is_file():
             review_template = truncate(strip_emoji(read_text(p)), max_chars=8_000)
             template_meta["review_template_source"] = str(p.relative_to(repo_root())).replace("\\", "/")
+            template_meta["review_template_sha256"] = _sha256_text(review_template)
         else:
             template_meta["review_template_source"] = None
             template_meta["review_template_error"] = "missing:built_in_bmad_godot_template"
@@ -380,6 +605,7 @@ def main() -> int:
             continue
 
         base_prompt, prompt_meta = agent_prompt(agent, claude_agents_root=claude_agents_root, skip_agent_files=bool(args.skip_agent_prompts))
+        agent_prompt_sha256 = _sha256_text(base_prompt)
         prompt_shape = _prompt_shape_for_agent(
             agent,
             delivery_profile=str(getattr(args, "delivery_profile", "") or ""),
@@ -426,6 +652,7 @@ def main() -> int:
             allow_drop_acceptance_semantic=(agent != "semantic-equivalence-auditor"),
         )
         prompt_used, budget_meta = apply_prompt_budget(prompt, max_chars=int(args.prompt_max_chars))
+        prompt_sha256 = _sha256_text(prompt_used)
         if bool(budget_meta.get("truncated")):
             prompt_truncated_agents.append(agent)
             if str(args.prompt_budget_gate) in {"warn", "require"}:
@@ -445,7 +672,7 @@ def main() -> int:
                     agent=agent,
                     status="skipped",
                     prompt_path=str(prompt_path.relative_to(repo_root())).replace("\\", "/"),
-                    details={"execution_stage": execution_stage, "trace": str(trace_path.relative_to(repo_root())).replace("\\", "/"), "claude_agents_root": str(claude_agents_root), "agent_prompt_source": prompt_meta.get("agent_prompt_source"), "security_profile": security_profile_payload(security_profile), "prompt_budget": budget_meta, "prompt_shape": {**prompt_shape, **prompt_fit_meta}, "acceptance_semantic_meta": acceptance_semantic_meta, "note": "--prompts-only: LLM execution skipped."},
+                    details={"execution_stage": execution_stage, "trace": str(trace_path.relative_to(repo_root())).replace("\\", "/"), "claude_agents_root": str(claude_agents_root), "agent_prompt_source": prompt_meta.get("agent_prompt_source"), "agent_prompt_sha256": agent_prompt_sha256, "prompt_sha256": prompt_sha256, "prompt_chars": len(prompt_used), "llm_invoked": False, "llm_duration_sec": 0.0, "output_chars": 0, "security_profile": security_profile_payload(security_profile), "prompt_budget": budget_meta, "prompt_shape": {**prompt_shape, **prompt_fit_meta}, "acceptance_semantic_meta": acceptance_semantic_meta, "note": "--prompts-only: LLM execution skipped."},
                 )
             )
             write_text(trace_path, "--prompts-only: LLM execution skipped.\n")
@@ -454,6 +681,7 @@ def main() -> int:
         agent_cap = per_agent_overrides.get(agent, per_agent_timeout_sec)
         remaining_before_sec = max(0, int(remaining))
         effective_timeout = max(1, int(agent_cap))
+        llm_started = time.perf_counter()
         rc, trace_out, cmd = run_codex_exec(
             backend=str(args.llm_backend),
             prompt=prompt_used,
@@ -461,6 +689,7 @@ def main() -> int:
             timeout_sec=effective_timeout,
             codex_configs=codex_configs,
         )
+        llm_duration_sec = round(max(0.0, time.perf_counter() - llm_started), 3)
         write_text(trace_path, trace_out)
 
         last_msg = ""
@@ -505,10 +734,19 @@ def main() -> int:
                 cmd=cmd,
                 prompt_path=str(prompt_path.relative_to(repo_root())).replace("\\", "/"),
                 output_path=str(output_path.relative_to(repo_root())).replace("\\", "/"),
-                details={"execution_stage": execution_stage, "trace": str(trace_path.relative_to(repo_root())).replace("\\", "/"), "claude_agents_root": str(claude_agents_root), "agent_prompt_source": prompt_meta.get("agent_prompt_source"), "security_profile": security_profile_payload(security_profile), "total_timeout_sec": total_timeout_sec, "agent_timeout_sec": effective_timeout, "remaining_before_sec": remaining_before_sec, "prompt_budget": budget_meta, "prompt_shape": {**prompt_shape, **prompt_fit_meta}, "acceptance_semantic_meta": acceptance_semantic_meta, "verdict": verdict, "verdict_normalization": verdict_normalization, "note": "This step is best-effort. Use --strict to make it a hard gate."},
+                details={"execution_stage": execution_stage, "trace": str(trace_path.relative_to(repo_root())).replace("\\", "/"), "claude_agents_root": str(claude_agents_root), "agent_prompt_source": prompt_meta.get("agent_prompt_source"), "agent_prompt_sha256": agent_prompt_sha256, "prompt_sha256": prompt_sha256, "prompt_chars": len(prompt_used), "llm_invoked": True, "llm_duration_sec": llm_duration_sec, "output_chars": len(last_msg), "security_profile": security_profile_payload(security_profile), "total_timeout_sec": total_timeout_sec, "agent_timeout_sec": effective_timeout, "remaining_before_sec": remaining_before_sec, "prompt_budget": budget_meta, "prompt_shape": {**prompt_shape, **prompt_fit_meta}, "acceptance_semantic_meta": acceptance_semantic_meta, "verdict": verdict, "verdict_normalization": verdict_normalization, "note": "This step is best-effort. Use --strict to make it a hard gate."},
             )
         )
 
+    review_metrics, input_identity = _build_review_metrics(
+        results,
+        args=args,
+        requested_agents=requested_agents,
+        security_profile=security_profile,
+        threat_model=threat_model,
+        template_meta=template_meta,
+        runtime=runtime_input,
+    )
     summary = summary_base(
         mode="uncommitted" if args.uncommitted else ("commit" if args.commit else "base"),
         out_dir=out_dir,
@@ -528,6 +766,8 @@ def main() -> int:
             "requested_agents": requested_agents,
             "execution_plan": execution_plan,
             "results": [r.__dict__ for r in results],
+            "review_metrics": review_metrics,
+            "input_identity": input_identity,
             "prompt_budget": {
                 "max_chars": int(args.prompt_max_chars),
                 "gate": str(args.prompt_budget_gate),

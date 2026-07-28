@@ -15,6 +15,7 @@ from acceptance_core import (
     validate_baseline_manifest,
     validate_candidate_manifest,
     validate_run_input,
+    verify_manifest_bytes,
 )
 from package_validation import validate_package
 from requirement_inventory import extract_requirement_inventory
@@ -80,10 +81,17 @@ def prepare_run(input_path: str, output_path: str) -> dict:
         raise InputError("baseline content manifest hash is stale")
     if canonical_hash(candidate) != value["candidate_content_manifest_hash"]:
         raise InputError("candidate content manifest hash is stale")
+    candidate_custody = verify_manifest_bytes(target_root, value, baseline, candidate)
     output = Path(output_path)
     if output.exists():
         raise InputError("run input output is append-only")
-    result = {"schemaVersion": "acceptance-run-input.v1", "input": value, "inputHash": canonical_hash(value), "authorizes": []}
+    result = {
+        "schemaVersion": "acceptance-run-input.v1",
+        "input": value,
+        "inputHash": canonical_hash(value),
+        "candidateCustody": candidate_custody,
+        "authorizes": [],
+    }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
     return result

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -12,6 +14,75 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 import acceptance_cli
+
+
+def _sha256(payload: bytes) -> str:
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def _git(repository_root: Path, *arguments: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(repository_root), *arguments],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=True,
+    )
+    return result.stdout.strip()
+
+
+def _run_input(
+    target_root: Path,
+    baseline: dict,
+    candidate: dict,
+    *,
+    baseline_revision: str = "baseline",
+    candidate_revision: str = "candidate",
+    candidate_mode: str = "commit",
+    snapshot_path: str | None = None,
+) -> dict:
+    changed_paths = sorted(
+        item.get("candidate_path") or item.get("baseline_path")
+        for item in candidate["files"]
+        if item["change_type"] != "unchanged"
+    )
+    value = {
+        "target": str(target_root),
+        "run_id": "run",
+        "created_utc": "2026-07-28T00:00:00Z",
+        "change_id": "change",
+        "baseline_revision": baseline_revision,
+        "candidate_revision": candidate_revision,
+        "candidate_mode": candidate_mode,
+        "target_plan_paths": ["plan"],
+        "execution_mode": "evidence_only",
+        "baseline_content_manifest_path": "baseline.json",
+        "baseline_content_manifest_hash": acceptance_cli.canonical_hash(baseline),
+        "candidate_content_manifest_path": "candidate.json",
+        "candidate_content_manifest_hash": acceptance_cli.canonical_hash(candidate),
+        "code_review_domain": "phase_service",
+        "code_review_policy_path": "policy.json",
+        "code_review_policy_hash": "sha256:" + "1" * 64,
+        "target_plan_hash": "sha256:" + "2" * 64,
+        "validator_hash": "sha256:" + "3" * 64,
+        "adapter_id": "adapter",
+        "adapter_version": "1",
+        "adapter_hash": "sha256:" + "4" * 64,
+        "allowed_write_roots": [],
+        "forbidden_write_roots": [],
+        "changed_paths": changed_paths,
+        "affected_consumer_refs": [],
+    }
+    if snapshot_path is not None:
+        value["candidate_frozen_snapshot_path"] = snapshot_path
+    return value
+
+
+def _write_prepare_inputs(target_root: Path, baseline: dict, candidate: dict, run_input: dict) -> None:
+    target_root.mkdir(parents=True, exist_ok=True)
+    (target_root / "baseline.json").write_text(json.dumps(baseline), encoding="utf-8")
+    (target_root / "candidate.json").write_text(json.dumps(candidate), encoding="utf-8")
+    (target_root / "input.json").write_text(json.dumps(run_input), encoding="utf-8")
 
 
 class RunInputTests(unittest.TestCase):
@@ -63,7 +134,8 @@ class RunInputTests(unittest.TestCase):
             candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
             (root / "baseline.json").write_text(json.dumps(baseline), encoding="utf-8")
             (root / "candidate.json").write_text(json.dumps(candidate), encoding="utf-8")
-            value = {"target": str(root), "run_id": "run", "created_utc": "2026-07-28T00:00:00Z", "change_id": "change", "baseline_revision": "a", "candidate_revision": "b", "candidate_mode": "commit", "target_plan_paths": ["plan"], "execution_mode": "evidence_only", "baseline_content_manifest_path": "baseline.json", "baseline_content_manifest_hash": canonical_hash(baseline), "candidate_content_manifest_path": "candidate.json", "candidate_content_manifest_hash": canonical_hash(candidate), "code_review_domain": "phase_service", "code_review_policy_path": "policy.json", "code_review_policy_hash": "sha256:" + "1" * 64, "target_plan_hash": "sha256:" + "2" * 64, "validator_hash": "sha256:" + "3" * 64, "adapter_id": "adapter", "adapter_version": "1", "adapter_hash": "sha256:" + "4" * 64, "allowed_write_roots": [], "forbidden_write_roots": [], "changed_paths": [], "affected_consumer_refs": []}
+            (root / ".acceptance-snapshots" / "run").mkdir(parents=True)
+            value = {"target": str(root), "run_id": "run", "created_utc": "2026-07-28T00:00:00Z", "change_id": "change", "baseline_revision": "a", "candidate_revision": "b", "candidate_mode": "dirty_worktree", "candidate_frozen_snapshot_path": ".acceptance-snapshots/run", "target_plan_paths": ["plan"], "execution_mode": "evidence_only", "baseline_content_manifest_path": "baseline.json", "baseline_content_manifest_hash": canonical_hash(baseline), "candidate_content_manifest_path": "candidate.json", "candidate_content_manifest_hash": canonical_hash(candidate), "code_review_domain": "phase_service", "code_review_policy_path": "policy.json", "code_review_policy_hash": "sha256:" + "1" * 64, "target_plan_hash": "sha256:" + "2" * 64, "validator_hash": "sha256:" + "3" * 64, "adapter_id": "adapter", "adapter_version": "1", "adapter_hash": "sha256:" + "4" * 64, "allowed_write_roots": [], "forbidden_write_roots": [], "changed_paths": [], "affected_consumer_refs": []}
             (root / "input.json").write_text(json.dumps(value), encoding="utf-8")
             previous = Path.cwd()
             try:
@@ -73,6 +145,198 @@ class RunInputTests(unittest.TestCase):
                 os.chdir(previous)
             self.assertEqual([], result["authorizes"])
             self.assertTrue((root / "run.json").is_file())
+
+    def test_prepare_commit_reads_candidate_bytes_from_immutable_git_blob(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository_root = Path(directory)
+            _git(repository_root, "init", "--quiet")
+            _git(repository_root, "config", "user.email", "acceptance@example.invalid")
+            _git(repository_root, "config", "user.name", "Acceptance Test")
+            _git(repository_root, "config", "core.autocrlf", "false")
+            _git(repository_root, "commit", "--allow-empty", "--quiet", "-m", "baseline")
+            baseline_revision = _git(repository_root, "rev-parse", "HEAD")
+            candidate_bytes = b"candidate bytes\n"
+            source = repository_root / "PhaseA.Platform" / "Program.cs"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(candidate_bytes)
+            _git(repository_root, "add", "PhaseA.Platform/Program.cs")
+            _git(repository_root, "commit", "--quiet", "-m", "candidate")
+            candidate_revision = _git(repository_root, "rev-parse", "HEAD")
+            source.write_bytes(b"live worktree bytes must not be read\n")
+
+            baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+            candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "added", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "PhaseA.Platform/Program.cs", "candidate_sha256": _sha256(candidate_bytes), "inclusion_reason": "candidate commit"}]}
+            target = repository_root / "execution-plans" / "acceptance"
+            value = _run_input(target, baseline, candidate, baseline_revision=baseline_revision, candidate_revision=candidate_revision)
+            _write_prepare_inputs(target, baseline, candidate, value)
+
+            result = acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
+
+            self.assertEqual([], result["authorizes"])
+            self.assertEqual(baseline_revision, result["candidateCustody"]["baselineResolvedCommit"])
+            self.assertEqual(candidate_revision, result["candidateCustody"]["candidateResolvedCommit"])
+
+    def test_prepare_commit_rejects_current_manifest_with_stale_candidate_file_hash(self) -> None:
+        from acceptance_core import InputError
+
+        with tempfile.TemporaryDirectory() as directory:
+            repository_root = Path(directory)
+            _git(repository_root, "init", "--quiet")
+            _git(repository_root, "config", "user.email", "acceptance@example.invalid")
+            _git(repository_root, "config", "user.name", "Acceptance Test")
+            source = repository_root / "PhaseA.Platform" / "Program.cs"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"current candidate\n")
+            _git(repository_root, "add", "PhaseA.Platform/Program.cs")
+            _git(repository_root, "commit", "--quiet", "-m", "candidate")
+            candidate_revision = _git(repository_root, "rev-parse", "HEAD")
+
+            baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+            candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "added", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "PhaseA.Platform/Program.cs", "candidate_sha256": _sha256(b"stale candidate\n"), "inclusion_reason": "stale bytes"}]}
+            target = repository_root / "execution-plans" / "acceptance"
+            value = _run_input(target, baseline, candidate, baseline_revision=candidate_revision, candidate_revision=candidate_revision)
+            _write_prepare_inputs(target, baseline, candidate, value)
+
+            with self.assertRaisesRegex(InputError, "candidate manifest hash.*declared file bytes"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
+            self.assertFalse((target / "run.json").exists())
+
+    def test_prepare_commit_binds_deletion_only_candidate_and_rejects_missing_tombstone(self) -> None:
+        from acceptance_core import InputError
+
+        with tempfile.TemporaryDirectory() as directory:
+            repository_root = Path(directory)
+            _git(repository_root, "init", "--quiet")
+            _git(repository_root, "config", "user.email", "acceptance@example.invalid")
+            _git(repository_root, "config", "user.name", "Acceptance Test")
+            source = repository_root / "PhaseA.Platform" / "Removed.cs"
+            source.parent.mkdir(parents=True)
+            baseline_bytes = b"remove me\n"
+            source.write_bytes(baseline_bytes)
+            _git(repository_root, "add", "PhaseA.Platform/Removed.cs")
+            _git(repository_root, "commit", "--quiet", "-m", "baseline")
+            baseline_revision = _git(repository_root, "rev-parse", "HEAD")
+            source.unlink()
+            _git(repository_root, "add", "--all")
+            _git(repository_root, "commit", "--quiet", "-m", "delete")
+            candidate_revision = _git(repository_root, "rev-parse", "HEAD")
+
+            baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"path": "PhaseA.Platform/Removed.cs", "roles": ["implementation"], "sha256": _sha256(baseline_bytes), "inclusion_reason": "baseline"}]}
+            candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "deleted", "roles": ["implementation"], "baseline_path": "PhaseA.Platform/Removed.cs", "baseline_sha256": _sha256(baseline_bytes), "candidate_path": None, "candidate_sha256": None, "inclusion_reason": "deleted"}]}
+            target = repository_root / "execution-plans" / "acceptance"
+            value = _run_input(target, baseline, candidate, baseline_revision=baseline_revision, candidate_revision=candidate_revision)
+            _write_prepare_inputs(target, baseline, candidate, value)
+
+            result = acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
+            self.assertEqual(candidate_revision, result["candidateCustody"]["candidateResolvedCommit"])
+
+            stale_value = _run_input(target, baseline, candidate, baseline_revision=baseline_revision, candidate_revision=baseline_revision)
+            (target / "input.json").write_text(json.dumps(stale_value), encoding="utf-8")
+            with self.assertRaisesRegex(InputError, "still contains removed path"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "stale-run.json"))
+
+    def test_run_input_rejects_nul_in_revision_or_relative_path(self) -> None:
+        from acceptance_core import InputError, validate_run_input
+
+        baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+        candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            invalid_revision = _run_input(target, baseline, candidate, baseline_revision="HEAD\0bad")
+            with self.assertRaisesRegex(InputError, "revisions cannot contain NUL"):
+                validate_run_input(invalid_revision)
+            invalid_path = _run_input(target, baseline, candidate, candidate_mode="dirty_worktree", snapshot_path=".acceptance-snapshots/run\0bad")
+            with self.assertRaisesRegex(InputError, "repository-relative path"):
+                validate_run_input(invalid_path)
+
+    def test_prepare_dirty_worktree_reads_only_contained_frozen_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            frozen_bytes = b"frozen candidate\n"
+            snapshot = target / ".acceptance-snapshots" / "run" / "PhaseA.Platform" / "Program.cs"
+            snapshot.parent.mkdir(parents=True)
+            snapshot.write_bytes(frozen_bytes)
+            live_file = target / "PhaseA.Platform" / "Program.cs"
+            live_file.parent.mkdir(parents=True)
+            live_file.write_bytes(b"live workspace bytes must not be read\n")
+
+            baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+            candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "untracked", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "PhaseA.Platform/Program.cs", "candidate_sha256": _sha256(frozen_bytes), "inclusion_reason": "frozen dirty candidate"}]}
+            value = _run_input(target, baseline, candidate, candidate_mode="dirty_worktree", snapshot_path=".acceptance-snapshots/run")
+            _write_prepare_inputs(target, baseline, candidate, value)
+
+            result = acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
+
+            self.assertEqual([], result["authorizes"])
+            self.assertTrue(result["candidateCustody"]["snapshotManifestHash"].startswith("sha256:"))
+
+    def test_prepare_proposed_commit_set_reads_contained_frozen_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            frozen_bytes = b"proposed candidate\n"
+            snapshot = target / ".acceptance-snapshots" / "run" / "PhaseA.Platform" / "Program.cs"
+            snapshot.parent.mkdir(parents=True)
+            snapshot.write_bytes(frozen_bytes)
+            baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+            candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "untracked", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "PhaseA.Platform/Program.cs", "candidate_sha256": _sha256(frozen_bytes), "inclusion_reason": "frozen proposed candidate"}]}
+            value = _run_input(target, baseline, candidate, candidate_mode="proposed_commit_set", snapshot_path=".acceptance-snapshots/run")
+            _write_prepare_inputs(target, baseline, candidate, value)
+
+            result = acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
+
+            self.assertEqual([], result["authorizes"])
+
+    def test_prepare_dirty_worktree_rejects_current_manifest_with_stale_snapshot_bytes(self) -> None:
+        from acceptance_core import InputError
+
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            snapshot = target / ".acceptance-snapshots" / "run" / "PhaseA.Platform" / "Program.cs"
+            snapshot.parent.mkdir(parents=True)
+            snapshot.write_bytes(b"new snapshot bytes\n")
+            baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+            candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "untracked", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "PhaseA.Platform/Program.cs", "candidate_sha256": _sha256(b"old snapshot bytes\n"), "inclusion_reason": "stale frozen candidate"}]}
+            value = _run_input(target, baseline, candidate, candidate_mode="dirty_worktree", snapshot_path=".acceptance-snapshots/run")
+            _write_prepare_inputs(target, baseline, candidate, value)
+
+            with self.assertRaisesRegex(InputError, "candidate manifest hash.*declared file bytes"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
+            self.assertFalse((target / "run.json").exists())
+
+    def test_prepare_dirty_worktree_requires_a_proper_frozen_snapshot_directory(self) -> None:
+        from acceptance_core import InputError
+
+        baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+        candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            missing = _run_input(target, baseline, candidate, candidate_mode="dirty_worktree")
+            _write_prepare_inputs(target, baseline, candidate, missing)
+            with self.assertRaisesRegex(InputError, "candidate_frozen_snapshot_path"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "missing-run.json"))
+
+            target_root = _run_input(target, baseline, candidate, candidate_mode="dirty_worktree", snapshot_path=".")
+            (target / "input.json").write_text(json.dumps(target_root), encoding="utf-8")
+            with self.assertRaisesRegex(InputError, "acceptance-snapshots namespace"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "root-run.json"))
+
+    def test_prepare_dirty_worktree_rejects_escaped_or_missing_snapshot_file(self) -> None:
+        from acceptance_core import InputError
+
+        baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+        candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "untracked", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "PhaseA.Platform/Program.cs", "candidate_sha256": _sha256(b"missing\n"), "inclusion_reason": "missing frozen file"}]}
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            (target / ".acceptance-snapshots" / "run").mkdir(parents=True)
+            missing_file = _run_input(target, baseline, candidate, candidate_mode="dirty_worktree", snapshot_path=".acceptance-snapshots/run")
+            _write_prepare_inputs(target, baseline, candidate, missing_file)
+            with self.assertRaisesRegex(InputError, "candidate snapshot file is missing"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "missing-file-run.json"))
+
+            escaped = _run_input(target, baseline, candidate, candidate_mode="dirty_worktree", snapshot_path="../outside")
+            (target / "input.json").write_text(json.dumps(escaped), encoding="utf-8")
+            with self.assertRaisesRegex(InputError, "repository-relative path"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "escaped-run.json"))
 
     def test_candidate_manifest_requires_deleted_tombstone_to_match_baseline(self) -> None:
         from acceptance_core import InputError, validate_candidate_manifest

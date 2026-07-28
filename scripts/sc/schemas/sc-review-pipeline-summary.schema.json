@@ -141,6 +141,9 @@
     "dominant_cost_phase": {
       "type": "string"
     },
+    "llm_review_metrics": {
+      "$ref": "#/$defs/llmReviewMetrics"
+    },
     "steps": {
       "type": "array",
       "items": {
@@ -149,6 +152,56 @@
     }
   },
   "$defs": {
+    "digestOrSentinel": {
+      "type": "string",
+      "pattern": "^(sha256:[0-9a-f]{64}|absent|not-applicable|unresolved)$"
+    },
+    "llmRuntimeIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "backend", "model", "reasoning_effort", "sandbox", "prompt_transport", "config_sha256", "backend_executable_sha256", "backend_version_sha256", "backend_adapter_sha256", "endpoint_sha256", "sdk_version", "complete", "error_codes"],
+      "properties": {
+        "schema_version": {"const": "sc-llm-review-runtime-identity.v1"},
+        "backend": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "reasoning_effort": {"type": "string"},
+        "sandbox": {"type": "string", "minLength": 1},
+        "prompt_transport": {"type": "string", "minLength": 1},
+        "config_sha256": {"$ref": "#/$defs/digestOrSentinel"},
+        "backend_executable_sha256": {"$ref": "#/$defs/digestOrSentinel"},
+        "backend_version_sha256": {"$ref": "#/$defs/digestOrSentinel"},
+        "backend_adapter_sha256": {"$ref": "#/$defs/digestOrSentinel"},
+        "endpoint_sha256": {"$ref": "#/$defs/digestOrSentinel"},
+        "sdk_version": {"type": "string"},
+        "complete": {"type": "boolean"},
+        "error_codes": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "llmReviewMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "requested_reviewer_count", "result_count", "status_counts", "llm_invocation_count", "llm_duration_sec_total", "prompt_chars_total", "prompt_chars_max", "prompt_chars_by_agent", "prompt_set_sha256", "prompt_truncated_count", "prompt_truncated_agents", "output_chars_total", "runtime", "input_identity_hash", "input_identity_complete", "pipeline_reuse_mode", "llm_result_reused"],
+      "properties": {
+        "schema_version": {"const": "sc-llm-review-metrics.v1"},
+        "requested_reviewer_count": {"type": "integer", "minimum": 0},
+        "result_count": {"type": "integer", "minimum": 0},
+        "status_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "llm_invocation_count": {"type": "integer", "minimum": 0},
+        "llm_duration_sec_total": {"type": "number", "minimum": 0},
+        "prompt_chars_total": {"type": "integer", "minimum": 0},
+        "prompt_chars_max": {"type": "integer", "minimum": 0},
+        "prompt_chars_by_agent": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "prompt_set_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "prompt_truncated_count": {"type": "integer", "minimum": 0},
+        "prompt_truncated_agents": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "output_chars_total": {"type": "integer", "minimum": 0},
+        "runtime": {"$ref": "#/$defs/llmRuntimeIdentity"},
+        "input_identity_hash": {"type": "string", "pattern": "^(|sha256:[0-9a-f]{64})$"},
+        "input_identity_complete": {"type": "boolean"},
+        "pipeline_reuse_mode": {"enum": ["none", "full-clean-reuse", "deterministic-only-reuse", "sc-test-reuse", "mixed-reuse"]},
+        "llm_result_reused": {"type": "boolean"}
+      }
+    },
     "step": {
       "type": "object",
       "additionalProperties": false,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import sys
 import tempfile
@@ -20,6 +21,7 @@ if str(SC_DIR) not in sys.path:
 
 import run_review_pipeline as run_review_pipeline_module  # noqa: E402
 from _artifact_schema import validate_pipeline_latest_index_payload  # noqa: E402
+from _llm_review_identity import canonical_hash  # noqa: E402
 from _taskmaster import TaskmasterTriplet  # noqa: E402
 
 
@@ -28,6 +30,68 @@ def _stable_env() -> dict[str, str]:
     for key in ("DELIVERY_PROFILE", "SECURITY_PROFILE", "SC_PIPELINE_RUN_ID", "SC_TEST_RUN_ID", "SC_ACCEPTANCE_RUN_ID"):
         env.pop(key, None)
     return env
+
+
+def _complete_git_fingerprint() -> dict:
+    identity_inputs = {
+        "schema_version": "sc-review-worktree-content.v1",
+        "head": "a" * 40,
+        "status_short": [],
+        "tracked_worktree_diff_sha256": "sha256:" + "1" * 64,
+        "tracked_worktree_manifest_sha256": "sha256:" + "2" * 64,
+        "tracked_worktree_file_count": 0,
+        "index_diff_sha256": "sha256:" + "3" * 64,
+        "untracked_manifest_sha256": "sha256:" + "4" * 64,
+        "untracked_file_count": 0,
+    }
+    encoded = json.dumps(identity_inputs, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return {
+        "schema_version": "sc-review-git-fingerprint.v2",
+        "head": identity_inputs["head"],
+        "status_short": [],
+        "content_identity": {
+            **identity_inputs,
+            "complete": True,
+            "snapshot_sha256": "sha256:" + hashlib.sha256(encoded).hexdigest(),
+            "error_codes": [],
+        },
+    }
+
+
+def _complete_llm_identity(prompt_marker: str) -> dict:
+    runtime = {
+        "schema_version": "sc-llm-review-runtime-identity.v1",
+        "backend": "codex-cli",
+        "model": "gpt-5",
+        "reasoning_effort": "low",
+        "sandbox": "read-only",
+        "prompt_transport": "stdin",
+        "config_sha256": "sha256:" + "1" * 64,
+        "backend_executable_sha256": "sha256:" + "2" * 64,
+        "backend_version_sha256": "sha256:" + "3" * 64,
+        "backend_adapter_sha256": "sha256:" + "4" * 64,
+        "endpoint_sha256": "not-applicable",
+        "sdk_version": "",
+        "complete": True,
+        "error_codes": [],
+    }
+    payload = {
+        "schema_version": "sc-llm-review-input-identity.v1",
+        "requested_agents": ["code-reviewer"],
+        "prompt_set": [{"agent": "code-reviewer", "prompt_sha256": "sha256:" + prompt_marker * 64}],
+        "runtime": runtime,
+        "delivery_profile": "fast-ship",
+        "security_profile": "host-safe",
+        "threat_model": "singleplayer",
+        "review_profile": "bmad-godot",
+        "template_sha256": "sha256:" + "5" * 64,
+        "diff_mode": "summary",
+        "semantic_gate": "skip",
+        "prompt_max_chars": 32000,
+        "prompt_budget_gate": "warn",
+        "skip_agent_prompts": False,
+    }
+    return {**payload, "complete": True, "input_identity_hash": canonical_hash(payload)}
 
 
 class RunReviewPipelinePreflightTests(unittest.TestCase):
@@ -42,6 +106,32 @@ class RunReviewPipelinePreflightTests(unittest.TestCase):
             tasks_gameplay_path=".taskmaster/tasks/tasks_gameplay.json",
             taskdoc_path=None,
         )
+
+    def test_resume_or_fork_should_invalidate_inherited_steps_when_snapshot_changed(self) -> None:
+        summary = {
+            "status": "fail",
+            "steps": [{"name": "sc-test", "status": "ok"}],
+            "reuse_mode": "deterministic-only-reuse",
+        }
+        marathon_state = {
+            "status": "stopped",
+            "steps": {"sc-test": {"status": "ok"}},
+            "diagnostics": {},
+            "last_failed_step": "sc-llm-review",
+            "next_step_name": "sc-llm-review",
+            "stop_reason": "step_failed",
+        }
+        invalidated = run_review_pipeline_module._invalidate_inherited_steps_for_snapshot_change(
+            summary=summary,
+            marathon_state=marathon_state,
+            source_execution_context={"git": {"head": "a", "status_short": []}},
+            current_git={"head": "b", "status_short": []},
+        )
+
+        self.assertTrue(invalidated)
+        self.assertEqual([], summary["steps"])
+        self.assertEqual({}, marathon_state["steps"])
+        self.assertIn("inherited_steps_invalidated", marathon_state["diagnostics"])
 
     def test_preflight_failure_should_stop_before_sc_test(self) -> None:
         run_id = uuid.uuid4().hex
@@ -550,7 +640,7 @@ class RunReviewPipelinePreflightTests(unittest.TestCase):
             self.assertEqual("ok", reused_step["status"])
             self.assertTrue(str(reused_step["summary_file"]).endswith("summary.json"))
 
-    def test_clean_skip_should_reuse_latest_successful_full_pipeline_for_docs_only_delta(self) -> None:
+    def test_clean_skip_should_reuse_only_deterministic_steps_when_llm_identity_is_unavailable(self) -> None:
         run_id = uuid.uuid4().hex
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_root = Path(tmpdir)
@@ -669,6 +759,40 @@ class RunReviewPipelinePreflightTests(unittest.TestCase):
 
             out_dir = tmp_root / "logs" / "ci" / "2026-04-07" / f"sc-review-pipeline-task-56-{run_id}"
             latest_path = tmp_root / "logs" / "ci" / "2026-04-07" / "sc-review-pipeline-task-56" / "latest.json"
+
+            def fake_run_step(*, out_dir: Path, name: str, cmd: list[str], timeout_sec: int) -> dict:
+                self.assertEqual("sc-llm-review", name)
+                child_dir = out_dir / "sc-llm-review-current"
+                child_dir.mkdir(parents=True, exist_ok=True)
+                child_summary = child_dir / "summary.json"
+                child_summary.write_text(
+                    json.dumps(
+                        {
+                            "status": "ok",
+                            "results": [
+                                {"agent": "code-reviewer", "status": "ok", "rc": 0, "details": {"verdict": "OK"}},
+                                {"agent": "security-auditor", "status": "ok", "rc": 0, "details": {"verdict": "OK"}},
+                                {"agent": "semantic-equivalence-auditor", "status": "ok", "rc": 0, "details": {"verdict": "OK"}},
+                            ],
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+                log_path = out_dir / "sc-llm-review.log"
+                log_path.write_text("fresh LLM review executed\n", encoding="utf-8")
+                return {
+                    "name": name,
+                    "cmd": cmd,
+                    "rc": 0,
+                    "status": "ok",
+                    "log": str(log_path),
+                    "reported_out_dir": str(child_dir),
+                    "summary_file": str(child_summary),
+                }
+
             argv = [
                 str(SCRIPT),
                 "--task-id",
@@ -686,6 +810,7 @@ class RunReviewPipelinePreflightTests(unittest.TestCase):
                 mock.patch.object(run_review_pipeline_module, "_pipeline_latest_index_path", return_value=latest_path),
                 mock.patch.object(run_review_pipeline_module, "repo_root", return_value=tmp_root),
                 mock.patch.object(run_review_pipeline_module, "run_review_prerequisite_check", return_value=None),
+                mock.patch.object(run_review_pipeline_module, "_derive_chapter6_route_guard", return_value=None),
                 mock.patch.object(run_review_pipeline_module, "resolve_triplet", return_value=self._triplet()),
                 mock.patch.object(
                     run_review_pipeline_module,
@@ -701,23 +826,120 @@ class RunReviewPipelinePreflightTests(unittest.TestCase):
                         "unsafe_paths": [],
                     },
                 ),
-                mock.patch.object(run_review_pipeline_module, "_run_step") as run_step_mock,
+                mock.patch.object(run_review_pipeline_module, "_run_step", side_effect=fake_run_step) as run_step_mock,
             ):
                 rc = run_review_pipeline_module.main()
 
             self.assertEqual(0, rc)
-            run_step_mock.assert_not_called()
+            self.assertEqual(1, run_step_mock.call_count)
             summary = json.loads((out_dir / "summary.json").read_text(encoding="utf-8"))
             self.assertEqual("ok", summary["status"])
             self.assertEqual("pipeline_clean", summary["reason"])
-            self.assertEqual("full-clean-reuse", summary["reuse_mode"])
+            self.assertEqual("deterministic-only-reuse", summary["reuse_mode"])
             self.assertGreaterEqual(int(summary["elapsed_sec"]), 0)
             self.assertEqual(
                 ["sc-test", "sc-acceptance-check", "sc-llm-review"],
                 [item["name"] for item in summary["steps"]],
             )
             self.assertTrue(all(item["status"] == "ok" for item in summary["steps"]))
-            self.assertIn("decision-logs/active-task.md", (out_dir / "sc-llm-review.log").read_text(encoding="utf-8"))
+            step_map = {item["name"]: item for item in summary["steps"]}
+            for step_name in ("sc-test", "sc-acceptance-check"):
+                self.assertIn(
+                    "reused deterministic steps",
+                    Path(step_map[step_name]["log"]).read_text(encoding="utf-8"),
+                )
+            self.assertEqual(
+                "fresh LLM review executed\n",
+                Path(step_map["sc-llm-review"]["log"]).read_text(encoding="utf-8"),
+            )
+
+    def test_full_clean_reuse_should_require_matching_complete_llm_input_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_root = Path(tmpdir)
+            previous_out_dir = tmp_root / "logs" / "ci" / "2026-04-06" / "sc-review-pipeline-task-56-previous"
+            previous_out_dir.mkdir(parents=True, exist_ok=True)
+            planned_steps = [
+                ("sc-test", ["py", "test.py"], 30, False),
+                ("sc-acceptance-check", ["py", "acceptance.py"], 30, False),
+                ("sc-llm-review", ["py", "llm_review.py"], 30, False),
+            ]
+            source_steps = []
+            for step_name, cmd, _timeout, _skipped in planned_steps:
+                child_dir = previous_out_dir / f"{step_name}-artifacts"
+                child_dir.mkdir(parents=True, exist_ok=True)
+                child_payload = {"status": "ok"}
+                if step_name == "sc-llm-review":
+                    child_payload = {
+                        "status": "ok",
+                        "results": [
+                            {"agent": "code-reviewer", "status": "ok", "rc": 0, "details": {"verdict": "OK"}},
+                        ],
+                        "input_identity": _complete_llm_identity("a"),
+                    }
+                child_summary = child_dir / "summary.json"
+                child_summary.write_text(json.dumps(child_payload), encoding="utf-8")
+                source_steps.append(
+                    {
+                        "name": step_name,
+                        "cmd": cmd,
+                        "rc": 0,
+                        "status": "ok",
+                        "reported_out_dir": str(child_dir),
+                        "summary_file": str(child_summary),
+                    }
+                )
+            (previous_out_dir / "summary.json").write_text(
+                json.dumps({"status": "ok", "steps": source_steps}),
+                encoding="utf-8",
+            )
+            git_fingerprint = _complete_git_fingerprint()
+            (previous_out_dir / "execution-context.json").write_text(
+                json.dumps(
+                    {
+                        "delivery_profile": "fast-ship",
+                        "security_profile": "host-safe",
+                        "git": git_fingerprint,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(run_review_pipeline_module, "repo_root", return_value=tmp_root):
+                tampered_identity = _complete_llm_identity("a")
+                tampered_identity["runtime"]["model"] = "different-model"
+                reused_steps = run_review_pipeline_module._find_reusable_clean_pipeline_steps(
+                    out_dir=tmp_root / "current-match",
+                    task_id="56",
+                    delivery_profile="fast-ship",
+                    security_profile="host-safe",
+                    planned_steps=planned_steps,
+                    git_fingerprint=git_fingerprint,
+                    current_llm_input_identity=_complete_llm_identity("a"),
+                )
+                mismatched_steps = run_review_pipeline_module._find_reusable_clean_pipeline_steps(
+                    out_dir=tmp_root / "current-mismatch",
+                    task_id="56",
+                    delivery_profile="fast-ship",
+                    security_profile="host-safe",
+                    planned_steps=planned_steps,
+                    git_fingerprint=git_fingerprint,
+                    current_llm_input_identity=_complete_llm_identity("c"),
+                )
+                tampered_steps = run_review_pipeline_module._find_reusable_clean_pipeline_steps(
+                    out_dir=tmp_root / "current-tampered",
+                    task_id="56",
+                    delivery_profile="fast-ship",
+                    security_profile="host-safe",
+                    planned_steps=planned_steps,
+                    git_fingerprint=git_fingerprint,
+                    current_llm_input_identity=tampered_identity,
+                )
+
+            self.assertIsNotNone(reused_steps)
+            assert reused_steps is not None
+            self.assertEqual(["sc-test", "sc-acceptance-check", "sc-llm-review"], [step["name"] for step in reused_steps])
+            self.assertIsNone(mismatched_steps)
+            self.assertIsNone(tampered_steps)
 
     def test_reuse_deterministic_steps_should_reuse_sc_test_and_acceptance_after_llm_only_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

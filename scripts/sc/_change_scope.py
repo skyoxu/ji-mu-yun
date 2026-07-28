@@ -5,6 +5,12 @@ import json
 import re
 from typing import Any
 
+from _git_snapshot import (
+    git_snapshots_match,
+    has_complete_content_identity,
+    same_head_and_status,
+    uses_versioned_content_identity,
+)
 from _util import repo_root, run_cmd
 
 
@@ -97,12 +103,26 @@ def _fingerprint_payload(
     current_head: str,
     changed_paths: list[str],
     acceptance_only_steps: list[str],
+    previous_snapshot: dict[str, Any] | None = None,
+    current_snapshot: dict[str, Any] | None = None,
 ) -> str:
+    def snapshot_binding(value: dict[str, Any] | None) -> dict[str, Any]:
+        snapshot = value if isinstance(value, dict) else {}
+        identity = snapshot.get("content_identity") if isinstance(snapshot.get("content_identity"), dict) else {}
+        return {
+            "schema_version": str(snapshot.get("schema_version") or "legacy"),
+            "content_schema_version": str(identity.get("schema_version") or "legacy"),
+            "snapshot_sha256": str(identity.get("snapshot_sha256") or ""),
+            "complete": has_complete_content_identity(snapshot),
+        }
+
     payload = {
         "previous_head": str(previous_head or "").strip(),
         "current_head": str(current_head or "").strip(),
         "changed_paths": list(changed_paths),
         "acceptance_only_steps": list(acceptance_only_steps),
+        "previous_snapshot": snapshot_binding(previous_snapshot),
+        "current_snapshot": snapshot_binding(current_snapshot),
     }
     return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
 
@@ -178,6 +198,35 @@ def classify_change_scope_between_snapshots(*, previous_git: dict[str, Any] | No
         current_status_short=list(current.get("status_short") or []),
         diff_paths=diff_paths,
     )
+    payload["change_fingerprint"] = _fingerprint_payload(
+        previous_head=str(previous.get("head") or "").strip(),
+        current_head=str(current.get("head") or "").strip(),
+        changed_paths=list(payload.get("changed_paths") or []),
+        acceptance_only_steps=list(payload.get("acceptance_only_steps") or []),
+        previous_snapshot=previous,
+        current_snapshot=current,
+    )
+    content_identity_incompatible = (
+        uses_versioned_content_identity(previous) or uses_versioned_content_identity(current)
+    ) and not (
+        has_complete_content_identity(previous) and has_complete_content_identity(current)
+    )
+    payload["content_identity_incompatible"] = content_identity_incompatible
+    content_changed_without_status_delta = (
+        has_complete_content_identity(previous)
+        and has_complete_content_identity(current)
+        and same_head_and_status(previous, current)
+        and not git_snapshots_match(previous, current)
+    )
+    payload["content_identity_changed_without_status_delta"] = content_changed_without_status_delta
+    if content_identity_incompatible or content_changed_without_status_delta:
+        payload["sc_test_reuse_allowed"] = False
+        payload["deterministic_strategy"] = "full-pipeline"
+        payload["acceptance_only_steps"] = []
+    if content_identity_incompatible:
+        payload["unsafe_paths"] = _dedupe_preserve_order(
+            list(payload.get("unsafe_paths") or []) + ["git_content_identity_incompatible"]
+        )
     if diff_error:
         payload["unsafe_paths"] = _dedupe_preserve_order(list(payload.get("unsafe_paths") or []) + [diff_error])
         payload["sc_test_reuse_allowed"] = False

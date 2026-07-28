@@ -55,6 +55,7 @@ def build_execution_context(
     repair_guide: dict[str, Any] | None = None,
     marathon_state: dict[str, Any] | None = None,
     approval_state: dict[str, Any] | None = None,
+    git_fingerprint: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"])
     head = _run_git(["rev-parse", "HEAD"])
@@ -64,6 +65,10 @@ def build_execution_context(
     diagnostics = (marathon_state or {}).get("diagnostics")
     candidate_commands = summary.get("candidate_commands") if isinstance(summary.get("candidate_commands"), dict) else {}
     failure_kind = derive_producer_failure_kind(summary_payload=summary, repair_payload=repair_guide)
+    captured_git = dict(git_fingerprint or {})
+    captured_status_source = captured_git["status_short"] if "status_short" in captured_git else status_short
+    captured_status = [str(line) for line in list(captured_status_source or [])]
+    captured_head = str(captured_git["head"]) if "head" in captured_git else head
     return {
         "schema_version": "1.0.0",
         "cmd": "sc-review-pipeline",
@@ -101,10 +106,11 @@ def build_execution_context(
         },
         "git": {
             "branch": branch,
-            "head": head,
             "recent_log": recent_log,
-            "status_short": status_short,
-            "dirty": bool(status_short),
+            **captured_git,
+            "head": captured_head,
+            "status_short": captured_status,
+            "dirty": bool(captured_status),
         },
         "recovery": {
             "resume_command": f"py -3 scripts/sc/run_review_pipeline.py --task-id {task_id} --resume",
@@ -146,6 +152,11 @@ def build_execution_context(
         "latest_summary_signals": dict(summary.get("latest_summary_signals") or {}) if isinstance(summary.get("latest_summary_signals"), dict) else {},
         "chapter6_hints": dict(summary.get("chapter6_hints") or {}) if isinstance(summary.get("chapter6_hints"), dict) else {},
         "llm_review": dict(llm_review_context or {}),
+        **(
+            {"llm_review_metrics": dict(summary["llm_review_metrics"])}
+            if isinstance(summary.get("llm_review_metrics"), dict) and summary["llm_review_metrics"]
+            else {}
+        ),
         "approval": {
             "soft_gate": bool((approval_state or {}).get("soft_gate") or False),
             "required_action": str((approval_state or {}).get("required_action") or ""),

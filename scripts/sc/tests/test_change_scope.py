@@ -68,6 +68,27 @@ class ChangeScopeTests(unittest.TestCase):
         self.assertEqual("full-pipeline", payload["deterministic_strategy"])
         self.assertIn("Game.Core/Gameplay/GuildManager.cs", payload["unsafe_paths"])
 
+    def test_snapshot_classification_should_reject_legacy_to_versioned_identity_reuse(self) -> None:
+        payload = change_scope.classify_change_scope_between_snapshots(
+            previous_git={"head": "abc123", "status_short": [" M tracked.txt"]},
+            current_git={
+                "schema_version": "sc-review-git-fingerprint.v2",
+                "head": "abc123",
+                "status_short": [" M tracked.txt"],
+                "content_identity": {
+                    "schema_version": "sc-review-worktree-content.v1",
+                    "complete": True,
+                    "snapshot_sha256": "sha256:" + "a" * 64,
+                    "error_codes": [],
+                },
+            },
+        )
+
+        self.assertTrue(payload["content_identity_incompatible"])
+        self.assertFalse(payload["sc_test_reuse_allowed"])
+        self.assertEqual("full-pipeline", payload["deterministic_strategy"])
+        self.assertIn("git_content_identity_incompatible", payload["unsafe_paths"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -765,7 +765,7 @@ class RunReviewPipelineMarathonTests(unittest.TestCase):
             latest = json.loads(latest_path.read_text(encoding="utf-8"))
             execution_context = json.loads((out_dir / "execution-context.json").read_text(encoding="utf-8"))
 
-            self.assertEqual(str(out_dir / "approval-response.json"), latest["approval_response_path"])
+            self.assertTrue((out_dir / "approval-response.json").samefile(Path(latest["approval_response_path"])))
             self.assertEqual("approved", execution_context["approval"]["status"])
             self.assertEqual("approved", execution_context["approval"]["decision"])
 
@@ -1402,7 +1402,7 @@ class RunReviewPipelineMarathonTests(unittest.TestCase):
                 summary["diagnostics"]["sc_test_retry_stop_loss"],
             )
 
-    def test_resume_should_continue_from_failed_step(self) -> None:
+    def test_resume_should_rerun_inherited_steps_when_source_snapshot_is_unbound(self) -> None:
         run_id = uuid.uuid4().hex
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_root = Path(tmpdir)
@@ -1483,7 +1483,7 @@ class RunReviewPipelineMarathonTests(unittest.TestCase):
                 second_rc = run_review_pipeline_module.main()
 
             self.assertEqual(0, second_rc)
-            self.assertNotIn("sc-test", resumed_counts)
+            self.assertEqual(1, resumed_counts["sc-test"])
             self.assertEqual(1, resumed_counts["sc-acceptance-check"])
             self.assertEqual(1, resumed_counts["sc-llm-review"])
 
@@ -1586,7 +1586,7 @@ class RunReviewPipelineMarathonTests(unittest.TestCase):
             self.assertEqual("aborted", marathon_state["status"])
             self.assertEqual("aborted", latest["status"])
 
-    def test_fork_should_create_new_run_and_continue_from_failed_step(self) -> None:
+    def test_fork_should_create_new_run_and_rerun_when_source_snapshot_is_unbound(self) -> None:
         source_run_id = uuid.uuid4().hex
         fork_run_id = uuid.uuid4().hex
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1690,7 +1690,7 @@ class RunReviewPipelineMarathonTests(unittest.TestCase):
                 rc = run_review_pipeline_module.main()
 
             self.assertEqual(0, rc)
-            self.assertNotIn("sc-test", call_counts)
+            self.assertEqual(1, call_counts["sc-test"])
             self.assertEqual(1, call_counts["sc-acceptance-check"])
             self.assertEqual(1, call_counts["sc-llm-review"])
             self.assertTrue(fork_out_dir.exists())
@@ -1703,8 +1703,8 @@ class RunReviewPipelineMarathonTests(unittest.TestCase):
             self.assertEqual(fork_run_id, fork_summary["run_id"])
             self.assertEqual("ok", fork_summary["status"])
             self.assertEqual(source_run_id, fork_state["forked_from_run_id"])
-            self.assertEqual(str(source_out_dir), fork_state["forked_from_out_dir"])
-            self.assertEqual(str(fork_out_dir / "marathon-state.json"), latest["marathon_state_path"])
+            self.assertTrue(source_out_dir.samefile(Path(fork_state["forked_from_out_dir"])))
+            self.assertTrue((fork_out_dir / "marathon-state.json").samefile(Path(latest["marathon_state_path"])))
             self.assertFalse((fork_out_dir / "approval-request.json").exists())
 
             fork_execution_context = json.loads((fork_out_dir / "execution-context.json").read_text(encoding="utf-8"))
