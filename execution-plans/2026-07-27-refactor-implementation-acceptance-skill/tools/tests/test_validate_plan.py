@@ -44,6 +44,18 @@ class RefactorAcceptancePlanTests(unittest.TestCase):
         invalid["slice_status"]["S2-matrix-phase"] = "in_progress"
         self.assertFalse(validator.validate_resume_dependencies(contract, invalid))
 
+    def test_repair_round_is_valid_and_exactly_binds_confirmed_findings(self) -> None:
+        self.assertTrue(validator.validate_repair_rounds())
+
+    def test_repair_round_findings_are_scoped_to_each_review_round(self) -> None:
+        self.assertEqual(
+            {"BSR-3BB3B873C4C0B09E", "BSR-4630976C15F6FDEA", "BSR-75E54594466B6EA2", "BSR-B757809A60227AD0", "BSR-FF35EB3EE83AF41E"},
+            validator.REPAIR_FINDINGS_BY_ROUND[3],
+        )
+
+    def test_successor_round_requires_the_authorized_successor_lineage(self) -> None:
+        self.assertTrue(validator.validate_successor_round())
+
 
 if __name__ == "__main__":
     unittest.main()

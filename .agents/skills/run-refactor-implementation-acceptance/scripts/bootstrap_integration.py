@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 from datetime import datetime, timezone
+from pathlib import PurePosixPath
 from typing import Any
 
 
@@ -14,12 +15,68 @@ class BootstrapBindingError(ValueError):
 
 
 _HASH = re.compile(r"sha256:[a-f0-9]{64}$")
+_REVIEW_SCOPE_INPUTS = {
+    "implementation_plan": "implementation-plan",
+    "changed_production_code": "changed-production-code",
+    "affected_consumers": "affected-consumers",
+    "tests_and_acceptance": "tests-and-acceptance",
+    "runtime_evidence": "runtime-evidence",
+    "repository_rules": "repository-rules",
+    "referenced_standards": "referenced-standards",
+}
 
 
 def _canonical_hash(value: Any) -> str:
     return "sha256:" + hashlib.sha256(
         json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
+
+
+def _normalize_review_paths(values: Any, label: str) -> list[str]:
+    if not isinstance(values, list) or not values:
+        raise BootstrapBindingError(f"{label} review scope must be a non-empty list")
+    normalized: list[str] = []
+    for raw in values:
+        if not isinstance(raw, str) or not raw.strip():
+            raise BootstrapBindingError(f"{label} review scope contains an invalid path")
+        path = raw.strip().replace("\\", "/")
+        parts = PurePosixPath(path).parts
+        if (
+            path.startswith("/")
+            or re.match(r"^[A-Za-z]:", path)
+            or path.endswith("/")
+            or any(part in {"", ".", ".."} for part in parts)
+            or any(character in path for character in "*?[]")
+        ):
+            raise BootstrapBindingError(
+                f"{label} review scope must contain explicit repository-relative files"
+            )
+        normalized.append(PurePosixPath(path).as_posix())
+    if len(normalized) != len(set(normalized)):
+        raise BootstrapBindingError(f"{label} review scope contains duplicate paths")
+    return sorted(normalized)
+
+
+def build_minimal_review_scope(scope_inputs: Any) -> dict[str, Any]:
+    """Build the exact Bootstrap implementation-conformance closure."""
+    if not isinstance(scope_inputs, dict) or set(scope_inputs) != set(_REVIEW_SCOPE_INPUTS):
+        raise BootstrapBindingError("bootstrap review scope inputs are incomplete")
+    context_classes = {
+        context_class: _normalize_review_paths(scope_inputs[source], context_class)
+        for source, context_class in _REVIEW_SCOPE_INPUTS.items()
+    }
+    scope = sorted({path for paths in context_classes.values() for path in paths})
+    closure = {
+        "schemaVersion": "implementation-acceptance-bootstrap-scope.v1",
+        "profile": "bootstrap-implementation-conformance",
+        "strategy": "minimal-complete-closure",
+        "scope": scope,
+        "contextClasses": context_classes,
+        "directoryScopeAttestation": None,
+        "authorizes": [],
+    }
+    closure["scopeHash"] = _canonical_hash(closure)
+    return closure
 
 
 def _required_capability(binding: Any) -> dict[str, Any]:
@@ -71,15 +128,18 @@ def build_attestation_scope(
     source_inventory: Any,
     source_clauses: Any,
     base_matrix: Any,
+    artifact_view_manifest_hash: Any,
 ) -> dict[str, Any]:
     """Freeze consumer-owned inputs that the Bootstrap companion must attest."""
     if not isinstance(decision, dict) or decision.get("requirement") != "required":
         raise BootstrapBindingError("attestation scope requires a required bootstrap decision")
     _required_capability(binding)
+    if not _HASH.fullmatch(str(artifact_view_manifest_hash)):
+        raise BootstrapBindingError("Artifact View manifest hash is invalid")
     for value, label in ((source_inventory, "source inventory"), (source_clauses, "source clauses"), (base_matrix, "base matrix")):
         if not isinstance(value, dict):
             raise BootstrapBindingError(label + " is invalid")
-    scope = {
+    consumer_scope = {
         "schemaVersion": "bootstrap-inventory-attestation-scope.v1",
         "decisionHash": _canonical_hash(decision),
         "bindingHash": _canonical_hash(binding),
@@ -88,7 +148,12 @@ def build_attestation_scope(
         "baseMatrixHash": _canonical_hash(base_matrix),
         "authorizes": [],
     }
-    return {**scope, "scopeHash": _canonical_hash(scope)}
+    return {
+        **consumer_scope,
+        "consumerScopeHash": _canonical_hash(consumer_scope),
+        # Bootstrap Review binds the companion attestation to its immutable Artifact View.
+        "scopeHash": artifact_view_manifest_hash,
+    }
 
 
 def validate_inventory_attestation(attestation: Any, binding: Any, scope: Any) -> None:

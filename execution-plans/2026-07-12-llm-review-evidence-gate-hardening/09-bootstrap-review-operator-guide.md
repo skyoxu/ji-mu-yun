@@ -1,6 +1,6 @@
 # Bootstrap Review 操作与兼容迁移指南
 
-当前通用权威位于 `.agents/skills/run-phase-bootstrap-review/`，control-plane revision 为 `bootstrap-control-plane.v2`。本文保留 7-12 计划的迁移示例；`tools/run_bootstrap_review.py` 只是 revision-bound 无状态 adapter，通用 runner、profile、schema、Artifact View、attempt/event、repair closure 和恢复命令均归仓库自有 Skill。长期语义见 `docs/standards/bootstrap-review-control-plane.md`，所有权决策见 `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`。
+当前通用权威位于 `.agents/skills/run-phase-bootstrap-review/`，control-plane revision 为 `bootstrap-control-plane.v2`。本文保留 7-12 计划的迁移示例；`tools/run_bootstrap_review.py` 只是 revision-bound 无状态 adapter，通用 runner、profile、schema、Artifact View、attempt/event、repair closure 和恢复命令均归仓库自有 Skill。长期语义见 `docs/standards/bootstrap-review-control-plane.md`，所有权决策见 `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`、`docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md` 和 `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`。
 
 ## 1. 适用范围
 
@@ -24,6 +24,13 @@ manual 与 specialized-agent 模式不调用 reviewer；`codex-exec` 模式可�
 四种 profile 的完整性合同完全相同：`artifactCoverage=all`、`samplingAllowed=false`、`contextClosureRequired=true`、缺上下文时 `status=failed`。推理等级只能改变分析深度，不能减少必读文件、调用方/消费者、测试或验收证据。每个 profile 还绑定 `reviewerInstructionPolicy`、`deterministicPreflightPolicy` 与 `reviewCyclePolicy`，跨会话不得改写。
 
 `prepare` 必须对 profile 的每个 `requiredContextClasses` 传入至少一个 `--context-class <class>=<scope>`。映射目标必须已经被某个 `--scope` 纳入，且实际含有该 class 的 authority；缺 class、未知 class 或零 artifact 映射时命令在写文件前失败。
+
+For `bootstrap-implementation-conformance`, `bootstrap-skill-route`, and
+`bootstrap-focused-change`, pass explicit files forming the minimal complete
+consumer closure. A directory scope requires
+`--directory-scope-attestation directory-is-minimal-complete-closure`.
+`bootstrap-upstream-plan` may continue to use the complete plan directory as
+its review object.
 `bootstrap-skill-route` 还执行确定性 artifact 语义校验：Skill source 必须含 `SKILL.md`；operator/CLI/profile+`openai.yaml`/schema/test/usage evidence/repository rules 必须分别匹配其稳定路径或文件形态。把同一无关文件冒名映射到全部 class 必须失败。
 
 Skill 位于仓库外时，先在 `logs/ci` 创建 SHA-256 相同的只读快照，并把 Skill 直接委托的 operator/route/profile/schema/test/usage authority 一起纳入 scope；只审 `SKILL.md` 不构成完整 Skill/路由审查。
@@ -152,7 +159,7 @@ CLI 会重验 Git revision、Git index、artifact hashes、Artifact View、acces
 - 每个 reviewer 保存输出后必须重新读取自己的 JSON，并执行 `validate-layer --run-dir <run-dir> --layer <role>`；只有命令零退出才算该层完成。失败时由同一 reviewer 修正自己的输出或将该层保留为失败，主会话不得代修。
 - 使用仓库自有 `run-layer` 时，runner 通过 UTF-8 stdin 启动显式指定的单个模型，使用参数数组、`shell=False`、环境白名单和类型化占位符。它不隐藏 provider 调度、不自动循环 fallback；首选失败后若要使用 `gpt-5.5` 或 `gpt-5.4`，必须由 operator 发起新命令并保留上一 attempt evidence。`gpt-5.6-sol` 禁止用于 reviewer/verifier。
 - `process-events.jsonl` 是执行事实权威；`process-leases.json` 由 event 重建，仅为 7-12 compatibility view。工具等待超时但 PID 仍 alive 时只能 inspect/reattach/poll，不得启动相同 operation。失败 attempt 不得覆盖 formal role output。
-- completed reviewer payload 在写入 formal sidecar 前必须再次通过 frozen launch authority 与完整 layer validation；这一步失败时 formal bytes 保持原状。模型显式返回的 schema-valid `status=failed` 可以保存 failure reason，但仍记录 failed attempt 且不阻断 retry。
+- completed reviewer payload 在写入 formal sidecar 前必须再次通过 frozen launch authority 与完整 layer validation；这一步失败时 formal bytes 保持原状。模型显式返回的 `status=failed`、malformed JSON、invalid receipt 或 child process failure 只形成 transport-class failed attempt；formal output 保持原字节，并在同一 run/round 重试。
 
 仓库 runner 示例：
 
@@ -173,6 +180,13 @@ py -3 -c "from pathlib import Path; print(Path(r'<run-dir>/reviewer-prompts/blin
 ```
 
 独立 verifier 使用相同 `-m gpt-5.6-terra`，但必须启动全新进程并读取 `verification-prompt.md`。
+
+For repository-owned `run-layer`, a completed Codex discovery child returns
+semantic candidates plus `bootstrap-artifact-view-read-receipt.v1`. It must not
+return coverage path arrays. The parent validates the same-session handshake
+and receipt, then constructs the exact ordered formal coverage from the frozen
+Artifact View. The steps below for filling coverage apply only to manual or
+specialized-agent output.
 
 每个 reviewer 都必须：
 
@@ -276,6 +290,11 @@ Bootstrap manifest、gate 中间结果、candidate/rejection/disposition/metrics
 5. 默认完整轮次上限为两轮；最终轮出现新的 P0/P1 或 authority/context graph 改变时，最多允许第三轮；
 6. P2-only 不自动触发完整复审；达到三轮仍未闭合时进入 `manual_pause`，不得继续自动循环。
 
+Transport attempt failures do not consume a full semantic review round and do
+not require a new review ID or successor lineage. A clean or P2-only finalized
+predecessor cannot start Round 2; dispose P2 in the current run and use the
+registered targeted closure or recheck command.
+
 `seal-run` 只能在没有 active event-backed attempt 且没有 acquired lease 时写入。如果 attempt 仍活跃，operator 必须先 inspect/reattach；如果进程已死亡，先记录 terminal/stale 执行事实并重建 lease view。incomplete-abandoned 的同轮替换例外只适用于不再存在 active event-backed attempt 的 run。
 
 Round 2/3 的 `repair-closure.json` 是当前计划的 implementation-contract 实例；通用 schema 归仓库 Skill。prepare 校验 predecessor identity、finalized finding exact set、evidence path 和 proof-family，authorize-launch 再校验 evidence/current source/validator hash、Git index、write-set、execution read-set、dependency closure 与 context freshness。遗漏任何 finalized finding 或 evidence 漂移时，reviewer event/lease 数量必须保持为零。
@@ -322,7 +341,7 @@ py -3 C:/Users/Administrator/.codex/skills/.system/skill-creator/scripts/quick_v
 - Given implementation profile 未声明 plan-bound required check，When prepare，Then在写 manifest 前失败。
 - Given同一 change 已有 round 1，When换 review ID 再 prepare round 1，Then失败；round 4 永远失败。
 - Given codex-exec 父进程可读但 child access handshake 失败，When prove-access/run-layer，Then语义阶段不形成正式 candidate，formal output 保持 pending。
-- Given completed reviewer/verifier payload 在最后一次 frozen-authority 校验前发生漂移，When parent 准备发布 formal output，Then attempt 失败且原 formal bytes 不变；Given child 显式返回合法 `status=failed`，Then保存 failure reason 且保持可重试。
+- Given completed reviewer/verifier payload 在最后一次 frozen-authority 校验前发生漂移，When parent 准备发布 formal output，Then attempt 失败且原 formal bytes 不变；Given child 显式返回 `status=failed`、malformed JSON 或 invalid Artifact View receipt，Then记录 transport failed attempt、formal bytes 不变且同一 run 可重试。
 - Given两个 active attempt 的 write-set 不重叠，When并发运行，Then允许；Given formal write-set 重叠，Then第二个 attempt 在启动 child 前失败。
 - Given run 存在 active event-backed attempt 或 acquired lease，When 执行 `seal-run`，Then 在写入 seal 前失败；Given 旧 abandoned evidence 与 active attempt 同时存在，When 准备同 `changeId` 的替换 Round 1，Then prepare 失败。
 - Given Git index、execution read-set 或 dependency closure 漂移，When authorize-launch/run-layer/gate/finalize，Then旧 run fail closed。

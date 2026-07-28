@@ -1,34 +1,279 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
-  "consumer": "vdd",
-  "request_sha256": "sha256:2fe9d3273c8ec4dc25c377197f781b32bc2b670ba1b987d537cdd7cf8ad0d458",
-  "result_sha256": "sha256:9d912e37c5ba8317d938325e14617289a9004581b54f174912827cbe40cc26db",
-  "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "vdd-refactor-acceptance-20260727-refresh-r2", "consumer": "vdd", "query": "refactor implementation acceptance skill bootstrap phase service policy", "snapshot": {"ref": "refs/heads/main", "commit": "cb156e25f2cf95bbb739e4176f50e254dbe2f84b"}, "policy_revision": "knowledge-consumer-policies.v1"},
-  "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "vdd-refactor-acceptance-20260727-refresh-r2", "status": "matched", "snapshot": {"ref": "refs/heads/main", "commit": "cb156e25f2cf95bbb739e4176f50e254dbe2f84b"}, "candidates": [
-    {"path": ".agents/skills/run-phase-bootstrap-review/SKILL.md", "anchor": "Bootstrap Review Skill", "line_start": 1, "line_end": 1, "source_sha256": "ef538864db4ea1078848db13d4b7c90ae679276cbdb95bc16b782d01b9974b2b", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 3}},
-    {"path": "docs/architecture/phase-service/prototype-routes-and-recovery.md", "anchor": "Prototype Routes And Recovery", "line_start": 1, "line_end": 1, "source_sha256": "a7815d65933cec85148dd1363db45dcb0726ba2f0d573a47037f8385194346b1", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 3}},
-    {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "anchor": "VDD Execution Plan", "line_start": 1, "line_end": 1, "source_sha256": "c82aea2ff3b91cc9aee9ab6a113c8173bc309e52f733c702e0d89105ae078d8d", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 2}},
-    {"path": "AGENTS.md", "anchor": "Repository Guide", "line_start": 1, "line_end": 1, "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 2}},
-    {"path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md", "anchor": "ADR-0041", "line_start": 1, "line_end": 1, "source_sha256": "755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 2}},
-    {"path": "docs/architecture/phase-service/_index.md", "anchor": "Phase Service Architecture", "line_start": 1, "line_end": 1, "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 2}},
-    {"path": "docs/architecture/phase-service/runtime-caddy-and-recovery.md", "anchor": "Runtime Caddy And Recovery", "line_start": 1, "line_end": 1, "source_sha256": "8038312358d6805e7068334f6caded6239d50eb2a3a182ae924fc02d928f3a74", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 2}},
-    {"path": "docs/standards/phase-service.md", "anchor": "Phase Service Standard", "line_start": 1, "line_end": 1, "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 2}},
-    {"path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md", "anchor": "ADR-0037", "line_start": 1, "line_end": 1, "source_sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 1}},
-    {"path": "runtime/phase-a/start-phasea.ps1", "anchor": "Phase A Startup", "line_start": 1, "line_end": 1, "source_sha256": "b25cffbc6d35c9f41139460db0ab9bd9adc921a348e65a7b62824508c1fa5a54", "provenance": ["catalog"], "rank_evidence": {"strategy": "token", "token_matches": 1}}
-  ]},
-  "decisions": [
-    {"owner": "adapter", "candidate": {"path": ".agents/skills/run-phase-bootstrap-review/SKILL.md", "source_sha256": "ef538864db4ea1078848db13d4b7c90ae679276cbdb95bc16b782d01b9974b2b"}, "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity"},
-    {"owner": "adapter", "candidate": {"path": "docs/architecture/phase-service/prototype-routes-and-recovery.md", "source_sha256": "a7815d65933cec85148dd1363db45dcb0726ba2f0d573a47037f8385194346b1"}, "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity"},
-    {"owner": "adapter", "candidate": {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "source_sha256": "c82aea2ff3b91cc9aee9ab6a113c8173bc309e52f733c702e0d89105ae078d8d"}, "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity"},
-    {"owner": "adapter", "candidate": {"path": "AGENTS.md", "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"}, "decision": "accepted", "satisfies": ["repository-rules"], "rejection_reason": null},
-    {"owner": "adapter", "candidate": {"path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md", "source_sha256": "755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"}, "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity"},
-    {"owner": "adapter", "candidate": {"path": "docs/architecture/phase-service/_index.md", "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474"}, "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity"},
-    {"owner": "adapter", "candidate": {"path": "docs/architecture/phase-service/runtime-caddy-and-recovery.md", "source_sha256": "8038312358d6805e7068334f6caded6239d50eb2a3a182ae924fc02d928f3a74"}, "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity"},
-    {"owner": "adapter", "candidate": {"path": "docs/standards/phase-service.md", "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc"}, "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity"},
-    {"owner": "adapter", "candidate": {"path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md", "source_sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111"}, "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity"},
-    {"owner": "adapter", "candidate": {"path": "runtime/phase-a/start-phasea.ps1", "source_sha256": "b25cffbc6d35c9f41139460db0ab9bd9adc921a348e65a7b62824508c1fa5a54"}, "decision": "rejected", "satisfies": [], "rejection_reason": "insufficient_specificity"}
+  "locator_request": {
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "request_id": "vdd-refactor-acceptance-20260728-refresh-r3",
+    "consumer": "vdd",
+    "query": "refactor implementation acceptance skill bootstrap phase service policy",
+    "snapshot": {
+      "ref": "refs/heads/main",
+      "commit": "657c6a98f4cddfacdc79b68a261b70e4aa4af349"
+    },
+    "policy_revision": "knowledge-consumer-policies.v1"
+  },
+  "locator_result": {
+    "candidates": [
+      {
+        "anchor": "Bootstrap Review Skill",
+        "line_end": 1,
+        "line_start": 1,
+        "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 3
+        },
+        "source_sha256": "09e6f82276a48e8ce8f6d28e58cd5c341cbc02c7779b084e5ba830749c895d7f"
+      },
+      {
+        "anchor": "Prototype Routes And Recovery",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "docs/architecture/phase-service/prototype-routes-and-recovery.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 3
+        },
+        "source_sha256": "a7815d65933cec85148dd1363db45dcb0726ba2f0d573a47037f8385194346b1"
+      },
+      {
+        "anchor": "VDD Execution Plan",
+        "line_end": 1,
+        "line_start": 1,
+        "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 2
+        },
+        "source_sha256": "c82aea2ff3b91cc9aee9ab6a113c8173bc309e52f733c702e0d89105ae078d8d"
+      },
+      {
+        "anchor": "Repository Guide",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "AGENTS.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 2
+        },
+        "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"
+      },
+      {
+        "anchor": "ADR-0041",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 2
+        },
+        "source_sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
+      },
+      {
+        "anchor": "Phase Service Architecture",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "docs/architecture/phase-service/_index.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 2
+        },
+        "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474"
+      },
+      {
+        "anchor": "Runtime Caddy And Recovery",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "docs/architecture/phase-service/runtime-caddy-and-recovery.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 2
+        },
+        "source_sha256": "8038312358d6805e7068334f6caded6239d50eb2a3a182ae924fc02d928f3a74"
+      },
+      {
+        "anchor": "Phase Service Standard",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "docs/standards/phase-service.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 2
+        },
+        "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc"
+      },
+      {
+        "anchor": "ADR-0037",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 1
+        },
+        "source_sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111"
+      },
+      {
+        "anchor": "Phase A Startup",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "runtime/phase-a/start-phasea.ps1",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 1
+        },
+        "source_sha256": "b25cffbc6d35c9f41139460db0ab9bd9adc921a348e65a7b62824508c1fa5a54"
+      }
+    ],
+    "request_id": "vdd-refactor-acceptance-20260728-refresh-r3",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "657c6a98f4cddfacdc79b68a261b70e4aa4af349",
+      "ref": "refs/heads/main"
+    },
+    "status": "matched"
+  },
+  "required_modules": [
+    "repository-rules"
   ],
-  "required_modules": ["repository-rules"],
-  "missing_required_modules": [],
-  "preflight": {"status": "ready", "failure_code": null, "context_sha256": "sha256:e7468a32f60f6a301c3a96e07a43ae31ad6257607db99fd568bf0c5d6c0d2826"}
+  "decisions": [
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "source_sha256": "09e6f82276a48e8ce8f6d28e58cd5c341cbc02c7779b084e5ba830749c895d7f"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/prototype-routes-and-recovery.md",
+        "source_sha256": "a7815d65933cec85148dd1363db45dcb0726ba2f0d573a47037f8385194346b1"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+        "source_sha256": "c82aea2ff3b91cc9aee9ab6a113c8173bc309e52f733c702e0d89105ae078d8d"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "AGENTS.md",
+        "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "repository-rules"
+      ],
+      "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "source_sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/_index.md",
+        "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/runtime-caddy-and-recovery.md",
+        "source_sha256": "8038312358d6805e7068334f6caded6239d50eb2a3a182ae924fc02d928f3a74"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/standards/phase-service.md",
+        "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+        "source_sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "runtime/phase-a/start-phasea.ps1",
+        "source_sha256": "b25cffbc6d35c9f41139460db0ab9bd9adc921a348e65a7b62824508c1fa5a54"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    }
+  ],
+  "request_sha256": "sha256:e852bd5f9a9127c4691e155fe50d7d20f63d5e2780068974880eed9207624b13",
+  "result_sha256": "sha256:4a3d7c65e39e0b169fabda4f489d202553d8504c7cf246448a6eb6d083994659",
+  "preflight": {
+    "status": "ready",
+    "failure_code": null,
+    "context_sha256": "sha256:4566f8e7aa0f9a1ff0a62f25ce210275817ef7f2eb81905c8225631199a89885"
+  }
 }

@@ -194,6 +194,14 @@ REVIEW_CYCLE_POLICY = {
     "p2OnlyTriggersFullReview": False,
     "onHardLimit": "manual_pause",
 }
+ARTIFACT_VIEW_READ_RECEIPT_SCHEMA = "bootstrap-artifact-view-read-receipt.v1"
+BOUNDED_SCOPE_PROFILES = {
+    "bootstrap-implementation-conformance",
+    "bootstrap-skill-route",
+    "bootstrap-focused-change",
+}
+DIRECTORY_SCOPE_ATTESTATION = "directory-is-minimal-complete-closure"
+REVIEW_SCOPE_POLICY_SCHEMA = "bootstrap-review-scope-policy.v1"
 SEMANTIC_REVIEW_POLICY = {
     "authority": "bootstrap",
     "requiredExclusivityAttestation": "no-other-semantic-review-in-cycle",
@@ -273,6 +281,10 @@ def normalize_finding_identity_text(value: str) -> str:
 
 class BootstrapError(Exception):
     """A deterministic operator or validation error."""
+
+
+class TransportAttemptError(BootstrapError):
+    """A retryable child process or candidate transport failure."""
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -775,6 +787,47 @@ def collect_scope(repository_root: Path, scopes: list[str], out_dir: Path) -> tu
     return scope_names, artifacts
 
 
+def build_review_scope_policy(
+    repository_root: Path,
+    scopes: list[str],
+    profile_name: str,
+    directory_scope_attestation: str | None,
+) -> dict[str, Any]:
+    directory_scopes: list[str] = []
+    for raw in scopes:
+        candidate = Path(raw)
+        if not candidate.is_absolute():
+            candidate = repository_root / candidate
+        candidate = ensure_within(candidate, repository_root, "Reviewed scope")
+        if candidate.is_dir():
+            directory_scopes.append(candidate.relative_to(repository_root).as_posix())
+
+    directory_scopes = sorted(set(directory_scopes))
+    if directory_scopes and profile_name in BOUNDED_SCOPE_PROFILES:
+        if directory_scope_attestation != DIRECTORY_SCOPE_ATTESTATION:
+            raise BootstrapError(
+                f"{profile_name} directory scopes require --directory-scope-attestation "
+                f"{DIRECTORY_SCOPE_ATTESTATION}"
+            )
+        strategy = "attested-minimal-complete-closure"
+    elif directory_scopes:
+        if directory_scope_attestation is not None:
+            raise BootstrapError("Directory scope attestation is not valid for this review profile")
+        strategy = "profile-complete-directory"
+    else:
+        if directory_scope_attestation is not None:
+            raise BootstrapError("Directory scope attestation requires at least one directory scope")
+        strategy = "explicit-files"
+
+    return {
+        "schemaVersion": REVIEW_SCOPE_POLICY_SCHEMA,
+        "strategy": strategy,
+        "directoryScopes": directory_scopes,
+        "attestation": directory_scope_attestation,
+        "authorizes": [],
+    }
+
+
 def current_scope_artifact_names(repository_root: Path, scopes: list[str], run_dir: Path) -> list[str]:
     _scope_names, artifacts = collect_scope(repository_root, scopes, run_dir)
     return [item["artifact"] for item in artifacts]
@@ -1116,11 +1169,23 @@ def validate_review_cycle(
     if predecessor_manifest.get("profileName") != profile_name:
         raise BootstrapError("Predecessor run uses a different review profile")
     predecessor_result = finalized_review_result(predecessor_dir, predecessor_manifest)
-    if review_round == REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]:
-        predecessor_has_blocker = any(
-            isinstance(item, dict) and item.get("proposedSeverity") in {"P0", "P1"}
-            for item in predecessor_result.get("findings", [])
+    predecessor_findings = [
+        item for item in predecessor_result.get("findings", []) if isinstance(item, dict)
+    ]
+    predecessor_has_blocker = any(
+        item.get("proposedSeverity") in {"P0", "P1"} for item in predecessor_findings
+    )
+    predecessor_is_p2_only = bool(predecessor_findings) and all(
+        item.get("proposedSeverity") == "P2" for item in predecessor_findings
+    )
+    if predecessor_is_p2_only:
+        raise BootstrapError(
+            "A P2-only predecessor does not trigger another full semantic review; "
+            "dispose P2 findings in the current run and use deterministic targeted validation"
         )
+    if review_round == 2 and not predecessor_has_blocker:
+        raise BootstrapError("A clean predecessor does not trigger another full semantic review")
+    if review_round == REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]:
         context_changed = predecessor_manifest.get("authorityContextHash") != current_authority_context_hash
         if not predecessor_has_blocker and not context_changed:
             raise BootstrapError(
@@ -1377,10 +1442,11 @@ the live original path; resolve each relative `snapshotPath` against the assigne
 never against the attempt workspace or current directory. Cite the corresponding `originalPath` and
 original line range in candidates.
 Do not modify the controller-owned formal output and do not run `validate-layer`; return only the
-structured candidate payload requested by the Codex Exec runtime wrapper. Do not hand-copy the
-coverage path arrays: after reading every Artifact View entry, derive `coverage.requiredArtifacts`
-directly from the frozen manifest's artifact list, copy that same ordered list to `readArtifacts`,
-and set `missingArtifacts=[]`. A failed payload requires a concrete `failureReason`."""
+structured candidate payload requested by the Codex Exec runtime wrapper. Do not return coverage
+path arrays. After reading every Artifact View entry, return the compact
+`artifactViewReadReceipt` requested by the wrapper. The parent validates that receipt and the
+same-session handshake, then constructs formal coverage from the frozen manifest. A failed payload
+requires a concrete `failureReason`."""
     else:
         execution_contract = f"""Do not start until `review-launch-authorization.json` exists and validates. In manual or
 specialized-agent mode, the operator owns recovery and process evidence.
@@ -1475,6 +1541,34 @@ def reviewer_template(
     if attempt_id is not None:
         output["attemptId"] = attempt_id
     return output
+
+
+def artifact_view_read_receipt(manifest: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schemaVersion": ARTIFACT_VIEW_READ_RECEIPT_SCHEMA,
+        "artifactViewManifestHash": manifest["artifactView"]["manifestHash"],
+        "artifactCount": len(manifest["artifacts"]),
+        "complete": True,
+    }
+
+
+def validate_artifact_view_read_receipt(receipt: Any, manifest: dict[str, Any]) -> None:
+    errors = schema_validation_errors(
+        "bootstrap-artifact-view-read-receipt.v1.schema.json", receipt
+    )
+    expected = artifact_view_read_receipt(manifest)
+    if errors or receipt != expected:
+        detail = "; ".join(errors) if errors else "receipt does not match the frozen Artifact View"
+        raise TransportAttemptError("Codex Artifact View read receipt is invalid: " + detail)
+
+
+def completed_reviewer_coverage(manifest: dict[str, Any]) -> dict[str, list[str]]:
+    required = [item["artifact"] for item in manifest["artifacts"]]
+    return {
+        "requiredArtifacts": required,
+        "readArtifacts": required,
+        "missingArtifacts": [],
+    }
 
 
 def preflight_template(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -1696,6 +1790,12 @@ def command_prepare(args: argparse.Namespace) -> int:
         # Reviewers receive the bound request/result/decision document itself,
         # not only the selected-candidate summary in review-input.json.
         scope_inputs.append(args.knowledge_context)
+    review_scope_policy = build_review_scope_policy(
+        repository_root,
+        list(args.scope),
+        args.profile,
+        args.directory_scope_attestation,
+    )
     scopes, artifacts = collect_scope(repository_root, scope_inputs, out_dir)
     knowledge_context = freeze_knowledge_context(repository_root, args.knowledge_context, artifacts)
     context_class_artifacts = build_context_class_artifacts(
@@ -1780,6 +1880,7 @@ def command_prepare(args: argparse.Namespace) -> int:
         "authorityContextHash": context_hash,
         "completenessPolicy": profile["completenessPolicy"],
         "scope": scopes,
+        "reviewScopePolicy": review_scope_policy,
         "authorityRevision": git_revision(repository_root),
         "worktreeDirty": git_worktree_dirty(repository_root),
         "authorityClass": AUTHORITY_CLASS,
@@ -1871,6 +1972,39 @@ def validate_manifest_controls(manifest: dict[str, Any], profile: dict[str, Any]
         raise BootstrapError("review-input.json has a stale or substituted controlPlanePolicy")
     if manifest.get("p2DispositionPolicy") != P2_DISPOSITION_POLICY:
         raise BootstrapError("review-input.json has a stale or substituted p2DispositionPolicy")
+    scope_policy = manifest.get("reviewScopePolicy")
+    if scope_policy is not None:
+        required_scope_policy_fields = {
+            "schemaVersion", "strategy", "directoryScopes", "attestation", "authorizes"
+        }
+        if not isinstance(scope_policy, dict) or set(scope_policy) != required_scope_policy_fields:
+            raise BootstrapError("review-input.json has an invalid reviewScopePolicy")
+        directory_scopes = scope_policy.get("directoryScopes")
+        if (
+            scope_policy.get("schemaVersion") != REVIEW_SCOPE_POLICY_SCHEMA
+            or scope_policy.get("authorizes") != []
+            or not isinstance(directory_scopes, list)
+            or directory_scopes != sorted(set(directory_scopes))
+            or any(item not in manifest.get("scope", []) for item in directory_scopes)
+        ):
+            raise BootstrapError("review-input.json has an invalid reviewScopePolicy")
+        if directory_scopes and manifest.get("profileName") in BOUNDED_SCOPE_PROFILES:
+            if (
+                scope_policy.get("strategy") != "attested-minimal-complete-closure"
+                or scope_policy.get("attestation") != DIRECTORY_SCOPE_ATTESTATION
+            ):
+                raise BootstrapError("review-input.json lacks bounded directory scope attestation")
+        elif directory_scopes:
+            if (
+                scope_policy.get("strategy") != "profile-complete-directory"
+                or scope_policy.get("attestation") is not None
+            ):
+                raise BootstrapError("review-input.json has invalid profile directory scope policy")
+        elif (
+            scope_policy.get("strategy") != "explicit-files"
+            or scope_policy.get("attestation") is not None
+        ):
+            raise BootstrapError("review-input.json has invalid explicit-file scope policy")
     for field in ("writeSet", "executionReadSet", "dependencyClosure"):
         values = manifest.get(field)
         if not isinstance(values, list) or values != sorted(set(values)) or any(
@@ -1921,7 +2055,11 @@ def validate_manifest_controls(manifest: dict[str, Any], profile: dict[str, Any]
         raise BootstrapError("review-input.json has stale or substituted authorityContextHash")
 
 
-def load_run(run_dir_arg: str) -> tuple[Path, dict[str, Any], Path]:
+def load_run(
+    run_dir_arg: str,
+    *,
+    require_fresh_artifacts: bool = True,
+) -> tuple[Path, dict[str, Any], Path]:
     run_dir = Path(run_dir_arg).resolve()
     manifest = read_json(run_dir / "review-input.json")
     repository_root = Path(manifest.get("repositoryRoot", "")).resolve()
@@ -1954,24 +2092,25 @@ def load_run(run_dir_arg: str) -> tuple[Path, dict[str, Any], Path]:
         manifest["profileName"],
         manifest["authorityContextHash"],
     )
-    if git_revision(repository_root) != manifest.get("authorityRevision"):
-        raise BootstrapError("Git authority revision changed after prepare")
-    try:
-        current_index_hash = git_index_hash(repository_root)
-    except ControlPlaneError as exc:
-        raise BootstrapError(str(exc)) from exc
-    if current_index_hash != manifest.get("gitIndexHash"):
-        raise BootstrapError("Git index changed after prepare")
-    prepared_names = [item.get("artifact") for item in manifest.get("artifacts", [])]
-    current_names = current_scope_artifact_names(repository_root, manifest.get("scope", []), run_dir)
-    if current_names != prepared_names:
-        raise BootstrapError("Prepared scope file inventory changed after prepare")
-    for artifact in manifest.get("artifacts", []):
-        if not isinstance(artifact, dict) or not isinstance(artifact.get("artifact"), str):
-            raise BootstrapError("review-input.json contains an invalid artifact entry")
-        path = ensure_within(repository_root / artifact["artifact"], repository_root, "Input artifact")
-        if not path.is_file() or file_hash(path) != artifact.get("sha256"):
-            raise BootstrapError(f"Prepared input artifact is stale: {artifact['artifact']}")
+    if require_fresh_artifacts:
+        if git_revision(repository_root) != manifest.get("authorityRevision"):
+            raise BootstrapError("Git authority revision changed after prepare")
+        try:
+            current_index_hash = git_index_hash(repository_root)
+        except ControlPlaneError as exc:
+            raise BootstrapError(str(exc)) from exc
+        if current_index_hash != manifest.get("gitIndexHash"):
+            raise BootstrapError("Git index changed after prepare")
+        prepared_names = [item.get("artifact") for item in manifest.get("artifacts", [])]
+        current_names = current_scope_artifact_names(repository_root, manifest.get("scope", []), run_dir)
+        if current_names != prepared_names:
+            raise BootstrapError("Prepared scope file inventory changed after prepare")
+        for artifact in manifest.get("artifacts", []):
+            if not isinstance(artifact, dict) or not isinstance(artifact.get("artifact"), str):
+                raise BootstrapError("review-input.json contains an invalid artifact entry")
+            path = ensure_within(repository_root / artifact["artifact"], repository_root, "Input artifact")
+            if not path.is_file() or file_hash(path) != artifact.get("sha256"):
+                raise BootstrapError(f"Prepared input artifact is stale: {artifact['artifact']}")
     if manifest.get("executionMode") == "codex-exec":
         view_binding = manifest.get("artifactView")
         if not isinstance(view_binding, dict):
@@ -1980,7 +2119,12 @@ def load_run(run_dir_arg: str) -> tuple[Path, dict[str, Any], Path]:
         if not view_path.is_file() or file_hash(view_path) != view_binding.get("manifestHash"):
             raise BootstrapError("Artifact View manifest is missing or stale")
         try:
-            view_hash = validate_artifact_view(run_dir, repository_root, read_json(view_path))
+            view_hash = validate_artifact_view(
+                run_dir,
+                repository_root,
+                read_json(view_path),
+                require_live_originals=require_fresh_artifacts,
+            )
         except ControlPlaneError as exc:
             raise BootstrapError(str(exc)) from exc
         if view_hash != view_binding["manifestHash"]:
@@ -2633,16 +2777,19 @@ def command_prove_access(args: argparse.Namespace) -> int:
 
 def parse_child_json(path: Path) -> dict[str, Any]:
     if not path.is_file():
-        raise BootstrapError("Codex child completed without structured candidate output")
-    text = path.read_text(encoding="utf-8").strip()
+        raise TransportAttemptError("Codex child completed without structured candidate output")
+    try:
+        text = path.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError) as exc:
+        raise TransportAttemptError(f"Codex child output is not readable UTF-8: {exc}") from exc
     if text.startswith("```"):
-        raise BootstrapError("Codex child output must be raw JSON without Markdown fences")
+        raise TransportAttemptError("Codex child output must be raw JSON without Markdown fences")
     try:
         value = json.loads(text, parse_constant=lambda item: (_ for _ in ()).throw(ValueError(item)))
     except ValueError as exc:
-        raise BootstrapError(f"Codex child output is not strict JSON: {exc}") from exc
+        raise TransportAttemptError(f"Codex child output is not strict JSON: {exc}") from exc
     if not isinstance(value, dict):
-        raise BootstrapError("Codex child candidate output must be an object")
+        raise TransportAttemptError("Codex child candidate output must be an object")
     return value
 
 
@@ -2949,16 +3096,20 @@ def verifier_evidence_requirements(blockers: list[dict[str, Any]]) -> str:
                 else ""
             )
         )
+        required_evidence = list(dict.fromkeys([finding_reference, *blocker["contextRead"]]))
         context_references = "\n".join(
             f"  - `{reference}`" for reference in blocker["contextRead"]
         )
+        copyable_evidence = json.dumps(required_evidence, ensure_ascii=False)
         sections.append(
             f"### `{blocker['findingId']}`\n"
             f"- Required finding evidence: `{finding_reference}`\n"
             "- Coverage rule: one `evidenceChecked` reference must cover the entire inclusive "
             "finding range above; split partial references do not satisfy it.\n"
             "- Required `contextRead` coverage:\n"
-            f"{context_references}"
+            f"{context_references}\n"
+            "- Required `evidenceChecked` minimum closure: copy this JSON array verbatim into "
+            f"the decision unless you add extra valid evidence: `{copyable_evidence}`"
         )
     return "\n\n".join(sections)
 
@@ -3011,7 +3162,12 @@ def runner_prompt(
         "If the command fails, stop and return no candidates.\n"
         f"Return raw JSON only with schemaVersion=bootstrap-layer-candidate.v1, attemptId={attempt_id}, "
         f"role={role}, inputHash={manifest['inputHash']}, accessHandshakeHash, and payload. "
-        "For a reviewer, payload contains status, coverage, candidates, and failureReason when failed. "
+        "For a reviewer, payload contains status, candidates, and failureReason when failed. A "
+        "completed reviewer payload must contain artifactViewReadReceipt with "
+        f"schemaVersion={ARTIFACT_VIEW_READ_RECEIPT_SCHEMA}, "
+        f"artifactViewManifestHash={manifest['artifactView']['manifestHash']}, "
+        f"artifactCount={len(manifest['artifacts'])}, and complete=true. Do not return coverage arrays; "
+        "the parent owns formal coverage. "
         + (
             "For acceptance_auditor, payload must also contain inventoryAttestation using "
             "bootstrap-acceptance-inventory-attestation.v1, bound to this attempt and Artifact View. "
@@ -3130,9 +3286,10 @@ def run_codex_attempt(
             run_dir, manifest,
             {"eventType": "attempt-failed", "timestamp": utc_now(), "attemptId": attempt_id,
              "operationId": operation_id, "role": role, "pid": 0,
-             "processIdentity": "unlaunched", "writeSet": request["writeSet"], "note": str(exc)},
+             "processIdentity": "unlaunched", "writeSet": request["writeSet"],
+             "failureClass": "transport", "note": str(exc)},
         )
-        raise BootstrapError(f"Cannot launch Codex child: {exc}") from exc
+        raise TransportAttemptError(f"Cannot launch Codex child: {exc}") from exc
     identity = process_creation_identity(process.pid)
     if identity is None:
         process.kill()
@@ -3147,9 +3304,9 @@ def run_codex_attempt(
             {"eventType": "attempt-failed", "timestamp": utc_now(), "attemptId": attempt_id,
              "operationId": operation_id, "role": role, "pid": process.pid,
              "processIdentity": "unavailable", "writeSet": request["writeSet"],
-             "note": "Cannot capture Codex child process identity"},
+             "failureClass": "transport", "note": "Cannot capture Codex child process identity"},
         )
-        raise BootstrapError("Cannot capture Codex child process identity")
+        raise TransportAttemptError("Cannot capture Codex child process identity")
     append_attempt_event_and_rebuild(
         run_dir, manifest,
         {
@@ -3181,8 +3338,9 @@ def run_codex_attempt(
         "note": stderr[-500:] if process.returncode else "",
     }
     if process.returncode != 0:
+        process_event["failureClass"] = "transport"
         append_attempt_event_and_rebuild(run_dir, manifest, process_event)
-        raise BootstrapError(f"Codex child failed with exit code {process.returncode}")
+        raise TransportAttemptError(f"Codex child failed with exit code {process.returncode}")
     append_process_event(run_dir, process_event)
     try:
         candidate = parse_child_json(candidate_path)
@@ -3191,7 +3349,8 @@ def run_codex_attempt(
             run_dir, manifest,
             {"eventType": "attempt-failed", "timestamp": utc_now(), "attemptId": attempt_id,
              "operationId": operation_id, "role": role, "pid": process.pid,
-             "processIdentity": identity, "writeSet": request["writeSet"], "note": str(exc)},
+             "processIdentity": identity, "writeSet": request["writeSet"],
+             "failureClass": "transport", "note": str(exc)},
         )
         raise
     return candidate, attempt_dir
@@ -3205,15 +3364,37 @@ def validate_child_candidate(
         "role": role, "inputHash": manifest["inputHash"],
     }
     if any(candidate.get(key) != value for key, value in expected.items()):
-        raise BootstrapError("Codex child candidate binding is invalid")
+        raise TransportAttemptError("Codex child candidate binding is invalid")
     handshake = read_json(attempt_dir / "access-handshake.json")
     handshake_hash = validate_access_handshake_payload(run_dir, manifest, role, handshake)
     if candidate.get("accessHandshakeHash") != handshake_hash:
-        raise BootstrapError("Codex child did not return its hash-bound access handshake")
+        raise TransportAttemptError("Codex child did not return its hash-bound access handshake")
     payload = candidate.get("payload")
     if not isinstance(payload, dict):
-        raise BootstrapError("Codex child candidate payload must be an object")
+        raise TransportAttemptError("Codex child candidate payload must be an object")
     return payload
+
+
+def validate_reviewer_candidate_payload(
+    payload: dict[str, Any], manifest: dict[str, Any], role: str
+) -> None:
+    allowed = {"status", "candidates", "failureReason", "artifactViewReadReceipt"}
+    if role == "acceptance_auditor" and requires_acceptance_inventory_attestation(manifest):
+        allowed.add("inventoryAttestation")
+    if set(payload) - allowed:
+        raise TransportAttemptError("Codex reviewer payload contains unexpected fields")
+    status = payload.get("status")
+    candidates = payload.get("candidates")
+    if status == "failed":
+        reason = payload.get("failureReason")
+        if not isinstance(reason, str) or not reason.strip() or candidates != []:
+            raise TransportAttemptError("Codex failed reviewer payload is invalid")
+        raise TransportAttemptError("Codex reviewer reported failure: " + reason.strip())
+    if status != "completed" or not isinstance(candidates, list):
+        raise TransportAttemptError("Codex completed reviewer payload is invalid")
+    if "failureReason" in payload:
+        raise TransportAttemptError("Codex completed reviewer payload cannot contain failureReason")
+    validate_artifact_view_read_receipt(payload.get("artifactViewReadReceipt"), manifest)
 
 
 def command_run_layer(args: argparse.Namespace) -> int:
@@ -3260,19 +3441,22 @@ def command_run_layer(args: argparse.Namespace) -> int:
             validate_launch_authorization(run_dir, manifest)
             write_json(run_dir / "verifier-output.json", formal)
         else:
+            validate_reviewer_candidate_payload(payload, manifest, args.role)
             formal = reviewer_template(args.role, manifest, attempt_id=attempt_dir.name)
-            for field in ("status", "coverage", "candidates"):
-                formal[field] = payload.get(field)
-            if payload.get("status") == "failed":
-                formal["failureReason"] = payload.get("failureReason")
+            formal["status"] = "completed"
+            formal["coverage"] = completed_reviewer_coverage(manifest)
+            formal["candidates"] = payload["candidates"]
             status = formal.get("status")
-            validate_reviewer_output(
-                formal,
-                manifest,
-                args.role,
-                repository_root,
-                require_completed=status == "completed",
-            )
+            try:
+                validate_reviewer_output(
+                    formal,
+                    manifest,
+                    args.role,
+                    repository_root,
+                    require_completed=status == "completed",
+                )
+            except BootstrapError as exc:
+                raise TransportAttemptError("Codex reviewer candidate is invalid: " + str(exc)) from exc
             # ADR-0041: revalidate frozen authority before publishing completed evidence.
             validate_launch_authorization(run_dir, manifest)
             if (
@@ -3280,25 +3464,32 @@ def command_run_layer(args: argparse.Namespace) -> int:
                 and status == "completed"
                 and requires_acceptance_inventory_attestation(manifest)
             ):
-                bundle = build_acceptance_auditor_role_bundle(
-                    formal,
-                    payload.get("inventoryAttestation"),
-                    attempt_dir.name,
-                    manifest,
-                )
+                try:
+                    bundle = build_acceptance_auditor_role_bundle(
+                        formal,
+                        payload.get("inventoryAttestation"),
+                        attempt_dir.name,
+                        manifest,
+                    )
+                except BootstrapError as exc:
+                    raise TransportAttemptError(
+                        "Codex acceptance inventory attestation is invalid: " + str(exc)
+                    ) from exc
                 write_json(
                     run_dir / "reviewer-outputs" / "acceptance_auditor.role-bundle.json",
                     bundle,
                 )
             write_json(run_dir / "reviewer-outputs" / f"{args.role}.json", formal)
-            if status == "failed":
-                raise BootstrapError(str(formal["failureReason"]))
     except BootstrapError as exc:
+        failure_class = (
+            "transport" if isinstance(exc, TransportAttemptError) else "authority_or_semantic"
+        )
         append_attempt_event_and_rebuild(
             run_dir, manifest,
             {"eventType": "attempt-failed", "timestamp": utc_now(), "attemptId": attempt_dir.name,
              "operationId": operation_id, "role": args.role, "pid": process_result["pid"],
-              "processIdentity": identity, "writeSet": event_write_set, "note": str(exc)},
+              "processIdentity": identity, "writeSet": event_write_set,
+              "failureClass": failure_class, "note": str(exc)},
         )
         raise
     append_attempt_event_and_rebuild(
@@ -3601,6 +3792,9 @@ ID and no other IDs. Decisions are `confirmed`, `refuted`, or `unverified`.
 For `unverified`, select `security`, `data_loss`, or `other`; the gateway derives the disposition.
 For each decision, `evidenceChecked` must cover the candidate's exact artifact line range and every
 reference in its `contextRead`; an unrelated in-scope reference is not sufficient.
+For each finding, copy the displayed `Required evidenceChecked minimum closure` JSON array verbatim
+into that decision's `evidenceChecked` field. You may append extra valid evidence but must not omit,
+rename, shorten, or substitute any displayed reference.
 Every decision must contain exactly `findingId`, `decision`, `reason`, and `evidenceChecked`.
 Use `reason` for the concise evidence-based conclusion; do not use `rationale`. Include
 `unverifiedClass` only when `decision` is `unverified`.
@@ -3627,6 +3821,8 @@ def evaluate_reviewer_outputs(
     manifest: dict[str, Any],
     repository_root: Path,
     preflight_result_hash: str | None = None,
+    *,
+    validate_live_evidence: bool = True,
 ) -> dict[str, Any]:
     if preflight_result_hash is None:
         preflight_result_hash = validate_preflight_result(run_dir, manifest)
@@ -3675,7 +3871,8 @@ def evaluate_reviewer_outputs(
             continue
         completed.append(layer)
         for candidate in output["candidates"]:
-            code, reason = candidate_reason(candidate, manifest, repository_root)
+            code, reason = (candidate_reason(candidate, manifest, repository_root)
+                            if validate_live_evidence else (None, ""))
             if code:
                 rejections.append(rejection(candidate, layer, manifest, code, reason))
                 continue
@@ -4479,7 +4676,8 @@ def validate_finalized_run_evidence(
     if gate.get("rejectionsHash") != value_hash(rejections_doc):
         raise BootstrapError("review-rejections.json changed after gate")
     reevaluated = evaluate_reviewer_outputs(
-        run_dir, manifest, repository_root, preflight_result_hash
+        run_dir, manifest, repository_root, preflight_result_hash,
+        validate_live_evidence=True,
     )
     if reevaluated["candidatesDoc"] != candidate_doc:
         raise BootstrapError("Reviewer outputs no longer reproduce review-candidates.json")
@@ -4718,8 +4916,13 @@ def command_validate_finalized_run(args: argparse.Namespace) -> int:
 
 
 def command_finalize(args: argparse.Namespace) -> int:
-    run_dir, manifest, repository_root = load_run(args.run_dir)
-    validate_launch_authorization(run_dir, manifest)
+    run_dir, manifest, repository_root = load_run(args.run_dir, require_fresh_artifacts=False)
+    stale_after_repair = False
+    try:
+        load_run(args.run_dir)
+        validate_launch_authorization(run_dir, manifest)
+    except BootstrapError:
+        stale_after_repair = True
     result_path = run_dir / "review-gate-result.json"
     if result_path.exists():
         existing_result = read_json(result_path)
@@ -4741,7 +4944,8 @@ def command_finalize(args: argparse.Namespace) -> int:
     if gate.get("rejectionsHash") != value_hash(rejections_doc):
         raise BootstrapError("review-rejections.json changed after gate")
     reevaluated = evaluate_reviewer_outputs(
-        run_dir, manifest, repository_root, preflight_result_hash
+        run_dir, manifest, repository_root, preflight_result_hash,
+        validate_live_evidence=not stale_after_repair,
     )
     if reevaluated["candidatesDoc"] != candidate_doc:
         raise BootstrapError("Reviewer outputs no longer reproduce review-candidates.json")
@@ -4752,11 +4956,12 @@ def command_finalize(args: argparse.Namespace) -> int:
     findings = candidate_doc.get("findings") if isinstance(candidate_doc, dict) else None
     if not isinstance(findings, list):
         raise BootstrapError("review-candidates.json is invalid")
-    for finding in findings:
-        artifact = finding.get("artifact", "") if isinstance(finding, dict) else ""
-        prepared = next((item for item in manifest["artifacts"] if item["artifact"] == artifact), None)
-        if prepared is None or file_hash(ensure_within(repository_root / artifact, repository_root, "Finding artifact")) != prepared["sha256"]:
-            raise BootstrapError(f"Finding evidence became stale before finalize: {artifact}")
+    if not stale_after_repair:
+        for finding in findings:
+            artifact = finding.get("artifact", "") if isinstance(finding, dict) else ""
+            prepared = next((item for item in manifest["artifacts"] if item["artifact"] == artifact), None)
+            if prepared is None or file_hash(ensure_within(repository_root / artifact, repository_root, "Finding artifact")) != prepared["sha256"]:
+                raise BootstrapError(f"Finding evidence became stale before finalize: {artifact}")
     blockers = {item["findingId"]: item for item in findings if item.get("proposedSeverity") in {"P0", "P1"}}
     recovery = validate_verifier_recovery_events(run_dir, manifest, blockers=blockers)
     if recovery["open"]:
@@ -4816,6 +5021,8 @@ def command_finalize(args: argparse.Namespace) -> int:
         status = "advisory"
     else:
         status = "clean"
+    if stale_after_repair and status != "blocked":
+        raise BootstrapError("Stale review input may only finalize a confirmed blocking result")
     result = {
         "schemaVersion": "review-result.v1",
         "authorityClass": AUTHORITY_CLASS,
@@ -4886,7 +5093,7 @@ def command_finalize(args: argparse.Namespace) -> int:
 
 
 def command_run_p2_command(args: argparse.Namespace) -> int:
-    run_dir, manifest, repository_root = load_run(args.run_dir)
+    run_dir, manifest, repository_root = load_run(args.run_dir, require_fresh_artifacts=False)
     gate = read_json(run_dir / "review-candidates.json")
     matching_findings = [
         item for item in gate.get("findings", [])
@@ -5335,6 +5542,11 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--repair-closure")
     prepare.add_argument("--profile", required=True)
     prepare.add_argument("--scope", action="append", required=True)
+    prepare.add_argument(
+        "--directory-scope-attestation",
+        choices=[DIRECTORY_SCOPE_ATTESTATION],
+        help="Acknowledge that each bounded-profile directory scope is the minimal complete closure",
+    )
     prepare.add_argument(
         "--context-class",
         action="append",

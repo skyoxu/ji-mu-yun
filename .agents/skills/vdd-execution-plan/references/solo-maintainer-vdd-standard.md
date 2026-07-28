@@ -19,6 +19,24 @@ Use Git baseline/range or a scoped dirty-worktree identity. Bind current contrac
 
 Repairs first run the smallest targeted checks for the affected layer. A local slice change invalidates only that slice and declared downstream dependents. One final full replay follows stabilization; replay all slices only after a shared lifecycle contract, global validator semantic, baseline identity, or all-slice dependency changes.
 
+Repairs stay in the original execution-plan directory by default. Append
+`repair/round-<n>/` with the finalized finding set, predecessor identity,
+bounded repair slices, and hash-bound closure. Validators must accept ordered
+repair rounds without rewriting completed initial slices. A successor requires
+an explicit supersede or incompatible-scope decision.
+
+Review scope is the smallest complete consumer closure. Name explicit changed
+files, direct consumers, targeted tests, plan authority, standards, repository
+rules, and current acceptance evidence. Do not use a whole source, test, Skill,
+document, log, or plan directory merely because it contains one relevant file;
+a directory scope needs an explicit minimal-closure attestation.
+
+Codex process failure, malformed child JSON, and an invalid Artifact View
+receipt are transport attempt failures. Retry the same role in the same run;
+they consume no semantic round and create no successor lineage. P2-only results
+use current-run disposition and targeted deterministic closure, never an
+automatic complete semantic review.
+
 ## Optional Controls
 
 `resumable` adds compact state and a 95 report only for cross-session or dependent work. `self-hosted` adds only protocol fixtures and migration checks consumed by workflow-control changes. Filesystem edge fixtures, recovery ledgers, review, Bootstrap evidence, external trust roots, signatures, verifier separation, and distributed publication are not defaults.

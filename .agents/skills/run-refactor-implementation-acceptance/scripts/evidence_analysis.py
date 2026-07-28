@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ElementTree
 from pathlib import Path
 from typing import Any
 
-from acceptance_core import InputError, canonical_hash
+from acceptance_core import InputError, candidate_changed_paths, canonical_hash
 
 
 _EXCLUSION_REASONS = {
@@ -35,6 +35,11 @@ def validate_changed_line_set(value: Any) -> list[dict[str, Any]]:
     entries = value.get("lines")
     if not isinstance(entries, list):
         raise InputError("changed-line set lines are invalid")
+    phase_paths = value.get("phaseChangedSourcePaths")
+    if not isinstance(phase_paths, list) or any(not _phase_source(path) for path in phase_paths) or len(phase_paths) != len(set(phase_paths)):
+        raise InputError("changed-line set Phase changed source paths are invalid")
+    if phase_paths and not entries:
+        raise InputError("changed-line set cannot be empty for Phase changed sources")
     observed: set[tuple[str, int]] = set()
     normalized: list[dict[str, Any]] = []
     for entry in entries:
@@ -58,6 +63,8 @@ def validate_changed_line_set(value: Any) -> list[dict[str, Any]]:
         else:
             raise InputError("changed-line classification is invalid")
         normalized.append({"path": entry["path"], "line": line, "classification": classification, "exclusionReason": reason})
+    if {entry["path"] for entry in normalized} != set(phase_paths):
+        raise InputError("changed-line set does not cover every declared Phase source")
     return normalized
 
 
@@ -90,6 +97,7 @@ def analyze_diff_coverage(
     baseline_revision: str,
     candidate_revision: str,
     candidate_manifest_hash: str,
+    candidate_manifest: Any,
     changed_line_set: Any,
     cobertura_path: Path,
     source_map: dict[str, str],
@@ -99,6 +107,11 @@ def analyze_diff_coverage(
     entries = validate_changed_line_set(changed_line_set)
     if changed_line_set["candidateContentManifestHash"] != candidate_manifest_hash:
         raise InputError("changed-line set is bound to another candidate manifest")
+    if canonical_hash(candidate_manifest) != candidate_manifest_hash:
+        raise InputError("candidate manifest hash is stale")
+    expected_phase_paths = sorted(path for path in candidate_changed_paths(candidate_manifest) if _phase_source(path))
+    if changed_line_set["phaseChangedSourcePaths"] != expected_phase_paths:
+        raise InputError("changed-line set does not match candidate Phase paths")
     if not isinstance(acceptance_run_id, str) or not acceptance_run_id or not isinstance(test_run_evidence_id, str) or not test_run_evidence_id:
         raise InputError("coverage run identity is invalid")
     if not cobertura_path.is_file():

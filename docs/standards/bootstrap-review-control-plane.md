@@ -2,7 +2,7 @@
 
 Status: Accepted
 Language: English
-Authority: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`
+Authorities: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`, `docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`, and `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`
 
 ## Purpose
 
@@ -16,6 +16,7 @@ This standard defines the durable protocol for evidence-gated Bootstrap Review. 
 - P0/P1 candidates require an independent verifier that is not a discovery reviewer.
 - A change cycle has a three-full-round hard limit. Changing a review ID does not reset the round.
 - A final result cannot contain an open accepted P0 or P1.
+- A clean or P2-only finalized predecessor does not trigger another complete semantic review. P2 is disposed in the current run with typed targeted evidence.
 - Every accepted P2 must be fixed, refuted, or explicitly deferred. High-risk P2 cannot be deferred. A deferral requires schema-valid typed owner, command-registry, non-impact, recheck, and process-result documents bound to the current review, input, frozen candidate, policy, authority root, finding, scope, immutable command descriptor, runner identity, append-only process event, stdout/stderr bytes, success exit, and expiry. Expiry or any stale transitive byte blocks automatically. Successful typed closure-process evidence is required when the disposition becomes fixed or refuted, not while it remains deferred. These proof documents always carry `authorizes=[]` and exclude implementation acceptance, protected handoff, release, commit, and done.
 - Each canonical profile hash-binds the authority-root registry. Successor and P2 owner authorities terminate only at that exact root, and command registries must use a root-authorized signer, runner, executable, consumer, and command class. Self-created null-predecessor authorities are not trust anchors.
 - Bootstrap evidence is supplemental and never substitutes for a protected handoff, plan-local acceptance validator, production release, or commit authority.
@@ -45,8 +46,8 @@ The implementation backend never owns review acceptance, severity, done, commit,
 - Command templates use typed placeholders; untyped string interpolation into executable arguments is prohibited.
 - Codex Exec sets the current attempt directory as the sandbox workspace root and grants `workspace-write` only there for handshake and candidate evidence. The repository root is not the child workspace. Formal outputs remain parent-owned, and no reviewed or unrelated repository path is child-writable.
 - Manual and specialized-agent modes remain external execution boundaries. The repository runner v1 owns only isolated Codex Exec execution.
-- The runner atomically writes formal reviewer or verifier sidecars from schema-valid child candidate output. The model cannot directly overwrite formal role output. Completed reviewer and verifier payloads revalidate frozen launch authority immediately before publication; if that pre-publication check fails, the prior formal bytes remain unchanged and the attempt fails. A validated explicit child failure may publish `status=failed` and its `failureReason` without becoming a completed output.
-- Completed reviewer coverage requires `requiredArtifacts` and `readArtifacts` to equal the frozen manifest's ordered artifact list exactly, with `missingArtifacts=[]`; duplicate or reordered coverage is invalid.
+- The runner atomically writes formal reviewer or verifier sidecars from schema-valid child candidate output. The model cannot directly overwrite formal role output. Completed reviewer and verifier payloads revalidate frozen launch authority immediately before publication; if that pre-publication check fails, the prior formal bytes remain unchanged and the attempt fails. An explicit child failure is a retryable transport failure and does not replace the pending formal reviewer output.
+- Codex discovery children return semantic candidates plus a compact Artifact View read receipt, never formal coverage arrays. After validating the same-session handshake and receipt, the parent constructs `requiredArtifacts` and `readArtifacts` from the frozen manifest's ordered artifact list and sets `missingArtifacts=[]`. Manual and specialized-agent formal outputs retain explicit coverage validation.
 - The verifier runtime prompt derives each blocker's full inclusive evidence range and complete `contextRead` set from the frozen, hash-bound candidate sidecar. A saved or generated start-line-only summary is not sufficient execution input, and one `evidenceChecked` reference must cover the entire finding range.
 - Before publishing verifier output, the parent validates its binding, exact blocker evidence coverage, and complete `contextRead` coverage against the frozen gate. A semantic failure appends failed-attempt evidence and leaves formal output unchanged.
 - A completed semantically invalid Codex verifier output may be reopened only through `recover-verifier` under ADR-0045. The command preserves the rejected bytes in a unique hash-bound recovery directory, appends a `verifier-recovery-opened` process event, and does not clear the formal file. Valid, finalized, sealed, active-attempt, or non-Codex verifier state cannot use this recovery lane.
@@ -61,7 +62,15 @@ The implementation backend never owns review acceptance, severity, done, commit,
 - Binary artifacts cannot claim text line evidence.
 - Launch requires an identity-equivalent access probe. Each actual reviewer child must also complete a same-process, hash-bound access handshake before semantic work begins.
 - The handshake executable material is generated inside the immutable attempt evidence boundary. A sandboxed child must not depend on reading the repository-owned Skill entrypoint, and the parent control plane must independently recompute the expected Artifact View coverage and handshake hash before accepting the result.
+- A completed Codex discovery payload binds `bootstrap-artifact-view-read-receipt.v1` to the exact Artifact View manifest hash and artifact count. The receipt and handshake establish controller-visible execution coverage; neither claims to prove model cognition.
 - Later live authority drift marks the old run stale. A replacement run starts from a new frozen snapshot and must not inherit stale state.
+
+## Review Scope Closure
+
+- `bootstrap-upstream-plan` may review a complete plan directory because the directory is the review object.
+- `bootstrap-implementation-conformance`, `bootstrap-skill-route`, and `bootstrap-focused-change` default to explicit files forming the smallest complete consumer closure: change intent or plan authority, changed implementation, direct consumers, targeted tests and acceptance, repository rules, referenced standards, and current evidence required by the profile.
+- A directory passed to a bounded profile requires the exact `directory-is-minimal-complete-closure` attestation. The attestation is non-authorizing and does not permit sampling inside that directory.
+- Unchanged repository areas and adjacent cleanup remain out of scope unless a direct dependency or reachable failure path makes them part of the closure.
 
 ## Concurrency And Freshness
 
@@ -72,7 +81,7 @@ The implementation backend never owns review acceptance, severity, done, commit,
 
 ## Attempts And Lifecycle
 
-Each process attempt has a unique immutable directory containing request, process result, stdout, stderr, token usage, and structured candidate output. `process-events.jsonl` records append-only lifecycle events. Codex Exec children return structured candidates only; they never edit formal reviewer/verifier outputs or invoke the formal validator. The parent preserves a failed payload's `failureReason` and atomically owns formal output validation.
+Each process attempt has a unique immutable directory containing request, process result, stdout, stderr, token usage, and structured candidate output. `process-events.jsonl` records append-only lifecycle events. Codex Exec children return structured candidates only; they never edit formal reviewer/verifier outputs or invoke the formal validator. Child process failure, malformed JSON, invalid binding, invalid read receipt, or invalid candidate shape appends a transport-class `attempt-failed`, preserves formal bytes, and retries in the same run without consuming a semantic round or requiring a successor lineage.
 
 Verifier recovery directories are immutable execution evidence. An open recovery is valid only while the live formal verifier bytes still equal the archived rejected hash. Its process event projects the verifier lease to `failed`, allowing a new reservation; only a later semantically valid publication and `attempt-completed` event close it. Finalize and finalized-run validation fail closed on an open or stale recovery lineage.
 

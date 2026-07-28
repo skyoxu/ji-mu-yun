@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "refactor-acceptance.successor-round.v1",
+  "round": 3,
+  "status": "implemented",
+  "lineage": "successor-lineage.v1.json",
+  "predecessor": "logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-successor-r2b",
+  "findingIds": ["BSR-195AB5E02C7D5BD0", "BSR-BB8CEC8E8C062E6A"],
+  "slices": [
+    {"id":"SUC3-manifest-and-windows-path-boundaries","findings":["BSR-195AB5E02C7D5BD0","BSR-BB8CEC8E8C062E6A"],"writeRoots":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],"commands":{"red":"successor-policy-suite","green":"successor-policy-suite","refactor":"successor-policy-suite"}}
+  ],
+  "terminalValidation": "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package",
+  "authorizes": []
+}

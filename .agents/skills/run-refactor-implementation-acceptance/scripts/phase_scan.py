@@ -4,35 +4,22 @@ from __future__ import annotations
 
 import hashlib
 import json
-import subprocess
 from pathlib import Path
 from typing import Any
 
-from acceptance_core import InputError, canonical_hash, validate_candidate_manifest
+from acceptance_core import InputError, canonical_hash, phase_changed_paths, validate_candidate_manifest
+from execution_control import ControlError, run_controlled_command, validate_command_descriptor
 
 
 _KINDS = {"static-analysis", "security-scan"}
 
 
-def _phase_changed_paths(candidate_manifest: Any) -> list[str]:
-    baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
-    validate_candidate_manifest(candidate_manifest, baseline)
-    paths = {
-        item["candidate_path"]
-        for item in candidate_manifest["files"]
-        if item.get("change_type") != "unchanged"
-        and isinstance(item.get("candidate_path"), str)
-        and (
-            item["candidate_path"].startswith("PhaseA.Platform/")
-            or item["candidate_path"].startswith("PhaseA.Platform.Tests/")
-            or item["candidate_path"].startswith("runtime/phase-a/")
-            or item["candidate_path"].startswith("scripts/python/phase_a_")
-            or item["candidate_path"].startswith("scripts/python/phase_b_")
-        )
-    }
+def _phase_changed_paths(candidate_manifest: Any, baseline_manifest: Any) -> list[str]:
+    validate_candidate_manifest(candidate_manifest, baseline_manifest)
+    paths = phase_changed_paths(candidate_manifest)
     if not paths:
         raise InputError("Phase scan was requested without Phase changed paths")
-    return sorted(paths)
+    return paths
 
 
 def _descriptor(registry: Any, command_id: str) -> dict[str, Any]:
@@ -43,18 +30,15 @@ def _descriptor(registry: Any, command_id: str) -> dict[str, Any]:
     if len(matches) != 1:
         raise InputError("scan command must resolve uniquely")
     command = matches[0]
-    required = {"id", "executable", "argv", "cwd", "timeout_seconds", "shell"}
-    if set(command) != required or command.get("shell") is not False or command.get("cwd") != ".":
-        raise InputError("scan command must be shell-free and repository-rooted")
-    if not isinstance(command.get("executable"), str) or not command["executable"] or not isinstance(command.get("argv"), list) or any(not isinstance(value, str) for value in command["argv"]):
-        raise InputError("scan command invocation is invalid")
-    if not isinstance(command.get("timeout_seconds"), int) or command["timeout_seconds"] <= 0:
-        raise InputError("scan command timeout is invalid")
+    try:
+        validate_command_descriptor(command)
+    except ControlError as exc:
+        raise InputError("scan command must use the controlled descriptor contract") from exc
     return command
 
 
 def run_phase_scan(
-    *, repository_root: Path, kind: str, execution_mode: str, candidate_manifest: Any,
+    *, repository_root: Path, kind: str, execution_mode: str, baseline_manifest: Any, candidate_manifest: Any,
     command_registry: Any, command_id: str,
 ) -> dict[str, Any]:
     if kind not in _KINDS:
@@ -64,20 +48,18 @@ def run_phase_scan(
     root = repository_root.resolve()
     if not root.is_dir():
         raise InputError("repository root is invalid")
-    required_paths = _phase_changed_paths(candidate_manifest)
+    required_paths = _phase_changed_paths(candidate_manifest, baseline_manifest)
     command = _descriptor(command_registry, command_id)
     try:
-        completed = subprocess.run(
-            [command["executable"], *command["argv"]], cwd=root, shell=False,
-            capture_output=True, timeout=command["timeout_seconds"], check=False,
-        )
-        stdout, stderr, exit_code = completed.stdout, completed.stderr, completed.returncode
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        stdout, stderr, exit_code = b"", str(exc).encode("utf-8", errors="replace"), None
+        controlled = run_controlled_command(root, command)
+    except ControlError as exc:
+        raise InputError("controlled Phase scan command failed validation") from exc
+    process = controlled["processResult"]
+    stdout, exit_code = process.get("stdout", "").encode("utf-8"), controlled["exitCode"]
     receipt = {
         "commandId": command_id, "exitCode": exit_code,
         "stdoutSha256": "sha256:" + hashlib.sha256(stdout).hexdigest(),
-        "stderrSha256": "sha256:" + hashlib.sha256(stderr).hexdigest(),
+        "stderrSha256": process.get("stderrSha256"),
     }
     base = {
         "schemaVersion": "phase-scan-bundle-result.v1",

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-successor-r1",
+  "predecessorInputHash": "sha256:1c2469aeea9d4abb628f7447af15cf99c44ba967757c70d6d6b5be0a96a6c8fc",
+  "predecessorResultHash": "sha256:670d200e2808f209d53641d82f15509cdd5a3a7497f13ade9ced52fb16b7db3a",
+  "findingIds": ["BSR-45D6FEA28AE59B11", "BSR-59FC2E4560070011", "BSR-A835D3DFFBC54206"],
+  "currentBindings": {
+    "candidateHash": "sha256:4af0c2c6ae0d392cf2bac904677a6084ac0aba97f0e3491829afa5f48f7bd562",
+    "sourceHash": "sha256:25207d7b60c22a20438f6715153b5f09d621a327cb1190b18ed76a005f8f5876",
+    "validatorHash": "sha256:87d694c386803d1fcc60d3b45da3d250b452069fa7a7e8539f1728278a69e9a2"
+  },
+  "gitIndexHash": "sha256:3015c12d33f453d720ea75d642f3576f7a9604f3758f80da6a96d656089e8fff",
+  "writeSetHash": "sha256:7a93a5ba094ed6050e3daf27d696717b624d5118a861df6d503a4bb8682ebb88",
+  "executionReadSetHash": "sha256:287b8d91cbd8676312f57cb52091840ed1e2509ef651d8a3f61a90c69368c54d",
+  "dependencyClosureHash": "sha256:6b955d1e53658d74978ebcfca159391224abc966049f6088ff67915ddb350388",
+  "items": [
+    {"findingId":"BSR-45D6FEA28AE59B11","disposition":"fixed","risk":"normal","proofFamily":"regression","reason":"Phase scan uses the shared policy classifier and covers the Python LLM backend.","fixRefs":[".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py"],"validationCommands":["successor-phase-scan-suite"],"evidence":[{"path":"logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-successor-r1/p2-process-events/p2-phase-scan-closure-1785228207320874400/process-result.json","sha256":"sha256:8d374005e90b06627958d8765cf160cea8845dfd069291b8547902cdbfe03df5"}]},
+    {"findingId":"BSR-59FC2E4560070011","disposition":"fixed","risk":"normal","proofFamily":"regression","reason":"Phase scan policy decisions share one classifier with run-input construction.","fixRefs":[".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py"],"validationCommands":["successor-phase-scan-suite"],"evidence":[{"path":"logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-successor-r1/p2-process-events/p2-phase-scan-closure-1785228207320874400/process-result.json","sha256":"sha256:8d374005e90b06627958d8765cf160cea8845dfd069291b8547902cdbfe03df5"}]},
+    {"findingId":"BSR-A835D3DFFBC54206","disposition":"fixed","risk":"normal","proofFamily":"negative-fixture","reason":"Phase membership is evaluated against both baseline and candidate paths for rename handling.","fixRefs":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py"],"validationCommands":["successor-phase-scan-suite"],"evidence":[{"path":"logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-successor-r1/p2-process-events/p2-phase-scan-closure-1785228207320874400/process-result.json","sha256":"sha256:8d374005e90b06627958d8765cf160cea8845dfd069291b8547902cdbfe03df5"}]}
+  ]
+}

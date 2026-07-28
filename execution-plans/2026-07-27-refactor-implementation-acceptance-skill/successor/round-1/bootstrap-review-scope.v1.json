@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "refactor-acceptance.successor-round1-scope.v1",
+  "profile": "bootstrap-implementation-conformance",
+  "scope": [
+    ".agents/skills/run-phase-bootstrap-review",
+    ".agents/skills/run-refactor-implementation-acceptance",
+    "AGENTS.md",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "docs/standards/bootstrap-review-control-plane.md",
+    "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+    "decision-logs/2026-07-28-refactor-implementation-acceptance-successor",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/01-requirements-and-acceptance.md",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/knowledge-context.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor-lineage.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-1/repair-plan.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-1/bootstrap-review-scope.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/bootstrap-preflight-commands.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/refactor_acceptance_slice_bridge.py",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_slice.py",
+    "logs/tdd-adapter/refactor-implementation-acceptance-skill/SUC1-policy-path-coverage/RUN-20260728T075151-227702Z/slice-ready-result.json",
+    "logs/tdd-adapter/refactor-implementation-acceptance-skill/SUC1-changed-line-manifest-binding/RUN-20260728T075210-872160Z/slice-ready-result.json",
+    "logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-round3/finalized-run-validation.json"
+  ]
+}

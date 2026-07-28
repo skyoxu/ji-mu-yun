@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "refactor-acceptance.repair-round.v1",
+  "round": 3,
+  "status": "implemented",
+  "predecessorReview": "logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-round2b",
+  "findingIds": ["BSR-3BB3B873C4C0B09E", "BSR-4630976C15F6FDEA", "BSR-75E54594466B6EA2", "BSR-B757809A60227AD0", "BSR-FF35EB3EE83AF41E"],
+  "slices": [
+    {"id":"R3-candidate-completeness-and-policy","findings":["BSR-3BB3B873C4C0B09E","BSR-4630976C15F6FDEA","BSR-75E54594466B6EA2","BSR-FF35EB3EE83AF41E"],"writeRoots":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],"execution_snapshot_paths":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],"commands":{"red":"r3-candidate-suite","green":"r3-candidate-suite","refactor":"r3-candidate-suite"}},
+    {"id":"R3-phase-coverage-completeness","findings":["BSR-B757809A60227AD0"],"writeRoots":[".agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py"],"execution_snapshot_paths":[".agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py"],"commands":{"red":"r3-coverage-suite","green":"r3-coverage-suite","refactor":"r3-coverage-suite"}}
+  ],
+  "terminalValidation": "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package",
+  "authorizes": []
+}

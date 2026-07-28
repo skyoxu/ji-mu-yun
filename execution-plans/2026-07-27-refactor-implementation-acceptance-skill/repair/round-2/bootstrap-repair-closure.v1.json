@@ -1,0 +1,159 @@
+{
+  "currentBindings": {
+    "candidateHash": "sha256:02fbd9fbce0608046ae7a88ed54a59f2afd7d2c2d13c787e50fe62b95486d917",
+    "sourceHash": "sha256:0baba03f05b9089f8a1bca30855287328610317c19c0d484b8f99a878ede4f82",
+    "validatorHash": "sha256:87d694c386803d1fcc60d3b45da3d250b452069fa7a7e8539f1728278a69e9a2"
+  },
+  "dependencyClosureHash": "sha256:224c8c365697a996029aeae0d07930a61d268ce92e52ee423424a7fe78a3554f",
+  "executionReadSetHash": "sha256:767ad85da6a7c8fe7f9330bea20775266b2a8c5846b95c17af456122285b0f21",
+  "findingIds": [
+    "BSR-61F0256FC98B5843",
+    "BSR-64AF933AD78CBC9C",
+    "BSR-7C3C4102B3C9D0A1",
+    "BSR-D29578D25669D4C4",
+    "BSR-E6107BFF207C275C",
+    "BSR-EF41592109D09BAE",
+    "BSR-F0AB766557297612"
+  ],
+  "gitIndexHash": "sha256:3015c12d33f453d720ea75d642f3576f7a9604f3758f80da6a96d656089e8fff",
+  "items": [
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-baseline-propagation/RUN-20260728T053309-736210Z/slice-ready-result.json",
+          "sha256": "sha256:505c6bb50ff49288465d0b2c0ea4411e9b55ad779165c5c875ffcefa42275de2"
+        }
+      ],
+      "findingId": "BSR-61F0256FC98B5843",
+      "fixRefs": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/repair-plan.v1.json"
+      ],
+      "proofFamily": "regression",
+      "reason": "Round 2 regression evidence closes the confirmed implementation defect.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py"
+      ]
+    },
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-checklist-contract/RUN-20260728T053507-823300Z/slice-ready-result.json",
+          "sha256": "sha256:f4af81b19628f8242a40d67016cc01b406d4111ef9b4d207ac82a612bfb3587f"
+        }
+      ],
+      "findingId": "BSR-64AF933AD78CBC9C",
+      "fixRefs": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/repair-plan.v1.json"
+      ],
+      "proofFamily": "regression",
+      "reason": "Round 2 regression evidence closes the confirmed implementation defect.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py"
+      ]
+    },
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-baseline-propagation/RUN-20260728T053309-736210Z/slice-ready-result.json",
+          "sha256": "sha256:505c6bb50ff49288465d0b2c0ea4411e9b55ad779165c5c875ffcefa42275de2"
+        }
+      ],
+      "findingId": "BSR-7C3C4102B3C9D0A1",
+      "fixRefs": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/repair-plan.v1.json"
+      ],
+      "proofFamily": "regression",
+      "reason": "Round 2 regression evidence closes the confirmed implementation defect.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py"
+      ]
+    },
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-bootstrap-dispatch/RUN-20260728T053639-900108Z/slice-ready-result.json",
+          "sha256": "sha256:816ed3342d44418eaa3c1f42f9d0cd9b4af58701cccb5a9c01f0bf4e2e12ded0"
+        }
+      ],
+      "findingId": "BSR-D29578D25669D4C4",
+      "fixRefs": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/repair-plan.v1.json"
+      ],
+      "proofFamily": "regression",
+      "reason": "Round 2 regression evidence closes the confirmed implementation defect.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py"
+      ]
+    },
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-baseline-propagation/RUN-20260728T053309-736210Z/slice-ready-result.json",
+          "sha256": "sha256:505c6bb50ff49288465d0b2c0ea4411e9b55ad779165c5c875ffcefa42275de2"
+        }
+      ],
+      "findingId": "BSR-E6107BFF207C275C",
+      "fixRefs": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/repair-plan.v1.json"
+      ],
+      "proofFamily": "regression",
+      "reason": "Round 2 regression evidence closes the confirmed implementation defect.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py"
+      ]
+    },
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-baseline-propagation/RUN-20260728T053309-736210Z/slice-ready-result.json",
+          "sha256": "sha256:505c6bb50ff49288465d0b2c0ea4411e9b55ad779165c5c875ffcefa42275de2"
+        }
+      ],
+      "findingId": "BSR-EF41592109D09BAE",
+      "fixRefs": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/repair-plan.v1.json"
+      ],
+      "proofFamily": "regression",
+      "reason": "Round 2 regression evidence closes the confirmed implementation defect.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py"
+      ]
+    },
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-attestation-scope/RUN-20260728T053808-710317Z/slice-ready-result.json",
+          "sha256": "sha256:0a6ffcddb18718351fc3423f2bbbd15ca419d8ddef6d5f1a52db84730a6f1150"
+        }
+      ],
+      "findingId": "BSR-F0AB766557297612",
+      "fixRefs": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/repair-plan.v1.json"
+      ],
+      "proofFamily": "regression",
+      "reason": "Round 2 regression evidence closes the confirmed implementation defect.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py"
+      ]
+    }
+  ],
+  "predecessorInputHash": "sha256:c51e9901cb144ca831a5cd537c3520c40a3f27f63522bcdf240ca42ff71e50ab",
+  "predecessorResultHash": "sha256:4a84060719566b3e2c8b96d2d733ff2e7221251ec2c1fe26ed0c880b1116aa0e",
+  "predecessorRun": "logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-implementation-verifier-closure-r1",
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "writeSetHash": "sha256:a004660fae8eac037117be38671828fe4acd5fd64102b5ccf04157d423c14976"
+}

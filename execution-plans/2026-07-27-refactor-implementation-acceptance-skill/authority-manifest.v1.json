@@ -5,6 +5,6 @@
     {"path": "execution-plans/2026-07-15-refactor-implementation-acceptance-skill-requirements.md", "role": "requirements", "sha256": "be6a7c00bff4e78b55014341839cfe1a2f98ccf02de01d72c44da73a8ec71456"},
     {"path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md", "role": "bootstrap-authority", "sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"},
     {"path": "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md", "role": "vdd-authority", "sha256": "3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43"},
-    {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "role": "plan-creator", "sha256": "c82aea2ff3b91cc9aee9ab6a113c8173bc309e52f733c702e0d89105ae078d8d"}
+    {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "role": "plan-creator", "sha256": "04064ab456c74efc393ff7f23c7d306ee67f5bcb91a85e68d71fa6548e351d07"}
   ]
 }

@@ -43,6 +43,15 @@ For each slice, name its intended behavior, RED or controlled negative command, 
 
 During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
 
+## In-Place Repair Rounds
+
+An explicit VDD `repair` updates the original execution-plan directory. Append
+each repair under `repair/round-<n>/`, binding the exact finalized finding set,
+predecessor review, bounded repair slices, RED/GREEN/regression commands, and
+a hash-bound `repair-closure.json`. Initial slices and historical evidence stay
+immutable. The original directory remains the only acceptance target; use a
+successor only after an explicit supersede or incompatible-scope decision.
+
 ## Knowledge Preflight
 
 After mandatory authority reads and before freezing plan sources, run the
@@ -64,6 +73,22 @@ on the emitted context before publishing `plan-ready`.
 Use a declared Git baseline plus either a frozen commit range or a complete scoped worktree identity. A dirty identity binds `HEAD`, canonical scoped tracked/index diff hash, and a manifest of relevant untracked paths and content hashes. Bind current contracts, implementation, and validators; exclude append-only logs and explanatory reports from normative hashes. Preserve old evidence as historical after invalidation.
 
 Review is optional unless requested by the maintainer or a protected-path rule requires it. Batch accepted findings, run deterministic targeted checks, and do not rerun a complete semantic review for P2-only findings automatically. Review validates the supplied requirements or implementation; it is not an unbounded discovery loop.
+
+When a plan includes Bootstrap Review, freeze a `minimal-complete-closure`,
+not an entire repository area by default. For implementation conformance, list
+the changed production files, direct consumers, targeted tests and acceptance,
+plan acceptance authority, referenced standards, repository rules, and current
+runtime or acceptance evidence as explicit files. A directory scope requires a
+written assertion that it is itself the minimal complete closure.
+
+Separate transport attempts from semantic rounds. Malformed child JSON, an
+invalid Artifact View receipt, or a failed Codex process retries the same role
+inside the same run and does not create a repair round or successor lineage.
+P2-only findings are disposed in that run and closed or rechecked with targeted
+deterministic validation; they do not start another complete semantic review.
+Repair evidence stays under the original execution-plan directory, which
+remains the acceptance target unless an explicit supersede or incompatible-
+scope decision says otherwise.
 
 `resumable` and `self-hosted` plans create `95-*.md` before implementation and add its entry to `execution-plans/95-implementation-report-index.v1.json` in the same change. The report is append-only, non-authorizing, records corrections and the final implementation result, and is excluded from candidate hashes. `standard` may omit it unless requested.
 

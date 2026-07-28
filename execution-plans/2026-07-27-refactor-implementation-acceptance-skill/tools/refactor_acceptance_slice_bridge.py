@@ -37,10 +37,25 @@ def _contract() -> dict:
     return json.loads((PLAN_ROOT / "implementation-contract.v1.json").read_text(encoding="utf-8"))
 
 
+def _repair_rounds() -> list[tuple[str, dict]]:
+    rounds: list[tuple[str, dict]] = []
+    paths = [
+        *(PLAN_ROOT / "repair").glob("round-*/repair-plan.v1.json"),
+        *(PLAN_ROOT / "successor").glob("round-*/repair-plan.v1.json"),
+    ]
+    for path in sorted(paths):
+        rounds.append((path.relative_to(PLAN_ROOT).as_posix(), json.loads(path.read_text(encoding="utf-8"))))
+    return rounds
+
+
 def _slice(slice_id: str) -> dict:
     for item in _contract()["slices"]:
         if item.get("slice_id") == slice_id:
-            return item
+            return {**item, "_identity_path": "implementation-contract.v1.json"}
+    for identity_path, repair in _repair_rounds():
+        for item in repair["slices"]:
+            if item.get("id") == slice_id:
+                return {**item, "slice_id": item["id"], "depends_on": [], "_identity_path": identity_path}
     raise ValueError("unknown slice")
 
 
@@ -50,6 +65,10 @@ def _commands() -> dict[str, dict]:
 
 
 def _command_ids(slice_id: str) -> tuple[str, str, str]:
+    selected = _slice(slice_id)
+    if "commands" in selected:
+        commands = selected["commands"]
+        return commands["red"], commands["green"], commands["refactor"]
     if slice_id == "RMAP-S0":
         return "s0-companion-red", "s0-companion-suite", "bootstrap-regression-suite"
     if slice_id == "RMAP-S1":
@@ -62,7 +81,11 @@ def _command_ids(slice_id: str) -> tuple[str, str, str]:
         return "s4-bootstrap-red", "s4-bootstrap-suite", "s4-bootstrap-suite"
     if slice_id == "RMAP-S5":
         return "s5-package-red", "s5-package-suite", "s5-package-suite"
-    return "plan-validator", "plan-validator", "plan-validator"
+    raise ValueError("slice command mapping is unavailable")
+
+
+def _identity_hash(selected: dict) -> str:
+    return _sha(PLAN_ROOT / selected["_identity_path"])
 
 
 def _run_dir(slice_id: str, run_id: str) -> Path:
@@ -82,12 +105,13 @@ def _write_new(path: Path, value: dict) -> None:
 
 def _result(slice_id: str, run_id: str) -> dict:
     snapshot = _load("validate_all").slice_validation_snapshot(slice_id)
-    return {"schema_version": "ria.slice-result.v1", "plan_id": PLAN_ID, "slice_id": slice_id, "run_id": run_id, "predicate": "slice-ready", "status": "pass", "contract_hash": _sha(PLAN_ROOT / "implementation-contract.v1.json"), **snapshot, "authorizes": []}
+    selected = _slice(slice_id)
+    return {"schema_version": "ria.slice-result.v1", "plan_id": PLAN_ID, "slice_id": slice_id, "run_id": run_id, "predicate": "slice-ready", "status": "pass", "contract_hash": _identity_hash(selected), "contract_path": selected["_identity_path"], **snapshot, "authorizes": []}
 
 
 def start_red(slice_id: str, snapshots: list[str]) -> int:
     selected = _slice(slice_id)
-    if snapshots != selected["execution_snapshot_paths"]:
+    if sorted(snapshots) != sorted(selected["execution_snapshot_paths"]):
         raise ValueError("snapshot paths must exactly match the slice contract")
     run_id = "RUN-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S-%fZ")
     commands = _commands()
@@ -97,17 +121,21 @@ def start_red(slice_id: str, snapshots: list[str]) -> int:
         raise RuntimeError("RED command unexpectedly passed")
     run_dir = _run_dir(slice_id, run_id)
     record_observation(run_dir, observation)
-    _write_new(_session(run_id), {"schema_version": "ria.tdd-bridge-session.v1", "plan_id": PLAN_ID, "slice_id": slice_id, "run_id": run_id, "snapshot_paths": snapshots, "contract_hash": _sha(PLAN_ROOT / "implementation-contract.v1.json"), "authorizes": []})
+    _write_new(_session(run_id), {"schema_version": "ria.tdd-bridge-session.v1", "plan_id": PLAN_ID, "slice_id": slice_id, "run_id": run_id, "snapshot_paths": sorted(snapshots), "contract_hash": _identity_hash(selected), "contract_path": selected["_identity_path"], "authorizes": []})
     print(json.dumps({"run_id": run_id, "next_action": "perform-green-write", "authorizes": []}))
     return 0
 
 
 def complete(slice_id: str, run_id: str) -> int:
     session = json.loads(_session(run_id).read_text(encoding="utf-8"))
-    if session.get("slice_id") != slice_id or session.get("contract_hash") != _sha(PLAN_ROOT / "implementation-contract.v1.json"):
-        raise RuntimeError("session is stale or has the wrong slice")
     selected = _slice(slice_id)
-    if session["snapshot_paths"] != selected["execution_snapshot_paths"]:
+    if (
+        session.get("slice_id") != slice_id
+        or session.get("contract_hash") != _identity_hash(selected)
+        or session.get("contract_path") != selected["_identity_path"]
+    ):
+        raise RuntimeError("session is stale or has the wrong slice")
+    if sorted(session["snapshot_paths"]) != sorted(selected["execution_snapshot_paths"]):
         raise RuntimeError("snapshot paths are stale")
     run_dir = _run_dir(slice_id, run_id)
     red_path = run_dir / "observations/red-observed.json"

@@ -11,6 +11,12 @@
     "explicit-complete-directory-repair": {"outcome": "vdd-repair", "vdd_mode": "repair", "creates_vdd_directory": false, "requires_explicit_vdd_request": true}
   },
   "lifecycle_states": ["draft", "plan-ready", "implementation-authorized", "implementation-complete", "acceptance-passed", "archived"],
+  "review_reentry_policy": {
+    "scope_strategy": "minimal-complete-closure",
+    "transport_failure": "retry-same-run-without-semantic-round",
+    "p2_only": "current-run-disposition-and-targeted-validation",
+    "acceptance_target": "original-plan-directory"
+  },
   "required_files": [
     "SKILL.md",
     "agents/openai.yaml",
@@ -38,5 +44,5 @@
   "forbidden_default_terms": ["requires at least five questions", "requires three Bootstrap rounds", "requires a cross-process lock", "requires reviewer identity attestation"],
   "forbidden_fixture_names": ["clarification-cases.json", "clarification-state-pass.json", "compliance-scenarios.json", "compliance-trace-pass.jsonl", "compliance-trace-write-before-clarification.jsonl", "compliance-trace-implementation-first.jsonl"],
   "forbidden_live_plan_patterns": ["execution-plans[\\\\/]+20[0-9]{2}-[0-9]{2}-[0-9]{2}", "RMAP-", "C:\\\\Users\\\\", "/Users/"],
-  "required_profile_case_ids": ["standard-clear", "resumable-interrupted", "self-hosted-routing", "slice-local-stale", "shared-contract-replay", "legacy-regression", "optional-review", "standard-no-report", "self-hosted-competing-pressure"]
+  "required_profile_case_ids": ["standard-clear", "resumable-interrupted", "self-hosted-routing", "slice-local-stale", "shared-contract-replay", "legacy-regression", "optional-review", "standard-no-report", "self-hosted-competing-pressure", "in-place-repair-round", "minimal-review-closure", "transport-attempt-retry", "p2-only-disposition"]
 }

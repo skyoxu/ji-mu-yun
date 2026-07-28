@@ -32,6 +32,13 @@ EXPECTED_INPUT_ROUTES = {
     },
 }
 
+EXPECTED_REVIEW_REENTRY_POLICY = {
+    "scope_strategy": "minimal-complete-closure",
+    "transport_failure": "retry-same-run-without-semantic-round",
+    "p2_only": "current-run-disposition-and-targeted-validation",
+    "acceptance_target": "original-plan-directory",
+}
+
 EXPECTED_ROUTE_TEXT = {
     "SKILL.md": (
         "One standalone requirements Markdown file routes to direct implementation",
@@ -204,6 +211,22 @@ def validate_profile_cases(skill_root: Path, contract: dict[str, Any]) -> list[d
             "expected_pressure_response",
             "stabilize-targeted-then-terminal-replay",
         ),
+        "in-place-repair-round": (
+            "expected_repair_location",
+            "original-directory-append-only-round",
+        ),
+        "minimal-review-closure": (
+            "expected_review_scope",
+            "minimal-complete-closure",
+        ),
+        "transport-attempt-retry": (
+            "expected_retry",
+            "same-run-no-semantic-round",
+        ),
+        "p2-only-disposition": (
+            "expected_p2_path",
+            "current-run-disposition-and-targeted-validation",
+        ),
     }
     for case_id, (field, expected) in expectations.items():
         if by_id.get(case_id, {}).get(field) != expected:
@@ -235,7 +258,7 @@ def validate_generic_source(skill_root: Path, contract: dict[str, Any]) -> list[
 
 
 def validate_skill(skill_root: Path) -> dict[str, Any]:
-    checks = ["required-files", "required-headings", "input-routing", "static-lifecycle", "profile-cases", "clarification-fixtures", "generic-source"]
+    checks = ["required-files", "required-headings", "input-routing", "static-lifecycle", "review-reentry", "profile-cases", "clarification-fixtures", "generic-source"]
     findings: list[dict[str, str]] = []
     try:
         contract = load_contract(skill_root)
@@ -243,6 +266,12 @@ def validate_skill(skill_root: Path) -> dict[str, Any]:
         return result([finding("VDD-SKILL-CONTRACT", str(skill_root), str(exc))], checks)
     if set(contract.get("profiles", {})) != {"standard", "resumable", "self-hosted"}:
         findings.append(finding("VDD-PROFILES", "scripts/skill-contract.json", "exactly three profiles are required"))
+    if contract.get("review_reentry_policy") != EXPECTED_REVIEW_REENTRY_POLICY:
+        findings.append(finding(
+            "VDD-REVIEW-REENTRY",
+            "scripts/skill-contract.json",
+            "review re-entry policy must preserve minimal scope, transport retry, P2, and original target rules",
+        ))
     findings.extend(validate_input_routes(skill_root, contract))
     for relative in contract["required_files"]:
         if not (skill_root / relative).is_file():

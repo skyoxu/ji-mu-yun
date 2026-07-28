@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "refactor-acceptance.successor-lineage.v1",
+  "supersededRun": "logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-round3",
+  "successorChangeId": "refactor-implementation-acceptance-skill-successor-v3",
+  "policyDecisionRef": {
+    "path": "decision-logs/2026-07-28-refactor-implementation-acceptance-successor/policy-decision.json",
+    "sha256": "sha256:4dc4410e97ed5d4f71509394bd7e0cd1fead262e6d9f3b02389ef1d2316cdab7"
+  },
+  "authorizes": []
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "refactor-acceptance.repair-round.v1",
+  "round": 2,
+  "status": "in_progress",
+  "predecessorReview": "logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-implementation-verifier-closure-r1",
+  "findingIds": [
+    "BSR-61F0256FC98B5843",
+    "BSR-64AF933AD78CBC9C",
+    "BSR-7C3C4102B3C9D0A1",
+    "BSR-D29578D25669D4C4",
+    "BSR-E6107BFF207C275C",
+    "BSR-EF41592109D09BAE",
+    "BSR-F0AB766557297612"
+  ],
+  "slices": [
+    {"id": "R2-baseline-propagation", "findings": ["BSR-61F0256FC98B5843", "BSR-7C3C4102B3C9D0A1", "BSR-E6107BFF207C275C", "BSR-EF41592109D09BAE"], "writeRoots": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py"], "execution_snapshot_paths": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py"], "commands": {"red": "r2-baseline-suite", "green": "r2-baseline-suite", "refactor": "r2-baseline-suite"}},
+    {"id": "R2-checklist-contract", "findings": ["BSR-64AF933AD78CBC9C"], "writeRoots": [".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"], "execution_snapshot_paths": [".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"], "commands": {"red": "r2-checklist-suite", "green": "r2-checklist-suite", "refactor": "r2-checklist-suite"}},
+    {"id": "R2-bootstrap-dispatch", "findings": ["BSR-D29578D25669D4C4"], "writeRoots": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py"], "execution_snapshot_paths": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py"], "commands": {"red": "r2-bootstrap-dispatch-suite", "green": "r2-bootstrap-dispatch-suite", "refactor": "r2-bootstrap-dispatch-suite"}},
+    {"id": "R2-attestation-scope", "findings": ["BSR-F0AB766557297612"], "writeRoots": [".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py", ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"], "execution_snapshot_paths": [".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py", ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"], "commands": {"red": "r2-attestation-scope-suite", "green": "r2-attestation-scope-suite", "refactor": "r2-attestation-scope-suite"}}
+  ],
+  "terminalValidation": "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package",
+  "authorizes": []
+}

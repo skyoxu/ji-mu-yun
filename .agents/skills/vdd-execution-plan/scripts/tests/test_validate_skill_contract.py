@@ -183,6 +183,17 @@ class SkillContractTests(unittest.TestCase):
             result = self.validator.validate_skill(copied)
             self.assertIn("VDD-PROFILE-CASES-BEHAVIOR", {item["rule_id"] for item in result["findings"]})
 
+    def test_review_reentry_policy_mutation_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            copied = Path(tmp) / "skill"
+            shutil.copytree(SKILL_ROOT, copied)
+            path = copied / "scripts" / "skill-contract.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["review_reentry_policy"]["transport_failure"] = "new-review-round"
+            path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+            result = self.validator.validate_skill(copied)
+            self.assertIn("VDD-REVIEW-REENTRY", {item["rule_id"] for item in result["findings"]})
+
     def test_excluded_recovery_architecture_is_absent(self) -> None:
         sources = {
             path.relative_to(SKILL_ROOT).as_posix(): path.read_text(encoding="utf-8")

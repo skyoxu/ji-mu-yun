@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "bootstrap-successor-policy-decision.v1",
+  "decisionId": "ria727-successor-decision-20260728",
+  "supersededReviewId": "rmap-7-27-round3-20260728",
+  "supersededChangeId": "refactor-implementation-acceptance-skill-verifier-closure-v2",
+  "successorChangeId": "refactor-implementation-acceptance-skill-successor-v3",
+  "policyRevision": "sha256:cf2e6630699af9637bcd74c742d11103100ce189acda1c869d9c52768fade14e",
+  "authorityRevision": "657c6a98f4cddfacdc79b68a261b70e4aa4af349",
+  "authorizationEventRef": {
+    "path": "decision-logs/2026-07-28-refactor-implementation-acceptance-successor/authorization-event.json",
+    "sha256": "sha256:bb54e89567f79660a461a46c34082f43aa9c41cd82acfc7d727a58660707f239"
+  },
+  "authorizationEventId": "ria727-successor-event-20260728",
+  "consumer": "repository-maintenance-tdd-adapter-plan-reentry",
+  "authorizes": [],
+  "doesNotAuthorize": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"],
+  "decidedAt": "2026-07-28T07:37:00Z"
+}

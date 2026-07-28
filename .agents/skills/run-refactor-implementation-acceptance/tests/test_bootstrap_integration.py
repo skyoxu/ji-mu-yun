@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import copy
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -11,6 +13,17 @@ sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 
 class BootstrapIntegrationTests(unittest.TestCase):
+    def minimal_scope_inputs(self) -> dict[str, list[str]]:
+        return {
+            "implementation_plan": ["execution-plans/example/plan.md"],
+            "changed_production_code": ["PhaseA.Platform/Feature.cs"],
+            "affected_consumers": ["PhaseA.Platform/Program.cs"],
+            "tests_and_acceptance": ["PhaseA.Platform.Tests/FeatureTests.cs"],
+            "runtime_evidence": ["logs/ci/example/acceptance.json"],
+            "repository_rules": ["AGENTS.md"],
+            "referenced_standards": ["docs/standards/phase-service.md"],
+        }
+
     def test_required_decision_binds_profile_companion_identity(self) -> None:
         import bootstrap_integration
 
@@ -25,8 +38,10 @@ class BootstrapIntegrationTests(unittest.TestCase):
 
         decision = {"requirement": "required", "requiredCompanionCapabilityExpectations": [{"capabilityId": "acceptance-inventory-attestation", "capabilityVersion": "1.0", "producerRole": "acceptance_auditor"}]}
         binding = {"schemaVersion": "bootstrap-capability-binding.v1", "status": "bound", "requiredCompanionCapabilities": [{"capabilityId": "acceptance-inventory-attestation", "capabilityVersion": "1.0", "producerRole": "acceptance_auditor", "schemaPath": "schema.json", "schemaHash": "sha256:" + "a" * 64}], "authorizes": []}
-        scope = bootstrap_integration.build_attestation_scope(decision, binding, {"partitions": ["semantic"]}, {"clauses": ["c1"]}, {"checks": ["k1"]})
-        self.assertTrue(scope["scopeHash"].startswith("sha256:"))
+        artifact_view_hash = "sha256:" + "b" * 64
+        scope = bootstrap_integration.build_attestation_scope(decision, binding, {"partitions": ["semantic"]}, {"clauses": ["c1"]}, {"checks": ["k1"]}, artifact_view_hash)
+        self.assertEqual(artifact_view_hash, scope["scopeHash"])
+        self.assertTrue(scope["consumerScopeHash"].startswith("sha256:"))
         self.assertEqual([], scope["authorizes"])
 
     def test_complete_attestation_must_match_the_frozen_scope_and_capability(self) -> None:
@@ -68,6 +83,62 @@ class BootstrapIntegrationTests(unittest.TestCase):
         deterministic = bootstrap_integration.project_bootstrap_execution_state({"requirement": "not_required", "requiredCompanionCapabilityExpectations": []}, launch_authorization=None, binding=None)
         self.assertEqual("not_applicable", deterministic["state"])
         self.assertTrue(all(value == "not_applicable" for value in deterministic["actionStates"].values()))
+
+    def test_minimal_review_scope_is_explicit_and_profile_complete(self) -> None:
+        import bootstrap_integration
+
+        result = bootstrap_integration.build_minimal_review_scope(self.minimal_scope_inputs())
+        self.assertEqual("minimal-complete-closure", result["strategy"])
+        self.assertEqual("bootstrap-implementation-conformance", result["profile"])
+        self.assertEqual(
+            {
+                "implementation-plan", "changed-production-code", "affected-consumers",
+                "tests-and-acceptance", "runtime-evidence", "repository-rules",
+                "referenced-standards",
+            },
+            set(result["contextClasses"]),
+        )
+        self.assertEqual(7, len(result["scope"]))
+        self.assertIsNone(result["directoryScopeAttestation"])
+
+    def test_minimal_review_scope_rejects_directory_or_glob_inputs(self) -> None:
+        import bootstrap_integration
+
+        for invalid in ("PhaseA.Platform/", "PhaseA.Platform/**/*.cs", "../outside.cs"):
+            inputs = self.minimal_scope_inputs()
+            inputs["changed_production_code"] = [invalid]
+            with self.subTest(invalid=invalid), self.assertRaises(
+                bootstrap_integration.BootstrapBindingError
+            ):
+                bootstrap_integration.build_minimal_review_scope(inputs)
+
+    def test_prepare_bootstrap_requires_and_publishes_minimal_scope(self) -> None:
+        import acceptance_cli
+
+        request = {
+            "decision": {"requirement": "required", "requiredCompanionCapabilityExpectations": []},
+            "binding": None,
+            "launch_authorization": None,
+            "scope_inputs": self.minimal_scope_inputs(),
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path = root / "request.json"
+            output_path = root / "route.json"
+            request_path.write_text(json.dumps(request), encoding="utf-8")
+            route = acceptance_cli.prepare_bootstrap_command(str(request_path), str(output_path))
+        self.assertEqual("minimal-complete-closure", route["reviewScope"]["strategy"])
+        self.assertEqual("run-phase-bootstrap-review", route["nextAction"])
+
+        request.pop("scope_inputs")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path = root / "request.json"
+            request_path.write_text(json.dumps(request), encoding="utf-8")
+            with self.assertRaisesRegex(acceptance_cli.InputError, "minimal review scope"):
+                acceptance_cli.prepare_bootstrap_command(
+                    str(request_path), str(root / "route.json")
+                )
 
     def test_finding_mapping_rejects_unknown_or_tombstoned_check(self) -> None:
         import bootstrap_integration

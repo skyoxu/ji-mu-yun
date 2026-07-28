@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import re
 import subprocess
@@ -34,6 +35,23 @@ SLICES = [
 ]
 RMAP_SLICES = [f"RMAP-S{index}" for index in range(6)]
 FORBIDDEN = {"logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", SOURCE}
+REPAIR_FINDINGS_BY_ROUND = {
+    2: {
+    "BSR-61F0256FC98B5843", "BSR-64AF933AD78CBC9C", "BSR-7C3C4102B3C9D0A1",
+    "BSR-D29578D25669D4C4", "BSR-E6107BFF207C275C", "BSR-EF41592109D09BAE",
+    "BSR-F0AB766557297612",
+    },
+    3: {
+        "BSR-3BB3B873C4C0B09E", "BSR-4630976C15F6FDEA", "BSR-75E54594466B6EA2",
+        "BSR-B757809A60227AD0", "BSR-FF35EB3EE83AF41E",
+    },
+}
+SUCCESSOR_FINDINGS = {
+    "BSR-1DA101461E3AB315", "BSR-483D0ED3EA11ED82",
+    "BSR-4F4C6B99E5533234", "BSR-ED73EE2E7BF8E0E6",
+    "BSR-45D6FEA28AE59B11", "BSR-59FC2E4560070011",
+    "BSR-A835D3DFFBC54206",
+}
 
 
 def load(relative: str) -> dict:
@@ -124,6 +142,106 @@ def validate_resume_dependencies(contract: dict, resume: dict) -> bool:
     return True
 
 
+def validate_repair_rounds() -> bool:
+    root = PLAN_ROOT / "repair"
+    if not root.exists():
+        return True
+    rounds = sorted(path for path in root.iterdir() if path.is_dir())
+    if [path.name for path in rounds] != [f"round-{index}" for index in range(2, 2 + len(rounds))]:
+        return False
+    for index, directory in enumerate(rounds, start=2):
+        expected_findings = REPAIR_FINDINGS_BY_ROUND.get(index)
+        if expected_findings is None:
+            return False
+        path = directory / "repair-plan.v1.json"
+        try:
+            repair = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return False
+        slices = repair.get("slices")
+        if (
+            repair.get("schemaVersion") != "refactor-acceptance.repair-round.v1"
+            or repair.get("round") != index
+            or repair.get("status") not in {"planned", "in_progress", "implemented"}
+            or not isinstance(repair.get("predecessorReview"), str)
+            or not repair["predecessorReview"].startswith("logs/ci/")
+            or set(repair.get("findingIds", [])) != expected_findings
+            or not isinstance(slices, list)
+            or not slices
+            or len({item.get("id") for item in slices if isinstance(item, dict)}) != len(slices)
+            or repair.get("authorizes") != []
+        ):
+            return False
+        for item in slices:
+            if not isinstance(item, dict) or not set(item.get("findings", [])).issubset(expected_findings):
+                return False
+            roots = item.get("writeRoots")
+            if not isinstance(roots, list) or not roots or any(not isinstance(value, str) or not value.startswith(".agents/skills/") for value in roots):
+                return False
+            snapshots = item.get("execution_snapshot_paths")
+            commands = item.get("commands")
+            if (
+                not isinstance(snapshots, list)
+                or not snapshots
+                or any(not isinstance(value, str) or value not in roots for value in snapshots)
+                or not isinstance(commands, dict)
+                or set(commands) != {"red", "green", "refactor"}
+                or any(not isinstance(value, str) or not value for value in commands.values())
+            ):
+                return False
+    return True
+
+
+def validate_successor_round() -> bool:
+    lineage_path = PLAN_ROOT / "successor-lineage.v1.json"
+    round_path = PLAN_ROOT / "successor" / "round-1" / "repair-plan.v1.json"
+    try:
+        lineage = json.loads(lineage_path.read_text(encoding="utf-8"))
+        repair = json.loads(round_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    reference = lineage.get("policyDecisionRef") if isinstance(lineage, dict) else None
+    if (
+        lineage.get("schemaVersion") != "refactor-acceptance.successor-lineage.v1"
+        or lineage.get("supersededRun") != "logs/ci/2026-07-28/review-gateway-bootstrap-rmap-7-27-round3"
+        or lineage.get("successorChangeId") != "refactor-implementation-acceptance-skill-successor-v3"
+        or lineage.get("authorizes") != []
+        or not isinstance(reference, dict)
+        or set(reference) != {"path", "sha256"}
+        or reference["path"] != "decision-logs/2026-07-28-refactor-implementation-acceptance-successor/policy-decision.json"
+        or reference["sha256"] != "sha256:" + sha256(reference["path"])
+    ):
+        return False
+    try:
+        spec = importlib.util.spec_from_file_location("bootstrap_review", REPOSITORY_ROOT / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py")
+        if spec is None or spec.loader is None:
+            return False
+        bootstrap = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bootstrap)
+        bootstrap.validate_successor_policy_authorization(REPOSITORY_ROOT, json.loads((REPOSITORY_ROOT / reference["path"]).read_text(encoding="utf-8")))
+    except Exception:
+        return False
+    slices = repair.get("slices")
+    return (
+        repair.get("schemaVersion") == "refactor-acceptance.successor-round.v1"
+        and repair.get("round") == 1
+        and repair.get("status") in {"planned", "in_progress", "implemented"}
+        and repair.get("lineage") == "successor-lineage.v1.json"
+        and set(repair.get("findingIds", [])) == SUCCESSOR_FINDINGS
+        and repair.get("authorizes") == []
+        and isinstance(slices, list)
+        and {item.get("id") for item in slices if isinstance(item, dict)} == {"SUC1-policy-path-coverage", "SUC1-changed-line-manifest-binding", "SUC1-phase-scan-policy-parity"}
+        and all(
+            isinstance(item, dict)
+            and set(item.get("findings", [])).issubset(SUCCESSOR_FINDINGS)
+            and item.get("writeRoots") == item.get("execution_snapshot_paths")
+            and isinstance(item.get("commands"), dict)
+            and set(item["commands"]) == {"red", "green", "refactor"}
+            for item in slices
+        )
+    )
+
+
 def validate() -> list[str]:
     findings: list[str] = []
     required = [
@@ -195,6 +313,10 @@ def validate() -> list[str]:
     resume = load("resume-state.v1.json")
     if not validate_resume_dependencies(contract, resume) or resume.get("live_phase_paths_allowed") is not False:
         findings.append("RIA-PLAN-RESUME")
+    if not validate_repair_rounds():
+        findings.append("RIA-PLAN-REPAIR-ROUNDS")
+    if not validate_successor_round():
+        findings.append("RIA-PLAN-SUCCESSOR-ROUND")
     report_index = json.loads((REPOSITORY_ROOT / "execution-plans/95-implementation-report-index.v1.json").read_text(encoding="utf-8"))
     report_entry = {"plan_directory": PLAN_ROOT.name, "report_filename": "95-implementation-evolution-and-completion-report.md"}
     if report_entry not in report_index.get("entries", []):
@@ -210,8 +332,16 @@ def validate() -> list[str]:
         findings.append("RIA-PLAN-PREFLIGHT-REGISTRY")
     execution_registry = load("command-registry.v1.json")
     execution_command_ids = {item.get("id") for item in execution_registry.get("commands", []) if isinstance(item, dict)}
-    if execution_command_ids != {"s0-companion-red", "s0-companion-suite", "bootstrap-regression-suite", "s1-core-red", "s1-core-suite", "s2-matrix-red", "s2-matrix-suite", "s3-control-red", "s3-control-suite", "s4-bootstrap-red", "s4-bootstrap-suite", "s5-package-red", "s5-package-suite", "plan-validator"}:
+    expected_execution_commands = {"s0-companion-red", "s0-companion-suite", "bootstrap-regression-suite", "s1-core-red", "s1-core-suite", "s2-matrix-red", "s2-matrix-suite", "s3-control-red", "s3-control-suite", "s4-bootstrap-red", "s4-bootstrap-suite", "s5-package-red", "s5-package-suite", "plan-validator", "r2-baseline-suite", "r2-checklist-suite", "r2-bootstrap-dispatch-suite", "r2-attestation-scope-suite", "r3-candidate-suite", "r3-coverage-suite", "successor-policy-suite", "successor-coverage-suite", "successor-phase-scan-suite"}
+    if execution_command_ids != expected_execution_commands:
         findings.append("RIA-PLAN-EXECUTION-REGISTRY")
+    elif any(
+        item["commands"][stage] not in execution_command_ids
+        for directory in sorted([*(PLAN_ROOT / "repair").glob("round-*"), *(PLAN_ROOT / "successor").glob("round-*")])
+        for item in json.loads((directory / "repair-plan.v1.json").read_text(encoding="utf-8"))["slices"]
+        for stage in ("red", "green", "refactor")
+    ):
+        findings.append("RIA-PLAN-REPAIR-COMMANDS")
     return findings
 
 

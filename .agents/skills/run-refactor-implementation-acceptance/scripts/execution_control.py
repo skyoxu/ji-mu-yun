@@ -421,6 +421,7 @@ def run_controlled_command(
             "exitCode": process.returncode,
             "stdoutSha256": "sha256:" + hashlib.sha256(stdout).hexdigest(),
             "stderrSha256": "sha256:" + hashlib.sha256(stderr).hexdigest(),
+            "stdout": stdout.decode("utf-8", errors="replace"),
         }
     except subprocess.TimeoutExpired as exc:
         terminated = False

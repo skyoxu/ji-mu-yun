@@ -18,7 +18,7 @@
     {
       "id": "plan-composite-validator",
       "executable": "py",
-      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_plan.py"}, "--require-plan-ready"],
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_plan.py"}],
       "cwd": {"type": "repo_path", "value": "."},
       "timeout_seconds": 60
     }

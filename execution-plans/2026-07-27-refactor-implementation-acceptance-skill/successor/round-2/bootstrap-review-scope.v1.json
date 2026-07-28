@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "refactor-acceptance.successor-round2-scope.v1",
+  "profile": "bootstrap-implementation-conformance",
+  "scopeSource": "round-1/bootstrap-review-scope.v1.json",
+  "additionalScope": [
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-2/repair-plan.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-2/bootstrap-review-scope.v1.json"
+  ],
+  "purpose": "Fresh successor review of the complete Round 1 repair batch and the closure-only stale-finalization control-plane repair.",
+  "authorizes": []
+}

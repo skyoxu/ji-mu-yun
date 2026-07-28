@@ -175,7 +175,13 @@ def create_artifact_view(
     return manifest
 
 
-def validate_artifact_view(run_dir: Path, repository_root: Path, manifest: dict[str, Any]) -> str:
+def validate_artifact_view(
+    run_dir: Path,
+    repository_root: Path,
+    manifest: dict[str, Any],
+    *,
+    require_live_originals: bool = True,
+) -> str:
     if manifest.get("schemaVersion") != "artifact-view.v1":
         raise ControlPlaneError("Artifact View has an unsupported schemaVersion")
     entries = manifest.get("entries")
@@ -189,7 +195,9 @@ def validate_artifact_view(run_dir: Path, repository_root: Path, manifest: dict[
     for entry in entries:
         original = repository_root / entry["originalPath"]
         snapshot = run_dir / entry["snapshotPath"]
-        if not original.is_file() or bytes_hash(original.read_bytes()) != entry["originalSha256"]:
+        if require_live_originals and (
+            not original.is_file() or bytes_hash(original.read_bytes()) != entry["originalSha256"]
+        ):
             raise ControlPlaneError(f"Live artifact drifted: {entry['originalPath']}")
         if not snapshot.is_file() or bytes_hash(snapshot.read_bytes()) != entry["snapshotSha256"]:
             raise ControlPlaneError(f"Artifact View drifted: {entry['snapshotPath']}")

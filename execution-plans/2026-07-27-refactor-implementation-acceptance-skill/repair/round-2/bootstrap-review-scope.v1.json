@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "refactor-acceptance.bootstrap-round2-scope.v1",
+  "profile": "bootstrap-implementation-conformance",
+  "scope": [
+    ".agents/skills/run-phase-bootstrap-review",
+    ".agents/skills/run-refactor-implementation-acceptance",
+    "AGENTS.md",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "docs/standards/bootstrap-review-control-plane.md",
+    "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/01-requirements-and-acceptance.md",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/knowledge-context.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_slice.py",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/refactor_acceptance_slice_bridge.py",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/bootstrap-preflight-commands.v1.json",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/repair-plan.v1.json",
+    "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-baseline-propagation/RUN-20260728T053309-736210Z/slice-ready-result.json",
+    "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-checklist-contract/RUN-20260728T053507-823300Z/slice-ready-result.json",
+    "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-bootstrap-dispatch/RUN-20260728T053639-900108Z/slice-ready-result.json",
+    "logs/tdd-adapter/refactor-implementation-acceptance-skill/R2-attestation-scope/RUN-20260728T053808-710317Z/slice-ready-result.json"
+  ],
+  "closureExcluded": ["execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/bootstrap-repair-closure.v1.json"]
+}

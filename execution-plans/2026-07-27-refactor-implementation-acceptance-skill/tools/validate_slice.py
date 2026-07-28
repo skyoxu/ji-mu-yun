@@ -111,6 +111,41 @@ def validate_slice(slice_id: str) -> list[str]:
             path = REPOSITORY_ROOT / relative
             if not path.is_file() or marker not in path.read_text(encoding="utf-8"):
                 findings.append("RIA-S5-PACKAGE:" + relative)
+    elif slice_id == "R2-baseline-propagation":
+        suite = subprocess.run(
+            [sys.executable, "-B", "-m", "unittest", "discover", "-s", str(REPOSITORY_ROOT / ".agents/skills/run-refactor-implementation-acceptance/tests"), "-p", "test_*.py"],
+            cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False,
+        )
+        if suite.returncode != 0:
+            findings.append("RIA-R2-BASELINE:" + (suite.stderr or suite.stdout).strip()[-400:])
+    elif slice_id == "R2-checklist-contract":
+        suite = subprocess.run([sys.executable, "-B", str(REPOSITORY_ROOT / ".agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py")], cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+        if suite.returncode != 0:
+            findings.append("RIA-R2-CHECKLIST:" + (suite.stderr or suite.stdout).strip()[-400:])
+    elif slice_id == "R2-bootstrap-dispatch":
+        suite = subprocess.run([sys.executable, "-B", str(REPOSITORY_ROOT / ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py")], cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+        if suite.returncode != 0:
+            findings.append("RIA-R2-DISPATCH:" + (suite.stderr or suite.stdout).strip()[-400:])
+    elif slice_id == "R2-attestation-scope":
+        suite = subprocess.run([sys.executable, "-B", str(REPOSITORY_ROOT / ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py")], cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+        if suite.returncode != 0:
+            findings.append("RIA-R2-ATTESTATION:" + (suite.stderr or suite.stdout).strip()[-400:])
+    elif slice_id == "R3-candidate-completeness-and-policy":
+        suite = subprocess.run([sys.executable, "-B", str(REPOSITORY_ROOT / ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py")], cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+        if suite.returncode != 0:
+            findings.append("RIA-R3-CANDIDATE:" + (suite.stderr or suite.stdout).strip()[-400:])
+    elif slice_id == "R3-phase-coverage-completeness":
+        suite = subprocess.run([sys.executable, "-B", str(REPOSITORY_ROOT / ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py")], cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+        if suite.returncode != 0:
+            findings.append("RIA-R3-COVERAGE:" + (suite.stderr or suite.stdout).strip()[-400:])
+    elif slice_id == "SUC1-policy-path-coverage":
+        suite = subprocess.run([sys.executable, "-B", str(REPOSITORY_ROOT / ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py")], cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+        if suite.returncode != 0:
+            findings.append("RIA-SUC1-POLICY:" + (suite.stderr or suite.stdout).strip()[-400:])
+    elif slice_id == "SUC1-changed-line-manifest-binding":
+        suite = subprocess.run([sys.executable, "-B", str(REPOSITORY_ROOT / ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py")], cwd=REPOSITORY_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+        if suite.returncode != 0:
+            findings.append("RIA-SUC1-COVERAGE:" + (suite.stderr or suite.stdout).strip()[-400:])
     else:
         findings.append("RIA-SLICE-NOT-IMPLEMENTED:" + slice_id)
     return findings

@@ -75,6 +75,11 @@ class BootstrapReviewCliTests(unittest.TestCase):
         required_check_args = []
         if profile_contract["planBoundCheckPolicy"]["required"]:
             required_check_args = ["--required-check", f"implementation-proof={self.scope}"]
+        scope_policy_args = (
+            ["--directory-scope-attestation", bootstrap.DIRECTORY_SCOPE_ATTESTATION]
+            if profile in bootstrap.BOUNDED_SCOPE_PROFILES
+            else []
+        )
         predecessor_args = [] if predecessor_run is None else ["--predecessor-run-dir", str(predecessor_run)]
         knowledge_args = [] if knowledge_context is None else ["--knowledge-context", str(knowledge_context.relative_to(self.repo))]
         repair_closure_args = []
@@ -152,6 +157,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 *repair_closure_args,
                 "--profile", profile,
                 "--scope", str(self.scope),
+                *scope_policy_args,
                 *context_args,
                 *knowledge_args,
                 *required_check_args,
@@ -180,6 +186,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             path.write_text(content, encoding="utf-8", newline="\n")
         scopes = [fixture_root, self.repo / "logs" / "ci" / "review-gateway-bootstrap-fixture", self.repo / "AGENTS.md"]
         args = [item for scope in scopes for item in ("--scope", str(scope))]
+        args.extend(["--directory-scope-attestation", bootstrap.DIRECTORY_SCOPE_ATTESTATION])
         assignments = {
             "skill-source": fixture_root / "SKILL.md",
             "operator-guide": fixture_root / "09-bootstrap-review-operator-guide.md",
@@ -654,6 +661,12 @@ class BootstrapReviewCliTests(unittest.TestCase):
                         "--profile", profile_name,
                         *profile_args,
                         *(
+                            ["--directory-scope-attestation", bootstrap.DIRECTORY_SCOPE_ATTESTATION]
+                            if profile_name in bootstrap.BOUNDED_SCOPE_PROFILES
+                            and profile_name != "bootstrap-skill-route"
+                            else []
+                        ),
+                        *(
                             ["--required-check", f"implementation-proof={self.scope}"]
                             if bootstrap.load_profile(profile_name)["planBoundCheckPolicy"]["required"]
                             else []
@@ -680,6 +693,12 @@ class BootstrapReviewCliTests(unittest.TestCase):
                     set(profile["requiredContextClasses"]),
                     set(manifest["contextClassArtifacts"]),
                 )
+                expected_strategy = (
+                    "profile-complete-directory"
+                    if profile_name == "bootstrap-upstream-plan"
+                    else "attested-minimal-complete-closure"
+                )
+                self.assertEqual(expected_strategy, manifest["reviewScopePolicy"]["strategy"])
                 for layer in bootstrap.LAYERS:
                     prompt = (run_dir / "reviewer-prompts" / f"{layer}.md").read_text(encoding="utf-8")
                     effort = profile["codexExecPolicy"]["reasoningEffortByRole"][layer]
@@ -694,6 +713,30 @@ class BootstrapReviewCliTests(unittest.TestCase):
                         profile["reviewerInstructionPolicy"]["falsePositiveRules"][-1], prompt
                     )
                     self.assertIn("Untrusted-content boundary:", prompt)
+
+    def test_bounded_profile_rejects_directory_scope_without_attestation(self) -> None:
+        profile = bootstrap.load_profile("bootstrap-implementation-conformance")
+        context_args = [
+            item
+            for context_class in profile["requiredContextClasses"]
+            for item in ("--context-class", f"{context_class}={self.scope}")
+        ]
+        result = bootstrap.main([
+            "prepare",
+            "--repository-root", str(self.repo),
+            "--review-id", "unbounded-implementation-scope",
+            "--change-id", "unbounded-implementation-change",
+            "--review-round", "1",
+            "--profile", "bootstrap-implementation-conformance",
+            "--scope", str(self.scope),
+            *context_args,
+            "--required-check", f"implementation-proof={self.scope}",
+            "--execution-mode", "manual",
+            "--semantic-review-exclusivity", "no-other-semantic-review-in-cycle",
+            "--out-dir", str(self.run_dir),
+        ])
+        self.assertEqual(1, result)
+        self.assertFalse((self.run_dir / "review-input.json").exists())
 
     def test_prepare_rejects_missing_context_class_assignments(self) -> None:
         result = bootstrap.main(
@@ -1995,7 +2038,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertTrue(first.is_dir())
         self.assertTrue((self.run_dir / "review-input.json").is_file())
 
-    def test_round_three_requires_blocker_or_changed_authority_context(self) -> None:
+    def test_clean_predecessor_does_not_trigger_round_two(self) -> None:
         self.prepare()
         self.complete_layers()
         self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
@@ -2007,19 +2050,48 @@ class BootstrapReviewCliTests(unittest.TestCase):
             review_id="upstream-manual-002",
             review_round=2,
             predecessor_run=round_one,
-        )
-        self.complete_layers()
-        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
-        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
-        round_two = self.run_dir
-
-        self.run_dir = self.repo / "bootstrap-run-round-3"
-        self.prepare(
-            review_id="upstream-manual-003",
-            review_round=3,
-            predecessor_run=round_two,
             expected_result=1,
         )
+        self.assertFalse((self.run_dir / "review-input.json").exists())
+
+    def test_p2_only_predecessor_does_not_trigger_full_review(self) -> None:
+        self.prepare()
+        self.complete_layers({"blind_hunter": [self.candidate(severity="P2")]})
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        findings = self.read_json("review-candidates.json")["findings"]
+        finding_id = findings[0]["findingId"]
+        manifest = self.read_json("review-input.json")
+        _registry_path, registry_ref = self.write_p2_registry(manifest)
+        process_ref = self.run_p2_command(finding_id, "closure-command")
+        self.write_json("p2-dispositions.json", {
+            "schemaVersion": "bootstrap-p2-dispositions.v1",
+            "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"],
+            "candidateHash": manifest["authorityContextHash"],
+            "policyRevision": manifest["policyRevision"],
+            "authorityRevision": manifest["authorityRevision"],
+            "findingIds": [finding_id],
+            "dispositions": [{
+                "findingId": finding_id,
+                "status": "fixed",
+                "risk": "normal",
+                "reason": "The registered targeted closure command passed",
+                "closureCommandId": "closure-command",
+                "closureCommandRegistryRef": registry_ref,
+                "closureProcessResultRef": process_ref,
+            }],
+        })
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        round_one = self.run_dir
+
+        self.run_dir = self.repo / "bootstrap-run-p2-round-2"
+        self.prepare(
+            review_id="upstream-p2-manual-002",
+            review_round=2,
+            predecessor_run=round_one,
+            expected_result=1,
+        )
+        self.assertFalse((self.run_dir / "review-input.json").exists())
 
     def test_review_round_four_is_always_rejected(self) -> None:
         self.prepare()
@@ -2120,8 +2192,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn(str(self.run_dir / manifest["artifactView"]["manifestPath"]), prompt)
         self.assertIn("Read every artifact from its Artifact View snapshotPath", prompt)
         self.assertIn("Resolve every relative snapshotPath against the assigned run directory", prompt)
-        self.assertIn("Do not hand-copy the\ncoverage path arrays", prompt)
-        self.assertIn("derive the coverage arrays from the frozen Artifact View manifest", prompt)
+        self.assertIn("Do not return coverage arrays", prompt)
+        self.assertIn("artifactViewReadReceipt", prompt)
+        self.assertIn("the parent owns formal coverage", prompt)
         self.assertIn("Do not edit formal output files", prompt)
         self.assertNotIn("fill\n`reviewer-outputs/blind_hunter.json`", prompt)
 
@@ -2145,6 +2218,15 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn("one `evidenceChecked` reference must cover the entire inclusive", prompt)
         self.assertIn("`upstream-plan/plan.md:1-2`", prompt)
         self.assertIn("`upstream-plan/zz-unrelated.md`", prompt)
+        self.assertIn(
+            'Required `evidenceChecked` minimum closure: copy this JSON array verbatim',
+            prompt,
+        )
+        self.assertIn(
+            '["upstream-plan/plan.md:1-3", "upstream-plan/plan.md:1-2", '
+            '"upstream-plan/zz-unrelated.md"]',
+            prompt,
+        )
 
     def test_codex_verifier_runtime_expands_frozen_requirements_for_legacy_prompt(self) -> None:
         self.prepare(execution_mode="codex-exec")
@@ -2190,6 +2272,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn("Required finding evidence: `upstream-plan/plan.md:1-3`", prompt)
         self.assertIn("`upstream-plan/plan.md:1-2`", prompt)
         self.assertIn("`upstream-plan/zz-unrelated.md`", prompt)
+        self.assertIn("Required `evidenceChecked` minimum closure: copy this JSON array verbatim", prompt)
 
     def test_parent_rejects_forged_run_local_access_handshake(self) -> None:
         self.prepare(execution_mode="codex-exec")
@@ -2205,11 +2288,163 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 self.run_dir, manifest, "model_probe", handshake
             )
 
-    def test_failed_codex_payload_preserves_failure_reason_in_formal_output(self) -> None:
+    def test_parent_synthesizes_ordered_codex_coverage_from_compact_receipt(self) -> None:
         self.prepare(execution_mode="codex-exec")
         self.complete_preflight()
         self.authorize_launch()
         manifest = self.read_json("review-input.json")
+        payload = {
+            "status": "completed",
+            "artifactViewReadReceipt": bootstrap.artifact_view_read_receipt(manifest),
+            "candidates": [],
+        }
+        self.assertNotIn("coverage", payload)
+        candidate, attempt_dir = self.reviewer_attempt_candidate(
+            manifest, "compact-coverage", "blind_hunter", payload
+        )
+
+        with mock.patch.object(
+            bootstrap, "run_codex_attempt", return_value=(candidate, attempt_dir)
+        ):
+            self.assertEqual(0, bootstrap.main([
+                "run-layer",
+                "--run-dir", str(self.run_dir),
+                "--role", "blind_hunter",
+                "--codex-command", "test-codex-command",
+                "--model", manifest["codexExecPolicy"]["preferredModel"],
+            ]))
+
+        required = [item["artifact"] for item in manifest["artifacts"]]
+        formal = self.read_json("reviewer-outputs/blind_hunter.json")
+        self.assertEqual("completed", formal["status"])
+        self.assertEqual(required, formal["coverage"]["requiredArtifacts"])
+        self.assertEqual(required, formal["coverage"]["readArtifacts"])
+        self.assertEqual([], formal["coverage"]["missingArtifacts"])
+
+    def test_wrong_compact_receipt_is_transport_failure_and_preserves_formal_output(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        self.complete_preflight()
+        self.authorize_launch()
+        manifest = self.read_json("review-input.json")
+        receipt = bootstrap.artifact_view_read_receipt(manifest)
+        receipt["artifactCount"] += 1
+        payload = {
+            "status": "completed",
+            "artifactViewReadReceipt": receipt,
+            "candidates": [],
+        }
+        candidate, attempt_dir = self.reviewer_attempt_candidate(
+            manifest, "bad-compact-coverage", "blind_hunter", payload
+        )
+        formal_path = self.run_dir / "reviewer-outputs" / "blind_hunter.json"
+        formal_before = formal_path.read_bytes()
+
+        with mock.patch.object(
+            bootstrap, "run_codex_attempt", return_value=(candidate, attempt_dir)
+        ):
+            self.assertEqual(1, bootstrap.main([
+                "run-layer",
+                "--run-dir", str(self.run_dir),
+                "--role", "blind_hunter",
+                "--codex-command", "test-codex-command",
+                "--model", manifest["codexExecPolicy"]["preferredModel"],
+            ]))
+
+        self.assertEqual(formal_before, formal_path.read_bytes())
+        failed_event = bootstrap.read_process_events(self.run_dir)[-1]
+        self.assertEqual("attempt-failed", failed_event["eventType"])
+        self.assertEqual("transport", failed_event["failureClass"])
+
+    def test_malformed_child_json_records_retryable_transport_failure(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        formal_path = self.run_dir / "reviewer-outputs" / "blind_hunter.json"
+        formal_before = formal_path.read_bytes()
+
+        class MalformedProcess:
+            pid = os.getpid()
+            returncode = 0
+
+            def __init__(self, output_path: Path) -> None:
+                self.output_path = output_path
+
+            def communicate(self, _prompt: str) -> tuple[str, str]:
+                self.output_path.write_text("{not-json", encoding="utf-8", newline="\n")
+                return "", ""
+
+        def fake_popen(argv: list[str], **_kwargs: object) -> MalformedProcess:
+            output_path = Path(argv[argv.index("--output-last-message") + 1])
+            return MalformedProcess(output_path)
+
+        with mock.patch.object(bootstrap.subprocess, "Popen", side_effect=fake_popen):
+            with self.assertRaises(bootstrap.TransportAttemptError):
+                bootstrap.run_codex_attempt(
+                    self.run_dir,
+                    manifest,
+                    "blind_hunter",
+                    "codex",
+                    manifest["codexExecPolicy"]["preferredModel"],
+                )
+
+        self.assertEqual(formal_before, formal_path.read_bytes())
+        failed_event = bootstrap.read_process_events(self.run_dir)[-1]
+        self.assertEqual("attempt-failed", failed_event["eventType"])
+        self.assertEqual("transport", failed_event["failureClass"])
+
+    def test_non_utf8_child_json_records_retryable_transport_failure(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        formal_path = self.run_dir / "reviewer-outputs" / "blind_hunter.json"
+        formal_before = formal_path.read_bytes()
+
+        class NonUtf8Process:
+            pid = os.getpid()
+            returncode = 0
+
+            def __init__(self, output_path: Path) -> None:
+                self.output_path = output_path
+
+            def communicate(self, _prompt: str) -> tuple[str, str]:
+                self.output_path.write_bytes(b"\xff\xfe")
+                return "", ""
+
+        def fake_popen(argv: list[str], **_kwargs: object) -> NonUtf8Process:
+            output_path = Path(argv[argv.index("--output-last-message") + 1])
+            return NonUtf8Process(output_path)
+
+        with mock.patch.object(bootstrap.subprocess, "Popen", side_effect=fake_popen):
+            with self.assertRaises(bootstrap.TransportAttemptError):
+                bootstrap.run_codex_attempt(
+                    self.run_dir,
+                    manifest,
+                    "blind_hunter",
+                    "codex",
+                    manifest["codexExecPolicy"]["preferredModel"],
+                )
+
+        self.assertEqual(formal_before, formal_path.read_bytes())
+        failed_event = bootstrap.read_process_events(self.run_dir)[-1]
+        self.assertEqual("attempt-failed", failed_event["eventType"])
+        self.assertEqual("transport", failed_event["failureClass"])
+
+    def test_child_json_read_error_is_transport_failure(self) -> None:
+        candidate_path = self.run_dir / "candidate.json"
+        candidate_path.parent.mkdir(parents=True)
+        candidate_path.write_text("{}", encoding="utf-8", newline="\n")
+
+        with mock.patch.object(Path, "read_text", side_effect=OSError("read failed")):
+            with self.assertRaisesRegex(
+                bootstrap.TransportAttemptError, "not readable UTF-8"
+            ):
+                bootstrap.parse_child_json(candidate_path)
+
+    def test_failed_codex_payload_is_retryable_transport_and_preserves_formal_output(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        self.complete_preflight()
+        self.authorize_launch()
+        manifest = self.read_json("review-input.json")
+        formal_path = self.run_dir / "reviewer-outputs" / "blind_hunter.json"
+        formal_before = formal_path.read_bytes()
         attempt_dir = self.run_dir / "attempts" / "failed-payload"
         attempt_dir.mkdir(parents=True)
         handshake = bootstrap.access_handshake_payload(self.run_dir, manifest, "blind_hunter")
@@ -2252,11 +2487,6 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "payload": {
                 "status": "failed",
                 "failureReason": "Assigned context is unavailable",
-                "coverage": {
-                    "requiredArtifacts": [item["artifact"] for item in manifest["artifacts"]],
-                    "readArtifacts": [],
-                    "missingArtifacts": [item["artifact"] for item in manifest["artifacts"]],
-                },
                 "candidates": [],
             },
         }
@@ -2278,9 +2508,20 @@ class BootstrapReviewCliTests(unittest.TestCase):
                     ]
                 ),
             )
-        self.assertEqual(
-            "Assigned context is unavailable",
-            self.read_json("reviewer-outputs/blind_hunter.json")["failureReason"],
+        self.assertEqual(formal_before, formal_path.read_bytes())
+        failed_event = bootstrap.read_process_events(self.run_dir)[-1]
+        self.assertEqual("attempt-failed", failed_event["eventType"])
+        self.assertEqual("transport", failed_event["failureClass"])
+        self.assertEqual(1, manifest["fullReviewRound"])
+        write_set = [formal_path.relative_to(self.repo).as_posix()]
+        bootstrap.reserve_codex_attempt(
+            self.run_dir,
+            manifest,
+            "blind_hunter",
+            "retry-after-transport",
+            "reviewer:blind_hunter",
+            formal_path,
+            write_set,
         )
 
     def test_reviewer_authority_drift_before_publication_preserves_formal_output(self) -> None:
@@ -2288,14 +2529,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.complete_preflight()
         self.authorize_launch()
         manifest = self.read_json("review-input.json")
-        required = [item["artifact"] for item in manifest["artifacts"]]
         payload = {
             "status": "completed",
-            "coverage": {
-                "requiredArtifacts": required,
-                "readArtifacts": required,
-                "missingArtifacts": [],
-            },
+            "artifactViewReadReceipt": bootstrap.artifact_view_read_receipt(manifest),
             "candidates": [self.candidate()],
         }
         candidate, attempt_dir = self.reviewer_attempt_candidate(
@@ -3233,6 +3469,17 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.prepare(knowledge_context=context)
         artifacts = {item["artifact"] for item in self.read_json("review-input.json")["artifacts"]}
         self.assertIn("knowledge-context.v1.json", artifacts)
+
+    def test_stale_run_requires_explicit_nonfresh_load_for_closure_only(self) -> None:
+        self.prepare()
+        self.target.write_text("changed after review\n", encoding="utf-8", newline="\n")
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "Prepared input artifact is stale"):
+            bootstrap.load_run(str(self.run_dir))
+        _run_dir, manifest, repository_root = bootstrap.load_run(
+            str(self.run_dir), require_fresh_artifacts=False
+        )
+        self.assertEqual(self.repo.resolve(), repository_root)
+        self.assertEqual("bootstrap-upstream-plan", manifest["profileName"])
 
 class BootstrapKnowledgeContextTests(unittest.TestCase):
     def test_rejected_candidate_cannot_satisfy_required_context_class(self) -> None:

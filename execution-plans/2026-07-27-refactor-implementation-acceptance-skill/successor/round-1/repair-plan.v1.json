@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "refactor-acceptance.successor-round.v1",
+  "round": 1,
+  "status": "implemented",
+  "lineage": "successor-lineage.v1.json",
+  "findingIds": ["BSR-1DA101461E3AB315", "BSR-483D0ED3EA11ED82", "BSR-4F4C6B99E5533234", "BSR-ED73EE2E7BF8E0E6", "BSR-45D6FEA28AE59B11", "BSR-59FC2E4560070011", "BSR-A835D3DFFBC54206"],
+  "slices": [
+    {"id":"SUC1-policy-path-coverage","findings":["BSR-1DA101461E3AB315","BSR-4F4C6B99E5533234","BSR-ED73EE2E7BF8E0E6"],"writeRoots":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],"execution_snapshot_paths":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],"commands":{"red":"successor-policy-suite","green":"successor-policy-suite","refactor":"successor-policy-suite"}},
+    {"id":"SUC1-changed-line-manifest-binding","findings":["BSR-483D0ED3EA11ED82"],"writeRoots":[".agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py"],"execution_snapshot_paths":[".agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py"],"commands":{"red":"successor-coverage-suite","green":"successor-coverage-suite","refactor":"successor-coverage-suite"}},
+    {"id":"SUC1-phase-scan-policy-parity","findings":["BSR-45D6FEA28AE59B11","BSR-59FC2E4560070011","BSR-A835D3DFFBC54206"],"writeRoots":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],"execution_snapshot_paths":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py",".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],"commands":{"red":"successor-phase-scan-suite","green":"successor-phase-scan-suite","refactor":"successor-phase-scan-suite"}}
+  ],
+  "terminalValidation": "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package",
+  "authorizes": []
+}

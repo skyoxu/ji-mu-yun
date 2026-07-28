@@ -31,14 +31,31 @@ def _contract() -> dict:
     return json.loads((PLAN_ROOT / "implementation-contract.v1.json").read_text(encoding="utf-8"))
 
 
+def _repair_rounds() -> list[tuple[str, dict]]:
+    rounds: list[tuple[str, dict]] = []
+    paths = [
+        *(PLAN_ROOT / "repair").glob("round-*/repair-plan.v1.json"),
+        *(PLAN_ROOT / "successor").glob("round-*/repair-plan.v1.json"),
+    ]
+    for path in sorted(paths):
+        rounds.append((path.relative_to(PLAN_ROOT).as_posix(), json.loads(path.read_text(encoding="utf-8"))))
+    return rounds
+
+
 def _slice(slice_id: str) -> dict:
     for item in _contract()["slices"]:
         if item["slice_id"] == slice_id:
-            return item
+            return {**item, "_identity_path": "implementation-contract.v1.json"}
+    for identity_path, repair in _repair_rounds():
+        for item in repair["slices"]:
+            if item["id"] == slice_id:
+                return {**item, "slice_id": item["id"], "depends_on": [], "candidate_paths": item["writeRoots"], "_identity_path": identity_path}
     raise ValueError("unknown slice")
 
 
 def _slice_closure(slice_id: str) -> list[dict]:
+    if (slice_id.startswith("R") or slice_id.startswith("SUC")) and not slice_id.startswith("RMAP-"):
+        return [_slice(slice_id)]
     contract = _contract()
     by_rmap = {item["slice_id"]: item for item in contract["slices"]}
     selected: list[dict] = []
@@ -93,7 +110,7 @@ def _worktree_hash(paths: list[str]) -> str:
 def slice_validation_snapshot(slice_id: str) -> dict[str, str]:
     selected = _slice(slice_id)
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPOSITORY_ROOT, text=True, encoding="utf-8").strip()
-    contract_hash = _hash((PLAN_ROOT / "implementation-contract.v1.json").read_bytes())
+    contract_hash = _hash((PLAN_ROOT / selected["_identity_path"]).read_bytes())
     # A completed slice must not become stale merely because an independent
     # later slice adds a command, test, or predicate branch. The shared
     # snapshot algorithm plus the selected slice's actual candidate files are

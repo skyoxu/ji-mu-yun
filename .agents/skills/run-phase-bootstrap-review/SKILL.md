@@ -71,6 +71,14 @@ Declare:
 - `--execution-read-set` for validator/runtime inputs already present in scope.
 - `--dependency` for the execution dependency closure already present in scope.
 
+Use the smallest complete consumer closure. `bootstrap-upstream-plan` may bind
+the whole plan directory because that directory is the review object. For
+implementation, Skill-route, and focused-change profiles, prefer explicit
+changed files, direct contracts and consumers, targeted tests, repository
+rules, referenced standards, and current acceptance evidence. If a directory
+is genuinely the minimal complete closure, prepare requires
+`--directory-scope-attestation directory-is-minimal-complete-closure`.
+
 Round 2 and Round 3 also require `--predecessor-run-dir` and a hash-bound `--repair-closure`. The closure must cover the exact finalized predecessor finding set, including confirmed, advisory, and refuted dispositions.
 
 Prepare freezes Git HEAD, Git index, direct artifacts, execution read set, dependency closure, context graph, cost estimate, and, for Codex Exec, `artifact-view.v1`. A replacement for a stale run uses a new review ID and fresh snapshot; the new run does not inherit stale state.
@@ -125,7 +133,13 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py run-
   --model <profile-allowed model>
 ```
 
-Each child must execute its same-session Artifact View handshake before semantic work and return only a structured candidate response. The runner validates binding and schema, then atomically writes the formal role output. Completed coverage is valid only when `requiredArtifacts` and `readArtifacts` both exactly equal the frozen manifest's ordered artifact list, `missingArtifacts=[]`, and no coverage list contains duplicates. Every completed reviewer or verifier payload receives one final frozen-authority validation immediately before publication; a failure at that boundary leaves the prior formal bytes unchanged and records a failed attempt. An explicit child `status=failed` may publish its validated failure reason while remaining retryable. Verifier output additionally requires exact blocker evidence and complete `contextRead` coverage against the frozen gate before publication. The verifier runtime prompt derives and re-emits every full inclusive blocker range and all `contextRead` references from the hash-bound candidate sidecar; it must not rely on a start-line-only summary in a saved prompt. Failed attempts remain under `attempts/<attempt-id>/` and never replace completed formal evidence.
+Each child must execute its same-session Artifact View handshake before semantic work and return only a structured candidate response. A completed Codex discovery payload returns semantic candidates and `bootstrap-artifact-view-read-receipt.v1`; it never reproduces coverage path arrays. The parent validates the receipt and handshake, constructs exact ordered formal coverage from the frozen manifest, validates the complete formal output, and writes it atomically. Manual and specialized-agent modes still fill and validate explicit coverage arrays because their reads occur outside the parent-owned Codex boundary. Every completed reviewer or verifier payload receives one final frozen-authority validation immediately before publication; a failure at that boundary leaves the prior formal bytes unchanged and records a failed attempt. Verifier output additionally requires exact blocker evidence and complete `contextRead` coverage against the frozen gate before publication. The verifier runtime prompt derives and re-emits every full inclusive blocker range and all `contextRead` references from the hash-bound candidate sidecar; it must not rely on a start-line-only summary in a saved prompt. Failed attempts remain under `attempts/<attempt-id>/` and never replace completed formal evidence.
+
+Child launch/exit failure, malformed strict JSON, invalid candidate binding or
+shape, and an invalid Artifact View receipt are transport attempt failures.
+They append `attempt-failed`, keep formal output bytes unchanged, and retry the
+same role in the same run. Do not create a new semantic round, review ID, or
+successor lineage for a transport failure.
 
 For Codex Exec, the child reads every artifact from the frozen Artifact View `snapshotPath` and cites `originalPath`. The runtime prompt names the absolute run directory and manifest. The child must not read live originals, edit formal reviewer/verifier outputs, or invoke `validate-layer`; those are parent control-plane responsibilities.
 
@@ -177,6 +191,11 @@ After a third-round manual pause, re-entry requires a schema-valid `bootstrap-su
 ## Repair Rounds
 
 Repair all accepted findings as one batch outside the read-only review run. Use deterministic targeted checks during repair; do not launch another full review after each finding.
+
+A clean or P2-only finalized predecessor does not authorize a new complete
+semantic round. Dispose P2 in the current run and use the registered targeted
+closure or recheck path. Round 2 and Round 3 are reserved for a predecessor
+with P0/P1 repair work, subject to the existing hard-limit rules.
 
 Round 2/3 repair closure is checked twice:
 

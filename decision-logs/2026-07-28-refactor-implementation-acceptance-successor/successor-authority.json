@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "bootstrap-successor-policy-authority.v1",
+  "authorityId": "ria727-successor-authority-20260728",
+  "rootId": "successor-policy-root.v1",
+  "authorityRootRef": {
+    "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+    "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1"
+  },
+  "signerId": "repository-operator",
+  "policyRevision": "sha256:cf2e6630699af9637bcd74c742d11103100ce189acda1c869d9c52768fade14e",
+  "authorizedActors": [
+    {
+      "actorId": "operator-20260728",
+      "role": "successor-policy-authorizer",
+      "consumers": ["repository-maintenance-tdd-adapter-plan-reentry"],
+      "scopes": ["plan-reentry"]
+    }
+  ],
+  "status": "active",
+  "issuedAt": "2026-07-28T07:35:00Z",
+  "expiresAt": "2027-07-28T07:35:00Z",
+  "predecessorAuthorityRef": {
+    "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+    "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1"
+  },
+  "authorizes": [],
+  "doesNotAuthorize": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+}

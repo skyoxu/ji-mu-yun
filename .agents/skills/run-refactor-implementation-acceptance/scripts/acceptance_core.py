@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -19,8 +20,8 @@ _ROLES = {"implementation", "consumer", "source", "authority", "test", "evidence
 _CHANGE_TYPES = {"unchanged", "added", "modified", "deleted", "renamed", "untracked"}
 _EXTRACTION_MODES = {"registry_backed", "parser_backed", "semantic_candidate"}
 _COMPLETENESS = {"deterministic_complete", "semantically_attested_complete", "candidate", "incomplete"}
-_PHASE_PREFIXES = ("PhaseA.Platform/", "PhaseA.Platform.Tests/", "runtime/phase-a/", "scripts/python/phase_a_", "scripts/python/phase_b_")
-_GODOT_PREFIXES = ("Game.Godot/", "Tests.Godot/", "Game.Core/")
+_PHASE_PREFIXES = ("PhaseA.Platform/", "PhaseA.Platform.Tests/", "runtime/phase-a/", "scripts/python/phase_a_", "scripts/python/phase_b_", "scripts/sc/_llm_backend.py")
+_GODOT_PREFIXES = ("Game.Godot/", "Tests.Godot/", "Game.Core/", "Game.Core.Tests/")
 
 
 def canonical_hash(value: Any) -> str:
@@ -29,13 +30,18 @@ def canonical_hash(value: Any) -> str:
 
 
 def _hash(value: Any, field: str) -> None:
-    if not isinstance(value, str) or len(value) != 71 or not value.startswith("sha256:"):
+    if not isinstance(value, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None:
         raise InputError(f"{field} must be a sha256 hash")
 
 
 def _relative(value: Any, field: str) -> None:
     if not isinstance(value, str) or not value or Path(value).is_absolute() or ".." in Path(value).parts:
         raise InputError(f"{field} must be a repository-relative path")
+
+
+def _normalized_relative(value: Any, field: str) -> str:
+    _relative(value, field)
+    return value.replace("\\", "/")
 
 
 def parse_run_input(value: Any) -> dict[str, Any]:
@@ -156,6 +162,8 @@ def validate_candidate_manifest(value: Any, baseline: Any) -> None:
             raise InputError("modified or renamed entry must close against the baseline")
         if kind == "unchanged" and (old_path != new_path or old_hash != new_hash):
             raise InputError("unchanged entry is inconsistent")
+        if kind == "unchanged" and baseline_files.get(old_path) != old_hash:
+            raise InputError("unchanged entry must close against the baseline")
         if kind == "modified" and (old_path != new_path or old_hash == new_hash):
             raise InputError("modified entry is inconsistent")
         if kind == "renamed" and old_path == new_path:
@@ -168,6 +176,8 @@ def validate_candidate_manifest(value: Any, baseline: Any) -> None:
             if new_path in candidate_seen:
                 raise InputError("candidate manifest duplicates a candidate path")
             candidate_seen.add(new_path)
+    if value["status"] == "complete" and baseline_seen != set(baseline_files):
+        raise InputError("complete candidate manifest must cover every baseline path")
 
 
 def candidate_changed_paths(candidate: Any) -> list[str]:
@@ -183,6 +193,31 @@ def candidate_changed_paths(candidate: Any) -> list[str]:
             paths.append(path)
     if len(paths) != len(set(paths)):
         raise InputError("candidate changed paths are duplicated")
+    return sorted(paths)
+
+
+def phase_changed_paths(candidate: Any) -> list[str]:
+    """Return the scan target for every change that enters the Phase policy."""
+    if not isinstance(candidate, dict) or not isinstance(candidate.get("files"), list):
+        raise InputError("candidate manifest files are invalid")
+    paths: list[str] = []
+    for item in candidate["files"]:
+        if not isinstance(item, dict):
+            raise InputError("candidate manifest file is invalid")
+        if item.get("change_type") == "unchanged":
+            continue
+        baseline_path = item.get("baseline_path")
+        candidate_path = item.get("candidate_path")
+        identities = (
+            _normalized_relative(path, "Phase policy path")
+            for path in (baseline_path, candidate_path)
+            if isinstance(path, str)
+        )
+        if any(path.startswith(_PHASE_PREFIXES) for path in identities):
+            path = _normalized_relative(candidate_path or baseline_path, "Phase changed path")
+            paths.append(path)
+    if len(paths) != len(set(paths)):
+        raise InputError("Phase changed paths are duplicated")
     return sorted(paths)
 
 
@@ -257,18 +292,18 @@ def validate_policy_pack(value: Any) -> None:
         raise InputError("policy pack evaluation mode is invalid")
 
 
-def resolve_phase_policy(policy: Any, candidate_manifest: Any, adapter_hash: str) -> dict[str, Any]:
+def resolve_phase_policy(policy: Any, candidate_manifest: Any, baseline_manifest: Any, adapter_hash: str) -> dict[str, Any]:
     validate_policy_pack(policy)
-    validate_candidate_manifest(candidate_manifest, {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []})
+    validate_candidate_manifest(candidate_manifest, baseline_manifest)
     _hash(adapter_hash, "adapter_hash")
-    paths = [item.get("candidate_path") for item in candidate_manifest["files"] if item.get("candidate_path")]
-    phase_paths = sorted(path for path in paths if path.startswith(_PHASE_PREFIXES))
-    godot_paths = sorted(path for path in paths if path.startswith(_GODOT_PREFIXES))
-    if godot_paths and not phase_paths:
+    paths = [_normalized_relative(path, "Changed path") for path in candidate_changed_paths(candidate_manifest)]
+    phase_paths = phase_changed_paths(candidate_manifest)
+    external_paths = sorted(path for path in paths if path not in phase_paths)
+    if external_paths and not phase_paths:
         raise InputError("unsupported_code_review_domain")
     if not phase_paths:
         raise InputError("phase policy was not triggered")
-    binding = {"schemaVersion": "code-review-policy-binding.v1", "policyId": policy["policyId"], "policyRevision": policy["policyRevision"], "policyHash": canonical_hash(policy), "candidateManifestHash": canonical_hash(candidate_manifest), "adapterHash": adapter_hash, "triggeredPaths": phase_paths, "unreviewedExternalDomainPaths": godot_paths, "activatedCheckIds": [item["policyCheckId"] for item in policy["checks"]], "authorizes": []}
+    binding = {"schemaVersion": "code-review-policy-binding.v1", "policyId": policy["policyId"], "policyRevision": policy["policyRevision"], "policyHash": canonical_hash(policy), "candidateManifestHash": canonical_hash(candidate_manifest), "adapterHash": adapter_hash, "triggeredPaths": phase_paths, "unreviewedExternalDomainPaths": external_paths, "activatedCheckIds": [item["policyCheckId"] for item in policy["checks"]], "authorizes": []}
     binding["bindingHash"] = canonical_hash(binding)
     return binding
 
@@ -296,15 +331,30 @@ def validate_diff_coverage(value: Any) -> None:
 def validate_task_checklist_closure(value: Any) -> None:
     if not isinstance(value, dict) or value.get("schemaVersion") != "task-checklist-closure.v1":
         raise InputError("task checklist closure schemaVersion is invalid")
+    required_top_level = {
+        "schemaVersion", "acceptanceRunId", "candidateContentManifestHash", "sources", "items",
+        "requiredItemCount", "checkedRequiredItemCount", "verifiedRequiredItemCount", "status", "authorizes",
+    }
+    if set(value) != required_top_level or value.get("authorizes") != []:
+        raise InputError("task checklist closure top-level fields are invalid")
     items = value.get("items")
     if not isinstance(items, list) or not items:
         raise InputError("task checklist items are invalid")
     ids: set[str] = set()
     for item in items:
-        if not isinstance(item, dict) or not isinstance(item.get("itemId"), str) or item["itemId"] in ids:
+        required_fields = {
+            "taskChecklistItemId", "sourceRef", "sectionAnchor", "textSignature", "requiredness", "checked",
+            "matrixCheckIds", "implementationRefs", "testRefs", "evidenceIds", "status",
+        }
+        if not isinstance(item, dict) or set(item) != required_fields or not isinstance(item.get("taskChecklistItemId"), str) or item["taskChecklistItemId"] in ids:
             raise InputError("task checklist item identity is invalid")
-        ids.add(item["itemId"])
-        if item.get("required") is True and (item.get("checked") is not True or not item.get("matrixCheckRefs") or not item.get("evidenceRefs")):
+        ids.add(item["taskChecklistItemId"])
+        if item.get("requiredness") not in {"required", "optional"} or not isinstance(item.get("checked"), bool):
+            raise InputError("task checklist item contract is invalid")
+        references = ("matrixCheckIds", "implementationRefs", "testRefs", "evidenceIds")
+        if any(not isinstance(item.get(name), list) for name in references):
+            raise InputError("task checklist item references are invalid")
+        if item["requiredness"] == "required" and (item.get("checked") is not True or item.get("status") != "verified" or any(not item[name] for name in references)):
             raise InputError("required task checklist item is not closed")
 
 
