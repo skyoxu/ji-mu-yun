@@ -132,6 +132,7 @@ def _run_locator(
             str(policies_path),
             "--projections",
             str(projections_path),
+            "--allow-unpublished-inputs",
         ],
         cwd=repository_root,
         input=(_canonical_json(request) + "\n").encode("utf-8"),
@@ -153,6 +154,7 @@ def _check_hashes_and_terms(
     evidence_locations: dict[str, list[dict[str, Any]]] = {term: [] for term in source_terms}
     blob_cache: dict[str, bytes] = {}
     expected_primary_path: str | None = None
+    verified_bound_resource = False
     for candidate in candidates:
         read_set = candidate.get("read_set")
         if not isinstance(read_set, list) or not read_set:
@@ -176,6 +178,8 @@ def _check_hashes_and_terms(
                 failures.append(f"source hash mismatch: {path}")
             else:
                 verified += 1
+                if candidate.get("module_id") == expected_module_id and item.get("role") != "primary":
+                    verified_bound_resource = True
             if candidate.get("module_id") == expected_module_id:
                 if item.get("role") == "primary":
                     expected_primary_path = path
@@ -190,7 +194,7 @@ def _check_hashes_and_terms(
     for term in source_terms:
         if not evidence_locations[term]:
             failures.append(f"expected source term not found: {term}")
-    body_evidence = any(
+    body_evidence = verified_bound_resource or any(
         location["path"] != expected_primary_path or location["line"] > 3
         for locations in evidence_locations.values()
         for location in locations

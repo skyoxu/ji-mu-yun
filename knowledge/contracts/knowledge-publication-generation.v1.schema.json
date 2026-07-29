@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-publication-generation.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generation_id", "main_commit", "source_snapshot_id", "policy_revision", "artifacts", "evaluation_summary"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.knowledge-publication-generation.v1"},
+    "generation_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "main_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "source_snapshot_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "policy_revision": {"type": "string", "minLength": 1},
+    "artifacts": {
+      "type": "object",
+      "required": ["snapshot", "catalog_v2", "projections", "catalog_v1", "policy", "exclusions", "query_suite", "query_report"],
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["repository_path", "bundle_path", "sha256"],
+        "properties": {
+          "repository_path": {"type": "string", "minLength": 1},
+          "bundle_path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "evaluation_summary": {"type": "object"}
+  }
+}

@@ -8,7 +8,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from _knowledge_locator_core import bind_result_to_request, catalog_source_snapshot, locate, require_fresh_catalog
+from _knowledge_locator_core import (
+    bind_result_to_request,
+    catalog_source_snapshot,
+    locate,
+    require_fresh_catalog,
+    verify_current_publication,
+)
 
 
 def _canonical_hash(value: Any) -> str:
@@ -27,12 +33,20 @@ def _main_source_hashes(repository_root: Path, catalog: dict[str, Any]) -> dict[
         encoding="utf-8",
         check=False,
     )
-    if current.returncode or current.stdout.strip() != snapshot["commit"]:
+    if current.returncode:
+        return {}
+    current_commit = current.stdout.strip()
+    ancestry = subprocess.run(
+        ["git", "-C", str(repository_root), "merge-base", "--is-ancestor", snapshot["commit"], current_commit],
+        capture_output=True,
+        check=False,
+    )
+    if ancestry.returncode:
         return {}
     paths = [item.get("path") for item in snapshot["sources"] if isinstance(item, dict) and isinstance(item.get("path"), str)]
     if not paths:
         return {}
-    request_bytes = "".join(f"{snapshot['commit']}:{path}\n" for path in paths).encode("utf-8")
+    request_bytes = "".join(f"{current_commit}:{path}\n" for path in paths).encode("utf-8")
     completed = subprocess.run(
         ["git", "-C", str(repository_root), "cat-file", "--batch"],
         input=request_bytes,
@@ -113,6 +127,7 @@ def main() -> int:
     parser.add_argument("--projections", type=Path, default=Path("knowledge/projections/consumer-projections.v1.json"))
     parser.add_argument("--max-candidates", type=int, default=12)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
+    parser.add_argument("--allow-unpublished-inputs", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     request = json.load(sys.stdin)
     repository_root = args.repository_root.resolve()
@@ -134,6 +149,21 @@ def main() -> int:
     snapshot = catalog_source_snapshot(catalog)
     fresh = require_fresh_catalog(catalog, _main_source_hashes(repository_root, catalog))
     policy = _policy_for(request, policies)
+    canonical_paths = (
+        catalog_path == repository_root / "knowledge" / "catalogs" / "repository-knowledge-catalog.v2.json"
+        and rooted(policy_path) == repository_root / "knowledge" / "policies" / "consumer-policies.v2.json"
+        and rooted(args.projections) == repository_root / "knowledge" / "projections" / "consumer-projections.v1.json"
+    )
+    publication_valid = (
+        args.allow_unpublished_inputs
+        or not canonical_paths
+        or verify_current_publication(
+            repository_root,
+            catalog_path=catalog_path,
+            policy_path=rooted(policy_path),
+            projections_path=rooted(args.projections),
+        )
+    )
     try:
         eligible_module_ids = _projection_for(request, catalog, policies, projection_document)
     except ValueError:
@@ -147,6 +177,7 @@ def main() -> int:
         or fresh["status"] != "current"
         or policy is None
         or not projection_valid
+        or not publication_valid
     ):
         core_result = {"status": "blocked", "candidates": []}
     else:

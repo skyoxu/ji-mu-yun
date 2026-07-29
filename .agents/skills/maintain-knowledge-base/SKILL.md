@@ -25,9 +25,12 @@ promote dirty-worktree bytes as repository facts.
    `provisional` candidate.
 5. Run `scripts/maintain_knowledge.py` with the request, catalog, derived
    output and append-only log root. When it reports a stale catalog snapshot,
-   run `scripts/python/build_knowledge_catalog.py` to regenerate all three
-   layers from current main facts, then re-read output hashes before claiming
-   a result. `docs/migration/**` is excluded in every mode.
+   run `scripts/python/publish_knowledge_catalog.py --check`; publish only with
+   the explicit `--publish` mode after staging passes. The publication CLI,
+   not this Skill, owns the single-writer lock, layer composition and hash
+   checks, 108-query evaluation, adapter-decision gate, immutable generation,
+   atomic current/LKG pointers, and failed-build evidence. `docs/migration/**`
+   is excluded in every mode.
 6. Report source locations and hashes, not generated factual answers. Preserve
    failed result sidecars under `logs/knowledge-context/`.
 
@@ -46,3 +49,15 @@ a JSON object with an `entries` array; every entry needs `entry_id` and
 Use `--dry-run` to validate authority and compute the result without writes.
 The only normal writes are the derived output and a new append-only result file
 under `logs/knowledge-context/`.
+
+## Publication Gate
+
+```powershell
+py -3 -B scripts/python/publish_knowledge_catalog.py --check
+py -3 -B scripts/python/publish_knowledge_catalog.py --publish
+```
+
+`--check` is the default and never advances `current.json` or
+`last-known-good.json`. A failed check or publication preserves the previous
+LKG and writes append-only failure evidence under `logs/knowledge-context/`.
+Do not call `build_knowledge_catalog.py` as a publication substitute.

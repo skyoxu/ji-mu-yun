@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-index-pointer.v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generation_id", "generation_sha256", "main_commit", "source_snapshot_id"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.knowledge-index-pointer.v2"},
+    "generation_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "generation_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "main_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "source_snapshot_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

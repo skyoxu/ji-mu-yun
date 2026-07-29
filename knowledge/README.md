@@ -19,6 +19,17 @@ acceptance evidence. ADR-0044 and ADR-0048 govern this boundary.
 The v1 catalog remains a generated compatibility projection. It is not the
 runtime owner for new integrations.
 
+## Publication Envelope
+
+The three runtime layers and the v1 compatibility projection are published as
+one logical generation. `indexes/current.json` is the logical commit marker;
+`indexes/last-known-good.json` is advanced only after a validated publication.
+Each immutable generation binds the source snapshot, both catalogs, consumer
+projections, policy, exclusion policy, query suite, and query report by
+SHA-256. The Locator verifies the current pointer and these runtime artifact
+hashes before reading the Catalog, then re-reads current main source blobs and
+verifies every returned read-set hash.
+
 ## Indexing Rules
 
 - ADRs are registered globally and grouped into Phase, Godot/workspace,
@@ -42,9 +53,12 @@ runtime owner for new integrations.
 ## Build And Verify
 
 ```powershell
-py -3 -B scripts/python/build_knowledge_catalog.py --repository-root .
-py -3 -B scripts/python/build_knowledge_catalog.py --repository-root . --check
+py -3 -B scripts/python/publish_knowledge_catalog.py --check
+py -3 -B scripts/python/publish_knowledge_catalog.py --publish
 ```
 
-The builder reads source bytes with `git show` from the pinned local main ref.
-It never promotes dirty-worktree bytes as repository facts.
+The publication CLI stages source bytes from the pinned local main ref, checks
+schema shape, composition, hashes, contamination, 108 real queries, and every
+adapter-owned consumption decision before atomically advancing `current` and
+LKG. It never promotes dirty-worktree bytes as repository facts. This is a
+local release gate; no CI workflow file is required.

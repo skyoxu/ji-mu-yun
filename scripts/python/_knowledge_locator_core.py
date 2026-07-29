@@ -18,6 +18,10 @@ def _sha(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _prefixed_sha(payload: bytes) -> str:
+    return "sha256:" + _sha(payload)
+
+
 def _tokens(query: str) -> list[str]:
     parts = re.findall(r"[a-z0-9]+(?:[._:-][a-z0-9]+)*|[\u3400-\u9fff]+", query.casefold())
     tokens: list[str] = []
@@ -300,6 +304,68 @@ def publish_index_generation(root: Path, catalog: dict[str, Any], snapshot_id: s
 def last_known_good(root: Path) -> dict[str, Any]:
     pointer = json.loads((root / "last-known-good.json").read_text(encoding="utf-8"))
     return json.loads((root / "generations" / f"{pointer['generation_id']}.json").read_text(encoding="utf-8"))
+
+
+def verify_current_publication(
+    repository_root: Path,
+    *,
+    catalog_path: Path,
+    policy_path: Path,
+    projections_path: Path,
+) -> bool:
+    """Verify the logical publication commit before consuming derived files."""
+    index_root = repository_root / "knowledge" / "indexes"
+    pointer_path = index_root / "current.json"
+    try:
+        pointer_bytes = pointer_path.read_bytes()
+        pointer = json.loads(pointer_bytes.decode("utf-8"))
+        if pointer.get("schema_version") != "jimuyun.knowledge-index-pointer.v2":
+            return False
+        generation_id = pointer.get("generation_id")
+        if not isinstance(generation_id, str) or not re.fullmatch(r"[0-9a-f]{64}", generation_id):
+            return False
+        manifest_path = index_root / "generations" / generation_id / "manifest.json"
+        manifest_bytes = manifest_path.read_bytes()
+        if pointer.get("generation_sha256") != _prefixed_sha(manifest_bytes):
+            return False
+        manifest = json.loads(manifest_bytes.decode("utf-8"))
+        if (
+            manifest.get("schema_version") != "jimuyun.knowledge-publication-generation.v1"
+            or manifest.get("generation_id") != generation_id
+            or pointer.get("source_snapshot_id") != manifest.get("source_snapshot_id")
+            or pointer.get("main_commit") != manifest.get("main_commit")
+        ):
+            return False
+        artifacts = manifest.get("artifacts")
+        if not isinstance(artifacts, dict):
+            return False
+        expected_paths = {
+            "snapshot": repository_root / "knowledge" / "snapshots" / "repository-source-snapshot.v1.json",
+            "catalog_v2": catalog_path,
+            "projections": projections_path,
+            "catalog_v1": repository_root / "knowledge" / "catalogs" / "repository-knowledge-catalog.v1.json",
+            "policy": policy_path,
+            "exclusions": repository_root / "knowledge" / "policies" / "source-exclusions.v1.json",
+            "query_suite": repository_root / "knowledge" / "evaluation" / "repository-knowledge-query-suite.v1.json",
+        }
+        for name, path in expected_paths.items():
+            artifact = artifacts.get(name)
+            if not isinstance(artifact, dict) or artifact.get("sha256") != _prefixed_sha(path.read_bytes()):
+                return False
+        report_artifact = artifacts.get("query_report")
+        if not isinstance(report_artifact, dict):
+            return False
+        bundle_path = report_artifact.get("bundle_path")
+        if not isinstance(bundle_path, str):
+            return False
+        generation_root = (index_root / "generations" / generation_id).resolve()
+        report_path = (generation_root / bundle_path).resolve()
+        report_path.relative_to(generation_root)
+        if report_artifact.get("sha256") != _prefixed_sha(report_path.read_bytes()):
+            return False
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+        return False
+    return True
 
 
 def catalog_source_snapshot(catalog: dict[str, Any]) -> dict[str, Any] | None:
