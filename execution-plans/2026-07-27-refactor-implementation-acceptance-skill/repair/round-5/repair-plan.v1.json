@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "refactor-acceptance.repair-round.v1",
+  "round": 5,
+  "status": "implemented",
+  "predecessorReview": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-4/repair-closure.json",
+  "findingIds": [
+    "RIA-ACCEPT-CATALOG-HEAD-SELF-REFERENCE",
+    "RIA-ACCEPT-DERIVED-CONTEXT-SOURCE-CYCLE"
+  ],
+  "slices": [
+    {
+      "id": "R5-break-catalog-context-self-reference",
+      "findings": [
+        "RIA-ACCEPT-CATALOG-HEAD-SELF-REFERENCE",
+        "RIA-ACCEPT-DERIVED-CONTEXT-SOURCE-CYCLE"
+      ],
+      "writeRoots": [
+        "scripts/python/knowledge_context_validation.py",
+        "scripts/python/_knowledge_catalog_builder.py",
+        "scripts/python/tests/test_knowledge_context_validation.py",
+        "scripts/python/tests/test_knowledge_catalog_builder.py",
+        "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+        "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+        "knowledge/projections/consumer-projections.v1.json",
+        "knowledge/snapshots/repository-source-snapshot.v1.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/knowledge-context.v1.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py"
+      ],
+      "execution_snapshot_paths": [
+        "scripts/python/knowledge_context_validation.py",
+        "scripts/python/_knowledge_catalog_builder.py",
+        "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/knowledge-context.v1.json"
+      ],
+      "commands": {
+        "red": "r5-knowledge-tests",
+        "green": "r5-catalog-check",
+        "refactor": "r5-whole-directory-validator"
+      }
+    }
+  ],
+  "terminalValidation": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py",
+  "authorizes": []
+}

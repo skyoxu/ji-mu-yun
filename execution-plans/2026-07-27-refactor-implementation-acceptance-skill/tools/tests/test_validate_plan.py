@@ -59,6 +59,13 @@ class RefactorAcceptancePlanTests(unittest.TestCase):
             },
             validator.REPAIR_FINDINGS_BY_ROUND[4],
         )
+        self.assertEqual(
+            {
+                "RIA-ACCEPT-CATALOG-HEAD-SELF-REFERENCE",
+                "RIA-ACCEPT-DERIVED-CONTEXT-SOURCE-CYCLE",
+            },
+            validator.REPAIR_FINDINGS_BY_ROUND[5],
+        )
 
     def test_successor_round_requires_the_authorized_successor_lineage(self) -> None:
         self.assertTrue(validator.validate_successor_round())

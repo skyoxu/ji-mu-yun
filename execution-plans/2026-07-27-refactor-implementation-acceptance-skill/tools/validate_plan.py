@@ -49,16 +49,26 @@ REPAIR_FINDINGS_BY_ROUND = {
         "RIA-ACCEPT-PLAN-KNOWLEDGE-AUTHORITY-STALE",
         "RIA-ACCEPT-CURRENT-AUTHORITY-DRIFT",
     },
+    5: {
+        "RIA-ACCEPT-CATALOG-HEAD-SELF-REFERENCE",
+        "RIA-ACCEPT-DERIVED-CONTEXT-SOURCE-CYCLE",
+    },
 }
 REPAIR_PREDECESSOR_PREFIXES_BY_ROUND = {
     2: ("logs/ci/",),
     3: ("logs/ci/",),
     4: ("execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/",),
+    5: ("execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-4/",),
 }
 REPAIR_WRITE_ROOT_PREFIXES_BY_ROUND = {
     2: (".agents/skills/",),
     3: (".agents/skills/",),
     4: (
+        "knowledge/",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/",
+    ),
+    5: (
+        "scripts/python/",
         "knowledge/",
         "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/",
     ),
@@ -358,7 +368,7 @@ def validate() -> list[str]:
         findings.append("RIA-PLAN-PREFLIGHT-REGISTRY")
     execution_registry = load("command-registry.v1.json")
     execution_command_ids = {item.get("id") for item in execution_registry.get("commands", []) if isinstance(item, dict)}
-    expected_execution_commands = {"s0-companion-red", "s0-companion-suite", "bootstrap-regression-suite", "s1-core-red", "s1-core-suite", "s2-matrix-red", "s2-matrix-suite", "s3-control-red", "s3-control-suite", "s4-bootstrap-red", "s4-bootstrap-suite", "s5-package-red", "s5-package-suite", "plan-validator", "r2-baseline-suite", "r2-checklist-suite", "r2-bootstrap-dispatch-suite", "r2-attestation-scope-suite", "r3-candidate-suite", "r3-coverage-suite", "r4-plan-validator", "r4-whole-directory-validator", "r4-validator-tests", "successor-policy-suite", "successor-coverage-suite", "successor-phase-scan-suite"}
+    expected_execution_commands = {"s0-companion-red", "s0-companion-suite", "bootstrap-regression-suite", "s1-core-red", "s1-core-suite", "s2-matrix-red", "s2-matrix-suite", "s3-control-red", "s3-control-suite", "s4-bootstrap-red", "s4-bootstrap-suite", "s5-package-red", "s5-package-suite", "plan-validator", "r2-baseline-suite", "r2-checklist-suite", "r2-bootstrap-dispatch-suite", "r2-attestation-scope-suite", "r3-candidate-suite", "r3-coverage-suite", "r4-plan-validator", "r4-whole-directory-validator", "r4-validator-tests", "r5-knowledge-tests", "r5-catalog-check", "r5-whole-directory-validator", "successor-policy-suite", "successor-coverage-suite", "successor-phase-scan-suite"}
     if execution_command_ids != expected_execution_commands:
         findings.append("RIA-PLAN-EXECUTION-REGISTRY")
     elif any(
