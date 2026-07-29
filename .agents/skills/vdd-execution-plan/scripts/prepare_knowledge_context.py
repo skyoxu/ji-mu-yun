@@ -69,6 +69,8 @@ def main() -> int:
     parser.add_argument("--required-module", action="append", default=[])
     parser.add_argument("--accept", action="append", default=[], help="candidate-path=module[,module]")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--replace-stale-context", action="store_true")
+    parser.add_argument("--expected-context-sha256")
     args = parser.parse_args()
     root = args.repository_root.resolve()
     validator = _validator(root)
@@ -163,6 +165,32 @@ def main() -> int:
         finally:
             staged_freeze.unlink(missing_ok=True)
         print(json.dumps({"status": "ready", "output": str(output), "freeze": str(freeze), "recovered": True, "authorizes": []}))
+        return 0
+    if output.exists() or freeze.exists():
+        if not args.replace_stale_context:
+            raise SystemExit("knowledge context and freeze receipt are append-only")
+        if freeze.exists() or not output.is_file():
+            raise SystemExit("only an unfrozen legacy knowledge context may be replaced")
+        expected = args.expected_context_sha256
+        actual = "sha256:" + hashlib.sha256(output.read_bytes()).hexdigest()
+        if expected != actual:
+            raise SystemExit("expected stale knowledge context hash does not match")
+        history = output.parent / "knowledge-context.history"
+        history.mkdir(exist_ok=True)
+        archived = history / (actual.removeprefix("sha256:") + ".v1.json")
+        if archived.exists() and archived.read_bytes() != output.read_bytes():
+            raise SystemExit("historical knowledge context path is occupied by different bytes")
+        if not archived.exists():
+            os.link(output, archived)
+        staged_context = _write_staged(output, context_bytes)
+        staged_freeze = _write_staged(freeze, freeze_bytes)
+        try:
+            os.replace(staged_context, output)
+            _publish_staged(staged_freeze, freeze)
+        finally:
+            staged_context.unlink(missing_ok=True)
+            staged_freeze.unlink(missing_ok=True)
+        print(json.dumps({"status": "ready", "output": str(output), "freeze": str(freeze), "replaced": True, "historical": str(archived), "authorizes": []}))
         return 0
     if output.exists() or freeze.exists():
         raise SystemExit("knowledge context and freeze receipt are append-only")
