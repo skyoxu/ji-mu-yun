@@ -1,0 +1,104 @@
+{
+  "authorizes": [],
+  "bootstrapExecutionState": {
+    "actionStates": {
+      "bind-bootstrap-capabilities": "ready",
+      "finalize": "waiting-external",
+      "import-bootstrap-result": "waiting-external",
+      "import-mapping-approval": "waiting-external",
+      "map-findings": "waiting-external",
+      "prepare-attestation": "waiting-external",
+      "prepare-bootstrap": "waiting-external",
+      "project-impact": "waiting-external"
+    },
+    "authorizes": [],
+    "schemaVersion": "bootstrap-execution-state.v1",
+    "state": "awaiting_authorization"
+  },
+  "nextAction": "run-phase-bootstrap-review",
+  "reviewScope": {
+    "authorizes": [],
+    "contextClasses": {
+      "affected-consumers": [
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+      ],
+      "changed-production-code": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/matrix_phase.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/requirement_inventory.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/source_clauses.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py"
+      ],
+      "implementation-plan": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/01-requirements-and-acceptance.md",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json"
+      ],
+      "referenced-standards": [
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "repository-rules": [
+        "AGENTS.md"
+      ],
+      "runtime-evidence": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r3/acceptance-run-input.rebound.v1.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r3/candidate-content-manifest.v1.json"
+      ],
+      "tests-and-acceptance": [
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_companion_capability.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"
+      ]
+    },
+    "directoryScopeAttestation": null,
+    "profile": "bootstrap-implementation-conformance",
+    "schemaVersion": "implementation-acceptance-bootstrap-scope.v1",
+    "scope": [
+      ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_companion_capability.py",
+      ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/matrix_phase.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/requirement_inventory.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/source_clauses.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "AGENTS.md",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "docs/standards/bootstrap-review-control-plane.md",
+      "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+      "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/01-requirements-and-acceptance.md",
+      "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r3/acceptance-run-input.rebound.v1.json",
+      "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r3/candidate-content-manifest.v1.json",
+      "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json"
+    ],
+    "scopeHash": "sha256:37b1c7c423b33b44b2e8ce52bca84eca5ae54ec4146105e550124e11472c784d",
+    "strategy": "minimal-complete-closure"
+  },
+  "schemaVersion": "implementation-acceptance-bootstrap-route.v1"
+}
