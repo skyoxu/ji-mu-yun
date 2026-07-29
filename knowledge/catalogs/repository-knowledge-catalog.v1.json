@@ -760,11 +760,11 @@
   ],
   "schema_version": "jimuyun.repository-knowledge-catalog.v1",
   "source_snapshot": {
-    "commit": "37650482036d13ef40016d818db676e463ef59e0",
+    "commit": "4c6e7b27369d391feea040109e9842584f0913ab",
     "exclusion_policy_revision": "knowledge-source-exclusions.v1",
     "ref": "refs/heads/main",
     "schema_version": "jimuyun.repository-source-snapshot.v1",
-    "snapshot_id": "sha256:f0b319043fec20450283e04b55091b41e506e96018a1149b33ba856bc0a58efd",
+    "snapshot_id": "sha256:1149bea10476814752e370f4e3d0ff65e14d2ebb301ff17a31323af742ca2be5",
     "sources": [
       {
         "path": ".agents/skills/maintain-knowledge-base/SKILL.md",
@@ -1603,7 +1603,7 @@
       },
       {
         "path": "scripts/python/build_knowledge_catalog.py",
-        "sha256": "f3fbb02d36465b6eebd25c7723cb5c7709ac2bf8ab5bdc7b2b45e03b22621e5e",
+        "sha256": "25d98e4b3ac9dfa9a105e2cec387abd871717f9891ae4e50cf3a4b33cef4e52c",
         "source_role": "catalog-builder"
       },
       {

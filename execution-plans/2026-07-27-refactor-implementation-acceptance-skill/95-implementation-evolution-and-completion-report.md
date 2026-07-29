@@ -50,3 +50,9 @@ This append-only continuity report has `authorizes: []`. It cannot publish plan 
 - Repair round 5 now treats a catalog source snapshot as a verified ancestor of `main`, compares every registered source against current `main` bytes, and excludes derived plan knowledge contexts from repository-source inventory.
 - Regenerated all catalog layers from source commit `37650482036d13ef40016d818db676e463ef59e0` and refreshed the 7-27 VDD context against that exact snapshot.
 - Seventeen knowledge tests, catalog freshness check, plan validation, whole-directory validation, and eight plan-validator tests passed. Lifecycle state remains unchanged and acceptance must be rerun separately.
+
+## 2026-07-29: Clean-HEAD semantic checker validation
+
+- Replaced byte-for-byte regeneration comparison in `build_knowledge_catalog.py --check` with semantic layer validation: registered current-main source hashes, module and route semantics, source-snapshot ancestry, projection bindings, and legacy compatibility bindings must all remain current.
+- Regenerated the catalog from source commit `4c6e7b27369d391feea040109e9842584f0913ab` and refreshed the 7-27 context without registering the derived context as a source.
+- The append-only post-commit validation sidecar records the final bindings. This closes the freshness loop without rewriting the already committed round-5 closure.

@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-refactor-acceptance-20260729-refresh-r7",
+    "request_id": "vdd-refactor-acceptance-20260729-refresh-r8",
     "consumer": "vdd",
     "query": "repository rules AGENTS refactor implementation acceptance bootstrap skill plan",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "37650482036d13ef40016d818db676e463ef59e0"
+      "commit": "4c6e7b27369d391feea040109e9842584f0913ab"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -727,13 +727,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-refactor-acceptance-20260729-refresh-r7",
+    "request_id": "vdd-refactor-acceptance-20260729-refresh-r8",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "37650482036d13ef40016d818db676e463ef59e0",
+      "commit": "4c6e7b27369d391feea040109e9842584f0913ab",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:f0b319043fec20450283e04b55091b41e506e96018a1149b33ba856bc0a58efd",
+    "source_snapshot_id": "sha256:1149bea10476814752e370f4e3d0ff65e14d2ebb301ff17a31323af742ca2be5",
     "status": "matched"
   },
   "required_modules": [
@@ -863,11 +863,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:6e525f72b15a6ddb5f11a0f540ad1af65a6a904ab8f8cbcd1cb94771c871c181",
-  "result_sha256": "sha256:ffb462901d6ba940429525ff25146336bc5fac94d3e02c3e9382f4f644650925",
+  "request_sha256": "sha256:9266e9ecc3abec391d9f4bc994f43fe469c2e021f7906a867165a739c1fb09c5",
+  "result_sha256": "sha256:8d8d8baea438577c6ea5dac388b251670b46da51da89716ac6e2f2d5cc2ee68f",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:6550eae31d049f1f9755d88e47be3a35cbedce4105dae929469fb0de247f29bd"
+    "context_sha256": "sha256:9bb7c04fd7aa4ac20be37d40b222083983f0b418fbf61cdb966107939857068d"
   }
 }

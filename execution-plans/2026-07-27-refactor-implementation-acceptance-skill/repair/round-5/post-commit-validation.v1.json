@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "refactor-acceptance.post-commit-validation.v1",
+  "round": 5,
+  "purpose": "Close the semantic catalog checker correction without rewriting the committed round-5 closure.",
+  "sourceSnapshot": {
+    "commit": "4c6e7b27369d391feea040109e9842584f0913ab",
+    "snapshotId": "sha256:1149bea10476814752e370f4e3d0ff65e14d2ebb301ff17a31323af742ca2be5"
+  },
+  "bindings": {
+    "predecessorClosureHash": "sha256:8a11b7ac4bf19957f6615aa49d871731705d49dc175fef67f4c5cbbde85970fe",
+    "catalogCheckImplementationHash": "sha256:25d98e4b3ac9dfa9a105e2cec387abd871717f9891ae4e50cf3a4b33cef4e52c",
+    "catalogHash": "sha256:a3765ef0e4033f2893846e2f0e5c23eeb6a848db13fadb4ae3e075ae8e8885ba",
+    "snapshotHash": "sha256:a331e5962e871319da2f40dee8f8c8b74a61621cbee6635faa7b7a41170135c7",
+    "projectionHash": "sha256:3cd891ad03b07338b4373ac6fd811ec33447779f9fb0e24b8579b57f9f60db87",
+    "knowledgeContextHash": "sha256:a04612bcd10657bef2d492ad11795f8a265bcb8d884f9a7b943c02cb8664c955"
+  },
+  "validation": {
+    "semanticCatalogCheck": "current",
+    "knowledgeTests": {
+      "passed": 17,
+      "failed": 0
+    },
+    "plan": "pass",
+    "wholeDirectory": "pass",
+    "planValidatorTests": {
+      "passed": 8,
+      "failed": 0
+    },
+    "validationSnapshot": {
+      "authority_root": "sha256:0ebe9fc1d00bdc799c66a5cb419260f30b24a468e31453c9e86f960fc39210cb",
+      "candidate_hash": "sha256:819e3d324abb193a8487a460bd5a89e4575ced677a43e7ba24ec26f78a6239ee",
+      "closure_definition_hash": "sha256:1ce08e79d39e534923db177c4034c95d6e3c89e7269a4048a445db07cc9b4972",
+      "predicate_input_root": "sha256:646bd5597751553f0e902a9d67299deb0a51ae3b67d7e05168ec6c954b34b47c",
+      "validator_root": "sha256:aa20c50dfa15eb773304d9a52a3927a053c7d58c931cd87aa282e04d7de8b597"
+    }
+  },
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "acceptance-passed",
+    "release",
+    "deployment",
+    "archive"
+  ]
+}
