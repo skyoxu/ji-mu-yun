@@ -563,12 +563,15 @@ def _require_generation_compatible_with_main(
 
 
 def _locator_smoke(repository_root: Path, snapshot: dict[str, Any], policy_revision: str) -> None:
+    # ADR-0050 keeps the restored generation as source provenance while the
+    # Locator result remains bound to the current main invoking the recovery.
+    current_main = _main_commit(repository_root)
     request = {
         "schema_version": "jimuyun.knowledge-locator-request.v1",
         "request_id": "knowledge-lkg-restore-smoke",
         "consumer": "vdd",
         "query": "repository knowledge authority",
-        "snapshot": {"ref": snapshot["ref"], "commit": snapshot["commit"]},
+        "snapshot": {"ref": "refs/heads/main", "commit": current_main},
         "policy_revision": policy_revision,
     }
     completed = subprocess.run(
