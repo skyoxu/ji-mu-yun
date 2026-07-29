@@ -1,5 +1,5 @@
 {
-  "catalog_sha256": "sha256:51233a112f9e5e786e12ebfedcdbd6c42b6348030c5feea82a59f82c0eb9c777",
+  "catalog_sha256": "sha256:7862a1480ffaea9f5d0ea6e5554df5c711ae0370a845bec95640f3f82c35be9c",
   "policy_revision": "knowledge-consumer-policies.v2",
   "policy_sha256": "sha256:2bee3a3aa6e3c88e7b8437260c4447b86bb318a611881983ff0c5289aafbf1bb",
   "projections": [
@@ -379,5 +379,5 @@
     }
   ],
   "schema_version": "jimuyun.knowledge-consumer-projections.v1",
-  "source_snapshot_id": "sha256:fd97af4182b87710f2a5802d771578fc5b40f976a12f72eddcbd9c8a3bdcb140"
+  "source_snapshot_id": "sha256:1961f5c40287e011c04f5b50e506245b108a9ce03544f76532f3310f074f98f7"
 }

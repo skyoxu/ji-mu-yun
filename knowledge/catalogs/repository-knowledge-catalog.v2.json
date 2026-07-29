@@ -7167,7 +7167,7 @@
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
           "role": "orchestrator",
-          "source_sha256": "f4b41479164fe5df9685ffab1610c8e6a2e5a772f578332a295cf3e5150143b9"
+          "source_sha256": "ee6370a82b3a3193bf0d10254a251d4f4241ab01b3c01553f4d5cf2c0a7e86f2"
         },
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
@@ -9164,11 +9164,11 @@
   ],
   "schema_version": "jimuyun.repository-knowledge-catalog.v2",
   "source_snapshot": {
-    "commit": "8690c0ab727bd1a8df65bb1b1fd5b606144996e8",
+    "commit": "4f92a7c63832363d42bae51c7084935f9dc48647",
     "exclusion_policy_revision": "knowledge-source-exclusions.v1",
     "ref": "refs/heads/main",
     "schema_version": "jimuyun.repository-source-snapshot.v1",
-    "snapshot_id": "sha256:fd97af4182b87710f2a5802d771578fc5b40f976a12f72eddcbd9c8a3bdcb140",
+    "snapshot_id": "sha256:1961f5c40287e011c04f5b50e506245b108a9ce03544f76532f3310f074f98f7",
     "sources": [
       {
         "path": ".agents/skills/maintain-knowledge-base/SKILL.md",
@@ -9277,7 +9277,7 @@
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
-        "sha256": "f4b41479164fe5df9685ffab1610c8e6a2e5a772f578332a295cf3e5150143b9",
+        "sha256": "ee6370a82b3a3193bf0d10254a251d4f4241ab01b3c01553f4d5cf2c0a7e86f2",
         "source_role": "orchestrator"
       },
       {
