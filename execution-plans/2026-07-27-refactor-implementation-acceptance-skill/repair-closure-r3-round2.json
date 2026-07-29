@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3",
+  "predecessorInputHash": "sha256:750976e4e1738f86a3cf875fee118a431b42924011cf871b1b0fc3344e906f26",
+  "predecessorResultHash": "sha256:fb40c57b88b4a711107791e3769a4be7830add74889e808b2f171fdd8378d5d0",
+  "findingIds": ["BSR-13C2A0C78849B4E5", "BSR-1742E7AB9FEA305B", "BSR-81EC9EC9DB0DBF61"],
+  "items": [
+    {
+      "findingId": "BSR-13C2A0C78849B4E5", "disposition": "fixed", "risk": "normal", "proofFamily": "regression",
+      "reason": "A public command now resolves only a hash-bound registry descriptor, with regression coverage for descriptor tampering.",
+      "fixRefs": [".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py"],
+      "validationCommands": ["py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -v", "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package", "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py"],
+      "evidence": [{"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py", "sha256": "sha256:e90d61f4e97ca92377eb8e75c1b71801ba5198e76bae7577c9214a5d9b69e406"}, {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py", "sha256": "sha256:9c3e53bb203def8f4283337219a408c56468b4473582ea37b1e249ee712b3b1c"}]
+    },
+    {
+      "findingId": "BSR-1742E7AB9FEA305B", "disposition": "fixed", "risk": "normal", "proofFamily": "regression",
+      "reason": "Phase scans require a contained hash-verified frozen candidate snapshot and execute inside that snapshot.",
+      "fixRefs": [".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py"],
+      "validationCommands": ["py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -v", "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package", "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py"],
+      "evidence": [{"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py", "sha256": "sha256:91a0f38b2b61282a27de445e9f831869cb226c7fdf3de1a96e38979fe114455f"}, {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py", "sha256": "sha256:057d5aad07fcb7397488e94c75b92eba27866da1322de972f10e46f227cb3970"}]
+    },
+    {
+      "findingId": "BSR-81EC9EC9DB0DBF61", "disposition": "fixed", "risk": "normal", "proofFamily": "regression",
+      "reason": "Authority checklist optionality cannot be supplied by the request; each parsed item remains required until a contract adds explicit optionality.",
+      "fixRefs": [".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py"],
+      "validationCommands": ["py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -v", "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package", "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py"],
+      "evidence": [{"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py", "sha256": "sha256:a9c1699b9e955d556a451ffbabe6f4515498defe87a17808cbe11c7f8e404b27"}, {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py", "sha256": "sha256:ae866c67b58e8743ad6cca2cfb8f7af193c97ae41d0c0457322922ce91939bea"}]
+    }
+  ],
+  "currentBindings": {"candidateHash": "sha256:3d7989fffb8a4a234e56a88ce48b3a12f89d9979ea51c71a7811b4597cfb457b", "sourceHash": "sha256:914c79210a276ee4c55d3a98000d725932364c889ada6187ea5a8514e690a3c2", "validatorHash": "sha256:1171c74a84a55f5d109f3aeb5d4ee99163acae8a3efc08bc0a56209ba62fa5de"},
+  "gitIndexHash": "sha256:a20fd665ba8da0fc3910e1d58f1192c4969ad862563370e8311075255f14ccf8",
+  "writeSetHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "executionReadSetHash": "sha256:5e5285899281b7486e735274fa0319550945b14b1cbc42544c87ad0f06a196e4",
+  "dependencyClosureHash": "sha256:684edcf42957f166389542fc63c886d6791bd3feb5c71c2906d67b40c98ad8bb"
+}

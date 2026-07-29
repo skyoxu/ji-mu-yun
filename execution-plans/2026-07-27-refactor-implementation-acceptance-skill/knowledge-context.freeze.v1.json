@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:e5585dac41d5a63e95c48f342f21792692a29d3d6b0783cd611518cf2f62a5be",
-  "canonical_context_sha256": "sha256:431c5a11501c49cb2549afb82b58588a4f37f9d6a488f28e273c743ca09e86c6",
-  "request_sha256": "sha256:8a264fefbf2265afb4262c321a8c2d681d3cb0f2ec94bb1bc9aa0116fb8aba3d",
-  "result_sha256": "sha256:c6a0207e3870f7c2977b8d59b55782b771145473c99eeff93996b5132accec66",
+  "context_sha256": "sha256:f6209dab297349bbe73c87d693dc1e5ecfa268c50a9f062878d6b44acd262819",
+  "canonical_context_sha256": "sha256:89ec7f9fb1a58558760bdf36338feae60e1bcf9e0976b8e165b61244fb8855e5",
+  "request_sha256": "sha256:b2f31509cc03c8ea5a7bb62a0d9fb9281bcbcde1e89ef52f80cf5d107376104c",
+  "result_sha256": "sha256:8588a08df033e8d7b121c58ebebcc9e0d702d1b4c3d0380d5f184370a2c36021",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "d93ca58e64da933437f84cd50fc7762d93c2ca93"
+    "commit": "6bb3c2795d07d11b1049526eb16039e36df2fcb8"
   },
-  "source_snapshot_id": "sha256:391745ac233bbef15f46054d1d06ccd7006c08515a24a2cd3d40123c782a043c",
+  "source_snapshot_id": "sha256:c97cff67a6ebed0d3ec540d37f52595c5f52da0ae10bd7bfa0330d913c3aed21",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -22,8 +22,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:955cd4db00fdec3b2447f993480283b79dbf50655ebe88cf14439f29de4a0941",
-    "freeze_receipt_path": "knowledge-context.freeze.history/955cd4db00fdec3b2447f993480283b79dbf50655ebe88cf14439f29de4a0941.v1.json",
-    "reason": "published knowledge policy added derived acceptance snapshot exclusion"
+    "context_sha256": "sha256:e5585dac41d5a63e95c48f342f21792692a29d3d6b0783cd611518cf2f62a5be",
+    "freeze_receipt_path": "knowledge-context.freeze.history/e5585dac41d5a63e95c48f342f21792692a29d3d6b0783cd611518cf2f62a5be.v1.json",
+    "reason": "r3 bootstrap P1 repair round requires a current main-bound context"
   }
 }

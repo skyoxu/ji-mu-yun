@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-7-27-context-r4-2026-07-30",
+    "request_id": "vdd-7-27-context-supersede-2026-07-29",
     "consumer": "vdd",
     "query": "repository guide AGENTS phase service rules",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "6bb3c2795d07d11b1049526eb16039e36df2fcb8"
+      "commit": "d93ca58e64da933437f84cd50fc7762d93c2ca93"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -593,13 +593,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-7-27-context-r4-2026-07-30",
+    "request_id": "vdd-7-27-context-supersede-2026-07-29",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "6bb3c2795d07d11b1049526eb16039e36df2fcb8",
+      "commit": "d93ca58e64da933437f84cd50fc7762d93c2ca93",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:c97cff67a6ebed0d3ec540d37f52595c5f52da0ae10bd7bfa0330d913c3aed21",
+    "source_snapshot_id": "sha256:391745ac233bbef15f46054d1d06ccd7006c08515a24a2cd3d40123c782a043c",
     "status": "matched"
   },
   "required_modules": [
@@ -729,11 +729,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:b2f31509cc03c8ea5a7bb62a0d9fb9281bcbcde1e89ef52f80cf5d107376104c",
-  "result_sha256": "sha256:8588a08df033e8d7b121c58ebebcc9e0d702d1b4c3d0380d5f184370a2c36021",
+  "request_sha256": "sha256:8a264fefbf2265afb4262c321a8c2d681d3cb0f2ec94bb1bc9aa0116fb8aba3d",
+  "result_sha256": "sha256:c6a0207e3870f7c2977b8d59b55782b771145473c99eeff93996b5132accec66",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:01cbfe687e1626ee77f045df52a4b713ae750afcc2773cf24fe8faff6e572463"
+    "context_sha256": "sha256:8f6c3cea07a6b15eb1729773208e18be3d4adde9beba26387f739a2352914cd7"
   }
 }
