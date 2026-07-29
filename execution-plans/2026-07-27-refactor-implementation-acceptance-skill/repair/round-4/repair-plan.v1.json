@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "refactor-acceptance.repair-round.v1",
+  "round": 4,
+  "status": "implemented",
+  "predecessorReview": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/deterministic-validation-result.v1.json",
+  "findingIds": [
+    "RIA-ACCEPT-PLAN-KNOWLEDGE-AUTHORITY-STALE",
+    "RIA-ACCEPT-CURRENT-AUTHORITY-DRIFT"
+  ],
+  "slices": [
+    {
+      "id": "R4-refresh-frozen-knowledge-authority",
+      "findings": [
+        "RIA-ACCEPT-PLAN-KNOWLEDGE-AUTHORITY-STALE",
+        "RIA-ACCEPT-CURRENT-AUTHORITY-DRIFT"
+      ],
+      "writeRoots": [
+        "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+        "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+        "knowledge/projections/consumer-projections.v1.json",
+        "knowledge/snapshots/repository-source-snapshot.v1.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/knowledge-context.v1.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json"
+      ],
+      "execution_snapshot_paths": [
+        "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/knowledge-context.v1.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json"
+      ],
+      "commands": {
+        "red": "r4-plan-validator",
+        "green": "r4-whole-directory-validator",
+        "refactor": "r4-validator-tests"
+      }
+    }
+  ],
+  "terminalValidation": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py",
+  "authorizes": []
+}

@@ -52,6 +52,13 @@ class RefactorAcceptancePlanTests(unittest.TestCase):
             {"BSR-3BB3B873C4C0B09E", "BSR-4630976C15F6FDEA", "BSR-75E54594466B6EA2", "BSR-B757809A60227AD0", "BSR-FF35EB3EE83AF41E"},
             validator.REPAIR_FINDINGS_BY_ROUND[3],
         )
+        self.assertEqual(
+            {
+                "RIA-ACCEPT-PLAN-KNOWLEDGE-AUTHORITY-STALE",
+                "RIA-ACCEPT-CURRENT-AUTHORITY-DRIFT",
+            },
+            validator.REPAIR_FINDINGS_BY_ROUND[4],
+        )
 
     def test_successor_round_requires_the_authorized_successor_lineage(self) -> None:
         self.assertTrue(validator.validate_successor_round())

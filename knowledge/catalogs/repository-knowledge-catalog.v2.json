@@ -5819,7 +5819,7 @@
       "anchors": [
         {
           "anchor": "Hosted Workspaces And Artifacts Architecture",
-          "line_end": 62,
+          "line_end": 75,
           "line_start": 1
         },
         {
@@ -5834,28 +5834,33 @@
         },
         {
           "anchor": "Key Decisions",
-          "line_end": 30,
+          "line_end": 32,
           "line_start": 24
         },
         {
           "anchor": "Invariants",
-          "line_end": 37,
-          "line_start": 31
+          "line_end": 42,
+          "line_start": 33
         },
         {
           "anchor": "Change Rules",
-          "line_end": 44,
-          "line_start": 38
+          "line_end": 50,
+          "line_start": 43
         },
         {
           "anchor": "Related Code",
-          "line_end": 57,
-          "line_start": 45
+          "line_end": 65,
+          "line_start": 51
         },
         {
           "anchor": "Related Tests",
-          "line_end": 62,
-          "line_start": 58
+          "line_end": 71,
+          "line_start": 66
+        },
+        {
+          "anchor": "Related Decisions",
+          "line_end": 75,
+          "line_start": 72
         }
       ],
       "authority_class": "derived_cache",
@@ -5864,7 +5869,7 @@
         "refactor-acceptance",
         "vdd"
       ],
-      "content": "# Hosted Workspaces And Artifacts Architecture\n\n## Intent\n\nHosted workspaces give browser/API users isolated project copies that can run repository-native Godot prototype workflows without exposing arbitrary host filesystem access or user-provided Git remotes.\n\nArtifacts and readback make workflow outputs inspectable without requiring users or agents to know local filesystem paths.\n\n## Boundary\n\nIn scope:\n\n- Workspace layout under `logs/phase-a-innernet/workspaces/**`.\n- Project seeding, project initialization recovery, and workspace maintenance.\n- Artifact indexing and readback for runs, packages, GDDs, assets, previews, project health, prototype evidence, and logs.\n- Package download tickets and asset preview tickets that resolve ownership before file reads.\n\nOut of scope:\n\n- Treating workspace sidecars as a replacement for Godot scene/source files.\n- Browser write access to arbitrary scene geometry, collision, spawn, region, or tilemap data without a Godot-native or repository-validated write path.\n- Object storage or remote worker storage before Phase C storage abstraction.\n\n## Key Decisions\n\n- The platform controls workspace roots and project seeding instead of accepting browser-provided repository URLs.\n- Browser/API readback uses logical artifact IDs, tickets, or workspace-relative sanitized paths instead of raw absolute paths.\n- Sidecars are for planning, readback, audit, validation, and route recovery. They must not replace engine-owned project files.\n- Package and preview services are readback/product surfaces but must still validate account/project ownership.\n\n## Invariants\n\n- All paths must stay within the workspace root after normalization.\n- Readback must be account-scoped unless the route is explicitly admin-only.\n- Generated evidence and artifacts must be additive; do not rewrite history to hide failures.\n- Package and preview files must be resolved through ticket/ownership checks before download or display.\n\n## Change Rules\n\n- New artifact types must define producer, owner, storage path, readback scope, and sanitization behavior.\n- New browser/API readback must avoid raw host paths and secrets.\n- New package or asset features must update readback tests and account-boundary tests.\n- Workspace layout changes require recovery and restore notes.\n\n## Related Code\n\n- `PhaseA.Platform/Workspaces/WorkspaceLayoutBuilder.cs`\n- `PhaseA.Platform/Workspaces/WorkspacePathPolicy.cs`\n- `PhaseA.Platform/Workspaces/ProjectWorkspaceSeeder.cs`\n- `PhaseA.Platform/Projects/ProjectCreationService.cs`\n- `PhaseA.Platform/Projects/ProjectInitializationRecoveryService.cs`\n- `PhaseA.Platform/Readback/ArtifactReadbackService.cs`\n- `PhaseA.Platform/Readback/ProjectPackageService.cs`\n- `PhaseA.Platform/Readback/ProjectWebPreviewService.cs`\n- `PhaseA.Platform/Readback/ProjectAssetLibraryService.cs`\n- `PhaseA.Platform/Readback/ProjectAssetInventoryService.cs`\n\n## Related Tests\n\n- `PhaseA.Platform.Tests/Workspaces/**`\n- `PhaseA.Platform.Tests/Readback/**`\n- `PhaseA.Platform.Tests/Projects/**`\n",
+      "content": "# Hosted Workspaces And Artifacts Architecture\n\n## Intent\n\nHosted workspaces give browser/API users isolated project copies that can run repository-native Godot prototype workflows without exposing arbitrary host filesystem access or user-provided Git remotes.\n\nArtifacts and readback make workflow outputs inspectable without requiring users or agents to know local filesystem paths.\n\n## Boundary\n\nIn scope:\n\n- Workspace layout under `logs/phase-a-innernet/workspaces/**`.\n- Project seeding, project initialization recovery, and workspace maintenance.\n- Artifact indexing and readback for runs, packages, GDDs, assets, previews, project health, prototype evidence, and logs.\n- Package download tickets and asset preview tickets that resolve ownership before file reads.\n\nOut of scope:\n\n- Treating workspace sidecars as a replacement for Godot scene/source files.\n- Browser write access to arbitrary scene geometry, collision, spawn, region, or tilemap data without a Godot-native or repository-validated write path.\n- Object storage or remote worker storage before Phase C storage abstraction.\n\n## Key Decisions\n\n- The platform controls workspace roots and project seeding instead of accepting browser-provided repository URLs.\n- New workspaces receive project-facing `AGENTS.md` and `README.md` from the dedicated templates under `PhaseA.Platform/Workspaces/HostedProjectTemplate/`; the Seeder does not use the platform-root entry documents when both templates are available.\n- Existing project entry documents are project-instance data and are preserved. Template source files are not recursively copied into the Hosted workspace.\n- Browser/API readback uses logical artifact IDs, tickets, or workspace-relative sanitized paths instead of raw absolute paths.\n- Sidecars are for planning, readback, audit, validation, and route recovery. They must not replace engine-owned project files.\n- Package and preview services are readback/product surfaces but must still validate account/project ownership.\n\n## Invariants\n\n- All paths must stay within the workspace root after normalization.\n- A copied project entry document does not inherit platform repository authority. It can narrow project behavior but cannot expand server route, Skill, account, sandbox, network, tool, or knowledge-policy ceilings.\n- Repository-template, project-instance, and run-artifact-view snapshots remain distinct as required by ADR-0044. Project entry documents do not replace route state, acceptance evidence, or a signed run context.\n- The repository Locator is not currently a Phase browser-route capability. Hosted child Skills cannot establish trusted repository context by invoking the CLI directly; a future Phase adapter must be server-owned and separately validated.\n- Readback must be account-scoped unless the route is explicitly admin-only.\n- Generated evidence and artifacts must be additive; do not rewrite history to hide failures.\n- Package and preview files must be resolved through ticket/ownership checks before download or display.\n\n## Change Rules\n\n- New artifact types must define producer, owner, storage path, readback scope, and sanitization behavior.\n- New browser/API readback must avoid raw host paths and secrets.\n- New package or asset features must update readback tests and account-boundary tests.\n- Workspace layout changes require recovery and restore notes.\n- Seeder entry-template changes require temporary-root coverage for fresh workspaces and preservation coverage for existing project-owned files. Existing live workspaces are never rewritten by documentation maintenance.\n\n## Related Code\n\n- `PhaseA.Platform/Workspaces/WorkspaceLayoutBuilder.cs`\n- `PhaseA.Platform/Workspaces/WorkspacePathPolicy.cs`\n- `PhaseA.Platform/Workspaces/ProjectWorkspaceSeeder.cs`\n- `PhaseA.Platform/Workspaces/HostedProjectTemplate/AGENTS.template.md`\n- `PhaseA.Platform/Workspaces/HostedProjectTemplate/README.template.md`\n- `PhaseA.Platform/Projects/ProjectCreationService.cs`\n- `PhaseA.Platform/Projects/ProjectInitializationRecoveryService.cs`\n- `PhaseA.Platform/Readback/ArtifactReadbackService.cs`\n- `PhaseA.Platform/Readback/ProjectPackageService.cs`\n- `PhaseA.Platform/Readback/ProjectWebPreviewService.cs`\n- `PhaseA.Platform/Readback/ProjectAssetLibraryService.cs`\n- `PhaseA.Platform/Readback/ProjectAssetInventoryService.cs`\n\n## Related Tests\n\n- `PhaseA.Platform.Tests/Workspaces/**`\n- `PhaseA.Platform.Tests/Readback/**`\n- `PhaseA.Platform.Tests/Projects/**`\n\n## Related Decisions\n\n- `docs/adr/ADR-0035-phase-controlled-runner-workspace-execution.md`\n- `docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md`\n",
       "enforcement_level": "E1",
       "entry_id": "architecture.phase-service.hosted-workspaces-and-artifacts",
       "instruction_authority": false,
@@ -5873,12 +5878,21 @@
       "may_override_source": false,
       "module_id": "architecture.phase-service.hosted-workspaces-and-artifacts",
       "primary_domain": "phase",
-      "relations": [],
+      "relations": [
+        {
+          "target": "adr.ADR-0035",
+          "type": "governed_by"
+        },
+        {
+          "target": "adr.ADR-0044",
+          "type": "governed_by"
+        }
+      ],
       "resources": [],
       "semantic_eligible": true,
       "source_path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
       "source_role": "architecture-module",
-      "source_sha256": "f03f22cc1ce7766b8014d992b3c2e5838b1fe5885706b3997068e33dd68ed698",
+      "source_sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0",
       "status": "active",
       "title": "Hosted Workspaces And Artifacts Architecture",
       "visibility": {
@@ -6545,7 +6559,7 @@
       "anchors": [
         {
           "anchor": "knowledge_locator.py",
-          "line_end": 52,
+          "line_end": 168,
           "line_start": 1
         }
       ],
@@ -6555,7 +6569,7 @@
         "refactor-acceptance",
         "vdd"
       ],
-      "content": "from __future__ import annotations\n\nimport argparse\nimport hashlib\nimport json\nimport subprocess\nimport sys\nfrom pathlib import Path\n\nfrom _knowledge_locator_core import bind_result_to_request, catalog_source_snapshot, locate, require_fresh_catalog\n\n\ndef _main_source_hashes(repository_root: Path, catalog: dict) -> dict[str, str]:\n    paths = {\n        entry.get(\"source_path\") or entry.get(\"path\")\n        for entry in catalog.get(\"entries\", [])\n        if isinstance(entry, dict)\n    }\n    hashes: dict[str, str] = {}\n    for path in paths:\n        if not isinstance(path, str) or not path:\n            continue\n        result = subprocess.run(\n            [\"git\", \"-C\", str(repository_root), \"show\", f\"refs/heads/main:{path}\"],\n            capture_output=True, check=False,\n        )\n        if result.returncode == 0:\n            hashes[path] = hashlib.sha256(result.stdout).hexdigest()\n    return hashes\n\n\ndef main() -> int:\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--catalog\", type=Path, default=Path(\"knowledge/catalogs/repository-knowledge-catalog.v1.json\"))\n    parser.add_argument(\"--max-candidates\", type=int, default=12)\n    parser.add_argument(\"--repository-root\", type=Path, default=Path.cwd())\n    args = parser.parse_args()\n    request = json.load(sys.stdin)\n    catalog = json.loads(args.catalog.read_text(encoding=\"utf-8\"))\n    snapshot = catalog_source_snapshot(catalog)\n    fresh = require_fresh_catalog(catalog, _main_source_hashes(args.repository_root.resolve(), catalog))\n    if snapshot is None or request.get(\"snapshot\") != {\"ref\": snapshot[\"ref\"], \"commit\": snapshot[\"commit\"]} or fresh[\"status\"] != \"current\":\n        core_result = {\"status\": \"blocked\", \"candidates\": []}\n    else:\n        core_result = locate(request, catalog, max_candidates=args.max_candidates)\n    result = bind_result_to_request(request, core_result)\n    print(json.dumps(result, ensure_ascii=False, sort_keys=True))\n    return 0\n\n\nif __name__ == \"__main__\":\n    raise SystemExit(main())\n",
+      "content": "from __future__ import annotations\n\nimport argparse\nimport hashlib\nimport json\nimport subprocess\nimport sys\nfrom pathlib import Path\nfrom typing import Any\n\nfrom _knowledge_locator_core import bind_result_to_request, catalog_source_snapshot, locate, require_fresh_catalog\n\n\ndef _canonical_hash(value: Any) -> str:\n    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(\",\", \":\")).encode(\"utf-8\")\n    return \"sha256:\" + hashlib.sha256(encoded).hexdigest()\n\n\ndef _main_source_hashes(repository_root: Path, catalog: dict[str, Any]) -> dict[str, str]:\n    snapshot = catalog_source_snapshot(catalog)\n    if snapshot is None:\n        return {}\n    current = subprocess.run(\n        [\"git\", \"-C\", str(repository_root), \"rev-parse\", \"refs/heads/main\"],\n        capture_output=True,\n        text=True,\n        encoding=\"utf-8\",\n        check=False,\n    )\n    if current.returncode or current.stdout.strip() != snapshot[\"commit\"]:\n        return {}\n    paths = [item.get(\"path\") for item in snapshot[\"sources\"] if isinstance(item, dict) and isinstance(item.get(\"path\"), str)]\n    if not paths:\n        return {}\n    request_bytes = \"\".join(f\"{snapshot['commit']}:{path}\\n\" for path in paths).encode(\"utf-8\")\n    completed = subprocess.run(\n        [\"git\", \"-C\", str(repository_root), \"cat-file\", \"--batch\"],\n        input=request_bytes,\n        capture_output=True,\n        check=False,\n    )\n    if completed.returncode:\n        return {}\n    output = completed.stdout\n    offset = 0\n    hashes: dict[str, str] = {}\n    for path in paths:\n        newline = output.find(b\"\\n\", offset)\n        if newline < 0:\n            return {}\n        header = output[offset:newline].decode(\"ascii\", errors=\"replace\")\n        offset = newline + 1\n        parts = header.rsplit(\" \", 2)\n        if len(parts) != 3 or parts[1] != \"blob\" or not parts[2].isdigit():\n            return {}\n        size = int(parts[2])\n        blob = output[offset : offset + size]\n        offset += size\n        if output[offset : offset + 1] != b\"\\n\":\n            return {}\n        offset += 1\n        hashes[path] = hashlib.sha256(blob).hexdigest()\n    return hashes\n\n\ndef _policy_for(request: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any] | None:\n    if request.get(\"policy_revision\") != registry.get(\"policy_revision\"):\n        return None\n    consumer = request.get(\"consumer\")\n    return next((item for item in registry.get(\"policies\", []) if isinstance(item, dict) and item.get(\"consumer\") == consumer), None)\n\n\ndef _projection_for(\n    request: dict[str, Any],\n    catalog: dict[str, Any],\n    policies: dict[str, Any],\n    projections: dict[str, Any] | None,\n) -> set[str] | None:\n    if not isinstance(catalog.get(\"modules\"), list):\n        return None\n    if projections is None:\n        raise ValueError(\"consumer_projection_missing\")\n    snapshot = catalog_source_snapshot(catalog)\n    if (\n        snapshot is None\n        or projections.get(\"source_snapshot_id\") != snapshot.get(\"snapshot_id\")\n        or projections.get(\"catalog_sha256\") != _canonical_hash(catalog)\n        or projections.get(\"policy_revision\") != policies.get(\"policy_revision\")\n        or projections.get(\"policy_sha256\") != _canonical_hash(policies)\n    ):\n        raise ValueError(\"consumer_projection_stale\")\n    projection = next(\n        (\n            item\n            for item in projections.get(\"projections\", [])\n            if isinstance(item, dict) and item.get(\"consumer\") == request.get(\"consumer\")\n        ),\n        None,\n    )\n    if projection is None or not isinstance(projection.get(\"eligible_module_ids\"), list):\n        raise ValueError(\"consumer_projection_missing\")\n    return set(projection[\"eligible_module_ids\"])\n\n\ndef main() -> int:\n    if hasattr(sys.stdout, \"reconfigure\"):\n        sys.stdout.reconfigure(encoding=\"utf-8\")\n    if hasattr(sys.stderr, \"reconfigure\"):\n        sys.stderr.reconfigure(encoding=\"utf-8\")\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--catalog\", type=Path, default=Path(\"knowledge/catalogs/repository-knowledge-catalog.v2.json\"))\n    parser.add_argument(\"--policies\", type=Path)\n    parser.add_argument(\"--projections\", type=Path, default=Path(\"knowledge/projections/consumer-projections.v1.json\"))\n    parser.add_argument(\"--max-candidates\", type=int, default=12)\n    parser.add_argument(\"--repository-root\", type=Path, default=Path.cwd())\n    args = parser.parse_args()\n    request = json.load(sys.stdin)\n    repository_root = args.repository_root.resolve()\n\n    def rooted(path: Path) -> Path:\n        return path if path.is_absolute() else repository_root / path\n\n    catalog_path = rooted(args.catalog)\n    catalog = json.loads(catalog_path.read_text(encoding=\"utf-8\"))\n    policy_path = args.policies\n    if policy_path is None:\n        revision = request.get(\"policy_revision\")\n        filename = \"consumer-policies.v1.json\" if revision == \"knowledge-consumer-policies.v1\" else \"consumer-policies.v2.json\"\n        policy_path = Path(\"knowledge/policies\") / filename\n    policies = json.loads(rooted(policy_path).read_text(encoding=\"utf-8\"))\n    projection_document = None\n    if isinstance(catalog.get(\"modules\"), list):\n        projection_document = json.loads(rooted(args.projections).read_text(encoding=\"utf-8\"))\n    snapshot = catalog_source_snapshot(catalog)\n    fresh = require_fresh_catalog(catalog, _main_source_hashes(repository_root, catalog))\n    policy = _policy_for(request, policies)\n    try:\n        eligible_module_ids = _projection_for(request, catalog, policies, projection_document)\n    except ValueError:\n        eligible_module_ids = None\n        projection_valid = False\n    else:\n        projection_valid = True\n    if (\n        snapshot is None\n        or request.get(\"snapshot\") != {\"ref\": snapshot[\"ref\"], \"commit\": snapshot[\"commit\"]}\n        or fresh[\"status\"] != \"current\"\n        or policy is None\n        or not projection_valid\n    ):\n        core_result = {\"status\": \"blocked\", \"candidates\": []}\n    else:\n        policy_max = policy.get(\"max_candidates\", args.max_candidates)\n        maximum = min(args.max_candidates, policy_max) if isinstance(policy_max, int) else args.max_candidates\n        core_result = locate(\n            request,\n            catalog,\n            max_candidates=maximum,\n            policy=policy,\n            eligible_module_ids=eligible_module_ids,\n        )\n    result = bind_result_to_request(request, core_result)\n    print(json.dumps(result, ensure_ascii=False, sort_keys=True))\n    return 0\n\n\nif __name__ == \"__main__\":\n    raise SystemExit(main())\n",
       "enforcement_level": "E1",
       "entry_id": "governance.knowledge-locator",
       "instruction_authority": false,
@@ -6576,19 +6590,44 @@
       ],
       "resources": [
         {
+          "path": "scripts/python/build_knowledge_catalog.py",
+          "role": "catalog-builder",
+          "source_sha256": "f3fbb02d36465b6eebd25c7723cb5c7709ac2bf8ab5bdc7b2b45e03b22621e5e"
+        },
+        {
+          "path": "scripts/python/_knowledge_catalog_builder.py",
+          "role": "catalog-core",
+          "source_sha256": "16c568377d04e92a59a7ac10ea4df9596498258c04a664279f711b117f2591fb"
+        },
+        {
+          "path": "knowledge/contracts/knowledge-consumer-projections.v1.schema.json",
+          "role": "contract",
+          "source_sha256": "515ba5840ecd87d04f26a240c632dd27bb9d4f821f965172664d903b9b9a1b30"
+        },
+        {
           "path": "knowledge/contracts/knowledge-locator-request.v1.schema.json",
           "role": "contract",
-          "source_sha256": "64e418e1bd6648192d94048ac73f36744fcfd175e776ed3bcb7c20dec3ced068"
+          "source_sha256": "f89ae3b9bff3d20640a2828dd4a18a5b622868b0db0d719a195dcd6020d7d451"
         },
         {
           "path": "knowledge/contracts/knowledge-locator-result.v1.schema.json",
           "role": "contract",
-          "source_sha256": "7a14eb91f0dcece3d75fbaed7e5345bcb2f83d962bb33bd20bfb2413b74714dc"
+          "source_sha256": "16979935f80ab144e36b511455a6eda421a58365a577f52024100a139f1c7c31"
+        },
+        {
+          "path": "knowledge/contracts/repository-knowledge-catalog.v2.schema.json",
+          "role": "contract",
+          "source_sha256": "e04f03182c1f5fcd45d6daad17b8b5dbe4da84b122116307b9fdffc1a1ebfe13"
+        },
+        {
+          "path": "knowledge/contracts/repository-source-snapshot.v1.schema.json",
+          "role": "contract",
+          "source_sha256": "376f147f1e579489e1677641c45ec17cc31609ce04e8e7c4c9fe493b72025782"
         },
         {
           "path": "scripts/python/_knowledge_locator_core.py",
           "role": "core",
-          "source_sha256": "7b21260b6f44b88c6f976b8a7c45bdf2b76e41d7d619243f6cbf2eb19e956006"
+          "source_sha256": "bd50bfb36d2668c042c6abcd17dfa2306f094bb50d0ab5cddc192be163f8594c"
         },
         {
           "path": "scripts/python/build_knowledge_index.py",
@@ -6599,12 +6638,22 @@
           "path": "knowledge/policies/consumer-policies.v1.json",
           "role": "policy",
           "source_sha256": "f434cd08f439afe96a2a5a163993c18b491e135f478e74a571e92172c0887d70"
+        },
+        {
+          "path": "knowledge/policies/consumer-policies.v2.json",
+          "role": "policy",
+          "source_sha256": "eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7"
+        },
+        {
+          "path": "knowledge/policies/source-exclusions.v1.json",
+          "role": "policy",
+          "source_sha256": "3a14d0f15e921f1eaf749b187f36a11fe59c5c697e0483cbd5b9793b2b38bdda"
         }
       ],
       "semantic_eligible": true,
       "source_path": "scripts/python/knowledge_locator.py",
       "source_role": "cli-entrypoint",
-      "source_sha256": "8a39fa8c2f2dff049b4c2bb942f6ec903b27a534eddc6ad697a232b0a4299e48",
+      "source_sha256": "312fe7148587c98582f9bb5aa3839d6c16c20b83466c4cac207cb65951d8f084",
       "status": "active",
       "title": "knowledge_locator.py",
       "visibility": {
@@ -6619,18 +6668,18 @@
       "anchors": [
         {
           "anchor": "Maintain Knowledge Base",
-          "line_end": 47,
+          "line_end": 48,
           "line_start": 6
         },
         {
           "anchor": "Workflow",
-          "line_end": 32,
+          "line_end": 33,
           "line_start": 12
         },
         {
           "anchor": "Command",
-          "line_end": 47,
-          "line_start": 33
+          "line_end": 48,
+          "line_start": 34
         }
       ],
       "authority_class": "derived_cache",
@@ -6639,7 +6688,7 @@
         "refactor-acceptance",
         "vdd"
       ],
-      "content": "---\nname: maintain-knowledge-base\ndescription: Refresh or audit the repository knowledge base against the pinned local main branch. Use when maintaining existing knowledge facts, checking a specific execution plan, CLI, skill, tool, MCP, or document directory, detecting stale registered entries, or producing derived index and append-only maintenance evidence.\n---\n\n# Maintain Knowledge Base\n\nUse this Skill only for derived knowledge artifacts. Never edit the inspected\nsource, checkout/fetch/merge Git branches, mutate a live Phase workspace, or\npromote dirty-worktree bytes as repository facts.\n\n## Workflow\n\n1. Read `AGENTS.md`, the stable maintenance-compatible contracts under\n   `knowledge/contracts/`, and the existing knowledge catalog. The dated\n   2026-07-25 schemas are read-only migration inputs, not runtime owners.\n2. Pin `refs/heads/main` with `git rev-parse refs/heads/main`. Reject a request\n   whose declared `main_commit` differs. Treat catalog `source_snapshot` as\n   provenance for the derived index, not as the commit containing the catalog\n   itself. Do not fetch or change branches.\n3. Use `existing-only` without a target to refresh only catalog entries already\n   registered. Do not discover absent files.\n4. Use `targeted` only with one explicit repository-relative target. Read main\n   blobs as facts; worktree-only target content may be recorded only as a\n   `provisional` candidate.\n5. Run `scripts/maintain_knowledge.py` with the request, catalog, derived\n   output and append-only log root. When it reports a stale catalog snapshot,\n   use its `suggested_catalog_source_snapshot` to regenerate the catalog from\n   current main facts, then re-read output hashes before claiming a result.\n6. Report source locations and hashes, not generated factual answers. Preserve\n   failed result sidecars under `logs/knowledge-context/`.\n\n## Command\n\n```powershell\npy -3 .agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py `\n  --request request.json --catalog knowledge/catalogs/repository-knowledge-catalog.v1.json `\n  --output knowledge/indexes/derived-index.v1.json --repo-root .\n```\n\nThe request must conform to `knowledge-maintenance-request.v1`. The catalog is\na JSON object with an `entries` array; every entry needs `entry_id` and\n`source_path`, and may contain `source_sha256`.\n\nUse `--dry-run` to validate authority and compute the result without writes.\nThe only normal writes are the derived output and a new append-only result file\nunder `logs/knowledge-context/`.\n",
+      "content": "---\nname: maintain-knowledge-base\ndescription: Refresh or audit the repository knowledge base against the pinned local main branch. Use when maintaining existing knowledge facts, checking a specific execution plan, CLI, skill, tool, MCP, or document directory, detecting stale registered entries, or producing derived index and append-only maintenance evidence.\n---\n\n# Maintain Knowledge Base\n\nUse this Skill only for derived knowledge artifacts. Never edit the inspected\nsource, checkout/fetch/merge Git branches, mutate a live Phase workspace, or\npromote dirty-worktree bytes as repository facts.\n\n## Workflow\n\n1. Read `AGENTS.md`, the stable maintenance-compatible contracts under\n   `knowledge/contracts/`, and the typed v2 knowledge catalog. The dated\n   2026-07-25 schemas are read-only migration inputs, not runtime owners.\n2. Pin `refs/heads/main` with `git rev-parse refs/heads/main`. Reject a request\n   whose declared `main_commit` differs. Treat catalog `source_snapshot` as\n   provenance for the derived index, not as the commit containing the catalog\n   itself. Do not fetch or change branches.\n3. Use `existing-only` without a target to refresh only catalog entries already\n   registered. Do not discover absent files.\n4. Use `targeted` only with one explicit repository-relative target. Read main\n   blobs as facts; worktree-only target content may be recorded only as a\n   `provisional` candidate.\n5. Run `scripts/maintain_knowledge.py` with the request, catalog, derived\n   output and append-only log root. When it reports a stale catalog snapshot,\n   run `scripts/python/build_knowledge_catalog.py` to regenerate all three\n   layers from current main facts, then re-read output hashes before claiming\n   a result. `docs/migration/**` is excluded in every mode.\n6. Report source locations and hashes, not generated factual answers. Preserve\n   failed result sidecars under `logs/knowledge-context/`.\n\n## Command\n\n```powershell\npy -3 .agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py `\n  --request request.json --catalog knowledge/catalogs/repository-knowledge-catalog.v2.json `\n  --output knowledge/indexes/derived-index.v1.json --repo-root .\n```\n\nThe request must conform to `knowledge-maintenance-request.v1`. The catalog is\na JSON object with an `entries` array; every entry needs `entry_id` and\n`source_path`, and may contain `source_sha256`.\n\nUse `--dry-run` to validate authority and compute the result without writes.\nThe only normal writes are the derived output and a new append-only result file\nunder `logs/knowledge-context/`.\n",
       "enforcement_level": "E1",
       "entry_id": "governance.knowledge-maintenance",
       "instruction_authority": false,
@@ -6660,15 +6709,20 @@
       ],
       "resources": [
         {
+          "path": "scripts/python/build_knowledge_catalog.py",
+          "role": "catalog-builder",
+          "source_sha256": "f3fbb02d36465b6eebd25c7723cb5c7709ac2bf8ab5bdc7b2b45e03b22621e5e"
+        },
+        {
           "path": ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
           "role": "cli",
-          "source_sha256": "06ee490859c5075534f4c6bf22e7ac4a69a72d0fb8622a328541780e07481f10"
+          "source_sha256": "691e662370b58ead554da351b2abb296a74d8537d4f80aac5d0425279158db3e"
         }
       ],
       "semantic_eligible": true,
       "source_path": ".agents/skills/maintain-knowledge-base/SKILL.md",
       "source_role": "skill-entrypoint",
-      "source_sha256": "97a99a93a6e9648734178c8a8e4f722bc1ffb44cfd239d52055c38fb3647b389",
+      "source_sha256": "6406a864bf8a6707759133e14891975ca5ff23660e2aaee24a8cd2bf2fd7ae65",
       "status": "active",
       "title": "Maintain Knowledge Base",
       "visibility": {
@@ -6949,7 +7003,7 @@
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
           "role": "orchestrator",
-          "source_sha256": "a2811af4e210c5d3f66e972664337c2ff91cf103d4593822de1923188f563a85"
+          "source_sha256": "c2446bff214ef047d5e4c5c24f18a7063f1b241ddccefad68ab656817274be88"
         },
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
@@ -7588,123 +7642,123 @@
       "anchors": [
         {
           "anchor": "Repository Guide",
-          "line_end": 276,
+          "line_end": 260,
           "line_start": 1
         },
         {
           "anchor": "Purpose",
-          "line_end": 11,
+          "line_end": 13,
           "line_start": 5
         },
         {
+          "anchor": "Context And Documentation Layers",
+          "line_end": 20,
+          "line_start": 14
+        },
+        {
           "anchor": "Phase Service Scope",
-          "line_end": 22,
-          "line_start": 12
+          "line_end": 31,
+          "line_start": 21
         },
         {
           "anchor": "Planned Frontend Boundary Hardening",
-          "line_end": 28,
-          "line_start": 23
+          "line_end": 37,
+          "line_start": 32
         },
         {
           "anchor": "Start Here",
-          "line_end": 40,
-          "line_start": 29
+          "line_end": 51,
+          "line_start": 38
         },
         {
           "anchor": "Change Routing",
-          "line_end": 84,
-          "line_start": 41
+          "line_end": 99,
+          "line_start": 52
         },
         {
           "anchor": "Repository Workflow Kernel Boundary",
-          "line_end": 94,
-          "line_start": 85
+          "line_end": 109,
+          "line_start": 100
         },
         {
           "anchor": "Highest Encoding Rule",
-          "line_end": 101,
-          "line_start": 95
+          "line_end": 116,
+          "line_start": 110
         },
         {
           "anchor": "Core Rules",
-          "line_end": 113,
-          "line_start": 102
+          "line_end": 128,
+          "line_start": 117
         },
         {
           "anchor": "Phase Service Change Contract",
-          "line_end": 163,
-          "line_start": 114
+          "line_end": 178,
+          "line_start": 129
         },
         {
           "anchor": "Change Matrix",
-          "line_end": 127,
-          "line_start": 116
+          "line_end": 142,
+          "line_start": 131
         },
         {
           "anchor": "Protected Phase Paths",
-          "line_end": 136,
-          "line_start": 128
+          "line_end": 151,
+          "line_start": 143
         },
         {
           "anchor": "Definition of Done",
-          "line_end": 145,
-          "line_start": 137
-        },
-        {
-          "anchor": "Database and API Compatibility",
-          "line_end": 151,
-          "line_start": 146
-        },
-        {
-          "anchor": "Prototype Route Recovery",
-          "line_end": 163,
+          "line_end": 160,
           "line_start": 152
         },
         {
+          "anchor": "Database and API Compatibility",
+          "line_end": 166,
+          "line_start": 161
+        },
+        {
+          "anchor": "Prototype Route Recovery",
+          "line_end": 178,
+          "line_start": 167
+        },
+        {
           "anchor": "LLM Engine And Invocation Protocol",
-          "line_end": 173,
-          "line_start": 164
+          "line_end": 188,
+          "line_start": 179
         },
         {
           "anchor": "Phase Runtime Recovery Order",
-          "line_end": 181,
-          "line_start": 174
+          "line_end": 196,
+          "line_start": 189
         },
         {
-          "anchor": "Phase A Runtime Ops",
-          "line_end": 226,
-          "line_start": 182
-        },
-        {
-          "anchor": "Minimum Recovery-Grade Runtime Variables",
-          "line_end": 226,
-          "line_start": 198
+          "anchor": "Host Runtime Boundary",
+          "line_end": 203,
+          "line_start": 197
         },
         {
           "anchor": "Repo Map",
-          "line_end": 238,
-          "line_start": 227
+          "line_end": 216,
+          "line_start": 204
         },
         {
           "anchor": "Main Phase Commands",
-          "line_end": 247,
-          "line_start": 239
+          "line_end": 225,
+          "line_start": 217
         },
         {
           "anchor": "Evidence Locations",
-          "line_end": 254,
-          "line_start": 248
+          "line_end": 232,
+          "line_start": 226
         },
         {
           "anchor": "Docs Index",
-          "line_end": 269,
-          "line_start": 255
+          "line_end": 251,
+          "line_start": 233
         },
         {
           "anchor": "Change Policy",
-          "line_end": 276,
-          "line_start": 270
+          "line_end": 260,
+          "line_start": 252
         }
       ],
       "authority_class": "derived_cache",
@@ -7713,7 +7767,7 @@
         "refactor-acceptance",
         "vdd"
       ],
-      "content": "# Repository Guide\n\nThis file is the Phase-service-first repository map. It routes agents to current product, architecture, standards, runtime, and recovery authority. Keep detailed procedures in their source documents instead of expanding this file into a general template manual.\n\n## Purpose\n- The root repository is the Ji Mu Yun Phase A/B cloud prototype platform, not a specific game project.\n- `AGENTS.md` is the concise agent routing and non-negotiable change-contract layer.\n- `README.md` is the product overview, phase status, stack summary, and startup entry.\n- Game-specific identity, genre, route profile, and execution state belong to each hosted project workspace and metadata records, not to root-level placeholder fields.\n- `docs/architecture/phase-service/**`, `docs/architecture/ADR_INDEX_PHASE.md`, and `docs/standards/**` are the deep sources for Phase service decisions and conventions.\n\n## Phase Service Scope\nTreat the following as in-scope for Phase service changes:\n- `PhaseA.Platform/**` and `PhaseA.Platform.Tests/**`.\n- `runtime/phase-a/**`, including startup, recovery, watchdog, and Caddy configuration.\n- `scripts/python/phase_a_*.py`, `scripts/python/phase_b_*.py`, and Phase-facing smoke or drill scripts.\n- `logs/phase-a-innernet/**` as runtime state, live metadata, hosted workspaces, and evidence.\n- Account isolation, admin/user auth, token hashing, audit exports, hosted workspace/artifact readback, and browser/API behavior.\n- Phase browser-consumed prototype routes, including project creation, GDD, prototype generation, iteration, repair, asset, package, preview, and route recovery state.\n- Shared LLM/Codex execution entrypoints used by Phase routes and scripts.\n- Godot runtime, UI capability, UI style, diagnostics, preview, package, and acceptance rules consumed by hosted routes.\n\n## Planned Frontend Boundary Hardening\n- `execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan.md` is a `paused` downstream plan. It starts only after `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/` is fully complete and the protected BH-HANDOFF succeeds.\n- Until that handoff, do not treat `/ui-v2`, Permit/Preflight, new browser session paths, Change Origin Gate, legacy freeze, or Phase platform SemVer as current repository capabilities. Current runtime commands and contracts in this file and `README.md` remain authoritative.\n- Plan-readiness can be checked with `py -3 execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/tools/validate_whole_directory.py`. A PASS means only that the plan is internally implementable; it cannot replace the repository-external protected BH-HANDOFF verifier and does not prove code completion.\n- Update this routing file in the same change that makes a planned rule operational: BH-SF2 for Platform/Hosted Codex routing and Preflight, BH-SF3 for mutation/acceptance recovery entrypoints, BH-RP1 for version projection, BH-REACT1/BH-REACT2 for `/ui-v2`, session and legacy-route behavior, and BH-RELEASE for final SemVer/release authority. Never document a future phase as active before its exit evidence exists.\n\n## Start Here\n1. Read `README.md` for current product status and startup.\n2. Read `docs/architecture/phase-service/_index.md` before changing Phase service boundaries.\n3. Read `docs/architecture/ADR_INDEX_PHASE.md` before changing Phase service decisions.\n4. Read `docs/standards/_index.md` and `docs/standards/phase-service.md` before changing API, DB, errors, logs, security, tests, or status contracts.\n5. Read the relevant Godot standard before changing hosted Godot behavior:\n   - `docs/standards/godot-engine-semantics.md`\n   - `docs/standards/godot-ui-capability-contract.md`\n   - `docs/standards/godot-ui-style-contract.md`\n   - `docs/standards/godot-diagnostics-quality-gates.md`\n6. Read the relevant file in `execution-plans/` and `decision-logs/` when the change is plan-scoped or decision-scoped.\n\n## Change Routing\n- Platform API, browser behavior, DTOs, or readback:\n  - `docs/standards/phase-service.md`\n  - `docs/architecture/phase-service/system-overview.md`\n  - `PhaseA.Platform/Program.cs`\n  - `PhaseA.Platform/Browser/**`\n  - `PhaseA.Platform.Tests/Browser/**`\n- Auth, accounts, tokens, isolation, limits, or audit:\n  - `docs/architecture/phase-service/auth-and-accounts.md`\n  - `docs/adr/ADR-0034-phase-account-scoped-token-auth.md`\n  - `PhaseA.Platform/Security/**`\n  - `PhaseA.Platform/Data/**`\n- Metadata DB, migrations, restore, or persistence:\n  - `docs/architecture/phase-service/metadata-db.md`\n  - `docs/adr/ADR-0033-phase-metadata-sqlite-local-disk.md`\n  - `PhaseA.Platform/Data/**`\n- Hosted workspace, artifacts, packages, assets, or previews:\n  - `docs/architecture/phase-service/hosted-workspaces-and-artifacts.md`\n  - `PhaseA.Platform/Workspaces/**`\n  - `PhaseA.Platform/Readback/**`\n- Prototype, GDD, iteration, repair, UI closure, or route recovery:\n  - `docs/architecture/phase-service/prototype-routes-and-recovery.md`\n  - the relevant Godot standards under `docs/standards/`\n  - the GDD-to-module source documents under `docs/workflows/phase-a-gdd-to-module-*.md`\n  - `PhaseA.Platform/Runs/**`\n- Shared LLM/Codex execution:\n  - `docs/architecture/phase-service/llm-codex-execution.md`\n  - `docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md`\n  - the shared entrypoints listed below\n- Runtime, Caddy, watchdog, or public health:\n  - `docs/architecture/phase-service/runtime-caddy-and-recovery.md`\n  - `runtime/phase-a/**`\n  - the recovery order below\n- Tests, smoke, or evidence:\n  - `docs/standards/phase-service.md`\n  - `PhaseA.Platform.Tests/**`\n  - Phase-facing smoke and drill scripts under `scripts/python/`\n- Hosted Godot execution kernel, contracts, or engine-side tests:\n  - `docs/architecture/ADR_INDEX_GODOT.md`\n  - `docs/architecture/base/00-README.md`\n  - `docs/testing-framework.md`\n  - the relevant Godot standard under `docs/standards/`\n  - keep shared contracts in `Game.Core/Contracts/**` and keep them Godot-free\n\n## Repository Workflow Kernel Boundary\n- `workflow.md` defines the repository-local formal delivery workflow. It is not the default Phase browser/API path.\n- `workflow.example.md` is onboarding for a game repository copied from the original template. It is not onboarding for this root platform repository.\n- A standalone requirements Markdown file is a direct implementation input and must not create a VDD directory. Use `$vdd-execution-plan` only when the user explicitly requests creation or repair of a complete execution-plan directory.\n- Phase routes reuse selected repository scripts, validators, profiles, Godot assets, and route contracts as internal execution dependencies.\n- Do not route ordinary Phase service work into business-repository Taskmaster triplets, formal Chapter 3-7 orchestration, Chapter 4 overlay-generator commands, local Chapter 6 review recovery, or game-template release steps unless the task explicitly targets that internal toolchain.\n- Phase architecture overlays and ADRs must still be updated when a Phase boundary, threshold, contract, security posture, or release decision changes.\n- Prototype routes use their project-local contracts, route profiles, latest state, ledgers, and acceptance evidence. They must not infer authority from root-level game metadata.\n- `DELIVERY_PROFILE` is an internal hosted-workflow configuration with allowed values `playable-ea`, `fast-ship`, and `standard`; the platform default is `fast-ship`, and hosted Chapter 2 bootstrap consumes it. Detailed local formal-delivery behavior remains in `DELIVERY_PROFILE.md` and `workflow.md`.\n\n## Highest Encoding Rule\n- All Chinese text reads and writes must use Python with explicit UTF-8, for example `Path(path).read_text(encoding=\"utf-8\")` and `Path(path).write_text(text, encoding=\"utf-8\", newline=\"\\n\")`.\n- Do not use PowerShell, `Get-Content`, `Set-Content`, `Out-File`, `Add-Content`, `type`, `echo`, `copy con`, or other Windows-native text tools to read or write Chinese text.\n- If a command script must contain Chinese literals, write it as a Python file or use ASCII-only Python source with Unicode escapes, then write the target file as UTF-8.\n- This rule applies to `AGENTS.md`, `README.md`, `workflow.md`, `docs/**/*.md`, `.agents/skills/**/SKILL.md`, prototype records, and project-health documentation.\n- Code, tests, logs, and machine output remain English unless the file is explicitly user-facing documentation.\n\n## Core Rules\n- Communicate with the user in Chinese.\n- Default environment is Windows; use Windows-compatible commands and paths.\n- Keep code, scripts, tests, comments, and printed messages in English.\n- Do not use emoji.\n- Write logs and evidence under `logs/`.\n- Do not revert user changes unless explicitly requested.\n- Prefer small, deterministic, testable changes.\n- Code or test changes should cite at least one accepted ADR; if thresholds, contracts, security posture, or release policy change, update or supersede the ADR set.\n- Route architecture work in arc42 order: irreversible decisions -> cross-cutting rules -> runtime backbone -> feature slices.\n- Ask before high-risk actions and never disable tests to get green.\n\n## Phase Service Change Contract\n\n### Change Matrix\n| Change area | Must update | Required validation |\n| --- | --- | --- |\n| Platform API | Server handler/DTO, browser caller, auth boundary, and public behavior docs when behavior changes. | `PhaseA.Platform.Tests/**` plus relevant `phase_a_*` or `phase_b_*` smoke. |\n| Metadata DB or persistence | Migration or recovery path, persistence tests, restore/drill docs, and runtime notes when DB paths or ownership change. | DB/persistence test, restore drill, or smoke evidence under `logs/`. |\n| Auth, token, account isolation, audit | Token hashing path, admin/user boundary behavior, audit output, and CSV/export callers. | Unauthorized and authorized checks, preferably `scripts/python/phase_b_account_smoke.py`. |\n| Runtime startup or watchdog | `runtime/phase-a/start-phasea.ps1`, `ensure-phasea.ps1`, `watch-phasea.ps1`, and runtime docs. | Local `/healthz`, `scripts/python/phase_a_ops_check.py`, and runtime log evidence. |\n| Caddy or public proxy | `runtime/phase-a/Caddyfile`, public URL docs, and recovery notes. | Validate local PhaseA health first, then public `:8080/healthz`. |\n| Hosted workspace, artifacts, packages, previews | Workspace boundary, artifact readback, cleanup/recovery behavior, and browser caller. | Integration or smoke evidence under `logs/`. |\n| Phase prototype routes | Route recovery inputs, latest state, repair ledger behavior, acceptance evidence, and browser-safe output. | Route-specific smoke/acceptance evidence and no completion based only on assistant text. |\n| LLM/Codex route execution | Shared route engine, command factory, script backend, and caller tests. | `CodexHostedProcessCommandFactoryTests`, `LlmRouteEngineTests`, `scripts/sc/tests/test_llm_backend.py`, plus route-specific tests. |\n\n### Protected Phase Paths\nAsk before modifying:\n- Live metadata or runtime state under `logs/phase-a-innernet/data/**` and hosted workspaces under `logs/phase-a-innernet/workspaces/**`.\n- `runtime/phase-a/start-phasea.ps1`, `runtime/phase-a/ensure-phasea.ps1`, `runtime/phase-a/watch-phasea.ps1`, and `runtime/phase-a/Caddyfile`.\n- Auth, token hashing, account isolation, and audit code in `PhaseA.Platform/**`.\n- Shared LLM/Codex execution entrypoints: `PhaseA.Platform/Llm/LlmRouteEngine.cs`, `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`, and `scripts/sc/_llm_backend.py`.\n- Delivery/security profile behavior, public deployment URLs, bind addresses, secret source-of-truth, or Caddy listener behavior.\n- Generated logs, runtime evidence, and failure artifacts when the intent is to rewrite or delete history instead of adding sidecar evidence.\n\n### Definition of Done\nA Phase service change is not done until:\n- Local behavior is validated, or the validation gap and required follow-up evidence are recorded.\n- API, auth, DB, runtime, Caddy, prototype-route, or LLM execution changes include targeted tests or smoke evidence.\n- Evidence is written under `logs/` when a run, smoke, drill, or recovery action occurs.\n- Live secrets and token material are not committed to git-tracked docs, scripts, config, logs, or test fixtures.\n- Public proxy issues are debugged in order: local PhaseA health first, then Caddy/public health.\n- Failures are preserved as evidence; add new sidecar files instead of rewriting generated history.\n\n### Database and API Compatibility\n- Detailed Phase service API, DB, error, logging, security, testing, and status standards live in `docs/standards/phase-service.md`; the standards index is `docs/standards/_index.md`.\n- Do not manually mutate the live Phase A metadata DB unless the user explicitly authorizes it.\n- Schema changes must be backward-compatible by default, include a migration or recovery path, and preserve existing data unless an approved decision log says otherwise.\n- Public and browser-consumed APIs must remain backward-compatible by default. Do not remove or rename routes, fields, status codes, auth behavior, or artifact paths without explicit approval and a documented compatibility plan.\n\n### Prototype Route Recovery\nFor file-changing hosted game-project routes, consume project-level recovery sources in authority order before editing:\n1. Parsed game-type route profile and selected route skill prompt block.\n2. `meta/project-execution-guide.md`.\n3. `routes/prototype-contract/latest.json`.\n4. Current route latest state, such as `meta/routes/prototype/latest.json`, `meta/routes/iteration-plan/latest.json`, or `meta/routes/execute-next-goal/latest.json`.\n5. Current goal, step, repair step, or session state.\n6. Repair ledger and failing acceptance or Godot diagnostic evidence for repair routes.\n7. Latest live platform acceptance blocker, which wins over old assistant summaries, route state, and repair ledger memory.\n\nMissing required recovery sources must fail closed. Route state and repair ledger are continuity memory, not current acceptance authority. Do not mark steps complete based only on assistant text.\n\n## LLM Engine And Invocation Protocol\n- New Phase routes, services, scripts, and workflow helpers must use the shared LLM/Codex entrypoints instead of constructing provider calls or `codex exec` commands locally.\n- C# structured/read-only LLM calls must use `PhaseA.Platform/Llm/LlmRouteEngine.cs` through `ILlmRouteEngine`.\n- C# executable Codex workflows must use `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`.\n- Python LLM/Codex scripts must use `scripts/sc/_llm_backend.py::run_llm_exec` or a thin wrapper that delegates to it.\n- Prompt transport is stdin-first: use `codex exec ... -` with UTF-8 stdin, never append large prompts as command-line arguments.\n- Pure analysis or JSON-only decisions remain read-only and schema/JSON parsed. File-changing workflows require an explicit executable route, `workspace-write`, and acceptance/smoke validation.\n- If the shared entrypoint cannot express a required model, reasoning, sandbox, output, billing, credential, or retry behavior, extend the shared entrypoint and its tests first.\n- Required regression coverage: `PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs`, `PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs`, `scripts/sc/tests/test_llm_backend.py`, and route-specific tests.\n\n## Phase Runtime Recovery Order\n1. Check `http://127.0.0.1:18080/healthz`.\n2. If local app health is unhealthy, run `runtime/phase-a/ensure-phasea.ps1`.\n3. If local app health is healthy but public `:8080` health is unhealthy, inspect or restart Caddy after the app is healthy.\n4. Do not use ordinary `dotnet run` for the live server. Use `runtime/phase-a/start-phasea.ps1`.\n5. Do not manually edit the live metadata DB.\n6. Record recovery evidence under `logs/phase-a-innernet/runtime/`.\n\n## Phase A Runtime Ops\n- Stable local app bind: `http://127.0.0.1:18080`.\n- Canonical external `PUBLIC_BASE_URL`: `https://47.86.160.138:8080`.\n- Current direct public health probe: `http://47.86.160.138:8080/healthz`.\n- Do not claim public HTTPS reachability until `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080` passes without `--allow-http`.\n- Canonical runtime config: `runtime/phase-a/start-phasea.ps1`.\n- Canonical Caddy config: `runtime/phase-a/Caddyfile`.\n- Caddy must listen on `0.0.0.0:8080` and reverse proxy to `127.0.0.1:18080`.\n- Live build outputs must stay outside the repository source tree. Current stable build root: `C:\\Users\\Administrator\\.codex\\memories\\phasea-runtime-build`.\n- Startup must set both `APP_BIND_URL` and `ASPNETCORE_URLS` to `http://127.0.0.1:18080`.\n- Repo-wide MSBuild excludes must keep generated `logs/**`, `obj/**`, and `bin/**` out of compile inputs.\n- `PHASEA_ADMIN_TOKEN_HASH` must come from the host secret store or service environment; never commit real token material or hashes.\n- Recovery from public `502` always starts with local PhaseA health, then Caddy/public health.\n- Watchdog PID: `logs/phase-a-innernet/phasea-watchdog.pid`.\n- Watchdog log: `logs/phase-a-innernet/runtime/phasea-watchdog.log`.\n\n### Minimum Recovery-Grade Runtime Variables\n`runtime/phase-a/start-phasea.ps1` is the complete operational source of truth. This list records stable non-secret recovery defaults and is intentionally not an exhaustive environment manifest:\n- `APP_BIND_URL=http://127.0.0.1:18080`\n- `ASPNETCORE_URLS=http://127.0.0.1:18080`\n- `HTTPS_TERMINATION=caddy`\n- `PUBLIC_BASE_URL=https://47.86.160.138:8080`\n- `HOSTED_WORKSPACE_ROOT=C:\\jimuyun\\logs\\phase-a-innernet\\workspaces`\n- `HOSTED_PROJECT_LIMIT=2`\n- `PHASEA_MAX_CONCURRENT_CHATS=8`\n- `PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT=1`\n- `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS=4`\n- `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS_PER_ACCOUNT=1`\n- `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS=3`\n- `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT=1`\n- `PHASEA_MAX_CONCURRENT_OTHER_RUNS=3`\n- `PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS=2`\n- `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS=3`\n- `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT=1`\n- `PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS=180`\n- `PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS=45`\n- `PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT=1`\n- `PHASEA_METADATA_DB_PATH=C:\\jimuyun\\logs\\phase-a-innernet\\data\\phase-a-platform.sqlite3`\n- `PHASEA_REPOSITORY_ROOT=C:\\jimuyun`\n- `GODOT_BIN=C:\\Godot\\4.5.1-mono\\Godot_v4.5.1-stable_mono_win64\\Godot_v4.5.1-stable_mono_win64_console.exe`\n- `PHASEA_GODOT3_BIN=C:\\Godot\\3.6.2\\Godot_v3.6.2-stable_win64.exe`\n- `DOTNET_ROOT=C:\\jimuyun\\.dotnet`\n\nThe startup script also resolves dynamic or secret-backed variables including `PHASEA_CODEX_COMMAND`, `PHASEA_RIPGREP_DIR`, `PHASEA_ADMIN_TOKEN_HASH`, `PHASEA_TICKET_SIGNING_SECRET`, `PHASEA_WEB_PREVIEW_SIGNING_SECRET`, and optional `AICODEMIRROR_*` integration values. Document names and sources only; never commit real secret values.\n\n## Repo Map\n- `PhaseA.Platform/`: ASP.NET Core Web/API, browser UI, route services, security, metadata, workspaces, LLM integration, and readback.\n- `PhaseA.Platform.Tests/`: Phase service unit and integration tests.\n- `runtime/phase-a/`: stable startup, recovery, watchdog, and Caddy configuration.\n- `logs/phase-a-innernet/`: live metadata, hosted workspaces, runtime state, and evidence; protected runtime data, not source configuration.\n- `scripts/python/phase_a_*.py` and `scripts/python/phase_b_*.py`: Phase operations, smoke, drill, and recovery utilities.\n- `Game.Core/`, `Game.Godot/`, `Game.Core.Tests/`, and `Tests.Godot/`: hosted Godot prototype execution kernel and its tests.\n- `scripts/sc/` and other `scripts/python/` tools: internal execution and validation infrastructure; not automatically public Phase entrypoints.\n- `docs/architecture/phase-service/`, `docs/adr/`, and `docs/standards/`: Phase architecture, decisions, and standards.\n- `execution-plans/` and `decision-logs/`: durable scoped intent and decisions.\n- `logs/`: generated runtime, smoke, review, and evidence artifacts.\n\n## Main Phase Commands\n- One-shot local recovery: `powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1`\n- Watchdog: `powershell -ExecutionPolicy Bypass -File runtime/phase-a/watch-phasea.ps1`\n- Local operations check: `py -3 scripts/python/phase_a_ops_check.py`\n- Local account/auth smoke: `py -3 scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080`\n- Direct HTTP public smoke: `py -3 scripts/python/phase_a_public_smoke.py --base-url http://47.86.160.138:8080 --allow-http`\n- HTTPS closure smoke: `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080`\n- Platform tests: `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`\n\n## Evidence Locations\n- Runtime recovery and watchdog evidence: `logs/phase-a-innernet/runtime/`.\n- Live metadata DB: `logs/phase-a-innernet/data/phase-a-platform.sqlite3` (protected; do not edit manually).\n- Hosted workspaces and project-local route state: `logs/phase-a-innernet/workspaces/**` (protected).\n- Phase smoke, drill, and test evidence: write under `logs/` without rewriting historical failures.\n- Project-local route authority: `meta/**`, `routes/**`, route ledgers, acceptance evidence, diagnostics, and database-bound artifacts inside the hosted workspace.\n\n## Docs Index\n- `README.md`\n- `docs/architecture/phase-service/_index.md`\n- `docs/architecture/ADR_INDEX_PHASE.md`\n- `docs/standards/_index.md`\n- `docs/standards/phase-service.md`\n- `docs/standards/godot-engine-semantics.md`\n- `docs/standards/godot-ui-capability-contract.md`\n- `docs/standards/godot-ui-style-contract.md`\n- `docs/standards/godot-diagnostics-quality-gates.md`\n- `docs/reference/godot-official-examples-index.md`\n- `docs/PROJECT_DOCUMENTATION_INDEX.md`\n- `workflow.md` only when maintaining the repository-local formal delivery toolchain.\n- `workflow.example.md` only when maintaining template-derived game-repository onboarding.\n\n## Change Policy\n- Keep `AGENTS.md` Phase-service-first and concise.\n- Keep public and browser-consumed contracts backward-compatible by default.\n- Add recovery data as structured sidecars instead of rewriting historical evidence.\n- Put detailed guidance in the relevant architecture, standard, workflow, or operations document.\n- Put durable intent in `execution-plans/` and durable decisions in `decision-logs/`.\n- Put high-frequency generated evidence in `logs/`.\n",
+      "content": "# Repository Guide\n\nThis file is the Phase-service-first repository map. It routes agents to current product, architecture, standards, runtime, and recovery authority. Keep detailed procedures in their source documents instead of expanding this file into a general template manual.\n\n## Purpose\n- The root repository is the Ji Mu Yun Phase A/B cloud prototype platform, not a specific game project.\n- `AGENTS.md` is the concise agent routing and non-negotiable change-contract layer.\n- `README.md` is the product overview, phase status, stack summary, and startup entry.\n- `PhaseA.Platform/AGENTS.md` and `PhaseA.Platform/README.md` own the ASP.NET application runtime model and local code map.\n- `runtime/phase-a/AGENTS.md` and `runtime/phase-a/README.md` own host startup, watchdog, Caddy, configuration, and recovery details.\n- Game-specific identity, genre, route profile, and execution state belong to each hosted project workspace and metadata records, not to root-level placeholder fields.\n- `docs/architecture/phase-service/**`, `docs/architecture/ADR_INDEX_PHASE.md`, and `docs/standards/**` are the deep sources for Phase service decisions and conventions.\n\n## Context And Documentation Layers\n- Repository governance: root `AGENTS.md` and `README.md` serve long-term platform, Toolchain, Phase feature, and shared game-workflow maintenance.\n- Phase application and host operations: the two local documentation pairs above serve application and host runtime work without duplicating root-wide rules.\n- Hosted workflow runtime: new project workspaces receive project-facing entry documents from `PhaseA.Platform/Workspaces/HostedProjectTemplate/**`; project state, route contracts, accepted knowledge, and run evidence remain structured project/run data.\n- These responsibility layers do not replace ADR-0044's four dimensions. Knowledge selection still carries Domain, per-domain Visibility, Lifecycle Instance, and Enforcement Level.\n- Repository source, repository template, project instance, and run Artifact View never share snapshot, cache, current, or LKG authority.\n\n## Phase Service Scope\nTreat the following as in-scope for Phase service changes:\n- `PhaseA.Platform/**` and `PhaseA.Platform.Tests/**`.\n- `runtime/phase-a/**`, including startup, recovery, watchdog, and Caddy configuration.\n- `scripts/python/phase_a_*.py`, `scripts/python/phase_b_*.py`, and Phase-facing smoke or drill scripts.\n- `logs/phase-a-innernet/**` as runtime state, live metadata, hosted workspaces, and evidence.\n- Account isolation, admin/user auth, token hashing, audit exports, hosted workspace/artifact readback, and browser/API behavior.\n- Phase browser-consumed prototype routes, including project creation, GDD, prototype generation, iteration, repair, asset, package, preview, and route recovery state.\n- Shared LLM/Codex execution entrypoints used by Phase routes and scripts.\n- Godot runtime, UI capability, UI style, diagnostics, preview, package, and acceptance rules consumed by hosted routes.\n\n## Planned Frontend Boundary Hardening\n- `execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan.md` is a `paused` downstream plan. It starts only after `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/` is fully complete and the protected BH-HANDOFF succeeds.\n- Until that handoff, do not treat `/ui-v2`, Permit/Preflight, new browser session paths, Change Origin Gate, legacy freeze, or Phase platform SemVer as current repository capabilities. Current runtime commands and contracts in this file and `README.md` remain authoritative.\n- Plan-readiness can be checked with `py -3 execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/tools/validate_whole_directory.py`. A PASS means only that the plan is internally implementable; it cannot replace the repository-external protected BH-HANDOFF verifier and does not prove code completion.\n- Update this routing file in the same change that makes a planned rule operational: BH-SF2 for Platform/Hosted Codex routing and Preflight, BH-SF3 for mutation/acceptance recovery entrypoints, BH-RP1 for version projection, BH-REACT1/BH-REACT2 for `/ui-v2`, session and legacy-route behavior, and BH-RELEASE for final SemVer/release authority. Never document a future phase as active before its exit evidence exists.\n\n## Start Here\n1. Read `README.md` for current product status and startup.\n2. Read `PhaseA.Platform/AGENTS.md` and its local `README.md` before changing the application subtree.\n3. Read `runtime/phase-a/AGENTS.md` and its local `README.md` before changing host startup or recovery.\n4. Read `docs/architecture/phase-service/_index.md` before changing Phase service boundaries.\n5. Read `docs/architecture/ADR_INDEX_PHASE.md` before changing Phase service decisions.\n6. Read `docs/standards/_index.md` and `docs/standards/phase-service.md` before changing API, DB, errors, logs, security, tests, or status contracts.\n7. Read the relevant Godot standard before changing hosted Godot behavior:\n   - `docs/standards/godot-engine-semantics.md`\n   - `docs/standards/godot-ui-capability-contract.md`\n   - `docs/standards/godot-ui-style-contract.md`\n   - `docs/standards/godot-diagnostics-quality-gates.md`\n8. Read the relevant file in `execution-plans/` and `decision-logs/` when the change is plan-scoped or decision-scoped.\n\n## Change Routing\n- Platform API, browser behavior, DTOs, or readback:\n  - `PhaseA.Platform/AGENTS.md`\n  - `PhaseA.Platform/README.md`\n  - `docs/standards/phase-service.md`\n  - `docs/architecture/phase-service/system-overview.md`\n  - `PhaseA.Platform/Program.cs`\n  - `PhaseA.Platform/Browser/**`\n  - `PhaseA.Platform.Tests/Browser/**`\n- Auth, accounts, tokens, isolation, limits, or audit:\n  - `docs/architecture/phase-service/auth-and-accounts.md`\n  - `docs/adr/ADR-0034-phase-account-scoped-token-auth.md`\n  - `PhaseA.Platform/Security/**`\n  - `PhaseA.Platform/Data/**`\n- Metadata DB, migrations, restore, or persistence:\n  - `docs/architecture/phase-service/metadata-db.md`\n  - `docs/adr/ADR-0033-phase-metadata-sqlite-local-disk.md`\n  - `PhaseA.Platform/Data/**`\n- Hosted workspace, artifacts, packages, assets, or previews:\n  - `docs/architecture/phase-service/hosted-workspaces-and-artifacts.md`\n  - `PhaseA.Platform/Workspaces/**`\n  - `PhaseA.Platform/Readback/**`\n- Prototype, GDD, iteration, repair, UI closure, or route recovery:\n  - `docs/architecture/phase-service/prototype-routes-and-recovery.md`\n  - the relevant Godot standards under `docs/standards/`\n  - the GDD-to-module source documents under `docs/workflows/phase-a-gdd-to-module-*.md`\n  - `PhaseA.Platform/Runs/**`\n- Shared LLM/Codex execution:\n  - `docs/architecture/phase-service/llm-codex-execution.md`\n  - `docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md`\n  - the shared entrypoints listed below\n- Runtime, Caddy, watchdog, or public health:\n  - `runtime/phase-a/AGENTS.md`\n  - `runtime/phase-a/README.md`\n  - `docs/architecture/phase-service/runtime-caddy-and-recovery.md`\n  - `runtime/phase-a/**`\n  - the recovery order below\n- Tests, smoke, or evidence:\n  - `docs/standards/phase-service.md`\n  - `PhaseA.Platform.Tests/**`\n  - Phase-facing smoke and drill scripts under `scripts/python/`\n- Hosted Godot execution kernel, contracts, or engine-side tests:\n  - `docs/architecture/ADR_INDEX_GODOT.md`\n  - `docs/architecture/base/00-README.md`\n  - `docs/testing-framework.md`\n  - the relevant Godot standard under `docs/standards/`\n  - keep shared contracts in `Game.Core/Contracts/**` and keep them Godot-free\n\n## Repository Workflow Kernel Boundary\n- `workflow.md` defines the repository-local formal delivery workflow. It is not the default Phase browser/API path.\n- `workflow.example.md` is onboarding for a game repository copied from the original template. It is not onboarding for this root platform repository.\n- A standalone requirements Markdown file is a direct implementation input and must not create a VDD directory. Use `$vdd-execution-plan` only when the user explicitly requests creation or repair of a complete execution-plan directory.\n- Phase routes reuse selected repository scripts, validators, profiles, Godot assets, and route contracts as internal execution dependencies.\n- Do not route ordinary Phase service work into business-repository Taskmaster triplets, formal Chapter 3-7 orchestration, Chapter 4 overlay-generator commands, local Chapter 6 review recovery, or game-template release steps unless the task explicitly targets that internal toolchain.\n- Phase architecture overlays and ADRs must still be updated when a Phase boundary, threshold, contract, security posture, or release decision changes.\n- Prototype routes use their project-local contracts, route profiles, latest state, ledgers, and acceptance evidence. They must not infer authority from root-level game metadata.\n- `DELIVERY_PROFILE` is an internal hosted-workflow configuration with allowed values `playable-ea`, `fast-ship`, and `standard`; the platform default is `fast-ship`, and hosted Chapter 2 bootstrap consumes it. Detailed local formal-delivery behavior remains in `DELIVERY_PROFILE.md` and `workflow.md`.\n\n## Highest Encoding Rule\n- All Chinese text reads and writes must use Python with explicit UTF-8, for example `Path(path).read_text(encoding=\"utf-8\")` and `Path(path).write_text(text, encoding=\"utf-8\", newline=\"\\n\")`.\n- Do not use PowerShell, `Get-Content`, `Set-Content`, `Out-File`, `Add-Content`, `type`, `echo`, `copy con`, or other Windows-native text tools to read or write Chinese text.\n- If a command script must contain Chinese literals, write it as a Python file or use ASCII-only Python source with Unicode escapes, then write the target file as UTF-8.\n- This rule applies to `AGENTS.md`, `README.md`, `workflow.md`, `docs/**/*.md`, `.agents/skills/**/SKILL.md`, prototype records, and project-health documentation.\n- Code, tests, logs, and machine output remain English unless the file is explicitly user-facing documentation.\n\n## Core Rules\n- Communicate with the user in Chinese.\n- Default environment is Windows; use Windows-compatible commands and paths.\n- Keep code, scripts, tests, comments, and printed messages in English.\n- Do not use emoji.\n- Write logs and evidence under `logs/`.\n- Do not revert user changes unless explicitly requested.\n- Prefer small, deterministic, testable changes.\n- Code or test changes should cite at least one accepted ADR; if thresholds, contracts, security posture, or release policy change, update or supersede the ADR set.\n- Route architecture work in arc42 order: irreversible decisions -> cross-cutting rules -> runtime backbone -> feature slices.\n- Ask before high-risk actions and never disable tests to get green.\n\n## Phase Service Change Contract\n\n### Change Matrix\n| Change area | Must update | Required validation |\n| --- | --- | --- |\n| Platform API | Server handler/DTO, browser caller, auth boundary, and public behavior docs when behavior changes. | `PhaseA.Platform.Tests/**` plus relevant `phase_a_*` or `phase_b_*` smoke. |\n| Metadata DB or persistence | Migration or recovery path, persistence tests, restore/drill docs, and runtime notes when DB paths or ownership change. | DB/persistence test, restore drill, or smoke evidence under `logs/`. |\n| Auth, token, account isolation, audit | Token hashing path, admin/user boundary behavior, audit output, and CSV/export callers. | Unauthorized and authorized checks, preferably `scripts/python/phase_b_account_smoke.py`. |\n| Runtime startup or watchdog | `runtime/phase-a/start-phasea.ps1`, `ensure-phasea.ps1`, `watch-phasea.ps1`, and runtime docs. | Local `/healthz`, `scripts/python/phase_a_ops_check.py`, and runtime log evidence. |\n| Caddy or public proxy | `runtime/phase-a/Caddyfile`, public URL docs, and recovery notes. | Validate local PhaseA health first, then public `:8080/healthz`. |\n| Hosted workspace, artifacts, packages, previews | Workspace boundary, artifact readback, cleanup/recovery behavior, and browser caller. | Integration or smoke evidence under `logs/`. |\n| Phase prototype routes | Route recovery inputs, latest state, repair ledger behavior, acceptance evidence, and browser-safe output. | Route-specific smoke/acceptance evidence and no completion based only on assistant text. |\n| LLM/Codex route execution | Shared route engine, command factory, script backend, and caller tests. | `CodexHostedProcessCommandFactoryTests`, `LlmRouteEngineTests`, `scripts/sc/tests/test_llm_backend.py`, plus route-specific tests. |\n\n### Protected Phase Paths\nAsk before modifying:\n- Live metadata or runtime state under `logs/phase-a-innernet/data/**` and hosted workspaces under `logs/phase-a-innernet/workspaces/**`.\n- `runtime/phase-a/start-phasea.ps1`, `runtime/phase-a/ensure-phasea.ps1`, `runtime/phase-a/watch-phasea.ps1`, and `runtime/phase-a/Caddyfile`.\n- Auth, token hashing, account isolation, and audit code in `PhaseA.Platform/**`.\n- Shared LLM/Codex execution entrypoints: `PhaseA.Platform/Llm/LlmRouteEngine.cs`, `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`, and `scripts/sc/_llm_backend.py`.\n- Delivery/security profile behavior, public deployment URLs, bind addresses, secret source-of-truth, or Caddy listener behavior.\n- Generated logs, runtime evidence, and failure artifacts when the intent is to rewrite or delete history instead of adding sidecar evidence.\n\n### Definition of Done\nA Phase service change is not done until:\n- Local behavior is validated, or the validation gap and required follow-up evidence are recorded.\n- API, auth, DB, runtime, Caddy, prototype-route, or LLM execution changes include targeted tests or smoke evidence.\n- Evidence is written under `logs/` when a run, smoke, drill, or recovery action occurs.\n- Live secrets and token material are not committed to git-tracked docs, scripts, config, logs, or test fixtures.\n- Public proxy issues are debugged in order: local PhaseA health first, then Caddy/public health.\n- Failures are preserved as evidence; add new sidecar files instead of rewriting generated history.\n\n### Database and API Compatibility\n- Detailed Phase service API, DB, error, logging, security, testing, and status standards live in `docs/standards/phase-service.md`; the standards index is `docs/standards/_index.md`.\n- Do not manually mutate the live Phase A metadata DB unless the user explicitly authorizes it.\n- Schema changes must be backward-compatible by default, include a migration or recovery path, and preserve existing data unless an approved decision log says otherwise.\n- Public and browser-consumed APIs must remain backward-compatible by default. Do not remove or rename routes, fields, status codes, auth behavior, or artifact paths without explicit approval and a documented compatibility plan.\n\n### Prototype Route Recovery\nFor file-changing hosted game-project routes, consume project-level recovery sources in authority order before editing:\n1. Parsed game-type route profile and selected route skill prompt block.\n2. `meta/project-execution-guide.md`.\n3. `routes/prototype-contract/latest.json`.\n4. Current route latest state, such as `meta/routes/prototype/latest.json`, `meta/routes/iteration-plan/latest.json`, or `meta/routes/execute-next-goal/latest.json`.\n5. Current goal, step, repair step, or session state.\n6. Repair ledger and failing acceptance or Godot diagnostic evidence for repair routes.\n7. Latest live platform acceptance blocker, which wins over old assistant summaries, route state, and repair ledger memory.\n\nMissing required recovery sources must fail closed. Route state and repair ledger are continuity memory, not current acceptance authority. Do not mark steps complete based only on assistant text.\n\n## LLM Engine And Invocation Protocol\n- New Phase routes, services, scripts, and workflow helpers must use the shared LLM/Codex entrypoints instead of constructing provider calls or `codex exec` commands locally.\n- C# structured/read-only LLM calls must use `PhaseA.Platform/Llm/LlmRouteEngine.cs` through `ILlmRouteEngine`.\n- C# executable Codex workflows must use `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`.\n- Python LLM/Codex scripts must use `scripts/sc/_llm_backend.py::run_llm_exec` or a thin wrapper that delegates to it.\n- Prompt transport is stdin-first: use `codex exec ... -` with UTF-8 stdin, never append large prompts as command-line arguments.\n- Pure analysis or JSON-only decisions remain read-only and schema/JSON parsed. File-changing workflows require an explicit executable route, `workspace-write`, and acceptance/smoke validation.\n- If the shared entrypoint cannot express a required model, reasoning, sandbox, output, billing, credential, or retry behavior, extend the shared entrypoint and its tests first.\n- Required regression coverage: `PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs`, `PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs`, `scripts/sc/tests/test_llm_backend.py`, and route-specific tests.\n\n## Phase Runtime Recovery Order\n1. Check `http://127.0.0.1:18080/healthz`.\n2. If local app health is unhealthy, run `runtime/phase-a/ensure-phasea.ps1`.\n3. If local app health is healthy but public `:8080` health is unhealthy, inspect or restart Caddy after the app is healthy.\n4. Do not use ordinary `dotnet run` for the live server. Use `runtime/phase-a/start-phasea.ps1`.\n5. Do not manually edit the live metadata DB.\n6. Record recovery evidence under `logs/phase-a-innernet/runtime/`.\n\n## Host Runtime Boundary\n- Stable local app bind: `http://127.0.0.1:18080`.\n- Canonical live startup and recovery remain `runtime/phase-a/start-phasea.ps1` and `runtime/phase-a/ensure-phasea.ps1`.\n- `runtime/phase-a/README.md` owns stable endpoints, non-secret recovery defaults, Caddy behavior, build location, watchdog paths, and smoke commands.\n- `runtime/phase-a/AGENTS.md` owns the protected host-runtime change contract.\n- Root documentation retains only cross-tree recovery order and safety rules; do not duplicate the runtime environment manifest here.\n\n## Repo Map\n- `PhaseA.Platform/`: ASP.NET Core Web/API, browser UI, route services, security, metadata, workspaces, LLM integration, and readback; see its local `AGENTS.md` and `README.md`.\n- `PhaseA.Platform.Tests/`: Phase service unit and integration tests.\n- `runtime/phase-a/`: stable startup, recovery, watchdog, and Caddy configuration; see its local `AGENTS.md` and `README.md`.\n- `PhaseA.Platform/Workspaces/HostedProjectTemplate/`: source templates for new Hosted project entry documents, not a live project context or instruction authority.\n- `logs/phase-a-innernet/`: live metadata, hosted workspaces, runtime state, and evidence; protected runtime data, not source configuration.\n- `scripts/python/phase_a_*.py` and `scripts/python/phase_b_*.py`: Phase operations, smoke, drill, and recovery utilities.\n- `Game.Core/`, `Game.Godot/`, `Game.Core.Tests/`, and `Tests.Godot/`: hosted Godot prototype execution kernel and its tests.\n- `scripts/sc/` and other `scripts/python/` tools: internal execution and validation infrastructure; not automatically public Phase entrypoints.\n- `docs/architecture/phase-service/`, `docs/adr/`, and `docs/standards/`: Phase architecture, decisions, and standards.\n- `execution-plans/` and `decision-logs/`: durable scoped intent and decisions.\n- `logs/`: generated runtime, smoke, review, and evidence artifacts.\n\n## Main Phase Commands\n- One-shot local recovery: `powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1`\n- Watchdog: `powershell -ExecutionPolicy Bypass -File runtime/phase-a/watch-phasea.ps1`\n- Local operations check: `py -3 scripts/python/phase_a_ops_check.py`\n- Local account/auth smoke: `py -3 scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080`\n- Direct HTTP public smoke: `py -3 scripts/python/phase_a_public_smoke.py --base-url http://47.86.160.138:8080 --allow-http`\n- HTTPS closure smoke: `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080`\n- Platform tests: `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`\n\n## Evidence Locations\n- Runtime recovery and watchdog evidence: `logs/phase-a-innernet/runtime/`.\n- Live metadata DB: `logs/phase-a-innernet/data/phase-a-platform.sqlite3` (protected; do not edit manually).\n- Hosted workspaces and project-local route state: `logs/phase-a-innernet/workspaces/**` (protected).\n- Phase smoke, drill, and test evidence: write under `logs/` without rewriting historical failures.\n- Project-local route authority: `meta/**`, `routes/**`, route ledgers, acceptance evidence, diagnostics, and database-bound artifacts inside the hosted workspace.\n\n## Docs Index\n- `README.md`\n- `PhaseA.Platform/AGENTS.md`\n- `PhaseA.Platform/README.md`\n- `runtime/phase-a/AGENTS.md`\n- `runtime/phase-a/README.md`\n- `docs/architecture/phase-service/_index.md`\n- `docs/architecture/ADR_INDEX_PHASE.md`\n- `docs/standards/_index.md`\n- `docs/standards/phase-service.md`\n- `docs/standards/godot-engine-semantics.md`\n- `docs/standards/godot-ui-capability-contract.md`\n- `docs/standards/godot-ui-style-contract.md`\n- `docs/standards/godot-diagnostics-quality-gates.md`\n- `docs/reference/godot-official-examples-index.md`\n- `docs/PROJECT_DOCUMENTATION_INDEX.md`\n- `workflow.md` only when maintaining the repository-local formal delivery toolchain.\n- `workflow.example.md` only when maintaining template-derived game-repository onboarding.\n\n## Change Policy\n- Keep `AGENTS.md` Phase-service-first and concise.\n- Keep application and host-operation details in their local documentation pairs.\n- Keep Hosted project entry templates Workspace-focused; structured route state and signed run context remain separate runtime authority.\n- Keep public and browser-consumed contracts backward-compatible by default.\n- Add recovery data as structured sidecars instead of rewriting historical evidence.\n- Put detailed guidance in the relevant architecture, standard, workflow, or operations document.\n- Put durable intent in `execution-plans/` and durable decisions in `decision-logs/`.\n- Put high-frequency generated evidence in `logs/`.\n",
       "enforcement_level": "E1",
       "entry_id": "repository-rules",
       "instruction_authority": false,
@@ -7727,7 +7781,7 @@
       "semantic_eligible": true,
       "source_path": "AGENTS.md",
       "source_role": "repository-authority",
-      "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
       "status": "active",
       "title": "Repository Guide",
       "visibility": {
@@ -7742,98 +7796,93 @@
       "anchors": [
         {
           "anchor": "Ji Mu Yun（积木云）Phase A/B Cloud Prototype Platform",
-          "line_end": 241,
+          "line_end": 192,
           "line_start": 1
         },
         {
           "anchor": "一眼看懂",
-          "line_end": 21,
+          "line_end": 20,
           "line_start": 7
         },
         {
+          "anchor": "文档与运行上下文分层",
+          "line_end": 33,
+          "line_start": 21
+        },
+        {
           "anchor": "当前阶段结论",
-          "line_end": 51,
-          "line_start": 22
+          "line_end": 63,
+          "line_start": 34
         },
         {
           "anchor": "前台边界加固计划状态",
-          "line_end": 51,
-          "line_start": 28
+          "line_end": 63,
+          "line_start": 40
         },
         {
           "anchor": "系统分层",
-          "line_end": 72,
-          "line_start": 52
+          "line_end": 85,
+          "line_start": 64
         },
         {
           "anchor": "1. 托管原型执行内核",
-          "line_end": 61,
-          "line_start": 54
+          "line_end": 73,
+          "line_start": 66
         },
         {
           "anchor": "2. Phase A 云端平台层",
-          "line_end": 72,
-          "line_start": 62
+          "line_end": 85,
+          "line_start": 74
         },
         {
           "anchor": "Phase 服务与仓库执行内核边界",
-          "line_end": 99,
-          "line_start": 73
+          "line_end": 112,
+          "line_start": 86
         },
         {
           "anchor": "3. Phase B 账号和运营层",
-          "line_end": 99,
-          "line_start": 80
+          "line_end": 112,
+          "line_start": 93
         },
         {
           "anchor": "运行入口",
-          "line_end": 160,
-          "line_start": 100
-        },
-        {
-          "anchor": "快速启动 Phase A",
-          "line_end": 121,
-          "line_start": 102
-        },
-        {
-          "anchor": "地址和配置",
-          "line_end": 160,
-          "line_start": 122
+          "line_end": 137,
+          "line_start": 113
         },
         {
           "anchor": "托管项目路由恢复规则",
-          "line_end": 181,
-          "line_start": 161
+          "line_end": 145,
+          "line_start": 138
         },
         {
           "anchor": "AI/LLM 调用协议",
-          "line_end": 205,
-          "line_start": 182
+          "line_end": 152,
+          "line_start": 146
         },
         {
           "anchor": "关键文档",
-          "line_end": 232,
-          "line_start": 206
+          "line_end": 183,
+          "line_start": 153
         },
         {
           "anchor": "云端平台",
-          "line_end": 226,
-          "line_start": 208
+          "line_end": 177,
+          "line_start": 155
         },
         {
           "anchor": "仓库和 Agent 导航",
-          "line_end": 232,
-          "line_start": 227
+          "line_end": 183,
+          "line_start": 178
         },
         {
           "anchor": "贡献者编码规则",
-          "line_end": 241,
-          "line_start": 233
+          "line_end": 192,
+          "line_start": 184
         },
         {
           "anchor": "Highest Encoding Rule",
-          "line_end": 241,
-          "line_start": 235
+          "line_end": 192,
+          "line_start": 186
         }
       ],
       "authority_class": "derived_cache",
@@ -7842,7 +7891,7 @@
         "refactor-acceptance",
         "vdd"
       ],
-      "content": "# Ji Mu Yun（积木云）Phase A/B Cloud Prototype Platform\n\n本仓已经从单纯的 Godot Windows-only C# 游戏模板，演进为一个 Windows 单机云端 Godot 原型生成与托管平台。\n\n它的执行内核仍然是 Godot 4.5 + C#/.NET 8 游戏模板、仓库原生脚本、质量门禁、恢复 sidecar 和文档体系；云端层通过 `PhaseA.Platform` 把这些能力包装成浏览器可用的项目创建、原型生成、迭代、修复、GDD、资源、打包、聊天、审计和运行证据查看平台。\n\n## 一眼看懂\n\n| 问题 | 答案 |\n| --- | --- |\n| 产品解决什么问题 | 把 Godot 原型创建、迭代、修复、打包、审计和运行证据查看，从本地脚本流程包装成浏览器/API 可用的平台。 |\n| 用户是谁 | 平台管理员、原型创建者、AI/自动化 agent、以及维护 Phase A/B 平台和托管执行内核的开发者。 |\n| 核心模块 | Phase A 云端平台层、Phase B 账号和运营层、托管 Godot 原型执行内核、运行时恢复和证据体系。 |\n| 当前阶段 | Phase A 已成型；Phase B 账号隔离 / 运营审计切片已完成；完整生产多租户隔离仍在后续 Phase C 或预生产加固范围。 |\n| 主要技术栈 | Godot 4.5 .NET/mono、C#/.NET 8、ASP.NET Core 8、SQLite、Caddy、Python、PowerShell、xUnit、GdUnit4。 |\n| 本地入口 | `http://127.0.0.1:18080` |\n| 公网反代入口 | `http://47.86.160.138:8080` |\n| 快速启动 / 恢复 | `powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1` |\n| 继续了解 | 先读本 README，再按 `AGENTS.md`、`docs/architecture/phase-service/_index.md`、`docs/PROJECT_DOCUMENTATION_INDEX.md` 进入细节。 |\n\n\n## 当前阶段结论\n\n- Phase A 已成型：已具备单节点托管 runner、ASP.NET Core Web/API、SQLite 元数据、workspace 管理、项目创建、原型通道、浏览器 UI、Caddy 反代、运行证据和恢复链路。\n- Phase B 账号隔离 / 运营审计切片已完成（当前 prototype-hardening scope）：已具备账号级访问、管理员创建用户、禁用/启用用户、轮换 token、应用层项目隔离、LLM 绑定、LLM 用量统计、管理员审计、CSV 导出和 Phase B smoke 验证。\n- 仍未视为路线图中的完整 Phase B / 生产多租户隔离：独立 Windows runner 账户、项目级 NTFS ACL、完整身份系统、用户删除、浏览器 E2E 和更强 runner 隔离仍属于后续 Phase C 或预生产安全加固范围。\n\n### 前台边界加固计划状态\n\n[`2026-07-11 Phase 前台边界加固计划`](execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan.md) 当前为 `paused`，严格等待 [`2026-07-07 GDD-to-module 重构`](execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md) 全部完成并通过受保护的 BH-HANDOFF 后再实施。当前仓库尚未启用 `/ui-v2`、Permit/Preflight、Change Origin Gate、新 browser session path、legacy freeze 或正式 Phase 平台 SemVer；本 README 中现有启动命令、浏览器入口和运行时合同仍是当前事实。\n\n该计划目录的本地校验器只检查 Markdown、schema、finding 和覆盖关系是否足以开始实施，不代表代码已经完成，也不能替代仓库外受保护的 BH-HANDOFF verifier。后续文档必须与代码按阶段同批更新：BH-SF2 同步 AI/Codex/Preflight 协议，BH-SF3 同步 mutation/acceptance 恢复入口，BH-RP1 同步版本投影，BH-REACT1/BH-REACT2 同步 `/ui-v2`、session 与 legacy route 状态，BH-RELEASE 同步 SemVer、发布和最终当前阶段结论。\n\n最新阶段状态来源：当前完成状态以 `docs/workflows/phase-b-account-isolation.md` 的 `Latest Completion Pass` 为准；`docs/workflows/cloud-platform-evolution-plan.cn.md` 是路线图，不代表所有目标都已落地。\n`docs/workflows/phase-b-agf-godogen-absorption.md` 记录 Phase B 对 AGF/GodoGen 能力吸收的阶段范围和后续边界。\n\n- GDD-to-module implementation phases: `docs/workflows/phase-a-gdd-to-module-implementation-phases.md`\n- GDD-to-module risks, DoD, and open questions: `docs/workflows/phase-a-gdd-to-module-risk-dod-open-questions.md`\n- GDD-to-module recommended first slice: `docs/workflows/phase-a-gdd-to-module-first-slice.md`\n- GDD-to-module global review standard: `docs/workflows/phase-a-gdd-to-module-global-review-standard.md`\n- GDD-to-module split-added requirements: `docs/workflows/phase-a-gdd-to-module-split-added-requirements.md`\n- GDD-to-module original split audit: `docs/workflows/phase-a-gdd-to-module-original-split-audit.md`\n- GDD-to-module source coverage map: `docs/workflows/phase-a-gdd-to-module-source-coverage-map.md`\n\n- `docs/workflows/phase-b-account-isolation.md`\n- `docs/workflows/phase-b-agf-godogen-absorption.md`\n- `docs/workflows/cloud-platform-evolution-plan.cn.md`\n- `docs/workflows/phase-a-security-hardening-plan.cn.md`\n- `docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md`\n- `execution-plans/2026-05-11-phase-a-prototype-lane-implementation-backlog.md`\n\n## 系统分层\n\n### 1. 托管原型执行内核\n\n- `Game.Core/`：纯 C# 领域逻辑和契约相邻代码。\n- `Game.Godot/`：Godot 运行时项目、场景、Autoload、适配层和原型资源。\n- `Game.Core.Tests/`：xUnit 测试。\n- `Tests.Godot/`：GdUnit4、场景、适配层、安全和集成测试。\n- `docs/architecture/**`、`docs/adr/**`、`docs/testing-framework.md`：架构、ADR、测试和交付规则。\n\n### 2. Phase A 云端平台层\n\n- `PhaseA.Platform/`：ASP.NET Core 8 Web/API 服务。\n- `PhaseA.Platform.Tests/`：平台单元和集成测试。\n- `runtime/phase-a/`：稳定启动、恢复、watchdog 和 Caddy 配置。\n- `logs/phase-a-innernet/`：本地运行时数据库、workspace、watchdog 和 runtime 证据；该目录是运行时生成证据，不是源码或稳定配置目录。\n- `scripts/python/phase_a_*.py`：Phase A ops、runtime、public、restore、prototype E2E 和 token drill 脚本。\n- GDD 创建流程先收集用户策划表单，再生成并让用户确认场景路由草案，最后把两份输入一起交给 GDD 路由生成大纲。\n\nPhase A 的原则是：平台负责 hosting、workspace、runner、artifact readback、browser/API 和恢复；仓库脚本继续拥有 workflow decision authority。\n\n## Phase 服务与仓库执行内核边界\n\n- `workflow.md` 描述仓库本地的正式交付流程，不是 Phase 浏览器/API 入口。\n- `workflow.example.md` 面向从原模板复制出的游戏业务仓，不适用于根平台仓。\n- Phase 路由只把其中选定的脚本、验证器、profile、Godot 资产和 route contract 作为内部执行依赖。\n- Taskmaster triplet、正式 Chapter 3-7 编排、本地 Chapter 6 review recovery、模板 feature flag 和游戏模板发布不是 Phase 默认产品路径。\n\n### 3. Phase B 账号和运营层\n\nPhase B B1/B2 把单管理员原型平台推进为账号作用域平台：\n\n- Bearer token 认证支持 host admin token 和数据库用户 token。\n- 用户 token 只返回一次，数据库中只保存 hash。\n- 管理员可创建用户、禁用/启用用户、轮换用户 access token。\n- 项目、run、artifact、package、asset、chat、workflow readback 按当前账号收敛。\n- 用户可配置自己的 LLM gateway binding，并查看账号级 LLM usage。\n- 管理员可查看跨账号 LLM usage、LLM run audit、账号操作审计，并导出 CSV。\n- Phase B smoke 脚本验证未授权拒绝、管理员授权、用户边界和审计输出不泄露 token material。\n\nPhase B 当前延期项：\n\n- 用户删除。\n- 完整 LLM audit export 的更细过滤和分页增强。\n- 用户名/密码登录、密码重置、OAuth、OIDC、自助注册。\n- 管理面板自动化浏览器 E2E。\n- OS 级 Windows runner 账户和 NTFS ACL 隔离。\n\n## 运行入口\n\n### 快速启动 Phase A\n\n优先使用一键恢复脚本。它会先检查 `http://127.0.0.1:18080/healthz`，必要时调用 `runtime/phase-a/start-phasea.ps1` 启动 Phase A 服务，并把恢复证据写入 `logs/phase-a-innernet/runtime/`。\n\n```powershell\npowershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1\n```\n\n长期守护使用 watchdog；它会每 30 秒调用 `ensure-phasea.ps1`：\n\n```powershell\npowershell -ExecutionPolicy Bypass -File runtime/phase-a/watch-phasea.ps1\n```\n\nCaddy 的稳定配置文件是 `runtime/phase-a/Caddyfile`。如果宿主未把 Caddy 作为服务常驻，可用同一配置启动或重启 Caddy；`ensure-phasea.ps1` 的 public health 检查会反映 `http://47.86.160.138:8080/healthz` 是否已通过反代恢复。\n\n```powershell\ncaddy run --config runtime/phase-a/Caddyfile\n```\n\n### 地址和配置\n\n本地 Phase A 服务稳定绑定：\n\n- `http://127.0.0.1:18080`\n\n公网反代入口：\n\n- `http://47.86.160.138:8080`\n\n当前 `runtime/phase-a/Caddyfile` 监听 `http://:8080`；`runtime/phase-a/start-phasea.ps1` 中的 `PUBLIC_BASE_URL=https://47.86.160.138:8080` 保留为平台公共基址配置口径，与当前 Caddy 直连 HTTP 入口并存，后续若启用证书或上游 HTTPS 终止再统一。\n\n稳定运行配置：\n\n- `runtime/phase-a/start-phasea.ps1`\n- `runtime/phase-a/ensure-phasea.ps1`\n- `runtime/phase-a/watch-phasea.ps1`\n- `runtime/phase-a/Caddyfile`\n\n重要规则：\n\n- live server 不要用普通 `dotnet run` 写入仓库默认 `obj/bin`。\n- live server 使用 `runtime/phase-a/start-phasea.ps1`。\n- 启动脚本把 build output 放到仓库外的稳定目录。\n- `PHASEA_ADMIN_TOKEN_HASH` 必须来自 host secret store 或服务环境，不得写入 git 跟踪文件。\n- `DELIVERY_PROFILE` 默认为 `fast-ship`，可选 `playable-ea`、`fast-ship` 或 `standard`；它是 hosted workflow 和 Chapter 2 bootstrap 的内部配置，不是 Phase 用户操作流程。详见 `DELIVERY_PROFILE.md`。\n\n常用检查：\n\n```powershell\npy -3 scripts/python/phase_a_ops_check.py\npy -3 scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080\npy -3 scripts/python/phase_b_account_smoke.py --base-url http://47.86.160.138:8080\n```\n\n`phase_a_runtime_smoke.py` 是本地临时 smoke，会用临时端口和临时 workspace 启动测试服务；它不是 live server 启动或恢复入口。\n\n带管理员 token 的 Phase B 授权 smoke 应通过环境变量或命令行传入 token；不要把真实 token 写入日志、README 或 docs。\n\n## 托管项目路由恢复规则\n\nPhase A 前端触发的 hosted game-project route 必须先读项目级恢复源，而不是把 `AGENTS.md` 当作普通项目记忆。\n\n可修改 hosted game-project 文件的 route，至少需要按权威顺序消费：\n\n1. 已解析的 game-type route profile 和选中的 route skill prompt block。\n2. `meta/project-execution-guide.md`。\n3. `routes/prototype-contract/latest.json`。\n4. 当前 route 的 latest state，例如 `meta/routes/prototype/latest.json`、`meta/routes/iteration-plan/latest.json`、`meta/routes/execute-next-goal/latest.json`。\n5. 当前 goal、step、repair step 或 session state。\n6. repair route 还必须读取 repair ledger、失败 acceptance 或 Godot diagnostic evidence。\n7. 最新 live platform acceptance blocker 优先于旧 assistant summary、route state 和 repair ledger memory。\n\n硬规则：\n\n- 缺少必需恢复源时 fail closed，不假装恢复成功。\n- route state 和 repair ledger 是连续性记忆，不是当前验收权威。\n- 不允许只凭 assistant 文本标记 step complete。\n- 新 route 在接入前必须声明 recovery inputs、authority order、missing-source behavior 和 browser-safe output rules。\n\n## AI/LLM 调用协议\n\n新 Phase A route、service、script 和 workflow helper 必须使用共享入口：\n\n- C# structured/read-only LLM：`PhaseA.Platform/Llm/LlmRouteEngine.cs` via `ILlmRouteEngine`。\n- C# executable Codex workflow：`PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`。\n- Python LLM/Codex script：`scripts/sc/_llm_backend.py::run_llm_exec`。\n\n协议规则：\n\n- 不要在新 route 或 script 中手写 raw `codex exec` subprocess。\n- prompt 传输使用 stdin：`codex exec ... -`，不要把大 prompt 拼到命令行参数。\n- 分析或 JSON-only 决策保持 read-only。\n- 改文件的流程必须走明确 executable route、`workspace-write` 和现有 acceptance/smoke validation。\n- 如果共享入口缺少 model、reasoning、sandbox、output、billing、credential 或 retry 选项，先扩展共享入口及其测试。\n\n必需回归覆盖：\n\n- `PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs`\n- `PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs`\n- `scripts/sc/tests/test_llm_backend.py`\n- 调用方自己的 route-specific tests\n\n\n## 关键文档\n\n### 云端平台\n\n- Phase service architecture rationale: `docs/architecture/phase-service/_index.md`\n- Phase service ADR index: `docs/architecture/ADR_INDEX_PHASE.md`\n- Standards index: `docs/standards/_index.md`\n- Phase service standards: `docs/standards/phase-service.md`\n- Godot engine semantics standard: `docs/standards/godot-engine-semantics.md`\n- Godot UI capability contract: `docs/standards/godot-ui-capability-contract.md`\n- Godot UI style contract: `docs/standards/godot-ui-style-contract.md`\n- Godot diagnostics and quality gates: `docs/standards/godot-diagnostics-quality-gates.md`\n- Godot official examples index: `docs/reference/godot-official-examples-index.md`\n- `docs/workflows/phase-b-account-isolation.md`\n- `docs/workflows/phase-b-agf-godogen-absorption.md`\n- `docs/workflows/cloud-platform-evolution-plan.cn.md`\n- `docs/workflows/cloud-user-telemetry-and-feedback-plan.cn.md`\n- `docs/workflows/phase-a-security-hardening-plan.cn.md`\n- `docs/workflows/phase-a-caddy-deployment.md`\n- `docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/_index.md`\n\n### 仓库和 Agent 导航\n\n- `AGENTS.md`\n- `docs/PROJECT_DOCUMENTATION_INDEX.md`\n\n\n## 贡献者编码规则\n\n### Highest Encoding Rule\n\n- All Chinese text reads and writes must use Python with explicit UTF-8, for example `Path(path).read_text(encoding=\"utf-8\")` and `Path(path).write_text(text, encoding=\"utf-8\", newline=\"\\n\")`.\n- Do not use PowerShell, `Get-Content`, `Set-Content`, `Out-File`, `Add-Content`, `type`, `echo`, `copy con`, or other Windows-native text tools to read or write Chinese text.\n- If a command script must contain Chinese literals, write it as a Python file or use ASCII-only Python source with Unicode escapes, then write the target file as UTF-8.\n- This rule applies to `AGENTS.md`, `README.md`, `workflow.md`, `docs/**/*.md`, `.agents/skills/**/SKILL.md`, prototype records, and project-health documentation.\n- Code, tests, logs, and machine output remain English unless the file is explicitly user-facing documentation.\n",
+      "content": "# Ji Mu Yun（积木云）Phase A/B Cloud Prototype Platform\n\n本仓已经从单纯的 Godot Windows-only C# 游戏模板，演进为一个 Windows 单机云端 Godot 原型生成与托管平台。\n\n它的执行内核仍然是 Godot 4.5 + C#/.NET 8 游戏模板、仓库原生脚本、质量门禁、恢复 sidecar 和文档体系；云端层通过 `PhaseA.Platform` 把这些能力包装成浏览器可用的项目创建、原型生成、迭代、修复、GDD、资源、打包、聊天、审计和运行证据查看平台。\n\n## 一眼看懂\n\n| 问题 | 答案 |\n| --- | --- |\n| 产品解决什么问题 | 把 Godot 原型创建、迭代、修复、打包、审计和运行证据查看，从本地脚本流程包装成浏览器/API 可用的平台。 |\n| 用户是谁 | 平台管理员、原型创建者、AI/自动化 agent、以及维护 Phase A/B 平台和托管执行内核的开发者。 |\n| 核心模块 | Phase A 云端平台层、Phase B 账号和运营层、托管 Godot 原型执行内核、运行时恢复和证据体系。 |\n| 当前阶段 | Phase A 已成型；Phase B 账号隔离 / 运营审计切片已完成；完整生产多租户隔离仍在后续 Phase C 或预生产加固范围。 |\n| 主要技术栈 | Godot 4.5 .NET/mono、C#/.NET 8、ASP.NET Core 8、SQLite、Caddy、Python、PowerShell、xUnit、GdUnit4。 |\n| 本地入口 | `http://127.0.0.1:18080` |\n| 公网反代入口 | `http://47.86.160.138:8080` |\n| 快速启动 / 恢复 | `powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1` |\n| 继续了解 | 先读本 README，再按 `AGENTS.md`、`docs/architecture/phase-service/_index.md`、`docs/PROJECT_DOCUMENTATION_INDEX.md` 进入细节。 |\n\n## 文档与运行上下文分层\n\n本仓采用三个责任面，但知识运行时仍按 ADR-0044 的 Domain、Visibility、Lifecycle Instance 和 Enforcement Level 四个维度进行选择与隔离。\n\n| 责任面 | 入口 | 服务对象 |\n| --- | --- | --- |\n| 根仓治理 | `AGENTS.md`、本 README | 平台、工具链、Phase 功能和共享游戏工作流的长期维护 |\n| Phase 应用与宿主运维 | `PhaseA.Platform/AGENTS.md`、`PhaseA.Platform/README.md`、`runtime/phase-a/AGENTS.md`、`runtime/phase-a/README.md` | ASP.NET 应用开发，以及启动、Caddy、watchdog 和恢复 |\n| Hosted 用户工作流 | `PhaseA.Platform/Workspaces/HostedProjectTemplate/**` 生成的项目入口，加项目 `meta/**`、`routes/**` 和运行证据 | 前台项目创建、GDD、原型、迭代和修复 |\n\n根文档不是 Hosted 游戏项目说明。新 workspace 使用专用项目模板；项目级入口只负责导航，当前 route 状态、验收、知识选择和签名运行上下文仍以结构化记录为准。\n\n\n## 当前阶段结论\n\n- Phase A 已成型：已具备单节点托管 runner、ASP.NET Core Web/API、SQLite 元数据、workspace 管理、项目创建、原型通道、浏览器 UI、Caddy 反代、运行证据和恢复链路。\n- Phase B 账号隔离 / 运营审计切片已完成（当前 prototype-hardening scope）：已具备账号级访问、管理员创建用户、禁用/启用用户、轮换 token、应用层项目隔离、LLM 绑定、LLM 用量统计、管理员审计、CSV 导出和 Phase B smoke 验证。\n- 仍未视为路线图中的完整 Phase B / 生产多租户隔离：独立 Windows runner 账户、项目级 NTFS ACL、完整身份系统、用户删除、浏览器 E2E 和更强 runner 隔离仍属于后续 Phase C 或预生产安全加固范围。\n\n### 前台边界加固计划状态\n\n[`2026-07-11 Phase 前台边界加固计划`](execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan.md) 当前为 `paused`，严格等待 [`2026-07-07 GDD-to-module 重构`](execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md) 全部完成并通过受保护的 BH-HANDOFF 后再实施。当前仓库尚未启用 `/ui-v2`、Permit/Preflight、Change Origin Gate、新 browser session path、legacy freeze 或正式 Phase 平台 SemVer；本 README 中现有启动命令、浏览器入口和运行时合同仍是当前事实。\n\n该计划目录的本地校验器只检查 Markdown、schema、finding 和覆盖关系是否足以开始实施，不代表代码已经完成，也不能替代仓库外受保护的 BH-HANDOFF verifier。后续文档必须与代码按阶段同批更新：BH-SF2 同步 AI/Codex/Preflight 协议，BH-SF3 同步 mutation/acceptance 恢复入口，BH-RP1 同步版本投影，BH-REACT1/BH-REACT2 同步 `/ui-v2`、session 与 legacy route 状态，BH-RELEASE 同步 SemVer、发布和最终当前阶段结论。\n\n最新阶段状态来源：当前完成状态以 `docs/workflows/phase-b-account-isolation.md` 的 `Latest Completion Pass` 为准；`docs/workflows/cloud-platform-evolution-plan.cn.md` 是路线图，不代表所有目标都已落地。\n`docs/workflows/phase-b-agf-godogen-absorption.md` 记录 Phase B 对 AGF/GodoGen 能力吸收的阶段范围和后续边界。\n\n- GDD-to-module implementation phases: `docs/workflows/phase-a-gdd-to-module-implementation-phases.md`\n- GDD-to-module risks, DoD, and open questions: `docs/workflows/phase-a-gdd-to-module-risk-dod-open-questions.md`\n- GDD-to-module recommended first slice: `docs/workflows/phase-a-gdd-to-module-first-slice.md`\n- GDD-to-module global review standard: `docs/workflows/phase-a-gdd-to-module-global-review-standard.md`\n- GDD-to-module split-added requirements: `docs/workflows/phase-a-gdd-to-module-split-added-requirements.md`\n- GDD-to-module original split audit: `docs/workflows/phase-a-gdd-to-module-original-split-audit.md`\n- GDD-to-module source coverage map: `docs/workflows/phase-a-gdd-to-module-source-coverage-map.md`\n\n- `docs/workflows/phase-b-account-isolation.md`\n- `docs/workflows/phase-b-agf-godogen-absorption.md`\n- `docs/workflows/cloud-platform-evolution-plan.cn.md`\n- `docs/workflows/phase-a-security-hardening-plan.cn.md`\n- `docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md`\n- `execution-plans/2026-05-11-phase-a-prototype-lane-implementation-backlog.md`\n\n## 系统分层\n\n### 1. 托管原型执行内核\n\n- `Game.Core/`：纯 C# 领域逻辑和契约相邻代码。\n- `Game.Godot/`：Godot 运行时项目、场景、Autoload、适配层和原型资源。\n- `Game.Core.Tests/`：xUnit 测试。\n- `Tests.Godot/`：GdUnit4、场景、适配层、安全和集成测试。\n- `docs/architecture/**`、`docs/adr/**`、`docs/testing-framework.md`：架构、ADR、测试和交付规则。\n\n### 2. Phase A 云端平台层\n\n- `PhaseA.Platform/`：ASP.NET Core 8 Web/API 服务；应用结构和代码边界见 `PhaseA.Platform/README.md` 与 `PhaseA.Platform/AGENTS.md`。\n- `PhaseA.Platform.Tests/`：平台单元和集成测试。\n- `runtime/phase-a/`：稳定启动、恢复、watchdog 和 Caddy 配置；宿主运行说明见该目录的 `README.md` 与 `AGENTS.md`。\n- `logs/phase-a-innernet/`：本地运行时数据库、workspace、watchdog 和 runtime 证据；该目录是运行时生成证据，不是源码或稳定配置目录。\n- `scripts/python/phase_a_*.py`：Phase A ops、runtime、public、restore、prototype E2E 和 token drill 脚本。\n- `PhaseA.Platform/Workspaces/HostedProjectTemplate/`：新项目 workspace 的入口模板；模板复制后属于项目实例，不继承根仓指令权威。\n- GDD 创建流程先收集用户策划表单，再生成并让用户确认场景路由草案，最后把两份输入一起交给 GDD 路由生成大纲。\n\nPhase A 的原则是：平台负责 hosting、workspace、runner、artifact readback、browser/API 和恢复；仓库脚本继续拥有 workflow decision authority。\n\n## Phase 服务与仓库执行内核边界\n\n- `workflow.md` 描述仓库本地的正式交付流程，不是 Phase 浏览器/API 入口。\n- `workflow.example.md` 面向从原模板复制出的游戏业务仓，不适用于根平台仓。\n- Phase 路由只把其中选定的脚本、验证器、profile、Godot 资产和 route contract 作为内部执行依赖。\n- Taskmaster triplet、正式 Chapter 3-7 编排、本地 Chapter 6 review recovery、模板 feature flag 和游戏模板发布不是 Phase 默认产品路径。\n\n### 3. Phase B 账号和运营层\n\nPhase B B1/B2 把单管理员原型平台推进为账号作用域平台：\n\n- Bearer token 认证支持 host admin token 和数据库用户 token。\n- 用户 token 只返回一次，数据库中只保存 hash。\n- 管理员可创建用户、禁用/启用用户、轮换用户 access token。\n- 项目、run、artifact、package、asset、chat、workflow readback 按当前账号收敛。\n- 用户可配置自己的 LLM gateway binding，并查看账号级 LLM usage。\n- 管理员可查看跨账号 LLM usage、LLM run audit、账号操作审计，并导出 CSV。\n- Phase B smoke 脚本验证未授权拒绝、管理员授权、用户边界和审计输出不泄露 token material。\n\nPhase B 当前延期项：\n\n- 用户删除。\n- 完整 LLM audit export 的更细过滤和分页增强。\n- 用户名/密码登录、密码重置、OAuth、OIDC、自助注册。\n- 管理面板自动化浏览器 E2E。\n- OS 级 Windows runner 账户和 NTFS ACL 隔离。\n\n## 运行入口\n\n根 README 只保留稳定入口。地址、变量、Caddy、watchdog、构建目录和完整恢复合同统一维护在 `runtime/phase-a/README.md`；受保护的修改规则见同目录 `AGENTS.md`。\n\n优先使用一键恢复脚本。它先检查本地 `http://127.0.0.1:18080/healthz`，必要时启动服务，并把恢复证据写入 `logs/phase-a-innernet/runtime/`。\n\n```powershell\npowershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1\n```\n\n长期守护使用 watchdog：\n\n```powershell\npowershell -ExecutionPolicy Bypass -File runtime/phase-a/watch-phasea.ps1\n```\n\n常用检查：\n\n```powershell\npy -3 scripts/python/phase_a_ops_check.py\npy -3 scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080\n```\n\nlive server 不使用普通 `dotnet run`。真实 token、hash 和签名 secret 不得写入 README、脚本、日志或 Git 跟踪配置。\n\n## 托管项目路由恢复规则\n\n完整权威顺序位于 `AGENTS.md`、`docs/architecture/phase-service/prototype-routes-and-recovery.md` 和 Hosted 项目 `AGENTS.md`。根 README 只保留三条原则：\n\n- 项目 route 读取项目级 profile、contract、latest state、goal/session、repair/diagnostic 和最新 live blocker，不从根文档推断项目状态。\n- 缺少必需恢复源时 fail closed；旧 route memory 和 assistant 文本不是当前验收权威。\n- 新 route 必须声明 recovery inputs、authority order、missing-source behavior 和 browser-safe output。\n\n## AI/LLM 调用协议\n\n新 Phase route 必须使用仓库共享 LLM/Codex 入口，prompt 使用 UTF-8 stdin；文件修改必须经过明确 executable route、`workspace-write` 和验收。完整协议、组件和回归测试路由见 `AGENTS.md`、`PhaseA.Platform/AGENTS.md` 与 `docs/architecture/phase-service/llm-codex-execution.md`。\n\n知识库 Locator 当前只接入 VDD、Quick Dev 和 Bootstrap Review，不等于 Phase 前台 route 已接入。未来 Phase adapter 必须复用同一 Locator core，由服务端持有 Domain、path、snapshot、budget 和 gate 权限，重读并复验 accepted source hash，再把冻结上下文绑定到 run manifest。\n\n\n## 关键文档\n\n### 云端平台\n\n- Phase application guide: `PhaseA.Platform/README.md`\n- Phase application agent rules: `PhaseA.Platform/AGENTS.md`\n- Host runtime guide: `runtime/phase-a/README.md`\n- Host runtime agent rules: `runtime/phase-a/AGENTS.md`\n- Phase service architecture rationale: `docs/architecture/phase-service/_index.md`\n- Phase service ADR index: `docs/architecture/ADR_INDEX_PHASE.md`\n- Standards index: `docs/standards/_index.md`\n- Phase service standards: `docs/standards/phase-service.md`\n- Godot engine semantics standard: `docs/standards/godot-engine-semantics.md`\n- Godot UI capability contract: `docs/standards/godot-ui-capability-contract.md`\n- Godot UI style contract: `docs/standards/godot-ui-style-contract.md`\n- Godot diagnostics and quality gates: `docs/standards/godot-diagnostics-quality-gates.md`\n- Godot official examples index: `docs/reference/godot-official-examples-index.md`\n- `docs/workflows/phase-b-account-isolation.md`\n- `docs/workflows/phase-b-agf-godogen-absorption.md`\n- `docs/workflows/cloud-platform-evolution-plan.cn.md`\n- `docs/workflows/cloud-user-telemetry-and-feedback-plan.cn.md`\n- `docs/workflows/phase-a-security-hardening-plan.cn.md`\n- `docs/workflows/phase-a-caddy-deployment.md`\n- `docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/_index.md`\n\n### 仓库和 Agent 导航\n\n- `AGENTS.md`\n- `docs/PROJECT_DOCUMENTATION_INDEX.md`\n\n\n## 贡献者编码规则\n\n### Highest Encoding Rule\n\n- All Chinese text reads and writes must use Python with explicit UTF-8, for example `Path(path).read_text(encoding=\"utf-8\")` and `Path(path).write_text(text, encoding=\"utf-8\", newline=\"\\n\")`.\n- Do not use PowerShell, `Get-Content`, `Set-Content`, `Out-File`, `Add-Content`, `type`, `echo`, `copy con`, or other Windows-native text tools to read or write Chinese text.\n- If a command script must contain Chinese literals, write it as a Python file or use ASCII-only Python source with Unicode escapes, then write the target file as UTF-8.\n- This rule applies to `AGENTS.md`, `README.md`, `workflow.md`, `docs/**/*.md`, `.agents/skills/**/SKILL.md`, prototype records, and project-health documentation.\n- Code, tests, logs, and machine output remain English unless the file is explicitly user-facing documentation.\n",
       "enforcement_level": "E1",
       "entry_id": "repository.overview",
       "instruction_authority": false,
@@ -7856,7 +7905,7 @@
       "semantic_eligible": true,
       "source_path": "README.md",
       "source_role": "repository-overview",
-      "source_sha256": "e38c75e4c4b4644b2ed735cdc335526c800ddfe989ecb59a4e019fb68c8c1779",
+      "source_sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6",
       "status": "active",
       "title": "Ji Mu Yun（积木云）Phase A/B Cloud Prototype Platform",
       "visibility": {
@@ -8957,20 +9006,20 @@
   ],
   "schema_version": "jimuyun.repository-knowledge-catalog.v2",
   "source_snapshot": {
-    "commit": "a7b0772d8beb47cf5fc895652e68b6c668e6f998",
+    "commit": "5fb597d9ebd3ad45da1af24cc0f32aef0d81156b",
     "exclusion_policy_revision": "knowledge-source-exclusions.v1",
     "ref": "refs/heads/main",
     "schema_version": "jimuyun.repository-source-snapshot.v1",
-    "snapshot_id": "sha256:d401561e8b69ad78ec973332ebb9e6f054c973440800b7496177fcbd5b0430c5",
+    "snapshot_id": "sha256:cf8b3b58b023226517422f1cac9f8ab2a15594533acb0828233b90573b6cabfd",
     "sources": [
       {
         "path": ".agents/skills/maintain-knowledge-base/SKILL.md",
-        "sha256": "97a99a93a6e9648734178c8a8e4f722bc1ffb44cfd239d52055c38fb3647b389",
+        "sha256": "6406a864bf8a6707759133e14891975ca5ff23660e2aaee24a8cd2bf2fd7ae65",
         "source_role": "skill-entrypoint"
       },
       {
         "path": ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
-        "sha256": "06ee490859c5075534f4c6bf22e7ac4a69a72d0fb8622a328541780e07481f10",
+        "sha256": "691e662370b58ead554da351b2abb296a74d8537d4f80aac5d0425279158db3e",
         "source_role": "cli"
       },
       {
@@ -9060,7 +9109,7 @@
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
-        "sha256": "a2811af4e210c5d3f66e972664337c2ff91cf103d4593822de1923188f563a85",
+        "sha256": "c2446bff214ef047d5e4c5c24f18a7063f1b241ddccefad68ab656817274be88",
         "source_role": "orchestrator"
       },
       {
@@ -9075,12 +9124,12 @@
       },
       {
         "path": "AGENTS.md",
-        "sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd",
+        "sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
         "source_role": "repository-authority"
       },
       {
         "path": "README.md",
-        "sha256": "e38c75e4c4b4644b2ed735cdc335526c800ddfe989ecb59a4e019fb68c8c1779",
+        "sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6",
         "source_role": "repository-overview"
       },
       {
@@ -9515,7 +9564,7 @@
       },
       {
         "path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
-        "sha256": "f03f22cc1ce7766b8014d992b3c2e5838b1fe5885706b3997068e33dd68ed698",
+        "sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0",
         "source_role": "architecture-module"
       },
       {
@@ -9754,13 +9803,28 @@
         "source_role": "requirements-ledger"
       },
       {
+        "path": "knowledge/contracts/knowledge-consumer-projections.v1.schema.json",
+        "sha256": "515ba5840ecd87d04f26a240c632dd27bb9d4f821f965172664d903b9b9a1b30",
+        "source_role": "contract"
+      },
+      {
         "path": "knowledge/contracts/knowledge-locator-request.v1.schema.json",
-        "sha256": "64e418e1bd6648192d94048ac73f36744fcfd175e776ed3bcb7c20dec3ced068",
+        "sha256": "f89ae3b9bff3d20640a2828dd4a18a5b622868b0db0d719a195dcd6020d7d451",
         "source_role": "contract"
       },
       {
         "path": "knowledge/contracts/knowledge-locator-result.v1.schema.json",
-        "sha256": "7a14eb91f0dcece3d75fbaed7e5345bcb2f83d962bb33bd20bfb2413b74714dc",
+        "sha256": "16979935f80ab144e36b511455a6eda421a58365a577f52024100a139f1c7c31",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/repository-knowledge-catalog.v2.schema.json",
+        "sha256": "e04f03182c1f5fcd45d6daad17b8b5dbe4da84b122116307b9fdffc1a1ebfe13",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/repository-source-snapshot.v1.schema.json",
+        "sha256": "376f147f1e579489e1677641c45ec17cc31609ce04e8e7c4c9fe493b72025782",
         "source_role": "contract"
       },
       {
@@ -9769,14 +9833,34 @@
         "source_role": "policy"
       },
       {
+        "path": "knowledge/policies/consumer-policies.v2.json",
+        "sha256": "eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+        "source_role": "policy"
+      },
+      {
+        "path": "knowledge/policies/source-exclusions.v1.json",
+        "sha256": "3a14d0f15e921f1eaf749b187f36a11fe59c5c697e0483cbd5b9793b2b38bdda",
+        "source_role": "policy"
+      },
+      {
         "path": "runtime/phase-a/start-phasea.ps1",
         "sha256": "b25cffbc6d35c9f41139460db0ab9bd9adc921a348e65a7b62824508c1fa5a54",
         "source_role": "runtime-config"
       },
       {
+        "path": "scripts/python/_knowledge_catalog_builder.py",
+        "sha256": "16c568377d04e92a59a7ac10ea4df9596498258c04a664279f711b117f2591fb",
+        "source_role": "catalog-core"
+      },
+      {
         "path": "scripts/python/_knowledge_locator_core.py",
-        "sha256": "7b21260b6f44b88c6f976b8a7c45bdf2b76e41d7d619243f6cbf2eb19e956006",
+        "sha256": "bd50bfb36d2668c042c6abcd17dfa2306f094bb50d0ab5cddc192be163f8594c",
         "source_role": "core"
+      },
+      {
+        "path": "scripts/python/build_knowledge_catalog.py",
+        "sha256": "f3fbb02d36465b6eebd25c7723cb5c7709ac2bf8ab5bdc7b2b45e03b22621e5e",
+        "source_role": "catalog-builder"
       },
       {
         "path": "scripts/python/build_knowledge_index.py",
@@ -9785,7 +9869,7 @@
       },
       {
         "path": "scripts/python/knowledge_locator.py",
-        "sha256": "8a39fa8c2f2dff049b4c2bb942f6ec903b27a534eddc6ad697a232b0a4299e48",
+        "sha256": "312fe7148587c98582f9bb5aa3839d6c16c20b83466c4cac207cb65951d8f084",
         "source_role": "cli-entrypoint"
       }
     ]

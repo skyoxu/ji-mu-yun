@@ -36,3 +36,10 @@ This append-only continuity report has `authorizes: []`. It cannot publish plan 
 - Replayed S1 through S5 with fresh append-only RED, GREEN, REFACTOR, and slice-ready evidence after the CLI/inventory repair.
 - The terminal router reported `validate-terminal`; package validation, plan validation, whole-directory validation, the 86-test Skill suite, and `git diff --check` passed.
 - This is an `implementation-complete` record only. It does not authorize acceptance-passed, target handoff, release, deployment, or archive.
+
+## 2026-07-29: VDD knowledge authority refresh
+
+- The first run of the revised implementation-acceptance Skill preserved a blocked result because the committed frozen knowledge context replayed as `catalog_stale`, while the live authority manifest also lagged the current `AGENTS.md` bytes.
+- Regenerated the repository knowledge snapshot, v2 catalog, consumer projections, and legacy locator catalog from immutable `main` commit `5fb597d9ebd3ad45da1af24cc0f32aef0d81156b`.
+- Reissued the VDD Locator request, reread and hash-verified `AGENTS.md`, accepted it only for `repository-rules`, refreshed the authority manifest, and recorded repair round 4 without changing the lifecycle state.
+- Plan validation, whole-directory validation, and all eight plan-validator tests passed. This repair restores an actionable acceptance target but does not itself authorize `acceptance-passed`.

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "refactor-acceptance.repair-closure.v1",
+  "round": 4,
+  "status": "closed",
+  "predecessor": {
+    "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/deterministic-validation-result.v1.json",
+    "sha256": "sha256:bee4815b2235a43d059a3519bcd53d71759860420163dabca9a2c200a0e92e99"
+  },
+  "findingClosure": [
+    {
+      "findingId": "RIA-ACCEPT-PLAN-KNOWLEDGE-AUTHORITY-STALE",
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/knowledge-context.v1.json",
+          "sha256": "sha256:aec07d2e59f8c3ea9059c94bb31d7523185ec582aba032d46df8a49bf5c303d7"
+        },
+        {
+          "path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+          "sha256": "sha256:96b915178ca7cda5164fa9ffb52e4e027323b17bb038e8054b604fa35b69b499"
+        }
+      ]
+    },
+    {
+      "findingId": "RIA-ACCEPT-CURRENT-AUTHORITY-DRIFT",
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
+          "sha256": "sha256:b3d0b27c70598da0034515a05dcfe87e389cce1584e53ce19dfb01c0a08e58cb"
+        }
+      ]
+    }
+  ],
+  "previousKnowledgeContextHash": "sha256:af2b4cee23f6ea92c439f49cf5a55a0e50bd19c357cb51a155902993ec2c01af",
+  "currentKnowledgeContextHash": "sha256:aec07d2e59f8c3ea9059c94bb31d7523185ec582aba032d46df8a49bf5c303d7",
+  "validatorHashes": {
+    "validatePlan": "sha256:2a942fab40fdcd1f6f4b593ac797d54ca2f6e1e18f538802ce5136db243b2f2b",
+    "validateAll": "sha256:a1ebc0b4bec64884425672060be517d43de867210bf86bbc91f87334004818b7",
+    "commandRegistry": "sha256:03fc4764ed2a4708ef26753b105eb4db67ff3af899274b830b6718b95e0bd439",
+    "repairPlan": "sha256:5688db44a559d56bf36b611086e999107e40cefaa012b349b68bfa240049cf20"
+  },
+  "validation": {
+    "plan": "pass",
+    "wholeDirectory": "pass",
+    "validatorTests": {
+      "passed": 8,
+      "failed": 0
+    },
+    "validationSnapshot": {
+      "authority_root": "sha256:0ebe9fc1d00bdc799c66a5cb419260f30b24a468e31453c9e86f960fc39210cb",
+      "candidate_hash": "sha256:2255790563705893c67fbc048fc943f7897837f475281b62353337c550ab4dae",
+      "closure_definition_hash": "sha256:1ce08e79d39e534923db177c4034c95d6e3c89e7269a4048a445db07cc9b4972",
+      "predicate_input_root": "sha256:394643f518e91bce5893a6659a2c901f4289bd8e3eb72175ccf3056e0ab3f557",
+      "validator_root": "sha256:aa20c50dfa15eb773304d9a52a3927a053c7d58c931cd87aa282e04d7de8b597"
+    }
+  },
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "acceptance-passed",
+    "release",
+    "deployment",
+    "archive"
+  ]
+}
