@@ -1,0 +1,739 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-context.v1",
+  "locator_request": {
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "request_id": "vdd-refactor-acceptance-20260729-refresh-r10",
+    "consumer": "vdd",
+    "query": "repository guide AGENTS phase service rules",
+    "snapshot": {
+      "ref": "refs/heads/main",
+      "commit": "2e1f2e85ab54a58ec0ccb2bb7ccdae373247a2fc"
+    },
+    "policy_revision": "knowledge-consumer-policies.v2"
+  },
+  "locator_result": {
+    "candidates": [
+      {
+        "anchor": "Repository Guide",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "repository-guide",
+        "lifecycle": "repository-source",
+        "line_end": 3,
+        "line_start": 3,
+        "module_id": "repository-rules",
+        "path": "AGENTS.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "high",
+          "score": 200,
+          "strategy": "hybrid-token",
+          "token_matches": 6
+        },
+        "read_set": [
+          {
+            "path": "AGENTS.md",
+            "role": "primary",
+            "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "repository-authority",
+        "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Purpose",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "standard",
+        "lifecycle": "repository-source",
+        "line_end": 9,
+        "line_start": 9,
+        "module_id": "standard.phase-service",
+        "path": "docs/standards/phase-service.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 108,
+          "strategy": "hybrid-token",
+          "token_matches": 6
+        },
+        "read_set": [
+          {
+            "path": "docs/standards/phase-service.md",
+            "role": "primary",
+            "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0033",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "standard",
+        "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Purpose",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-collection",
+        "lifecycle": "repository-source",
+        "line_end": 9,
+        "line_start": 9,
+        "module_id": "architecture.phase-service.index",
+        "path": "docs/architecture/phase-service/_index.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 98,
+          "strategy": "hybrid-token",
+          "token_matches": 5
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/phase-service/_index.md",
+            "role": "primary",
+            "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "collection-index",
+        "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Change Rules",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-module",
+        "lifecycle": "repository-source",
+        "line_end": 65,
+        "line_start": 65,
+        "module_id": "architecture.phase-service.system-overview",
+        "path": "docs/architecture/phase-service/system-overview.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 98,
+          "strategy": "hybrid-token",
+          "token_matches": 5
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/phase-service/system-overview.md",
+            "role": "primary",
+            "source_sha256": "e1ac21ddd5f79d91c92f39148547a60d11e01b50f3108ba3571e535dcf9adfea"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "e1ac21ddd5f79d91c92f39148547a60d11e01b50f3108ba3571e535dcf9adfea",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "1. Architecture Intent",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-overlay",
+        "lifecycle": "repository-source",
+        "line_end": 15,
+        "line_start": 15,
+        "module_id": "architecture.overlay.phase-a-cloud-runner.08-phase-a-cloud-runner-architecture",
+        "path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 84,
+          "strategy": "hybrid-token",
+          "token_matches": 6
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md",
+            "role": "primary",
+            "source_sha256": "83a1207b37179a19f5527a5b22fb031ec3b32a0bd78df377aad6247d542e0010"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0015",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0018",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0019",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0025",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0031",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "83a1207b37179a19f5527a5b22fb031ec3b32a0bd78df377aad6247d542e0010",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Phase Service Execution Mapping",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "execution-plan",
+        "lifecycle": "repository-source",
+        "line_end": 35,
+        "line_start": 35,
+        "module_id": "plan.2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening",
+        "path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 84,
+          "strategy": "hybrid-token",
+          "token_matches": 6
+        },
+        "read_set": [
+          {
+            "path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md",
+            "role": "primary",
+            "source_sha256": "26c6caa75b7637eafb97b3c72ed2ae3995cf4386df473d3dab56188034e07e31"
+          },
+          {
+            "path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/implementation-contract.v1.json",
+            "role": "implementation-contract",
+            "source_sha256": "43c621adbc2b6d27041f5053214522c07a4712d8b75d83425707562288c83699"
+          },
+          {
+            "path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/97-split-added-requirements-ledger.md",
+            "role": "requirements-ledger",
+            "source_sha256": "ac9bfb7ac346b95a92c26697437943b55e2892f5578973ac7ce34704a290d608"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "plan-index",
+        "source_sha256": "26c6caa75b7637eafb97b3c72ed2ae3995cf4386df473d3dab56188034e07e31",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Accepted",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr-scope-index",
+        "lifecycle": "repository-source",
+        "line_end": 7,
+        "line_start": 7,
+        "module_id": "adr-index.phase",
+        "path": "docs/architecture/ADR_INDEX_PHASE.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 82,
+          "strategy": "hybrid-token",
+          "token_matches": 5
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/ADR_INDEX_PHASE.md",
+            "role": "primary",
+            "source_sha256": "04392e70c88ac49776e0c453f8d156d2e5541cfaf6179f0d7a59804f9ef7c8df"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "collection-index",
+        "source_sha256": "04392e70c88ac49776e0c453f8d156d2e5541cfaf6179f0d7a59804f9ef7c8df",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "Key Decisions",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-module",
+        "lifecycle": "repository-source",
+        "line_end": 27,
+        "line_start": 27,
+        "module_id": "architecture.phase-service.hosted-workspaces-and-artifacts",
+        "path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 82,
+          "strategy": "hybrid-token",
+          "token_matches": 5
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
+            "role": "primary",
+            "source_sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0035",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0044",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Intent",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-module",
+        "lifecycle": "repository-source",
+        "line_end": 5,
+        "line_start": 5,
+        "module_id": "architecture.phase-service.prototype-routes-and-recovery",
+        "path": "docs/architecture/phase-service/prototype-routes-and-recovery.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 82,
+          "strategy": "hybrid-token",
+          "token_matches": 5
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/phase-service/prototype-routes-and-recovery.md",
+            "role": "primary",
+            "source_sha256": "a7815d65933cec85148dd1363db45dcb0726ba2f0d573a47037f8385194346b1"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "a7815d65933cec85148dd1363db45dcb0726ba2f0d573a47037f8385194346b1",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Intent",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-module",
+        "lifecycle": "repository-source",
+        "line_end": 5,
+        "line_start": 5,
+        "module_id": "architecture.phase-service.roadmap-and-hardening",
+        "path": "docs/architecture/phase-service/roadmap-and-hardening.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 82,
+          "strategy": "hybrid-token",
+          "token_matches": 5
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/phase-service/roadmap-and-hardening.md",
+            "role": "primary",
+            "source_sha256": "5b3563aa5ff7ca093cf6009477556a5101f266c2f4df74e2a90f30f0ee697247"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "5b3563aa5ff7ca093cf6009477556a5101f266c2f4df74e2a90f30f0ee697247",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Intent",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-module",
+        "lifecycle": "repository-source",
+        "line_end": 5,
+        "line_start": 5,
+        "module_id": "architecture.phase-service.runtime-caddy-and-recovery",
+        "path": "docs/architecture/phase-service/runtime-caddy-and-recovery.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 82,
+          "strategy": "hybrid-token",
+          "token_matches": 5
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/phase-service/runtime-caddy-and-recovery.md",
+            "role": "primary",
+            "source_sha256": "8038312358d6805e7068334f6caded6239d50eb2a3a182ae924fc02d928f3a74"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0039",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "8038312358d6805e7068334f6caded6239d50eb2a3a182ae924fc02d928f3a74",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "一眼看懂",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "repository-overview",
+        "lifecycle": "repository-source",
+        "line_end": 19,
+        "line_start": 19,
+        "module_id": "repository.overview",
+        "path": "README.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 76,
+          "strategy": "hybrid-token",
+          "token_matches": 6
+        },
+        "read_set": [
+          {
+            "path": "README.md",
+            "role": "primary",
+            "source_sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "repository-overview",
+        "source_sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      }
+    ],
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "request_id": "vdd-refactor-acceptance-20260729-refresh-r10",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "2e1f2e85ab54a58ec0ccb2bb7ccdae373247a2fc",
+      "ref": "refs/heads/main"
+    },
+    "source_snapshot_id": "sha256:18320f5ba97f641f717c5363db8861d79a7534719e7130e9179569b502c4690d",
+    "status": "matched"
+  },
+  "required_modules": [
+    "repository-rules"
+  ],
+  "decisions": [
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "AGENTS.md",
+        "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "repository-rules"
+      ],
+      "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/standards/phase-service.md",
+        "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/_index.md",
+        "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/system-overview.md",
+        "source_sha256": "e1ac21ddd5f79d91c92f39148547a60d11e01b50f3108ba3571e535dcf9adfea"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md",
+        "source_sha256": "83a1207b37179a19f5527a5b22fb031ec3b32a0bd78df377aad6247d542e0010"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md",
+        "source_sha256": "26c6caa75b7637eafb97b3c72ed2ae3995cf4386df473d3dab56188034e07e31"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/ADR_INDEX_PHASE.md",
+        "source_sha256": "04392e70c88ac49776e0c453f8d156d2e5541cfaf6179f0d7a59804f9ef7c8df"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
+        "source_sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/prototype-routes-and-recovery.md",
+        "source_sha256": "a7815d65933cec85148dd1363db45dcb0726ba2f0d573a47037f8385194346b1"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/roadmap-and-hardening.md",
+        "source_sha256": "5b3563aa5ff7ca093cf6009477556a5101f266c2f4df74e2a90f30f0ee697247"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/runtime-caddy-and-recovery.md",
+        "source_sha256": "8038312358d6805e7068334f6caded6239d50eb2a3a182ae924fc02d928f3a74"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "README.md",
+        "source_sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    }
+  ],
+  "request_sha256": "sha256:3258aa04563fe21720bbee85826b80c3caf5f061ee82b191337b62c6a8b80950",
+  "result_sha256": "sha256:d1aa45e8903c226f842eb5f8a1d82aada3538a298e4d8d6b530040f480572fc4",
+  "preflight": {
+    "status": "ready",
+    "failure_code": null,
+    "context_sha256": "sha256:fca8b5132006aa042f81c5b688bc4b0c2909bf6a8305601fb6fbcf634d7aed2a"
+  }
+}

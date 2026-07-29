@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:955cd4db00fdec3b2447f993480283b79dbf50655ebe88cf14439f29de4a0941",
-  "canonical_context_sha256": "sha256:41592b8a2153654220b42e20e87089c33403b1e481e243a4f1935e9cf46150ea",
-  "request_sha256": "sha256:3258aa04563fe21720bbee85826b80c3caf5f061ee82b191337b62c6a8b80950",
-  "result_sha256": "sha256:d1aa45e8903c226f842eb5f8a1d82aada3538a298e4d8d6b530040f480572fc4",
+  "context_sha256": "sha256:e5585dac41d5a63e95c48f342f21792692a29d3d6b0783cd611518cf2f62a5be",
+  "canonical_context_sha256": "sha256:431c5a11501c49cb2549afb82b58588a4f37f9d6a488f28e273c743ca09e86c6",
+  "request_sha256": "sha256:8a264fefbf2265afb4262c321a8c2d681d3cb0f2ec94bb1bc9aa0116fb8aba3d",
+  "result_sha256": "sha256:c6a0207e3870f7c2977b8d59b55782b771145473c99eeff93996b5132accec66",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "2e1f2e85ab54a58ec0ccb2bb7ccdae373247a2fc"
+    "commit": "d93ca58e64da933437f84cd50fc7762d93c2ca93"
   },
-  "source_snapshot_id": "sha256:18320f5ba97f641f717c5363db8861d79a7534719e7130e9179569b502c4690d",
+  "source_snapshot_id": "sha256:391745ac233bbef15f46054d1d06ccd7006c08515a24a2cd3d40123c782a043c",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -20,5 +20,10 @@
       ]
     }
   ],
-  "authorizes": []
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:955cd4db00fdec3b2447f993480283b79dbf50655ebe88cf14439f29de4a0941",
+    "freeze_receipt_path": "knowledge-context.freeze.history/955cd4db00fdec3b2447f993480283b79dbf50655ebe88cf14439f29de4a0941.v1.json",
+    "reason": "published knowledge policy added derived acceptance snapshot exclusion"
+  }
 }

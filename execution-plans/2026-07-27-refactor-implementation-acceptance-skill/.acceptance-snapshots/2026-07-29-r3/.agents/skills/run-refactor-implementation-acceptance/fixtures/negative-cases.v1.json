@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "refactor-acceptance-negative-cases.v1",
+  "categories": ["positive", "negative", "mutation", "plan-7-07", "pure-godot", "mixed-domain", "fresh-context"],
+  "cases": [
+    {"id": "RA-POS-PHASE-SERVICE", "category": "positive", "expect": "phase_service candidate is evaluated by the active policy"},
+    {"id": "RA-NEG-MANIFEST-TOMBSTONE", "expect": "deleted entry must be a baseline tombstone"},
+    {"id": "RA-NEG-SEMANTIC-DETERMINISTIC", "expect": "semantic partition cannot claim deterministic completion"},
+    {"id": "RA-NEG-GODOT-DOMAIN", "expect": "unsupported_code_review_domain"},
+    {"id": "RA-NEG-COVERAGE-THRESHOLD", "expect": "diff coverage does not meet the required threshold"},
+    {"id": "RA-MUT-ACTION-LINEAGE", "category": "mutation", "expect": "altered action lineage is rejected"},
+    {"id": "RA-707-ADAPTER", "category": "plan-7-07", "expect": "7-07 adapter remains hash-bound"},
+    {"id": "RA-GODOT-PURE", "category": "pure-godot", "expect": "unsupported_code_review_domain"},
+    {"id": "RA-MIXED-DOMAIN", "category": "mixed-domain", "expect": "unreviewed_external_domain is preserved"},
+    {"id": "RA-FRESH-CONTEXT", "category": "fresh-context", "expect": "fresh source hashes are required"}
+  ]
+}
