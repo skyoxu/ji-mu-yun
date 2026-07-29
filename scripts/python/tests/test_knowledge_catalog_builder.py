@@ -27,7 +27,12 @@ class KnowledgeCatalogBuilderTests(unittest.TestCase):
         main = subprocess.check_output(
             ["git", "rev-parse", "refs/heads/main"], cwd=REPOSITORY_ROOT, text=True, encoding="utf-8"
         ).strip()
-        self.assertEqual(main, self.snapshot["commit"])
+        ancestry = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", self.snapshot["commit"], main],
+            cwd=REPOSITORY_ROOT,
+            check=False,
+        )
+        self.assertEqual(0, ancestry.returncode)
         self.assertEqual(self.snapshot, self.catalog["source_snapshot"])
         completed = subprocess.run(
             [sys.executable, "-B", str(BUILDER_PATH), "--repository-root", str(REPOSITORY_ROOT), "--check"],
@@ -90,6 +95,8 @@ class KnowledgeCatalogBuilderTests(unittest.TestCase):
         for plan in plans:
             self.assertTrue(plan["source_path"].endswith("/00-index.md"))
             self.assertFalse(any("/fixtures/" in item["path"] or "/tools/" in item["path"] or "/95-" in item["path"] for item in plan["resources"]))
+            self.assertNotIn("knowledge-context", {item["role"] for item in plan["resources"]})
+        self.assertFalse(any(item["path"].endswith("/knowledge-context.v1.json") for item in self.snapshot["sources"]))
         self.assertEqual("historical", self.modules["plan.2026-07-25-four-domain-knowledge-context-engineering-plan"]["status"])
         self.assertEqual("conditional", self.modules["plan.2026-07-11-phase-frontend-boundary-hardening-execution-plan"]["status"])
 

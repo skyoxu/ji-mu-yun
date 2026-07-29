@@ -555,7 +555,6 @@ class CatalogBuilder:
                 ("implementation-contract", "implementation-contract.v1.json"),
                 ("authority-manifest", "authority-manifest.v1.json"),
                 ("plan-state", "plan-state.v1.json"),
-                ("knowledge-context", "knowledge-context.v1.json"),
                 ("command-registry", "command-registry.v1.json"),
             )
             for role, name in fixed:

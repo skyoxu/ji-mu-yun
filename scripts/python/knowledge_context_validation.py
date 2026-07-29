@@ -47,10 +47,19 @@ def _main_source_hashes(repository_root: Path, catalog: dict[str, Any]) -> dict[
         encoding="utf-8",
         check=False,
     )
-    if current.returncode or current.stdout.strip() != snapshot.get("commit"):
-        raise ValueError("catalog_main_commit_mismatch")
+    if current.returncode:
+        raise ValueError("catalog_main_commit_unavailable")
+    current_commit = current.stdout.strip()
+    snapshot_commit = snapshot.get("commit")
+    ancestry = subprocess.run(
+        ["git", "-C", str(repository_root), "merge-base", "--is-ancestor", snapshot_commit, current_commit],
+        capture_output=True,
+        check=False,
+    )
+    if ancestry.returncode:
+        raise ValueError("catalog_source_snapshot_not_main_ancestor")
     paths = [item.get("path") for item in snapshot["sources"] if isinstance(item, dict) and isinstance(item.get("path"), str)]
-    request_bytes = "".join(f"{snapshot['commit']}:{path}\n" for path in paths).encode("utf-8")
+    request_bytes = "".join(f"{current_commit}:{path}\n" for path in paths).encode("utf-8")
     completed = subprocess.run(
         ["git", "-C", str(repository_root), "cat-file", "--batch"],
         input=request_bytes,
