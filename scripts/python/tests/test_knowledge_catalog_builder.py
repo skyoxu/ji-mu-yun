@@ -57,6 +57,7 @@ class KnowledgeCatalogBuilderTests(unittest.TestCase):
             "execution-plans/example/knowledge-context.freeze.v1.json",
             "execution-plans/example/knowledge-context.history/previous.v1.json",
             "execution-plans/example/acceptance-runs/r3/candidate-content-manifest.v1.json",
+            "execution-plans/example/.acceptance-snapshots/r3/.agents/skills/example/SKILL.md",
         )
         for path in derived_paths:
             self.assertTrue(is_policy_excluded(path, exclusions))

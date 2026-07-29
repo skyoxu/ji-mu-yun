@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "refactor-acceptance.scope-rebaseline.v1",
+  "runId": "2026-07-29-r3",
+  "status": "accepted-scope-repair",
+  "authorizes": [],
+  "originalPlanBaseline": "108d3112e7c701e97014842600068a912236b7f3",
+  "implementationBaseline": "cc1ff5694b78a37307b70a1c5a85478c688801c2",
+  "candidateSourceCommit": "940dffde194c165f8a16196c8c20fef503cb174b",
+  "candidateMode": "proposed_commit_set",
+  "candidateFrozenSnapshotPath": ".acceptance-snapshots/2026-07-29-r3",
+  "reason": "The original commit range contains unrelated repository changes. The acceptance candidate is therefore the exact plan-owned file set frozen from the last committed implementation-and-custody repair state.",
+  "scopeIncludes": [
+    ".agents/skills/run-refactor-implementation-acceptance/**",
+    ".agents/skills/run-phase-bootstrap-review/**",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "docs/standards/bootstrap-review-control-plane.md",
+    "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/**"
+  ],
+  "scopeExcludes": [
+    "scripts/sc/**",
+    ".agents/skills/vdd-execution-plan/**",
+    "decision-logs/**",
+    "knowledge/**",
+    "PhaseA.Platform/**",
+    "PhaseA.Platform.Tests/**",
+    "runtime/phase-a/**"
+  ]
+}

@@ -25,6 +25,12 @@
       "disposition": "excluded",
       "applies_to": ["source-snapshot"],
       "reason": "plan-local-derived-acceptance-evidence-is-not-repository-knowledge-authority"
+    },
+    {
+      "path_pattern": "execution-plans/**/.acceptance-snapshots/**",
+      "disposition": "excluded",
+      "applies_to": ["source-snapshot"],
+      "reason": "plan-local-derived-acceptance-candidate-snapshot-is-not-repository-knowledge-authority"
     }
   ]
 }
