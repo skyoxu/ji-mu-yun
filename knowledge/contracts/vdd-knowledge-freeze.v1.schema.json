@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.vdd-knowledge-freeze.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "context_path",
+    "context_sha256",
+    "canonical_context_sha256",
+    "request_sha256",
+    "result_sha256",
+    "snapshot",
+    "source_snapshot_id",
+    "policy_revision",
+    "accepted",
+    "authorizes"
+  ],
+  "properties": {
+    "schema_version": {"const": "jimuyun.vdd-knowledge-freeze.v1"},
+    "context_path": {"const": "knowledge-context.v1.json"},
+    "context_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "canonical_context_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "request_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "result_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "snapshot": {
+      "type": "object",
+      "required": ["ref", "commit"],
+      "properties": {
+        "ref": {"const": "refs/heads/main"},
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "source_snapshot_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "policy_revision": {"type": "string", "minLength": 1},
+    "accepted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "source_sha256", "satisfies"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "satisfies": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "authorizes": {"const": []}
+  }
+}

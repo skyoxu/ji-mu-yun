@@ -6,12 +6,14 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPT_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPT_ROOT))
 
+import knowledge_context_validation as validation
 from knowledge_context_validation import _main_source_hashes, canonical_hash, validate_context
 
 
@@ -45,6 +47,23 @@ def payload(*, path: str = "AGENTS.md", digest: str = "a" * 64) -> dict:
 
 
 class KnowledgeContextValidationTests(unittest.TestCase):
+    def test_catalog_validation_fails_closed_when_publication_pointer_is_invalid(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            catalog = root / validation.CATALOG_RELATIVE
+            catalog.parent.mkdir(parents=True)
+            catalog.write_text(json.dumps({"source_snapshot": {"sources": []}}), encoding="utf-8")
+            with mock.patch.object(validation, "verify_current_publication", return_value=False):
+                self.assertEqual("catalog_publication_invalid", validation.validate_catalog_freshness(root))
+
+    def test_generic_context_binds_the_declared_consumer(self) -> None:
+        document = payload()
+        document["schema_version"] = "jimuyun.knowledge-consumer-context.v1"
+        document["consumer"] = "refactor-acceptance"
+        document["locator_request"]["consumer"] = "vdd"
+        document["request_sha256"] = canonical_hash(document["locator_request"])
+        self.assertEqual("knowledge_consumer_mismatch", validate_context(document))
+
     def test_catalog_source_snapshot_may_be_an_ancestor_when_registered_sources_are_unchanged(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -105,6 +124,29 @@ class KnowledgeContextValidationTests(unittest.TestCase):
             "rejection_reason": "not-selected-by-vdd-adapter",
         })
         self.assertEqual("rejected_candidate_invalid", validate_context(document))
+
+    def test_rejects_accepted_coverage_outside_required_modules(self) -> None:
+        document = payload()
+        document["decisions"][0]["satisfies"].append("undeclared")
+        self.assertEqual("consumption_modules_outside_required", validate_context(document))
+
+    def test_rejects_preflight_hash_or_status_drift(self) -> None:
+        document = payload()
+        document["preflight"] = {
+            "status": "ready",
+            "failure_code": None,
+            "context_sha256": "sha256:" + "0" * 64,
+        }
+        self.assertEqual("preflight_context_hash_mismatch", validate_context(document))
+        document["preflight"]["context_sha256"] = canonical_hash({key: value for key, value in document.items() if key != "preflight"})
+        document["preflight"]["status"] = "blocked"
+        self.assertEqual("preflight_status_invalid", validate_context(document))
+
+    def test_expected_consumer_is_enforced(self) -> None:
+        document = payload()
+        document["locator_request"]["consumer"] = "vdd"
+        document["request_sha256"] = canonical_hash(document["locator_request"])
+        self.assertEqual("knowledge_consumer_mismatch", validate_context(document, expected_consumer="bootstrap"))
 
     def test_rejects_migration_candidate_before_source_read(self) -> None:
         document = payload(path="docs/migration/legacy.md")

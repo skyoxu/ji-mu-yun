@@ -38,6 +38,7 @@ def bound_payload(module, payload: dict) -> dict:
     request = payload.setdefault("locator_request", {})
     result = payload.setdefault("locator_result", {})
     request.setdefault("schema_version", "jimuyun.knowledge-locator-request.v1")
+    request.setdefault("consumer", "vdd")
     result.setdefault("schema_version", "jimuyun.knowledge-locator-result.v1")
     payload["request_sha256"] = module.canonical_hash(request)
     payload["result_sha256"] = module.canonical_hash(result)
@@ -148,6 +149,9 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
             catalog.parent.mkdir(parents=True)
             catalog.write_text(json.dumps({"source_snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}}), encoding="utf-8")
+            policy = root / "knowledge/policies/consumer-policies.v2.json"
+            policy.parent.mkdir(parents=True)
+            policy.write_text(json.dumps({"policy_revision": "test-policy-v2"}), encoding="utf-8")
             output = root / "plan/knowledge-context.v1.json"
             result = {
                 "schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "request-1",
@@ -161,6 +165,9 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             document = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual("ready", document["preflight"]["status"])
             self.assertIn("context_sha256", document["preflight"])
+            freeze = json.loads((output.parent / "knowledge-context.freeze.v1.json").read_text(encoding="utf-8"))
+            self.assertEqual("jimuyun.vdd-knowledge-freeze.v1", freeze["schema_version"])
+            self.assertEqual("test-policy-v2", freeze["policy_revision"])
 
 
 if __name__ == "__main__":

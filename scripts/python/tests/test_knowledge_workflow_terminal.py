@@ -22,6 +22,7 @@ class KnowledgeWorkflowTerminalTests(unittest.TestCase):
         self.assertIn("vdd", result["consumers"])
         self.assertIn("quick-dev", result["consumers"])
         self.assertIn("bootstrap", result["consumers"])
+        self.assertIn("refactor-acceptance", result["consumers"])
 
 
 if __name__ == "__main__":

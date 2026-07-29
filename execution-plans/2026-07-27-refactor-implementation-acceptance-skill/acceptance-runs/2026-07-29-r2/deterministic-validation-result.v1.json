@@ -1,0 +1,52 @@
+{
+  "authorizes": [],
+  "blockingFindings": [],
+  "candidateRevision": "49627fcbe7f8cf208d0a8c473391dcd7528c2625",
+  "checks": [
+    {
+      "command": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+      "id": "immutable-candidate-plan-validation",
+      "status": "passed"
+    },
+    {
+      "command": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py",
+      "id": "immutable-candidate-whole-directory-validation",
+      "status": "passed"
+    },
+    {
+      "command": "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package",
+      "id": "acceptance-skill-package-validation",
+      "status": "passed"
+    },
+    {
+      "command": "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py",
+      "id": "acceptance-skill-unit-tests",
+      "status": "passed",
+      "testsFailed": 0,
+      "testsPassed": 123
+    },
+    {
+      "command": "py -3 -B .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py BootstrapReviewCliTests.test_implementation_profile_gate_fails_closed_without_acceptance_companion BootstrapReviewCliTests.test_implementation_profile_gate_accepts_parent_owned_companion_bundle",
+      "id": "bootstrap-companion-regression-tests",
+      "status": "passed",
+      "testsFailed": 0,
+      "testsPassed": 2
+    },
+    {
+      "command": "git diff --check 108d3112e7c701e97014842600068a912236b7f3 49627fcbe7f8cf208d0a8c473391dcd7528c2625",
+      "id": "candidate-diff-check",
+      "status": "passed"
+    }
+  ],
+  "conclusion": "review_required_and_launchable_after_bootstrap_preflight",
+  "doesNotAuthorize": [
+    "acceptance-passed",
+    "protected-handoff",
+    "release",
+    "deployment",
+    "archive"
+  ],
+  "runId": "2026-07-29-r2",
+  "schemaVersion": "refactor-implementation-acceptance.deterministic-validation-result.v1",
+  "status": "passed"
+}

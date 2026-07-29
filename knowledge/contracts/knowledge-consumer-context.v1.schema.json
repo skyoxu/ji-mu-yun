@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-consumer-context.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "consumer", "locator_request", "locator_result", "required_modules", "decisions", "request_sha256", "result_sha256", "preflight"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.knowledge-consumer-context.v1"},
+    "consumer": {"enum": ["vdd", "bootstrap", "refactor-acceptance"]},
+    "locator_request": {"$ref": "knowledge-locator-request.v1.schema.json"},
+    "locator_result": {"$ref": "knowledge-locator-result.v1.schema.json"},
+    "required_modules": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "decisions": {"type": "array", "items": {"$ref": "knowledge-consumption-decision.v1.schema.json"}},
+    "request_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "result_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "preflight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "failure_code", "context_sha256"],
+      "properties": {
+        "status": {"enum": ["ready", "blocked"]},
+        "failure_code": {"type": ["string", "null"]},
+        "context_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

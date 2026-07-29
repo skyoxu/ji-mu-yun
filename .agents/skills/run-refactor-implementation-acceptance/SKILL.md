@@ -46,6 +46,35 @@ target unless an explicit supersede or incompatible-scope decision exists.
 
 ## Current Core
 
+Before `prepare-run`, create one Refactor Acceptance-owned knowledge context
+through the canonical Locator:
+
+```text
+py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py \
+  --repository-root <repo> --request-id <id> --query <query> \
+  --required-module acceptance-scope \
+  --accept <candidate-path>=acceptance-scope \
+  --output <target-plan>/knowledge-context.refactor-acceptance.v1.json
+```
+
+The adapter uses `consumer=refactor-acceptance`, records one accepted or
+rejected decision for every Locator candidate after reread/hash verification,
+and fails closed on publication, snapshot, policy, projection, request/result,
+or read-set drift. It never uses unpublished staging inputs.
+
+The formal CLI requires that frozen file at the `acceptance-run-input` freeze
+point:
+
+```text
+py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py prepare-run \
+  --input <request.json> --knowledge-context <target-root-relative-path> \
+  --out <run-input.json>
+```
+
+Historical function-level inputs without a knowledge context remain readable;
+new CLI preparations cannot omit it. Later phases consume the frozen summary
+and never issue another Locator query.
+
 `scripts/acceptance_cli.py prepare-run` validates a hash-bound run input with replayable baseline and candidate content manifests, then writes a new non-authorizing run-input artifact. Commit candidates are checked against raw bytes from resolved immutable Git commits, and the resolved baseline/candidate OIDs are persisted in `candidateCustody`. Dirty-worktree and proposed-commit-set candidates must declare `candidate_frozen_snapshot_path` as `.acceptance-snapshots/<run_id>` beneath the target root; symlinks and live workspace substitutes are rejected, and the snapshot manifest receipt is persisted. `policies/phase-service-code-review.v1.json` is the Phase-only policy pack. Pure Godot inputs are rejected as an unsupported code-review domain; mixed candidates must retain an unreviewed external partition.
 
 `analyze-diff-coverage` consumes a frozen `phase-changed-line-set.v1` and a current Cobertura report. It uses only added or modified executable `PhaseA.Platform/**/*.cs` lines for the denominator, records every exclusion reason, and returns `incomplete` when a source mapping is missing. It never substitutes repository-wide coverage.

@@ -461,6 +461,8 @@ class CatalogBuilder:
                 "primary": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
                 "resources": (
                     ("cli", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"),
+                    ("knowledge-adapter", ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py"),
+                    ("knowledge-validator", ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py"),
                     ("orchestrator", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py"),
                     ("route-registry", ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json"),
                     ("acceptance-matrix-contract", ".agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json"),
@@ -469,7 +471,7 @@ class CatalogBuilder:
                 "consumer": "refactor-acceptance",
                 "operations": ["inspect", "build-matrix", "bootstrap-gate", "finalize"],
                 "freeze_point": "acceptance-run-input",
-                "locator_mode": "available-not-yet-wired",
+                "locator_mode": "query-and-freeze",
             },
             {
                 "id": "governance.knowledge-locator",
@@ -481,22 +483,26 @@ class CatalogBuilder:
                     ("catalog-builder", "scripts/python/build_knowledge_catalog.py"),
                     ("index-builder", "scripts/python/build_knowledge_index.py"),
                     ("publication-gate", "scripts/python/publish_knowledge_catalog.py"),
+                    ("generation-pruner", "scripts/python/prune_knowledge_generations.py"),
                     ("query-evaluator", "scripts/python/evaluate_knowledge_queries.py"),
                     ("contract", "knowledge/contracts/knowledge-locator-request.v1.schema.json"),
                     ("contract", "knowledge/contracts/knowledge-locator-result.v1.schema.json"),
                     ("contract", "knowledge/contracts/repository-knowledge-catalog.v2.schema.json"),
                     ("contract", "knowledge/contracts/repository-source-snapshot.v1.schema.json"),
                     ("contract", "knowledge/contracts/knowledge-consumer-projections.v1.schema.json"),
+                    ("contract", "knowledge/contracts/knowledge-consumer-context.v1.schema.json"),
                     ("contract", "knowledge/contracts/knowledge-publication-generation.v1.schema.json"),
                     ("contract", "knowledge/contracts/knowledge-index-pointer.v2.schema.json"),
                     ("contract", "knowledge/contracts/knowledge-publication-report.v1.schema.json"),
+                    ("contract", "knowledge/contracts/knowledge-generation-retention-policy.v1.schema.json"),
                     ("evaluation-suite", "knowledge/evaluation/repository-knowledge-query-suite.v1.json"),
                     ("policy", "knowledge/policies/consumer-policies.v1.json"),
                     ("policy", "knowledge/policies/consumer-policies.v2.json"),
                     ("policy", "knowledge/policies/source-exclusions.v1.json"),
+                    ("policy", "knowledge/policies/generation-retention.v1.json"),
                 ),
                 "consumer": "server-registry",
-                "operations": ["locate", "rank", "verify-snapshot", "verify-source-hash"],
+                "operations": ["locate", "rank", "verify-snapshot", "verify-source-hash", "restore-lkg", "prune-generations"],
                 "freeze_point": "consumer-owned",
                 "locator_mode": "deterministic-service",
             },
@@ -507,9 +513,12 @@ class CatalogBuilder:
                 "resources": (
                     ("cli", ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py"),
                     ("catalog-builder", "scripts/python/build_knowledge_catalog.py"),
+                    ("publication-gate", "scripts/python/publish_knowledge_catalog.py"),
+                    ("generation-pruner", "scripts/python/prune_knowledge_generations.py"),
+                    ("retention-policy", "knowledge/policies/generation-retention.v1.json"),
                 ),
                 "consumer": "maintainer",
-                "operations": ["existing-only", "targeted", "refresh-derived-index"],
+                "operations": ["existing-only", "targeted", "refresh-derived-index", "restore-lkg", "prune-generations"],
                 "freeze_point": "pinned-main-at-run-start",
                 "locator_mode": "maintenance-only",
             },
@@ -526,6 +535,11 @@ class CatalogBuilder:
                 relations=(
                     {"type": "governed_by", "target": "adr.ADR-0044"},
                     {"type": "governed_by", "target": "adr.ADR-0048"},
+                    *(
+                        ({"type": "governed_by", "target": "adr.ADR-0050"},)
+                        if component["id"] in {"governance.knowledge-locator", "governance.knowledge-maintenance"}
+                        else ()
+                    ),
                 ),
                 consumer_ids=("vdd", "bootstrap", "refactor-acceptance"),
             )

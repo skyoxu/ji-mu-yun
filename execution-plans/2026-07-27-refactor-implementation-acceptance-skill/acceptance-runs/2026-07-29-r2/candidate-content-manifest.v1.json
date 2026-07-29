@@ -1,0 +1,1669 @@
+{
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "baseline_sha256": "sha256:43274db309a21df535d45fd05ecd66ffef400287778c4372c793d37194e1aba9",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "candidate_sha256": "sha256:66a9d405e0eb08b0930ce92b1e94ca5cc8ad2765dcb961a52012a256dfc4d934",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "baseline_sha256": "sha256:7dc81b5d86763959fefaa4057c24913384a817d6a54ddeb4004d46bdbb8c0acc",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "candidate_sha256": "sha256:8eb99473854847d3126e72047e62180cda37f8b25c06e9cdacc8e5702d742f03",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-auditor-role-bundle.v1.schema.json",
+      "candidate_sha256": "sha256:1c9a12fc3da8f3e8085b88b7f4e558cb975f0a05b48b40cb0cc57730a06a124e",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+      "candidate_sha256": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json",
+      "candidate_sha256": "sha256:d5145862fd4d4b01ab2f96aebdd8d1c417c33f46e8017469110b1630eafe174b",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "baseline_sha256": "sha256:a35dccedfdf9fb548844f813bce924c8987889cf33dece8000e1a29bebd56e85",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "candidate_sha256": "sha256:48f5172ae8183a360734bbcd38a486da0eef009a12554b6dba26cdeabb193b61",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "baseline_sha256": "sha256:afbe840b25c016c14a3be98178b30a21ef668fb328b98977ad6d693fcfa36623",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "candidate_sha256": "sha256:d7ffcb190bc86dc0e95dbbcccd4faac322065dbe985a06ec1cc3b2642f06f454",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "baseline_sha256": "sha256:869455371997a07a1ad1b836a63150769834f55bf8c2525a34f5ba1123ec0fc3",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "candidate_sha256": "sha256:0df6a9ece3928e54f02f3e36c3306e42313ee195c2ff7ae1844e15d051225f1d",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_companion_capability.py",
+      "candidate_sha256": "sha256:c5ba6da828384f11d9b4c43354d56d7ffb331399199e0b0ba667fbdde9b0d65f",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "baseline_sha256": "sha256:fb55339753b6ca32591de3399da9a107ee22059402dc36a934f62475d74edc28",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "candidate_sha256": "sha256:47bd555ed9339e9e400b4e714f1354da4109362b82b3b04ba80c63cbc3cc8264",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "candidate_sha256": "sha256:9095c3d7c2870fc3ee268ffc3145a9a45dcfe1d36fb9d5508d223d7db3592d49",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json",
+      "candidate_sha256": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "candidate_sha256": "sha256:e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-baseline-content-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:aa5b6bf8eb9fc7ab407ad4a9b39111dffcdb51854f0f7b99becc124ed286fa80",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-candidate-content-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:7e8483176f2cf60fa8e4436edd43c28c886cd3f7d5415dbaaedfe919c8e3f104",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-impact-projection.v1.schema.json",
+      "candidate_sha256": "sha256:c9c44607c397be2c1592e137052177ac7563e0ab6f30d8a920945be1e6e9ba4f",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-run-input.v1.schema.json",
+      "candidate_sha256": "sha256:aa17b8b5ac51f1a468eb521879ffaf2ac165474b0e04dd903052ef11808ace40",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-clauses.v1.schema.json",
+      "candidate_sha256": "sha256:7e50ff8fb164d68d9b04bed733b4e8d85c835c06ce550c9640daf1f5ec2cd09a",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-inventory.v1.schema.json",
+      "candidate_sha256": "sha256:12475404d1267af3da09acb12e621d0ec158cfa02b10b06d30cf85d43adf6661",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/check-id-lineage.v1.schema.json",
+      "candidate_sha256": "sha256:5b5a4e1a2560aefce2f5a956b1b9caad4e3a4348dfc8a08016717e6b0e7f3523",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-binding.v1.schema.json",
+      "candidate_sha256": "sha256:ed523e09a5f329d345a46af5d9c212bcbe0f22a1e550a3add02b5046be241de9",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-pack.v1.schema.json",
+      "candidate_sha256": "sha256:4784b040b47c4f2ddce0cde5501d9c870f491364594a491449c6b06e85ae7f79",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
+      "candidate_sha256": "sha256:775c6b865e93f62c610149a536d360437493b5439605b10fb85eb88852c08b68",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-acceptance-candidate.v1.schema.json",
+      "candidate_sha256": "sha256:4d4fd1b06de8f7a861c0eac53a22acbf10a5432c152abe41869d49261304b22f",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-diff-coverage-result.v1.schema.json",
+      "candidate_sha256": "sha256:1c33a1df78ec34c2afd408f087327515cbaccadaee3d71307c92ab419dcc8f7b",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
+      "candidate_sha256": "sha256:9f88fc03dda0c90bd96fb09f2441e06f1d849ad76ac64d99674af5fd9c2f212b",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-scan-bundle-result.v1.schema.json",
+      "candidate_sha256": "sha256:e918fa130bc5032d247f500edc67ce599d2966a8a8efffaae3a1c215e8721726",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/program-dod-candidate.v1.schema.json",
+      "candidate_sha256": "sha256:d75508b509b4002cf624b79a8b72d579cf1dbe56bf59218d03af12e6e9d77a6a",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/task-checklist-closure.v1.schema.json",
+      "candidate_sha256": "sha256:67fd82529625a555de4693c8e9a9859139cb10adfac2793118d06d02676acab6",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/typed-gate-result.v1.schema.json",
+      "candidate_sha256": "sha256:369fd038977b9aee8bdb79921e9f486b153db3d2bc1ddb6f9328a31c46c17b98",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "candidate_sha256": "sha256:02e78070964b3a7e3d3f6de793d2fc739d2fdde01aebd96ffe1f55cb81e8d136",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "candidate_sha256": "sha256:f4c4bde0a69973324aa3ca96f2d0be3ea299854440585ef242fa97bcdc6f5978",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      "candidate_sha256": "sha256:f8c8f15dea91bddffec8644ee9eda997ce8ae1becfd33fff340e8a3cc44f7064",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/check_lineage.py",
+      "candidate_sha256": "sha256:bedc1fc1006b30b4e277097a0061e4e5a393b35ba1c7ce81de91cf4fa2438172",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",
+      "candidate_sha256": "sha256:71126775f586db3b19836d730cb2ac30262749837ead052739aa0a477cc578cf",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "candidate_sha256": "sha256:5d6dcd819f7ab763b3708a2224149a1a37b6da9a4813b251ddd8aaf9014903fb",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/matrix_phase.py",
+      "candidate_sha256": "sha256:0a07047465a8411559a132704dc6e3024c6f2b525b711f2d1433b3315a52c1c1",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+      "candidate_sha256": "sha256:44079730c193e0a790e53c7d6c2ed030dfc2fe8d3d91860342ad57731e113622",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py",
+      "candidate_sha256": "sha256:1208d88c078813dc63bdc65615e4567883d9b6d51afd84231241da07cf91f3ef",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/requirement_inventory.py",
+      "candidate_sha256": "sha256:cc948059a5e72c979ec82e96cee69d1e3b774fdfaea3a10deb30c684f4e8884a",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/source_clauses.py",
+      "candidate_sha256": "sha256:fe62c533b8e6a6dfa57c94789024329e33ed8c1501136112078b4ab9afb81a8e",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py",
+      "candidate_sha256": "sha256:42bc227520b8eadac5123642f1c00454006316dac27ec6b21251d673aef55a63",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+      "candidate_sha256": "sha256:6299b80b4c96812b0f8bb32eb95272b4aa4cfcb56557f18d17e4c97c0832e7e4",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_check_lineage.py",
+      "candidate_sha256": "sha256:e7dc7d04056f437e47644414b91c67cfb7f537c88bfc2806e68e6f3e25a10eed",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "candidate_sha256": "sha256:af2ca5700ef882664c6e6d640ae701ff234ab0f1a1989d0ec38bbf9003a558ad",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py",
+      "candidate_sha256": "sha256:7f9669253f135bcfffce88583518088b15b21b1229008cf8484cc8b468c0bb35",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_matrix_phase.py",
+      "candidate_sha256": "sha256:53635e632f139fb04cb52aa0c648b86859369a48f4f769702871fbbc8eb7470c",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py",
+      "candidate_sha256": "sha256:11981dfc8cf5b7ebe227ed5a7cb2131755ec74a83bd5e748d90c3c367f9b55b7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py",
+      "candidate_sha256": "sha256:f8ea2485fe54a3fd391eda9727e6aa90eb0deb33834f943790ae51faed7855a9",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_requirement_inventory.py",
+      "candidate_sha256": "sha256:c274ee9eeb1dfa2dbaea005f77d0c806fa60faa7af10b63afc3ebf371e6cf8bf",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "candidate_sha256": "sha256:63b25c817e7752dd2dea58e527f4aa19efa8546adb319f58dd9e9fd3669021a7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_schemas.py",
+      "candidate_sha256": "sha256:ce5329f23c23c8cdfda1da9429d112530d3644489e3150bd07eeb3951e6a268c",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_source_clauses.py",
+      "candidate_sha256": "sha256:8f0ede7c8cb2c1f7cdfb17793cf8cc0caa79b07b96b9c33575a8795e12fff787",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py",
+      "candidate_sha256": "sha256:01802c58a94771bb7f44b0269e1134c131d5b97db9ebb7151ce64da767775960",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+      "candidate_sha256": "sha256:74615b9e13f6fd6e614fc2ed5be3b3caf8250866e0ec1cdd893f9500d64705d6",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/01-requirements-and-acceptance.md",
+      "candidate_sha256": "sha256:1987cf7796d9579b67e115862bd98254cc1ea1f6869686355018570400de9494",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:8c893a75eb1a23d85b431eeb0ac22f9af1d74ca4bfdcd8eb25e37e0275cffc39",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-run-input-2026-07-29-r1.request.json",
+      "candidate_sha256": "sha256:cf0e5d9c1f1a87542c1680988875eb780800c713c57a55fa5e729e3bbfe164f7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-run-input-2026-07-29-r1.v1.json",
+      "candidate_sha256": "sha256:1ec16a4b2e43ad33de0b26b7b964eb4877e61fbb5fe2305c1ac241cb11db3256",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/acceptance-result.rendered.v1.json",
+      "candidate_sha256": "sha256:f3a22d6d33128384a23ebd488051e5147632deb31f8b7cadf4fe5d31fa7e1ddd",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/baseline-content-manifest.v1.json",
+      "candidate_sha256": "sha256:d4f8cd9b3d2a95236e0cb336941b9c16f53b3f545ef345857a1fabfe6c27895c",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/bootstrap-requirement.request.json",
+      "candidate_sha256": "sha256:5953a02320aab6fc19664caefb0ff047faacef4126df74bf39e8fe074fa0b50f",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/bootstrap-requirement.v1.json",
+      "candidate_sha256": "sha256:0872a87150f845da5d2017d455da83b31c578a4246cffc5a99a2d2af24b2c4fa",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/bootstrap-route.request.json",
+      "candidate_sha256": "sha256:b2b06730b36d259b6bbda7518206ccf948b260fbc702852c6b481aeed1d2aaf1",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/bootstrap-route.v1.json",
+      "candidate_sha256": "sha256:cf5d06dbe363d118d2f4ea5894fb8edcf28981e1f5156c36be5c59435f5b713d",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/candidate-content-manifest.v1.json",
+      "candidate_sha256": "sha256:e4c847795cfa9248902e634d66db1668ff11a058803b01238173be0c62602b6f",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/deterministic-validation-result.v1.json",
+      "candidate_sha256": "sha256:bee4815b2235a43d059a3519bcd53d71759860420163dabca9a2c200a0e92e99",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/source-inventory.v1.json",
+      "candidate_sha256": "sha256:f7c4fdad88114679ba06285281162d9007222fbd921890153dc8cfcccbd622ba",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
+      "candidate_sha256": "sha256:b3d0b27c70598da0034515a05dcfe87e389cce1584e53ce19dfb01c0a08e58cb",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json",
+      "candidate_sha256": "sha256:fa6a1b4eb31ab9e0837ec4c87298c6ab476f6e7cde1f33253b1cc8e39db32620",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/fixtures/negative-cases.v1.json",
+      "candidate_sha256": "sha256:69edac6359f18c5b62bc7da0ce94e77abe9bae75df7f710e5dd9feac4ad497ec",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:370a0d20d1e0adf761ab09a92e9c44bdffdb8e392345a909d0975d8654e57156",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/knowledge-context.v1.json",
+      "candidate_sha256": "sha256:471f55bf5f88b0a649679cf8689d890e9f077a91aec7efe93873a39ad261ebf7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/plan-state.v1.json",
+      "candidate_sha256": "sha256:b60ba5896eec2be677514d8e7d8e3c308f767773c09fe333948265c1b1d233cf",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair-closure-r3.json",
+      "candidate_sha256": "sha256:c2d37793dbb436155c070ee87769f5be991f766785362d324e4a184c14b6d073",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair-closure.json",
+      "candidate_sha256": "sha256:44af878a6d7068679e7fe605e69b94ac2f98328303df0a9b0c4de10c24c291f7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/bootstrap-repair-closure-r2.v1.json",
+      "candidate_sha256": "sha256:e3219ce5b778c2cc83312a0509b051f31ede5e180ff75d12162b01a2218063dc",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/bootstrap-repair-closure-r3.v1.json",
+      "candidate_sha256": "sha256:e3d8261c36f70f5f491b8c7ffc2b929d31b9e2b8dcfdbaac78f3612314797d65",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/bootstrap-repair-closure-r4.v1.json",
+      "candidate_sha256": "sha256:3395da76d8390cd861e461710d0083ad58c3f22f86d26047059665eff940550f",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/bootstrap-repair-closure.v1.json",
+      "candidate_sha256": "sha256:e3219ce5b778c2cc83312a0509b051f31ede5e180ff75d12162b01a2218063dc",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/bootstrap-review-scope.v1.json",
+      "candidate_sha256": "sha256:2552c99c71a1b8838301d863ff7243256d33af1fbcde5ced0771beaca3856ecb",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-2/repair-plan.v1.json",
+      "candidate_sha256": "sha256:03d52e6fa473f1b67886fc54e03cd2de54fefd650664877f80344712f21dee22",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-3/bootstrap-repair-closure.v1.json",
+      "candidate_sha256": "sha256:d88bb50ea7671168ddab231ce6cd39d2c2ca3da367937ace2f87fa89b030edea",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-3/bootstrap-review-scope.v1.json",
+      "candidate_sha256": "sha256:bb457e925edff6599ca47dde4edab36afcea85c7533344c2771e1ffe9de8b54e",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-3/repair-plan.v1.json",
+      "candidate_sha256": "sha256:4275976d58b9cc07c4e9270b2f4c996c642367d51e72936329e872b3f1d7a75b",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-4/repair-closure.json",
+      "candidate_sha256": "sha256:103dcc1c14871340adad7cb07a85552ff9fa93ac8b42ee164959a799bf5044f9",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-4/repair-plan.v1.json",
+      "candidate_sha256": "sha256:5688db44a559d56bf36b611086e999107e40cefaa012b349b68bfa240049cf20",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-5/post-commit-validation.v1.json",
+      "candidate_sha256": "sha256:eee6f27a32b644a04040271b61962d3c9aa0a06adf61fd7794a59885ce06f9d2",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-5/repair-closure.json",
+      "candidate_sha256": "sha256:8a11b7ac4bf19957f6615aa49d871731705d49dc175fef67f4c5cbbde85970fe",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-5/repair-plan.v1.json",
+      "candidate_sha256": "sha256:8a77fa352fd163142515a0893da6afd0b6ef8b99b0b61e005eae7bfbdcc392f7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/requirements-ledger.v1.json",
+      "candidate_sha256": "sha256:a8dccbac7925ec6deedd06815f2cf6787cd80604f407c9d4c340228b3c859167",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/resume-state.v1.json",
+      "candidate_sha256": "sha256:8528f0870f44bd73075c3d7ccb2eed13ba7b4aca56131e37c8f41e6d7e091dbe",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor-lineage.v1.json",
+      "candidate_sha256": "sha256:98fcb8632674a97621e953ef1e575c363f3fe0f9d0e6a1b2822c3ff02502d55e",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-1/bootstrap-review-scope.v1.json",
+      "candidate_sha256": "sha256:dfbc0bbeb2d96bcf624760de845b5d87e246024413df3c776fcada3d328b20f3",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-1/repair-plan.v1.json",
+      "candidate_sha256": "sha256:f6b9b396807bdf4bcdd96e920878efd3a3e0c20989969a37dac186d96447cbaf",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-2/bootstrap-repair-closure.v1.json",
+      "candidate_sha256": "sha256:a924205a9122d3b41c72d8f80f834a2b5d5a344c53264ae9be818952da6be757",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-2/bootstrap-review-scope.v1.json",
+      "candidate_sha256": "sha256:0b9f3c226de3e185abf350a1634ab9bcbdd8e4641f47db8294435dd34e75959e",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-2/repair-plan.v1.json",
+      "candidate_sha256": "sha256:a3d11c42d37fbfce047b2e939460663cdf9b7aed214396d4a810e5b934e61c63",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-3/bootstrap-repair-closure.v1.json",
+      "candidate_sha256": "sha256:fd057a8e91ef037fff4f605eb900033231c3d30019be61dcb93a584aa88d3fbb",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-3/bootstrap-review-scope.v1.json",
+      "candidate_sha256": "sha256:8f79260ec8cc637704585807a0c086c8d9d3c34aeeefce872a0804da0c647131",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-3/repair-plan.v1.json",
+      "candidate_sha256": "sha256:4444f78946230a790547cdd49f6e0b73e0f662a2f0935067249d52db52bc39cb",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/bootstrap-preflight-commands.v1.json",
+      "candidate_sha256": "sha256:db8fa662963ca586e44f9c2e86aa95f1a34dea5b2c1a40775fef8ca7f6fd5387",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/refactor_acceptance_slice_bridge.py",
+      "candidate_sha256": "sha256:eaebc51f2446b04075c596bab4a44e6fe6eaeab59ef006366690fd8d9141863c",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py",
+      "candidate_sha256": "sha256:603a51fee4061fef7e28cee3d525bb71f523020bb641f000e0e35683b4a0a92c",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py",
+      "candidate_sha256": "sha256:a1ebc0b4bec64884425672060be517d43de867210bf86bbc91f87334004818b7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+      "candidate_sha256": "sha256:cf16596eb53167a1d2d149a4a4b87b22c5303c8cb58569aec81d4ee3bbad7410",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_slice.py",
+      "candidate_sha256": "sha256:c6ddd05f34c6fbb000f1464ec08ecb17776a5236c7a68107d52acaf65fb78ea3",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/README.md",
+      "candidate_sha256": "sha256:e924705c577429e1903d170dab1c1121aeef89225afc0ba97adbcfec250ac7cf",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "baseline_sha256": "sha256:b9dbe3d28f82e55fda28ef887db126b4252ed1a38891da8832717a31aae133cf",
+      "candidate_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "candidate_sha256": "sha256:e1e2417e96bcaf32e04f3ccd0f13ec96431a06bc94521e918295ab5141ccb908",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "candidate_sha256": "sha256:c8402f443205712b0b75cb0c0dbee42aa4cebb72331348032a9cbde57ceb76c6",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/contracts/knowledge-consumer-projections.v1.schema.json",
+      "candidate_sha256": "sha256:515ba5840ecd87d04f26a240c632dd27bb9d4f821f965172664d903b9b9a1b30",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "knowledge/contracts/knowledge-context-selection.v1.schema.json",
+      "baseline_sha256": "sha256:54ae7187f8713425da85b087828d1eede70afa983327bbfd21a5611016827898",
+      "candidate_path": "knowledge/contracts/knowledge-context-selection.v1.schema.json",
+      "candidate_sha256": "sha256:f1a16513dc88084dd5628b693b682277feaa46f38840a2442eb3e9aa43f587f5",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/contracts/knowledge-index-pointer.v2.schema.json",
+      "candidate_sha256": "sha256:b0f62983102d7419f9f922f79ce9afd070654847a4f3e9b789c10e5f6cad2943",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "knowledge/contracts/knowledge-locator-request.v1.schema.json",
+      "baseline_sha256": "sha256:64e418e1bd6648192d94048ac73f36744fcfd175e776ed3bcb7c20dec3ced068",
+      "candidate_path": "knowledge/contracts/knowledge-locator-request.v1.schema.json",
+      "candidate_sha256": "sha256:f89ae3b9bff3d20640a2828dd4a18a5b622868b0db0d719a195dcd6020d7d451",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "knowledge/contracts/knowledge-locator-result.v1.schema.json",
+      "baseline_sha256": "sha256:7a14eb91f0dcece3d75fbaed7e5345bcb2f83d962bb33bd20bfb2413b74714dc",
+      "candidate_path": "knowledge/contracts/knowledge-locator-result.v1.schema.json",
+      "candidate_sha256": "sha256:16979935f80ab144e36b511455a6eda421a58365a577f52024100a139f1c7c31",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/contracts/knowledge-publication-generation.v1.schema.json",
+      "candidate_sha256": "sha256:a091b8f20dd8f1bd8c90274f3f7168773d3850b4497e826bd4c1f94909447918",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/contracts/knowledge-publication-report.v1.schema.json",
+      "candidate_sha256": "sha256:87d0a311dd4eebe286e8583bca20034a22de61dcece0e82b5d8947e6d0f94414",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/contracts/repository-knowledge-catalog.v2.schema.json",
+      "candidate_sha256": "sha256:e04f03182c1f5fcd45d6daad17b8b5dbe4da84b122116307b9fdffc1a1ebfe13",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/contracts/repository-knowledge-query-report.v1.schema.json",
+      "candidate_sha256": "sha256:3826139031ece154e2696c80a9fa157c4ce37fbf7dc6f5a041a109354a337a34",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/contracts/repository-knowledge-query-suite.v1.schema.json",
+      "candidate_sha256": "sha256:05e066d217f54b713857cf72365048e565a44ae35fc39a965376f7e4753c25eb",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/contracts/repository-source-snapshot.v1.schema.json",
+      "candidate_sha256": "sha256:376f147f1e579489e1677641c45ec17cc31609ce04e8e7c4c9fe493b72025782",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
+      "candidate_sha256": "sha256:806fcd0541a6fc4c8a2605293e553d196cb7c1162ec0cad2169b9ef604a70e31",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "knowledge/indexes/README.md",
+      "baseline_sha256": "sha256:f0710a8eeeaa821e826e14d67369fabe6cff0e73e28670562b3e84169a33e781",
+      "candidate_path": "knowledge/indexes/README.md",
+      "candidate_sha256": "sha256:bd4419b18bc00a6193f374912780adbe0479de6dd6e976f138dbed581d293069",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/current.json",
+      "candidate_sha256": "sha256:34c827d995a0c21cb9ea6140e7fd66c2bdb80f16527b35aa76000a1025a294b6",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/derived-index.v1.json",
+      "candidate_sha256": "sha256:9635309f4d3c6677751bc3da2c2d6329b0533a116c351cfa1e84164ff3f7b5ad",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/4862ed1b82c7523e1d6722e6ad29406cb0d44ff1a99e20473f4673457c5e5e0f/evaluation/query-report.v1.json",
+      "candidate_sha256": "sha256:453e1fcb3c9f148fb5f514d215b208fe1d39004cf191d6ef006e14575fadd3a8",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/4862ed1b82c7523e1d6722e6ad29406cb0d44ff1a99e20473f4673457c5e5e0f/inputs/consumer-policies.v2.json",
+      "candidate_sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/4862ed1b82c7523e1d6722e6ad29406cb0d44ff1a99e20473f4673457c5e5e0f/inputs/repository-knowledge-query-suite.v1.json",
+      "candidate_sha256": "sha256:806fcd0541a6fc4c8a2605293e553d196cb7c1162ec0cad2169b9ef604a70e31",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/4862ed1b82c7523e1d6722e6ad29406cb0d44ff1a99e20473f4673457c5e5e0f/inputs/source-exclusions.v1.json",
+      "candidate_sha256": "sha256:3a14d0f15e921f1eaf749b187f36a11fe59c5c697e0483cbd5b9793b2b38bdda",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/4862ed1b82c7523e1d6722e6ad29406cb0d44ff1a99e20473f4673457c5e5e0f/layers/consumer-projections.v1.json",
+      "candidate_sha256": "sha256:6a43ab87e1c15c58a9e16d9b8326ac98cdede583ea1beab365ce3a32c1a1a975",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/4862ed1b82c7523e1d6722e6ad29406cb0d44ff1a99e20473f4673457c5e5e0f/layers/repository-knowledge-catalog.v1.json",
+      "candidate_sha256": "sha256:e1e2417e96bcaf32e04f3ccd0f13ec96431a06bc94521e918295ab5141ccb908",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/4862ed1b82c7523e1d6722e6ad29406cb0d44ff1a99e20473f4673457c5e5e0f/layers/repository-knowledge-catalog.v2.json",
+      "candidate_sha256": "sha256:c8402f443205712b0b75cb0c0dbee42aa4cebb72331348032a9cbde57ceb76c6",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/4862ed1b82c7523e1d6722e6ad29406cb0d44ff1a99e20473f4673457c5e5e0f/layers/repository-source-snapshot.v1.json",
+      "candidate_sha256": "sha256:c2c8643718d8c4565c501536c05c2fc17a7ee3dbc5cce8f56bd839cfd53bf830",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/4862ed1b82c7523e1d6722e6ad29406cb0d44ff1a99e20473f4673457c5e5e0f/manifest.json",
+      "candidate_sha256": "sha256:59d6de3f2c56302993311e770adc22104500d9bdaaf621cc8c87aa93aabe1a09",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/b10d5eebbe525668e38aa01ad9fc533965526a2267d52daae5b25043a104f4f1/evaluation/query-report.v1.json",
+      "candidate_sha256": "sha256:873cccabb3f2a2d70d4cbb8b8c94b9cc8ea66a25b7471dbcac530bac7716ce15",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/b10d5eebbe525668e38aa01ad9fc533965526a2267d52daae5b25043a104f4f1/inputs/consumer-policies.v2.json",
+      "candidate_sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/b10d5eebbe525668e38aa01ad9fc533965526a2267d52daae5b25043a104f4f1/inputs/repository-knowledge-query-suite.v1.json",
+      "candidate_sha256": "sha256:806fcd0541a6fc4c8a2605293e553d196cb7c1162ec0cad2169b9ef604a70e31",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/b10d5eebbe525668e38aa01ad9fc533965526a2267d52daae5b25043a104f4f1/inputs/source-exclusions.v1.json",
+      "candidate_sha256": "sha256:3a14d0f15e921f1eaf749b187f36a11fe59c5c697e0483cbd5b9793b2b38bdda",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/b10d5eebbe525668e38aa01ad9fc533965526a2267d52daae5b25043a104f4f1/layers/consumer-projections.v1.json",
+      "candidate_sha256": "sha256:fc2cdfd51ceca6ec86124b64f96e1f65b5009cd761d3ab9ed7192e90c09e35eb",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/b10d5eebbe525668e38aa01ad9fc533965526a2267d52daae5b25043a104f4f1/layers/repository-knowledge-catalog.v1.json",
+      "candidate_sha256": "sha256:a4f1fa0387f68aa5ef37e85d3a3ac5b2af0f14a6e10aa3deffeb15805c8d3828",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/b10d5eebbe525668e38aa01ad9fc533965526a2267d52daae5b25043a104f4f1/layers/repository-knowledge-catalog.v2.json",
+      "candidate_sha256": "sha256:ec5c2e6cd9064815b0c5651a4b1913623a06d4478aff7f4db7eb98cb7610ffb6",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/b10d5eebbe525668e38aa01ad9fc533965526a2267d52daae5b25043a104f4f1/layers/repository-source-snapshot.v1.json",
+      "candidate_sha256": "sha256:146dc2cd4d38035aa4139d300b80ad0e62671ed8eb32423bf201c58d9dd906fd",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/b10d5eebbe525668e38aa01ad9fc533965526a2267d52daae5b25043a104f4f1/manifest.json",
+      "candidate_sha256": "sha256:414c4162346d4a177910bca8884353bb2d198ce3885fafd449849bf8c479cd8b",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/last-known-good.json",
+      "candidate_sha256": "sha256:34c827d995a0c21cb9ea6140e7fd66c2bdb80f16527b35aa76000a1025a294b6",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/policies/consumer-policies.v2.json",
+      "candidate_sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/policies/source-exclusions.v1.json",
+      "candidate_sha256": "sha256:3a14d0f15e921f1eaf749b187f36a11fe59c5c697e0483cbd5b9793b2b38bdda",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/projections/consumer-projections.v1.json",
+      "candidate_sha256": "sha256:6a43ab87e1c15c58a9e16d9b8326ac98cdede583ea1beab365ce3a32c1a1a975",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "candidate_sha256": "sha256:c2c8643718d8c4565c501536c05c2fc17a7ee3dbc5cce8f56bd839cfd53bf830",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/python/_knowledge_catalog_builder.py",
+      "candidate_sha256": "sha256:5d161292e7a6d2e5afa19783b4574ca3b8302624ce6cbd210343c9115e6205d7",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/python/build_knowledge_catalog.py",
+      "candidate_sha256": "sha256:25d98e4b3ac9dfa9a105e2cec387abd871717f9891ae4e50cf3a4b33cef4e52c",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/python/knowledge_context_validation.py",
+      "candidate_sha256": "sha256:b6429d3f4388715cd593696ea96ad2f2f8ced890e76edb31377fecc6f5f74a90",
+      "inclusion_reason": "Full 7-27 implementation, consumer, plan-repair, or frozen knowledge dependency scope."
+    }
+  ]
+}

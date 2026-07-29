@@ -20,7 +20,7 @@ _MODES = {"evidence_only", "controlled_validation"}
 _CANDIDATE_MODES = {"commit", "dirty_worktree", "proposed_commit_set"}
 _MANIFEST_STATUS = {"complete", "partial", "unavailable"}
 _ROLES = {"implementation", "consumer", "source", "authority", "test", "evidence"}
-_CHANGE_TYPES = {"unchanged", "added", "modified", "deleted", "renamed", "untracked"}
+_CHANGE_TYPES = {"unchanged", "added", "modified", "deleted", "renamed", "copied", "untracked"}
 _EXTRACTION_MODES = {"registry_backed", "parser_backed", "semantic_candidate"}
 _COMPLETENESS = {"deterministic_complete", "semantically_attested_complete", "candidate", "incomplete"}
 _PHASE_PREFIXES = ("PhaseA.Platform/", "PhaseA.Platform.Tests/", "runtime/phase-a/", "scripts/python/phase_a_", "scripts/python/phase_b_", "scripts/sc/_llm_backend.py")
@@ -120,6 +120,45 @@ def _git_path_exists(repository_root: Path, commit: str, path: str, field: str) 
     return normalized in paths
 
 
+def _git_changed_paths(repository_root: Path, baseline_commit: str, candidate_commit: str) -> set[str]:
+    """Return the exact path set changed by two immutable commits.
+
+    A complete commit manifest is custody evidence only when it accounts for
+    every path in the commit diff.  ``--name-status -z`` avoids lossy parsing
+    of spaces and preserves both sides of a rename.
+    """
+    output = _git(
+        repository_root,
+        "diff",
+        "--name-status",
+        "-z",
+        "--find-renames",
+        "--find-copies",
+        "--find-copies-harder",
+        baseline_commit,
+        candidate_commit,
+    )
+    fields = [item for item in output.split(b"\0") if item]
+    paths: set[str] = set()
+    index = 0
+    try:
+        while index < len(fields):
+            status = fields[index].decode("ascii", errors="strict")
+            index += 1
+            if status.startswith("R") or status.startswith("C"):
+                old_path = fields[index].decode("utf-8", errors="strict")
+                new_path = fields[index + 1].decode("utf-8", errors="strict")
+                index += 2
+                paths.update({_normalized_relative(old_path, "Git diff path"), _normalized_relative(new_path, "Git diff path")})
+            else:
+                path = fields[index].decode("utf-8", errors="strict")
+                index += 1
+                paths.add(_normalized_relative(path, "Git diff path"))
+    except (IndexError, UnicodeDecodeError) as exc:
+        raise InputError("Git diff returned malformed immutable path data") from exc
+    return paths
+
+
 def _is_link_or_reparse_point(path: Path) -> bool:
     try:
         if path.is_symlink():
@@ -177,6 +216,11 @@ def verify_manifest_bytes(
                 continue
             if _git_path_exists(repository_root, candidate_commit, old_path, "candidate tombstone path"):
                 raise InputError(f"candidate revision still contains removed path: {old_path}")
+        if candidate.get("status") == "complete":
+            declared_changes = set(candidate_changed_paths(candidate))
+            actual_changes = _git_changed_paths(repository_root, baseline_commit, candidate_commit)
+            if declared_changes != actual_changes:
+                raise InputError("complete candidate manifest does not exactly match the immutable commit diff")
         return {
             "schemaVersion": "acceptance-candidate-custody.v1",
             "candidateMode": candidate_mode,
@@ -243,6 +287,23 @@ def verify_manifest_bytes(
             old_file = snapshot_root / Path(_normalized_relative(old_path, "candidate tombstone path"))
             if old_file.exists() or old_file.is_symlink():
                 raise InputError(f"candidate snapshot still contains removed path: {old_path}")
+    if candidate.get("status") == "complete":
+        declared_snapshot_paths = {
+            _normalized_relative(item["candidate_path"], "candidate manifest path")
+            for item in candidate_files
+            if item.get("candidate_path") is not None
+        }
+        observed_snapshot_paths: set[str] = set()
+        try:
+            for entry in snapshot_root.rglob("*"):
+                if _is_link_or_reparse_point(entry):
+                    raise InputError("candidate snapshot cannot contain a link or reparse point")
+                if entry.is_file():
+                    observed_snapshot_paths.add(entry.relative_to(snapshot_root).as_posix())
+        except OSError as exc:
+            raise InputError("candidate snapshot cannot be enumerated") from exc
+        if observed_snapshot_paths != declared_snapshot_paths:
+            raise InputError("complete candidate snapshot does not exactly match its manifest")
     snapshot_binding = {
         "snapshot_path": normalized_snapshot,
         "run_id": run_input["run_id"],
@@ -383,18 +444,18 @@ def validate_candidate_manifest(value: Any, baseline: Any) -> None:
         old_hash, new_hash = item.get("baseline_sha256"), item.get("candidate_sha256")
         if not isinstance(item.get("inclusion_reason"), str) or not item["inclusion_reason"].strip():
             raise InputError("candidate manifest inclusion reason is invalid")
-        if kind in {"unchanged", "modified", "renamed", "deleted"}:
+        if kind in {"unchanged", "modified", "renamed", "copied", "deleted"}:
             _relative(old_path, "baseline_path")
             _hash(old_hash, "baseline_sha256")
-        if kind in {"unchanged", "modified", "renamed", "added", "untracked"}:
+        if kind in {"unchanged", "modified", "renamed", "copied", "added", "untracked"}:
             _relative(new_path, "candidate_path")
             _hash(new_hash, "candidate_sha256")
         if kind in {"added", "untracked"} and (old_path is not None or old_hash is not None):
             raise InputError("added or untracked entry cannot have a baseline")
         if kind == "deleted" and (new_path is not None or new_hash is not None or baseline_files.get(old_path) != old_hash):
             raise InputError("deleted entry must be a baseline tombstone")
-        if kind in {"modified", "renamed"} and baseline_files.get(old_path) != old_hash:
-            raise InputError("modified or renamed entry must close against the baseline")
+        if kind in {"modified", "renamed", "copied"} and baseline_files.get(old_path) != old_hash:
+            raise InputError("modified, renamed, or copied entry must close against the baseline")
         if kind == "unchanged" and (old_path != new_path or old_hash != new_hash):
             raise InputError("unchanged entry is inconsistent")
         if kind == "unchanged" and baseline_files.get(old_path) != old_hash:
@@ -403,6 +464,8 @@ def validate_candidate_manifest(value: Any, baseline: Any) -> None:
             raise InputError("modified entry is inconsistent")
         if kind == "renamed" and old_path == new_path:
             raise InputError("renamed entry must change path")
+        if kind == "copied" and old_path == new_path:
+            raise InputError("copied entry must change path")
         if old_path is not None:
             if old_path in baseline_seen:
                 raise InputError("candidate manifest duplicates a baseline path")
@@ -423,9 +486,14 @@ def candidate_changed_paths(candidate: Any) -> list[str]:
         if not isinstance(item, dict):
             raise InputError("candidate manifest file is invalid")
         if item.get("change_type") != "unchanged":
-            path = item.get("candidate_path") or item.get("baseline_path")
-            _relative(path, "changed candidate path")
-            paths.append(path)
+            identities = (
+                (item.get("baseline_path"), item.get("candidate_path"))
+                if item.get("change_type") in {"renamed", "copied"}
+                else (item.get("candidate_path") or item.get("baseline_path"),)
+            )
+            for path in identities:
+                _relative(path, "changed candidate path")
+                paths.append(path)
     if len(paths) != len(set(paths)):
         raise InputError("candidate changed paths are duplicated")
     return sorted(paths)

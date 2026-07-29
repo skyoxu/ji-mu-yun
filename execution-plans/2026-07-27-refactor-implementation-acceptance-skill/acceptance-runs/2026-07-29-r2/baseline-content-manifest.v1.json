@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "sha256": "sha256:43274db309a21df535d45fd05ecd66ffef400287778c4372c793d37194e1aba9",
+      "roles": [
+        "consumer"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "sha256": "sha256:7dc81b5d86763959fefaa4057c24913384a817d6a54ddeb4004d46bdbb8c0acc",
+      "roles": [
+        "consumer"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "sha256": "sha256:a35dccedfdf9fb548844f813bce924c8987889cf33dece8000e1a29bebd56e85",
+      "roles": [
+        "consumer"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "sha256": "sha256:afbe840b25c016c14a3be98178b30a21ef668fb328b98977ad6d693fcfa36623",
+      "roles": [
+        "consumer"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "sha256": "sha256:869455371997a07a1ad1b836a63150769834f55bf8c2525a34f5ba1123ec0fc3",
+      "roles": [
+        "consumer"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "sha256": "sha256:fb55339753b6ca32591de3399da9a107ee22059402dc36a934f62475d74edc28",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "sha256": "sha256:b9dbe3d28f82e55fda28ef887db126b4252ed1a38891da8832717a31aae133cf",
+      "roles": [
+        "authority"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": "knowledge/contracts/knowledge-context-selection.v1.schema.json",
+      "sha256": "sha256:54ae7187f8713425da85b087828d1eede70afa983327bbfd21a5611016827898",
+      "roles": [
+        "authority"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": "knowledge/contracts/knowledge-locator-request.v1.schema.json",
+      "sha256": "sha256:64e418e1bd6648192d94048ac73f36744fcfd175e776ed3bcb7c20dec3ced068",
+      "roles": [
+        "authority"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": "knowledge/contracts/knowledge-locator-result.v1.schema.json",
+      "sha256": "sha256:7a14eb91f0dcece3d75fbaed7e5345bcb2f83d962bb33bd20bfb2413b74714dc",
+      "roles": [
+        "authority"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    },
+    {
+      "path": "knowledge/indexes/README.md",
+      "sha256": "sha256:f0710a8eeeaa821e826e14d67369fabe6cff0e73e28670562b3e84169a33e781",
+      "roles": [
+        "authority"
+      ],
+      "inclusion_reason": "Full frozen baseline scope."
+    }
+  ]
+}

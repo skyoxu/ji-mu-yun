@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-generation-retention-policy.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_revision",
+    "keep_recent_successful",
+    "protect_current",
+    "protect_last_known_good",
+    "pruning_mode",
+    "failure_evidence_root"
+  ],
+  "properties": {
+    "schema_version": {"const": "jimuyun.knowledge-generation-retention-policy.v1"},
+    "policy_revision": {"type": "string", "minLength": 1},
+    "keep_recent_successful": {"type": "integer", "minimum": 1},
+    "protect_current": {"const": true},
+    "protect_last_known_good": {"const": true},
+    "pruning_mode": {"const": "explicit-only"},
+    "failure_evidence_root": {"const": "logs/knowledge-context"}
+  }
+}

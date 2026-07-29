@@ -32,6 +32,7 @@ from phase_scan import run_phase_scan
 from task_checklist import audit_task_checklist
 from source_clauses import extract_heading_clauses
 from matrix_phase import project_acceptance_impact, publish_candidate_result, publish_final_result
+from knowledge_context import freeze_knowledge_context
 from bootstrap_integration import (
     bind_capabilities,
     build_attestation_scope,
@@ -56,7 +57,7 @@ def _publish_new_json(output_path: str, value: dict) -> dict:
     return value
 
 
-def prepare_run(input_path: str, output_path: str) -> dict:
+def prepare_run(input_path: str, output_path: str, knowledge_context_path: str | None = None) -> dict:
     input_file = Path(input_path).resolve()
     value = _read_json(input_file)
     validate_run_input(value)
@@ -82,6 +83,11 @@ def prepare_run(input_path: str, output_path: str) -> dict:
     if canonical_hash(candidate) != value["candidate_content_manifest_hash"]:
         raise InputError("candidate content manifest hash is stale")
     candidate_custody = verify_manifest_bytes(target_root, value, baseline, candidate)
+    knowledge_context = (
+        freeze_knowledge_context(target_root, knowledge_context_path)
+        if knowledge_context_path is not None
+        else None
+    )
     output = Path(output_path)
     if output.exists():
         raise InputError("run input output is append-only")
@@ -90,6 +96,7 @@ def prepare_run(input_path: str, output_path: str) -> dict:
         "input": value,
         "inputHash": canonical_hash(value),
         "candidateCustody": candidate_custody,
+        **({"knowledgeContext": knowledge_context} if knowledge_context is not None else {}),
         "authorizes": [],
     }
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -374,6 +381,7 @@ def main() -> int:
     prepare = subcommands.add_parser("prepare", aliases=("prepare-run",))
     prepare.add_argument("--input", required=True)
     prepare.add_argument("--out", required=True)
+    prepare.add_argument("--knowledge-context", required=True, help="Target-root-relative Refactor Acceptance knowledge context")
     policy = subcommands.add_parser("resolve-code-review-policy", aliases=("resolve-phase-policy",))
     policy.add_argument("--policy", required=True)
     policy.add_argument("--baseline", required=True)
@@ -464,7 +472,7 @@ def main() -> int:
         print(json.dumps(parse_run_input(json.loads(Path(args.input).read_text(encoding="utf-8"))), sort_keys=True))
         return 0
     if args.command in {"prepare", "prepare-run"}:
-        print(json.dumps(prepare_run(args.input, args.out), sort_keys=True))
+        print(json.dumps(prepare_run(args.input, args.out, args.knowledge_context), sort_keys=True))
         return 0
     if args.command in {"resolve-code-review-policy", "resolve-phase-policy"}:
         print(json.dumps(resolve_phase_policy_command(args.policy, args.baseline, args.candidate, args.adapter_hash), sort_keys=True))

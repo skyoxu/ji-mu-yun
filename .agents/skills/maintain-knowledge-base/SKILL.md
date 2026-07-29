@@ -55,9 +55,26 @@ under `logs/knowledge-context/`.
 ```powershell
 py -3 -B scripts/python/publish_knowledge_catalog.py --check
 py -3 -B scripts/python/publish_knowledge_catalog.py --publish
+py -3 -B scripts/python/publish_knowledge_catalog.py --restore-lkg
 ```
 
 `--check` is the default and never advances `current.json` or
 `last-known-good.json`. A failed check or publication preserves the previous
 LKG and writes append-only failure evidence under `logs/knowledge-context/`.
 Do not call `build_knowledge_catalog.py` as a publication substitute.
+
+`--restore-lkg` is the only recovery mode. It restores the four formal layers
+from the immutable LKG only when that generation still matches local main,
+then re-verifies the publication and Locator. It never deletes generations or
+evidence.
+
+Generation retention is a separate explicit operation:
+
+```powershell
+py -3 -B scripts/python/prune_knowledge_generations.py --check
+py -3 -B scripts/python/prune_knowledge_generations.py --prune
+```
+
+The policy is `knowledge/policies/generation-retention.v1.json`. Current, LKG,
+and the configured recent successful generations are protected. Publication
+must never invoke pruning implicitly.

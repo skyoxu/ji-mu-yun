@@ -91,6 +91,11 @@ source hash, then records the context hash and selected candidates in the
 frozen manifest. Bootstrap does not create a new Locator query or promote a
 candidate on its own.
 
+The shared context validator also verifies the current publication pointer,
+immutable generation manifest, Catalog/policy/projection bindings, and current
+main source hashes. A missing, stale, or tampered publication blocks prepare.
+No Bootstrap child may use the staging-only `--allow-unpublished-inputs` path.
+
 An abandoned Codex Exec run with no gate and incomplete required layers may be replaced at the same round after repairing the execution defect. Preserve the abandoned evidence and carry any valid partial finding into repair evidence or the replacement review scope; this exception does not reset a gated or completed semantic round.
 
 ## Complete Deterministic Preflight

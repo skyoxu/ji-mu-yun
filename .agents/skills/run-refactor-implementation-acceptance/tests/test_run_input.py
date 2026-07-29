@@ -185,6 +185,33 @@ class RunInputTests(unittest.TestCase):
             self.assertEqual(baseline_revision, result["candidateCustody"]["baselineResolvedCommit"])
             self.assertEqual(candidate_revision, result["candidateCustody"]["candidateResolvedCommit"])
 
+    def test_prepare_commit_rejects_complete_manifest_that_omits_changed_file(self) -> None:
+        from acceptance_core import InputError
+
+        with tempfile.TemporaryDirectory() as directory:
+            repository_root = Path(directory)
+            _git(repository_root, "init", "--quiet")
+            _git(repository_root, "config", "user.email", "acceptance@example.invalid")
+            _git(repository_root, "config", "user.name", "Acceptance Test")
+            _git(repository_root, "config", "core.autocrlf", "false")
+            _git(repository_root, "commit", "--allow-empty", "--quiet", "-m", "baseline")
+            baseline_revision = _git(repository_root, "rev-parse", "HEAD")
+            for name in ("Declared.cs", "Omitted.cs"):
+                source = repository_root / "PhaseA.Platform" / name
+                source.parent.mkdir(parents=True, exist_ok=True)
+                source.write_text(f"class {Path(name).stem} {{}}\n", encoding="utf-8")
+            _git(repository_root, "add", "PhaseA.Platform")
+            _git(repository_root, "commit", "--quiet", "-m", "candidate")
+            candidate_revision = _git(repository_root, "rev-parse", "HEAD")
+            declared = (repository_root / "PhaseA.Platform" / "Declared.cs").read_bytes()
+            baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+            candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "added", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "PhaseA.Platform/Declared.cs", "candidate_sha256": _sha256(declared), "inclusion_reason": "declared only"}]}
+            target = repository_root / "execution-plans" / "acceptance"
+            _write_prepare_inputs(target, baseline, candidate, _run_input(target, baseline, candidate, baseline_revision=baseline_revision, candidate_revision=candidate_revision))
+
+            with self.assertRaisesRegex(InputError, "exactly match the immutable commit diff"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
+
     def test_prepare_commit_rejects_current_manifest_with_stale_candidate_file_hash(self) -> None:
         from acceptance_core import InputError
 
@@ -278,6 +305,23 @@ class RunInputTests(unittest.TestCase):
 
             self.assertEqual([], result["authorizes"])
             self.assertTrue(result["candidateCustody"]["snapshotManifestHash"].startswith("sha256:"))
+
+    def test_prepare_dirty_worktree_rejects_complete_snapshot_with_undeclared_file(self) -> None:
+        from acceptance_core import InputError
+
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            snapshot_root = target / ".acceptance-snapshots" / "run" / "PhaseA.Platform"
+            snapshot_root.mkdir(parents=True)
+            declared = snapshot_root / "Declared.cs"
+            declared.write_bytes(b"class Declared {}\n")
+            (snapshot_root / "Omitted.cs").write_bytes(b"class Omitted {}\n")
+            baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+            candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "untracked", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "PhaseA.Platform/Declared.cs", "candidate_sha256": _sha256(declared.read_bytes()), "inclusion_reason": "declared only"}]}
+            _write_prepare_inputs(target, baseline, candidate, _run_input(target, baseline, candidate, candidate_mode="dirty_worktree", snapshot_path=".acceptance-snapshots/run"))
+
+            with self.assertRaisesRegex(InputError, "exactly match its manifest"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "run.json"))
 
     def test_prepare_proposed_commit_set_reads_contained_frozen_snapshot(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -453,6 +497,40 @@ class RunInputTests(unittest.TestCase):
         invalid = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [{"change_type": "added", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "PhaseA.Platform/Program.cs", "candidate_sha256": "sha256:" + "z" * 64, "inclusion_reason": "invalid digest"}]}
         with self.assertRaisesRegex(InputError, "sha256 hash"):
             validate_candidate_manifest(invalid, baseline)
+
+    def test_rename_and_copy_changed_paths_include_both_git_identities(self) -> None:
+        from acceptance_core import _git_changed_paths, candidate_changed_paths
+
+        for change_type in ("renamed", "copied"):
+            with self.subTest(change_type=change_type), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                _git(root, "init")
+                _git(root, "config", "user.email", "acceptance@example.invalid")
+                _git(root, "config", "user.name", "Acceptance Test")
+                source = root / "source.txt"
+                source.write_text("same content\n", encoding="utf-8")
+                _git(root, "add", "source.txt")
+                _git(root, "commit", "-m", "baseline")
+                baseline_commit = _git(root, "rev-parse", "HEAD")
+                target = root / "target.txt"
+                if change_type == "renamed":
+                    source.rename(target)
+                else:
+                    target.write_bytes(source.read_bytes())
+                _git(root, "add", "-A")
+                _git(root, "commit", "-m", change_type)
+                candidate_commit = _git(root, "rev-parse", "HEAD")
+                manifest = {
+                    "files": [{
+                        "change_type": change_type,
+                        "baseline_path": "source.txt",
+                        "candidate_path": "target.txt",
+                    }]
+                }
+                self.assertEqual(
+                    _git_changed_paths(root, baseline_commit, candidate_commit),
+                    set(candidate_changed_paths(manifest)),
+                )
 
     def test_candidate_manifest_rejects_unknown_top_level_fields(self) -> None:
         from acceptance_core import InputError, validate_candidate_manifest

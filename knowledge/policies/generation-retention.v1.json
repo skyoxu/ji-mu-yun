@@ -1,0 +1,9 @@
+{
+  "failure_evidence_root": "logs/knowledge-context",
+  "keep_recent_successful": 5,
+  "policy_revision": "knowledge-generation-retention.v1",
+  "protect_current": true,
+  "protect_last_known_good": true,
+  "pruning_mode": "explicit-only",
+  "schema_version": "jimuyun.knowledge-generation-retention-policy.v1"
+}

@@ -10,6 +10,8 @@ REQUIRED = (
     "SKILL.md",
     "scripts/acceptance_cli.py",
     "scripts/acceptance_core.py",
+    "scripts/knowledge_context.py",
+    "scripts/prepare_knowledge_context.py",
     "scripts/evidence_analysis.py",
     "scripts/phase_scan.py",
     "scripts/task_checklist.py",
@@ -47,6 +49,7 @@ REQUIRED = (
     "tests/test_control.py",
     "tests/test_bootstrap_integration.py",
     "tests/test_package.py",
+    "tests/test_knowledge_context.py",
 )
 
 REQUIRED_FIXTURE_CATEGORIES = (

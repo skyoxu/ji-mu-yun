@@ -13,7 +13,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from _knowledge_locator_core import require_fresh_catalog
+from _knowledge_locator_core import require_fresh_catalog, verify_current_publication
 
 
 CATALOG_RELATIVE = Path("knowledge/catalogs/repository-knowledge-catalog.v2.json")
@@ -21,7 +21,10 @@ POLICY_RELATIVE = Path("knowledge/policies/consumer-policies.v2.json")
 PROJECTION_RELATIVE = Path("knowledge/projections/consumer-projections.v1.json")
 REQUEST_SCHEMA = "jimuyun.knowledge-locator-request.v1"
 RESULT_SCHEMA = "jimuyun.knowledge-locator-result.v1"
-CONTEXT_SCHEMA = "jimuyun.vdd-knowledge-context.v1"
+CONTEXT_SCHEMAS = {
+    "jimuyun.vdd-knowledge-context.v1",
+    "jimuyun.knowledge-consumer-context.v1",
+}
 DECISION_OWNER = "adapter"
 REJECTION_REASONS = {
     "wrong_domain",
@@ -93,6 +96,15 @@ def validate_catalog_freshness(repository_root: Path) -> str | None:
     catalog_path = repository_root / CATALOG_RELATIVE
     try:
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+        policy_path = repository_root / POLICY_RELATIVE
+        projection_path = repository_root / PROJECTION_RELATIVE
+        if not verify_current_publication(
+            repository_root,
+            catalog_path=catalog_path,
+            policy_path=policy_path,
+            projections_path=projection_path,
+        ):
+            return "catalog_publication_invalid"
         freshness = require_fresh_catalog(catalog, _main_source_hashes(repository_root, catalog))
     except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
         return "catalog_invalid"
@@ -166,9 +178,11 @@ def validate_context(
     repository_root: Path | None = None,
     verify_catalog: bool = False,
     verify_sources: bool = False,
+    expected_consumer: str | None = None,
+    require_selection: bool = False,
 ) -> str | None:
     """Return a stable failure code, or ``None`` for a complete bound context."""
-    if not isinstance(payload, dict) or payload.get("schema_version") != CONTEXT_SCHEMA:
+    if not isinstance(payload, dict) or payload.get("schema_version") not in CONTEXT_SCHEMAS:
         return "context_schema_invalid"
     request, result = payload.get("locator_request"), payload.get("locator_result")
     required_modules, decisions = payload.get("required_modules"), payload.get("decisions")
@@ -176,21 +190,40 @@ def validate_context(
         return "context_shape_invalid"
     if request.get("schema_version") != REQUEST_SCHEMA or result.get("schema_version") != RESULT_SCHEMA:
         return "locator_schema_invalid"
+    generic_context = payload.get("schema_version") == "jimuyun.knowledge-consumer-context.v1"
+    consumer = payload.get("consumer") if generic_context else "vdd"
+    if consumer not in {"vdd", "bootstrap", "refactor-acceptance"}:
+        return "knowledge_consumer_mismatch"
+    if (generic_context or expected_consumer is not None or request.get("consumer") is not None) and request.get("consumer") != consumer:
+        return "knowledge_consumer_mismatch"
+    if expected_consumer is not None and consumer != expected_consumer:
+        return "knowledge_consumer_mismatch"
     if request.get("request_id") != result.get("request_id"):
         return "locator_request_id_mismatch"
     if request.get("snapshot") != result.get("snapshot"):
         return "locator_snapshot_mismatch"
     if payload.get("request_sha256") != canonical_hash(request) or payload.get("result_sha256") != canonical_hash(result):
         return "locator_hash_mismatch"
+    preflight = payload.get("preflight")
+    if preflight is not None:
+        if not isinstance(preflight, dict):
+            return "preflight_invalid"
+        context_without_preflight = {key: value for key, value in payload.items() if key != "preflight"}
+        if preflight.get("context_sha256") != canonical_hash(context_without_preflight):
+            return "preflight_context_hash_mismatch"
+        if preflight.get("status") != "ready" or preflight.get("failure_code") is not None:
+            return "preflight_status_invalid"
     snapshot = request.get("snapshot")
     if not isinstance(snapshot, dict) or snapshot.get("ref") != "refs/heads/main" or not isinstance(snapshot.get("commit"), str):
         return "locator_snapshot_invalid"
     if result.get("status") != "matched":
         return "locator_result_not_matched"
-    if any(not isinstance(module, str) or not module for module in required_modules):
+    if any(not isinstance(module, str) or not module for module in required_modules) or len(set(required_modules)) != len(required_modules):
         return "required_modules_invalid"
+    if require_selection and not required_modules:
+        return "required_modules_empty"
     candidates = result.get("candidates")
-    if not isinstance(candidates, list):
+    if not isinstance(candidates, list) or not candidates:
         return "locator_candidates_invalid"
     available: set[tuple[str, str]] = set()
     candidate_documents: list[dict[str, Any]] = []
@@ -226,6 +259,8 @@ def validate_context(
         satisfies = decision.get("satisfies")
         if not isinstance(satisfies, list) or any(not isinstance(value, str) or not value for value in satisfies):
             return "consumption_modules_invalid"
+        if not set(satisfies).issubset(set(required_modules)):
+            return "consumption_modules_outside_required"
         if decision.get("decision") == "accepted":
             if not satisfies:
                 return "accepted_candidate_missing_coverage"
@@ -240,6 +275,8 @@ def validate_context(
         return "locator_candidate_decision_missing"
     if not set(required_modules).issubset(satisfied_modules):
         return "required_modules_unsatisfied"
+    if require_selection and not accepted:
+        return "accepted_decisions_empty"
     if repository_root is None:
         return None
     repository_root = repository_root.resolve()

@@ -59,6 +59,7 @@ def evaluate_preflight(payload: dict[str, Any], *, repository_root: Path | None 
         repository_root=repository_root,
         verify_catalog=repository_root is not None,
         verify_sources=repository_root is not None,
+        expected_consumer="vdd",
     )
     if failure_code:
         result["status"] = "blocked"

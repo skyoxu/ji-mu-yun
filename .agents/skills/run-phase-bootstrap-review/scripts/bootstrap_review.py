@@ -1628,6 +1628,7 @@ def freeze_knowledge_context(repository_root: Path, raw_path: str | None, artifa
         repository_root=repository_root,
         verify_catalog=True,
         verify_sources=False,
+        expected_consumer="vdd",
     )
     if validation_error:
         raise BootstrapError(f"Knowledge context is not VDD/Locator-bound: {validation_error}")
