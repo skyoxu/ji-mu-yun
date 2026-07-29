@@ -43,3 +43,10 @@ This append-only continuity report has `authorizes: []`. It cannot publish plan 
 - Regenerated the repository knowledge snapshot, v2 catalog, consumer projections, and legacy locator catalog from immutable `main` commit `5fb597d9ebd3ad45da1af24cc0f32aef0d81156b`.
 - Reissued the VDD Locator request, reread and hash-verified `AGENTS.md`, accepted it only for `repository-rules`, refreshed the authority manifest, and recorded repair round 4 without changing the lifecycle state.
 - Plan validation, whole-directory validation, and all eight plan-validator tests passed. This repair restores an actionable acceptance target but does not itself authorize `acceptance-passed`.
+
+## 2026-07-29: Catalog self-reference closure
+
+- Clean-HEAD replay showed that the first round-4 publication immediately invalidated itself because catalog freshness still required the source snapshot commit to equal final `HEAD`, while plan-owned `knowledge-context.v1.json` was also registered as a repository source.
+- Repair round 5 now treats a catalog source snapshot as a verified ancestor of `main`, compares every registered source against current `main` bytes, and excludes derived plan knowledge contexts from repository-source inventory.
+- Regenerated all catalog layers from source commit `37650482036d13ef40016d818db676e463ef59e0` and refreshed the 7-27 VDD context against that exact snapshot.
+- Seventeen knowledge tests, catalog freshness check, plan validation, whole-directory validation, and eight plan-validator tests passed. Lifecycle state remains unchanged and acceptance must be rerun separately.

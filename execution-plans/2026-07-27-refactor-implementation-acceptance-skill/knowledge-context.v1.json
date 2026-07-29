@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-refactor-acceptance-20260729-refresh-r5",
+    "request_id": "vdd-refactor-acceptance-20260729-refresh-r7",
     "consumer": "vdd",
     "query": "repository rules AGENTS refactor implementation acceptance bootstrap skill plan",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "5fb597d9ebd3ad45da1af24cc0f32aef0d81156b"
+      "commit": "37650482036d13ef40016d818db676e463ef59e0"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -125,22 +125,17 @@
           {
             "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
             "role": "authority-manifest",
-            "source_sha256": "ab96e7aafada7961ee750c64e74f05578d970b7ebf4a03c5752960c6362262f6"
+            "source_sha256": "b3d0b27c70598da0034515a05dcfe87e389cce1584e53ce19dfb01c0a08e58cb"
           },
           {
             "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json",
             "role": "command-registry",
-            "source_sha256": "5e11ca82adf40968ecc621a050e3b8cf1aaea55a9b0175be9db786421653ddd7"
+            "source_sha256": "fa6a1b4eb31ab9e0837ec4c87298c6ab476f6e7cde1f33253b1cc8e39db32620"
           },
           {
             "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
             "role": "implementation-contract",
             "source_sha256": "370a0d20d1e0adf761ab09a92e9c44bdffdb8e392345a909d0975d8654e57156"
-          },
-          {
-            "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/knowledge-context.v1.json",
-            "role": "knowledge-context",
-            "source_sha256": "af2b4cee23f6ea92c439f49cf5a55a0e50bd19c357cb51a155902993ec2c01af"
           },
           {
             "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/plan-state.v1.json",
@@ -732,13 +727,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-refactor-acceptance-20260729-refresh-r5",
+    "request_id": "vdd-refactor-acceptance-20260729-refresh-r7",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "5fb597d9ebd3ad45da1af24cc0f32aef0d81156b",
+      "commit": "37650482036d13ef40016d818db676e463ef59e0",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:cf8b3b58b023226517422f1cac9f8ab2a15594533acb0828233b90573b6cabfd",
+    "source_snapshot_id": "sha256:f0b319043fec20450283e04b55091b41e506e96018a1149b33ba856bc0a58efd",
     "status": "matched"
   },
   "required_modules": [
@@ -868,11 +863,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:13afcfc1d10e2fb6c2bd3be17d4b0a480c7f6a557c413fadd9f1af8a62b8397d",
-  "result_sha256": "sha256:6cb18d94915578d555af071980d473082ff4ca14348207c7285f6a8d7b77411a",
+  "request_sha256": "sha256:6e525f72b15a6ddb5f11a0f540ad1af65a6a904ab8f8cbcd1cb94771c871c181",
+  "result_sha256": "sha256:ffb462901d6ba940429525ff25146336bc5fac94d3e02c3e9382f4f644650925",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:9467357f90d013c0274ef9bf1b35a49c085d2516d75ce173a945e3470bf466a2"
+    "context_sha256": "sha256:6550eae31d049f1f9755d88e47be3a35cbedce4105dae929469fb0de247f29bd"
   }
 }
