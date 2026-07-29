@@ -6,10 +6,12 @@ import argparse
 import json
 import os
 import tempfile
+import hashlib
 from pathlib import Path
 from typing import Any
 
 from _knowledge_catalog_builder import build_layers
+from knowledge_context_validation import validate_catalog_freshness
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -18,6 +20,59 @@ def _load(path: Path) -> dict[str, Any]:
 
 def _render(value: dict[str, Any]) -> str:
     return json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+
+
+def _canonical_hash(value: Any) -> str:
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _semantic_layer_errors(
+    root: Path,
+    outputs: tuple[tuple[Path, dict[str, Any]], ...],
+) -> list[str]:
+    if any(not path.is_file() for path, _ in outputs):
+        return [str(path.relative_to(root)) for path, _ in outputs if not path.is_file()]
+    actual_snapshot, actual_catalog, actual_projections, actual_legacy = (
+        _load(path) for path, _ in outputs
+    )
+    expected_snapshot, expected_catalog, expected_projections, expected_legacy = (
+        value for _, value in outputs
+    )
+    errors: list[str] = []
+    if validate_catalog_freshness(root) is not None:
+        errors.append(str(outputs[1][0].relative_to(root)))
+    snapshot_fields = {"schema_version", "ref", "exclusion_policy_revision", "sources"}
+    if {key: actual_snapshot.get(key) for key in snapshot_fields} != {
+        key: expected_snapshot.get(key) for key in snapshot_fields
+    }:
+        errors.append(str(outputs[0][0].relative_to(root)))
+    if actual_catalog.get("source_snapshot") != actual_snapshot:
+        errors.append(str(outputs[1][0].relative_to(root)))
+    actual_catalog_semantic = dict(actual_catalog)
+    expected_catalog_semantic = dict(expected_catalog)
+    actual_catalog_semantic.pop("source_snapshot", None)
+    expected_catalog_semantic.pop("source_snapshot", None)
+    if actual_catalog_semantic != expected_catalog_semantic:
+        errors.append(str(outputs[1][0].relative_to(root)))
+    actual_projection_semantic = dict(actual_projections)
+    expected_projection_semantic = dict(expected_projections)
+    for value in (actual_projection_semantic, expected_projection_semantic):
+        value.pop("source_snapshot_id", None)
+        value.pop("catalog_sha256", None)
+    if (
+        actual_projection_semantic != expected_projection_semantic
+        or actual_projections.get("source_snapshot_id") != actual_snapshot.get("snapshot_id")
+        or actual_projections.get("catalog_sha256") != _canonical_hash(actual_catalog)
+    ):
+        errors.append(str(outputs[2][0].relative_to(root)))
+    actual_legacy_semantic = dict(actual_legacy)
+    expected_legacy_semantic = dict(expected_legacy)
+    actual_legacy_semantic.pop("source_snapshot", None)
+    expected_legacy_semantic.pop("source_snapshot", None)
+    if actual_legacy.get("source_snapshot") != actual_snapshot or actual_legacy_semantic != expected_legacy_semantic:
+        errors.append(str(outputs[3][0].relative_to(root)))
+    return sorted(set(errors))
 
 
 def _atomic_write(path: Path, value: dict[str, Any]) -> None:
@@ -60,7 +115,7 @@ def main() -> int:
         (rooted(args.legacy_output), legacy),
     )
     if args.check:
-        stale = [str(path.relative_to(root)) for path, value in outputs if not path.is_file() or path.read_text(encoding="utf-8") != _render(value)]
+        stale = _semantic_layer_errors(root, outputs)
         print(json.dumps({"status": "current" if not stale else "stale", "stale_outputs": stale}, sort_keys=True))
         return 0 if not stale else 2
     for path, value in outputs:
