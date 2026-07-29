@@ -13,6 +13,8 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
     private const string TestsProjectDirectoryName = "Tests.Godot";
     private const string RuntimeDirectoryName = "Game.Godot";
     private const string SeedCompletionMarkerName = ".phasea-seed-complete";
+    private const string HostedProjectTemplateRelativeDirectory =
+        "PhaseA.Platform/Workspaces/HostedProjectTemplate";
     private const int LockedFileRetryCount = 3;
     private static readonly TimeSpan LockedFileRetryDelay = TimeSpan.FromMilliseconds(250);
     private static readonly object WorkspaceSeedLocksGate = new();
@@ -73,6 +75,12 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         "Game.Core.Tests/Game.Core.Tests.csproj"
     ];
 
+    private static readonly (string TemplateFileName, string DestinationFileName)[] HostedProjectEntryFiles =
+    [
+        ("AGENTS.template.md", "AGENTS.md"),
+        ("README.template.md", "README.md")
+    ];
+
     private static readonly string[] SeededPrototypeTemplateDirectories =
     [
         "DefaultRpgTemplate"
@@ -129,6 +137,7 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
             {
                 EnsureBootstrapBaseline(sourceRoot, targetRoot);
             }
+            EnsureHostedProjectEntryDocuments(sourceRoot, targetRoot);
             SyncManagedFiles(sourceRoot, targetRoot);
             SyncManagedDirectories(sourceRoot, targetRoot);
             RestoreWorkspaceJunctions(sourceRoot, targetRoot);
@@ -139,6 +148,7 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
         Directory.CreateDirectory(targetRoot);
         CopyDirectory(sourceRoot, sourceRoot, targetRoot, overwriteFiles: false);
+        EnsureHostedProjectEntryDocuments(sourceRoot, targetRoot);
         RestoreWorkspaceJunctions(sourceRoot, targetRoot);
         EnsureRuntimeLogsAreGodotIgnored(targetRoot);
         WriteSeedCompletionMarker(targetRoot);
@@ -172,6 +182,37 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         }
 
         return false;
+    }
+
+    private static void EnsureHostedProjectEntryDocuments(string sourceRoot, string targetRoot)
+    {
+        if (!HasHostedProjectEntryTemplate(sourceRoot))
+        {
+            return;
+        }
+
+        var templateRoot = ResolveRepositoryRelativePath(sourceRoot, HostedProjectTemplateRelativeDirectory);
+        foreach (var (templateFileName, destinationFileName) in HostedProjectEntryFiles)
+        {
+            var destinationPath = Path.Combine(targetRoot, destinationFileName);
+            if (File.Exists(destinationPath))
+            {
+                continue;
+            }
+
+            File.Copy(Path.Combine(templateRoot, templateFileName), destinationPath, overwrite: false);
+        }
+    }
+
+    private static bool HasHostedProjectEntryTemplate(string sourceRoot)
+    {
+        var templateRoot = ResolveRepositoryRelativePath(sourceRoot, HostedProjectTemplateRelativeDirectory);
+        return HostedProjectEntryFiles.All(item => File.Exists(Path.Combine(templateRoot, item.TemplateFileName)));
+    }
+
+    private static string ResolveRepositoryRelativePath(string sourceRoot, string relativePath)
+    {
+        return Path.Combine(sourceRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
     private static void SyncManagedFiles(string sourceRoot, string targetRoot)
@@ -277,6 +318,21 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
     private static void CopyDirectory(string repositoryRoot, string sourceRoot, string targetRoot, bool overwriteFiles)
     {
+        CopyDirectory(
+            repositoryRoot,
+            sourceRoot,
+            targetRoot,
+            overwriteFiles,
+            HasHostedProjectEntryTemplate(repositoryRoot));
+    }
+
+    private static void CopyDirectory(
+        string repositoryRoot,
+        string sourceRoot,
+        string targetRoot,
+        bool overwriteFiles,
+        bool hasHostedProjectEntryTemplate)
+    {
         foreach (var directory in Directory.EnumerateDirectories(sourceRoot))
         {
             var name = Path.GetFileName(directory);
@@ -287,13 +343,18 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
             var destination = Path.Combine(targetRoot, name);
             Directory.CreateDirectory(destination);
-            CopyDirectory(repositoryRoot, directory, destination, overwriteFiles);
+            CopyDirectory(
+                repositoryRoot,
+                directory,
+                destination,
+                overwriteFiles,
+                hasHostedProjectEntryTemplate);
         }
 
         foreach (var file in Directory.EnumerateFiles(sourceRoot))
         {
             var name = Path.GetFileName(file);
-            if (ShouldSkipFile(repositoryRoot, name, file))
+            if (ShouldSkipFile(repositoryRoot, name, file, hasHostedProjectEntryTemplate))
             {
                 continue;
             }
@@ -436,6 +497,11 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
             return false;
         }
 
+        if (ShouldSkipHostedProjectTemplateDirectory(sourceRoot, fullPath))
+        {
+            return true;
+        }
+
         if (ExcludedDirectoryNames.Contains(name, StringComparer.OrdinalIgnoreCase))
         {
             return true;
@@ -475,8 +541,27 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
             StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool ShouldSkipFile(string sourceRoot, string name, string fullPath)
+    private static bool ShouldSkipHostedProjectTemplateDirectory(string sourceRoot, string fullPath)
     {
+        var relativePath = Path.GetRelativePath(sourceRoot, fullPath)
+            .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+        return relativePath.Equals(
+            HostedProjectTemplateRelativeDirectory.Replace('/', Path.DirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ShouldSkipFile(
+        string sourceRoot,
+        string name,
+        string fullPath,
+        bool hasHostedProjectEntryTemplate)
+    {
+        if (hasHostedProjectEntryTemplate && IsRepositoryRootEntryDocument(sourceRoot, name, fullPath))
+        {
+            return true;
+        }
+
         if (ShouldSkipGeneratedPrototypeContent(sourceRoot, fullPath, name, isDirectory: false))
         {
             return true;
@@ -487,6 +572,19 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
                name.Equals("phase-a-platform.sqlite3", StringComparison.OrdinalIgnoreCase) ||
                name.Equals("phase-a-platform.sqlite3-shm", StringComparison.OrdinalIgnoreCase) ||
                name.Equals("phase-a-platform.sqlite3-wal", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsRepositoryRootEntryDocument(string sourceRoot, string name, string fullPath)
+    {
+        if (!name.Equals("AGENTS.md", StringComparison.OrdinalIgnoreCase) &&
+            !name.Equals("README.md", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var relativePath = Path.GetRelativePath(sourceRoot, fullPath);
+        return !relativePath.Contains(Path.DirectorySeparatorChar) &&
+               !relativePath.Contains(Path.AltDirectorySeparatorChar);
     }
 
     private static bool ShouldSkipGeneratedPrototypeContent(string sourceRoot, string fullPath, string name, bool isDirectory)

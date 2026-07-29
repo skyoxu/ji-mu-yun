@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "partial",
+  "coverageGaps": [
+    "Representative custody manifest; the full target-plan inventory remains blocked by stale frozen knowledge authority."
+  ],
+  "authorizes": [],
+  "files": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "sha256": "sha256:43274db309a21df535d45fd05ecd66ffef400287778c4372c793d37194e1aba9",
+      "roles": ["consumer"],
+      "inclusion_reason": "Representative pre-change consumer contract."
+    }
+  ]
+}

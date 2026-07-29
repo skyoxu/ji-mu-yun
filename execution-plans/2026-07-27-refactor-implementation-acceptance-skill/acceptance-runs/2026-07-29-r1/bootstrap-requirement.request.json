@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "implementation-acceptance-bootstrap-requirement.v1",
+  "requirement": "required",
+  "requirementSources": [
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json#S0-bootstrap-companion",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json#S4-bootstrap-integration",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md#Bootstrap-Routing"
+  ],
+  "requiredCompanionCapabilityExpectations": [
+    {
+      "capabilityId": "acceptance-inventory-attestation",
+      "capabilityVersion": "1.0",
+      "producerRole": "acceptance_auditor"
+    }
+  ],
+  "authorizes": []
+}

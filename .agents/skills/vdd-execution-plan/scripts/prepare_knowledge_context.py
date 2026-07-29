@@ -15,7 +15,7 @@ from knowledge_context_validation import canonical_hash, validate_context  # noq
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
-    parser.add_argument("--catalog", type=Path, default=Path("knowledge/catalogs/repository-knowledge-catalog.v1.json"))
+    parser.add_argument("--catalog", type=Path, default=Path("knowledge/catalogs/repository-knowledge-catalog.v2.json"))
     parser.add_argument("--request-id", required=True)
     parser.add_argument("--query", required=True)
     parser.add_argument("--required-module", action="append", default=[])
@@ -24,11 +24,11 @@ def main() -> int:
     args = parser.parse_args()
     root = args.repository_root.resolve()
     catalog_path = args.catalog if args.catalog.is_absolute() else root / args.catalog
-    canonical_catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v1.json"
+    canonical_catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
     if catalog_path.resolve() != canonical_catalog.resolve():
         raise SystemExit("--catalog must name the canonical repository knowledge catalog")
     snapshot = json.loads(catalog_path.read_text(encoding="utf-8")).get("source_snapshot", {})
-    request = {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": args.request_id, "consumer": "vdd", "query": args.query, "snapshot": {"ref": snapshot.get("ref"), "commit": snapshot.get("commit")}, "policy_revision": "knowledge-consumer-policies.v1"}
+    request = {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": args.request_id, "consumer": "vdd", "query": args.query, "snapshot": {"ref": snapshot.get("ref"), "commit": snapshot.get("commit")}, "policy_revision": "knowledge-consumer-policies.v2"}
     completed = subprocess.run(
         [
             sys.executable, "-B", str(root / "scripts/python/knowledge_locator.py"),

@@ -18,6 +18,18 @@
 | 快速启动 / 恢复 | `powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1` |
 | 继续了解 | 先读本 README，再按 `AGENTS.md`、`docs/architecture/phase-service/_index.md`、`docs/PROJECT_DOCUMENTATION_INDEX.md` 进入细节。 |
 
+## 文档与运行上下文分层
+
+本仓采用三个责任面，但知识运行时仍按 ADR-0044 的 Domain、Visibility、Lifecycle Instance 和 Enforcement Level 四个维度进行选择与隔离。
+
+| 责任面 | 入口 | 服务对象 |
+| --- | --- | --- |
+| 根仓治理 | `AGENTS.md`、本 README | 平台、工具链、Phase 功能和共享游戏工作流的长期维护 |
+| Phase 应用与宿主运维 | `PhaseA.Platform/AGENTS.md`、`PhaseA.Platform/README.md`、`runtime/phase-a/AGENTS.md`、`runtime/phase-a/README.md` | ASP.NET 应用开发，以及启动、Caddy、watchdog 和恢复 |
+| Hosted 用户工作流 | `PhaseA.Platform/Workspaces/HostedProjectTemplate/**` 生成的项目入口，加项目 `meta/**`、`routes/**` 和运行证据 | 前台项目创建、GDD、原型、迭代和修复 |
+
+根文档不是 Hosted 游戏项目说明。新 workspace 使用专用项目模板；项目级入口只负责导航，当前 route 状态、验收、知识选择和签名运行上下文仍以结构化记录为准。
+
 
 ## 当前阶段结论
 
@@ -61,11 +73,12 @@
 
 ### 2. Phase A 云端平台层
 
-- `PhaseA.Platform/`：ASP.NET Core 8 Web/API 服务。
+- `PhaseA.Platform/`：ASP.NET Core 8 Web/API 服务；应用结构和代码边界见 `PhaseA.Platform/README.md` 与 `PhaseA.Platform/AGENTS.md`。
 - `PhaseA.Platform.Tests/`：平台单元和集成测试。
-- `runtime/phase-a/`：稳定启动、恢复、watchdog 和 Caddy 配置。
+- `runtime/phase-a/`：稳定启动、恢复、watchdog 和 Caddy 配置；宿主运行说明见该目录的 `README.md` 与 `AGENTS.md`。
 - `logs/phase-a-innernet/`：本地运行时数据库、workspace、watchdog 和 runtime 证据；该目录是运行时生成证据，不是源码或稳定配置目录。
 - `scripts/python/phase_a_*.py`：Phase A ops、runtime、public、restore、prototype E2E 和 token drill 脚本。
+- `PhaseA.Platform/Workspaces/HostedProjectTemplate/`：新项目 workspace 的入口模板；模板复制后属于项目实例，不继承根仓指令权威。
 - GDD 创建流程先收集用户策划表单，再生成并让用户确认场景路由草案，最后把两份输入一起交给 GDD 路由生成大纲。
 
 Phase A 的原则是：平台负责 hosting、workspace、runner、artifact readback、browser/API 和恢复；仓库脚本继续拥有 workflow decision authority。
@@ -99,114 +112,52 @@ Phase B 当前延期项：
 
 ## 运行入口
 
-### 快速启动 Phase A
+根 README 只保留稳定入口。地址、变量、Caddy、watchdog、构建目录和完整恢复合同统一维护在 `runtime/phase-a/README.md`；受保护的修改规则见同目录 `AGENTS.md`。
 
-优先使用一键恢复脚本。它会先检查 `http://127.0.0.1:18080/healthz`，必要时调用 `runtime/phase-a/start-phasea.ps1` 启动 Phase A 服务，并把恢复证据写入 `logs/phase-a-innernet/runtime/`。
+优先使用一键恢复脚本。它先检查本地 `http://127.0.0.1:18080/healthz`，必要时启动服务，并把恢复证据写入 `logs/phase-a-innernet/runtime/`。
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1
 ```
 
-长期守护使用 watchdog；它会每 30 秒调用 `ensure-phasea.ps1`：
+长期守护使用 watchdog：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File runtime/phase-a/watch-phasea.ps1
 ```
-
-Caddy 的稳定配置文件是 `runtime/phase-a/Caddyfile`。如果宿主未把 Caddy 作为服务常驻，可用同一配置启动或重启 Caddy；`ensure-phasea.ps1` 的 public health 检查会反映 `http://47.86.160.138:8080/healthz` 是否已通过反代恢复。
-
-```powershell
-caddy run --config runtime/phase-a/Caddyfile
-```
-
-### 地址和配置
-
-本地 Phase A 服务稳定绑定：
-
-- `http://127.0.0.1:18080`
-
-公网反代入口：
-
-- `http://47.86.160.138:8080`
-
-当前 `runtime/phase-a/Caddyfile` 监听 `http://:8080`；`runtime/phase-a/start-phasea.ps1` 中的 `PUBLIC_BASE_URL=https://47.86.160.138:8080` 保留为平台公共基址配置口径，与当前 Caddy 直连 HTTP 入口并存，后续若启用证书或上游 HTTPS 终止再统一。
-
-稳定运行配置：
-
-- `runtime/phase-a/start-phasea.ps1`
-- `runtime/phase-a/ensure-phasea.ps1`
-- `runtime/phase-a/watch-phasea.ps1`
-- `runtime/phase-a/Caddyfile`
-
-重要规则：
-
-- live server 不要用普通 `dotnet run` 写入仓库默认 `obj/bin`。
-- live server 使用 `runtime/phase-a/start-phasea.ps1`。
-- 启动脚本把 build output 放到仓库外的稳定目录。
-- `PHASEA_ADMIN_TOKEN_HASH` 必须来自 host secret store 或服务环境，不得写入 git 跟踪文件。
-- `DELIVERY_PROFILE` 默认为 `fast-ship`，可选 `playable-ea`、`fast-ship` 或 `standard`；它是 hosted workflow 和 Chapter 2 bootstrap 的内部配置，不是 Phase 用户操作流程。详见 `DELIVERY_PROFILE.md`。
 
 常用检查：
 
 ```powershell
 py -3 scripts/python/phase_a_ops_check.py
 py -3 scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080
-py -3 scripts/python/phase_b_account_smoke.py --base-url http://47.86.160.138:8080
 ```
 
-`phase_a_runtime_smoke.py` 是本地临时 smoke，会用临时端口和临时 workspace 启动测试服务；它不是 live server 启动或恢复入口。
-
-带管理员 token 的 Phase B 授权 smoke 应通过环境变量或命令行传入 token；不要把真实 token 写入日志、README 或 docs。
+live server 不使用普通 `dotnet run`。真实 token、hash 和签名 secret 不得写入 README、脚本、日志或 Git 跟踪配置。
 
 ## 托管项目路由恢复规则
 
-Phase A 前端触发的 hosted game-project route 必须先读项目级恢复源，而不是把 `AGENTS.md` 当作普通项目记忆。
+完整权威顺序位于 `AGENTS.md`、`docs/architecture/phase-service/prototype-routes-and-recovery.md` 和 Hosted 项目 `AGENTS.md`。根 README 只保留三条原则：
 
-可修改 hosted game-project 文件的 route，至少需要按权威顺序消费：
-
-1. 已解析的 game-type route profile 和选中的 route skill prompt block。
-2. `meta/project-execution-guide.md`。
-3. `routes/prototype-contract/latest.json`。
-4. 当前 route 的 latest state，例如 `meta/routes/prototype/latest.json`、`meta/routes/iteration-plan/latest.json`、`meta/routes/execute-next-goal/latest.json`。
-5. 当前 goal、step、repair step 或 session state。
-6. repair route 还必须读取 repair ledger、失败 acceptance 或 Godot diagnostic evidence。
-7. 最新 live platform acceptance blocker 优先于旧 assistant summary、route state 和 repair ledger memory。
-
-硬规则：
-
-- 缺少必需恢复源时 fail closed，不假装恢复成功。
-- route state 和 repair ledger 是连续性记忆，不是当前验收权威。
-- 不允许只凭 assistant 文本标记 step complete。
-- 新 route 在接入前必须声明 recovery inputs、authority order、missing-source behavior 和 browser-safe output rules。
+- 项目 route 读取项目级 profile、contract、latest state、goal/session、repair/diagnostic 和最新 live blocker，不从根文档推断项目状态。
+- 缺少必需恢复源时 fail closed；旧 route memory 和 assistant 文本不是当前验收权威。
+- 新 route 必须声明 recovery inputs、authority order、missing-source behavior 和 browser-safe output。
 
 ## AI/LLM 调用协议
 
-新 Phase A route、service、script 和 workflow helper 必须使用共享入口：
+新 Phase route 必须使用仓库共享 LLM/Codex 入口，prompt 使用 UTF-8 stdin；文件修改必须经过明确 executable route、`workspace-write` 和验收。完整协议、组件和回归测试路由见 `AGENTS.md`、`PhaseA.Platform/AGENTS.md` 与 `docs/architecture/phase-service/llm-codex-execution.md`。
 
-- C# structured/read-only LLM：`PhaseA.Platform/Llm/LlmRouteEngine.cs` via `ILlmRouteEngine`。
-- C# executable Codex workflow：`PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`。
-- Python LLM/Codex script：`scripts/sc/_llm_backend.py::run_llm_exec`。
-
-协议规则：
-
-- 不要在新 route 或 script 中手写 raw `codex exec` subprocess。
-- prompt 传输使用 stdin：`codex exec ... -`，不要把大 prompt 拼到命令行参数。
-- 分析或 JSON-only 决策保持 read-only。
-- 改文件的流程必须走明确 executable route、`workspace-write` 和现有 acceptance/smoke validation。
-- 如果共享入口缺少 model、reasoning、sandbox、output、billing、credential 或 retry 选项，先扩展共享入口及其测试。
-
-必需回归覆盖：
-
-- `PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs`
-- `PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs`
-- `scripts/sc/tests/test_llm_backend.py`
-- 调用方自己的 route-specific tests
+知识库 Locator 当前只接入 VDD、Quick Dev 和 Bootstrap Review，不等于 Phase 前台 route 已接入。未来 Phase adapter 必须复用同一 Locator core，由服务端持有 Domain、path、snapshot、budget 和 gate 权限，重读并复验 accepted source hash，再把冻结上下文绑定到 run manifest。
 
 
 ## 关键文档
 
 ### 云端平台
 
+- Phase application guide: `PhaseA.Platform/README.md`
+- Phase application agent rules: `PhaseA.Platform/AGENTS.md`
+- Host runtime guide: `runtime/phase-a/README.md`
+- Host runtime agent rules: `runtime/phase-a/AGENTS.md`
 - Phase service architecture rationale: `docs/architecture/phase-service/_index.md`
 - Phase service ADR index: `docs/architecture/ADR_INDEX_PHASE.md`
 - Standards index: `docs/standards/_index.md`

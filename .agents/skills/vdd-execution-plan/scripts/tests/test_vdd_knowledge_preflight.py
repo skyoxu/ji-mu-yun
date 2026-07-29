@@ -145,7 +145,7 @@ class VddKnowledgePreflightTests(unittest.TestCase):
         module = load_prepare()
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v1.json"
+            catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
             catalog.parent.mkdir(parents=True)
             catalog.write_text(json.dumps({"source_snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}}), encoding="utf-8")
             output = root / "plan/knowledge-context.v1.json"

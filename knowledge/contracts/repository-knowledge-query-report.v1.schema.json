@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.repository-knowledge-query-report.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "suite_path", "snapshot", "policy_revision", "repeat", "summary", "protocol_results", "categories", "results"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.repository-knowledge-query-report.v1"},
+    "suite_path": {"type": "string"},
+    "snapshot": {"type": "object"},
+    "policy_revision": {"type": "string"},
+    "repeat": {"type": "integer", "minimum": 1},
+    "summary": {
+      "type": "object",
+      "required": ["status", "total", "passed", "failed"],
+      "properties": {
+        "status": {"enum": ["passed", "failed"]},
+        "total": {"type": "integer", "minimum": 0},
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "protocol_total": {"type": "integer", "minimum": 0},
+        "protocol_passed": {"type": "integer", "minimum": 0},
+        "protocol_failed": {"type": "integer", "minimum": 0}
+      }
+    },
+    "protocol_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check", "status", "failures"],
+        "properties": {
+          "check": {"type": "string"},
+          "status": {"enum": ["passed", "failed"]},
+          "failures": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "categories": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(adr|execution-plan|architecture|toolchain)$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["total", "passed", "failed", "matched_cases", "insufficient_match_cases"],
+          "properties": {
+            "total": {"type": "integer", "minimum": 0},
+            "passed": {"type": "integer", "minimum": 0},
+            "failed": {"type": "integer", "minimum": 0},
+            "matched_cases": {"type": "integer", "minimum": 0},
+            "insufficient_match_cases": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "category", "consumer", "query", "expected_result_status", "actual_result_status", "expected_module_id", "actual_rank", "candidate_count", "verified_read_set_items", "request_sha256", "result_sha256", "evidence_locations", "consumption_decisions", "deterministic_runs", "status", "failures"],
+        "properties": {
+          "case_id": {"type": "string"},
+          "category": {"enum": ["adr", "execution-plan", "architecture", "toolchain"]},
+          "consumer": {"enum": ["vdd", "bootstrap", "refactor-acceptance"]},
+          "query": {"type": "string"},
+          "expected_result_status": {"enum": ["matched", "insufficient_match"]},
+          "actual_result_status": {"enum": ["matched", "insufficient_match", "blocked", null]},
+          "expected_module_id": {"type": ["string", "null"]},
+          "actual_rank": {"type": ["integer", "null"], "minimum": 1},
+          "candidate_count": {"type": "integer", "minimum": 0},
+          "verified_read_set_items": {"type": "integer", "minimum": 0},
+          "request_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "result_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "evidence_locations": {"type": "object"},
+          "consumption_decisions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["owner", "candidate", "decision", "satisfies", "rejection_reason"],
+              "properties": {
+                "owner": {"const": "adapter"},
+                "candidate": {"type": "object"},
+                "decision": {"enum": ["accepted", "rejected"]},
+                "satisfies": {"type": "array", "items": {"type": "string"}},
+                "rejection_reason": {"enum": ["wrong_domain", "insufficient_specificity", "authority_conflict", "duplicate", null]}
+              }
+            }
+          },
+          "deterministic_runs": {"type": "integer", "minimum": 1},
+          "status": {"enum": ["passed", "failed"]},
+          "failures": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

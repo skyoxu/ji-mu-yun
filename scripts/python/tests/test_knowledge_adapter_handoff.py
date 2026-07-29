@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import hashlib
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,10 +12,17 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 
 def load(name: str, relative: str):
-    spec = importlib.util.spec_from_file_location(name, REPOSITORY_ROOT / relative)
+    module_path = REPOSITORY_ROOT / relative
+    spec = importlib.util.spec_from_file_location(name, module_path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    previous_path = list(sys.path)
+    try:
+        sys.path.insert(0, str(module_path.parent))
+        sys.path.insert(0, str(REPOSITORY_ROOT / "scripts/python"))
+        spec.loader.exec_module(module)
+    finally:
+        sys.path[:] = previous_path
     return module
 
 
@@ -25,23 +32,28 @@ class KnowledgeAdapterHandoffTests(unittest.TestCase):
         vdd = load("handoff_vdd", ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py")
         quick = load("handoff_quick", ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py")
         bootstrap = load("handoff_bootstrap", ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py")
-        catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json").read_text(encoding="utf-8"))
-        entry = next(item for item in catalog["entries"] if item["source_path"] == "AGENTS.md")
+        catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json").read_text(encoding="utf-8"))
+        entry = next(item for item in catalog["modules"] if item["source_path"] == "AGENTS.md")
         snapshot = {key: catalog["source_snapshot"][key] for key in ("ref", "commit")}
         request = {
             "schema_version": "jimuyun.knowledge-locator-request.v1",
-            "request_id": "adapter-handoff-1", "snapshot": snapshot,
+            "request_id": "adapter-handoff-1", "consumer": "vdd", "snapshot": snapshot,
+            "policy_revision": "knowledge-consumer-policies.v2",
         }
+        read_set = [{"role": "primary", "path": entry["source_path"], "source_sha256": entry["source_sha256"]}]
         result = {
             "schema_version": "jimuyun.knowledge-locator-result.v1",
             "request_id": "adapter-handoff-1", "snapshot": snapshot,
-            "status": "matched", "candidates": [{"path": "AGENTS.md", "source_sha256": entry["source_sha256"]}],
+            "source_snapshot_id": catalog["source_snapshot"]["snapshot_id"],
+            "policy_revision": "knowledge-consumer-policies.v2",
+            "status": "matched", "candidates": [{"path": "AGENTS.md", "source_sha256": entry["source_sha256"], "module_id": entry["module_id"], "read_set": read_set}],
         }
         context = {
             "schema_version": "jimuyun.vdd-knowledge-context.v1",
             "locator_request": request, "locator_result": result,
             "required_modules": ["repository-rules"],
             "decisions": [{
+                "owner": "adapter",
                 "decision": "accepted", "satisfies": ["repository-rules"],
                 "candidate": {"path": "AGENTS.md", "source_sha256": entry["source_sha256"]},
                 "rejection_reason": None,
@@ -49,7 +61,8 @@ class KnowledgeAdapterHandoffTests(unittest.TestCase):
             "request_sha256": validation.canonical_hash(request),
             "result_sha256": validation.canonical_hash(result),
         }
-        self.assertEqual("ready", vdd.evaluate_preflight(context, repository_root=REPOSITORY_ROOT)["status"])
+        preflight = vdd.evaluate_preflight(context, repository_root=REPOSITORY_ROOT)
+        self.assertEqual("ready", preflight["status"], preflight)
         with tempfile.TemporaryDirectory() as raw:
             plan_dir = Path(raw)
             (plan_dir / "knowledge-context.v1.json").write_text(json.dumps(context), encoding="utf-8")
@@ -60,7 +73,7 @@ class KnowledgeAdapterHandoffTests(unittest.TestCase):
             relative = context_path.relative_to(REPOSITORY_ROOT).as_posix()
             frozen = bootstrap.freeze_knowledge_context(
                 REPOSITORY_ROOT, relative,
-                [{"artifact": "AGENTS.md", "sha256": "sha256:" + hashlib.sha256((REPOSITORY_ROOT / "AGENTS.md").read_bytes()).hexdigest()}],
+                [{"artifact": "AGENTS.md", "sha256": "sha256:" + entry["source_sha256"]}],
             )
             self.assertEqual("AGENTS.md", frozen["accepted"][0]["path"])
 

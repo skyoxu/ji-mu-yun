@@ -1,0 +1,230 @@
+三、最重要的新发现：仓库已经设计了正确方案，但尚未运行化
+
+agentbuild.txt 已经写出了与 Superpowers 6 几乎同构的目标架构：
+
+VDD 只负责计划与验证权威；
+SDD 不再生成第二套长文档；
+通过 implementation-contract.v1.json 给实现 Agent 提供紧凑机器投影；
+实现 Agent 只接收 Slice Capsule；
+Quick Dev 只做 implementation/TDD；
+Bootstrap 是唯一 semantic finding authority。
+
+Slice Capsule 也已经设计为只包含：
+
+slice intent；
+requirement/acceptance IDs；
+architecture refs；
+allowed/forbidden paths；
+当前 RED evidence；
+targeted GREEN command。
+
+这正是 Superpowers 6 的核心优化：把模型自行探仓和重建上下文，改为消费预生成 task/review packet。Superpowers 官方实验中，预生成 review packet 单项带来约 10% 改善；合并重复 reviewer 又带来额外改善，组合后取得其报告中的约 50% runtime、约 60% token 优化。该数字属于 Superpowers 自身评测，不能直接视为你仓库的预期结果。
+
+但仓库当前的 plan 明确说明：
+
+quick-dev-tdd-adapter 尚未 operational；
+implementation contract 与 tdd-result.v1 尚未成为实际运行能力；
+stock BMAD Quick Dev 仍会自己做 semantic review、标记完成，甚至可能提交代码。
+
+因此，你最值得做的不是再设计一套优化方案，而是把已有的 repository-maintenance-tdd-adapter 从 plan-ready 实现成真正 runtime。
+
+四、更新后的优化优先级
+优先级	改造	收益	复杂度	兼容性
+P0	增加 direct / bounded / formal 三档入口路由	极高	低	高
+P0	强制 Sol 仅作为 controller，Bootstrap reviewer 显式使用 Terra	高	低	高
+P0	日常 review 使用 16k–20k prompt、summary diff、跳过外部 agent prompt	中高	低	高
+P1	实现 quick-dev-tdd-adapter 与 Slice Capsule	极高	中高	高
+P1	生成统一 review-packet.v1.json	高	中	高
+P1	禁用 BMAD Quick Dev 自带 semantic review/commit/done	高	中	高
+P1	普通 review 合并 code/security reviewer，semantic 保持 deferred	中高	中	高
+P2	primary reviewer 并行化或改为持久 API/backend	中高	高	中
+P2	对两个 Skill 做 progressive disclosure	高	中高	中
+五、具体修改建议
+A. 在 AGENTS.md 增加明确的工作模式入口
+
+建议在 Start Here 前增加机器可判定的三档：
+
+direct:
+  单文件、小修复、已有失败日志、无合同/权威变化
+  -> targeted build/test
+  -> 不运行 VDD、BMAD planning、Bootstrap
+
+bounded:
+  多文件但边界清楚、已有 acceptance
+  -> 生成最小 Slice Capsule
+  -> TDD adapter
+  -> 单一 combined reviewer
+  -> semantic reviewer 条件触发
+
+formal:
+  新计划、计划修复、跨模块合同、protected path、
+  authority/security/release/handoff 变化
+  -> VDD
+  -> TDD adapter
+  -> Bootstrap
+
+这会直接解决日常 building/debug 被正式方法论拖慢的问题。
+
+B. 让 $vdd-execution-plan 在生成 Capsule 后退出
+
+不要削弱 clarification gate；它承担的是计划权威，严格性有合理目的。
+
+需要修改的是它的适用边界：
+
+routine debug：明确 does_not_apply；
+已有 plan-ready slice 的 implementation：明确 does_not_apply；
+read-only analysis：不进入 clarification gate；
+create/repair：继续保留完整 gate。
+
+然后让 VDD 的最终产物必须生成或刷新：
+
+implementation-contract.v1.json
+slice-capsule/<slice-id>.json
+
+后续所有实现会话只消费 Capsule，不再重读整个 VDD 文档目录。
+
+C. 将 BMAD Quick Dev 降为 implementation backend
+
+长期目标应是：
+
+VDD plan
+  -> Slice Capsule
+  -> quick-dev-tdd-adapter
+  -> BMAD Quick Dev implementation-only
+  -> deterministic validation
+  -> implementation candidate packet
+  -> Bootstrap Review
+
+必须关闭 BMAD Quick Dev 的：
+
+自带 semantic review；
+spec done 状态写入；
+自动 commit；
+自行宣布 acceptance/done。
+
+否则它会与 Bootstrap 形成两套语义权威，重复 review，甚至出现相互要求返工的“拉扯”。
+
+D. 给 Bootstrap 增加预生成 review packet
+
+推荐增加：
+
+{
+  "schemaVersion": "jimuyun.review-packet.v1",
+  "changeId": "...",
+  "candidateHash": "sha256:...",
+  "intentRefs": [],
+  "requirementIds": [],
+  "acceptanceIds": [],
+  "changedFiles": [],
+  "affectedConsumers": [],
+  "diffSummary": "...",
+  "tests": [],
+  "build": {},
+  "runtimeEvidence": [],
+  "knownRisks": [],
+  "writeSet": [],
+  "executionReadSet": [],
+  "dependencyClosure": [],
+  "artifactViewManifest": "..."
+}
+
+该 packet 不替代 Bootstrap 的完整性要求，而是：
+
+作为 reviewer 的导航和事实索引；
+消除每个 reviewer 自己运行 Git 探索的需要；
+避免 controller 重复自然语言转述任务；
+让三个 reviewer 复用同一份冻结上下文装配结果。
+E. 缩减普通 scripts/sc review
+
+目前 fast-ship 默认仍会运行 code、security 和 semantic 三个 reviewer。
+
+日常可先使用现有参数做实验：
+
+py -3 scripts/sc/llm_review.py `
+  --delivery-profile fast-ship `
+  --agents code-reviewer `
+  --semantic-gate skip `
+  --diff-mode summary `
+  --prompt-max-chars 18000 `
+  --skip-agent-prompts `
+  --model-reasoning-effort low
+
+安全边界、认证、文件路径或网络修改时再使用：
+
+code-reviewer,security-auditor
+
+semantic auditor 只在 acceptance 本身发生变化或前置 reviewer clean 后运行。
+
+下一步再把 code/security 合并为一个 combined-change-reviewer，输出两个独立 verdict section。这里可以吸收 Superpowers 的 reviewer 合并思想，因为它不破坏正式 Bootstrap 的三角色独立合同。
+
+F. 减少 reviewer 冷启动
+
+实施顺序应为：
+
+先减少实际运行的 reviewer 数；
+再生成 review packet；
+再并行 primary reviewers；
+最后考虑持久 backend。
+
+仓库已有 openai-api backend seam，可作为后续试验，但当前实现仍是每次独立 responses.create()，并没有会话复用。
+
+长期可以增加：
+
+persistent Responses conversation；
+Codex app-server/coordinator；
+按 packet hash + profile revision + model + prompt revision 缓存只读 reviewer 结果；
+hash 任一变化时自动失效。
+六、两个 Skill 的 progressive disclosure
+
+这是中长期最大的 token 优化，但必须作为正式 contract revision 完成。
+
+$vdd-execution-plan
+
+当前要求每次完整阅读标准与 clarification 文件。可以改成：
+
+SKILL 只包含模式路由和核心不变量；
+create 模式加载 create 章节；
+repair 模式加载 repair、delta、baseline 章节；
+read-only 模式只加载 assessment rubric；
+skill-maintenance 才完整加载 compliance protocol。
+
+完整规则仍由 deterministic validator 和 skill-contract.json 执行，不要求 controller 每次用自然语言重新消化全部协议。
+
+$run-phase-bootstrap-review
+
+按 command 加载规则：
+
+list-runs / inspect-run：只加载恢复合同；
+prepare：加载 profile、scope、preflight；
+run-layer：直接消费生成后的 role prompt 和 packet；
+gate：加载 finding/gate schema；
+finalize：加载 disposition 与 envelope 合同。
+
+目前 Skill 要求 operator 在开始前阅读 ADR、standard、profiles 和完整 operator guide。对于恢复或执行单个已准备好的 layer，这部分大量信息其实已经固化在 review-input.json 和 runner 中，可改为由机器合同验证，而不是由 Sol 再次阅读解释。
+
+七、推荐实施路线
+第一阶段：先解决体感缓慢
+在 AGENTS.md 加三档 workflow entry gate。
+检查 Bootstrap attempt 中实际 model，确保从未使用 Sol reviewer。
+日常 review 改成单 reviewer、18k prompt、summary diff、skip agent prompts。
+普通 build/debug 禁止自动触发 VDD 和 Bootstrap。
+所有失败优先 inspect/resume，禁止直接整轮重跑。
+第二阶段：落实仓库已有架构
+实现 .agents/skills/quick-dev-tdd-adapter/。
+将 implementation-contract.v1.json 变成真实运行输入。
+生成 immutable Slice Capsule。
+将 BMAD Quick Dev 改成 implementation-only backend。
+生成 Bootstrap review-packet.v1.json。
+第三阶段：优化正式审查
+三个 Bootstrap role 共享 packet，但保持隔离。
+非重叠角色并发运行。
+增加 content-hash cache。
+为两个 Skill 实施 progressive disclosure。
+评估 persistent API/backend，消除 reviewer 级冷启动。
+最终判断
+
+对 ji-mu-yun 而言，最优方向不是换掉 BMAD，也不是削弱 VDD/Bootstrap 的证据强度，而是：
+
+把严格方法论保留在 formal lane，把实现上下文编译成 Capsule，把 review 上下文编译成 Packet，让日常 coding 默认绕开正式控制平面。
+
+你的仓库其实已经完成了大部分设计工作。真正缺失的是把 repository-maintenance-tdd-adapter 从 plan-ready 变成 operational，并在入口处彻底区分日常工作与正式审计。静态分析表明，这一改造比继续调整 Sol 的 reasoning 参数更可能带来决定性的改善；但目前尚未在你的本地 Codex 环境执行 A/B benchmark，因此具体提速比例仍需以同任务实测为准。OpenAI 的 Codex 提示指南同样建议日常交互使用适中的 reasoning，并避免旧 harness 额外加入前置计划、preamble 和重复状态播报

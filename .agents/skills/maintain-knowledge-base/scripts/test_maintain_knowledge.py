@@ -106,6 +106,28 @@ def main() -> int:
         assert modern_result["suggested_catalog_source_snapshot"]["commit"] == commit
         assert modern_result["suggested_catalog_source_snapshot"]["sources"] == [{"path": "docs/fact.md", "sha256": sha256(b"main fact\n")}]
 
+        support_digest = sha256(b"must not be discovered\n")
+        v2_catalog = {
+            "source_snapshot": {
+                "ref": "refs/heads/main",
+                "commit": commit,
+                "sources": [
+                    {"path": "docs/fact.md", "sha256": sha256(b"main fact\n"), "source_role": "primary"},
+                    {"path": "docs/unregistered.md", "sha256": support_digest, "source_role": "supporting-source"},
+                ],
+            },
+            "modules": [{
+                "entry_id": "fact", "source_path": "docs/fact.md", "source_sha256": sha256(b"main fact\n"),
+                "resources": [{"role": "supporting-source", "path": "docs/unregistered.md", "source_sha256": support_digest}],
+            }],
+        }
+        write_json(catalog_path, v2_catalog)
+        v2 = execute(repo, request_path, catalog_path, output_path)
+        assert v2.returncode == 0, v2.stderr + v2.stdout
+        v2_result = json.loads(output_path.read_text(encoding="utf-8"))
+        assert v2_result["catalog_source_snapshot_status"] == "current"
+        assert {item["source_path"] for item in v2_result["entries"]} == {"docs/fact.md", "docs/unregistered.md"}
+
         write_json(request_path, request("0" * 40))
         rejected = execute(repo, request_path, catalog_path, output_path)
         assert rejected.returncode == 2
@@ -119,6 +141,11 @@ def main() -> int:
         candidate = json.loads(output_path.read_text(encoding="utf-8"))["entries"]
         assert candidate[0]["authority_status"] == "provisional"
         assert candidate[0]["disposition"] == "candidate"
+
+        write_json(request_path, request(commit, "targeted", {"kind": "document-directory", "repo_relative_path": "docs/migration", "snapshot_kind": "main", "content_sha256": None}))
+        excluded = execute(repo, request_path, catalog_path, output_path)
+        assert excluded.returncode == 2
+        assert json.loads(output_path.read_text(encoding="utf-8"))["log"]["failure_code"] == "source_path_excluded"
     print("MAINTAIN_KNOWLEDGE_TEST PASS")
     return 0
 

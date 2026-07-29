@@ -7,7 +7,7 @@
   "properties": {
     "schema_version": {"const": "jimuyun.knowledge-locator-request.v1"},
     "request_id": {"type": "string", "minLength": 1},
-    "consumer": {"enum": ["vdd", "quick-dev", "bootstrap"]},
+    "consumer": {"enum": ["vdd", "quick-dev", "bootstrap", "refactor-acceptance"]},
     "query": {"type": "string", "minLength": 1},
     "snapshot": {"type": "object", "additionalProperties": false, "required": ["ref", "commit"], "properties": {"ref": {"const": "refs/heads/main"}, "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}}},
     "policy_revision": {"type": "string", "minLength": 1}

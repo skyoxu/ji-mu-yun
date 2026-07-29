@@ -3,8 +3,8 @@
 After mandatory authority reads and before freezing plan sources, VDD performs
 this required sequence:
 
-1. Read `knowledge/policies/consumer-policies.v1.json` and
-   `knowledge/catalogs/repository-knowledge-catalog.v1.json`.
+1. Read `knowledge/policies/consumer-policies.v2.json` and
+   `knowledge/catalogs/repository-knowledge-catalog.v2.json`.
 2. Build a Locator request with `consumer: "vdd"` and copy `ref` and `commit`
    exactly from the catalog `source_snapshot`; do not substitute `HEAD`.
 3. Send that request as JSON stdin to `scripts/python/knowledge_locator.py`.

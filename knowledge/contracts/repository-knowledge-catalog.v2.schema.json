@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.repository-knowledge-catalog.v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "authority_ref", "authority_class", "instruction_authority", "may_override_source", "source_snapshot", "exclusion_policy", "collections", "routes", "modules"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.repository-knowledge-catalog.v2"},
+    "authority_ref": {"const": "refs/heads/main"},
+    "authority_class": {"const": "derived_cache"},
+    "instruction_authority": {"const": false},
+    "may_override_source": {"const": false},
+    "source_snapshot": {"$ref": "repository-source-snapshot.v1.schema.json"},
+    "exclusion_policy": {"type": "object"},
+    "collections": {"type": "array", "items": {"type": "object"}},
+    "routes": {"type": "array", "items": {"type": "object"}},
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["module_id", "entry_id", "kind", "title", "primary_domain", "visibility", "lifecycle", "enforcement_level", "authority_class", "instruction_authority", "may_override_source", "source_role", "status", "source_path", "source_sha256", "anchor", "anchors", "relations", "consumer_ids", "semantic_eligible", "resources", "content"],
+        "properties": {
+          "module_id": {"type": "string", "minLength": 1},
+          "entry_id": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "primary_domain": {"enum": ["toolchain", "phase", "workspace", "marketplace"]},
+          "visibility": {"type": "object"},
+          "lifecycle": {"const": "repository-source"},
+          "enforcement_level": {"const": "E1"},
+          "authority_class": {"const": "derived_cache"},
+          "instruction_authority": {"const": false},
+          "may_override_source": {"const": false},
+          "source_role": {"type": "string", "minLength": 1},
+          "status": {"enum": ["active", "conditional", "historical", "excluded"]},
+          "source_path": {"type": "string", "minLength": 1, "not": {"pattern": "^docs/migration/"}},
+          "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "anchor": {"type": "string", "minLength": 1},
+          "anchors": {"type": "array", "items": {"type": "object"}},
+          "relations": {"type": "array", "items": {"type": "object"}},
+          "consumer_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "semantic_eligible": {"type": "boolean"},
+          "resources": {"type": "array", "items": {"type": "object"}},
+          "content": {"type": "string"}
+        }
+      }
+    }
+  }
+}

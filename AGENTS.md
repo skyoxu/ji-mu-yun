@@ -6,8 +6,17 @@ This file is the Phase-service-first repository map. It routes agents to current
 - The root repository is the Ji Mu Yun Phase A/B cloud prototype platform, not a specific game project.
 - `AGENTS.md` is the concise agent routing and non-negotiable change-contract layer.
 - `README.md` is the product overview, phase status, stack summary, and startup entry.
+- `PhaseA.Platform/AGENTS.md` and `PhaseA.Platform/README.md` own the ASP.NET application runtime model and local code map.
+- `runtime/phase-a/AGENTS.md` and `runtime/phase-a/README.md` own host startup, watchdog, Caddy, configuration, and recovery details.
 - Game-specific identity, genre, route profile, and execution state belong to each hosted project workspace and metadata records, not to root-level placeholder fields.
 - `docs/architecture/phase-service/**`, `docs/architecture/ADR_INDEX_PHASE.md`, and `docs/standards/**` are the deep sources for Phase service decisions and conventions.
+
+## Context And Documentation Layers
+- Repository governance: root `AGENTS.md` and `README.md` serve long-term platform, Toolchain, Phase feature, and shared game-workflow maintenance.
+- Phase application and host operations: the two local documentation pairs above serve application and host runtime work without duplicating root-wide rules.
+- Hosted workflow runtime: new project workspaces receive project-facing entry documents from `PhaseA.Platform/Workspaces/HostedProjectTemplate/**`; project state, route contracts, accepted knowledge, and run evidence remain structured project/run data.
+- These responsibility layers do not replace ADR-0044's four dimensions. Knowledge selection still carries Domain, per-domain Visibility, Lifecycle Instance, and Enforcement Level.
+- Repository source, repository template, project instance, and run Artifact View never share snapshot, cache, current, or LKG authority.
 
 ## Phase Service Scope
 Treat the following as in-scope for Phase service changes:
@@ -28,18 +37,22 @@ Treat the following as in-scope for Phase service changes:
 
 ## Start Here
 1. Read `README.md` for current product status and startup.
-2. Read `docs/architecture/phase-service/_index.md` before changing Phase service boundaries.
-3. Read `docs/architecture/ADR_INDEX_PHASE.md` before changing Phase service decisions.
-4. Read `docs/standards/_index.md` and `docs/standards/phase-service.md` before changing API, DB, errors, logs, security, tests, or status contracts.
-5. Read the relevant Godot standard before changing hosted Godot behavior:
+2. Read `PhaseA.Platform/AGENTS.md` and its local `README.md` before changing the application subtree.
+3. Read `runtime/phase-a/AGENTS.md` and its local `README.md` before changing host startup or recovery.
+4. Read `docs/architecture/phase-service/_index.md` before changing Phase service boundaries.
+5. Read `docs/architecture/ADR_INDEX_PHASE.md` before changing Phase service decisions.
+6. Read `docs/standards/_index.md` and `docs/standards/phase-service.md` before changing API, DB, errors, logs, security, tests, or status contracts.
+7. Read the relevant Godot standard before changing hosted Godot behavior:
    - `docs/standards/godot-engine-semantics.md`
    - `docs/standards/godot-ui-capability-contract.md`
    - `docs/standards/godot-ui-style-contract.md`
    - `docs/standards/godot-diagnostics-quality-gates.md`
-6. Read the relevant file in `execution-plans/` and `decision-logs/` when the change is plan-scoped or decision-scoped.
+8. Read the relevant file in `execution-plans/` and `decision-logs/` when the change is plan-scoped or decision-scoped.
 
 ## Change Routing
 - Platform API, browser behavior, DTOs, or readback:
+  - `PhaseA.Platform/AGENTS.md`
+  - `PhaseA.Platform/README.md`
   - `docs/standards/phase-service.md`
   - `docs/architecture/phase-service/system-overview.md`
   - `PhaseA.Platform/Program.cs`
@@ -68,6 +81,8 @@ Treat the following as in-scope for Phase service changes:
   - `docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md`
   - the shared entrypoints listed below
 - Runtime, Caddy, watchdog, or public health:
+  - `runtime/phase-a/AGENTS.md`
+  - `runtime/phase-a/README.md`
   - `docs/architecture/phase-service/runtime-caddy-and-recovery.md`
   - `runtime/phase-a/**`
   - the recovery order below
@@ -179,55 +194,18 @@ Missing required recovery sources must fail closed. Route state and repair ledge
 5. Do not manually edit the live metadata DB.
 6. Record recovery evidence under `logs/phase-a-innernet/runtime/`.
 
-## Phase A Runtime Ops
+## Host Runtime Boundary
 - Stable local app bind: `http://127.0.0.1:18080`.
-- Canonical external `PUBLIC_BASE_URL`: `https://47.86.160.138:8080`.
-- Current direct public health probe: `http://47.86.160.138:8080/healthz`.
-- Do not claim public HTTPS reachability until `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080` passes without `--allow-http`.
-- Canonical runtime config: `runtime/phase-a/start-phasea.ps1`.
-- Canonical Caddy config: `runtime/phase-a/Caddyfile`.
-- Caddy must listen on `0.0.0.0:8080` and reverse proxy to `127.0.0.1:18080`.
-- Live build outputs must stay outside the repository source tree. Current stable build root: `C:\Users\Administrator\.codex\memories\phasea-runtime-build`.
-- Startup must set both `APP_BIND_URL` and `ASPNETCORE_URLS` to `http://127.0.0.1:18080`.
-- Repo-wide MSBuild excludes must keep generated `logs/**`, `obj/**`, and `bin/**` out of compile inputs.
-- `PHASEA_ADMIN_TOKEN_HASH` must come from the host secret store or service environment; never commit real token material or hashes.
-- Recovery from public `502` always starts with local PhaseA health, then Caddy/public health.
-- Watchdog PID: `logs/phase-a-innernet/phasea-watchdog.pid`.
-- Watchdog log: `logs/phase-a-innernet/runtime/phasea-watchdog.log`.
-
-### Minimum Recovery-Grade Runtime Variables
-`runtime/phase-a/start-phasea.ps1` is the complete operational source of truth. This list records stable non-secret recovery defaults and is intentionally not an exhaustive environment manifest:
-- `APP_BIND_URL=http://127.0.0.1:18080`
-- `ASPNETCORE_URLS=http://127.0.0.1:18080`
-- `HTTPS_TERMINATION=caddy`
-- `PUBLIC_BASE_URL=https://47.86.160.138:8080`
-- `HOSTED_WORKSPACE_ROOT=C:\jimuyun\logs\phase-a-innernet\workspaces`
-- `HOSTED_PROJECT_LIMIT=2`
-- `PHASEA_MAX_CONCURRENT_CHATS=8`
-- `PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT=1`
-- `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS=4`
-- `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS_PER_ACCOUNT=1`
-- `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS=3`
-- `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT=1`
-- `PHASEA_MAX_CONCURRENT_OTHER_RUNS=3`
-- `PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS=2`
-- `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS=3`
-- `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT=1`
-- `PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS=180`
-- `PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS=45`
-- `PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT=1`
-- `PHASEA_METADATA_DB_PATH=C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3`
-- `PHASEA_REPOSITORY_ROOT=C:\jimuyun`
-- `GODOT_BIN=C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe`
-- `PHASEA_GODOT3_BIN=C:\Godot\3.6.2\Godot_v3.6.2-stable_win64.exe`
-- `DOTNET_ROOT=C:\jimuyun\.dotnet`
-
-The startup script also resolves dynamic or secret-backed variables including `PHASEA_CODEX_COMMAND`, `PHASEA_RIPGREP_DIR`, `PHASEA_ADMIN_TOKEN_HASH`, `PHASEA_TICKET_SIGNING_SECRET`, `PHASEA_WEB_PREVIEW_SIGNING_SECRET`, and optional `AICODEMIRROR_*` integration values. Document names and sources only; never commit real secret values.
+- Canonical live startup and recovery remain `runtime/phase-a/start-phasea.ps1` and `runtime/phase-a/ensure-phasea.ps1`.
+- `runtime/phase-a/README.md` owns stable endpoints, non-secret recovery defaults, Caddy behavior, build location, watchdog paths, and smoke commands.
+- `runtime/phase-a/AGENTS.md` owns the protected host-runtime change contract.
+- Root documentation retains only cross-tree recovery order and safety rules; do not duplicate the runtime environment manifest here.
 
 ## Repo Map
-- `PhaseA.Platform/`: ASP.NET Core Web/API, browser UI, route services, security, metadata, workspaces, LLM integration, and readback.
+- `PhaseA.Platform/`: ASP.NET Core Web/API, browser UI, route services, security, metadata, workspaces, LLM integration, and readback; see its local `AGENTS.md` and `README.md`.
 - `PhaseA.Platform.Tests/`: Phase service unit and integration tests.
-- `runtime/phase-a/`: stable startup, recovery, watchdog, and Caddy configuration.
+- `runtime/phase-a/`: stable startup, recovery, watchdog, and Caddy configuration; see its local `AGENTS.md` and `README.md`.
+- `PhaseA.Platform/Workspaces/HostedProjectTemplate/`: source templates for new Hosted project entry documents, not a live project context or instruction authority.
 - `logs/phase-a-innernet/`: live metadata, hosted workspaces, runtime state, and evidence; protected runtime data, not source configuration.
 - `scripts/python/phase_a_*.py` and `scripts/python/phase_b_*.py`: Phase operations, smoke, drill, and recovery utilities.
 - `Game.Core/`, `Game.Godot/`, `Game.Core.Tests/`, and `Tests.Godot/`: hosted Godot prototype execution kernel and its tests.
@@ -254,6 +232,10 @@ The startup script also resolves dynamic or secret-backed variables including `P
 
 ## Docs Index
 - `README.md`
+- `PhaseA.Platform/AGENTS.md`
+- `PhaseA.Platform/README.md`
+- `runtime/phase-a/AGENTS.md`
+- `runtime/phase-a/README.md`
 - `docs/architecture/phase-service/_index.md`
 - `docs/architecture/ADR_INDEX_PHASE.md`
 - `docs/standards/_index.md`
@@ -269,6 +251,8 @@ The startup script also resolves dynamic or secret-backed variables including `P
 
 ## Change Policy
 - Keep `AGENTS.md` Phase-service-first and concise.
+- Keep application and host-operation details in their local documentation pairs.
+- Keep Hosted project entry templates Workspace-focused; structured route state and signed run context remain separate runtime authority.
 - Keep public and browser-consumed contracts backward-compatible by default.
 - Add recovery data as structured sidecars instead of rewriting historical evidence.
 - Put detailed guidance in the relevant architecture, standard, workflow, or operations document.

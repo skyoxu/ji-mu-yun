@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "refactor-implementation-acceptance.deterministic-validation-result.v1",
+  "runId": "2026-07-29-r1",
+  "candidateRevision": "a7b0772d8beb47cf5fc895652e68b6c668e6f998",
+  "status": "blocked",
+  "checks": [
+    {
+      "id": "current-worktree-plan-validation",
+      "status": "failed",
+      "command": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+      "findings": ["RIA-PLAN-AUTHORITY-MANIFEST", "RIA-PLAN-KNOWLEDGE-CONTEXT"]
+    },
+    {
+      "id": "immutable-candidate-plan-validation",
+      "status": "failed",
+      "command": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+      "candidateRevision": "a7b0772d8beb47cf5fc895652e68b6c668e6f998",
+      "findings": ["RIA-PLAN-KNOWLEDGE-CONTEXT"],
+      "detail": "The frozen knowledge context replays as catalog_stale even in a clean detached worktree at the immutable candidate commit."
+    },
+    {
+      "id": "immutable-candidate-whole-directory-validation",
+      "status": "failed",
+      "command": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py",
+      "candidateRevision": "a7b0772d8beb47cf5fc895652e68b6c668e6f998",
+      "findings": ["RIA-PLAN-KNOWLEDGE-CONTEXT"]
+    },
+    {
+      "id": "acceptance-skill-package-validation",
+      "status": "passed",
+      "command": "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package",
+      "findings": []
+    },
+    {
+      "id": "acceptance-skill-unit-tests",
+      "status": "passed",
+      "command": "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py",
+      "testsPassed": 123,
+      "testsFailed": 0
+    },
+    {
+      "id": "candidate-diff-check",
+      "status": "passed",
+      "command": "git diff --check 108d3112e7c701e97014842600068a912236b7f3 a7b0772",
+      "findings": []
+    }
+  ],
+  "blockingFindings": [
+    {
+      "id": "RIA-ACCEPT-PLAN-KNOWLEDGE-AUTHORITY-STALE",
+      "severity": "P1",
+      "summary": "The committed 7-27 plan cannot replay its frozen knowledge context against its catalog source snapshot, so whole-directory authority validation is not current."
+    },
+    {
+      "id": "RIA-ACCEPT-CURRENT-AUTHORITY-DRIFT",
+      "severity": "P1",
+      "summary": "The live worktree also changes AGENTS.md and knowledge assets outside the 7-27 candidate; these changes cannot be imported into this acceptance candidate without an explicit VDD refresh."
+    },
+    {
+      "id": "RIA-ACCEPT-MANIFEST-PARTIAL",
+      "severity": "P2",
+      "summary": "Candidate custody is valid for the representative declared files, but the manifest intentionally remains partial while plan authority is invalid."
+    }
+  ],
+  "conclusion": "review_required_but_not_launchable",
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "acceptance-passed",
+    "protected-handoff",
+    "release",
+    "deployment",
+    "archive"
+  ]
+}

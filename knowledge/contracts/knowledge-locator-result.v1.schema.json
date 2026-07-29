@@ -9,6 +9,49 @@
     "request_id": {"type": "string", "minLength": 1},
     "status": {"enum": ["matched", "insufficient_match", "blocked"]},
     "snapshot": {"type": "object"},
-    "candidates": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "anchor", "line_start", "line_end", "source_sha256", "provenance", "rank_evidence"], "properties": {"path": {"type": "string"}, "anchor": {"type": "string"}, "line_start": {"type": "integer", "minimum": 1}, "line_end": {"type": "integer", "minimum": 1}, "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "provenance": {"type": "array"}, "rank_evidence": {"type": "object"}}}}
+    "source_snapshot_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "policy_revision": {"type": "string", "minLength": 1},
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "anchor", "line_start", "line_end", "source_sha256", "provenance", "rank_evidence"],
+        "properties": {
+          "path": {"type": "string"},
+          "anchor": {"type": "string"},
+          "line_start": {"type": "integer", "minimum": 1},
+          "line_end": {"type": "integer", "minimum": 1},
+          "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "provenance": {"type": "array", "items": {"type": "string"}},
+          "rank_evidence": {"type": "object"},
+          "module_id": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "minLength": 1},
+          "primary_domain": {"enum": ["toolchain", "phase", "workspace", "marketplace"]},
+          "visibility": {"type": "object"},
+          "lifecycle": {"enum": ["repository-source", "repository-template", "project-instance", "run-artifact-view"]},
+          "enforcement_level": {"enum": ["E0", "E1", "E2", "E3"]},
+          "source_role": {"type": "string", "minLength": 1},
+          "status": {"enum": ["active", "conditional", "historical", "excluded"]},
+          "relations": {"type": "array", "items": {"type": "object"}},
+          "consumer_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "semantic_eligible": {"type": "boolean"},
+          "read_set": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["role", "path", "source_sha256"],
+              "properties": {
+                "role": {"type": "string", "minLength": 1},
+                "path": {"type": "string", "minLength": 1},
+                "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

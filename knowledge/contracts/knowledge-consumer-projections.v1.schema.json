@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-consumer-projections.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_snapshot_id", "catalog_sha256", "policy_revision", "policy_sha256", "projections"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.knowledge-consumer-projections.v1"},
+    "source_snapshot_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "catalog_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "policy_revision": {"const": "knowledge-consumer-policies.v2"},
+    "policy_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "projections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["consumer", "eligible_module_ids", "required_modules", "optional_modules", "max_candidates", "freeze_point"],
+        "properties": {
+          "consumer": {"enum": ["vdd", "quick-dev", "bootstrap", "refactor-acceptance"]},
+          "eligible_module_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "required_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "optional_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "max_candidates": {"type": "integer", "minimum": 0},
+          "freeze_point": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

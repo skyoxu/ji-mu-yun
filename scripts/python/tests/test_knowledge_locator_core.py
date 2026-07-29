@@ -60,15 +60,16 @@ class KnowledgeLocatorCoreTests(unittest.TestCase):
             "schema_version": "jimuyun.knowledge-locator-request.v1",
             "request_id": "test-request",
             "consumer": "vdd",
-            "query": "unmatched locator query",
+            "query": "zzzxxyy-unmatched-catalog-token",
             "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40},
             "policy_revision": "test-policy",
         }
-        catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json").read_text(encoding="utf-8"))
+        catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json").read_text(encoding="utf-8"))
         request["snapshot"] = {"ref": catalog["source_snapshot"]["ref"], "commit": catalog["source_snapshot"]["commit"]}
+        request["policy_revision"] = "knowledge-consumer-policies.v2"
         result = subprocess.run(
-            [sys.executable, "-B", str(CLI_PATH), "--catalog", str(REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json")],
-            input=json.dumps(request), text=True, capture_output=True, check=False,
+            [sys.executable, "-B", str(CLI_PATH), "--catalog", str(REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json")],
+            input=json.dumps(request), text=True, encoding="utf-8", capture_output=True, check=False,
         )
         self.assertEqual(0, result.returncode, result.stderr)
         output = json.loads(result.stdout)
@@ -79,10 +80,36 @@ class KnowledgeLocatorCoreTests(unittest.TestCase):
 
     def test_catalog_covers_gdd_prototype_route_module(self) -> None:
         core = load_core()
-        catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json").read_text(encoding="utf-8"))
+        catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json").read_text(encoding="utf-8"))
         result = core.locate({"query": "GDD prototype route"}, catalog, max_candidates=12)
         self.assertEqual("matched", result["status"])
         self.assertIn("docs/architecture/phase-service/prototype-routes-and-recovery.md", [item["path"] for item in result["candidates"]])
+
+    def test_typed_policy_rejects_migration_and_non_exact_history(self) -> None:
+        core = load_core()
+        policy = {
+            "consumer": "vdd", "domains": ["toolchain"], "visibility": ["active", "dependency"],
+            "lifecycles": ["repository-source"], "statuses": ["active", "historical"],
+            "historical_mode": "exact-only", "path_prefixes": ["docs/"], "exact_paths": [],
+        }
+        catalog = {"modules": [
+            {
+                "module_id": "migration.fake", "source_path": "docs/migration/legacy.md", "source_sha256": "a" * 64,
+                "content": "legacy migration", "semantic_eligible": True, "status": "active", "lifecycle": "repository-source",
+                "primary_domain": "toolchain", "visibility": {"toolchain": "active"}, "consumer_ids": ["vdd"],
+            },
+            {
+                "module_id": "plan.completed", "source_path": "docs/completed.md", "source_sha256": "b" * 64,
+                "title": "Completed Plan", "content": "completed knowledge plan", "semantic_eligible": True,
+                "status": "historical", "lifecycle": "repository-source", "primary_domain": "toolchain",
+                "visibility": {"toolchain": "active"}, "consumer_ids": ["vdd"],
+            },
+        ]}
+        hidden = core.locate({"query": "legacy migration", "consumer": "vdd"}, catalog, policy=policy)
+        self.assertEqual("insufficient_match", hidden["status"])
+        exact = core.locate({"query": "plan.completed", "consumer": "vdd"}, catalog, policy=policy)
+        self.assertEqual("matched", exact["status"])
+        self.assertEqual("plan.completed", exact["candidates"][0]["module_id"])
 
     def test_cli_blocks_stale_catalog_or_snapshot_mismatch(self) -> None:
         request = {

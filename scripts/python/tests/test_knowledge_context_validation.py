@@ -79,6 +79,18 @@ class KnowledgeContextValidationTests(unittest.TestCase):
         })
         self.assertEqual("rejected_candidate_invalid", validate_context(document))
 
+    def test_rejects_migration_candidate_before_source_read(self) -> None:
+        document = payload(path="docs/migration/legacy.md")
+        self.assertEqual("candidate_path_excluded", validate_context(document))
+
+    def test_rejects_read_set_that_does_not_start_with_primary_source(self) -> None:
+        document = payload()
+        document["locator_result"]["candidates"][0]["read_set"] = [
+            {"role": "supporting-source", "path": "README.md", "source_sha256": "b" * 64}
+        ]
+        document["result_sha256"] = canonical_hash(document["locator_result"])
+        self.assertEqual("locator_candidate_read_set_invalid", validate_context(document))
+
 
 if __name__ == "__main__":
     unittest.main()

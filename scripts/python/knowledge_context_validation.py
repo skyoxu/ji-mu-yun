@@ -16,7 +16,9 @@ from typing import Any
 from _knowledge_locator_core import require_fresh_catalog
 
 
-CATALOG_RELATIVE = Path("knowledge/catalogs/repository-knowledge-catalog.v1.json")
+CATALOG_RELATIVE = Path("knowledge/catalogs/repository-knowledge-catalog.v2.json")
+POLICY_RELATIVE = Path("knowledge/policies/consumer-policies.v2.json")
+PROJECTION_RELATIVE = Path("knowledge/projections/consumer-projections.v1.json")
 REQUEST_SCHEMA = "jimuyun.knowledge-locator-request.v1"
 RESULT_SCHEMA = "jimuyun.knowledge-locator-result.v1"
 CONTEXT_SCHEMA = "jimuyun.vdd-knowledge-context.v1"
@@ -35,21 +37,46 @@ def canonical_hash(value: Any) -> str:
 
 
 def _main_source_hashes(repository_root: Path, catalog: dict[str, Any]) -> dict[str, str]:
-    paths = {
-        entry.get("source_path")
-        for entry in catalog.get("entries", [])
-        if isinstance(entry, dict) and isinstance(entry.get("source_path"), str)
-    }
+    snapshot = catalog.get("source_snapshot")
+    if not isinstance(snapshot, dict) or not isinstance(snapshot.get("sources"), list):
+        raise ValueError("catalog_source_snapshot_invalid")
+    current = subprocess.run(
+        ["git", "-C", str(repository_root), "rev-parse", "refs/heads/main"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    if current.returncode or current.stdout.strip() != snapshot.get("commit"):
+        raise ValueError("catalog_main_commit_mismatch")
+    paths = [item.get("path") for item in snapshot["sources"] if isinstance(item, dict) and isinstance(item.get("path"), str)]
+    request_bytes = "".join(f"{snapshot['commit']}:{path}\n" for path in paths).encode("utf-8")
+    completed = subprocess.run(
+        ["git", "-C", str(repository_root), "cat-file", "--batch"],
+        input=request_bytes,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode:
+        raise ValueError("catalog_main_source_unavailable")
     values: dict[str, str] = {}
+    offset = 0
     for path in paths:
-        result = subprocess.run(
-            ["git", "-C", str(repository_root), "show", f"refs/heads/main:{path}"],
-            capture_output=True,
-            check=False,
-        )
-        if result.returncode:
+        newline = completed.stdout.find(b"\n", offset)
+        if newline < 0:
             raise ValueError("catalog_main_source_unavailable")
-        values[path] = hashlib.sha256(result.stdout).hexdigest()
+        header = completed.stdout[offset:newline].decode("ascii", errors="replace")
+        offset = newline + 1
+        parts = header.rsplit(" ", 2)
+        if len(parts) != 3 or parts[1] != "blob" or not parts[2].isdigit():
+            raise ValueError("catalog_main_source_unavailable")
+        size = int(parts[2])
+        blob = completed.stdout[offset : offset + size]
+        offset += size
+        if completed.stdout[offset : offset + 1] != b"\n":
+            raise ValueError("catalog_main_source_unavailable")
+        offset += 1
+        values[path] = hashlib.sha256(blob).hexdigest()
     return values
 
 
@@ -78,6 +105,50 @@ def _contained_source(repository_root: Path, raw_path: object) -> Path:
     except ValueError as exc:
         raise ValueError("candidate_path_outside_repository") from exc
     return resolved
+
+
+def _snapshot_blob(repository_root: Path, commit: str, raw_path: object) -> bytes:
+    _contained_source(repository_root, raw_path)
+    assert isinstance(raw_path, str)
+    normalized = raw_path.replace("\\", "/")
+    if normalized.startswith("docs/migration/"):
+        raise ValueError("candidate_path_excluded")
+    result = subprocess.run(
+        ["git", "-C", str(repository_root), "show", f"{commit}:{normalized}"],
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode:
+        raise ValueError("candidate_snapshot_source_unavailable")
+    return result.stdout
+
+
+def _catalog_candidates(catalog: dict[str, Any]) -> dict[tuple[str, str], dict[str, Any]]:
+    raw_entries = catalog.get("modules") if isinstance(catalog.get("modules"), list) else catalog.get("entries", [])
+    values: dict[tuple[str, str], dict[str, Any]] = {}
+    for entry in raw_entries:
+        if not isinstance(entry, dict):
+            continue
+        path, digest = entry.get("source_path") or entry.get("path"), entry.get("source_sha256")
+        if isinstance(path, str) and isinstance(digest, str):
+            values[(path, digest)] = entry
+    return values
+
+
+def _candidate_read_set(candidate: dict[str, Any]) -> list[tuple[str, str]]:
+    read_set = candidate.get("read_set")
+    if read_set is None:
+        return [(candidate["path"], candidate["source_sha256"])]
+    if not isinstance(read_set, list) or not read_set:
+        raise ValueError("locator_candidate_read_set_invalid")
+    values: list[tuple[str, str]] = []
+    for item in read_set:
+        if not isinstance(item, dict) or not isinstance(item.get("path"), str) or not isinstance(item.get("source_sha256"), str):
+            raise ValueError("locator_candidate_read_set_invalid")
+        values.append((item["path"], item["source_sha256"]))
+    if values[0] != (candidate["path"], candidate["source_sha256"]):
+        raise ValueError("locator_candidate_read_set_invalid")
+    return values
 
 
 def validate_context(
@@ -113,13 +184,21 @@ def validate_context(
     if not isinstance(candidates, list):
         return "locator_candidates_invalid"
     available: set[tuple[str, str]] = set()
+    candidate_documents: list[dict[str, Any]] = []
     for candidate in candidates:
         if not isinstance(candidate, dict) or not isinstance(candidate.get("path"), str) or not isinstance(candidate.get("source_sha256"), str):
             return "locator_candidates_invalid"
+        if candidate["path"].replace("\\", "/").startswith("docs/migration/"):
+            return "candidate_path_excluded"
+        try:
+            _candidate_read_set(candidate)
+        except ValueError as exc:
+            return str(exc)
         key = (candidate["path"], candidate["source_sha256"])
         if key in available:
             return "locator_candidates_duplicate"
         available.add(key)
+        candidate_documents.append(candidate)
     seen: set[tuple[str, str]] = set()
     accepted: list[tuple[str, str]] = []
     satisfied_modules: set[str] = set()
@@ -163,12 +242,67 @@ def validate_context(
         source_snapshot = catalog.get("source_snapshot", {})
         if request.get("snapshot") != {"ref": source_snapshot.get("ref"), "commit": source_snapshot.get("commit")}:
             return "catalog_snapshot_mismatch"
-    if verify_sources:
-        for path, digest in accepted:
+        if catalog.get("schema_version") == "jimuyun.repository-knowledge-catalog.v2":
+            if result.get("source_snapshot_id") != source_snapshot.get("snapshot_id"):
+                return "catalog_source_snapshot_id_mismatch"
+            if result.get("policy_revision") != request.get("policy_revision"):
+                return "catalog_policy_revision_mismatch"
             try:
-                source = _contained_source(repository_root, path)
+                policies = json.loads((repository_root / POLICY_RELATIVE).read_text(encoding="utf-8"))
+                projections = json.loads((repository_root / PROJECTION_RELATIVE).read_text(encoding="utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                return "consumer_projection_invalid"
+            if (
+                request.get("policy_revision") != policies.get("policy_revision")
+                or projections.get("policy_revision") != policies.get("policy_revision")
+                or projections.get("policy_sha256") != canonical_hash(policies)
+                or projections.get("catalog_sha256") != canonical_hash(catalog)
+                or projections.get("source_snapshot_id") != source_snapshot.get("snapshot_id")
+            ):
+                return "consumer_projection_stale"
+            consumer_projection = next(
+                (
+                    item
+                    for item in projections.get("projections", [])
+                    if isinstance(item, dict) and item.get("consumer") == request.get("consumer")
+                ),
+                None,
+            )
+            if consumer_projection is None or not isinstance(consumer_projection.get("eligible_module_ids"), list):
+                return "consumer_projection_invalid"
+            eligible_module_ids = set(consumer_projection["eligible_module_ids"])
+        else:
+            eligible_module_ids = None
+        registered = _catalog_candidates(catalog)
+        for candidate in candidate_documents:
+            entry = registered.get((candidate["path"], candidate["source_sha256"]))
+            if entry is None:
+                return "locator_candidate_catalog_mismatch"
+            if candidate.get("module_id") is not None and candidate.get("module_id") != entry.get("module_id"):
+                return "locator_candidate_catalog_mismatch"
+            if eligible_module_ids is not None and candidate.get("module_id") not in eligible_module_ids:
+                return "locator_candidate_outside_consumer_projection"
+            if candidate.get("read_set") is not None:
+                expected = [(entry["source_path"], entry["source_sha256"])] + [
+                    (item.get("path"), item.get("source_sha256"))
+                    for item in entry.get("resources", [])
+                    if isinstance(item, dict)
+                ]
+                try:
+                    actual = _candidate_read_set(candidate)
+                except ValueError as exc:
+                    return str(exc)
+                if actual != expected:
+                    return "locator_candidate_read_set_mismatch"
+    if verify_sources:
+        commit = snapshot["commit"]
+        for candidate in candidate_documents:
+            try:
+                read_set = _candidate_read_set(candidate)
+                for path, digest in read_set:
+                    blob = _snapshot_blob(repository_root, commit, path)
+                    if hashlib.sha256(blob).hexdigest() != digest:
+                        return "candidate_source_hash_mismatch"
             except ValueError as exc:
                 return str(exc)
-            if not source.is_file() or hashlib.sha256(source.read_bytes()).hexdigest() != digest:
-                return "candidate_source_hash_mismatch"
     return None

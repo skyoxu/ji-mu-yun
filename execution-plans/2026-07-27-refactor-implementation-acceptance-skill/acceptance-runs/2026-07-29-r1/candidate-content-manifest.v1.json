@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "partial",
+  "coverageGaps": [
+    "Representative custody manifest only; authoritative whole-plan acceptance cannot proceed until plan authority and frozen knowledge context are refreshed."
+  ],
+  "authorizes": [],
+  "files": [
+    {
+      "change_type": "added",
+      "roles": ["implementation"],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "candidate_sha256": "sha256:9095c3d7c2870fc3ee268ffc3145a9a45dcfe1d36fb9d5508d223d7db3592d49",
+      "inclusion_reason": "Representative 7-27 implementation or directly affected consumer."
+    },
+    {
+      "change_type": "added",
+      "roles": ["implementation"],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "candidate_sha256": "sha256:02e78070964b3a7e3d3f6de793d2fc739d2fdde01aebd96ffe1f55cb81e8d136",
+      "inclusion_reason": "Representative 7-27 implementation or directly affected consumer."
+    },
+    {
+      "change_type": "added",
+      "roles": ["implementation"],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "candidate_sha256": "sha256:f4c4bde0a69973324aa3ca96f2d0be3ea299854440585ef242fa97bcdc6f5978",
+      "inclusion_reason": "Representative 7-27 implementation or directly affected consumer."
+    },
+    {
+      "change_type": "added",
+      "roles": ["implementation"],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      "candidate_sha256": "sha256:f8c8f15dea91bddffec8644ee9eda997ce8ae1becfd33fff340e8a3cc44f7064",
+      "inclusion_reason": "Representative 7-27 implementation or directly affected consumer."
+    },
+    {
+      "change_type": "added",
+      "roles": ["test"],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "candidate_sha256": "sha256:63b25c817e7752dd2dea58e527f4aa19efa8546adb319f58dd9e9fd3669021a7",
+      "inclusion_reason": "Representative 7-27 implementation or directly affected consumer."
+    },
+    {
+      "change_type": "modified",
+      "roles": ["consumer"],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "baseline_sha256": "sha256:43274db309a21df535d45fd05ecd66ffef400287778c4372c793d37194e1aba9",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "candidate_sha256": "sha256:66a9d405e0eb08b0930ce92b1e94ca5cc8ad2765dcb961a52012a256dfc4d934",
+      "inclusion_reason": "Representative 7-27 implementation or directly affected consumer."
+    },
+    {
+      "change_type": "added",
+      "roles": ["consumer"],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+      "candidate_sha256": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018",
+      "inclusion_reason": "Representative 7-27 implementation or directly affected consumer."
+    },
+    {
+      "change_type": "added",
+      "roles": ["authority"],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:370a0d20d1e0adf761ab09a92e9c44bdffdb8e392345a909d0975d8654e57156",
+      "inclusion_reason": "Representative 7-27 implementation or directly affected consumer."
+    },
+    {
+      "change_type": "added",
+      "roles": ["evidence"],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:382ce172cba2de113d043cc2e2f90efc9528638d970d472c4e4797bd6c8814da",
+      "inclusion_reason": "Representative 7-27 implementation or directly affected consumer."
+    }
+  ]
+}

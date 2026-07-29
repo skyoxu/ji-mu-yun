@@ -1,0 +1,87 @@
+{
+  "authorizes": [],
+  "content": {
+    "authorizes": [],
+    "blockingFindings": [
+      {
+        "id": "RIA-ACCEPT-PLAN-KNOWLEDGE-AUTHORITY-STALE",
+        "severity": "P1",
+        "summary": "The committed 7-27 plan cannot replay its frozen knowledge context against its catalog source snapshot, so whole-directory authority validation is not current."
+      },
+      {
+        "id": "RIA-ACCEPT-CURRENT-AUTHORITY-DRIFT",
+        "severity": "P1",
+        "summary": "The live worktree also changes AGENTS.md and knowledge assets outside the 7-27 candidate; these changes cannot be imported into this acceptance candidate without an explicit VDD refresh."
+      },
+      {
+        "id": "RIA-ACCEPT-MANIFEST-PARTIAL",
+        "severity": "P2",
+        "summary": "Candidate custody is valid for the representative declared files, but the manifest intentionally remains partial while plan authority is invalid."
+      }
+    ],
+    "candidateRevision": "a7b0772d8beb47cf5fc895652e68b6c668e6f998",
+    "checks": [
+      {
+        "command": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+        "findings": [
+          "RIA-PLAN-AUTHORITY-MANIFEST",
+          "RIA-PLAN-KNOWLEDGE-CONTEXT"
+        ],
+        "id": "current-worktree-plan-validation",
+        "status": "failed"
+      },
+      {
+        "candidateRevision": "a7b0772d8beb47cf5fc895652e68b6c668e6f998",
+        "command": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+        "detail": "The frozen knowledge context replays as catalog_stale even in a clean detached worktree at the immutable candidate commit.",
+        "findings": [
+          "RIA-PLAN-KNOWLEDGE-CONTEXT"
+        ],
+        "id": "immutable-candidate-plan-validation",
+        "status": "failed"
+      },
+      {
+        "candidateRevision": "a7b0772d8beb47cf5fc895652e68b6c668e6f998",
+        "command": "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py",
+        "findings": [
+          "RIA-PLAN-KNOWLEDGE-CONTEXT"
+        ],
+        "id": "immutable-candidate-whole-directory-validation",
+        "status": "failed"
+      },
+      {
+        "command": "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package",
+        "findings": [],
+        "id": "acceptance-skill-package-validation",
+        "status": "passed"
+      },
+      {
+        "command": "py -3 -B -m unittest discover -s .agents/skills/run-refactor-implementation-acceptance/tests -p test_*.py",
+        "id": "acceptance-skill-unit-tests",
+        "status": "passed",
+        "testsFailed": 0,
+        "testsPassed": 123
+      },
+      {
+        "command": "git diff --check 108d3112e7c701e97014842600068a912236b7f3 a7b0772",
+        "findings": [],
+        "id": "candidate-diff-check",
+        "status": "passed"
+      }
+    ],
+    "conclusion": "review_required_but_not_launchable",
+    "doesNotAuthorize": [
+      "acceptance-passed",
+      "protected-handoff",
+      "release",
+      "deployment",
+      "archive"
+    ],
+    "runId": "2026-07-29-r1",
+    "schemaVersion": "refactor-implementation-acceptance.deterministic-validation-result.v1",
+    "status": "blocked"
+  },
+  "inputHash": "sha256:8e7902320c1941d24009901f33bef2cf8b51076d641b8ac4ae31556858bf467b",
+  "inputPath": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1/deterministic-validation-result.v1.json",
+  "schemaVersion": "acceptance-rendered-view.v1"
+}

@@ -11,6 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
 
+HARD_EXCLUDED_PREFIXES = ("docs/migration/",)
+
+
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -27,7 +30,10 @@ def safe_relative(value: str) -> str:
     pure = PurePosixPath(value.replace("\\", "/"))
     if pure.is_absolute() or ".." in pure.parts or not pure.parts:
         raise ValueError("invalid_source_path")
-    return pure.as_posix()
+    normalized = pure.as_posix()
+    if any(normalized == prefix.rstrip("/") or normalized.startswith(prefix) for prefix in HARD_EXCLUDED_PREFIXES):
+        raise ValueError("source_path_excluded")
+    return normalized
 
 
 def catalog_source_snapshot(catalog: dict) -> dict | None:
@@ -74,7 +80,7 @@ def main() -> int:
             raise ValueError("existing_only_discovery_forbidden")
         if mode == "targeted" and (target.get("kind") == "none" or request.get("discovery_policy") != "target-scoped"):
             raise ValueError("target_required")
-        raw_entries = catalog.get("entries")
+        raw_entries = catalog.get("modules") if isinstance(catalog.get("modules"), list) else catalog.get("entries")
         if raw_entries is None and isinstance(catalog.get("files"), list):
             raw_entries = [
                 {"entry_id": str(item.get("path", "")).replace("/", "."), "source_path": item.get("path"), "source_sha256": item.get("sha256")}
@@ -89,10 +95,33 @@ def main() -> int:
             for item in (recorded_snapshot or {}).get("sources", [])
             if isinstance(item, dict)
         }
-        selected = raw_entries
+        if mode == "existing-only" and recorded_snapshot is not None:
+            selected = [
+                {
+                    "entry_id": "source." + safe_relative(str(item.get("path", ""))).replace("/", "."),
+                    "source_path": item.get("path"),
+                    "source_sha256": item.get("sha256"),
+                }
+                for item in recorded_snapshot["sources"]
+                if isinstance(item, dict)
+            ]
+        else:
+            selected = list(raw_entries)
+            for item in raw_entries:
+                if not isinstance(item, dict):
+                    continue
+                for index, resource in enumerate(item.get("resources", [])):
+                    if isinstance(resource, dict):
+                        selected.append(
+                            {
+                                "entry_id": f"{item.get('entry_id', 'module')}.resource.{index}",
+                                "source_path": resource.get("path"),
+                                "source_sha256": resource.get("source_sha256"),
+                            }
+                        )
         if mode == "targeted":
             prefix = safe_relative(str(target.get("repo_relative_path") or "")).rstrip("/")
-            selected = [item for item in raw_entries if safe_relative(str(item.get("source_path", ""))).startswith(prefix + "/") or safe_relative(str(item.get("source_path", ""))) == prefix]
+            selected = [item for item in selected if safe_relative(str(item.get("source_path", ""))).startswith(prefix + "/") or safe_relative(str(item.get("source_path", ""))) == prefix]
         for item in selected:
             source_path = safe_relative(str(item.get("source_path", "")))
             entry_id = str(item.get("entry_id", ""))
@@ -107,14 +136,36 @@ def main() -> int:
             disposition = "unchanged" if before == after else "updated"
             suggested_sources.append({"path": source_path, "sha256": after})
             entries_result.append({"entry_id": entry_id, "source_path": source_path, "source_snapshot_kind": "main", "disposition": disposition, "authority_status": "main-backed", "before_sha256": before, "after_sha256": after, "changed_fields": [] if disposition == "unchanged" else ["source_sha256"]})
-        if mode == "targeted" and not selected and target.get("snapshot_kind") == "worktree":
+        if mode == "targeted" and not selected:
             source_path = safe_relative(str(target.get("repo_relative_path")))
-            worktree = repo / source_path
-            if worktree.is_file():
+            blob = subprocess.run(["git", "-C", str(repo), "show", f"{main_commit}:{source_path}"], capture_output=True)
+            if blob.returncode == 0:
+                digest = sha256(blob.stdout)
+                suggested_sources.append({"path": source_path, "sha256": digest})
+                entries_result.append({"entry_id": f"candidate.{source_path.replace('/', '.')}", "source_path": source_path, "source_snapshot_kind": "main", "disposition": "candidate", "authority_status": "main-backed", "before_sha256": None, "after_sha256": digest, "changed_fields": ["candidate_source"]})
+            elif target.get("snapshot_kind") == "worktree" and (repo / source_path).is_file():
+                worktree = repo / source_path
                 entries_result.append({"entry_id": f"candidate.{source_path.replace('/', '.')}", "source_path": source_path, "source_snapshot_kind": "worktree", "disposition": "candidate", "authority_status": "provisional", "before_sha256": None, "after_sha256": sha256(worktree.read_bytes()), "changed_fields": ["candidate_source"]})
         if recorded_snapshot is not None:
             actual_sources = {item["path"]: item["sha256"] for item in suggested_sources}
-            snapshot_status = "current" if recorded_sources == actual_sources else "stale"
+            catalog_bindings_current = True
+            for item in raw_entries:
+                if not isinstance(item, dict):
+                    catalog_bindings_current = False
+                    break
+                source_path = safe_relative(str(item.get("source_path", "")))
+                if recorded_sources.get(source_path) != item.get("source_sha256"):
+                    catalog_bindings_current = False
+                    break
+                for resource in item.get("resources", []):
+                    if not isinstance(resource, dict):
+                        catalog_bindings_current = False
+                        break
+                    resource_path = safe_relative(str(resource.get("path", "")))
+                    if recorded_sources.get(resource_path) != resource.get("source_sha256"):
+                        catalog_bindings_current = False
+                        break
+            snapshot_status = "current" if recorded_sources == actual_sources and catalog_bindings_current else "stale"
         status = "updated" if any(item["disposition"] in {"updated", "missing", "candidate"} for item in entries_result) or snapshot_status == "stale" else "unchanged"
     except (KeyError, ValueError, subprocess.CalledProcessError) as exc:
         failure = str(exc)

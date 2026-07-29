@@ -1,0 +1,50 @@
+{
+  "target": "C:/jimuyun/execution-plans/2026-07-27-refactor-implementation-acceptance-skill",
+  "run_id": "2026-07-29-r1",
+  "created_utc": "2026-07-29T06:12:20.727836Z",
+  "change_id": "refactor-implementation-acceptance-skill-reacceptance-2026-07-29-r1",
+  "baseline_revision": "108d3112e7c701e97014842600068a912236b7f3",
+  "candidate_revision": "a7b0772",
+  "candidate_mode": "commit",
+  "target_plan_paths": [
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/01-requirements-and-acceptance.md",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json"
+  ],
+  "execution_mode": "evidence_only",
+  "baseline_content_manifest_path": "acceptance-runs/2026-07-29-r1/baseline-content-manifest.v1.json",
+  "baseline_content_manifest_hash": "sha256:968fdfa2bd4ff987ece9c69754279c944fd9fbd0011567ab70e16b486f6f4606",
+  "candidate_content_manifest_path": "acceptance-runs/2026-07-29-r1/candidate-content-manifest.v1.json",
+  "candidate_content_manifest_hash": "sha256:dccade8dc4e4585480e0486ea9061af10c56e15b0e516eb6259a2467e9aa01e2",
+  "code_review_domain": "phase_service",
+  "code_review_policy_path": ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+  "code_review_policy_hash": "sha256:e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+  "target_plan_hash": "sha256:74615b9e13f6fd6e614fc2ed5be3b3caf8250866e0ec1cdd893f9500d64705d6",
+  "validator_hash": "sha256:a1ebc0b4bec64884425672060be517d43de867210bf86bbc91f87334004818b7",
+  "adapter_id": "run-refactor-implementation-acceptance",
+  "adapter_version": "2026-07-29-candidate-custody",
+  "adapter_hash": "sha256:9095c3d7c2870fc3ee268ffc3145a9a45dcfe1d36fb9d5508d223d7db3592d49",
+  "allowed_write_roots": [
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-29-r1"
+  ],
+  "forbidden_write_roots": [
+    "logs/phase-a-innernet",
+    "runtime/phase-a",
+    "PhaseA.Platform",
+    "PhaseA.Platform.Tests"
+  ],
+  "changed_paths": [
+    ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/95-implementation-evolution-and-completion-report.md",
+    "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json"
+  ],
+  "affected_consumer_refs": [
+    ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+  ]
+}

@@ -9,6 +9,108 @@ namespace PhaseA.Platform.Tests.Workspaces;
 public sealed class ProjectWorkspaceSeederTests
 {
     [Fact]
+    public void EnsureSeeded_UsesHostedProjectEntryTemplateForFreshWorkspace()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        File.WriteAllText(Path.Combine(source.Path, "AGENTS.md"), "platform agents\n");
+        File.WriteAllText(Path.Combine(source.Path, "README.md"), "platform readme\n");
+        var templateRoot = Path.Combine(
+            source.Path,
+            "PhaseA.Platform",
+            "Workspaces",
+            "HostedProjectTemplate");
+        Directory.CreateDirectory(templateRoot);
+        File.WriteAllText(Path.Combine(templateRoot, "AGENTS.template.md"), "project agents\n");
+        File.WriteAllText(Path.Combine(templateRoot, "README.template.md"), "project readme\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = source.Path
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+
+        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+
+        File.ReadAllText(Path.Combine(targetRepo, "AGENTS.md")).Should().Be("project agents\n");
+        File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("project readme\n");
+        Directory.Exists(Path.Combine(
+            targetRepo,
+            "PhaseA.Platform",
+            "Workspaces",
+            "HostedProjectTemplate")).Should().BeFalse();
+    }
+
+    [Fact]
+    public void EnsureSeeded_PreservesExistingProjectEntryDocumentsWhenTemplateIsAvailable()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        File.WriteAllText(Path.Combine(source.Path, "AGENTS.md"), "platform agents\n");
+        File.WriteAllText(Path.Combine(source.Path, "README.md"), "platform readme\n");
+        var templateRoot = Path.Combine(
+            source.Path,
+            "PhaseA.Platform",
+            "Workspaces",
+            "HostedProjectTemplate");
+        Directory.CreateDirectory(templateRoot);
+        File.WriteAllText(Path.Combine(templateRoot, "AGENTS.template.md"), "project agents\n");
+        File.WriteAllText(Path.Combine(templateRoot, "README.template.md"), "project readme\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = source.Path
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        Directory.CreateDirectory(targetRepo);
+        File.WriteAllText(Path.Combine(targetRepo, "README.md"), "custom project readme\n");
+        File.WriteAllText(Path.Combine(targetRepo, ".phasea-seed-complete"), "phase-a-workspace-seed.v1\n");
+
+        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+
+        File.ReadAllText(Path.Combine(targetRepo, "AGENTS.md")).Should().Be("project agents\n");
+        File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("custom project readme\n");
+    }
+
+    [Fact]
+    public void EnsureSeeded_FallsBackToRepositoryEntryDocumentsWhenTemplateSetIsIncomplete()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        File.WriteAllText(Path.Combine(source.Path, "AGENTS.md"), "platform agents\n");
+        File.WriteAllText(Path.Combine(source.Path, "README.md"), "platform readme\n");
+        var templateRoot = Path.Combine(
+            source.Path,
+            "PhaseA.Platform",
+            "Workspaces",
+            "HostedProjectTemplate");
+        Directory.CreateDirectory(templateRoot);
+        File.WriteAllText(Path.Combine(templateRoot, "AGENTS.template.md"), "project agents\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = source.Path
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+
+        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+
+        File.ReadAllText(Path.Combine(targetRepo, "AGENTS.md")).Should().Be("platform agents\n");
+        File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("platform readme\n");
+        Directory.Exists(Path.Combine(
+            targetRepo,
+            "PhaseA.Platform",
+            "Workspaces",
+            "HostedProjectTemplate")).Should().BeFalse();
+    }
+
+    [Fact]
     public void EnsureSeeded_SkipsReparsePointDirectories()
     {
         using var source = TempDirectory.Create("phase-a-source");

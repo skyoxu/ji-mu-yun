@@ -24,6 +24,8 @@ Out of scope:
 ## Key Decisions
 
 - The platform controls workspace roots and project seeding instead of accepting browser-provided repository URLs.
+- New workspaces receive project-facing `AGENTS.md` and `README.md` from the dedicated templates under `PhaseA.Platform/Workspaces/HostedProjectTemplate/`; the Seeder does not use the platform-root entry documents when both templates are available.
+- Existing project entry documents are project-instance data and are preserved. Template source files are not recursively copied into the Hosted workspace.
 - Browser/API readback uses logical artifact IDs, tickets, or workspace-relative sanitized paths instead of raw absolute paths.
 - Sidecars are for planning, readback, audit, validation, and route recovery. They must not replace engine-owned project files.
 - Package and preview services are readback/product surfaces but must still validate account/project ownership.
@@ -31,6 +33,9 @@ Out of scope:
 ## Invariants
 
 - All paths must stay within the workspace root after normalization.
+- A copied project entry document does not inherit platform repository authority. It can narrow project behavior but cannot expand server route, Skill, account, sandbox, network, tool, or knowledge-policy ceilings.
+- Repository-template, project-instance, and run-artifact-view snapshots remain distinct as required by ADR-0044. Project entry documents do not replace route state, acceptance evidence, or a signed run context.
+- The repository Locator is not currently a Phase browser-route capability. Hosted child Skills cannot establish trusted repository context by invoking the CLI directly; a future Phase adapter must be server-owned and separately validated.
 - Readback must be account-scoped unless the route is explicitly admin-only.
 - Generated evidence and artifacts must be additive; do not rewrite history to hide failures.
 - Package and preview files must be resolved through ticket/ownership checks before download or display.
@@ -41,12 +46,15 @@ Out of scope:
 - New browser/API readback must avoid raw host paths and secrets.
 - New package or asset features must update readback tests and account-boundary tests.
 - Workspace layout changes require recovery and restore notes.
+- Seeder entry-template changes require temporary-root coverage for fresh workspaces and preservation coverage for existing project-owned files. Existing live workspaces are never rewritten by documentation maintenance.
 
 ## Related Code
 
 - `PhaseA.Platform/Workspaces/WorkspaceLayoutBuilder.cs`
 - `PhaseA.Platform/Workspaces/WorkspacePathPolicy.cs`
 - `PhaseA.Platform/Workspaces/ProjectWorkspaceSeeder.cs`
+- `PhaseA.Platform/Workspaces/HostedProjectTemplate/AGENTS.template.md`
+- `PhaseA.Platform/Workspaces/HostedProjectTemplate/README.template.md`
 - `PhaseA.Platform/Projects/ProjectCreationService.cs`
 - `PhaseA.Platform/Projects/ProjectInitializationRecoveryService.cs`
 - `PhaseA.Platform/Readback/ArtifactReadbackService.cs`
@@ -60,3 +68,8 @@ Out of scope:
 - `PhaseA.Platform.Tests/Workspaces/**`
 - `PhaseA.Platform.Tests/Readback/**`
 - `PhaseA.Platform.Tests/Projects/**`
+
+## Related Decisions
+
+- `docs/adr/ADR-0035-phase-controlled-runner-workspace-execution.md`
+- `docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md`

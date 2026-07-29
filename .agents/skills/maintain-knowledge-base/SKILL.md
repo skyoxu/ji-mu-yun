@@ -12,7 +12,7 @@ promote dirty-worktree bytes as repository facts.
 ## Workflow
 
 1. Read `AGENTS.md`, the stable maintenance-compatible contracts under
-   `knowledge/contracts/`, and the existing knowledge catalog. The dated
+   `knowledge/contracts/`, and the typed v2 knowledge catalog. The dated
    2026-07-25 schemas are read-only migration inputs, not runtime owners.
 2. Pin `refs/heads/main` with `git rev-parse refs/heads/main`. Reject a request
    whose declared `main_commit` differs. Treat catalog `source_snapshot` as
@@ -25,8 +25,9 @@ promote dirty-worktree bytes as repository facts.
    `provisional` candidate.
 5. Run `scripts/maintain_knowledge.py` with the request, catalog, derived
    output and append-only log root. When it reports a stale catalog snapshot,
-   use its `suggested_catalog_source_snapshot` to regenerate the catalog from
-   current main facts, then re-read output hashes before claiming a result.
+   run `scripts/python/build_knowledge_catalog.py` to regenerate all three
+   layers from current main facts, then re-read output hashes before claiming
+   a result. `docs/migration/**` is excluded in every mode.
 6. Report source locations and hashes, not generated factual answers. Preserve
    failed result sidecars under `logs/knowledge-context/`.
 
@@ -34,7 +35,7 @@ promote dirty-worktree bytes as repository facts.
 
 ```powershell
 py -3 .agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py `
-  --request request.json --catalog knowledge/catalogs/repository-knowledge-catalog.v1.json `
+  --request request.json --catalog knowledge/catalogs/repository-knowledge-catalog.v2.json `
   --output knowledge/indexes/derived-index.v1.json --repo-root .
 ```
 
