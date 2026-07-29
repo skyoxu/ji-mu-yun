@@ -92,6 +92,28 @@ def current_git_fingerprint() -> dict[str, Any]:
     return _current_git_fingerprint()
 
 
+def _input_snapshot_drift_diagnostic(expected_git: dict[str, Any]) -> dict[str, Any] | None:
+    observed_git = current_git_fingerprint()
+    if git_snapshots_match(expected_git, observed_git):
+        return None
+    expected_identity = expected_git.get("content_identity") if isinstance(expected_git.get("content_identity"), dict) else {}
+    observed_identity = observed_git.get("content_identity") if isinstance(observed_git.get("content_identity"), dict) else {}
+    return {
+        "reason": "git_snapshot_changed_during_run",
+        "start_snapshot_sha256": str(expected_identity.get("snapshot_sha256") or ""),
+        "finish_snapshot_sha256": str(observed_identity.get("snapshot_sha256") or ""),
+    }
+
+
+def _run_has_input_snapshot_drift(summary: dict[str, Any], execution_context: dict[str, Any]) -> bool:
+    for payload in (summary, execution_context):
+        diagnostics = payload.get("diagnostics") if isinstance(payload.get("diagnostics"), dict) else {}
+        drift = diagnostics.get("input_snapshot_drift") if isinstance(diagnostics.get("input_snapshot_drift"), dict) else {}
+        if drift or str(payload.get("reason") or "").strip() == "git_snapshot_changed_during_run":
+            return True
+    return False
+
+
 def _invalidate_inherited_steps_for_snapshot_change(
     *,
     summary: dict[str, Any],
@@ -489,7 +511,10 @@ def _llm_step_is_clean(step: dict[str, Any]) -> bool:
         if not isinstance(row, dict):
             return False
         status = str(row.get("status") or "").strip().lower()
-        rc = int(row.get("rc") or 0)
+        try:
+            rc = int(row.get("rc") or 0)
+        except (TypeError, ValueError):
+            return False
         details = row.get("details") if isinstance(row.get("details"), dict) else {}
         verdict = _normalize_llm_verdict(str(details.get("verdict") or ""))
         if rc != 0 or status != "ok" or verdict != "OK":
@@ -588,6 +613,8 @@ def _derive_llm_reviewer_subset_from_recent_signals(
         summary = _read_json(summary_path)
         execution_context = _read_json(execution_context_path)
         if not summary or not execution_context:
+            continue
+        if _run_has_input_snapshot_drift(summary, execution_context):
             continue
         if _normalize_profile_value(execution_context.get("delivery_profile")) != delivery_profile:
             continue
@@ -699,6 +726,8 @@ def _find_recent_deterministic_green_llm_not_clean_run(
         execution_context = _read_json(execution_context_path)
         if not summary or not execution_context:
             continue
+        if _run_has_input_snapshot_drift(summary, execution_context):
+            continue
         if _normalize_profile_value(execution_context.get("delivery_profile")) != delivery_profile:
             continue
         if _normalize_profile_value(execution_context.get("security_profile")) != security_profile:
@@ -769,6 +798,8 @@ def _find_repeated_deterministic_failure_guard(
         summary = _read_json(summary_path)
         execution_context = _read_json(execution_context_path)
         if not summary or not execution_context:
+            continue
+        if _run_has_input_snapshot_drift(summary, execution_context):
             continue
         if _normalize_profile_value(execution_context.get("delivery_profile")) != delivery_profile:
             continue
@@ -1102,6 +1133,8 @@ def _find_reusable_sc_test_step(
         execution_context = _read_json(execution_context_path)
         if not summary or not execution_context:
             continue
+        if _run_has_input_snapshot_drift(summary, execution_context):
+            continue
         if str(execution_context.get("delivery_profile") or "").strip().lower() != delivery_profile:
             continue
         if str(execution_context.get("security_profile") or "").strip().lower() != security_profile:
@@ -1342,6 +1375,8 @@ def _find_reusable_deterministic_steps_from_llm_only_failure(
         execution_context = _read_json(execution_context_path)
         if not summary or not execution_context:
             continue
+        if _run_has_input_snapshot_drift(summary, execution_context):
+            continue
         if str(execution_context.get("delivery_profile") or "").strip().lower() != delivery_profile:
             continue
         if str(execution_context.get("security_profile") or "").strip().lower() != security_profile:
@@ -1465,6 +1500,8 @@ def _find_reusable_successful_acceptance_step(
         if not exact_snapshot_match and str(change_scope.get("deterministic_strategy") or "").strip() != "reuse-latest":
             continue
         summary = _read_json(summary_path)
+        if _run_has_input_snapshot_drift(summary, execution_context):
+            continue
         steps = summary.get("steps") if isinstance(summary.get("steps"), list) else []
         source_step = next(
             (
@@ -2285,6 +2322,7 @@ def main() -> int:
             script_start_monotonic=script_start_monotonic,
         ),
         git_fingerprint=current_git,
+        validate_input_snapshot=lambda: _input_snapshot_drift_diagnostic(current_git),
     )
     if not session.persist():
         return 2
@@ -2536,20 +2574,6 @@ def main() -> int:
     step_rc = session.execute_steps(steps, resume_or_fork=bool(args.resume or args.fork))
     if step_rc is not None:
         return step_rc
-    finished_git = current_git_fingerprint()
-    if not git_snapshots_match(current_git, finished_git):
-        session.summary["status"] = "fail"
-        session.marathon_state["status"] = "stopped"
-        session.marathon_state["stop_reason"] = "git_snapshot_changed_during_run"
-        diagnostics = session.marathon_state.setdefault("diagnostics", {})
-        if isinstance(diagnostics, dict):
-            start_identity = current_git.get("content_identity") if isinstance(current_git.get("content_identity"), dict) else {}
-            finish_identity = finished_git.get("content_identity") if isinstance(finished_git.get("content_identity"), dict) else {}
-            diagnostics["input_snapshot_drift"] = {
-                "reason": "git_snapshot_changed_during_run",
-                "start_snapshot_sha256": str(start_identity.get("snapshot_sha256") or ""),
-                "finish_snapshot_sha256": str(finish_identity.get("snapshot_sha256") or ""),
-            }
     final_rc = session.finish()
     try:
         write_low_priority_debt_artifacts(

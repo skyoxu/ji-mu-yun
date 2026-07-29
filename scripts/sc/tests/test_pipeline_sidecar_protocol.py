@@ -236,6 +236,7 @@ class PipelineSidecarProtocolTests(unittest.TestCase):
             out_dir = Path(tmpdir) / f"sc-review-pipeline-task-1-{run_id}"
             out_dir.mkdir(parents=True, exist_ok=True)
             emitted_events: list[dict[str, object]] = []
+            snapshot_checks: list[str] = []
 
             session = PipelineSession(
                 args=type("Args", (), {"dry_run": False, "fork": False, "skip_agent_review": False})(),
@@ -318,6 +319,7 @@ class PipelineSidecarProtocolTests(unittest.TestCase):
                     },
                 ),
                 refresh_summary_meta=lambda _summary: None,
+                validate_input_snapshot=lambda: snapshot_checks.append("checked") or None,
             )
 
             rc = session.finish()
@@ -328,6 +330,22 @@ class PipelineSidecarProtocolTests(unittest.TestCase):
             self.assertEqual("artifact-reviewer", reviewer_event["item_id"])
             self.assertEqual("ok", reviewer_event["status"])
             self.assertEqual("fork", reviewer_event["details"]["recommended_action"])
+            self.assertEqual(["checked", "checked"], snapshot_checks)
+
+    def test_pipeline_session_snapshot_guard_should_fail_closed(self) -> None:
+        session = object.__new__(PipelineSession)
+        session.summary = {"status": "ok", "reason": "pipeline_clean"}
+        session.marathon_state = {"status": "running", "diagnostics": {}}
+        session.validate_input_snapshot = lambda: {
+            "reason": "git_snapshot_changed_during_run",
+            "start_snapshot_sha256": "sha256:" + "1" * 64,
+            "finish_snapshot_sha256": "sha256:" + "2" * 64,
+        }
+
+        self.assertFalse(session._apply_input_snapshot_guard())
+        self.assertEqual("fail", session.summary["status"])
+        self.assertEqual("git_snapshot_changed_during_run", session.marathon_state["stop_reason"])
+        self.assertIn("input_snapshot_drift", session.marathon_state["diagnostics"])
 
     def test_dry_run_should_write_run_events_and_capabilities(self) -> None:
         run_id = uuid.uuid4().hex

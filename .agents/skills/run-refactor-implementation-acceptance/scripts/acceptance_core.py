@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import stat
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -56,11 +58,14 @@ def _content_hash(payload: bytes) -> str:
 
 
 def _git(repository_root: Path, *arguments: str) -> bytes:
+    env = dict(os.environ)
+    env["GIT_NO_REPLACE_OBJECTS"] = "1"
     try:
         result = subprocess.run(
             ["git", "-C", str(repository_root), *arguments],
             capture_output=True,
             check=False,
+            env=env,
             timeout=30,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -103,16 +108,29 @@ def _git_blob(repository_root: Path, commit: str, path: str, field: str) -> byte
 
 def _git_path_exists(repository_root: Path, commit: str, path: str, field: str) -> bool:
     normalized = _normalized_relative(path, field)
+    output = _git(repository_root, "ls-tree", "-z", "--name-only", commit, "--", f":(literal){normalized}")
     try:
-        result = subprocess.run(
-            ["git", "-C", str(repository_root), "cat-file", "-e", f"{commit}:{normalized}"],
-            capture_output=True,
-            check=False,
-            timeout=30,
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        raise InputError("Git is unavailable for immutable manifest verification") from exc
-    return result.returncode == 0
+        paths = {
+            item.decode("utf-8", errors="strict")
+            for item in output.split(b"\0")
+            if item
+        }
+    except UnicodeDecodeError as exc:
+        raise InputError("Git path lookup returned a non-UTF-8 path") from exc
+    return normalized in paths
+
+
+def _is_link_or_reparse_point(path: Path) -> bool:
+    try:
+        if path.is_symlink():
+            return True
+        is_junction = getattr(path, "is_junction", None)
+        if callable(is_junction) and is_junction():
+            return True
+        attributes = int(getattr(os.lstat(path), "st_file_attributes", 0) or 0)
+        return bool(attributes & int(getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0) or 0))
+    except OSError:
+        return False
 
 
 def _verify_hash(payload: bytes, expected: str, field: str) -> None:
@@ -181,8 +199,8 @@ def verify_manifest_bytes(
     cursor = target_root
     for part in Path(snapshot_relative).parts:
         cursor = cursor / part
-        if cursor.is_symlink():
-            raise InputError("candidate_frozen_snapshot_path cannot traverse a symlink")
+        if _is_link_or_reparse_point(cursor):
+            raise InputError("candidate_frozen_snapshot_path cannot traverse a link or reparse point")
     snapshot_root = unresolved_snapshot_root.resolve()
     try:
         snapshot_root.relative_to(target_root)
@@ -204,8 +222,8 @@ def verify_manifest_bytes(
         cursor = snapshot_root
         for part in Path(normalized).parts:
             cursor = cursor / part
-            if cursor.is_symlink():
-                raise InputError(f"candidate snapshot path cannot traverse a symlink: {path}")
+            if _is_link_or_reparse_point(cursor):
+                raise InputError(f"candidate snapshot path cannot traverse a link or reparse point: {path}")
         frozen_file = unresolved_file.resolve()
         try:
             frozen_file.relative_to(snapshot_root)
@@ -214,6 +232,8 @@ def verify_manifest_bytes(
         if not frozen_file.is_file():
             raise InputError(f"candidate snapshot file is missing: {path}")
         try:
+            if frozen_file.stat().st_nlink > 1:
+                raise InputError(f"candidate snapshot file cannot be a shared hardlink: {path}")
             payload = frozen_file.read_bytes()
         except OSError as exc:
             raise InputError(f"candidate snapshot file is unreadable: {path}") from exc

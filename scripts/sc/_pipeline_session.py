@@ -78,6 +78,7 @@ class PipelineSession:
     run_agent_review_post_hook: Callable[..., tuple[int, dict[str, Any]]]
     refresh_summary_meta: Callable[[dict[str, Any]], None]
     git_fingerprint: dict[str, Any] | None = None
+    validate_input_snapshot: Callable[[], dict[str, Any] | None] | None = None
 
     def _should_publish_recovery_sidecars(self) -> bool:
         return not bool(getattr(self.args, "dry_run", False)) and has_materialized_pipeline_steps(self.summary)
@@ -116,6 +117,21 @@ class PipelineSession:
             status=status,
             details=details,
         )
+
+    def _apply_input_snapshot_guard(self) -> bool:
+        if self.summary.get("status") != "ok" or self.validate_input_snapshot is None:
+            return True
+        diagnostic = self.validate_input_snapshot()
+        if not isinstance(diagnostic, dict) or not diagnostic:
+            return True
+        self.summary["status"] = "fail"
+        self.summary["reason"] = "pipeline_failed"
+        self.marathon_state["status"] = "stopped"
+        self.marathon_state["stop_reason"] = "git_snapshot_changed_during_run"
+        diagnostics = self.marathon_state.setdefault("diagnostics", {})
+        if isinstance(diagnostics, dict):
+            diagnostics["input_snapshot_drift"] = dict(diagnostic)
+        return False
 
     def persist(self) -> bool:
         self.refresh_summary_meta(self.summary)
@@ -430,6 +446,12 @@ class PipelineSession:
         return None
 
     def finish(self) -> int:
+        if not self._apply_input_snapshot_guard():
+            self._append_run_completed(agent_review_rc=0)
+            self.summary["finished_at_utc"] = datetime.now(timezone.utc).isoformat()
+            if not self.persist():
+                return 2
+            return 1
         if not self.args.dry_run and not self.args.skip_agent_review and self.agent_review_mode != "skip":
             post_hook_rc, self.marathon_state = self.run_agent_review_post_hook(
                 out_dir=self.out_dir,
@@ -447,6 +469,7 @@ class PipelineSession:
                     "recommended_action": str(agent_review.get("recommended_action") or ""),
                 },
             )
+            self._apply_input_snapshot_guard()
             if not self.persist():
                 return 2
             self._append_run_completed(agent_review_rc=post_hook_rc)

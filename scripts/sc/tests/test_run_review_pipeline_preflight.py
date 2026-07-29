@@ -1073,6 +1073,63 @@ class RunReviewPipelinePreflightTests(unittest.TestCase):
             self.assertEqual(["sc-test", "sc-acceptance-check"], [step["name"] for step in reused_steps])
             self.assertTrue(all(step["status"] == "ok" for step in reused_steps))
 
+            summary_payload["diagnostics"] = {
+                "input_snapshot_drift": {
+                    "reason": "git_snapshot_changed_during_run",
+                    "start_snapshot_sha256": "sha256:" + "1" * 64,
+                    "finish_snapshot_sha256": "sha256:" + "2" * 64,
+                }
+            }
+            (previous_out_dir / "summary.json").write_text(
+                json.dumps(summary_payload, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(run_review_pipeline_module, "repo_root", return_value=tmp_root),
+                mock.patch.object(
+                    run_review_pipeline_module,
+                    "classify_change_scope_between_snapshots",
+                    return_value={
+                        "deterministic_strategy": "reuse-latest",
+                        "changed_paths": [],
+                        "unsafe_paths": [],
+                    },
+                ),
+            ):
+                drifted_steps = run_review_pipeline_module._find_reusable_deterministic_steps_from_llm_only_failure(
+                    out_dir=out_dir,
+                    task_id="56",
+                    delivery_profile="fast-ship",
+                    security_profile="host-safe",
+                    planned_steps=planned_steps,
+                    git_fingerprint={"head": "current-head", "status_short": []},
+                )
+            self.assertIsNone(drifted_steps)
+
+    def test_llm_step_clean_check_rejects_malformed_result_code(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            summary_path = Path(tmpdir) / "summary.json"
+            summary_path.write_text(
+                json.dumps(
+                    {
+                        "results": [
+                            {
+                                "agent": "code-reviewer",
+                                "status": "ok",
+                                "rc": "not-an-integer",
+                                "details": {"verdict": "OK"},
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            self.assertFalse(
+                run_review_pipeline_module._llm_step_is_clean(
+                    {"status": "ok", "summary_file": str(summary_path)}
+                )
+            )
+
     def test_clean_skip_should_reject_parent_ok_when_llm_child_summary_is_not_clean(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_root = Path(tmpdir)

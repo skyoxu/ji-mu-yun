@@ -103,6 +103,18 @@ class GitSnapshotTests(unittest.TestCase):
             self.assertTrue(scope["content_identity_incompatible"])
             self.assertEqual("full-pipeline", scope["deterministic_strategy"])
 
+    def test_special_index_flags_make_snapshot_incomplete(self) -> None:
+        for flag in ("--assume-unchanged", "--skip-worktree"):
+            with self.subTest(flag=flag), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self._repository(root)
+                _git(root, "update-index", flag, "tracked.txt")
+
+                snapshot = current_git_fingerprint(root=root)
+
+                self.assertFalse(has_complete_content_identity(snapshot))
+                self.assertIn("git_special_index_flags_present", snapshot["content_identity"]["error_codes"])
+
 
 if __name__ == "__main__":
     unittest.main()

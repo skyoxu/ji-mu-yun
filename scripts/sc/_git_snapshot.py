@@ -118,6 +118,7 @@ def current_git_fingerprint(*, root: Path | None = None) -> dict[str, Any]:
         ["ls-files", "--others", "--exclude-standard", "-z"],
         root=resolved_root,
     )
+    rc_index_flags, raw_index_flags = _run_git_bytes(["ls-files", "-v", "-z"], root=resolved_root)
 
     tracked_entries: list[dict[str, str]] = []
     untracked_entries: list[dict[str, str]] = []
@@ -147,9 +148,18 @@ def current_git_fingerprint(*, root: Path | None = None) -> dict[str, Any]:
         (rc_status, "git_status_failed"),
         (rc_worktree, "git_worktree_diff_failed"),
         (rc_index, "git_index_diff_failed"),
+        (rc_index_flags, "git_index_flags_failed"),
     ):
         if rc != 0:
             errors.append(code)
+    if rc_index_flags == 0:
+        special_index_flags = []
+        for row in (item for item in raw_index_flags.split(b"\0") if item):
+            tag = chr(row[0])
+            if tag == "S" or tag.islower():
+                special_index_flags.append(tag)
+        if special_index_flags:
+            errors.append("git_special_index_flags_present")
 
     head = raw_head.decode("utf-8", errors="replace").strip() if rc_head == 0 else ""
     status_short = _decode_lines(raw_status) if rc_status == 0 else []

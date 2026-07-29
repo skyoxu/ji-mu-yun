@@ -9,11 +9,13 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 import acceptance_cli
+import acceptance_core
 
 
 def _sha256(payload: bytes) -> str:
@@ -86,6 +88,13 @@ def _write_prepare_inputs(target_root: Path, baseline: dict, candidate: dict, ru
 
 
 class RunInputTests(unittest.TestCase):
+    def test_git_lookup_disables_replace_objects(self) -> None:
+        completed = subprocess.CompletedProcess(args=[], returncode=0, stdout=b"ok", stderr=b"")
+        with mock.patch.object(acceptance_core.subprocess, "run", return_value=completed) as run:
+            self.assertEqual(b"ok", acceptance_core._git(Path.cwd(), "status"))
+
+        self.assertEqual("1", run.call_args.kwargs["env"]["GIT_NO_REPLACE_OBJECTS"])
+
     def test_run_input_requires_exact_target_and_evidence_only_default(self) -> None:
         spec = importlib.util.spec_from_file_location(
             "acceptance_cli", SKILL_ROOT / "scripts" / "acceptance_cli.py"
@@ -337,6 +346,65 @@ class RunInputTests(unittest.TestCase):
             (target / "input.json").write_text(json.dumps(escaped), encoding="utf-8")
             with self.assertRaisesRegex(InputError, "repository-relative path"):
                 acceptance_cli.prepare_run(str(target / "input.json"), str(target / "escaped-run.json"))
+
+    def test_prepare_dirty_worktree_rejects_shared_hardlink_bytes(self) -> None:
+        from acceptance_core import InputError
+
+        baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            relative_path = Path("PhaseA.Platform") / "Program.cs"
+            live_file = target / relative_path
+            live_file.parent.mkdir(parents=True)
+            live_file.write_text("class Live {}\n", encoding="utf-8")
+            snapshot_file = target / ".acceptance-snapshots" / "run" / relative_path
+            snapshot_file.parent.mkdir(parents=True)
+            os.link(live_file, snapshot_file)
+            candidate = {
+                "schemaVersion": "acceptance-candidate-content-manifest.v1",
+                "status": "complete",
+                "coverageGaps": [],
+                "authorizes": [],
+                "files": [
+                    {
+                        "change_type": "added",
+                        "roles": ["implementation"],
+                        "baseline_path": None,
+                        "baseline_sha256": None,
+                        "candidate_path": relative_path.as_posix(),
+                        "candidate_sha256": _sha256(live_file.read_bytes()),
+                        "inclusion_reason": "candidate",
+                    }
+                ],
+            }
+            run_input = _run_input(
+                target,
+                baseline,
+                candidate,
+                candidate_mode="dirty_worktree",
+                snapshot_path=".acceptance-snapshots/run",
+            )
+            _write_prepare_inputs(target, baseline, candidate, run_input)
+
+            with self.assertRaisesRegex(InputError, "shared hardlink"):
+                acceptance_cli.prepare_run(str(target / "input.json"), str(target / "hardlink-run.json"))
+
+    def test_git_path_lookup_fails_closed_for_invalid_object(self) -> None:
+        from acceptance_core import InputError
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _git(root, "init")
+            _git(root, "config", "user.email", "acceptance@example.invalid")
+            _git(root, "config", "user.name", "Acceptance Test")
+            (root / "tracked.txt").write_text("base\n", encoding="utf-8")
+            _git(root, "add", "tracked.txt")
+            _git(root, "commit", "-m", "base")
+            commit = _git(root, "rev-parse", "HEAD")
+
+            self.assertFalse(acceptance_core._git_path_exists(root, commit, "missing.txt", "missing path"))
+            with self.assertRaises(InputError):
+                acceptance_core._git_path_exists(root, "0" * 40, "missing.txt", "invalid object")
 
     def test_candidate_manifest_requires_deleted_tombstone_to_match_baseline(self) -> None:
         from acceptance_core import InputError, validate_candidate_manifest
