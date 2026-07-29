@@ -1,0 +1,36 @@
+{
+  "schema_version": "jimuyun.knowledge-source-exclusions.v1",
+  "policy_revision": "knowledge-source-exclusions.v1",
+  "rules": [
+    {
+      "path_prefix": "docs/migration/",
+      "disposition": "excluded",
+      "applies_to": ["source-snapshot", "module-catalog", "semantic-retrieval", "targeted-maintenance"],
+      "reason": "historical-migration-material-outside-current-knowledge-scope"
+    },
+    {
+      "path_pattern": "execution-plans/**/knowledge-context*.json",
+      "disposition": "excluded",
+      "applies_to": ["source-snapshot"],
+      "reason": "plan-local-derived-consumer-context-is-not-repository-knowledge-authority"
+    },
+    {
+      "path_pattern": "execution-plans/**/knowledge-context.history/**",
+      "disposition": "excluded",
+      "applies_to": ["source-snapshot"],
+      "reason": "plan-local-derived-consumer-context-history-is-not-repository-knowledge-authority"
+    },
+    {
+      "path_pattern": "execution-plans/**/acceptance-runs/**",
+      "disposition": "excluded",
+      "applies_to": ["source-snapshot"],
+      "reason": "plan-local-derived-acceptance-evidence-is-not-repository-knowledge-authority"
+    },
+    {
+      "path_pattern": "execution-plans/**/.acceptance-snapshots/**",
+      "disposition": "excluded",
+      "applies_to": ["source-snapshot"],
+      "reason": "plan-local-derived-acceptance-candidate-snapshot-is-not-repository-knowledge-authority"
+    }
+  ]
+}
