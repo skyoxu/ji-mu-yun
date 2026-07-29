@@ -31,6 +31,12 @@
       "disposition": "excluded",
       "applies_to": ["source-snapshot"],
       "reason": "plan-local-derived-acceptance-candidate-snapshot-is-not-repository-knowledge-authority"
+    },
+    {
+      "path_pattern": "execution-plans/**/repair-closure*.json",
+      "disposition": "excluded",
+      "applies_to": ["source-snapshot"],
+      "reason": "plan-local-derived-bootstrap-repair-evidence-is-not-repository-knowledge-authority"
     }
   ]
 }

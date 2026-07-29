@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:f6209dab297349bbe73c87d693dc1e5ecfa268c50a9f062878d6b44acd262819",
-  "canonical_context_sha256": "sha256:89ec7f9fb1a58558760bdf36338feae60e1bcf9e0976b8e165b61244fb8855e5",
-  "request_sha256": "sha256:b2f31509cc03c8ea5a7bb62a0d9fb9281bcbcde1e89ef52f80cf5d107376104c",
-  "result_sha256": "sha256:8588a08df033e8d7b121c58ebebcc9e0d702d1b4c3d0380d5f184370a2c36021",
+  "context_sha256": "sha256:9283f9a540b6b3e649bef3954d05c5b1aa2ea8f88f6d61b6ea0c7e4a6ac3b818",
+  "canonical_context_sha256": "sha256:ef7db35f8e36c4f622b9e25b45086633bfae1ebecbe52e26e539181d4b1f2c59",
+  "request_sha256": "sha256:d26be547ebae84c4a11a5a2e2bf7df695e77c15dfd60b036d9015e0980ccfb1f",
+  "result_sha256": "sha256:9d11c127d27d4e08eb5f653149e5d995a33b0d269dd2f1312c012967f815f385",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "6bb3c2795d07d11b1049526eb16039e36df2fcb8"
+    "commit": "00acf85e1d22341bd51ca2042dfcdc5af6a1dbdb"
   },
-  "source_snapshot_id": "sha256:c97cff67a6ebed0d3ec540d37f52595c5f52da0ae10bd7bfa0330d913c3aed21",
+  "source_snapshot_id": "sha256:27d938d3ba86f68d451ce277627984dda39c168afbe672f1311bae78e3591f7c",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -22,8 +22,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:e5585dac41d5a63e95c48f342f21792692a29d3d6b0783cd611518cf2f62a5be",
-    "freeze_receipt_path": "knowledge-context.freeze.history/e5585dac41d5a63e95c48f342f21792692a29d3d6b0783cd611518cf2f62a5be.v1.json",
-    "reason": "r3 bootstrap P1 repair round requires a current main-bound context"
+    "context_sha256": "sha256:f6209dab297349bbe73c87d693dc1e5ecfa268c50a9f062878d6b44acd262819",
+    "freeze_receipt_path": "knowledge-context.freeze.history/f6209dab297349bbe73c87d693dc1e5ecfa268c50a9f062878d6b44acd262819.v1.json",
+    "reason": "round two launch requires current published main context"
   }
 }
