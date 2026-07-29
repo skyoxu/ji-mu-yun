@@ -457,6 +457,41 @@ def run_controlled_command(
     return receipt
 
 
+def resolve_registered_command(registry: Any, command_id: str) -> dict[str, Any]:
+    """Resolve exactly one immutable descriptor from a hash-bound registry.
+
+    This is deliberately separate from descriptor-shape validation: public
+    callers must never turn an arbitrary JSON descriptor into an executable
+    command merely by supplying syntactically valid fields.
+    """
+    if not isinstance(registry, dict) or set(registry) != {"schemaVersion", "commands", "registryHash"}:
+        raise ControlError("command registry fields are invalid")
+    if registry.get("schemaVersion") != "acceptance-command-registry.v1" or not isinstance(command_id, str) or not command_id:
+        raise ControlError("command registry identity is invalid")
+    commands = registry.get("commands")
+    if not isinstance(commands, list):
+        raise ControlError("command registry commands are invalid")
+    # registry_hash appears inside each descriptor to bind its receipt.  Hash
+    # the registry material with that derived field omitted, avoiding a
+    # self-referential digest while still binding every executable argument.
+    material_commands = [
+        {key: value for key, value in command.items() if key != "registry_hash"}
+        if isinstance(command, dict) else command
+        for command in commands
+    ]
+    material = {"schemaVersion": registry["schemaVersion"], "commands": material_commands}
+    if registry.get("registryHash") != _canonical_hash(material):
+        raise ControlError("command registry hash is stale")
+    matches = [item for item in commands if isinstance(item, dict) and item.get("id") == command_id]
+    if len(matches) != 1:
+        raise ControlError("command registry command must resolve uniquely")
+    descriptor = matches[0]
+    validate_command_descriptor(descriptor)
+    if descriptor["registry_hash"] != registry["registryHash"]:
+        raise ControlError("command descriptor is not bound to its registry")
+    return descriptor
+
+
 def publish_receipt(path: Path, receipt: Any) -> None:
     """Publish one receipt once; failed and successful evidence are never overwritten."""
     if not isinstance(receipt, dict) or receipt.get("authorizes") != []:

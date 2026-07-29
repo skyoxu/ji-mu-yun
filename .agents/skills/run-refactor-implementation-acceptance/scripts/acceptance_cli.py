@@ -156,11 +156,12 @@ def analyze_diff_coverage_command(request_path: str, output_path: str) -> dict:
 
 def run_phase_scan_command(
     repository_root: str, kind: str, execution_mode: str, baseline_path: str, candidate_path: str,
-    registry_path: str, command_id: str, output_path: str,
+    registry_path: str, command_id: str, candidate_snapshot_path: str, output_path: str,
 ) -> dict:
     result = run_phase_scan(
         repository_root=Path(repository_root), kind=kind, execution_mode=execution_mode, baseline_manifest=_read_json(baseline_path),
         candidate_manifest=_read_json(candidate_path), command_registry=_read_json(registry_path), command_id=command_id,
+        candidate_snapshot_root=Path(candidate_snapshot_path),
     )
     output = Path(output_path)
     if output.exists():
@@ -170,11 +171,13 @@ def run_phase_scan_command(
     return result
 
 
-def run_command_command(repository_root: str, descriptor_path: str, output_path: str) -> dict:
+def run_command_command(repository_root: str, registry_path: str, command_id: str, output_path: str) -> dict:
     root = Path(repository_root).resolve()
-    descriptor = _read_json(descriptor_path)
-    if not isinstance(descriptor, dict):
-        raise InputError("controlled command descriptor must be an object")
+    from execution_control import resolve_registered_command
+    try:
+        descriptor = resolve_registered_command(_read_json(registry_path), command_id)
+    except ControlError as exc:
+        raise InputError("controlled command must resolve from a hash-bound registry") from exc
     output = Path(output_path).resolve()
     try:
         output.relative_to(root)
@@ -402,6 +405,7 @@ def main() -> int:
     scan.add_argument("--candidate", required=True)
     scan.add_argument("--command-registry", required=True)
     scan.add_argument("--command-id", required=True)
+    scan.add_argument("--candidate-snapshot", required=True)
     scan.add_argument("--out", required=True)
     for command_name, scan_kind in (("run-static-analysis", "static-analysis"), ("run-security-scan", "security-scan")):
         scoped_scan = subcommands.add_parser(command_name)
@@ -412,10 +416,12 @@ def main() -> int:
         scoped_scan.add_argument("--candidate", required=True)
         scoped_scan.add_argument("--command-registry", required=True)
         scoped_scan.add_argument("--command-id", required=True)
+        scoped_scan.add_argument("--candidate-snapshot", required=True)
         scoped_scan.add_argument("--out", required=True)
     controlled = subcommands.add_parser("run-command")
     controlled.add_argument("--repository-root", required=True)
-    controlled.add_argument("--descriptor", required=True)
+    controlled.add_argument("--command-registry", required=True)
+    controlled.add_argument("--command-id", required=True)
     controlled.add_argument("--out", required=True)
     checklist = subcommands.add_parser("audit-task-checklist")
     checklist.add_argument("--repository-root", required=True)
@@ -484,13 +490,13 @@ def main() -> int:
         print(json.dumps(analyze_diff_coverage_command(args.request, args.out), sort_keys=True))
         return 0
     if args.command == "run-phase-scan":
-        print(json.dumps(run_phase_scan_command(args.repository_root, args.kind, args.execution_mode, args.baseline, args.candidate, args.command_registry, args.command_id, args.out), sort_keys=True))
+        print(json.dumps(run_phase_scan_command(args.repository_root, args.kind, args.execution_mode, args.baseline, args.candidate, args.command_registry, args.command_id, args.candidate_snapshot, args.out), sort_keys=True))
         return 0
     if args.command in {"run-static-analysis", "run-security-scan"}:
-        print(json.dumps(run_phase_scan_command(args.repository_root, args.scan_kind, args.execution_mode, args.baseline, args.candidate, args.command_registry, args.command_id, args.out), sort_keys=True))
+        print(json.dumps(run_phase_scan_command(args.repository_root, args.scan_kind, args.execution_mode, args.baseline, args.candidate, args.command_registry, args.command_id, args.candidate_snapshot, args.out), sort_keys=True))
         return 0
     if args.command == "run-command":
-        print(json.dumps(run_command_command(args.repository_root, args.descriptor, args.out), sort_keys=True))
+        print(json.dumps(run_command_command(args.repository_root, args.command_registry, args.command_id, args.out), sort_keys=True))
         return 0
     if args.command == "audit-task-checklist":
         print(json.dumps(audit_task_checklist_command(args.repository_root, args.request, args.out), sort_keys=True))

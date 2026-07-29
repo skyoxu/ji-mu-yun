@@ -16,7 +16,7 @@ This plan preserves the 2026-07-15 requirements document as source authority. It
 
 - Code-review conclusions are only for `phase_service`. Pure Godot candidates return `unsupported_code_review_domain`; mixed candidates preserve an `unreviewed_external_domain` partition.
 - The Skill never creates a second semantic auditor, Codex runner, Artifact View, gateway, or Bootstrap lifecycle.
-- `evidence_only` cannot authorize deterministic or Bootstrap completion. `controlled_validation` requires typed commands and isolated write roots.
+- `evidence_only` cannot authorize deterministic or Bootstrap completion. `controlled_validation` requires typed commands and isolated write roots; public command execution resolves only a hash-bound registry entry, Phase scans execute from a hash-verified frozen candidate snapshot, and request input cannot downgrade authority checklist items to optional.
 - Bootstrap `clean` cannot replace acceptance inventory, phase gates, DoD, protected gates, or target-plan authority.
 - `S5` is only a Skill release candidate. It does not authorize a target plan's protected handoff, release, deployment, or archive.
 

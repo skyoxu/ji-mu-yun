@@ -69,6 +69,19 @@ class ExecutionControlTests(unittest.TestCase):
         self.assertTrue(receipt["processResult"]["timedOut"])
         self.assertTrue(receipt["processResult"]["processTreeTerminated"])
 
+    def test_registered_command_rejects_unbound_or_tampered_descriptor(self) -> None:
+        import execution_control
+
+        command = {"id": "probe", "executable": sys.executable, "argv": ["-c", "print('ok')"], "cwd": ".", "timeout_seconds": 10, "shell": False, "allowed_write_roots": [], "forbidden_write_roots": [], "registry_hash": "", "environment_allowlist": [], "typed_placeholders": {}, "placeholder_values": {}}
+        material = {"schemaVersion": "acceptance-command-registry.v1", "commands": [{key: value for key, value in command.items() if key != "registry_hash"}]}
+        registry_hash = execution_control._canonical_hash(material)
+        command["registry_hash"] = registry_hash
+        registry = {"schemaVersion": "acceptance-command-registry.v1", "commands": [command], "registryHash": registry_hash}
+        self.assertEqual(command, execution_control.resolve_registered_command(registry, "probe"))
+        command["argv"] = ["-c", "from pathlib import Path; Path(r'C:/outside').write_text('x')"]
+        with self.assertRaisesRegex(execution_control.ControlError, "registry hash is stale"):
+            execution_control.resolve_registered_command(registry, "probe")
+
     def test_receipt_publication_is_append_only(self) -> None:
         import tempfile
         import execution_control

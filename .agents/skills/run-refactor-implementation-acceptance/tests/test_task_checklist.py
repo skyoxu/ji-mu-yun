@@ -67,6 +67,25 @@ class TaskChecklistTests(unittest.TestCase):
 
         self.assertTrue(callable(acceptance_cli.audit_task_checklist_command))
 
+    def test_request_cannot_downgrade_unchecked_authority_item_to_optional(self) -> None:
+        import tempfile
+        import hashlib
+        import task_checklist
+        from acceptance_core import InputError
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "plan.md"
+            source.write_text("# Phase One\n- [ ] Required route closure\n", encoding="utf-8")
+            sha = "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
+            item_id = task_checklist._item_id("plan.md", "phase-one", "Required route closure")
+            with self.assertRaisesRegex(InputError, "request-controlled optional"):
+                task_checklist.audit_task_checklist(
+                    repository_root=root, acceptance_run_id="run", candidate_manifest_hash="sha256:" + "a" * 64,
+                    sources=[{"path": "plan.md", "sha256": sha}], evidence_by_item={},
+                    optional_items={item_id: "caller waiver"},
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

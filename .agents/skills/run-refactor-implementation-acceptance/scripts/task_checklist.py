@@ -39,9 +39,10 @@ def audit_task_checklist(
         raise InputError("task checklist sources are required")
     if not isinstance(evidence_by_item, dict):
         raise InputError("task checklist evidence mapping is invalid")
-    optional = optional_items or {}
-    if not isinstance(optional, dict) or any(not isinstance(key, str) or not isinstance(value, str) or not value.strip() for key, value in optional.items()):
-        raise InputError("optional task checklist declarations are invalid")
+    # Authority checklists currently have no contract-level optionality syntax.
+    # A request must therefore not downgrade parsed source requirements.
+    if optional_items not in (None, {}):
+        raise InputError("request-controlled optional task checklist items are forbidden")
     root = repository_root.resolve()
     source_records: list[dict[str, str]] = []
     items: list[dict[str, Any]] = []
@@ -70,7 +71,7 @@ def audit_task_checklist(
             proof = evidence_by_item.get(item_id, {})
             if not isinstance(proof, dict):
                 raise InputError("task checklist item evidence is invalid")
-            requiredness = "optional" if item_id in optional else "required"
+            requiredness = "required"
             checked = checkbox.group("checked").casefold() == "x"
             required_refs = ("matrixCheckIds", "implementationRefs", "testRefs", "evidenceIds")
             proof_complete = all(isinstance(proof.get(key), list) and proof[key] for key in required_refs)
@@ -78,8 +79,6 @@ def audit_task_checklist(
                 status = "verified"
             elif checked:
                 status = "checked_without_evidence"
-            elif requiredness == "optional" and proof.get("notApplicableReason") == optional[item_id]:
-                status = "not_applicable"
             else:
                 status = "unchecked"
             items.append({
@@ -92,7 +91,7 @@ def audit_task_checklist(
     if not items:
         raise InputError("declared task checklist sources contain no checklist items")
     required = [item for item in items if item["requiredness"] == "required"]
-    status = "passed" if all(item["status"] == "verified" for item in required) and all(item["status"] in {"verified", "not_applicable"} for item in items if item["requiredness"] == "optional") else "failed"
+    status = "passed" if all(item["status"] == "verified" for item in required) else "failed"
     return {
         "schemaVersion": "task-checklist-closure.v1", "acceptanceRunId": acceptance_run_id,
         "candidateContentManifestHash": candidate_manifest_hash, "sources": source_records, "items": items,
