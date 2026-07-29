@@ -187,7 +187,10 @@ def main() -> int:
         snapshot is None
         # ADR-0050 permits a generation source commit to precede main only
         # while the complete source read-set still matches current main.
-        or request.get("snapshot") != {"ref": "refs/heads/main", "commit": current_main_commit}
+        # A published derived catalog is committed after its source snapshot.
+        # Freshness is established by the complete read-set above, so require
+        # the caller to bind that catalog snapshot rather than the later HEAD.
+        or request.get("snapshot") != {"ref": snapshot["ref"], "commit": snapshot["commit"]}
         or fresh["status"] != "current"
         or policy is None
         or not projection_valid
