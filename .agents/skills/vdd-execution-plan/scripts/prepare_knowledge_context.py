@@ -70,7 +70,9 @@ def main() -> int:
     parser.add_argument("--accept", action="append", default=[], help="candidate-path=module[,module]")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--replace-stale-context", action="store_true")
+    parser.add_argument("--supersede-frozen-context", action="store_true")
     parser.add_argument("--expected-context-sha256")
+    parser.add_argument("--supersession-reason")
     args = parser.parse_args()
     root = args.repository_root.resolve()
     validator = _validator(root)
@@ -167,6 +169,43 @@ def main() -> int:
         print(json.dumps({"status": "ready", "output": str(output), "freeze": str(freeze), "recovered": True, "authorizes": []}))
         return 0
     if output.exists() or freeze.exists():
+        if args.supersede_frozen_context:
+            if not output.is_file() or not freeze.is_file() or not args.supersession_reason:
+                raise SystemExit("frozen context supersession requires context, receipt, and --supersession-reason")
+            expected = args.expected_context_sha256
+            actual = "sha256:" + hashlib.sha256(output.read_bytes()).hexdigest()
+            if expected != actual:
+                raise SystemExit("expected frozen knowledge context hash does not match")
+            old_receipt = json.loads(freeze.read_text(encoding="utf-8"))
+            if old_receipt.get("context_sha256") != actual:
+                raise SystemExit("frozen knowledge receipt does not bind the current context")
+            history = output.parent / "knowledge-context.history"
+            receipt_history = output.parent / "knowledge-context.freeze.history"
+            history.mkdir(exist_ok=True)
+            receipt_history.mkdir(exist_ok=True)
+            archived = history / (actual.removeprefix("sha256:") + ".v1.json")
+            archived_receipt = receipt_history / (actual.removeprefix("sha256:") + ".v1.json")
+            for source, destination in ((output, archived), (freeze, archived_receipt)):
+                if destination.exists() and destination.read_bytes() != source.read_bytes():
+                    raise SystemExit("historical frozen knowledge artifact path is occupied by different bytes")
+                if not destination.exists():
+                    os.link(source, destination)
+            receipt["supersedes"] = {
+                "context_sha256": actual,
+                "freeze_receipt_path": str(archived_receipt.relative_to(output.parent)).replace("\\", "/"),
+                "reason": args.supersession_reason,
+            }
+            freeze_bytes = _render(receipt)
+            staged_context = _write_staged(output, context_bytes)
+            staged_freeze = _write_staged(freeze, freeze_bytes)
+            try:
+                os.replace(staged_context, output)
+                os.replace(staged_freeze, freeze)
+            finally:
+                staged_context.unlink(missing_ok=True)
+                staged_freeze.unlink(missing_ok=True)
+            print(json.dumps({"status": "ready", "output": str(output), "freeze": str(freeze), "superseded": True, "historical": str(archived), "authorizes": []}))
+            return 0
         if not args.replace_stale_context:
             raise SystemExit("knowledge context and freeze receipt are append-only")
         if freeze.exists() or not output.is_file():
