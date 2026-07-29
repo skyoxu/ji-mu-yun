@@ -10,6 +10,7 @@ import hashlib
 import json
 import re
 import subprocess
+from fnmatch import fnmatchcase
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
@@ -44,6 +45,37 @@ def normalized_path(value: str) -> str:
 def is_hard_excluded(path: str) -> bool:
     normalized = normalized_path(path)
     return any(normalized == prefix.rstrip("/") or normalized.startswith(prefix) for prefix in HARD_EXCLUDED_PREFIXES)
+
+
+def excluded_source_prefixes(exclusions: dict[str, Any]) -> tuple[str, ...]:
+    """Return source-snapshot exclusions declared by the current policy."""
+    prefixes = list(HARD_EXCLUDED_PREFIXES)
+    for rule in exclusions.get("rules", []):
+        if (
+            isinstance(rule, dict)
+            and rule.get("disposition") == "excluded"
+            and "source-snapshot" in rule.get("applies_to", [])
+            and isinstance(rule.get("path_prefix"), str)
+        ):
+            prefixes.append(normalized_path(rule["path_prefix"]).rstrip("/") + "/")
+    return tuple(sorted(set(prefixes)))
+
+
+def is_policy_excluded(path: str, exclusions: dict[str, Any]) -> bool:
+    normalized = normalized_path(path)
+    if any(
+        normalized == prefix.rstrip("/") or normalized.startswith(prefix)
+        for prefix in excluded_source_prefixes(exclusions)
+    ):
+        return True
+    return any(
+        isinstance(rule, dict)
+        and rule.get("disposition") == "excluded"
+        and "source-snapshot" in rule.get("applies_to", [])
+        and isinstance(rule.get("path_pattern"), str)
+        and fnmatchcase(normalized, rule["path_pattern"])
+        for rule in exclusions.get("rules", [])
+    )
 
 
 @dataclass
@@ -196,7 +228,7 @@ class CatalogBuilder:
 
     def add_source(self, path: str, source_role: str) -> dict[str, Any] | None:
         normalized = normalized_path(path)
-        if is_hard_excluded(normalized) or not self.snapshot.contains(normalized):
+        if is_policy_excluded(normalized, self.exclusions) or not self.snapshot.contains(normalized):
             return None
         existing = self.sources.get(normalized)
         if existing is None:
@@ -688,7 +720,7 @@ class CatalogBuilder:
             "source_snapshot": source_snapshot,
             "exclusion_policy": {
                 "policy_revision": self.exclusions.get("policy_revision"),
-                "excluded_path_prefixes": list(HARD_EXCLUDED_PREFIXES),
+                "excluded_path_prefixes": list(excluded_source_prefixes(self.exclusions)),
                 "targeted_discovery": "forbidden",
             },
             "collections": self.collections(),

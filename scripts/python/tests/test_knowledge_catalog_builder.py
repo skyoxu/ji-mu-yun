@@ -9,6 +9,8 @@ from pathlib import Path
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
+from _knowledge_catalog_builder import is_policy_excluded
 CATALOG_PATH = REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
 SNAPSHOT_PATH = REPOSITORY_ROOT / "knowledge/snapshots/repository-source-snapshot.v1.json"
 PROJECTION_PATH = REPOSITORY_ROOT / "knowledge/projections/consumer-projections.v1.json"
@@ -46,7 +48,19 @@ class KnowledgeCatalogBuilderTests(unittest.TestCase):
     def test_migration_tree_is_hard_excluded_from_every_layer(self) -> None:
         self.assertFalse(any(item["path"].startswith("docs/migration/") for item in self.snapshot["sources"]))
         self.assertFalse(any(item["source_path"].startswith("docs/migration/") for item in self.catalog["modules"]))
-        self.assertEqual(["docs/migration/"], self.catalog["exclusion_policy"]["excluded_path_prefixes"])
+        self.assertIn("docs/migration/", self.catalog["exclusion_policy"]["excluded_path_prefixes"])
+
+    def test_plan_derived_consumer_artifacts_are_excluded_without_excluding_plan_authority(self) -> None:
+        exclusions = json.loads((REPOSITORY_ROOT / "knowledge/policies/source-exclusions.v1.json").read_text(encoding="utf-8"))
+        derived_paths = (
+            "execution-plans/example/knowledge-context.v1.json",
+            "execution-plans/example/knowledge-context.freeze.v1.json",
+            "execution-plans/example/knowledge-context.history/previous.v1.json",
+            "execution-plans/example/acceptance-runs/r3/candidate-content-manifest.v1.json",
+        )
+        for path in derived_paths:
+            self.assertTrue(is_policy_excluded(path, exclusions))
+        self.assertFalse(is_policy_excluded("execution-plans/example/00-index.md", exclusions))
 
     def test_adr_status_and_scope_layers_are_typed(self) -> None:
         self.assertEqual("active", self.modules["adr.ADR-0003"]["status"])
