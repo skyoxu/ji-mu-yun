@@ -275,6 +275,9 @@ def evaluate(
                 raise ValueError("catalog source snapshot does not match refs/heads/main")
     elif current_commit != commit:
         raise ValueError("catalog source snapshot does not match refs/heads/main")
+    # ADR-0050 keeps generation provenance on the source commit while each
+    # Locator invocation binds its result to the current, source-equivalent main.
+    request_snapshot = {"ref": "refs/heads/main", "commit": current_commit}
     policy_revision = suite.get("policy_revision")
     if policies.get("policy_revision") != policy_revision:
         raise ValueError("suite and policy revisions differ")
@@ -307,13 +310,13 @@ def evaluate(
         (
             "stale-snapshot-blocked",
             {
-                **_protocol_request(snapshot, request_id="knowledge-query-protocol:stale-snapshot", policy_revision=policy_revision),
-                "snapshot": {"ref": snapshot["ref"], "commit": "0" * 40},
+                **_protocol_request(request_snapshot, request_id="knowledge-query-protocol:stale-snapshot", policy_revision=policy_revision),
+                "snapshot": {"ref": request_snapshot["ref"], "commit": "0" * 40},
             },
         ),
         (
             "policy-drift-blocked",
-            _protocol_request(snapshot, request_id="knowledge-query-protocol:policy-drift", policy_revision="unknown-policy-revision"),
+            _protocol_request(request_snapshot, request_id="knowledge-query-protocol:policy-drift", policy_revision="unknown-policy-revision"),
         ),
     ):
         protocol_runs = [
@@ -350,7 +353,7 @@ def evaluate(
             "request_id": f"knowledge-query-eval:{case['case_id']}",
             "consumer": case["consumer"],
             "query": case["query"],
-            "snapshot": {"ref": snapshot["ref"], "commit": commit},
+            "snapshot": request_snapshot,
             "policy_revision": policy_revision,
         }
         runs = [

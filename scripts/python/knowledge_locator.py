@@ -22,10 +22,7 @@ def _canonical_hash(value: Any) -> str:
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
-def _main_source_hashes(repository_root: Path, catalog: dict[str, Any]) -> dict[str, str]:
-    snapshot = catalog_source_snapshot(catalog)
-    if snapshot is None:
-        return {}
+def _current_main_commit(repository_root: Path) -> str | None:
     current = subprocess.run(
         ["git", "-C", str(repository_root), "rev-parse", "refs/heads/main"],
         capture_output=True,
@@ -34,8 +31,22 @@ def _main_source_hashes(repository_root: Path, catalog: dict[str, Any]) -> dict[
         check=False,
     )
     if current.returncode:
+        return None
+    commit = current.stdout.strip()
+    return commit if len(commit) == 40 else None
+
+
+def _main_source_hashes(
+    repository_root: Path,
+    catalog: dict[str, Any],
+    current_commit: str | None = None,
+) -> dict[str, str]:
+    snapshot = catalog_source_snapshot(catalog)
+    if snapshot is None:
         return {}
-    current_commit = current.stdout.strip()
+    current_commit = current_commit or _current_main_commit(repository_root)
+    if current_commit is None:
+        return {}
     ancestry = subprocess.run(
         ["git", "-C", str(repository_root), "merge-base", "--is-ancestor", snapshot["commit"], current_commit],
         capture_output=True,
@@ -147,7 +158,8 @@ def main() -> int:
     if isinstance(catalog.get("modules"), list):
         projection_document = json.loads(rooted(args.projections).read_text(encoding="utf-8"))
     snapshot = catalog_source_snapshot(catalog)
-    fresh = require_fresh_catalog(catalog, _main_source_hashes(repository_root, catalog))
+    current_main_commit = _current_main_commit(repository_root)
+    fresh = require_fresh_catalog(catalog, _main_source_hashes(repository_root, catalog, current_main_commit))
     policy = _policy_for(request, policies)
     canonical_paths = (
         catalog_path == repository_root / "knowledge" / "catalogs" / "repository-knowledge-catalog.v2.json"
@@ -173,7 +185,9 @@ def main() -> int:
         projection_valid = True
     if (
         snapshot is None
-        or request.get("snapshot") != {"ref": snapshot["ref"], "commit": snapshot["commit"]}
+        # ADR-0050 permits a generation source commit to precede main only
+        # while the complete source read-set still matches current main.
+        or request.get("snapshot") != {"ref": "refs/heads/main", "commit": current_main_commit}
         or fresh["status"] != "current"
         or policy is None
         or not projection_valid

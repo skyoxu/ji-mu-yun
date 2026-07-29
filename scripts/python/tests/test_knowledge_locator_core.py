@@ -55,7 +55,7 @@ class KnowledgeLocatorCoreTests(unittest.TestCase):
             self.assertEqual(generation["generation_id"], core.publish_index_generation(index, {"entries": []}, "snapshot-a", "policy-v1")["generation_id"])
             self.assertEqual(generation["generation_id"], core.last_known_good(index)["generation_id"])
 
-    def test_cli_emits_request_bound_stable_result(self) -> None:
+    def test_cli_emits_result_bound_to_current_main_after_publication_commit(self) -> None:
         request = {
             "schema_version": "jimuyun.knowledge-locator-request.v1",
             "request_id": "test-request",
@@ -65,7 +65,14 @@ class KnowledgeLocatorCoreTests(unittest.TestCase):
             "policy_revision": "test-policy",
         }
         catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json").read_text(encoding="utf-8"))
-        request["snapshot"] = {"ref": catalog["source_snapshot"]["ref"], "commit": catalog["source_snapshot"]["commit"]}
+        current_main = subprocess.run(
+            ["git", "-C", str(REPOSITORY_ROOT), "rev-parse", "refs/heads/main"],
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            check=True,
+        ).stdout.strip()
+        request["snapshot"] = {"ref": "refs/heads/main", "commit": current_main}
         request["policy_revision"] = "knowledge-consumer-policies.v2"
         result = subprocess.run(
             [sys.executable, "-B", str(CLI_PATH), "--catalog", str(REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json")],
