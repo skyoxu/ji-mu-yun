@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -38,10 +39,12 @@ CONTROL_PATHS = (
     Path("scripts/python/evaluate_knowledge_queries.py"),
     Path("scripts/python/knowledge_locator.py"),
     Path("scripts/python/_knowledge_locator_core.py"),
+    Path("scripts/python/knowledge_context_validation.py"),
 )
 SCHEMA_VERSION = "jimuyun.knowledge-publication-generation.v1"
 POINTER_SCHEMA_VERSION = "jimuyun.knowledge-index-pointer.v2"
 REPORT_SCHEMA_VERSION = "jimuyun.knowledge-publication-report.v1"
+MALFORMED_LOCK_GRACE_SECONDS = 60
 REQUIRED_ARTIFACTS = {*LAYER_PATHS, *INPUT_PATHS, "query_report"}
 EXPECTED_BUNDLE_PATHS = {
     **{name: Path("layers") / path.name for name, path in LAYER_PATHS.items()},
@@ -125,6 +128,12 @@ def _pid_alive(pid: object) -> bool | None:
         process_query_limited_information = 0x1000
         still_active = 259
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.OpenProcess.argtypes = [ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
+        kernel32.OpenProcess.restype = ctypes.c_void_p
+        kernel32.GetExitCodeProcess.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulong)]
+        kernel32.GetExitCodeProcess.restype = ctypes.c_int
+        kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
+        kernel32.CloseHandle.restype = ctypes.c_int
         handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
         if not handle:
             error = ctypes.get_last_error()
@@ -153,31 +162,137 @@ def _pid_alive(pid: object) -> bool | None:
     return True
 
 
+def _process_identity(pid: object) -> str | None:
+    if not isinstance(pid, int) or pid <= 0:
+        return None
+    if os.name == "nt":
+        import ctypes
+
+        class FileTime(ctypes.Structure):
+            _fields_ = [("low", ctypes.c_ulong), ("high", ctypes.c_ulong)]
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.OpenProcess.argtypes = [ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
+        kernel32.OpenProcess.restype = ctypes.c_void_p
+        kernel32.GetProcessTimes.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(FileTime),
+            ctypes.POINTER(FileTime),
+            ctypes.POINTER(FileTime),
+            ctypes.POINTER(FileTime),
+        ]
+        kernel32.GetProcessTimes.restype = ctypes.c_int
+        kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
+        kernel32.CloseHandle.restype = ctypes.c_int
+        handle = kernel32.OpenProcess(0x1000, False, pid)
+        if not handle:
+            return None
+        try:
+            creation = FileTime()
+            exit_time = FileTime()
+            kernel = FileTime()
+            user = FileTime()
+            if not kernel32.GetProcessTimes(
+                handle,
+                ctypes.byref(creation),
+                ctypes.byref(exit_time),
+                ctypes.byref(kernel),
+                ctypes.byref(user),
+            ):
+                return None
+            return f"windows-filetime:{(creation.high << 32) | creation.low}"
+        finally:
+            kernel32.CloseHandle(handle)
+    try:
+        fields = Path(f"/proc/{pid}/stat").read_text(encoding="ascii").split()
+    except (OSError, UnicodeError):
+        return None
+    return f"proc-start:{fields[21]}" if len(fields) > 21 else None
+
+
+def _lock_owner_alive(lock: dict[str, Any]) -> bool | None:
+    alive = _pid_alive(lock.get("pid"))
+    if alive is not True:
+        return alive
+    recorded = lock.get("process_identity")
+    if recorded is None:
+        return True
+    current = _process_identity(lock.get("pid"))
+    if current is None:
+        return None
+    return current == recorded
+
+
+@contextmanager
+def _acquisition_guard(index_root: Path) -> Iterator[None]:
+    path = index_root / ".publication-acquire.lock"
+    descriptor = os.open(path, os.O_CREAT | os.O_RDWR)
+    try:
+        if os.fstat(descriptor).st_size == 0:
+            os.write(descriptor, b"\0")
+            os.fsync(descriptor)
+        if os.name == "nt":
+            import msvcrt
+
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            yield
+        finally:
+            if os.name == "nt":
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
+    finally:
+        os.close(descriptor)
+
+
 def _recover_stale_lock(index_root: Path, lock_path: Path) -> bool:
+    payload: bytes
+    lock: dict[str, Any]
     try:
         payload = lock_path.read_bytes()
         lock = _load_json_bytes(payload, "publication_lock")
     except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
-        return False
-    if _pid_alive(lock.get("pid")) is not False:
+        try:
+            age = time.time() - lock_path.stat().st_mtime
+        except OSError:
+            return False
+        if age < MALFORMED_LOCK_GRACE_SECONDS:
+            return False
+        payload = lock_path.read_bytes()
+        lock = {"malformed": True}
+    if not lock.get("malformed") and _lock_owner_alive(lock) is not False:
         return False
     if lock_path.read_bytes() != payload:
         return False
     repository_root = index_root.parents[1]
     now = datetime.now(timezone.utc)
     evidence = repository_root / "logs" / "knowledge-context" / now.date().isoformat() / "stale-locks" / f"{now.strftime('%H%M%S%f')}-{uuid.uuid4().hex}.json"
-    _atomic_bytes(evidence, _render({
-        "schema_version": "jimuyun.knowledge-publication-stale-lock.v1",
-        "status": "recovered",
-        "recorded_at": now.isoformat(),
-        "lock_sha256": _sha(payload),
-        "lock": lock,
-    }))
+    quarantine = index_root / f".publication-lock-stale-{uuid.uuid4().hex}"
     try:
         if lock_path.read_bytes() != payload:
             return False
-        lock_path.unlink()
+        os.replace(lock_path, quarantine)
     except OSError:
+        return False
+    try:
+        _atomic_bytes(evidence, _render({
+            "schema_version": "jimuyun.knowledge-publication-stale-lock.v1",
+            "status": "recovered",
+            "recorded_at": now.isoformat(),
+            "lock_sha256": _sha(payload),
+            "lock": lock,
+        }))
+        quarantine.unlink()
+    except OSError:
+        if not lock_path.exists() and quarantine.exists():
+            os.replace(quarantine, lock_path)
         return False
     return True
 
@@ -188,17 +303,26 @@ def _single_writer(index_root: Path) -> Iterator[None]:
     lock_path = index_root / "publication.lock"
     token = uuid.uuid4().hex
     descriptor: int | None = None
-    for attempt in range(2):
-        try:
-            descriptor = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            break
-        except FileExistsError as exc:
-            if attempt or not _recover_stale_lock(index_root, lock_path):
-                raise ValueError("knowledge_publication_lock_conflict") from exc
+    try:
+        with _acquisition_guard(index_root):
+            for attempt in range(2):
+                try:
+                    descriptor = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                    break
+                except FileExistsError as exc:
+                    if attempt or not _recover_stale_lock(index_root, lock_path):
+                        raise ValueError("knowledge_publication_lock_conflict") from exc
+    except OSError as exc:
+        raise ValueError("knowledge_publication_lock_conflict") from exc
     assert descriptor is not None
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
-            json.dump({"pid": os.getpid(), "token": token, "created_at": datetime.now(timezone.utc).isoformat()}, handle, sort_keys=True)
+            json.dump({
+                "pid": os.getpid(),
+                "process_identity": _process_identity(os.getpid()),
+                "token": token,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }, handle, sort_keys=True)
             handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
@@ -415,6 +539,29 @@ def _validate_generation_payloads(
     return layers, inputs
 
 
+def _require_generation_compatible_with_main(
+    repository_root: Path,
+    *,
+    generation_main: str,
+    current_main: str,
+    snapshot: dict[str, Any],
+    payloads: dict[str, bytes],
+) -> None:
+    ancestry = _git(repository_root, "merge-base", "--is-ancestor", generation_main, current_main)
+    if ancestry.returncode:
+        raise ValueError("lkg_main_commit_stale")
+    for item in snapshot.get("sources", []):
+        if not isinstance(item, dict) or not isinstance(item.get("path"), str):
+            raise ValueError("lkg_snapshot_binding_invalid")
+        blob = _main_blob(repository_root, current_main, Path(item["path"]))
+        if hashlib.sha256(blob).hexdigest() != item.get("sha256"):
+            raise ValueError(f"lkg_source_drift:{item['path']}")
+    for name, path in INPUT_PATHS.items():
+        if _main_blob(repository_root, current_main, path) != payloads[name]:
+            raise ValueError(f"lkg_input_drift:{path.as_posix()}")
+    _require_main_controls(repository_root, current_main)
+
+
 def _locator_smoke(repository_root: Path, snapshot: dict[str, Any], policy_revision: str) -> None:
     request = {
         "schema_version": "jimuyun.knowledge-locator-request.v1",
@@ -498,13 +645,14 @@ def _activate_lkg(
     inputs: dict[str, Any],
     repeat: int,
     expected_main: str,
+    evidence_path: Path | None = None,
 ) -> dict[str, Any]:
     index_root = repository_root / "knowledge" / "indexes"
     targets = [repository_root / path for path in LAYER_PATHS.values()]
     current_pointer_path = index_root / "current.json"
     backups = {
         target: target.read_bytes() if target.is_file() else None
-        for target in [*targets, current_pointer_path]
+        for target in [*targets, *([evidence_path] if evidence_path is not None else []), current_pointer_path]
     }
     try:
         if _main_commit(repository_root) != expected_main:
@@ -526,11 +674,14 @@ def _activate_lkg(
             repository_root / INPUT_PATHS["policy"],
             repository_root / LAYER_PATHS["projections"],
             repeat,
+            allow_ancestor_snapshot=True,
         )
         _validate_evaluation(report, inputs["query_suite"])
         _locator_smoke(repository_root, layers["snapshot"], manifest["policy_revision"])
         if _main_commit(repository_root) != expected_main:
             raise ValueError("main_advanced_during_lkg_restore")
+        if evidence_path is not None:
+            _atomic_bytes(evidence_path, _render(report))
         return report
     except Exception as error:
         try:
@@ -551,15 +702,29 @@ def restore_last_known_good(repository_root: Path, *, repeat: int) -> dict[str, 
             phase = "restore-load-lkg"
             pinned_main = _main_commit(repository_root)
             pointer, pointer_bytes = _load_pointer(index_root / "last-known-good.json", "lkg_pointer")
-            if pointer["main_commit"] != pinned_main:
-                raise ValueError("lkg_main_commit_stale")
             manifest, payloads = _generation_payloads(repository_root, pointer)
             layers, inputs = _validate_generation_payloads(manifest, payloads)
+            _require_generation_compatible_with_main(
+                repository_root,
+                generation_main=pointer["main_commit"],
+                current_main=pinned_main,
+                snapshot=layers["snapshot"],
+                payloads=payloads,
+            )
             for name, path in INPUT_PATHS.items():
                 formal_path = repository_root / path
                 if not formal_path.is_file() or formal_path.read_bytes() != payloads[name]:
                     raise ValueError(f"lkg_input_drift:{path.as_posix()}")
             phase = "restore-four-layers"
+            evidence = (
+                repository_root
+                / "logs"
+                / "knowledge-context"
+                / datetime.now(timezone.utc).date().isoformat()
+                / "restores"
+                / pointer["generation_id"]
+                / f"{uuid.uuid4().hex}.query-report.v1.json"
+            )
             report = _activate_lkg(
                 repository_root,
                 pointer=pointer,
@@ -570,19 +735,9 @@ def restore_last_known_good(repository_root: Path, *, repeat: int) -> dict[str, 
                 inputs=inputs,
                 repeat=repeat,
                 expected_main=pinned_main,
+                evidence_path=evidence,
             )
             phase = "restore-verify-locator-suite"
-            report_bytes = _render(report)
-            evidence = (
-                repository_root
-                / "logs"
-                / "knowledge-context"
-                / datetime.now(timezone.utc).date().isoformat()
-                / "restores"
-                / pointer["generation_id"]
-                / f"{uuid.uuid4().hex}.query-report.v1.json"
-            )
-            _atomic_bytes(evidence, report_bytes)
             return {
                 "status": "restored",
                 "main_commit": pinned_main,
@@ -592,7 +747,7 @@ def restore_last_known_good(repository_root: Path, *, repeat: int) -> dict[str, 
                 "evaluation": report["summary"],
                 "evidence": evidence.relative_to(repository_root).as_posix(),
             }
-    except (OSError, UnicodeError, ValueError, KeyError, TypeError, json.JSONDecodeError, subprocess.SubprocessError) as error:
+    except (OSError, UnicodeError, ValueError, RuntimeError, KeyError, TypeError, json.JSONDecodeError, subprocess.SubprocessError) as error:
         evidence = _write_failure(
             repository_root,
             phase=phase,
@@ -698,7 +853,7 @@ def _publish_bundle(
     success_path = repository_root / "logs" / "knowledge-context" / datetime.now(timezone.utc).date().isoformat() / "publications" / generation_id / "query-report.v1.json"
     current_path = index_root / "current.json"
     lkg_path = index_root / "last-known-good.json"
-    targets = [*(repository_root / path for path in LAYER_PATHS.values()), current_path, lkg_path, success_path]
+    targets = [*(repository_root / path for path in LAYER_PATHS.values()), lkg_path, success_path, current_path]
     backups = {path: path.read_bytes() if path.is_file() else None for path in targets}
     try:
         if _main_commit(repository_root) != main_commit:
@@ -706,12 +861,12 @@ def _publish_bundle(
         for name, payload in layer_bytes.items():
             _atomic_bytes(repository_root / LAYER_PATHS[name], payload)
         pointer_bytes = _render(pointer)
-        _atomic_bytes(current_path, pointer_bytes)
         _atomic_bytes(lkg_path, pointer_bytes)
         if success_path.is_file() and success_path.read_bytes() != report_bytes:
             raise ValueError("publication_success_evidence_conflict")
         if not success_path.is_file():
             _atomic_bytes(success_path, report_bytes)
+        _atomic_bytes(current_path, pointer_bytes)
         if not verify_current_publication(
             repository_root,
             catalog_path=repository_root / LAYER_PATHS["catalog_v2"],
@@ -810,7 +965,7 @@ def run(repository_root: Path, *, publish: bool, repeat: int) -> dict[str, Any]:
                 "generation_sha256": pointer["generation_sha256"],
                 "evaluation": report["summary"],
             }
-    except (OSError, UnicodeError, ValueError, json.JSONDecodeError, subprocess.SubprocessError) as error:
+    except (OSError, UnicodeError, ValueError, RuntimeError, json.JSONDecodeError, subprocess.SubprocessError) as error:
         evidence = _write_failure(
             repository_root,
             phase=phase,

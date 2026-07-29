@@ -249,6 +249,7 @@ def evaluate(
     repeat: int,
     categories: set[str] | None = None,
     case_ids: set[str] | None = None,
+    allow_ancestor_snapshot: bool = False,
 ) -> dict[str, Any]:
     suite = _read_json(suite_path)
     _validate_suite(suite)
@@ -262,7 +263,17 @@ def evaluate(
     if not isinstance(commit, str):
         raise ValueError("catalog source snapshot has no commit")
     current_main = _git(repository_root, "rev-parse", "refs/heads/main")
-    if current_main.returncode or current_main.stdout.decode("ascii").strip() != commit:
+    current_commit = current_main.stdout.decode("ascii").strip() if not current_main.returncode else ""
+    if current_commit != commit and allow_ancestor_snapshot:
+        ancestry = _git(repository_root, "merge-base", "--is-ancestor", commit, current_commit)
+        if ancestry.returncode:
+            raise ValueError("catalog source snapshot does not match refs/heads/main")
+        for item in snapshot.get("sources", []):
+            if not isinstance(item, dict) or not isinstance(item.get("path"), str):
+                raise ValueError("catalog source snapshot does not match refs/heads/main")
+            if hashlib.sha256(_main_blob(repository_root, current_commit, item["path"])).hexdigest() != item.get("sha256"):
+                raise ValueError("catalog source snapshot does not match refs/heads/main")
+    elif current_commit != commit:
         raise ValueError("catalog source snapshot does not match refs/heads/main")
     policy_revision = suite.get("policy_revision")
     if policies.get("policy_revision") != policy_revision:
@@ -549,6 +560,7 @@ def main() -> int:
             args.repeat,
             set(args.category) if args.category else None,
             set(args.case_id) if args.case_id else None,
+            allow_ancestor_snapshot=True,
         )
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(json.dumps({"status": "blocked", "error": str(error)}, ensure_ascii=False, sort_keys=True))

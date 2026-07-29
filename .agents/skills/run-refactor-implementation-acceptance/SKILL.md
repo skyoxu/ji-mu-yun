@@ -73,7 +73,9 @@ py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_c
 
 Historical function-level inputs without a knowledge context remain readable;
 new CLI preparations cannot omit it. Later phases consume the frozen summary
-and never issue another Locator query.
+and never issue another Locator query. The shared context validator must
+byte-match current main, and the complete Locator read-set is revalidated
+against both its source commit and current worktree before the summary freezes.
 
 `scripts/acceptance_cli.py prepare-run` validates a hash-bound run input with replayable baseline and candidate content manifests, then writes a new non-authorizing run-input artifact. Commit candidates are checked against raw bytes from resolved immutable Git commits, and the resolved baseline/candidate OIDs are persisted in `candidateCustody`. Dirty-worktree and proposed-commit-set candidates must declare `candidate_frozen_snapshot_path` as `.acceptance-snapshots/<run_id>` beneath the target root; symlinks and live workspace substitutes are rejected, and the snapshot manifest receipt is persisted. `policies/phase-service-code-review.v1.json` is the Phase-only policy pack. Pure Godot inputs are rejected as an unsupported code-review domain; mixed candidates must retain an unreviewed external partition.
 

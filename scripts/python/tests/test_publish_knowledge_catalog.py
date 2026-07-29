@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import nullcontext
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 
@@ -150,6 +153,33 @@ class KnowledgePublicationTests(unittest.TestCase):
             self.assertEqual(1, len(evidence))
             self.assertEqual("recovered", json.loads(evidence[0].read_text(encoding="utf-8"))["status"])
 
+    def test_old_malformed_lock_is_recovered(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            index_root = root / "knowledge" / "indexes"
+            index_root.mkdir(parents=True)
+            lock = index_root / "publication.lock"
+            lock.write_bytes(b"")
+            old = publication.time.time() - publication.MALFORMED_LOCK_GRACE_SECONDS - 1
+            os.utime(lock, (old, old))
+            with publication._single_writer(index_root):
+                self.assertTrue(lock.is_file())
+            self.assertFalse(lock.exists())
+            evidence = list((root / "logs/knowledge-context").rglob("*.json"))
+            self.assertEqual(1, len(evidence))
+
+    def test_reused_pid_lock_is_recovered(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            index_root = root / "knowledge" / "indexes"
+            index_root.mkdir(parents=True)
+            lock = index_root / "publication.lock"
+            lock.write_text(json.dumps({"pid": 42, "process_identity": "old", "token": "stale"}), encoding="utf-8")
+            with mock.patch.object(publication, "_pid_alive", return_value=True), mock.patch.object(publication, "_process_identity", return_value="new"):
+                with publication._single_writer(index_root):
+                    self.assertTrue(lock.is_file())
+            self.assertFalse(lock.exists())
+
     def test_generation_payloads_reject_tampered_immutable_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -270,6 +300,40 @@ class KnowledgePublicationTests(unittest.TestCase):
             for path in tracked:
                 self.assertEqual(b"before\n", path.read_bytes())
 
+    def test_current_pointer_is_the_last_activation_write(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            layer_bytes = {name: b"{}\n" for name in publication.LAYER_PATHS}
+            input_bytes = {name: b"{}\n" for name in publication.INPUT_PATHS}
+            for name, path in publication.INPUT_PATHS.items():
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(input_bytes[name])
+            writes: list[Path] = []
+            real_atomic = publication._atomic_bytes
+
+            def record(path: Path, payload: bytes) -> None:
+                writes.append(path)
+                real_atomic(path, payload)
+
+            report = {"snapshot": {"snapshot_id": "sha256:" + "1" * 64}, "policy_revision": "policy-v1", "summary": {"status": "passed"}}
+            with mock.patch.object(publication, "_main_commit", return_value="a" * 40), mock.patch.object(publication, "_atomic_bytes", side_effect=record), mock.patch.object(publication, "verify_current_publication", return_value=True), mock.patch.object(publication, "_locator_smoke"):
+                publication._publish_bundle(root, main_commit="a" * 40, layer_bytes=layer_bytes, input_bytes=input_bytes, report_bytes=b"{}\n", report=report)
+            current = root / "knowledge/indexes/current.json"
+            self.assertEqual(current, writes[-1])
+
+    def test_runtime_rollback_failure_is_returned_with_structured_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            index_root = root / "knowledge/indexes"
+            index_root.mkdir(parents=True)
+            failure = Path("logs/knowledge-context/failure.json")
+            with mock.patch.object(publication, "_single_writer", return_value=nullcontext()), mock.patch.object(publication, "_main_commit", return_value="a" * 40), mock.patch.object(publication, "_load_pointer", side_effect=RuntimeError("rollback failed")), mock.patch.object(publication, "_write_failure", return_value=failure):
+                result = publication.restore_last_known_good(root, repeat=1)
+            self.assertEqual("blocked", result["status"])
+            self.assertEqual("rollback failed", result["error"])
+            self.assertEqual(failure.as_posix(), result["evidence"])
+
     def test_lkg_restore_rolls_back_when_main_advances_after_validation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -310,21 +374,15 @@ class KnowledgePublicationTests(unittest.TestCase):
     def test_restore_lkg_rejects_generation_from_stale_main_without_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            index_root = root / "knowledge" / "indexes"
-            index_root.mkdir(parents=True)
-            pointer = {
-                "schema_version": publication.POINTER_SCHEMA_VERSION,
-                "generation_id": "a" * 64,
-                "generation_sha256": "sha256:" + "b" * 64,
-                "main_commit": "c" * 40,
-                "source_snapshot_id": "sha256:" + "d" * 64,
-            }
-            (index_root / "last-known-good.json").write_bytes(publication._render(pointer))
-            with mock.patch.object(publication, "_main_commit", return_value="e" * 40):
-                result = publication.restore_last_known_good(root, repeat=1)
-            self.assertEqual("blocked", result["status"])
-            self.assertEqual("lkg_main_commit_stale", result["error"])
-            self.assertFalse((index_root / "current.json").exists())
+            with mock.patch.object(publication, "_git", return_value=SimpleNamespace(returncode=1)):
+                with self.assertRaisesRegex(ValueError, "lkg_main_commit_stale"):
+                    publication._require_generation_compatible_with_main(
+                        root,
+                        generation_main="c" * 40,
+                        current_main="e" * 40,
+                        snapshot={"sources": []},
+                        payloads={},
+                    )
 
     def test_restore_lkg_runs_real_evaluator_and_locator_in_temporary_clone(self) -> None:
         source_index = REPOSITORY_ROOT / "knowledge" / "indexes"
@@ -339,11 +397,18 @@ class KnowledgePublicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "repository"
             subprocess.run(["git", "clone", "--quiet", "--shared", "--no-checkout", str(REPOSITORY_ROOT), str(root)], check=True)
-            subprocess.run(["git", "checkout", "--quiet", "-B", "main", pointer["main_commit"]], cwd=root, check=True)
+            current_main = subprocess.run(
+                ["git", "-C", str(REPOSITORY_ROOT), "rev-parse", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+                encoding="ascii",
+            ).stdout.strip()
+            subprocess.run(["git", "checkout", "--quiet", "-B", "main", current_main], cwd=root, check=True)
             target_index = root / "knowledge" / "indexes"
             target_generation = target_index / "generations" / generation_id
             target_generation.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(source_generation, target_generation)
+            shutil.copytree(source_generation, target_generation, dirs_exist_ok=True)
             shutil.copy2(pointer_path, target_index / "last-known-good.json")
             for path in publication.LAYER_PATHS.values():
                 target = root / path

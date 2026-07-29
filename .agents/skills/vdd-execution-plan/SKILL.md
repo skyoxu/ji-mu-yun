@@ -68,6 +68,11 @@ Locator result. Its `--accept` arguments are explicit adapter decisions; it
 never promotes a search result automatically. Run `vdd_knowledge_preflight.py`
 on the emitted context before publishing `plan-ready`.
 
+The producer writes no formal context or receipt when preflight is blocked.
+Ready output is restricted to one `execution-plans/<plan>/` directory, stages
+complete bytes before publication, and can finish an identical orphan context
+by publishing its missing receipt after an interrupted first attempt.
+
 ## Candidate, Review, And Reports
 
 Use a declared Git baseline plus either a frozen commit range or a complete scoped worktree identity. A dirty identity binds `HEAD`, canonical scoped tracked/index diff hash, and a manifest of relevant untracked paths and content hashes. Bind current contracts, implementation, and validators; exclude append-only logs and explanatory reports from normative hashes. Preserve old evidence as historical after invalidation.

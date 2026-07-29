@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import sys
 import tempfile
@@ -152,15 +153,22 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             policy = root / "knowledge/policies/consumer-policies.v2.json"
             policy.parent.mkdir(parents=True)
             policy.write_text(json.dumps({"policy_revision": "test-policy-v2"}), encoding="utf-8")
-            output = root / "plan/knowledge-context.v1.json"
+            output = root / "execution-plans/plan/knowledge-context.v1.json"
             result = {
                 "schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "request-1",
                 "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}, "status": "matched",
                 "candidates": [{"path": "AGENTS.md", "source_sha256": "b" * 64}],
             }
+            validator = SimpleNamespace(
+                validate_context=lambda *_args, **_kwargs: None,
+                canonical_hash=lambda value: "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+            )
             with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(result), stderr="")), \
-                 mock.patch.object(module, "validate_context", return_value=None), \
+                 mock.patch.object(module, "_validator", return_value=validator), \
                  mock.patch.object(sys, "argv", ["prepare", "--repository-root", str(root), "--request-id", "request-1", "--query", "rules", "--required-module", "repository-rules", "--accept", "AGENTS.md=repository-rules", "--output", str(output)]):
+                self.assertEqual(0, module.main())
+                freeze_path = output.with_name("knowledge-context.freeze.v1.json")
+                freeze_path.unlink()
                 self.assertEqual(0, module.main())
             document = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual("ready", document["preflight"]["status"])
@@ -168,6 +176,31 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             freeze = json.loads((output.parent / "knowledge-context.freeze.v1.json").read_text(encoding="utf-8"))
             self.assertEqual("jimuyun.vdd-knowledge-freeze.v1", freeze["schema_version"])
             self.assertEqual("test-policy-v2", freeze["policy_revision"])
+
+    def test_blocked_preflight_does_not_publish_fixed_output_files(self) -> None:
+        module = load_prepare()
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
+            catalog.parent.mkdir(parents=True)
+            catalog.write_text(json.dumps({"source_snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}}), encoding="utf-8")
+            policy = root / "knowledge/policies/consumer-policies.v2.json"
+            policy.parent.mkdir(parents=True)
+            policy.write_text(json.dumps({"policy_revision": "test-policy-v2"}), encoding="utf-8")
+            output = root / "execution-plans/plan/knowledge-context.v1.json"
+            result = {
+                "schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "request-1",
+                "snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}, "status": "matched",
+                "candidates": [{"path": "AGENTS.md", "source_sha256": "b" * 64}],
+            }
+            validator = SimpleNamespace(
+                validate_context=lambda *_args, **_kwargs: "required_modules_unsatisfied",
+                canonical_hash=lambda value: "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+            )
+            with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(result), stderr="")), mock.patch.object(module, "_validator", return_value=validator), mock.patch.object(sys, "argv", ["prepare", "--repository-root", str(root), "--request-id", "request-1", "--query", "rules", "--required-module", "repository-rules", "--output", str(output)]):
+                self.assertEqual(2, module.main())
+            self.assertFalse(output.exists())
+            self.assertFalse(output.with_name("knowledge-context.freeze.v1.json").exists())
 
 
 if __name__ == "__main__":

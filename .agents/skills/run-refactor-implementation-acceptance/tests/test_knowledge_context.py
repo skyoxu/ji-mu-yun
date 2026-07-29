@@ -74,7 +74,10 @@ class RefactorAcceptanceKnowledgeContextTests(unittest.TestCase):
             target = Path(temporary).resolve()
             context = target / "knowledge-context.json"
             context.write_text(json.dumps({"consumer": "vdd", "preflight": {"status": "ready"}}), encoding="utf-8")
-            validator = SimpleNamespace(validate_context=lambda *args, **kwargs: None)
+            validator = SimpleNamespace(
+                validate_context=lambda *args, **kwargs: None,
+                validate_worktree_sources=lambda *args, **kwargs: None,
+            )
             with mock.patch.object(module, "_repository_root", return_value=target), \
                  mock.patch.object(module, "_validator", return_value=validator):
                 with self.assertRaisesRegex(module.InputError, "consumer must be refactor-acceptance"):

@@ -25,10 +25,9 @@ def load_module():
 
 
 class QuickDevKnowledgeContextTests(unittest.TestCase):
-    def test_quick_dev_adapter_has_no_locator_or_subprocess_query_path(self) -> None:
+    def test_quick_dev_adapter_has_no_locator_query_path(self) -> None:
         source = MODULE_PATH.read_text(encoding="utf-8")
         self.assertNotIn("knowledge_locator.py", source)
-        self.assertNotIn("subprocess", source)
 
     def test_locator_result_or_consumption_decision_cannot_expand_frozen_context(self) -> None:
         try:
@@ -82,6 +81,7 @@ class QuickDevKnowledgeContextTests(unittest.TestCase):
             context_path.write_bytes(context_bytes)
             validator = SimpleNamespace(
                 validate_context=lambda *_args, **_kwargs: None,
+                validate_worktree_sources=lambda *_args, **_kwargs: None,
                 canonical_hash=lambda value: "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
             )
             receipt = {
@@ -104,6 +104,28 @@ class QuickDevKnowledgeContextTests(unittest.TestCase):
                 result = module.verify_plan_context(Path.cwd(), plan)
         self.assertEqual("vdd-repair", result["status"])
         self.assertEqual("freeze_receipt_mismatch", result["detail"])
+
+    def test_worktree_source_drift_routes_to_vdd_repair(self) -> None:
+        module = load_module()
+        with tempfile.TemporaryDirectory() as temporary:
+            plan = Path(temporary)
+            context = {
+                "locator_request": {"snapshot": {}, "policy_revision": "policy-v2"},
+                "locator_result": {"source_snapshot_id": "sha256:" + "a" * 64},
+                "request_sha256": "sha256:" + "b" * 64,
+                "result_sha256": "sha256:" + "c" * 64,
+                "decisions": [],
+            }
+            context_bytes = (json.dumps(context) + "\n").encode("utf-8")
+            (plan / "knowledge-context.v1.json").write_bytes(context_bytes)
+            (plan / "knowledge-context.freeze.v1.json").write_text("{}\n", encoding="utf-8")
+            validator = SimpleNamespace(
+                validate_context=lambda *_args, **_kwargs: None,
+                validate_worktree_sources=lambda *_args, **_kwargs: "candidate_worktree_source_hash_mismatch",
+            )
+            with mock.patch.object(module, "_validator", return_value=validator):
+                result = module.verify_plan_context(Path.cwd(), plan)
+        self.assertEqual("candidate_worktree_source_hash_mismatch", result["detail"])
 
 
 if __name__ == "__main__":

@@ -6,12 +6,21 @@ import importlib.util
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
 from typing import Any
 
 
 def _validator(repository_root: Path):
     module_path = repository_root / "scripts" / "python" / "knowledge_context_validation.py"
+    for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py"):
+        current = subprocess.run(
+            ["git", "-C", str(repository_root), "show", f"refs/heads/main:{relative}"],
+            capture_output=True,
+            check=False,
+        )
+        if current.returncode or (repository_root / relative).read_bytes() != current.stdout:
+            raise ImportError("context_validator_not_main_bound")
     spec = importlib.util.spec_from_file_location("quick_dev_knowledge_context_validation", module_path)
     if spec is None or spec.loader is None:
         raise ImportError("context_validator_unavailable")
@@ -63,9 +72,13 @@ def verify_plan_context(repository_root: Path, plan_dir: Path) -> dict[str, Any]
             verify_catalog=True,
             verify_sources=True,
             expected_consumer="vdd",
+            require_preflight=True,
         )
         if failure_code:
             return {"status": "vdd-repair", "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE", "detail": failure_code}
+        worktree_failure = validator.validate_worktree_sources(context, repository_root.resolve())
+        if worktree_failure:
+            return {"status": "vdd-repair", "failure_code": "KWI-QUICK-FROZEN-CONTEXT-STALE", "detail": worktree_failure}
         accepted = [
             {
                 "path": decision["candidate"]["path"],

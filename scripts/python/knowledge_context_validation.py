@@ -172,6 +172,26 @@ def _candidate_read_set(candidate: dict[str, Any]) -> list[tuple[str, str]]:
     return values
 
 
+def validate_worktree_sources(payload: dict[str, Any], repository_root: Path) -> str | None:
+    result = payload.get("locator_result") if isinstance(payload, dict) else None
+    candidates = result.get("candidates") if isinstance(result, dict) else None
+    if not isinstance(candidates, list):
+        return "locator_candidates_invalid"
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            return "locator_candidates_invalid"
+        try:
+            for raw_path, digest in _candidate_read_set(candidate):
+                source = _contained_source(repository_root, raw_path)
+                if raw_path.replace("\\", "/").startswith("docs/migration/"):
+                    return "candidate_path_excluded"
+                if hashlib.sha256(source.read_bytes()).hexdigest() != digest:
+                    return "candidate_worktree_source_hash_mismatch"
+        except (OSError, ValueError) as error:
+            return str(error) if isinstance(error, ValueError) else "candidate_worktree_source_unavailable"
+    return None
+
+
 def validate_context(
     payload: dict[str, Any],
     *,
@@ -180,6 +200,7 @@ def validate_context(
     verify_sources: bool = False,
     expected_consumer: str | None = None,
     require_selection: bool = False,
+    require_preflight: bool = False,
 ) -> str | None:
     """Return a stable failure code, or ``None`` for a complete bound context."""
     if not isinstance(payload, dict) or payload.get("schema_version") not in CONTEXT_SCHEMAS:
@@ -205,9 +226,12 @@ def validate_context(
     if payload.get("request_sha256") != canonical_hash(request) or payload.get("result_sha256") != canonical_hash(result):
         return "locator_hash_mismatch"
     preflight = payload.get("preflight")
-    if preflight is not None:
-        if not isinstance(preflight, dict):
+    if preflight is None:
+        if require_preflight:
             return "preflight_invalid"
+    elif not isinstance(preflight, dict):
+        return "preflight_invalid"
+    else:
         context_without_preflight = {key: value for key, value in payload.items() if key != "preflight"}
         if preflight.get("context_sha256") != canonical_hash(context_without_preflight):
             return "preflight_context_hash_mismatch"

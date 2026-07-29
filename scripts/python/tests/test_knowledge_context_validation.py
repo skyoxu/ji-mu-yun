@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -159,6 +160,23 @@ class KnowledgeContextValidationTests(unittest.TestCase):
         ]
         document["result_sha256"] = canonical_hash(document["locator_result"])
         self.assertEqual("locator_candidate_read_set_invalid", validate_context(document))
+
+    def test_consumer_can_require_ready_preflight(self) -> None:
+        document = payload()
+        self.assertEqual("preflight_invalid", validate_context(document, require_preflight=True))
+
+    def test_worktree_source_hash_is_revalidated(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "AGENTS.md"
+            source.write_text("rules\n", encoding="utf-8")
+            document = payload(digest=hashlib.sha256(source.read_bytes()).hexdigest())
+            self.assertIsNone(validation.validate_worktree_sources(document, root))
+            source.write_text("changed\n", encoding="utf-8")
+            self.assertEqual(
+                "candidate_worktree_source_hash_mismatch",
+                validation.validate_worktree_sources(document, root),
+            )
 
 
 if __name__ == "__main__":

@@ -69,15 +69,18 @@ change cannot produce a publishable generation. It never promotes
 dirty-worktree bytes as repository facts. This is a local release gate; no CI
 workflow file is required.
 
-`--restore-lkg` is an explicit recovery operation. It accepts only an immutable
-LKG generation whose main commit still equals local `refs/heads/main` before
-write and after all post-restore checks, verifies
-every bundled artifact hash, restores the snapshot, v2 Catalog, projections,
-and v1 compatibility Catalog, then re-runs publication verification and the
-real Locator gate. A failed check rolls back and re-verifies every target. A
-dead-PID publication lock may be recovered with append-only evidence; a live
-or indeterminate PID remains fail-closed. Recovery never deletes a generation
-or historical evidence.
+`--restore-lkg` is an explicit recovery operation. The generation source commit
+must be an ancestor of local `refs/heads/main`; every indexed source and bundled
+publication input must still byte-match current main. This permits the commit
+that records the immutable generation without accepting later source drift.
+Recovery verifies every bundled artifact hash, restores the snapshot, v2
+Catalog, projections, and v1 compatibility Catalog, then re-runs publication
+verification and the real Locator gate. A failed check or success-evidence
+write rolls back and re-verifies every target. Locks bind PID and process
+creation identity; a dead, reused, or sufficiently old malformed owner can be
+recovered after a 60-second grace period through serialized acquisition and
+append-only evidence. Recovery never deletes a generation or historical
+evidence.
 
 ## Generation Retention
 
@@ -99,6 +102,7 @@ py -3 -B scripts/python/prune_knowledge_generations.py --prune
 The default command is read-only. Deletion requires the independent explicit
 `--prune` mode, runs under the publication single-writer lock, and accepts no
 alternate policy path. It records an append-only intent before deletion, a
-per-generation authorization before each removal, and a success or partial
-failure record with removed and remaining sets. Publication and LKG restoration
-never invoke it.
+per-generation authorization before each removal, atomically isolates a target
+from generation authority before recursive cleanup, and records per-target
+deletion evidence plus success or partial-failure sets. Publication and LKG
+restoration never invoke it.

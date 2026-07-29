@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,14 @@ def _repository_root(target_root: Path) -> Path:
 
 def _validator(repository_root: Path):
     module_path = repository_root / "scripts" / "python" / "knowledge_context_validation.py"
+    for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py"):
+        current = subprocess.run(
+            ["git", "-C", str(repository_root), "show", f"refs/heads/main:{relative}"],
+            capture_output=True,
+            check=False,
+        )
+        if current.returncode or (repository_root / relative).read_bytes() != current.stdout:
+            raise InputError("knowledge context validator is not bound to current main")
     spec = importlib.util.spec_from_file_location("refactor_acceptance_knowledge_context_validation", module_path)
     if spec is None or spec.loader is None:
         raise InputError("knowledge context validator is unavailable")
@@ -57,9 +66,13 @@ def freeze_knowledge_context(target_root: Path, raw_path: str) -> dict[str, Any]
         verify_sources=True,
         expected_consumer="refactor-acceptance",
         require_selection=True,
+        require_preflight=True,
     )
     if failure_code:
         raise InputError(f"knowledge context is invalid: {failure_code}")
+    worktree_failure = validation.validate_worktree_sources(document, repository_root)
+    if worktree_failure:
+        raise InputError(f"knowledge context is invalid: {worktree_failure}")
     if document.get("consumer") != "refactor-acceptance":
         raise InputError("knowledge context consumer must be refactor-acceptance")
     preflight = document.get("preflight")

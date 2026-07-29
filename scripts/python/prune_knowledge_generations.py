@@ -119,6 +119,12 @@ def inventory(repository_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
     keep = _validate_policy(policy)
     current_pointer, _ = _load_valid_pointer(index_root, "current.json")
     lkg_pointer, _ = _load_valid_pointer(index_root, "last-known-good.json")
+    for label, pointer in (("current", current_pointer), ("last_known_good", lkg_pointer)):
+        try:
+            manifest, payloads = publication._generation_payloads(repository_root, pointer)
+            publication._validate_generation_payloads(manifest, payloads)
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError, json.JSONDecodeError) as error:
+            raise ValueError(f"{label}_pointer_generation_invalid") from error
     current = current_pointer["generation_id"]
     lkg = lkg_pointer["generation_id"]
     commit_order = _main_commit_order(repository_root)
@@ -173,6 +179,10 @@ def run(repository_root: Path, *, prune: bool) -> dict[str, Any]:
         index_root = repository_root / "knowledge" / "indexes"
         with publication._single_writer(index_root):
             report = inventory(repository_root, policy)
+            pointer_bytes = {
+                filename: (index_root / filename).read_bytes()
+                for filename in ("current.json", "last-known-good.json")
+            }
             if not prune:
                 return report
             if publication._main_commit(repository_root) != main_commit:
@@ -193,6 +203,9 @@ def run(repository_root: Path, *, prune: bool) -> dict[str, Any]:
             _append_evidence(evidence_root / "intent.json", intent)
             generation_root = (index_root / "generations").resolve()
             removed: list[str] = []
+            cleanup_failed: list[str] = []
+            quarantined: list[str] = []
+            committed = False
             candidates = list(report["candidate_generation_ids"])
             try:
                 for generation_id in candidates:
@@ -202,6 +215,9 @@ def run(repository_root: Path, *, prune: bool) -> dict[str, Any]:
                     target.relative_to(generation_root)
                     if target.parent != generation_root or not GENERATION_ID.fullmatch(target.name):
                         raise ValueError("generation_prune_target_invalid")
+                    for filename, expected in pointer_bytes.items():
+                        if (index_root / filename).read_bytes() != expected:
+                            raise ValueError("generation_pointer_changed_during_pruning")
                     _validated_generation(repository_root, generation_id)
                     _append_evidence(evidence_root / "authorizations" / f"{generation_id}.json", {
                         "schema_version": "jimuyun.knowledge-generation-prune-authorization.v1",
@@ -212,9 +228,62 @@ def run(repository_root: Path, *, prune: bool) -> dict[str, Any]:
                         "recorded_at": datetime.now(timezone.utc).isoformat(),
                         "authorizes": [f"delete:{generation_id}"],
                     })
-                    shutil.rmtree(target)
-                    removed.append(generation_id)
+                    quarantine = evidence_root / "quarantine" / generation_id
+                    quarantine.parent.mkdir(parents=True, exist_ok=True)
+                    os.replace(target, quarantine)
+                    quarantined.append(generation_id)
+                if publication._main_commit(repository_root) != main_commit:
+                    raise ValueError("main_advanced_during_generation_pruning")
+                for filename, expected in pointer_bytes.items():
+                    if (index_root / filename).read_bytes() != expected:
+                        raise ValueError("generation_pointer_changed_during_pruning")
+                _append_evidence(evidence_root / "commit.json", {
+                    "schema_version": "jimuyun.knowledge-generation-prune-commit.v1",
+                    "status": "committed",
+                    "operation_id": operation_id,
+                    "main_commit": main_commit,
+                    "generation_ids": quarantined,
+                    "pointer_sha256": {
+                        filename: publication._sha(payload)
+                        for filename, payload in pointer_bytes.items()
+                    },
+                    "recorded_at": datetime.now(timezone.utc).isoformat(),
+                    "authorizes": [],
+                })
+                committed = True
+                removed.extend(quarantined)
+                for generation_id in list(quarantined):
+                    quarantine = evidence_root / "quarantine" / generation_id
+                    cleanup_failed.append(generation_id)
+                    deletion_evidence = evidence_root / "deletions" / f"{generation_id}.json"
+                    _append_evidence(deletion_evidence, {
+                        "schema_version": "jimuyun.knowledge-generation-prune-deletion.v1",
+                        "status": "removed-from-generation-authority",
+                        "operation_id": operation_id,
+                        "generation_id": generation_id,
+                        "recorded_at": datetime.now(timezone.utc).isoformat(),
+                        "authorizes": [],
+                    })
+                    shutil.rmtree(quarantine)
+                    cleanup_failed.remove(generation_id)
+                    quarantined.remove(generation_id)
             except Exception as error:
+                rollback_errors: list[str] = []
+                if not committed:
+                    for generation_id in reversed(quarantined):
+                        quarantine = evidence_root / "quarantine" / generation_id
+                        target = generation_root / generation_id
+                        try:
+                            if quarantine.exists():
+                                os.replace(quarantine, target)
+                            if not target.is_dir():
+                                rollback_errors.append(generation_id)
+                        except OSError:
+                            rollback_errors.append(generation_id)
+                    if rollback_errors:
+                        error = RuntimeError(f"{error}; generation_prune_rollback_failed:{','.join(rollback_errors)}")
+                    else:
+                        quarantined.clear()
                 remaining = [generation_id for generation_id in candidates if generation_id not in removed]
                 failure = {
                     "schema_version": "jimuyun.knowledge-generation-prune-failure.v1",
@@ -223,19 +292,46 @@ def run(repository_root: Path, *, prune: bool) -> dict[str, Any]:
                     "error": str(error),
                     "removed_generation_ids": removed,
                     "remaining_generation_ids": remaining,
+                    "cleanup_failed_generation_ids": cleanup_failed,
+                    "quarantined_generation_ids": list(quarantined),
                     "recorded_at": datetime.now(timezone.utc).isoformat(),
                     "authorizes": [],
                 }
-                _append_evidence(evidence_root / "failure.json", failure)
-                return {**failure, "evidence": (evidence_root / "failure.json").relative_to(repository_root).as_posix()}
+                failure_path = evidence_root / "failure.json"
+                try:
+                    _append_evidence(failure_path, failure)
+                    evidence_value: str | None = failure_path.relative_to(repository_root).as_posix()
+                except OSError:
+                    evidence_value = None
+                return {**failure, "evidence": evidence_value}
             result = {
                 **report,
                 "status": "pruned",
                 "operation_id": operation_id,
                 "removed_generation_ids": removed,
+                "cleanup_failed_generation_ids": cleanup_failed,
                 "recorded_at": datetime.now(timezone.utc).isoformat(),
             }
-            _append_evidence(evidence_root / "result.json", result)
+            try:
+                _append_evidence(evidence_root / "result.json", result)
+            except OSError as error:
+                failure = {
+                    "schema_version": "jimuyun.knowledge-generation-prune-failure.v1",
+                    "status": "failed",
+                    "operation_id": operation_id,
+                    "error": str(error),
+                    "removed_generation_ids": removed,
+                    "remaining_generation_ids": [],
+                    "cleanup_failed_generation_ids": cleanup_failed,
+                    "recorded_at": datetime.now(timezone.utc).isoformat(),
+                    "authorizes": [],
+                }
+                try:
+                    _append_evidence(evidence_root / "failure.json", failure)
+                    evidence_value = (evidence_root / "failure.json").relative_to(repository_root).as_posix()
+                except OSError:
+                    evidence_value = None
+                return {**failure, "evidence": evidence_value}
             return {**result, "evidence": (evidence_root / "result.json").relative_to(repository_root).as_posix()}
     except (OSError, UnicodeError, ValueError, KeyError, TypeError, json.JSONDecodeError) as error:
         return {"status": "blocked", "error": str(error)}

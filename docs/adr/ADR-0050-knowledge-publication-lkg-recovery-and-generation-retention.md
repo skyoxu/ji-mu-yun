@@ -22,6 +22,10 @@ inside publication would couple recovery data loss to the release path.
   pointer, immutable generation identity, every bundled artifact hash, source
   snapshot, policy, query report, and current local `refs/heads/main` before
   changing formal files.
+- The LKG source commit may precede current main only when it remains an
+  ancestor and every indexed source plus bundled publication input still
+  byte-matches current main. The commit that records a generation therefore
+  does not immediately invalidate that generation.
 - Recovery restores exactly the source snapshot, v2 Catalog, consumer
   projections, and v1 compatibility Catalog. It then verifies the current
   publication, replays the Locator query gate, and runs a canonical Locator
@@ -33,12 +37,14 @@ inside publication would couple recovery data loss to the release path.
 - Publication activates the four formal layers, current pointer, LKG pointer,
   and success evidence as one rollback domain. A failed activation preserves
   its immutable generation but restores and verifies all prior formal bytes.
+  The current pointer is written last as the logical activation marker.
 - Publication requires its builder, evaluator, Locator, core, and publication
   scripts to byte-match pinned main before staging, so a dirty control plane
   cannot create a generation that main cannot reproduce.
-- A stale publication lock is recoverable only when its recorded PID is
-  definitely absent; recovery writes append-only evidence first. A live or
-  indeterminate PID remains a lock conflict.
+- A stale publication lock binds PID and process creation identity. Serialized
+  acquisition may recover a definitely dead or reused owner and, after a grace
+  period of 60 seconds, an incomplete malformed lock. A live or indeterminate
+  owner remains a lock conflict.
 - Generation pruning is owned by the independent explicit
   `scripts/python/prune_knowledge_generations.py --prune` command. Publication
   and recovery never invoke pruning.
@@ -49,7 +55,9 @@ inside publication would couple recovery data loss to the release path.
   generation directories are reported and never deleted.
 - Pruning reads only the canonical retention policy at current main. Before
   deletion it persists an operation intent and a per-generation authorization;
-  partial failure evidence records both removed and remaining generation sets.
+  each target is atomically isolated from generation authority before recursive
+  cleanup. Per-target evidence and partial failure evidence distinguish removed,
+  remaining, and cleanup-failed generation sets.
 - Failed publication and recovery evidence remains append-only under
   `logs/knowledge-context/` and is outside generation-pruning scope.
 

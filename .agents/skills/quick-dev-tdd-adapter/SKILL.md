@@ -38,6 +38,8 @@ to VDD repair. See `references/knowledge-consumption.md`.
 `knowledge-context.v1.json` and its VDD-owned
 `knowledge-context.freeze.v1.json` receipt before any slice can start. A
 binding, receipt, or source-hash mismatch routes to VDD repair.
+The shared context validator must byte-match current main, and every Locator
+read-set path must still match its hash in the worktree before RED.
 
 Use `tools/persistent_plan_loop.py` for unattended execution. It re-routes after every completed slice and consumes only the slice's explicit, no-wildcard `execution_snapshot_paths` declaration. The plan validator requires that declaration to name an existing repository file covered by that slice's allowed write set; a missing or invalid declaration fails closed. Its state file belongs under `logs/tdd-adapter/<plan-id>/controller/`.
 

@@ -12,6 +12,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 
@@ -3465,10 +3466,14 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 },
             }],
         }), encoding="utf-8", newline="\n")
-        with mock.patch.object(bootstrap, "validate_context", return_value=None):
+        freeze = self.repo / "knowledge-context.freeze.v1.json"
+        freeze.write_text("{}\n", encoding="utf-8", newline="\n")
+        frozen = {"path": "knowledge-context.v1.json", "sha256": bootstrap.file_hash(context), "freezePath": "knowledge-context.freeze.v1.json", "freezeSha256": bootstrap.file_hash(freeze), "accepted": [], "rejectedCount": 0}
+        with mock.patch.object(bootstrap, "freeze_knowledge_context", return_value=frozen):
             self.prepare(knowledge_context=context)
         artifacts = {item["artifact"] for item in self.read_json("review-input.json")["artifacts"]}
         self.assertIn("knowledge-context.v1.json", artifacts)
+        self.assertIn("knowledge-context.freeze.v1.json", artifacts)
 
     def test_stale_run_requires_explicit_nonfresh_load_for_closure_only(self) -> None:
         self.prepare()
@@ -3503,24 +3508,59 @@ class BootstrapKnowledgeContextTests(unittest.TestCase):
             root = Path(raw)
             source = root / "AGENTS.md"
             source.write_text("rules\n", encoding="utf-8", newline="\n")
-            context = root / "knowledge-context.json"
-            context.write_text(json.dumps({"decisions": [{"decision": "accepted", "satisfies": ["repository-rules"], "candidate": {"path": "AGENTS.md", "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}}]}), encoding="utf-8", newline="\n")
-            with mock.patch.object(bootstrap, "validate_context", return_value=None):
-                frozen = bootstrap.freeze_knowledge_context(root, "knowledge-context.json", [{"artifact": "AGENTS.md", "sha256": bootstrap.file_hash(source)}])
-            self.assertEqual([{"path": "AGENTS.md", "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(), "satisfies": ["repository-rules"]}], frozen["accepted"])
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            resource = root / "README.md"
+            resource.write_text("support\n", encoding="utf-8", newline="\n")
+            resource_digest = hashlib.sha256(resource.read_bytes()).hexdigest()
+            context = root / "knowledge-context.v1.json"
+            document = {
+                "locator_request": {"snapshot": {}, "policy_revision": "policy-v2"},
+                "locator_result": {"source_snapshot_id": "sha256:" + "a" * 64, "candidates": [{"path": "AGENTS.md", "source_sha256": digest, "read_set": [{"path": "AGENTS.md", "source_sha256": digest}, {"path": "README.md", "source_sha256": resource_digest}]}]},
+                "request_sha256": "sha256:" + "b" * 64,
+                "result_sha256": "sha256:" + "c" * 64,
+                "decisions": [{"decision": "accepted", "satisfies": ["repository-rules"], "candidate": {"path": "AGENTS.md", "source_sha256": digest}}],
+            }
+            context.write_text(json.dumps(document), encoding="utf-8", newline="\n")
+            context_hash = bootstrap.file_hash(context)
+            freeze = root / "knowledge-context.freeze.v1.json"
+            receipt = {
+                "schema_version": "jimuyun.vdd-knowledge-freeze.v1", "context_path": context.name,
+                "context_sha256": context_hash, "canonical_context_sha256": "sha256:canonical",
+                "request_sha256": document["request_sha256"], "result_sha256": document["result_sha256"],
+                "snapshot": {}, "source_snapshot_id": document["locator_result"]["source_snapshot_id"],
+                "policy_revision": "policy-v2", "accepted": [{"path": "AGENTS.md", "source_sha256": digest, "satisfies": ["repository-rules"]}], "authorizes": [],
+            }
+            freeze.write_text(json.dumps(receipt), encoding="utf-8", newline="\n")
+            validator = SimpleNamespace(
+                validate_context=lambda *_args, **_kwargs: None,
+                validate_worktree_sources=lambda *_args, **_kwargs: None,
+                canonical_hash=lambda _value: "sha256:canonical",
+            )
+            artifacts = [
+                {"artifact": "AGENTS.md", "sha256": bootstrap.file_hash(source)},
+                {"artifact": "README.md", "sha256": bootstrap.file_hash(resource)},
+                {"artifact": context.name, "sha256": context_hash},
+                {"artifact": freeze.name, "sha256": bootstrap.file_hash(freeze)},
+            ]
+            with mock.patch.object(bootstrap, "_bound_knowledge_validator", return_value=validator):
+                frozen = bootstrap.freeze_knowledge_context(root, context.name, artifacts)
+            self.assertEqual([{"path": "AGENTS.md", "source_sha256": digest, "satisfies": ["repository-rules"], "readSet": [{"path": "AGENTS.md", "source_sha256": digest}, {"path": "README.md", "source_sha256": resource_digest}]}], frozen["accepted"])
 
     def test_prepare_rejects_context_that_fails_shared_provenance_validation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            context = root / "knowledge-context.json"
+            context = root / "knowledge-context.v1.json"
             context.write_text(json.dumps({"decisions": []}), encoding="utf-8", newline="\n")
-            with mock.patch.object(bootstrap, "validate_context", return_value="catalog_stale"):
+            freeze = root / "knowledge-context.freeze.v1.json"
+            freeze.write_text("{}\n", encoding="utf-8")
+            validator = SimpleNamespace(validate_context=lambda *_args, **_kwargs: "catalog_stale")
+            with mock.patch.object(bootstrap, "_bound_knowledge_validator", return_value=validator):
                 with self.assertRaisesRegex(bootstrap.BootstrapError, "catalog_stale"):
-                    bootstrap.freeze_knowledge_context(root, "knowledge-context.json", [])
+                    bootstrap.freeze_knowledge_context(root, context.name, [])
 
     def test_knowledge_context_augments_but_never_replaces_profile_mapping(self) -> None:
         mapped = {"repository-rules": ["README.md"], "tests": ["tests/test_a.py"]}
-        context = {"accepted": [{"path": "AGENTS.md", "source_sha256": "a" * 64, "satisfies": ["repository-rules", "unknown"]}]}
+        context = {"accepted": [{"path": "AGENTS.md", "source_sha256": "a" * 64, "satisfies": ["repository-rules", "unknown"], "readSet": [{"path": "AGENTS.md"}]}]}
         actual = bootstrap.augment_context_class_artifacts(mapped, context, ["repository-rules", "tests"])
         self.assertEqual(["AGENTS.md", "README.md"], actual["repository-rules"])
         self.assertEqual(["tests/test_a.py"], actual["tests"])

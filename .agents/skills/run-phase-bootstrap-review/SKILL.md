@@ -91,6 +91,11 @@ source hash, then records the context hash and selected candidates in the
 frozen manifest. Bootstrap does not create a new Locator query or promote a
 candidate on its own.
 
+Prepare also requires the adjacent VDD freeze receipt, verifies both files from
+the same bytes collected into scope, and binds every path in each accepted
+candidate's complete Locator read-set into the Artifact View and mapped context
+classes. The shared validator must byte-match current main.
+
 The shared context validator also verifies the current publication pointer,
 immutable generation manifest, Catalog/policy/projection bindings, and current
 main source hashes. A missing, stale, or tampered publication blocks prepare.

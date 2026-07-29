@@ -49,8 +49,6 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
 
-from knowledge_context_validation import validate_context  # noqa: E402
-
 PLAN_ROOT = SKILL_ROOT
 PROFILE_PATH = SKILL_ROOT / "references" / "review-profiles.v1.json"
 AUTHORITY_ROOT_PATH = SKILL_ROOT / "references" / "authority-roots.v1.json"
@@ -1618,17 +1616,46 @@ def prepared_artifact_set(
     return sorted(selected)
 
 
+def _bound_knowledge_validator(repository_root: Path):
+    module_path = repository_root / "scripts" / "python" / "knowledge_context_validation.py"
+    for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py"):
+        completed = subprocess.run(
+            ["git", "-C", str(repository_root), "show", f"refs/heads/main:{relative}"],
+            capture_output=True,
+            check=False,
+        )
+        if completed.returncode or (repository_root / relative).read_bytes() != completed.stdout:
+            raise BootstrapError("Knowledge context validator is not bound to current main")
+    spec = importlib.util.spec_from_file_location("bootstrap_knowledge_context_validation", module_path)
+    if spec is None or spec.loader is None:
+        raise BootstrapError("Knowledge context validator is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def freeze_knowledge_context(repository_root: Path, raw_path: str | None, artifacts: list[dict[str, Any]]) -> dict[str, Any] | None:
     if raw_path is None:
         return None
     path = ensure_within(repository_root / raw_path, repository_root, "Knowledge context")
-    document = read_json(path)
-    validation_error = validate_context(
+    if path.name != "knowledge-context.v1.json":
+        raise BootstrapError("Knowledge context must be the VDD-owned knowledge-context.v1.json")
+    freeze_path = path.with_name("knowledge-context.freeze.v1.json")
+    try:
+        context_bytes = path.read_bytes()
+        freeze_bytes = freeze_path.read_bytes()
+        document = json.loads(context_bytes.decode("utf-8"))
+        freeze = json.loads(freeze_bytes.decode("utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise BootstrapError("Knowledge context or VDD freeze receipt is unreadable") from error
+    validator = _bound_knowledge_validator(repository_root)
+    validation_error = validator.validate_context(
         document,
         repository_root=repository_root,
         verify_catalog=True,
-        verify_sources=False,
+        verify_sources=True,
         expected_consumer="vdd",
+        require_preflight=True,
     )
     if validation_error:
         raise BootstrapError(f"Knowledge context is not VDD/Locator-bound: {validation_error}")
@@ -1637,19 +1664,71 @@ def freeze_knowledge_context(repository_root: Path, raw_path: str | None, artifa
         raise BootstrapError("Knowledge context decisions are invalid")
     selected = select_context(required_classes=[], decisions=decisions)
     known = {item["artifact"]: item["sha256"] for item in artifacts}
-    accepted: list[dict[str, str]] = []
+    context_relative = path.relative_to(repository_root.resolve()).as_posix()
+    freeze_relative = freeze_path.relative_to(repository_root.resolve()).as_posix()
+    context_hash = HASH_PREFIX + hashlib.sha256(context_bytes).hexdigest()
+    freeze_hash = HASH_PREFIX + hashlib.sha256(freeze_bytes).hexdigest()
+    expected_accepted = [
+        {
+            "path": decision["candidate"]["path"],
+            "source_sha256": decision["candidate"]["source_sha256"],
+            "satisfies": sorted(decision["satisfies"]),
+        }
+        for decision in decisions
+        if isinstance(decision, dict) and decision.get("decision") == "accepted"
+    ]
+    if (
+        known.get(context_relative) != context_hash
+        or known.get(freeze_relative) != freeze_hash
+        or freeze.get("schema_version") != "jimuyun.vdd-knowledge-freeze.v1"
+        or freeze.get("context_path") != path.name
+        or freeze.get("context_sha256") != context_hash
+        or freeze.get("canonical_context_sha256") != validator.canonical_hash(document)
+        or freeze.get("request_sha256") != document.get("request_sha256")
+        or freeze.get("result_sha256") != document.get("result_sha256")
+        or freeze.get("snapshot") != document["locator_request"].get("snapshot")
+        or freeze.get("source_snapshot_id") != document["locator_result"].get("source_snapshot_id")
+        or freeze.get("policy_revision") != document["locator_request"].get("policy_revision")
+        or freeze.get("accepted") != expected_accepted
+        or freeze.get("authorizes") != []
+    ):
+        raise BootstrapError("Knowledge context does not match its VDD freeze receipt")
+    worktree_error = validator.validate_worktree_sources(document, repository_root)
+    if worktree_error:
+        raise BootstrapError(f"Knowledge context worktree sources are stale: {worktree_error}")
+    candidates = {
+        (candidate.get("path"), candidate.get("source_sha256")): candidate
+        for candidate in document["locator_result"].get("candidates", [])
+        if isinstance(candidate, dict)
+    }
+    accepted: list[dict[str, Any]] = []
     for decision in selected["accepted"]:
         candidate = decision.get("candidate", {})
         candidate_path = candidate.get("path") if isinstance(candidate, dict) else None
         candidate_hash = candidate.get("source_sha256") if isinstance(candidate, dict) else None
-        if not isinstance(candidate_path, str) or known.get(candidate_path) != HASH_PREFIX + str(candidate_hash):
-            raise BootstrapError("Accepted knowledge candidate is not hash-bound in review scope")
+        locator_candidate = candidates.get((candidate_path, candidate_hash), {})
+        read_set = locator_candidate.get("read_set") or [candidate]
+        normalized_read_set: list[dict[str, str]] = []
+        for item in read_set:
+            read_path = item.get("path") if isinstance(item, dict) else None
+            read_hash = item.get("source_sha256") if isinstance(item, dict) else None
+            if not isinstance(read_path, str) or known.get(read_path) != HASH_PREFIX + str(read_hash):
+                raise BootstrapError("Accepted knowledge read-set is not hash-bound in review scope")
+            normalized_read_set.append({"path": read_path, "source_sha256": read_hash})
         accepted.append({
             "path": candidate_path,
             "source_sha256": candidate_hash,
             "satisfies": list(decision["satisfies"]),
+            "readSet": normalized_read_set,
         })
-    return {"path": path.relative_to(repository_root.resolve()).as_posix(), "sha256": file_hash(path), "accepted": accepted, "rejectedCount": len(selected["rejected"])}
+    return {
+        "path": context_relative,
+        "sha256": context_hash,
+        "freezePath": freeze_relative,
+        "freezeSha256": freeze_hash,
+        "accepted": accepted,
+        "rejectedCount": len(selected["rejected"]),
+    }
 
 
 def augment_context_class_artifacts(
@@ -1664,8 +1743,10 @@ def augment_context_class_artifacts(
     required = set(required_classes)
     for candidate in knowledge_context["accepted"]:
         for context_class in candidate["satisfies"]:
-            if context_class in required and candidate["path"] not in augmented[context_class]:
-                augmented[context_class].append(candidate["path"])
+            if context_class in required:
+                for source in candidate["readSet"]:
+                    if source["path"] not in augmented[context_class]:
+                        augmented[context_class].append(source["path"])
     return {name: sorted(paths) for name, paths in augmented.items()}
 
 
@@ -1791,6 +1872,9 @@ def command_prepare(args: argparse.Namespace) -> int:
         # Reviewers receive the bound request/result/decision document itself,
         # not only the selected-candidate summary in review-input.json.
         scope_inputs.append(args.knowledge_context)
+        context_candidate = ensure_within(repository_root / args.knowledge_context, repository_root, "Knowledge context")
+        freeze_candidate = context_candidate.with_name("knowledge-context.freeze.v1.json")
+        scope_inputs.append(freeze_candidate.relative_to(repository_root).as_posix())
     review_scope_policy = build_review_scope_policy(
         repository_root,
         list(args.scope),
