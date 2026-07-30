@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:9283f9a540b6b3e649bef3954d05c5b1aa2ea8f88f6d61b6ea0c7e4a6ac3b818",
-  "canonical_context_sha256": "sha256:ef7db35f8e36c4f622b9e25b45086633bfae1ebecbe52e26e539181d4b1f2c59",
-  "request_sha256": "sha256:d26be547ebae84c4a11a5a2e2bf7df695e77c15dfd60b036d9015e0980ccfb1f",
-  "result_sha256": "sha256:9d11c127d27d4e08eb5f653149e5d995a33b0d269dd2f1312c012967f815f385",
+  "context_sha256": "sha256:af9feac1c055de3ff7efbda578df72d5fef14994e49a40003c4b24431e3357d2",
+  "canonical_context_sha256": "sha256:037e48b46985a03ac4f9acedc9c8595a74f53f572268217b083f409379423ca4",
+  "request_sha256": "sha256:c762a2d60bbb1fec79c6fffe4698305ccefa0c74e0726a0507da549f9dbb1a3d",
+  "result_sha256": "sha256:3eba1d5f9efcad77ae18d8ae231bcd353c48627e5541863f0f99edb808ac13da",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "00acf85e1d22341bd51ca2042dfcdc5af6a1dbdb"
+    "commit": "5d257437d8a5947e73d5e9acff3e5413673ee9a2"
   },
-  "source_snapshot_id": "sha256:27d938d3ba86f68d451ce277627984dda39c168afbe672f1311bae78e3591f7c",
+  "source_snapshot_id": "sha256:476c32d62e987d2416229fb576d7b9d2453dcf444f1803b2b21c5d5cc64317eb",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -22,8 +22,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:f6209dab297349bbe73c87d693dc1e5ecfa268c50a9f062878d6b44acd262819",
-    "freeze_receipt_path": "knowledge-context.freeze.history/f6209dab297349bbe73c87d693dc1e5ecfa268c50a9f062878d6b44acd262819.v1.json",
-    "reason": "round two launch requires current published main context"
+    "context_sha256": "sha256:9283f9a540b6b3e649bef3954d05c5b1aa2ea8f88f6d61b6ea0c7e4a6ac3b818",
+    "freeze_receipt_path": "knowledge-context.freeze.history/9283f9a540b6b3e649bef3954d05c5b1aa2ea8f88f6d61b6ea0c7e4a6ac3b818.v1.json",
+    "reason": "published repair-evidence exclusion establishes the stable round two context"
   }
 }

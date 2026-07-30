@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "refactor-acceptance.successor-round.v1",
+  "round": 4,
+  "status": "implemented",
+  "lineage": "successor-policy-decision.v1.json",
+  "predecessor": "logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3-r3",
+  "findingIds": ["BSR-071FB4BC2D315098", "BSR-FB741B3B3F492F55"],
+  "slices": [
+    {
+      "id": "SUC4-bootstrap-import-artifact-validation",
+      "findings": ["BSR-071FB4BC2D315098", "BSR-FB741B3B3F492F55"],
+      "writeRoots": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py"
+      ],
+      "commands": {"red": "successor-policy-suite", "green": "successor-policy-suite", "refactor": "successor-policy-suite"}
+    }
+  ],
+  "terminalValidation": "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package",
+  "authorizes": []
+}

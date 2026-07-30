@@ -1,0 +1,31 @@
+{
+  "actorId": "repository-operator",
+  "authorityRevision": "ria-reacceptance-r3-successor-r4-authority-20260730",
+  "authoritySourceRef": {
+    "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/successor/round-4/successor-policy-authority.v1.json",
+    "sha256": "sha256:6447bcf80a2530830ce816b14f4da3c457b1381f02b6be45d87c306ed5d47f37"
+  },
+  "authorizes": [],
+  "consumer": "repository-maintenance-tdd-adapter-plan-reentry",
+  "decisionId": "ria-r3-r4-decision-20260730",
+  "doesNotAuthorize": [
+    "plan-ready",
+    "slice-ready",
+    "bootstrap-review",
+    "implementation-accepted",
+    "protected-handoff",
+    "release-ready"
+  ],
+  "eventId": "ria-r3-r4-event-20260730",
+  "expiresAt": "2026-08-29T02:20:17.208942Z",
+  "issuedAt": "2026-07-30T02:20:18.208942Z",
+  "policyRevision": "sha256:cf2e6630699af9637bcd74c742d11103100ce189acda1c869d9c52768fade14e",
+  "predecessorEventRef": null,
+  "revocationEventRef": null,
+  "schemaVersion": "bootstrap-successor-policy-authorization.v1",
+  "scope": "plan-reentry",
+  "status": "active",
+  "successorChangeId": "ria-reacceptance-r3-successor-r4-20260730",
+  "supersededChangeId": "ria-reacceptance-r3-20260730",
+  "supersededReviewId": "ria-reacceptance-r3-r3-20260730"
+}

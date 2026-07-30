@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Phase Acceptance Candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "phaseId", "baseMatrixHash", "codeReviewPolicyBindingHash", "status", "authorizes"],
+  "properties": {"schemaVersion": {"const": "phase-acceptance-candidate.v1"}, "status": {"enum": ["passed", "failed", "blocked", "incomplete", "stale"]}, "authorizes": {"const": []}}
+}

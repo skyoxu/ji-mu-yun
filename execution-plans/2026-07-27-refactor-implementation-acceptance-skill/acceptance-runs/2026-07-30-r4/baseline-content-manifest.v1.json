@@ -1,0 +1,136 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "roles": [
+        "consumer"
+      ],
+      "sha256": "sha256:ef538864db4ea1078848db13d4b7c90ae679276cbdb95bc16b782d01b9974b2b"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "roles": [
+        "consumer"
+      ],
+      "sha256": "sha256:7dc81b5d86763959fefaa4057c24913384a817d6a54ddeb4004d46bdbb8c0acc"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "roles": [
+        "consumer"
+      ],
+      "sha256": "sha256:a35dccedfdf9fb548844f813bce924c8987889cf33dece8000e1a29bebd56e85"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "roles": [
+        "consumer"
+      ],
+      "sha256": "sha256:afbe840b25c016c14a3be98178b30a21ef668fb328b98977ad6d693fcfa36623"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "roles": [
+        "consumer"
+      ],
+      "sha256": "sha256:148ed39e6b451bc57fa0c46d16db02160c256fa6ce93bf7d3c50b3d67cdca3b7"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:8d41186a2cd9b81b76af3ed535c80ccbd0611b737da1a2435efc29b86e2359e3"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:0f4639c2fdc0e4ab6b8342f517f2b96a431387ba6eb1d98985da8872361ce687"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:41e73db3a575643362e9d0d1510418f9b2fe2f64d1a9f558d37262fadd3288bf"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/95-implementation-evolution-and-completion-report.md",
+      "roles": [
+        "evidence"
+      ],
+      "sha256": "sha256:4d6b8b1c9858cc5fabdf80b85b63f4cfc39e2cb0971922028e990aed40edd0ca"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:393fd31473f35b75424951a064da3f2a151174f53225aa98c196ffd2c61ac21c"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:9ec8010e1e1339f03f25279a3e9a5854304e33edae8895bf010c8fb6527e5c1e"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/resume-state.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:33b7649072943b512bd7e2265eff86d8253f18bde99bd8578614d0e00398736a"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/bootstrap-preflight-commands.v1.json",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:9f501362a08981cbceff0a818fad0891b25e41a3397a88b41b05fe71c32442da"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:c4c7f1f57c23e044b8d7fefe110d5a2bbe376d62040f32e9d0c4d5c1e5f9ef94"
+    },
+    {
+      "inclusion_reason": "Scoped immutable pre-implementation baseline.",
+      "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:ab86fc38cd5b425d30b09521d0849f1278f2e839b7530e9731ed4e2acfdf1ab5"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

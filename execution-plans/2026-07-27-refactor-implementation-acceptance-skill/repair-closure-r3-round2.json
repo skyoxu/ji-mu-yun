@@ -27,9 +27,9 @@
       "evidence": [{"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py", "sha256": "sha256:a9c1699b9e955d556a451ffbabe6f4515498defe87a17808cbe11c7f8e404b27"}, {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py", "sha256": "sha256:ae866c67b58e8743ad6cca2cfb8f7af193c97ae41d0c0457322922ce91939bea"}]
     }
   ],
-  "currentBindings": {"candidateHash": "sha256:3d7989fffb8a4a234e56a88ce48b3a12f89d9979ea51c71a7811b4597cfb457b", "sourceHash": "sha256:914c79210a276ee4c55d3a98000d725932364c889ada6187ea5a8514e690a3c2", "validatorHash": "sha256:1171c74a84a55f5d109f3aeb5d4ee99163acae8a3efc08bc0a56209ba62fa5de"},
-  "gitIndexHash": "sha256:a20fd665ba8da0fc3910e1d58f1192c4969ad862563370e8311075255f14ccf8",
+  "currentBindings": {"candidateHash": "sha256:17b9e68a8bb49f03c16d7be6d4d9c510068479bcb8e2f9673ceae0a90ed11ca7", "sourceHash": "sha256:f8fee915f61df9b248c2cfaf5d486548fd575f5a393440d862f0c0b2f4452667", "validatorHash": "sha256:1171c74a84a55f5d109f3aeb5d4ee99163acae8a3efc08bc0a56209ba62fa5de"},
+  "gitIndexHash": "sha256:e8214f108e5128e6174c2546ed9749c079356965910b7c8a5f91b5cda0440783",
   "writeSetHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-  "executionReadSetHash": "sha256:5e5285899281b7486e735274fa0319550945b14b1cbc42544c87ad0f06a196e4",
-  "dependencyClosureHash": "sha256:684edcf42957f166389542fc63c886d6791bd3feb5c71c2906d67b40c98ad8bb"
+  "executionReadSetHash": "sha256:0d6c0f0ac21633a5c90fd60fad016f456b92003f92589307c4a6973041f7a6b9",
+  "dependencyClosureHash": "sha256:6f309514420e452ea45b4c976b313d2d4219d8256e6a0de0c22229911b872fba"
 }

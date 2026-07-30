@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Typed External Or Protected Gate Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gateId", "gateClass", "resultPath", "resultHash", "schemaPath", "schemaHash", "authorityRef", "authorizationScopes", "status"],
+  "properties": {
+    "gateClass": {"enum": ["external", "protected"]},
+    "status": {"enum": ["passed", "failed", "blocked", "incomplete", "stale"]},
+    "authorizationScopes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}
+  }
+}

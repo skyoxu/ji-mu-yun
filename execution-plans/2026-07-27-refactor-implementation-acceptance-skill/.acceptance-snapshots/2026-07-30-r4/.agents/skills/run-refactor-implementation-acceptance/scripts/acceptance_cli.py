@@ -37,7 +37,7 @@ from bootstrap_integration import (
     bind_capabilities,
     build_attestation_scope,
     build_minimal_review_scope,
-    load_verified_bootstrap_import,
+    validate_import_envelope,
     validate_finding_mapping,
     validate_mapping_approval,
     project_bootstrap_execution_state,
@@ -347,16 +347,10 @@ def import_bootstrap_launch_authorization_command(request_path: str, output_path
 
 def import_bootstrap_command(request_path: str, output_path: str) -> dict:
     request = _read_json(request_path)
-    required = {"repositoryRoot", "bootstrapRunDir", "binding", "scope"}
-    if not isinstance(request, dict) or set(request) != required:
+    if not isinstance(request, dict) or set(request) != {"envelope", "expectedHashes"}:
         raise InputError("bootstrap import request fields are invalid")
-    try:
-        result = load_verified_bootstrap_import(
-            Path(request["repositoryRoot"]), request["bootstrapRunDir"], request["binding"], request["scope"],
-        )
-    except (TypeError, ValueError) as exc:
-        raise InputError(str(exc)) from exc
-    return _publish_new_json(output_path, {"schemaVersion": "bootstrap-import-envelope.v2", **result, "authorizes": []})
+    validate_import_envelope(request["envelope"], request["expectedHashes"])
+    return _publish_new_json(output_path, request["envelope"])
 
 
 def map_findings_command(request_path: str, output_path: str) -> dict:

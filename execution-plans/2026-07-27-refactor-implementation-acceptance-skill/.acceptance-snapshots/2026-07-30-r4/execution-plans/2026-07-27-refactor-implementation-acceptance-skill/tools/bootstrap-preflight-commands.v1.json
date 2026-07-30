@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "refactor-acceptance.bootstrap-preflight-commands.v1",
+  "commands": [
+    {
+      "id": "scope-structure-and-links",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_plan.py"}],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 60
+    },
+    {
+      "id": "schema-and-fixture-parse",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/tests/test_validate_plan.py"}],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 60
+    },
+    {
+      "id": "plan-composite-validator",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_plan.py"}],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 60
+    }
+  ]
+}

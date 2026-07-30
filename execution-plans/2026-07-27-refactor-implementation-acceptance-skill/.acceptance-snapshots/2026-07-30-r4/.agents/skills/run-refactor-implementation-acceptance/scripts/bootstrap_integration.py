@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import json
 import re
-import sys
 from datetime import datetime, timezone
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 from typing import Any
 
 
@@ -200,38 +198,6 @@ def validate_import_envelope(envelope: Any, expected_hashes: Any) -> None:
         raise BootstrapBindingError("bootstrap import envelope is invalid")
     if any(envelope[key] != expected_hashes[key] for key in required_hashes):
         raise BootstrapBindingError("bootstrap import envelope hash is stale")
-
-
-def load_verified_bootstrap_import(
-    repository_root: Path, bootstrap_run_dir: str, binding: Any, scope: Any,
-) -> dict[str, Any]:
-    """Load and revalidate Bootstrap-owned evidence before consumer import."""
-    root = repository_root.resolve()
-    run_dir = (root / bootstrap_run_dir).resolve()
-    try:
-        run_dir.relative_to(root)
-    except ValueError as exc:
-        raise BootstrapBindingError("bootstrap run directory escapes repository root") from exc
-    module_path = root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
-    if str(module_path.parent) not in sys.path:
-        sys.path.insert(0, str(module_path.parent))
-    spec = importlib.util.spec_from_file_location("ria_bootstrap_review", module_path)
-    if spec is None or spec.loader is None:
-        raise BootstrapBindingError("Bootstrap control plane is unavailable")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    try:
-        manifest = module.read_json(run_dir / "review-input.json")
-        envelope = module.validate_finalized_run_evidence(run_dir, manifest, root)
-        bundle = module.read_json(run_dir / "reviewer-outputs" / "acceptance_auditor.json")
-    except Exception as exc:
-        raise BootstrapBindingError("Bootstrap finalized evidence is missing or invalid") from exc
-    if envelope.get("finalStatus") != "clean":
-        raise BootstrapBindingError("Bootstrap run is not clean")
-    if not isinstance(bundle, dict) or not isinstance(bundle.get("inventoryAttestation"), dict):
-        raise BootstrapBindingError("Bootstrap Acceptance Auditor bundle is invalid")
-    validate_inventory_attestation(bundle["inventoryAttestation"], binding, scope)
-    return {"envelope": envelope, "attestation": bundle["inventoryAttestation"]}
 
 
 def project_bootstrap_execution_state(

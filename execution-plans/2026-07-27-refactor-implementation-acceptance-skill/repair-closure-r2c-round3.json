@@ -1,0 +1,95 @@
+{
+  "currentBindings": {
+    "candidateHash": "sha256:cfb76a8e69ad9e325a1822846af8bff0647ada55196b7110e1c40d3c54489662",
+    "sourceHash": "sha256:c0a852602219828a3b81c071a6d7c7190b29dd7f78b9b861754d9351749041d6",
+    "validatorHash": "sha256:6bca041b572a19c816c57d79955d9da634a31de9a5e68e609f7eae7c0188dd5d"
+  },
+  "dependencyClosureHash": "sha256:5b129fa3215c18c514812b6762ed37fe7eb5d02897981a0706ce18562434cb86",
+  "executionReadSetHash": "sha256:f444a06468b89df5cb1189899a923af4fd8de5e122ef106a765196905f2e53fa",
+  "findingIds": [
+    "BSR-2C3D096DF0D81B28",
+    "BSR-3CF81EC7C3B19C70",
+    "BSR-96386107FB6EDBBF"
+  ],
+  "gitIndexHash": "sha256:e8214f108e5128e6174c2546ed9749c079356965910b7c8a5f91b5cda0440783",
+  "items": [
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-30-r4/candidate-content-manifest.v1.json",
+          "sha256": "sha256:dd7e6db615f5c976ef0b888d40f37859b5689c2df4e82e8324fb09d20daa39a9"
+        },
+        {
+          "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-30-r4/acceptance-run-input.v1.json",
+          "sha256": "sha256:242a5b410c61b4887d8c3a478a8fc112ff6271982cb2c80ce10adb5e99f9ba56"
+        }
+      ],
+      "findingId": "BSR-2C3D096DF0D81B28",
+      "fixRefs": [
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-30-r4/candidate-content-manifest.v1.json",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/2026-07-30-r4/acceptance-run-input.v1.json"
+      ],
+      "proofFamily": "regression",
+      "reason": "A new r4 candidate manifest and contained snapshot bind the current implementation bytes and a fresh non-authorizing run input.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py validate-package",
+        "py -3 -B execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py"
+      ]
+    },
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+          "sha256": "sha256:720e2e4b74420ac9b621e224f849c763832d531befbc137b5f757ec4b18bc68e"
+        },
+        {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+          "sha256": "sha256:75b17b4b4cf20753b3581aee52022d2536b7fe296efcd395a1b8969aeb62fbd8"
+        }
+      ],
+      "findingId": "BSR-3CF81EC7C3B19C70",
+      "fixRefs": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py"
+      ],
+      "proofFamily": "regression",
+      "reason": "The plan-owned v1 registry now resolves through a strict projected descriptor with a content hash and explicit Windows runtime environment allowlist.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B .agents/skills/run-refactor-implementation-acceptance/tests/test_control.py"
+      ]
+    },
+    {
+      "disposition": "fixed",
+      "evidence": [
+        {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+          "sha256": "sha256:720e2e4b74420ac9b621e224f849c763832d531befbc137b5f757ec4b18bc68e"
+        },
+        {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+          "sha256": "sha256:75b17b4b4cf20753b3581aee52022d2536b7fe296efcd395a1b8969aeb62fbd8"
+        }
+      ],
+      "findingId": "BSR-96386107FB6EDBBF",
+      "fixRefs": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py"
+      ],
+      "proofFamily": "regression",
+      "reason": "Persisted controlled-action failures write a terminal lifecycle event, release the transient claim, and retry with a new immutable attempt identity.",
+      "risk": "normal",
+      "validationCommands": [
+        "py -3 -B .agents/skills/run-refactor-implementation-acceptance/tests/test_control.py"
+      ]
+    }
+  ],
+  "predecessorInputHash": "sha256:3292c52f3bfc28271cae805c6bc156b6037804c1c32a1005d39a0f4a085052b2",
+  "predecessorResultHash": "sha256:355d1495e36c75eb182c0d1f4a838367d61c86d8386229701a4907a39073506d",
+  "predecessorRun": "logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3-r2c",
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "writeSetHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+}

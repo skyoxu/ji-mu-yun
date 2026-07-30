@@ -54,7 +54,7 @@ class PackageTests(unittest.TestCase):
             "verifierHash": "a", "p2DispositionsHash": "b",
         }.items()}
         requests = {
-            "import-bootstrap": {"repositoryRoot": ".", "bootstrapRunDir": "missing-run", "binding": {}, "scope": {}},
+            "import-bootstrap": {"envelope": {"schemaVersion": "bootstrap-import-envelope.v1", "controlPlaneRevision": "bootstrap-control-plane.v2", **hashes, "authorizes": []}, "expectedHashes": hashes},
             "map-findings": {"mapping": {"schemaVersion": "bootstrap-finding-acceptance-map.v1", "findingId": "F-1", "findingHash": "sha256:" + "a" * 64, "mappingKind": "check", "checkId": "RA-SKILL-001", "authorizes": []}, "liveCheckIds": ["RA-SKILL-001"], "tombstonedCheckIds": []},
             "import-mapping-approval": {"approval": {"schemaVersion": "bootstrap-finding-mapping-approval.v1", "approverRole": "acceptance_owner", "identityEvidenceHash": "sha256:" + "a" * 64, "expiresAtUtc": "2099-01-01T00:00:00Z", "findingHash": "sha256:" + "b" * 64, "mappingHash": "sha256:" + "c" * 64, "matrixHash": "sha256:" + "d" * 64, "lineageHash": "sha256:" + "e" * 64, "importEnvelopeHash": "sha256:" + "f" * 64, "authorizes": []}, "requiredApproverRole": "acceptance_owner", "findingHash": "sha256:" + "b" * 64, "matrixHash": "sha256:" + "d" * 64, "lineageHash": "sha256:" + "e" * 64, "importEnvelopeHash": "sha256:" + "f" * 64},
         }
@@ -64,12 +64,8 @@ class PackageTests(unittest.TestCase):
                 request_path, output_path = root / f"{command}.request.json", root / f"{command}.out.json"
                 request_path.write_text(json.dumps(request), encoding="utf-8")
                 result = subprocess.run([sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"), command, "--request", str(request_path), "--out", str(output_path)], capture_output=True, text=True, encoding="utf-8", check=False)
-                if command == "import-bootstrap":
-                    self.assertNotEqual(0, result.returncode)
-                    self.assertFalse(output_path.exists())
-                else:
-                    self.assertEqual(0, result.returncode, result.stderr)
-                    self.assertTrue(output_path.is_file(), command)
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertTrue(output_path.is_file(), command)
 
     def test_registered_bootstrap_import_command_rejects_missing_request(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

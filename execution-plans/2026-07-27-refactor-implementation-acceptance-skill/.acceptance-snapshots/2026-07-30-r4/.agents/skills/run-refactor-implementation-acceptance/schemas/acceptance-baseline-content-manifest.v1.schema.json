@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Acceptance Baseline Content Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "coverageGaps", "authorizes", "files"],
+  "properties": {
+    "schemaVersion": {"const": "acceptance-baseline-content-manifest.v1"},
+    "status": {"enum": ["complete", "partial", "unavailable"]},
+    "coverageGaps": {"type": "array"},
+    "authorizes": {"const": []},
+    "files": {"type": "array", "items": {"type": "object", "required": ["path", "sha256", "roles", "inclusion_reason"]}}
+  }
+}

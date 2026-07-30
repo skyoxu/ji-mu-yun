@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Code Review Policy Pack",
+  "type": "object",
+  "required": ["schemaVersion", "policyId", "policyRevision", "targetDomain", "authorityRefs", "checks"],
+  "properties": {"schemaVersion": {"const": "code-review-policy-pack.v1"}, "policyId": {"const": "phase-service-code-review"}, "targetDomain": {"const": "phase_service"}}
+}
