@@ -3,7 +3,7 @@
   "profiles": {
     "bootstrap-upstream-plan": {
       "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
-      "policyRevision": "sha256:d4077a8c91b9b271ff3607548b3575d1616d14dc3c10733849856959ee6ebc0a",
+      "policyRevision": "sha256:5b6aa916dfd5ab0cf9e3b774beef5b5854e03bebca399744aa28222e7591c928",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -94,7 +94,15 @@
         "defaultFullReviewRoundLimit": 2,
         "hardFullReviewRoundLimit": 3,
         "p2OnlyTriggersFullReview": false,
-        "onHardLimit": "manual_pause"
+        "onHardLimit": "manual_pause",
+        "roundIdentity": "lineage_family",
+        "successorResetsRoundBudget": false,
+        "roundThreeEntryReasons": [
+          "novel_p0_p1",
+          "authority_context_graph_changed",
+          "high_risk_boundary_changed"
+        ],
+        "repairReviewScope": "repair_delta_closure"
       },
       "semanticReviewPolicy": {
         "authority": "bootstrap",
@@ -142,7 +150,7 @@
     },
     "bootstrap-implementation-conformance": {
       "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
-      "policyRevision": "sha256:cf2e6630699af9637bcd74c742d11103100ce189acda1c869d9c52768fade14e",
+      "policyRevision": "sha256:958cdee6a99f285dc9a804e088d2d8731e26e7d162ab8789ae8fe5e01bc5a1d9",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -243,7 +251,15 @@
         "defaultFullReviewRoundLimit": 2,
         "hardFullReviewRoundLimit": 3,
         "p2OnlyTriggersFullReview": false,
-        "onHardLimit": "manual_pause"
+        "onHardLimit": "manual_pause",
+        "roundIdentity": "lineage_family",
+        "successorResetsRoundBudget": false,
+        "roundThreeEntryReasons": [
+          "novel_p0_p1",
+          "authority_context_graph_changed",
+          "high_risk_boundary_changed"
+        ],
+        "repairReviewScope": "repair_delta_closure"
       },
       "semanticReviewPolicy": {
         "authority": "bootstrap",
@@ -291,7 +307,7 @@
     },
     "bootstrap-skill-route": {
       "reviewProfile": "review-policy://bootstrap-skill-route/v1",
-      "policyRevision": "sha256:d33980749bda33705cc8ca7dacdf48b2fe4c13184451fa6918bdfc7f4c57c957",
+      "policyRevision": "sha256:f99ba09ae34906fee842ef0594d4e913e5c3f0c8449291b38faaae9136eca168",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -384,7 +400,15 @@
         "defaultFullReviewRoundLimit": 2,
         "hardFullReviewRoundLimit": 3,
         "p2OnlyTriggersFullReview": false,
-        "onHardLimit": "manual_pause"
+        "onHardLimit": "manual_pause",
+        "roundIdentity": "lineage_family",
+        "successorResetsRoundBudget": false,
+        "roundThreeEntryReasons": [
+          "novel_p0_p1",
+          "authority_context_graph_changed",
+          "high_risk_boundary_changed"
+        ],
+        "repairReviewScope": "repair_delta_closure"
       },
       "semanticReviewPolicy": {
         "authority": "bootstrap",
@@ -432,7 +456,7 @@
     },
     "bootstrap-focused-change": {
       "reviewProfile": "review-policy://bootstrap-focused-change/v1",
-      "policyRevision": "sha256:b60c47999586523dd1cdd2b5a490899c4472e37005262efefdbefa5ade811899",
+      "policyRevision": "sha256:bdb8bf81b47107d2ed8a44df8e3f447e055e342b6ea0100e1e7f4ad8407bd729",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -523,7 +547,15 @@
         "defaultFullReviewRoundLimit": 2,
         "hardFullReviewRoundLimit": 3,
         "p2OnlyTriggersFullReview": false,
-        "onHardLimit": "manual_pause"
+        "onHardLimit": "manual_pause",
+        "roundIdentity": "lineage_family",
+        "successorResetsRoundBudget": false,
+        "roundThreeEntryReasons": [
+          "novel_p0_p1",
+          "authority_context_graph_changed",
+          "high_risk_boundary_changed"
+        ],
+        "repairReviewScope": "repair_delta_closure"
       },
       "semanticReviewPolicy": {
         "authority": "bootstrap",

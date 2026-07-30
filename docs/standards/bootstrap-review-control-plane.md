@@ -2,7 +2,7 @@
 
 Status: Accepted
 Language: English
-Authorities: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`, `docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`, and `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`
+Authorities: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`, `docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`, `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`, and `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`
 
 ## Purpose
 
@@ -14,7 +14,7 @@ This standard defines the durable protocol for evidence-gated Bootstrap Review. 
 - Discovery roles do not share sessions, candidates, suspected findings, or a minimum finding quota.
 - Required artifacts and context are read completely. Sampling is prohibited.
 - P0/P1 candidates require an independent verifier that is not a discovery reviewer.
-- A change cycle has a three-full-round hard limit. Changing a review ID does not reset the round.
+- A stable lineage family has a default two-round budget and a three-full-round hard limit. Changing a review ID, `changeId`, or successor directory does not reset the family budget.
 - A final result cannot contain an open accepted P0 or P1.
 - A clean or P2-only finalized predecessor does not trigger another complete semantic review. P2 is disposed in the current run with typed targeted evidence.
 - Every accepted P2 must be fixed, refuted, or explicitly deferred. High-risk P2 cannot be deferred. A deferral requires schema-valid typed owner, command-registry, non-impact, recheck, and process-result documents bound to the current review, input, frozen candidate, policy, authority root, finding, scope, immutable command descriptor, runner identity, append-only process event, stdout/stderr bytes, success exit, and expiry. Expiry or any stale transitive byte blocks automatically. Successful typed closure-process evidence is required when the disposition becomes fixed or refuted, not while it remains deferred. These proof documents always carry `authorizes=[]` and exclude implementation acceptance, protected handoff, release, commit, and done.
@@ -87,6 +87,54 @@ Verifier recovery directories are immutable execution evidence. An open recovery
 
 P2 command results reference both their immutable event sidecar and the shared append-only process log. New results anchor the event's hash rather than the mutable whole-log byte hash; validation replays the complete chain and requires the anchored event exactly once. Later valid appends therefore preserve earlier results. Legacy whole-log hash references remain valid while their exact historical log bytes are still current.
 
+## Lineage Family And Bounded Re-entry
+
+- Every new run declares `lineageFamilyId`; consumers derive and retain it from
+  the original acceptance target. Historical manifests without the field use
+  `changeId` as a read-only compatibility family.
+- Bridge pre-family history only with `adopt-lineage`, explicit historical run
+  paths, and a hash-bound policy document whose status is `Accepted`. Do not
+  rewrite old manifests or infer adoption from directory location.
+- The Git-local Bootstrap run registry is a non-authoritative path index. Every
+  indexed manifest and adoption record must pass current byte-hash and schema
+  validation before it contributes to lineage state. The registry binds the
+  source Git revision; a revision change rebuilds it from repository history,
+  while controller-created same-revision evidence is registered explicitly.
+- A semantic round is consumed when semantic reviewer execution starts. Access
+  probe and transport failures remain attempts inside the same round.
+- Round 1 uses the minimal complete closure. Round 2 uses the repair delta:
+  added, changed, and removed artifacts plus unchanged support artifacts needed
+  for direct consumers, authority, targeted tests, and current validation.
+- Round 3 requires one schema-valid entry reason: `novel_p0_p1`,
+  `authority_context_graph_changed`, or `high_risk_boundary_changed`.
+- A successor for the same acceptance target retains the family. It cannot
+  restart Round 1 or clear `manual_pause`. A genuinely different target needs
+  an explicit supersede or incompatible-scope decision before deriving a new
+  family.
+- `inspect-lineage` reconstructs consumed rounds from run evidence. Its output
+  is hash-bound, non-authorizing, and required by bounded routing even when it
+  reports zero rounds; omission never means a fresh budget. Artifact View,
+  acceptance snapshot, and nested agent-worktree copies are derived evidence,
+  not review-history entries.
+- Implementation-acceptance consumers audit sibling callsites and successful
+  controlled producer/consumer composition before repair re-entry. Present
+  changed paths are content-hash bound and deleted paths use explicit
+  tombstones. Each composition check covers a changed path, uses declared
+  direct consumers, and binds its receipt as a validation reference. Repair
+  paths, inventory matches, composition bindings, registries, receipts, tests,
+  and validation evidence must all belong to the same minimal review closure.
+  After two rounds, a complete repair without a typed Round 3 trigger uses
+  deterministic closure rather than another semantic review.
+- An implementation-conformance repair prepare binds the Acceptance-owned
+  route and replayed repair-completeness projection by current bytes. Their
+  family, consumed round, next round, route kind, and typed Round 3 reason must
+  match the Bootstrap invocation. A generic repair closure alone is not valid
+  implementation-acceptance re-entry evidence.
+- Omitting an unchanged predecessor artifact from a bounded repair scope is not
+  deletion. A predecessor artifact is deleted only when the live path is
+  absent. Its frozen old bytes enter the current Artifact View deleted tree and
+  remain part of formal reviewer coverage and valid finding evidence.
+
 Lifecycle state is split into three dimensions:
 
 - Run execution: prepared, preflight-failed, authorized, layers-running, layers-incomplete, awaiting-verification, finalized, abandoned.
@@ -97,7 +145,7 @@ Lifecycle state is split into three dimensions:
 
 ## Repair Closure
 
-Round 2 and Round 3 require an implementation-contract instance named `repair-closure.json`.
+Round 2 and Round 3 require an implementation-contract instance named `repair-closure.json` and retain the predecessor's lineage family.
 
 - The canonical predecessor finding set is the exact union derived from finalized gate and disposition evidence.
 - Confirmed, advisory, and refuted findings remain represented; none may disappear from the exact set.
@@ -111,9 +159,9 @@ Round 2 and Round 3 require an implementation-contract instance named `repair-cl
 
 The repository-owned Skill exposes `validate-finalized-run` as the only durable plan-consumption surface for a finalized Bootstrap run. The command reloads the current profile and run authority, revalidates preflight and gate evidence, reproduces candidate/rejection projection from reviewer outputs, and recomputes final result, disposition, metrics, and byte hashes.
 
-The `bootstrap-finalized-run-validation.v1` envelope binds review/change/round identity, the complete canonical profile hash, route and control-plane revisions, policy and authority identity, final status, finding closure, validator identity, and hashes of every consumed final artifact. This includes direct hashes for `verifier-output.json` and the applicable `p2-dispositions.json`; a metrics-only transitive reference or file-existence check is insufficient. It always carries `authorizes=[]` and explicitly excludes plan acceptance, implementation acceptance, protected handoff, release, commit, and done.
+The current `bootstrap-finalized-run-validation.v2` envelope binds review/change/lineage-family/round identity, repair delta and entry-decision state, the complete canonical profile hash, route and control-plane revisions, policy and authority identity, final status, finding closure, validator identity, and hashes of every consumed final artifact. The v1 schema remains unchanged for stored-envelope compatibility; new producer output uses v2. Both include direct hashes for `verifier-output.json` and the applicable `p2-dispositions.json`; a metrics-only transitive reference or file-existence check is insufficient. They always carry `authorizes=[]` and explicitly exclude plan acceptance, implementation acceptance, protected handoff, release, commit, and done.
 
-Plans consume this envelope instead of reimplementing a partial Bootstrap profile or lifecycle validator. The consumer calls the repository producer, compares the full saved and recomputed envelope except `generatedAt`, and then applies only its own candidate and predicate rules. A plan-local validator remains solely responsible for its own candidate and acceptance predicates. Envelope validation alone cannot clear a review-cycle manual pause or create a new semantic-review round. Re-entry after the hard limit additionally requires a schema-valid successor policy decision and authorization event. The event binds a current authority source chained to the profile-bound authority root, root-authorized signer and actor/role, exact old/new review and change lineage, policy, authority, consumer, scope, issuance/expiry, predecessor, and revocation state; it cannot be reused for a different decision because it also binds the decision ID. The consuming plan derives independence from a new change/policy/authority/review/input lineage and must not trust a run-local root, saved minimal envelope, arbitrary event JSON, or an `independent=true` assertion.
+Plans consume this envelope instead of reimplementing a partial Bootstrap profile or lifecycle validator. The consumer calls the repository producer, compares the full saved and recomputed envelope except `generatedAt`, and then applies only its own candidate and predicate rules. A plan-local validator remains solely responsible for its own candidate and acceptance predicates. Envelope validation alone cannot clear a review-cycle manual pause or create a new semantic-review round. A successor policy decision may authorize consideration of a genuinely superseding target, but it cannot reset the lineage family of the existing target. The consuming plan must bind the explicit supersede or incompatible-scope decision and derive a different acceptance target before a new family is valid; a new change ID, saved minimal envelope, arbitrary event JSON, or `independent=true` assertion is insufficient.
 
 ## Acceptance Inventory Attestation Companion
 

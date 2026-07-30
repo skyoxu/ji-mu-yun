@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-import-envelope.v2.schema.json",
+  "title": "Bootstrap Import Envelope v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "controlPlaneRevision",
+    "bootstrapRunDir",
+    "finalizedRun",
+    "finalizedRunCoreHash",
+    "inventoryAttestation",
+    "inventoryAttestationHash",
+    "bindingHash",
+    "scopeHash",
+    "authorizes"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-import-envelope.v2"},
+    "controlPlaneRevision": {"const": "bootstrap-control-plane.v2"},
+    "bootstrapRunDir": {"type": "string", "minLength": 1},
+    "finalizedRun": {
+      "type": "object",
+      "required": ["schemaVersion", "validationStatus", "finalStatus", "controlPlaneRevision"],
+      "properties": {
+        "schemaVersion": {
+          "enum": [
+            "bootstrap-finalized-run-validation.v1",
+            "bootstrap-finalized-run-validation.v2"
+          ]
+        },
+        "validationStatus": {"const": "passed"},
+        "finalStatus": {"const": "clean"},
+        "controlPlaneRevision": {"const": "bootstrap-control-plane.v2"}
+      }
+    },
+    "finalizedRunCoreHash": {"$ref": "#/$defs/hash"},
+    "inventoryAttestation": {"type": "object"},
+    "inventoryAttestationHash": {"$ref": "#/$defs/hash"},
+    "bindingHash": {"$ref": "#/$defs/hash"},
+    "scopeHash": {"$ref": "#/$defs/hash"},
+    "authorizes": {"type": "array", "maxItems": 0}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

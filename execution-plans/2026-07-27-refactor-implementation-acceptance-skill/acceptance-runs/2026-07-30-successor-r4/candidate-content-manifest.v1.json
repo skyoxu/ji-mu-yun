@@ -1,0 +1,789 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "baseline_sha256": "sha256:ef538864db4ea1078848db13d4b7c90ae679276cbdb95bc16b782d01b9974b2b",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "candidate_sha256": "sha256:eedfeda704fbcd2a56f204c89aa0e6c7c4d11776b54ff89401289330a803688c",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "baseline_sha256": "sha256:7dc81b5d86763959fefaa4057c24913384a817d6a54ddeb4004d46bdbb8c0acc",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "candidate_sha256": "sha256:8eb99473854847d3126e72047e62180cda37f8b25c06e9cdacc8e5702d742f03",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-auditor-role-bundle.v1.schema.json",
+      "candidate_sha256": "sha256:1c9a12fc3da8f3e8085b88b7f4e558cb975f0a05b48b40cb0cc57730a06a124e",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+      "candidate_sha256": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json",
+      "candidate_sha256": "sha256:d5145862fd4d4b01ab2f96aebdd8d1c417c33f46e8017469110b1630eafe174b",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "baseline_sha256": "sha256:a35dccedfdf9fb548844f813bce924c8987889cf33dece8000e1a29bebd56e85",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "candidate_sha256": "sha256:48f5172ae8183a360734bbcd38a486da0eef009a12554b6dba26cdeabb193b61",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "baseline_sha256": "sha256:afbe840b25c016c14a3be98178b30a21ef668fb328b98977ad6d693fcfa36623",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "candidate_sha256": "sha256:d7ffcb190bc86dc0e95dbbcccd4faac322065dbe985a06ec1cc3b2642f06f454",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "baseline_sha256": "sha256:148ed39e6b451bc57fa0c46d16db02160c256fa6ce93bf7d3c50b3d67cdca3b7",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "candidate_sha256": "sha256:1f7b194f5ae312c4deb3a0b479b43c23c2c1cf84e67e150beca707af8154afdc",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_companion_capability.py",
+      "candidate_sha256": "sha256:c5ba6da828384f11d9b4c43354d56d7ffb331399199e0b0ba667fbdde9b0d65f",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "baseline_sha256": "sha256:8d41186a2cd9b81b76af3ed535c80ccbd0611b737da1a2435efc29b86e2359e3",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "candidate_sha256": "sha256:76044e2d0234e81bc72d3c50f4718ee9cdb971a41d216242317934c99216ac64",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "candidate_sha256": "sha256:53fbb1955417e9dded4410266969caabecfb895f0bbaeac13cfea40bf12f37f1",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json",
+      "candidate_sha256": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "candidate_sha256": "sha256:e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-baseline-content-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:aa5b6bf8eb9fc7ab407ad4a9b39111dffcdb51854f0f7b99becc124ed286fa80",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-candidate-content-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:1352cd005181836bfd442d869475eaeeb606b166c4dfa7dae68a9d3ce03e8206",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-impact-projection.v1.schema.json",
+      "candidate_sha256": "sha256:c9c44607c397be2c1592e137052177ac7563e0ab6f30d8a920945be1e6e9ba4f",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-run-input.v1.schema.json",
+      "candidate_sha256": "sha256:aa17b8b5ac51f1a468eb521879ffaf2ac165474b0e04dd903052ef11808ace40",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-clauses.v1.schema.json",
+      "candidate_sha256": "sha256:7e50ff8fb164d68d9b04bed733b4e8d85c835c06ce550c9640daf1f5ec2cd09a",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-source-inventory.v1.schema.json",
+      "candidate_sha256": "sha256:12475404d1267af3da09acb12e621d0ec158cfa02b10b06d30cf85d43adf6661",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/check-id-lineage.v1.schema.json",
+      "candidate_sha256": "sha256:5b5a4e1a2560aefce2f5a956b1b9caad4e3a4348dfc8a08016717e6b0e7f3523",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-binding.v1.schema.json",
+      "candidate_sha256": "sha256:ed523e09a5f329d345a46af5d9c212bcbe0f22a1e550a3add02b5046be241de9",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-pack.v1.schema.json",
+      "candidate_sha256": "sha256:4784b040b47c4f2ddce0cde5501d9c870f491364594a491449c6b06e85ae7f79",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
+      "candidate_sha256": "sha256:775c6b865e93f62c610149a536d360437493b5439605b10fb85eb88852c08b68",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-acceptance-candidate.v1.schema.json",
+      "candidate_sha256": "sha256:4d4fd1b06de8f7a861c0eac53a22acbf10a5432c152abe41869d49261304b22f",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-diff-coverage-result.v1.schema.json",
+      "candidate_sha256": "sha256:1c33a1df78ec34c2afd408f087327515cbaccadaee3d71307c92ab419dcc8f7b",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
+      "candidate_sha256": "sha256:9f88fc03dda0c90bd96fb09f2441e06f1d849ad76ac64d99674af5fd9c2f212b",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-scan-bundle-result.v1.schema.json",
+      "candidate_sha256": "sha256:e918fa130bc5032d247f500edc67ce599d2966a8a8efffaae3a1c215e8721726",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/program-dod-candidate.v1.schema.json",
+      "candidate_sha256": "sha256:d75508b509b4002cf624b79a8b72d579cf1dbe56bf59218d03af12e6e9d77a6a",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/task-checklist-closure.v1.schema.json",
+      "candidate_sha256": "sha256:67fd82529625a555de4693c8e9a9859139cb10adfac2793118d06d02676acab6",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/typed-gate-result.v1.schema.json",
+      "candidate_sha256": "sha256:369fd038977b9aee8bdb79921e9f486b153db3d2bc1ddb6f9328a31c46c17b98",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "candidate_sha256": "sha256:eb13785cad9bb886d09c331a06876ce4aa43246ef9777ddfb199008a979f333f",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "candidate_sha256": "sha256:efe3fb6821a3936b6e28d0204b4bce101ea90c92aaae3560fcafcfaa9838badb",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      "candidate_sha256": "sha256:16f8615e68c74af3b6b2221891202c98f3a785bae117f141543f91ce5b4e4663",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/check_lineage.py",
+      "candidate_sha256": "sha256:bedc1fc1006b30b4e277097a0061e4e5a393b35ba1c7ce81de91cf4fa2438172",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/evidence_analysis.py",
+      "candidate_sha256": "sha256:71126775f586db3b19836d730cb2ac30262749837ead052739aa0a477cc578cf",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "candidate_sha256": "sha256:720e2e4b74420ac9b621e224f849c763832d531befbc137b5f757ec4b18bc68e",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "candidate_sha256": "sha256:58f0a10076ee65bff09eee4945708aed7aab48e21b8dde75c17e94407ba99ce8",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/matrix_phase.py",
+      "candidate_sha256": "sha256:0a07047465a8411559a132704dc6e3024c6f2b525b711f2d1433b3315a52c1c1",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+      "candidate_sha256": "sha256:6a31583ccf4e4d49bea46d822de01fa50a8b1e8002de383ccd952745fdc9081a",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/phase_scan.py",
+      "candidate_sha256": "sha256:91a0f38b2b61282a27de445e9f831869cb226c7fdf3de1a96e38979fe114455f",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      "candidate_sha256": "sha256:3076fac55c5c66fdfda70c4cc5d96a5b967332463a51d69e2c9cfa1841aae2de",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/requirement_inventory.py",
+      "candidate_sha256": "sha256:cc948059a5e72c979ec82e96cee69d1e3b774fdfaea3a10deb30c684f4e8884a",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/source_clauses.py",
+      "candidate_sha256": "sha256:fe62c533b8e6a6dfa57c94789024329e33ed8c1501136112078b4ab9afb81a8e",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/task_checklist.py",
+      "candidate_sha256": "sha256:a9c1699b9e955d556a451ffbabe6f4515498defe87a17808cbe11c7f8e404b27",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+      "candidate_sha256": "sha256:6299b80b4c96812b0f8bb32eb95272b4aa4cfcb56557f18d17e4c97c0832e7e4",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_check_lineage.py",
+      "candidate_sha256": "sha256:e7dc7d04056f437e47644414b91c67cfb7f537c88bfc2806e68e6f3e25a10eed",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+      "candidate_sha256": "sha256:75b17b4b4cf20753b3581aee52022d2536b7fe296efcd395a1b8969aeb62fbd8",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_analysis.py",
+      "candidate_sha256": "sha256:7f9669253f135bcfffce88583518088b15b21b1229008cf8484cc8b468c0bb35",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+      "candidate_sha256": "sha256:c694ed061eb69113e39315b2ad42a9ebc36a953f05ef57e565e5918f84d90711",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_matrix_phase.py",
+      "candidate_sha256": "sha256:53635e632f139fb04cb52aa0c648b86859369a48f4f769702871fbbc8eb7470c",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py",
+      "candidate_sha256": "sha256:54330b32afbfb50458281da09de827e21a88b6d8e0cbc19857cae1f33db90694",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_phase_scan.py",
+      "candidate_sha256": "sha256:057d5aad07fcb7397488e94c75b92eba27866da1322de972f10e46f227cb3970",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_requirement_inventory.py",
+      "candidate_sha256": "sha256:c274ee9eeb1dfa2dbaea005f77d0c806fa60faa7af10b63afc3ebf371e6cf8bf",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "candidate_sha256": "sha256:58fa1befc51a2c04d7c5dd1f2f9947cfb205a694baad12a001e5f3ce6b5382b3",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_schemas.py",
+      "candidate_sha256": "sha256:ce5329f23c23c8cdfda1da9429d112530d3644489e3150bd07eeb3951e6a268c",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_source_clauses.py",
+      "candidate_sha256": "sha256:8f0ede7c8cb2c1f7cdfb17793cf8cc0caa79b07b96b9c33575a8795e12fff787",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_task_checklist.py",
+      "candidate_sha256": "sha256:ae866c67b58e8743ad6cca2cfb8f7af193c97ae41d0c0457322922ce91939bea",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "baseline_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+      "candidate_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "candidate_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "docs/standards/bootstrap-review-control-plane.md",
+      "baseline_sha256": "sha256:0f4639c2fdc0e4ab6b8342f517f2b96a431387ba6eb1d98985da8872361ce687",
+      "candidate_path": "docs/standards/bootstrap-review-control-plane.md",
+      "candidate_sha256": "sha256:ed4bc30e31babfb9caa3bfa283d1ce46a5d1ce1539407308cb42a7fe86f63321",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "baseline_sha256": "sha256:41e73db3a575643362e9d0d1510418f9b2fe2f64d1a9f558d37262fadd3288bf",
+      "candidate_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "candidate_sha256": "sha256:ddc2f42b739b5858c9381050bf28f93bceb7f185ab4a322dc77b94965864c186",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/95-implementation-evolution-and-completion-report.md",
+      "baseline_sha256": "sha256:4d6b8b1c9858cc5fabdf80b85b63f4cfc39e2cb0971922028e990aed40edd0ca",
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:8c893a75eb1a23d85b431eeb0ac22f9af1d74ca4bfdcd8eb25e37e0275cffc39",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
+      "baseline_sha256": "sha256:393fd31473f35b75424951a064da3f2a151174f53225aa98c196ffd2c61ac21c",
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
+      "candidate_sha256": "sha256:fcb8ab8367f7bc14416bfe7f9313d3f7803ae151ee1dbc22e4e6abc7f58c0cd4",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json",
+      "candidate_sha256": "sha256:fa6a1b4eb31ab9e0837ec4c87298c6ab476f6e7cde1f33253b1cc8e39db32620",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
+      "baseline_sha256": "sha256:9ec8010e1e1339f03f25279a3e9a5854304e33edae8895bf010c8fb6527e5c1e",
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:370a0d20d1e0adf761ab09a92e9c44bdffdb8e392345a909d0975d8654e57156",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/resume-state.v1.json",
+      "baseline_sha256": "sha256:33b7649072943b512bd7e2265eff86d8253f18bde99bd8578614d0e00398736a",
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/resume-state.v1.json",
+      "candidate_sha256": "sha256:8528f0870f44bd73075c3d7ccb2eed13ba7b4aca56131e37c8f41e6d7e091dbe",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/bootstrap-preflight-commands.v1.json",
+      "baseline_sha256": "sha256:9f501362a08981cbceff0a818fad0891b25e41a3397a88b41b05fe71c32442da",
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/bootstrap-preflight-commands.v1.json",
+      "candidate_sha256": "sha256:db8fa662963ca586e44f9c2e86aa95f1a34dea5b2c1a40775fef8ca7f6fd5387",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/refactor_acceptance_slice_bridge.py",
+      "candidate_sha256": "sha256:eaebc51f2446b04075c596bab4a44e6fe6eaeab59ef006366690fd8d9141863c",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py",
+      "baseline_sha256": "sha256:c4c7f1f57c23e044b8d7fefe110d5a2bbe376d62040f32e9d0c4d5c1e5f9ef94",
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py",
+      "candidate_sha256": "sha256:603a51fee4061fef7e28cee3d525bb71f523020bb641f000e0e35683b4a0a92c",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_all.py",
+      "candidate_sha256": "sha256:a1ebc0b4bec64884425672060be517d43de867210bf86bbc91f87334004818b7",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+      "baseline_sha256": "sha256:ab86fc38cd5b425d30b09521d0849f1278f2e839b7530e9731ed4e2acfdf1ab5",
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py",
+      "candidate_sha256": "sha256:cf16596eb53167a1d2d149a4a4b87b22c5303c8cb58569aec81d4ee3bbad7410",
+      "change_type": "modified",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_slice.py",
+      "candidate_sha256": "sha256:c6ddd05f34c6fbb000f1464ec08ecb17776a5236c7a68107d52acaf65fb78ea3",
+      "change_type": "added",
+      "inclusion_reason": "Accepted 7-27 scoped candidate from immutable source commit.",
+      "roles": [
+        "authority"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

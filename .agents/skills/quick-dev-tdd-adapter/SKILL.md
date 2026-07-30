@@ -26,6 +26,21 @@ After the target plan's current declared terminal predicate passes, append its o
 3. Run the declared RED command and require its expected nonzero failure before a production write; then run GREEN, REFACTOR, and the plan-local slice predicate.
 4. After `slice-ready`, route the next unlocked slice automatically. Stop only at the plan-local terminal predicate, `external-repair-required`, or a repeated failure fingerprint.
 5. A plan may consume an already-published implementation authorization before its first implementation slice. This Skill never launches Bootstrap Review, changes review evidence, or creates a successor policy. Its terminal result may only be `implementation-complete`; acceptance remains external.
+6. After a P0/P1 repair reaches the plan-local terminal predicate, read
+   [repair-review-handoff.md](references/repair-review-handoff.md), generate the
+   standard Acceptance request, and immediately run the Acceptance-owned
+   `audit-repair-completeness` command. Preserve the current predecessor,
+   hash-bound baseline and complete candidate manifests, changed files, direct
+   consumers, targeted tests, validation references, the generated root-cause callsite inventory, and controlled producer/consumer composition receipts.
+   The Acceptance audit derives the exact changed set from the candidate
+   manifest, binds present paths by current content hash, and binds deleted
+   paths by their baseline hash before routing continues. Run each registered
+   composition command with every producer and consumer supplied as an
+   `--input-path`. Supply every
+   preserved repair and composition artifact to the same minimal review closure;
+   do not let the handoff and Bootstrap scope describe different file sets.
+   Do not select an acceptance route, launch Bootstrap, create a review
+   successor, or change the stable lineage family.
 
 ## Knowledge Consumption
 
@@ -55,7 +70,7 @@ py -3 .agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py `
 
 The caller supplies explicit snapshot paths from the current slice's declared write set. The driver creates a new append-only run, compiles only the target plan's registered commands, executes all declared refactor invocations, and re-routes after a current terminal predicate. It must not guess a write set or create implementation changes absent from the backend's declared allowed writes.
 
-The adapter never treats backend text, a Capsule, an adapter decision, run state, a clean process exit, or this Skill as acceptance authority. Only the plan-local registered predicate may authorize its declared state.
+The adapter never treats backend text, a Capsule, an adapter decision, run state, a clean process exit, a repair review handoff, or this Skill as acceptance authority. Only the plan-local registered predicate may authorize its declared state.
 
 ## Version Currency Commit Gate
 

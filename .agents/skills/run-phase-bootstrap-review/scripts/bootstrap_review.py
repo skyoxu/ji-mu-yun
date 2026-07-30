@@ -17,7 +17,7 @@ import importlib.util
 import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
@@ -64,7 +64,7 @@ HASH_PREFIX = "sha256:"
 AUTHORITY_CLASS = "supplemental_bootstrap"
 REVIEW_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}")
 CHECK_ID_PATTERN = re.compile(r"[a-z][a-z0-9-]{2,63}")
-FINALIZED_VALIDATOR_REVISION = "bootstrap-finalized-run-validator.v2"
+FINALIZED_VALIDATOR_REVISION = "bootstrap-finalized-run-validator.v3"
 FINALIZED_DOES_NOT_AUTHORIZE = [
     "plan-acceptance",
     "implementation-acceptance",
@@ -74,6 +74,10 @@ FINALIZED_DOES_NOT_AUTHORIZE = [
     "done",
 ]
 VERIFIER_RECOVERY_EVENT = "verifier-recovery-opened"
+SEMANTIC_ROUND_STARTED_EVENT = "semantic-round-started"
+REVIEW_RUN_REGISTRY_SCHEMA = "bootstrap-review-run-registry.v1"
+LINEAGE_ADOPTION_SCHEMA = "bootstrap-lineage-adoption.v1"
+HISTORICAL_POLICY_PATH = SKILL_ROOT / "references" / "historical-policy-revisions.v1.json"
 
 ACCESS_HANDSHAKE_HELPER = r'''#!/usr/bin/env python3
 from __future__ import annotations
@@ -191,7 +195,17 @@ REVIEW_CYCLE_POLICY = {
     "hardFullReviewRoundLimit": 3,
     "p2OnlyTriggersFullReview": False,
     "onHardLimit": "manual_pause",
+    "roundIdentity": "lineage_family",
+    "successorResetsRoundBudget": False,
+    "roundThreeEntryReasons": [
+        "novel_p0_p1",
+        "authority_context_graph_changed",
+        "high_risk_boundary_changed",
+    ],
+    "repairReviewScope": "repair_delta_closure",
 }
+ROUND_THREE_ENTRY_REASONS = set(REVIEW_CYCLE_POLICY["roundThreeEntryReasons"])
+REPAIR_DELTA_SCHEMA = "bootstrap-repair-review-delta.v1"
 ARTIFACT_VIEW_READ_RECEIPT_SCHEMA = "bootstrap-artifact-view-read-receipt.v1"
 BOUNDED_SCOPE_PROFILES = {
     "bootstrap-implementation-conformance",
@@ -247,9 +261,11 @@ P2_DISPOSITION_POLICY = {
 LEASE_ROLES = {*LAYERS, "independent_verifier", "preflight", "model_probe"}
 LEASE_STATES = {"acquired", "completed", "failed", "stale"}
 REVIEW_HISTORY_PRUNED_DIRS = {
-    ".git", ".vs", ".idea", "node_modules", "bin", "obj", "__pycache__",
+    ".git", ".vs", ".idea", ".acceptance-snapshots", "artifact-view",
+    "node_modules", "bin", "obj", "__pycache__",
 }
 REVIEW_HISTORY_PRUNED_PREFIXES = {
+    ("logs", "agent-worktrees"),
     ("logs", "phase-a-innernet", "workspaces"),
     ("logs", "phase-a-innernet", "data"),
 }
@@ -489,13 +505,35 @@ def profile_for_policy_revision(policy_revision: str) -> dict[str, Any]:
         value for value in registry.get("profiles", {}).values()
         if isinstance(value, dict) and value.get("policyRevision") == policy_revision
     ] if isinstance(registry, dict) else []
-    if len(matches) != 1:
+    if len(matches) == 1:
+        profile = matches[0]
+        revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
+        if value_hash(revision_payload) != policy_revision:
+            raise BootstrapError("Successor policy revision does not match canonical profile content")
+        return profile
+    if len(matches) > 1:
+        raise BootstrapError("Successor policy revision resolves to multiple trusted Bootstrap profiles")
+    history = read_json(HISTORICAL_POLICY_PATH)
+    history_errors = schema_validation_errors(
+        "bootstrap-historical-policy-revisions.v1.schema.json", history
+    )
+    entries = history.get("revisions") if isinstance(history, dict) else None
+    historical = [
+        item for item in entries or []
+        if isinstance(item, dict) and item.get("policyRevision") == policy_revision
+    ]
+    if (
+        history_errors
+        or not isinstance(entries, list)
+        or history.get("schemaVersion") != "bootstrap-historical-policy-revisions.v1"
+        or history.get("authorizes") != []
+        or len(historical) != 1
+    ):
         raise BootstrapError("Successor policy revision does not resolve to one trusted Bootstrap profile")
-    profile = matches[0]
-    revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
-    if value_hash(revision_payload) != policy_revision:
-        raise BootstrapError("Successor policy revision does not match canonical profile content")
-    return profile
+    entry = historical[0]
+    if set(entry) != {"profileName", "policyRevision", "authorityRootRegistry"}:
+        raise BootstrapError("Historical Bootstrap policy revision has an invalid shape")
+    return entry
 
 
 def validate_leaf_root_binding(
@@ -1062,7 +1100,181 @@ def finalized_review_result(run_dir: Path, manifest: dict[str, Any]) -> dict[str
     for field in ("reviewId", "routeVersion", "reviewProfile", "policyRevision", "inputHash"):
         if result.get(field) != expected[field]:
             raise BootstrapError(f"Predecessor final result has a stale {field} binding")
+    if result.get("status") not in {"clean", "advisory", "blocked", "incomplete"}:
+        raise BootstrapError(f"Predecessor run is not finalized: {run_dir}")
+    dispositions = read_json(run_dir / "review-dispositions.json")
+    metrics = read_json(run_dir / "review-metrics.json")
+    expected_disposition_keys = set(expected) | {"schemaVersion", "dispositions"}
+    if (
+        not isinstance(dispositions, dict)
+        or set(dispositions) != expected_disposition_keys
+        or dispositions.get("schemaVersion") != "bootstrap-review-dispositions.v1"
+        or any(dispositions.get(field) != value for field, value in expected.items())
+        or not isinstance(dispositions.get("dispositions"), list)
+        or not isinstance(metrics, dict)
+        or metrics.get("schemaVersion") != "bootstrap-review-metrics.v1"
+        or metrics.get("status") != result.get("status")
+        or any(metrics.get(field) != value for field, value in expected.items())
+    ):
+        raise BootstrapError(f"Predecessor finalized disposition evidence is invalid: {run_dir}")
+    candidate_document = read_json(run_dir / "review-candidates.json")
+    candidates = candidate_document.get("findings") if isinstance(candidate_document, dict) else None
+    disposition_ids = [
+        item.get("findingId") for item in dispositions["dispositions"] if isinstance(item, dict)
+    ]
+    candidate_ids = [item.get("findingId") for item in candidates or [] if isinstance(item, dict)]
+    if (
+        not isinstance(candidates, list)
+        or len(disposition_ids) != len(dispositions["dispositions"])
+        or sorted(disposition_ids) != sorted(candidate_ids)
+        or len(disposition_ids) != len(set(disposition_ids))
+    ):
+        raise BootstrapError(f"Predecessor finalized finding disposition is incomplete: {run_dir}")
     return result
+
+
+def _review_registry_path(repository_root: Path) -> Path:
+    completed = subprocess.run(
+        ["git", "rev-parse", "--git-path", "bootstrap-review-run-registry.v1.json"],
+        cwd=repository_root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="strict",
+        check=False,
+    )
+    if completed.returncode != 0 or not completed.stdout.strip():
+        raise BootstrapError("Bootstrap review registry requires a Git repository")
+    candidate = Path(completed.stdout.strip())
+    if not candidate.is_absolute():
+        candidate = repository_root / candidate
+    return candidate.resolve()
+
+
+def _scan_review_history(repository_root: Path) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    runs: list[dict[str, str]] = []
+    adoptions: list[dict[str, str]] = []
+    for root, dirs, files in os.walk(repository_root):
+        current = Path(root)
+        relative_parts = current.relative_to(repository_root).parts
+        if any(relative_parts[: len(prefix)] == prefix for prefix in REVIEW_HISTORY_PRUNED_PREFIXES):
+            dirs[:] = []
+            continue
+        dirs[:] = [name for name in dirs if name not in REVIEW_HISTORY_PRUNED_DIRS]
+        if "review-input.json" in files:
+            path = current / "review-input.json"
+            try:
+                manifest = read_json(path)
+            except BootstrapError as exc:
+                raise BootstrapError(f"Review history is damaged at {path}: {exc}") from exc
+            if isinstance(manifest, dict) and manifest.get("schemaVersion") == "bootstrap-review-input.v1":
+                runs.append({
+                    "runDirectory": repository_relative_path(current, repository_root),
+                    "manifestHash": file_hash(path),
+                })
+        for name in files:
+            if not name.endswith("lineage-adoption.v1.json"):
+                continue
+            path = current / name
+            adoptions.append({
+                "path": repository_relative_path(path, repository_root),
+                "hash": file_hash(path),
+            })
+    return sorted(runs, key=lambda item: item["runDirectory"]), sorted(
+        adoptions, key=lambda item: item["path"]
+    )
+
+
+def _write_review_registry(
+    repository_root: Path,
+    runs: list[dict[str, str]],
+    adoptions: list[dict[str, str]],
+) -> None:
+    write_json(
+        _review_registry_path(repository_root),
+        {
+            "schemaVersion": REVIEW_RUN_REGISTRY_SCHEMA,
+            "sourceRevision": git_revision(repository_root),
+            "runs": sorted(runs, key=lambda item: item["runDirectory"]),
+            "adoptions": sorted(adoptions, key=lambda item: item["path"]),
+        },
+    )
+
+
+def _load_review_registry(repository_root: Path) -> dict[str, Any]:
+    path = _review_registry_path(repository_root)
+    if not path.is_file():
+        runs, adoptions = _scan_review_history(repository_root)
+        _write_review_registry(repository_root, runs, adoptions)
+        return {
+            "schemaVersion": REVIEW_RUN_REGISTRY_SCHEMA,
+            "sourceRevision": git_revision(repository_root),
+            "runs": runs,
+            "adoptions": adoptions,
+        }
+    registry = read_json(path)
+    legacy_shape = isinstance(registry, dict) and set(registry) == {
+        "schemaVersion", "runs", "adoptions"
+    }
+    if (
+        not isinstance(registry, dict)
+        or (not legacy_shape and set(registry) != {
+            "schemaVersion", "sourceRevision", "runs", "adoptions"
+        })
+        or registry.get("schemaVersion") != REVIEW_RUN_REGISTRY_SCHEMA
+        or not isinstance(registry.get("runs"), list)
+        or not isinstance(registry.get("adoptions"), list)
+    ):
+        raise BootstrapError("Bootstrap review registry is damaged")
+    for entry in registry["runs"]:
+        if (
+            not isinstance(entry, dict)
+            or set(entry) != {"runDirectory", "manifestHash"}
+            or not isinstance(entry.get("runDirectory"), str)
+            or HASH_PATTERN.fullmatch(str(entry.get("manifestHash", ""))) is None
+        ):
+            raise BootstrapError("Bootstrap review registry contains an invalid run entry")
+    for entry in registry["adoptions"]:
+        if (
+            not isinstance(entry, dict)
+            or set(entry) != {"path", "hash"}
+            or not isinstance(entry.get("path"), str)
+            or HASH_PATTERN.fullmatch(str(entry.get("hash", ""))) is None
+        ):
+            raise BootstrapError("Bootstrap review registry contains an invalid adoption entry")
+    current_revision = git_revision(repository_root)
+    if legacy_shape or registry.get("sourceRevision") != current_revision:
+        scanned_runs, scanned_adoptions = _scan_review_history(repository_root)
+        registry = {
+            "schemaVersion": REVIEW_RUN_REGISTRY_SCHEMA,
+            "sourceRevision": current_revision,
+            "runs": scanned_runs,
+            "adoptions": scanned_adoptions,
+        }
+        _write_review_registry(repository_root, registry["runs"], registry["adoptions"])
+    return registry
+
+
+def _register_review_artifact(
+    repository_root: Path,
+    *,
+    run_dir: Path | None = None,
+    adoption_path: Path | None = None,
+) -> None:
+    registry = _load_review_registry(repository_root)
+    runs = list(registry["runs"])
+    adoptions = list(registry["adoptions"])
+    if run_dir is not None:
+        relative = repository_relative_path(run_dir, repository_root)
+        item = {"runDirectory": relative, "manifestHash": file_hash(run_dir / "review-input.json")}
+        runs = [entry for entry in runs if entry.get("runDirectory") != relative]
+        runs.append(item)
+    if adoption_path is not None:
+        relative = repository_relative_path(adoption_path, repository_root)
+        item = {"path": relative, "hash": file_hash(adoption_path)}
+        adoptions = [entry for entry in adoptions if entry.get("path") != relative]
+        adoptions.append(item)
+    _write_review_registry(repository_root, runs, adoptions)
 
 
 def review_run_manifests(
@@ -1071,97 +1283,491 @@ def review_run_manifests(
 ) -> list[tuple[Path, dict[str, Any]]]:
     found: list[tuple[Path, dict[str, Any]]] = []
     excluded = excluded_run.resolve() if excluded_run is not None else None
-    for root, dirs, files in os.walk(repository_root):
-        current = Path(root)
-        relative_parts = current.relative_to(repository_root).parts
-        if any(relative_parts[: len(prefix)] == prefix for prefix in REVIEW_HISTORY_PRUNED_PREFIXES):
-            dirs[:] = []
-            continue
-        dirs[:] = [name for name in dirs if name not in REVIEW_HISTORY_PRUNED_DIRS]
-        if "review-input.json" not in files:
-            continue
-        path = current / "review-input.json"
-        run_dir = path.parent.resolve()
+    registry = _load_review_registry(repository_root)
+    seen: set[str] = set()
+    for entry in registry["runs"]:
+        if not isinstance(entry, dict) or set(entry) != {"runDirectory", "manifestHash"}:
+            raise BootstrapError("Bootstrap review registry contains an invalid run entry")
+        run_dir = ensure_within(repository_root / entry["runDirectory"], repository_root, "Registered review run")
+        path = run_dir / "review-input.json"
+        relative = repository_relative_path(run_dir, repository_root)
+        if relative in seen:
+            raise BootstrapError("Bootstrap review registry contains a duplicate run")
+        seen.add(relative)
         if excluded is not None and run_dir == excluded:
             continue
+        if not path.is_file() or file_hash(path) != entry.get("manifestHash"):
+            raise BootstrapError(f"Registered review history is missing or stale at {path}")
         try:
             manifest = read_json(path)
-        except BootstrapError:
-            continue
-        if isinstance(manifest, dict) and manifest.get("schemaVersion") == "bootstrap-review-input.v1":
-            found.append((run_dir, manifest))
+        except BootstrapError as exc:
+            raise BootstrapError(f"Review history is damaged at {path}: {exc}") from exc
+        if not isinstance(manifest, dict) or manifest.get("schemaVersion") != "bootstrap-review-input.v1":
+            raise BootstrapError(f"Registered review history has an invalid manifest at {path}")
+        found.append((run_dir, manifest))
     return found
+
+
+def effective_lineage_family(manifest: dict[str, Any]) -> str | None:
+    family = manifest.get("lineageFamilyId")
+    if isinstance(family, str) and family:
+        return family
+    change_id = manifest.get("changeId")
+    return change_id if isinstance(change_id, str) and change_id else None
+
+
+def policy_text_is_accepted(value: str) -> bool:
+    return re.search(
+        r"^\s*(?:[-*]\s*)?status\s*:\s*accepted\s*$",
+        value,
+        flags=re.IGNORECASE | re.MULTILINE,
+    ) is not None
+
+
+def _validated_lineage_adoptions(repository_root: Path) -> list[dict[str, Any]]:
+    registry = _load_review_registry(repository_root)
+    adoptions: list[dict[str, Any]] = []
+    adopted_runs: dict[str, str] = {}
+    seen_paths: set[str] = set()
+    for entry in registry["adoptions"]:
+        if not isinstance(entry, dict) or set(entry) != {"path", "hash"}:
+            raise BootstrapError("Bootstrap review registry contains an invalid adoption entry")
+        relative = entry.get("path")
+        if not isinstance(relative, str) or relative in seen_paths:
+            raise BootstrapError("Bootstrap review registry contains a duplicate adoption")
+        seen_paths.add(relative)
+        path = ensure_within(repository_root / relative, repository_root, "Lineage adoption")
+        if not path.is_file() or file_hash(path) != entry.get("hash"):
+            raise BootstrapError(f"Registered lineage adoption is missing or stale at {path}")
+        adoption = read_json(path)
+        errors = schema_validation_errors("bootstrap-lineage-adoption.v1.schema.json", adoption)
+        if errors:
+            raise BootstrapError("Lineage adoption is invalid: " + "; ".join(errors))
+        expected_hash = value_hash({
+            key: value for key, value in adoption.items() if key != "adoptionHash"
+        })
+        if adoption.get("adoptionHash") != expected_hash:
+            raise BootstrapError("Lineage adoption hash is stale")
+        policy = adoption["policyAuthority"]
+        policy_path = ensure_within(repository_root / policy["path"], repository_root, "Adoption policy")
+        if not policy_path.is_file() or file_hash(policy_path) != policy["sha256"]:
+            raise BootstrapError("Lineage adoption policy binding is stale")
+        try:
+            policy_text = policy_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise BootstrapError("Lineage adoption policy is unreadable") from exc
+        if not policy_text_is_accepted(policy_text):
+            raise BootstrapError("Lineage adoption policy is not Accepted")
+        for historical in adoption["historicalRuns"]:
+            run_relative = historical["runDirectory"]
+            previous_family = adopted_runs.get(run_relative)
+            if previous_family is not None and previous_family != adoption["targetLineageFamilyId"]:
+                raise BootstrapError("A historical review run is adopted by multiple lineage families")
+            adopted_runs[run_relative] = adoption["targetLineageFamilyId"]
+            run_dir = ensure_within(repository_root / run_relative, repository_root, "Adopted review run")
+            manifest_path = run_dir / "review-input.json"
+            if not manifest_path.is_file() or file_hash(manifest_path) != historical["manifestFileHash"]:
+                raise BootstrapError("Adopted review run binding is stale")
+            manifest = read_json(manifest_path)
+            if (
+                manifest.get("lineageFamilyId") is not None
+                or manifest.get("changeId") != adoption["legacyChangeId"]
+                or manifest.get("inputHash") != historical["reviewInputHash"]
+            ):
+                raise BootstrapError("Adopted review run is not the declared legacy history")
+        adoptions.append(adoption)
+    return adoptions
+
+
+def adopted_lineage_run_paths(repository_root: Path, lineage_family_id: str) -> set[str]:
+    return {
+        historical["runDirectory"]
+        for adoption in _validated_lineage_adoptions(repository_root)
+        if adoption["targetLineageFamilyId"] == lineage_family_id
+        for historical in adoption["historicalRuns"]
+    }
+
+
+def run_consumes_semantic_round(path: Path, manifest: dict[str, Any]) -> bool:
+    gate_started = (path / "review-gate-result.json").is_file()
+    try:
+        process_events = read_process_events(path)
+    except ControlPlaneError as exc:
+        raise BootstrapError(f"Review history has invalid process events at {path}") from exc
+    event_backed_attempts = active_attempts(process_events)
+    seal_path = path / "run-seal.json"
+    seal = read_json(seal_path) if seal_path.is_file() else None
+    incomplete_abandoned_codex_run = (
+        manifest.get("executionMode") == "codex-exec"
+        and isinstance(seal, dict)
+        and seal.get("state") == "abandoned"
+        and not gate_started
+        and not event_backed_attempts
+        and not all(
+            (path / "reviewer-outputs" / f"{layer}.json").is_file()
+            and read_json(path / "reviewer-outputs" / f"{layer}.json").get("status") == "completed"
+            for layer in LAYERS
+        )
+    )
+    if incomplete_abandoned_codex_run:
+        return False
+    explicit_semantic_start = any(
+        event.get("eventType") == SEMANTIC_ROUND_STARTED_EVENT
+        and event.get("reviewId") == manifest.get("reviewId")
+        and event.get("inputHash") == manifest.get("inputHash")
+        for event in process_events
+    )
+    reviewer_process_started = any(
+        event.get("eventType") == "attempt-started" and event.get("role") in LAYERS
+        for event in process_events
+    )
+    lease_policy = manifest.get("processLeasePolicy")
+    lease_sidecar = (
+        lease_policy.get("sidecar", "process-leases.json")
+        if isinstance(lease_policy, dict)
+        else "process-leases.json"
+    )
+    if not isinstance(lease_sidecar, str) or not lease_sidecar:
+        raise BootstrapError("Review history has an invalid process lease sidecar")
+    lease_path = ensure_within(path / lease_sidecar, path, "Process lease sidecar")
+    if lease_path.is_file():
+        lease_state = read_json(lease_path)
+        if not isinstance(lease_state, dict):
+            raise BootstrapError(f"Review history has an invalid process lease state: {lease_path}")
+        reviewer_process_started |= any(
+            isinstance(lease, dict) and lease.get("role") in LAYERS
+            for lease in lease_state.get("leases", [])
+        )
+    completed_manual_output = all(
+        (path / "reviewer-outputs" / f"{layer}.json").is_file()
+        and read_json(path / "reviewer-outputs" / f"{layer}.json").get("status") == "completed"
+        for layer in LAYERS
+    )
+    return gate_started or reviewer_process_started or explicit_semantic_start or completed_manual_output
+
+
+def artifact_hash_map(artifacts: list[dict[str, Any]]) -> dict[str, str]:
+    return {
+        item["artifact"]: item["sha256"]
+        for item in artifacts
+        if isinstance(item, dict)
+        and isinstance(item.get("artifact"), str)
+        and isinstance(item.get("sha256"), str)
+    }
+
+
+def reviewable_artifact_map(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    artifacts = {
+        item["artifact"]: dict(item)
+        for item in manifest.get("artifacts", [])
+        if isinstance(item, dict) and isinstance(item.get("artifact"), str)
+    }
+    delta = manifest.get("repairReviewDelta")
+    snapshots = delta.get("removedArtifactSnapshots", []) if isinstance(delta, dict) else []
+    for item in snapshots:
+        if isinstance(item, dict) and isinstance(item.get("artifact"), str):
+            artifacts[item["artifact"]] = {**item, "sourceState": "deleted"}
+    return artifacts
+
+
+def prepare_removed_artifact_snapshots(
+    repository_root: Path,
+    predecessor_run: str,
+    predecessor_manifest: dict[str, Any],
+    removed_artifacts: list[str],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if not removed_artifacts:
+        return [], []
+    predecessor_dir = ensure_within(
+        repository_root / predecessor_run, repository_root, "Predecessor run"
+    )
+    view_binding = predecessor_manifest.get("artifactView")
+    if not isinstance(view_binding, dict):
+        raise BootstrapError(
+            "A repair that deletes reviewed artifacts requires a predecessor Artifact View"
+        )
+    view_path = ensure_within(
+        predecessor_dir / view_binding.get("manifestPath", ""),
+        predecessor_dir,
+        "Predecessor Artifact View",
+    )
+    if not view_path.is_file() or file_hash(view_path) != view_binding.get("manifestHash"):
+        raise BootstrapError("Predecessor Artifact View is missing or stale")
+    view = read_json(view_path)
+    try:
+        validate_artifact_view(
+            predecessor_dir, repository_root, view, require_live_originals=False
+        )
+    except ControlPlaneError as exc:
+        raise BootstrapError(str(exc)) from exc
+    entries = {
+        item.get("originalPath"): item
+        for item in view.get("entries", [])
+        if isinstance(item, dict) and isinstance(item.get("originalPath"), str)
+    }
+    predecessor_artifacts = {
+        item.get("artifact"): item
+        for item in predecessor_manifest.get("artifacts", [])
+        if isinstance(item, dict) and isinstance(item.get("artifact"), str)
+    }
+    public: list[dict[str, Any]] = []
+    sources: list[dict[str, Any]] = []
+    for relative in removed_artifacts:
+        entry = entries.get(relative)
+        artifact = predecessor_artifacts.get(relative)
+        if not isinstance(entry, dict) or not isinstance(artifact, dict):
+            raise BootstrapError(
+                f"Removed artifact is absent from predecessor frozen evidence: {relative}"
+            )
+        digest = artifact.get("sha256")
+        source = ensure_within(
+            predecessor_dir / entry.get("snapshotPath", ""),
+            predecessor_dir / "artifact-view",
+            "Removed predecessor snapshot",
+        )
+        if (
+            not source.is_file()
+            or file_hash(source) != digest
+            or entry.get("snapshotSha256") != digest
+        ):
+            raise BootstrapError(f"Removed predecessor snapshot is stale: {relative}")
+        snapshot_path = (Path("artifact-view") / "deleted-tree" / relative).as_posix()
+        binding = {
+            "artifact": relative,
+            "sha256": digest,
+            "snapshotPath": snapshot_path,
+            "predecessorRun": predecessor_run,
+            "textEncoding": artifact.get("textEncoding"),
+            "lineCount": artifact.get("lineCount"),
+        }
+        public.append(binding)
+        sources.append({**binding, "sourcePath": str(source)})
+    return public, sources
+
+
+def review_candidate_binding_hash(
+    artifacts: list[dict[str, Any]],
+    authority_context_hash_value: str,
+    write_set: list[str],
+    execution_read_set: list[str],
+    dependency_closure: list[str],
+) -> str:
+    return value_hash(
+        {
+            "artifacts": artifacts,
+            "authorityContextHash": authority_context_hash_value,
+            "writeSet": write_set,
+            "executionReadSet": execution_read_set,
+            "dependencyClosure": dependency_closure,
+        }
+    )
+
+
+def build_repair_review_delta(
+    repository_root: Path,
+    predecessor_run: str,
+    predecessor_manifest: dict[str, Any],
+    current_artifacts: list[dict[str, Any]],
+    candidate_binding_hash: str,
+    dependency_closure: list[str],
+) -> dict[str, Any]:
+    before = artifact_hash_map(predecessor_manifest.get("artifacts", []))
+    after = artifact_hash_map(current_artifacts)
+    added = sorted(set(after) - set(before))
+    removed: list[str] = []
+    for relative in sorted(set(before) - set(after)):
+        live = ensure_within(repository_root / relative, repository_root, "Omitted predecessor artifact")
+        if not live.exists():
+            removed.append(relative)
+        elif not live.is_file() or file_hash(live) != before[relative]:
+            raise BootstrapError(
+                f"Changed predecessor artifact is missing from the repair review scope: {relative}"
+            )
+    changed = sorted(path for path in set(before) & set(after) if before[path] != after[path])
+    reachable = set(dependency_closure)
+    support = sorted(
+        path
+        for path in set(before) & set(after)
+        if before[path] == after[path] and path in reachable
+    )
+    if not added and not removed and not changed:
+        raise BootstrapError(
+            "A repair review requires a non-empty artifact delta after targeted repair validation"
+        )
+    return {
+        "schemaVersion": REPAIR_DELTA_SCHEMA,
+        "strategy": REVIEW_CYCLE_POLICY["repairReviewScope"],
+        "predecessorRun": predecessor_run,
+        "addedArtifacts": added,
+        "changedArtifacts": changed,
+        "removedArtifacts": removed,
+        "removedArtifactSnapshots": [],
+        "supportArtifacts": support,
+        "candidateBindingHash": candidate_binding_hash,
+        "authorizes": [],
+    }
+
+
+def blocker_finding_ids(run_dir: Path, manifest: dict[str, Any]) -> set[str]:
+    result = finalized_review_result(run_dir, manifest)
+    return {
+        item["findingId"]
+        for item in result.get("findings", [])
+        if isinstance(item, dict)
+        and item.get("proposedSeverity") in {"P0", "P1"}
+        and isinstance(item.get("findingId"), str)
+    }
+
+
+def blocker_finding_lineage(run_dir: Path, manifest: dict[str, Any]) -> dict[str, str]:
+    result = finalized_review_result(run_dir, manifest)
+    lineage: dict[str, str] = {}
+    for item in result.get("findings", []):
+        if not isinstance(item, dict) or item.get("proposedSeverity") not in {"P0", "P1"}:
+            continue
+        identity = value_hash(
+            [
+                item.get("artifact"),
+                item.get("dimension"),
+                *(
+                    normalize_finding_identity_text(str(item.get(field, "")))
+                    for field in ("triggerInput", "requiredState", "badOutcome")
+                ),
+            ]
+        )
+        finding_id = item.get("findingId")
+        if isinstance(finding_id, str):
+            lineage[identity] = finding_id
+    return lineage
+
+
+def build_round_three_entry_decision(
+    repository_root: Path,
+    lineage_family_id: str,
+    predecessor_run: str,
+    predecessor_dir: Path,
+    predecessor_manifest: dict[str, Any],
+    current_authority_context_hash: str,
+    repair_delta: dict[str, Any],
+    candidate_binding_hash: str,
+    reason: str | None,
+    high_risk_boundaries: list[str],
+) -> dict[str, Any]:
+    if reason not in ROUND_THREE_ENTRY_REASONS:
+        raise BootstrapError(
+            "Round 3 requires --round-entry-reason with an allowed typed reason"
+        )
+    predecessor_blockers = blocker_finding_ids(predecessor_dir, predecessor_manifest)
+    trigger_findings: list[str] = []
+    boundary_artifacts: list[str] = []
+    if reason == "novel_p0_p1":
+        predecessor_lineage = blocker_finding_lineage(predecessor_dir, predecessor_manifest)
+        prior_lineage: dict[str, str] = {}
+        prior_run = predecessor_manifest.get("predecessorRun")
+        if isinstance(prior_run, str) and prior_run:
+            prior_dir = ensure_within(repository_root / prior_run, repository_root, "Prior review run")
+            prior_manifest = read_json(prior_dir / "review-input.json")
+            prior_lineage = blocker_finding_lineage(prior_dir, prior_manifest)
+        trigger_findings = sorted(
+            finding_id
+            for identity, finding_id in predecessor_lineage.items()
+            if identity not in prior_lineage
+        )
+        if not trigger_findings:
+            raise BootstrapError("Round 3 novel_p0_p1 requires a new predecessor P0/P1 finding")
+    elif reason == "authority_context_graph_changed":
+        if predecessor_manifest.get("authorityContextHash") == current_authority_context_hash:
+            raise BootstrapError(
+                "Round 3 authority_context_graph_changed requires an actual authority/context hash change"
+            )
+    else:
+        impacted = set(repair_delta["addedArtifacts"]) | set(repair_delta["changedArtifacts"]) | set(
+            repair_delta["removedArtifacts"]
+        )
+        boundary_artifacts = sorted(set(high_risk_boundaries))
+        if not boundary_artifacts or any(path not in impacted for path in boundary_artifacts):
+            raise BootstrapError(
+                "Round 3 high_risk_boundary_changed requires changed high-risk boundary artifacts"
+            )
+    decision = {
+        "schemaVersion": "bootstrap-review-round-entry-decision.v1",
+        "lineageFamilyId": lineage_family_id,
+        "entryRound": 3,
+        "reason": reason,
+        "predecessorRun": predecessor_run,
+        "predecessorInputHash": predecessor_manifest["inputHash"],
+        "triggerFindingIds": trigger_findings,
+        "scopeDelta": {
+            "addedArtifacts": repair_delta["addedArtifacts"],
+            "changedArtifacts": repair_delta["changedArtifacts"],
+            "removedArtifacts": repair_delta["removedArtifacts"],
+        },
+        "highRiskBoundaryArtifacts": boundary_artifacts,
+        "candidateBindingHash": candidate_binding_hash,
+        "authorizes": [],
+    }
+    errors = schema_validation_errors("bootstrap-review-round-entry-decision.v1.schema.json", decision)
+    if errors:
+        raise BootstrapError("Round 3 entry decision is invalid: " + "; ".join(errors))
+    return decision
 
 
 def validate_review_cycle(
     repository_root: Path,
     run_dir: Path,
     change_id: str,
+    lineage_family_id: str | None,
     review_id: str,
     review_round: int,
     predecessor_run: str | None,
     profile_name: str,
     current_authority_context_hash: str,
-) -> None:
+    current_artifacts: list[dict[str, Any]],
+    candidate_binding_hash: str,
+    dependency_closure: list[str],
+    round_entry_reason: str | None = None,
+    high_risk_boundaries: list[str] | None = None,
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    legacy_lineage = lineage_family_id is None
+    family_id = lineage_family_id or change_id
+    if REVIEW_ID_PATTERN.fullmatch(family_id) is None:
+        raise BootstrapError(
+            "Lineage family ID must be 3-64 lowercase letters, digits, dot, underscore, or hyphen"
+        )
     existing = review_run_manifests(repository_root, run_dir)
-    same_change = [(path, item) for path, item in existing if item.get("changeId") == change_id]
-    counted_change = []
-    for path, item in same_change:
-        gate_started = (path / "review-gate-result.json").is_file()
-        event_backed_attempts = active_attempts(read_process_events(path))
-        seal_path = path / "run-seal.json"
-        seal = read_json(seal_path) if seal_path.is_file() else None
-        incomplete_abandoned_codex_run = (
-            item.get("executionMode") == "codex-exec"
-            and isinstance(seal, dict)
-            and seal.get("state") == "abandoned"
-            and not gate_started
-            and not event_backed_attempts
-            and not all(
-                (path / "reviewer-outputs" / f"{layer}.json").is_file()
-                and read_json(path / "reviewer-outputs" / f"{layer}.json").get("status") == "completed"
-                for layer in LAYERS
-            )
-        )
-        if incomplete_abandoned_codex_run:
-            continue
-        authorization_exists = (path / "review-launch-authorization.json").is_file()
-        reviewer_process_started = any(
-            event.get("role") in LAYERS for event in event_backed_attempts.values()
-        )
-        lease_path = path / item.get("processLeasePolicy", {}).get("sidecar", "process-leases.json")
-        if lease_path.is_file():
-            try:
-                lease_state = read_json(lease_path)
-            except BootstrapError:
-                lease_state = {}
-            reviewer_process_started |= any(
-                isinstance(lease, dict) and lease.get("role") in LAYERS
-                for lease in lease_state.get("leases", [])
-            )
-        execution_started = (
-            reviewer_process_started
-            if item.get("executionMode") == "codex-exec"
-            else authorization_exists
-        )
-        if gate_started or execution_started:
-            counted_change.append((path, item))
+    adopted_paths = adopted_lineage_run_paths(repository_root, family_id)
+    same_family = [
+        (path, item)
+        for path, item in existing
+        if effective_lineage_family(item) == family_id
+        or repository_relative_path(path, repository_root) in adopted_paths
+    ]
+    counted_family = [
+        (path, item) for path, item in same_family if run_consumes_semantic_round(path, item)
+    ]
     if any(item.get("reviewId") == review_id for _path, item in existing):
         raise BootstrapError(f"Review ID already exists in another run: {review_id}")
-    if any(item.get("fullReviewRound") == review_round for _path, item in counted_change):
-        raise BootstrapError(f"Change {change_id} already has full review round {review_round}")
+    if any(item.get("fullReviewRound") == review_round for _path, item in counted_family):
+        raise BootstrapError(
+            f"Lineage family {family_id} already has full review round {review_round}"
+        )
     if review_round == 1:
-        if counted_change:
+        if counted_family:
             raise BootstrapError(
-                f"Change {change_id} already has review history; changing review ID cannot restart round 1"
+                f"Lineage family {family_id} already has review history; a successor cannot restart round 1"
             )
-        return
+        if round_entry_reason is not None or high_risk_boundaries:
+            raise BootstrapError("Round 1 cannot declare Round 3 entry evidence")
+        return None, None
     if predecessor_run is None:
         raise BootstrapError("Review rounds after round 1 require a predecessor run")
     predecessor_dir = ensure_within(repository_root / predecessor_run, repository_root, "Predecessor run")
     predecessor_manifest = read_json(predecessor_dir / "review-input.json")
-    if predecessor_manifest.get("changeId") != change_id:
-        raise BootstrapError("Predecessor run belongs to a different changeId")
+    if (
+        effective_lineage_family(predecessor_manifest) != family_id
+        and predecessor_run not in adopted_paths
+    ):
+        raise BootstrapError("Predecessor run belongs to a different lineage family")
     if predecessor_manifest.get("fullReviewRound") != review_round - 1:
         raise BootstrapError("Predecessor run must be the immediately previous full review round")
     if predecessor_manifest.get("profileName") != profile_name:
@@ -1183,12 +1789,43 @@ def validate_review_cycle(
         )
     if review_round == 2 and not predecessor_has_blocker:
         raise BootstrapError("A clean predecessor does not trigger another full semantic review")
+    repair_delta = build_repair_review_delta(
+        repository_root,
+        predecessor_run,
+        predecessor_manifest,
+        current_artifacts,
+        candidate_binding_hash,
+        dependency_closure,
+    )
+    delta_errors = schema_validation_errors("bootstrap-repair-review-delta.v1.schema.json", repair_delta)
+    if delta_errors:
+        raise BootstrapError("Repair review delta is invalid: " + "; ".join(delta_errors))
+    entry_decision = None
     if review_round == REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]:
-        context_changed = predecessor_manifest.get("authorityContextHash") != current_authority_context_hash
-        if not predecessor_has_blocker and not context_changed:
-            raise BootstrapError(
-                "Round 3 requires a predecessor P0/P1 finding or a changed authority/context graph"
+        if legacy_lineage and round_entry_reason is None:
+            context_changed = (
+                predecessor_manifest.get("authorityContextHash") != current_authority_context_hash
             )
+            if not predecessor_has_blocker and not context_changed:
+                raise BootstrapError(
+                    "Round 3 requires a predecessor P0/P1 finding or a changed authority/context graph"
+                )
+        else:
+            entry_decision = build_round_three_entry_decision(
+                repository_root,
+                family_id,
+                predecessor_run,
+                predecessor_dir,
+                predecessor_manifest,
+                current_authority_context_hash,
+                repair_delta,
+                candidate_binding_hash,
+                round_entry_reason,
+                high_risk_boundaries or [],
+            )
+    elif round_entry_reason is not None or high_risk_boundaries:
+        raise BootstrapError("Round 3 entry evidence is only valid for Round 3")
+    return repair_delta, entry_decision
 
 
 def process_lease_path(run_dir: Path, manifest: dict[str, Any]) -> Path:
@@ -1426,6 +2063,29 @@ def prompt_text(layer: str, manifest: dict[str, Any], run_dir: Path) -> str:
     forbidden_changes = ", ".join(
         f"`{item}`" for item in instruction_policy["contentTrustPolicy"]["forbiddenAuthorityChanges"]
     )
+    repair_delta = manifest.get("repairReviewDelta")
+    if isinstance(repair_delta, dict):
+        focus = repair_delta["addedArtifacts"] + repair_delta["changedArtifacts"]
+        removed = repair_delta["removedArtifacts"]
+        removed_snapshots = repair_delta.get("removedArtifactSnapshots", [])
+        focus_text = ", ".join(f"`{path}`" for path in focus) or "(none)"
+        removed_text = ", ".join(f"`{path}`" for path in removed) or "(none)"
+        removed_snapshot_text = ", ".join(
+            f"`{item['artifact']}` at `{item['snapshotPath']}`"
+            for item in removed_snapshots
+            if isinstance(item, dict)
+        ) or "(none)"
+        repair_guidance = (
+            "Repair review focus: analyze the repair delta and its reachable consumer effects. "
+            f"Present focus artifacts: {focus_text}. Removed artifact tombstones: {removed_text}. "
+            f"Frozen predecessor bytes for removed artifacts: {removed_snapshot_text}. "
+            "Read every removed predecessor snapshot before assessing deletion effects; locate any "
+            "candidate on a current consumer or contract artifact. "
+            "Unchanged support artifacts remain mandatory context but are not an invitation for "
+            "unbounded rediscovery."
+        )
+    else:
+        repair_guidance = "Initial review: no predecessor repair delta applies."
     if manifest["executionMode"] == "codex-exec":
         execution_contract = f"""The controller has already validated launch authorization and owns the live process event for
 `reviewer:{layer}`. Process events are execution authority; `process-leases.json` is only a derived
@@ -1447,7 +2107,9 @@ same-session handshake, then constructs formal coverage from the frozen manifest
 requires a concrete `failureReason`."""
     else:
         execution_contract = f"""Do not start until `review-launch-authorization.json` exists and validates. In manual or
-specialized-agent mode, the operator owns recovery and process evidence.
+specialized-agent mode, the operator owns recovery and process evidence. Immediately before the
+first reviewer begins semantic work, run
+`py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py mark-semantic-start --run-dir {run_dir}`.
 Read `review-input.json`, inspect only its hash-bound artifacts, and fill
 `reviewer-outputs/{layer}.json`. Keep every binding field unchanged.
 Before exiting, re-read your saved JSON and run this read-only validator from the repository root:
@@ -1469,6 +2131,7 @@ Required context classes: `{', '.join(manifest['requiredContextClasses'])}`
 Context class artifact bindings:
 {context_lines}
 Completeness: all artifacts and context closure are mandatory; sampling is forbidden.
+{repair_guidance}
 
 Role mission:
 {role_lines}
@@ -1520,7 +2183,7 @@ Do not write verifier decisions or gateway-owned dispositions.
 def reviewer_template(
     layer: str, manifest: dict[str, Any], *, attempt_id: str | None = None,
 ) -> dict[str, Any]:
-    required_artifacts = [item["artifact"] for item in manifest["artifacts"]]
+    required_artifacts = list(reviewable_artifact_map(manifest))
     output = {
         "schemaVersion": "bootstrap-reviewer-output.v1",
         "reviewId": manifest["reviewId"],
@@ -1545,7 +2208,7 @@ def artifact_view_read_receipt(manifest: dict[str, Any]) -> dict[str, Any]:
     return {
         "schemaVersion": ARTIFACT_VIEW_READ_RECEIPT_SCHEMA,
         "artifactViewManifestHash": manifest["artifactView"]["manifestHash"],
-        "artifactCount": len(manifest["artifacts"]),
+        "artifactCount": len(reviewable_artifact_map(manifest)),
         "complete": True,
     }
 
@@ -1613,6 +2276,30 @@ def prepared_artifact_set(
     selected: set[str] = set()
     for raw in values:
         selected.update(artifacts_for_assignment(repository_root, raw, artifact_paths, label))
+    return sorted(selected)
+
+
+def explicit_repository_paths(
+    values: list[str], repository_root: Path, label: str
+) -> list[str]:
+    selected: set[str] = set()
+    for raw in values:
+        if not isinstance(raw, str) or not raw.strip():
+            raise BootstrapError(f"{label} must be an explicit repository-relative path")
+        normalized = raw.strip().replace("\\", "/")
+        parts = PurePosixPath(normalized).parts
+        if (
+            normalized.startswith("/")
+            or re.match(r"^[A-Za-z]:", normalized)
+            or normalized.endswith("/")
+            or any(part in {"", ".", ".."} for part in parts)
+            or any(character in normalized for character in "*?[]")
+        ):
+            raise BootstrapError(f"{label} must be an explicit repository-relative path")
+        candidate = ensure_within(repository_root / normalized, repository_root, label)
+        if candidate.exists() and not candidate.is_file():
+            raise BootstrapError(f"{label} must identify a file: {normalized}")
+        selected.add(repository_relative_path(candidate, repository_root))
     return sorted(selected)
 
 
@@ -1837,6 +2524,49 @@ def validate_repair_closure(
     return closure
 
 
+def validate_acceptance_repair_route(
+    route_path: Path,
+    completeness_path: Path,
+    repository_root: Path,
+    lineage_family_id: str,
+    review_round: int,
+    round_entry_reason: str | None,
+) -> dict[str, dict[str, str]]:
+    route = read_json(route_path)
+    completeness = read_json(completeness_path)
+    expected_kind = "focused_repair_review" if review_round == 2 else "full_implementation_conformance"
+    if (
+        not isinstance(route, dict)
+        or route.get("schemaVersion") != "implementation-acceptance-bootstrap-route.v1"
+        or route.get("routeKind") != expected_kind
+        or route.get("lineageFamilyId") != lineage_family_id
+        or route.get("semanticRoundsConsumed") != review_round - 1
+        or route.get("nextFullReviewRound") != review_round
+        or route.get("roundEntryReason") != round_entry_reason
+        or route.get("authorizes") != []
+        or not isinstance(completeness, dict)
+        or completeness.get("schemaVersion") != "acceptance-repair-completeness.v1"
+        or completeness.get("lineageFamilyId") != lineage_family_id
+        or completeness.get("semanticRoundsConsumed") != review_round - 1
+        or completeness.get("status") != "passed"
+        or completeness.get("authorizes") != []
+        or route.get("repairCompletenessHash") != value_hash(completeness)
+    ):
+        raise BootstrapError(
+            "Implementation-conformance repair review requires a matching Acceptance route and completeness projection"
+        )
+    return {
+        "acceptanceRepairRoute": {
+            "path": repository_relative_path(route_path, repository_root),
+            "sha256": file_hash(route_path),
+        },
+        "acceptanceRepairCompleteness": {
+            "path": repository_relative_path(completeness_path, repository_root),
+            "sha256": file_hash(completeness_path),
+        },
+    }
+
+
 def command_prepare(args: argparse.Namespace) -> int:
     repository_root = Path(args.repository_root).resolve()
     if not repository_root.is_dir():
@@ -1851,6 +2581,8 @@ def command_prepare(args: argparse.Namespace) -> int:
         raise BootstrapError("Review ID must be 3-64 lowercase letters, digits, dot, underscore, or hyphen")
     if REVIEW_ID_PATTERN.fullmatch(args.change_id) is None:
         raise BootstrapError("Change ID must be 3-64 lowercase letters, digits, dot, underscore, or hyphen")
+    if not isinstance(args.lineage_family_id, str) or not args.lineage_family_id:
+        raise BootstrapError("New reviews require --lineage-family-id")
     if args.review_round < 1 or args.review_round > REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]:
         raise BootstrapError("Review round must be within the configured full-review hard limit")
     if args.review_round == 1 and args.predecessor_run_dir:
@@ -1913,21 +2645,62 @@ def command_prepare(args: argparse.Namespace) -> int:
             for artifact in check["authorityArtifacts"]
         }
     )
+    high_risk_boundaries = explicit_repository_paths(
+        args.high_risk_boundary, repository_root, "High-risk boundary"
+    )
     current_git_index_hash = git_index_hash(repository_root)
-    validate_review_cycle(
+    candidate_binding_hash = review_candidate_binding_hash(
+        artifacts,
+        context_hash,
+        write_set,
+        execution_read_set,
+        dependency_closure,
+    )
+    repair_review_delta, review_entry_decision = validate_review_cycle(
         repository_root,
         out_dir,
         args.change_id,
+        args.lineage_family_id,
         args.review_id,
         args.review_round,
         predecessor_run,
         args.profile,
         context_hash,
+        artifacts,
+        candidate_binding_hash,
+        dependency_closure,
+        args.round_entry_reason,
+        high_risk_boundaries,
     )
+    removed_snapshot_sources: list[dict[str, Any]] = []
+    if isinstance(repair_review_delta, dict):
+        predecessor_manifest = read_json(
+            ensure_within(
+                repository_root / predecessor_run,
+                repository_root,
+                "Predecessor run",
+            )
+            / "review-input.json"
+        )
+        removed_bindings, removed_snapshot_sources = prepare_removed_artifact_snapshots(
+            repository_root,
+            predecessor_run,
+            predecessor_manifest,
+            repair_review_delta["removedArtifacts"],
+        )
+        repair_review_delta["removedArtifactSnapshots"] = removed_bindings
+        delta_errors = schema_validation_errors(
+            "bootstrap-repair-review-delta.v1.schema.json", repair_review_delta
+        )
+        if delta_errors:
+            raise BootstrapError(
+                "Repair review delta is invalid: " + "; ".join(delta_errors)
+            )
     manifest = {
         "schemaVersion": "bootstrap-review-input.v1",
         "reviewId": args.review_id,
         "changeId": args.change_id,
+        "lineageFamilyId": args.lineage_family_id,
         "fullReviewRound": args.review_round,
         "predecessorRun": predecessor_run,
         "repositoryRoot": str(repository_root),
@@ -1963,6 +2736,9 @@ def command_prepare(args: argparse.Namespace) -> int:
         "contextClassArtifacts": context_class_artifacts,
         "knowledgeContext": knowledge_context,
         "authorityContextHash": context_hash,
+        "candidateBindingHash": candidate_binding_hash,
+        "repairReviewDelta": repair_review_delta,
+        "reviewEntryDecision": review_entry_decision,
         "completenessPolicy": profile["completenessPolicy"],
         "scope": scopes,
         "reviewScopePolicy": review_scope_policy,
@@ -1995,25 +2771,58 @@ def command_prepare(args: argparse.Namespace) -> int:
             "path": closure_path.relative_to(repository_root).as_posix(),
             "sha256": file_hash(closure_path),
         }
+        if args.profile == "bootstrap-implementation-conformance":
+            if not args.acceptance_repair_route or not args.acceptance_repair_completeness:
+                raise BootstrapError(
+                    "Implementation-conformance repair rounds require Acceptance route bindings"
+                )
+            route_path = ensure_within(
+                repository_root / args.acceptance_repair_route,
+                repository_root,
+                "Acceptance repair route",
+            )
+            completeness_path = ensure_within(
+                repository_root / args.acceptance_repair_completeness,
+                repository_root,
+                "Acceptance repair completeness",
+            )
+            if not route_path.is_file() or not completeness_path.is_file():
+                raise BootstrapError("Acceptance repair route binding is missing")
+            manifest.update(
+                validate_acceptance_repair_route(
+                    route_path,
+                    completeness_path,
+                    repository_root,
+                    args.lineage_family_id,
+                    args.review_round,
+                    args.round_entry_reason,
+                )
+            )
+        elif args.acceptance_repair_route or args.acceptance_repair_completeness:
+            raise BootstrapError(
+                "Acceptance repair route bindings are only valid for implementation-conformance"
+            )
     elif args.repair_closure:
         raise BootstrapError("Round 1 must not declare --repair-closure")
-    if args.execution_mode == "codex-exec":
-        try:
-            view = create_artifact_view(
-                repository_root,
-                out_dir,
-                artifacts,
-                context_class_artifacts,
-                manifest["authorityRevision"],
-            )
-        except ControlPlaneError as exc:
-            raise BootstrapError(str(exc)) from exc
-        manifest["artifactView"] = {
-            "schemaVersion": view["schemaVersion"],
-            "manifestPath": "artifact-view/manifest.json",
-            "manifestHash": file_hash(out_dir / "artifact-view" / "manifest.json"),
-            "creationHash": view["creationHash"],
-        }
+    elif args.acceptance_repair_route or args.acceptance_repair_completeness:
+        raise BootstrapError("Round 1 cannot declare Acceptance repair route bindings")
+    try:
+        view = create_artifact_view(
+            repository_root,
+            out_dir,
+            artifacts,
+            context_class_artifacts,
+            manifest["authorityRevision"],
+            removed_snapshot_sources,
+        )
+    except (ControlPlaneError, OSError) as exc:
+        raise BootstrapError(str(exc)) from exc
+    manifest["artifactView"] = {
+        "schemaVersion": view["schemaVersion"],
+        "manifestPath": "artifact-view/manifest.json",
+        "manifestHash": file_hash(out_dir / "artifact-view" / "manifest.json"),
+        "creationHash": view["creationHash"],
+    }
     manifest["inputHash"] = value_hash(manifest)
     write_json(out_dir / "review-input.json", manifest)
     write_json(out_dir / "preflight-result.json", preflight_template(manifest), grant_modify=True)
@@ -2034,6 +2843,7 @@ def command_prepare(args: argparse.Namespace) -> int:
             reviewer_template(layer, manifest),
             grant_modify=True,
         )
+    _register_review_artifact(repository_root, run_dir=out_dir)
     print(f"Prepared manual bootstrap review at {out_dir}")
     return 0
 
@@ -2041,6 +2851,20 @@ def command_prepare(args: argparse.Namespace) -> int:
 def validate_manifest_controls(manifest: dict[str, Any], profile: dict[str, Any]) -> None:
     if REVIEW_ID_PATTERN.fullmatch(str(manifest.get("changeId", ""))) is None:
         raise BootstrapError("review-input.json has an invalid changeId")
+    lineage_fields = {
+        "lineageFamilyId",
+        "candidateBindingHash",
+        "repairReviewDelta",
+        "reviewEntryDecision",
+    }
+    present_lineage_fields = lineage_fields & set(manifest)
+    if present_lineage_fields and present_lineage_fields != lineage_fields:
+        raise BootstrapError("review-input.json has a partial lineage-family contract")
+    if present_lineage_fields:
+        if REVIEW_ID_PATTERN.fullmatch(str(manifest.get("lineageFamilyId", ""))) is None:
+            raise BootstrapError("review-input.json has an invalid lineageFamilyId")
+        if HASH_PATTERN.fullmatch(str(manifest.get("candidateBindingHash", ""))) is None:
+            raise BootstrapError("review-input.json has an invalid candidateBindingHash")
     review_round = manifest.get("fullReviewRound")
     if not isinstance(review_round, int) or isinstance(review_round, bool) or not (
         1 <= review_round <= REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
@@ -2051,6 +2875,22 @@ def validate_manifest_controls(manifest: dict[str, Any], profile: dict[str, Any]
         review_round > 1 and (not isinstance(predecessor, str) or not predecessor.strip())
     ):
         raise BootstrapError("review-input.json has an invalid predecessorRun")
+    if present_lineage_fields:
+        if review_round == 1 and (
+            manifest.get("repairReviewDelta") is not None
+            or manifest.get("reviewEntryDecision") is not None
+        ):
+            raise BootstrapError("Round 1 cannot contain repair review lineage evidence")
+        if review_round == 2 and (
+            not isinstance(manifest.get("repairReviewDelta"), dict)
+            or manifest.get("reviewEntryDecision") is not None
+        ):
+            raise BootstrapError("Round 2 requires repair delta and no Round 3 entry decision")
+        if review_round == 3 and (
+            not isinstance(manifest.get("repairReviewDelta"), dict)
+            or not isinstance(manifest.get("reviewEntryDecision"), dict)
+        ):
+            raise BootstrapError("Round 3 requires repair delta and typed entry decision")
     if manifest.get("executionMode") not in EXECUTION_MODES:
         raise BootstrapError("review-input.json has an invalid executionMode")
     if manifest.get("controlPlanePolicy") != CONTROL_PLANE_POLICY:
@@ -2167,16 +3007,49 @@ def load_run(
         raise BootstrapError("review-input.json has an invalid bootstrap authority class")
     validate_context_class_artifacts(manifest, profile)
     validate_manifest_controls(manifest, profile)
-    validate_review_cycle(
+    candidate_binding_hash = review_candidate_binding_hash(
+        manifest.get("artifacts", []),
+        manifest.get("authorityContextHash", ""),
+        manifest.get("writeSet", []),
+        manifest.get("executionReadSet", []),
+        manifest.get("dependencyClosure", []),
+    )
+    entry = manifest.get("reviewEntryDecision")
+    repair_delta, expected_entry = validate_review_cycle(
         repository_root,
         run_dir,
         manifest["changeId"],
+        manifest.get("lineageFamilyId"),
         manifest["reviewId"],
         manifest["fullReviewRound"],
         manifest["predecessorRun"],
         manifest["profileName"],
         manifest["authorityContextHash"],
+        manifest.get("artifacts", []),
+        candidate_binding_hash,
+        manifest.get("dependencyClosure", []),
+        entry.get("reason") if isinstance(entry, dict) else None,
+        entry.get("highRiskBoundaryArtifacts", []) if isinstance(entry, dict) else [],
     )
+    if isinstance(repair_delta, dict) and repair_delta.get("removedArtifacts"):
+        predecessor_dir = ensure_within(
+            repository_root / manifest["predecessorRun"], repository_root, "Predecessor run"
+        )
+        predecessor_manifest = read_json(predecessor_dir / "review-input.json")
+        removed_bindings, _sources = prepare_removed_artifact_snapshots(
+            repository_root,
+            manifest["predecessorRun"],
+            predecessor_manifest,
+            repair_delta["removedArtifacts"],
+        )
+        repair_delta["removedArtifactSnapshots"] = removed_bindings
+    if "lineageFamilyId" in manifest:
+        if manifest.get("candidateBindingHash") != candidate_binding_hash:
+            raise BootstrapError("review-input.json has a stale candidateBindingHash")
+        if manifest.get("repairReviewDelta") != repair_delta:
+            raise BootstrapError("review-input.json has a stale or substituted repairReviewDelta")
+        if manifest.get("reviewEntryDecision") != expected_entry:
+            raise BootstrapError("review-input.json has a stale or substituted reviewEntryDecision")
     if require_fresh_artifacts:
         if git_revision(repository_root) != manifest.get("authorityRevision"):
             raise BootstrapError("Git authority revision changed after prepare")
@@ -2196,24 +3069,23 @@ def load_run(
             path = ensure_within(repository_root / artifact["artifact"], repository_root, "Input artifact")
             if not path.is_file() or file_hash(path) != artifact.get("sha256"):
                 raise BootstrapError(f"Prepared input artifact is stale: {artifact['artifact']}")
-    if manifest.get("executionMode") == "codex-exec":
-        view_binding = manifest.get("artifactView")
-        if not isinstance(view_binding, dict):
-            raise BootstrapError("Codex Exec run is missing Artifact View binding")
-        view_path = run_dir / view_binding.get("manifestPath", "")
-        if not view_path.is_file() or file_hash(view_path) != view_binding.get("manifestHash"):
-            raise BootstrapError("Artifact View manifest is missing or stale")
-        try:
-            view_hash = validate_artifact_view(
-                run_dir,
-                repository_root,
-                read_json(view_path),
-                require_live_originals=require_fresh_artifacts,
-            )
-        except ControlPlaneError as exc:
-            raise BootstrapError(str(exc)) from exc
-        if view_hash != view_binding["manifestHash"]:
-            raise BootstrapError("Artifact View manifest hash is invalid")
+    view_binding = manifest.get("artifactView")
+    if not isinstance(view_binding, dict):
+        raise BootstrapError("Review run is missing Artifact View binding")
+    view_path = run_dir / view_binding.get("manifestPath", "")
+    if not view_path.is_file() or file_hash(view_path) != view_binding.get("manifestHash"):
+        raise BootstrapError("Artifact View manifest is missing or stale")
+    try:
+        view_hash = validate_artifact_view(
+            run_dir,
+            repository_root,
+            read_json(view_path),
+            require_live_originals=require_fresh_artifacts,
+        )
+    except ControlPlaneError as exc:
+        raise BootstrapError(str(exc)) from exc
+    if view_hash != view_binding["manifestHash"]:
+        raise BootstrapError("Artifact View manifest hash is invalid")
     if manifest["fullReviewRound"] > 1:
         closure_binding = manifest.get("repairClosure")
         if not isinstance(closure_binding, dict):
@@ -2236,6 +3108,40 @@ def load_run(
             manifest["executionReadSet"],
             manifest["dependencyClosure"],
         )
+        if manifest.get("profileName") == "bootstrap-implementation-conformance":
+            route_binding = manifest.get("acceptanceRepairRoute")
+            completeness_binding = manifest.get("acceptanceRepairCompleteness")
+            if not isinstance(route_binding, dict) or not isinstance(completeness_binding, dict):
+                raise BootstrapError("Review round is missing Acceptance repair route bindings")
+            route_path = ensure_within(
+                repository_root / route_binding.get("path", ""),
+                repository_root,
+                "Acceptance repair route",
+            )
+            completeness_path = ensure_within(
+                repository_root / completeness_binding.get("path", ""),
+                repository_root,
+                "Acceptance repair completeness",
+            )
+            if (
+                not route_path.is_file()
+                or file_hash(route_path) != route_binding.get("sha256")
+                or not completeness_path.is_file()
+                or file_hash(completeness_path) != completeness_binding.get("sha256")
+            ):
+                raise BootstrapError("Acceptance repair route binding is missing or stale")
+            expected_bindings = validate_acceptance_repair_route(
+                route_path,
+                completeness_path,
+                repository_root,
+                effective_lineage_family(manifest),
+                manifest["fullReviewRound"],
+                manifest.get("reviewEntryDecision", {}).get("reason")
+                if isinstance(manifest.get("reviewEntryDecision"), dict)
+                else None,
+            )
+            if any(manifest.get(key) != value for key, value in expected_bindings.items()):
+                raise BootstrapError("Acceptance repair route manifest binding is stale")
     return run_dir, manifest, repository_root
 
 
@@ -2534,6 +3440,40 @@ def command_process_lease(args: argparse.Namespace) -> int:
     run_dir, manifest, _repository_root = load_run(args.run_dir)
     with process_lease_lock(run_dir):
         return command_process_lease_locked(args, run_dir, manifest)
+
+
+def command_mark_semantic_start(args: argparse.Namespace) -> int:
+    run_dir, manifest, _repository_root = load_run(args.run_dir)
+    validate_launch_authorization(run_dir, manifest)
+    if manifest.get("executionMode") == "codex-exec":
+        raise BootstrapError("Codex Exec semantic start is recorded by controller-owned attempt events")
+    if (run_dir / "review-gate-result.json").is_file():
+        raise BootstrapError("A gated review cannot publish a new semantic-start event")
+    events = read_process_events(run_dir)
+    matching = [
+        event
+        for event in events
+        if event.get("eventType") == SEMANTIC_ROUND_STARTED_EVENT
+        and event.get("reviewId") == manifest.get("reviewId")
+        and event.get("inputHash") == manifest.get("inputHash")
+    ]
+    if matching:
+        print("Semantic review round is already marked started")
+        return 0
+    append_process_event(
+        run_dir,
+        {
+            "eventType": SEMANTIC_ROUND_STARTED_EVENT,
+            "timestamp": utc_now(),
+            "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"],
+            "lineageFamilyId": effective_lineage_family(manifest),
+            "fullReviewRound": manifest["fullReviewRound"],
+            "executionMode": manifest["executionMode"],
+        },
+    )
+    print("Marked semantic review round started")
+    return 0
 
 
 def expected_access_handshake_artifacts(
@@ -3251,7 +4191,7 @@ def runner_prompt(
         "completed reviewer payload must contain artifactViewReadReceipt with "
         f"schemaVersion={ARTIFACT_VIEW_READ_RECEIPT_SCHEMA}, "
         f"artifactViewManifestHash={manifest['artifactView']['manifestHash']}, "
-        f"artifactCount={len(manifest['artifacts'])}, and complete=true. Do not return coverage arrays; "
+        f"artifactCount={len(reviewable_artifact_map(manifest))}, and complete=true. Do not return coverage arrays; "
         "the parent owns formal coverage. "
         + (
             "For acceptance_auditor, payload must also contain inventoryAttestation using "
@@ -3538,6 +4478,7 @@ def command_run_layer(args: argparse.Namespace) -> int:
                     manifest,
                     args.role,
                     repository_root,
+                    run_dir,
                     require_completed=status == "completed",
                 )
             except BootstrapError as exc:
@@ -3614,7 +4555,7 @@ def validate_binding(output: Any, manifest: dict[str, Any], layer: str) -> list[
     if output.get("status") == "completed" and "failureReason" in output:
         errors.append("schema_invalid: completed layer cannot contain failureReason")
     coverage = output.get("coverage")
-    expected_artifacts = [item["artifact"] for item in manifest["artifacts"]]
+    expected_artifacts = list(reviewable_artifact_map(manifest))
     if isinstance(coverage, dict):
         required_artifacts = coverage.get("requiredArtifacts")
         read_artifacts = coverage.get("readArtifacts")
@@ -3647,7 +4588,9 @@ def command_validate_layer(args: argparse.Namespace) -> int:
     if layer not in manifest["requiredLayers"]:
         raise BootstrapError(f"Reviewer layer is not required by this review: {layer}")
     output = read_json(run_dir / "reviewer-outputs" / f"{layer}.json")
-    validate_reviewer_output(output, manifest, layer, repository_root, require_completed=True)
+    validate_reviewer_output(
+        output, manifest, layer, repository_root, run_dir, require_completed=True
+    )
     print(f"Validated reviewer output: {layer}")
     return 0
 
@@ -3657,6 +4600,7 @@ def validate_reviewer_output(
     manifest: dict[str, Any],
     layer: str,
     repository_root: Path,
+    run_dir: Path,
     *,
     require_completed: bool,
 ) -> None:
@@ -3665,7 +4609,9 @@ def validate_reviewer_output(
         errors.append("status_invalid: validate-layer requires a completed reviewer output")
     if not errors and isinstance(output, dict):
         for candidate in output.get("candidates", []):
-            reason_code, reason = candidate_reason(candidate, manifest, repository_root)
+            reason_code, reason = candidate_reason(
+                candidate, manifest, repository_root, run_dir
+            )
             if reason_code:
                 errors.append(f"{reason_code}: {reason}")
     if errors:
@@ -3681,7 +4627,7 @@ def validate_scope_references(
         not isinstance(item, str) or not item.strip() for item in references
     ):
         return "missing_context", f"{label} must contain inspected context"
-    artifact_map = {item["artifact"]: item for item in manifest["artifacts"]}
+    artifact_map = reviewable_artifact_map(manifest)
     for reference in references:
         match = re.fullmatch(r"(.+?)(?::([1-9][0-9]*)(?:-([1-9][0-9]*))?)?", reference.strip())
         if match is None:
@@ -3721,7 +4667,12 @@ def reference_covers(checked_reference: str, required_reference: str) -> bool:
     return checked_start <= required_start and checked_end >= required_end
 
 
-def candidate_reason(candidate: Any, manifest: dict[str, Any], repository_root: Path) -> tuple[str | None, str]:
+def candidate_reason(
+    candidate: Any,
+    manifest: dict[str, Any],
+    repository_root: Path,
+    run_dir: Path,
+) -> tuple[str | None, str]:
     if not isinstance(candidate, dict):
         return "schema_invalid", "Candidate must be an object"
     required = {
@@ -3735,15 +4686,28 @@ def candidate_reason(candidate: Any, manifest: dict[str, Any], repository_root: 
     if not isinstance(candidate_id, str) or re.fullmatch(r"[A-Z][A-Z0-9-]{4,63}", candidate_id) is None:
         return "schema_invalid", "candidateId is invalid"
     artifact = candidate.get("artifact")
-    artifact_map = {item["artifact"]: item for item in manifest["artifacts"]}
+    artifact_map = reviewable_artifact_map(manifest)
     if not isinstance(artifact, str) or artifact not in artifact_map:
         return "missing_location", "Artifact is not part of the prepared scope"
     if candidate.get("artifactHash") != artifact_map[artifact]["sha256"]:
         return "stale_evidence", "Candidate artifactHash does not match prepared input"
-    path = ensure_within(repository_root / artifact, repository_root, "Candidate artifact")
-    if not path.is_file() or file_hash(path) != artifact_map[artifact]["sha256"]:
+    prepared_artifact = artifact_map[artifact]
+    if prepared_artifact.get("sourceState") == "deleted":
+        path = ensure_within(
+            run_dir / prepared_artifact.get("snapshotPath", ""),
+            run_dir / "artifact-view",
+            "Deleted candidate snapshot",
+        )
+        live = ensure_within(
+            repository_root / artifact, repository_root, "Deleted candidate artifact"
+        )
+        if live.exists():
+            return "stale_evidence", "Deleted candidate artifact exists in the current repository"
+    else:
+        path = ensure_within(repository_root / artifact, repository_root, "Candidate artifact")
+    if not path.is_file() or file_hash(path) != prepared_artifact["sha256"]:
         return "stale_evidence", "Current artifact hash differs from prepared input"
-    if artifact_map[artifact].get("textEncoding") != "utf-8":
+    if prepared_artifact.get("textEncoding") != "utf-8":
         return "missing_location", "Candidate evidence must reference a UTF-8 text artifact"
     start, end = candidate.get("startLine"), candidate.get("endLine")
     if not isinstance(start, int) or isinstance(start, bool) or not isinstance(end, int) or isinstance(end, bool) or start < 1 or end < start:
@@ -3956,8 +4920,8 @@ def evaluate_reviewer_outputs(
             continue
         completed.append(layer)
         for candidate in output["candidates"]:
-            code, reason = (candidate_reason(candidate, manifest, repository_root)
-                            if validate_live_evidence else (None, ""))
+            code, reason = (candidate_reason(candidate, manifest, repository_root, run_dir)
+                             if validate_live_evidence else (None, ""))
             if code:
                 rejections.append(rejection(candidate, layer, manifest, code, reason))
                 continue
@@ -4948,10 +5912,11 @@ def validate_finalized_run_evidence(
         "p2RefutedCount": p2_status_counts["p2_refuted"],
     }
     return {
-        "schemaVersion": "bootstrap-finalized-run-validation.v1",
+        "schemaVersion": "bootstrap-finalized-run-validation.v2",
         "validationStatus": "passed",
         "reviewId": manifest["reviewId"],
         "changeId": manifest["changeId"],
+        "lineageFamilyId": effective_lineage_family(manifest),
         "fullReviewRound": manifest["fullReviewRound"],
         "profileName": manifest["profileName"],
         "reviewProfile": manifest["reviewProfile"],
@@ -4962,6 +5927,16 @@ def validate_finalized_run_evidence(
         "authorityRevision": manifest["authorityRevision"],
         "inputHash": manifest["inputHash"],
         "authorityContextHash": manifest["authorityContextHash"],
+        "reviewEntryDecisionHash": (
+            value_hash(manifest["reviewEntryDecision"])
+            if isinstance(manifest.get("reviewEntryDecision"), dict)
+            else None
+        ),
+        "repairReviewDeltaHash": (
+            value_hash(manifest["repairReviewDelta"])
+            if isinstance(manifest.get("repairReviewDelta"), dict)
+            else None
+        ),
         "artifactHashes": {
             "reviewInput": file_hash(run_dir / "review-input.json"),
             "preflightResult": preflight_result_hash,
@@ -4988,7 +5963,7 @@ def command_validate_finalized_run(args: argparse.Namespace) -> int:
     run_dir, manifest, repository_root = load_run(args.run_dir)
     envelope = validate_finalized_run_evidence(run_dir, manifest, repository_root)
     errors = schema_validation_errors(
-        "bootstrap-finalized-run-validation.v1.schema.json", envelope
+        "bootstrap-finalized-run-validation.v2.schema.json", envelope
     )
     if errors:
         raise BootstrapError("Finalized-run validation envelope is invalid: " + "; ".join(errors))
@@ -5042,10 +6017,26 @@ def command_finalize(args: argparse.Namespace) -> int:
     if not isinstance(findings, list):
         raise BootstrapError("review-candidates.json is invalid")
     if not stale_after_repair:
+        prepared_artifacts = reviewable_artifact_map(manifest)
         for finding in findings:
             artifact = finding.get("artifact", "") if isinstance(finding, dict) else ""
-            prepared = next((item for item in manifest["artifacts"] if item["artifact"] == artifact), None)
-            if prepared is None or file_hash(ensure_within(repository_root / artifact, repository_root, "Finding artifact")) != prepared["sha256"]:
+            prepared = prepared_artifacts.get(artifact)
+            if isinstance(prepared, dict) and prepared.get("sourceState") == "deleted":
+                evidence_path = ensure_within(
+                    run_dir / prepared.get("snapshotPath", ""),
+                    run_dir / "artifact-view",
+                    "Deleted finding snapshot",
+                )
+                live_path = ensure_within(
+                    repository_root / artifact, repository_root, "Deleted finding artifact"
+                )
+                fresh = not live_path.exists() and evidence_path.is_file()
+            else:
+                evidence_path = ensure_within(
+                    repository_root / artifact, repository_root, "Finding artifact"
+                )
+                fresh = evidence_path.is_file()
+            if prepared is None or not fresh or file_hash(evidence_path) != prepared["sha256"]:
                 raise BootstrapError(f"Finding evidence became stale before finalize: {artifact}")
     blockers = {item["findingId"]: item for item in findings if item.get("proposedSeverity") in {"P0", "P1"}}
     recovery = validate_verifier_recovery_events(run_dir, manifest, blockers=blockers)
@@ -5484,6 +6475,7 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
         "runDirectory": run_dir.as_posix(),
         "reviewId": manifest.get("reviewId"),
         "changeId": manifest.get("changeId"),
+        "lineageFamilyId": effective_lineage_family(manifest),
         "fullReviewRound": review_round,
         "runExecutionState": execution_state,
         "runRelationship": relationship,
@@ -5560,12 +6552,15 @@ def command_list_runs(args: argparse.Namespace) -> int:
         classify_run(run_dir, manifest)
         for run_dir, manifest in review_run_manifests(repository_root)
         if args.change_id is None or manifest.get("changeId") == args.change_id
+        if args.lineage_family_id is None
+        or effective_lineage_family(manifest) == args.lineage_family_id
     ]
     rows.sort(key=lambda item: (str(item.get("changeId")), int(item.get("fullReviewRound") or 0), str(item.get("reviewId"))))
     document = {
         "schemaVersion": "bootstrap-run-index.v1",
         "repositoryRoot": str(repository_root),
         "changeId": args.change_id,
+        "lineageFamilyId": args.lineage_family_id,
         "runCount": len(rows),
         "runs": rows,
     }
@@ -5576,6 +6571,156 @@ def command_list_runs(args: argparse.Namespace) -> int:
         output = ensure_within(output, repository_root, "Run index output")
         write_json(output, document)
     print(json.dumps(document, ensure_ascii=False, indent=2))
+    return 0
+
+
+def build_lineage_state(repository_root: Path, lineage_family_id: str) -> dict[str, Any]:
+    if REVIEW_ID_PATTERN.fullmatch(lineage_family_id) is None:
+        raise BootstrapError("Lineage family ID is invalid")
+    adopted_paths = adopted_lineage_run_paths(repository_root, lineage_family_id)
+    rows = [
+        (run_dir, manifest)
+        for run_dir, manifest in review_run_manifests(repository_root)
+        if (
+            effective_lineage_family(manifest) == lineage_family_id
+            or repository_relative_path(run_dir, repository_root) in adopted_paths
+        )
+        and run_consumes_semantic_round(run_dir, manifest)
+    ]
+    rows.sort(key=lambda item: (int(item[1].get("fullReviewRound") or 0), str(item[1].get("reviewId"))))
+    rounds = [
+        {
+            "runDirectory": repository_relative_path(run_dir, repository_root),
+            "reviewId": manifest.get("reviewId"),
+            "changeId": manifest.get("changeId"),
+            "fullReviewRound": manifest.get("fullReviewRound"),
+            "inputHash": manifest.get("inputHash"),
+        }
+        for run_dir, manifest in rows
+    ]
+    consumed = sorted(
+        {
+            item["fullReviewRound"]
+            for item in rounds
+            if isinstance(item.get("fullReviewRound"), int)
+        }
+    )
+    if consumed != list(range(1, len(consumed) + 1)) or len(rounds) != len(consumed):
+        raise BootstrapError(
+            "Lineage family has non-contiguous or duplicated semantic-round evidence"
+        )
+    hard_limit = REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+    next_round = None if len(consumed) >= hard_limit else len(consumed) + 1
+    document = {
+        "schemaVersion": "bootstrap-review-lineage-state.v1",
+        "lineageFamilyId": lineage_family_id,
+        "semanticRoundsConsumed": len(consumed),
+        "consumedRoundNumbers": consumed,
+        "defaultFullReviewRoundLimit": REVIEW_CYCLE_POLICY["defaultFullReviewRoundLimit"],
+        "hardFullReviewRoundLimit": hard_limit,
+        "nextFullReviewRound": next_round,
+        "state": "manual_pause" if next_round is None else "available",
+        "runs": rounds,
+        "authorizes": [],
+    }
+    document["lineageStateHash"] = value_hash(document)
+    errors = schema_validation_errors("bootstrap-review-lineage-state.v1.schema.json", document)
+    if errors:
+        raise BootstrapError("Bootstrap lineage state is invalid: " + "; ".join(errors))
+    return document
+
+
+def command_inspect_lineage(args: argparse.Namespace) -> int:
+    repository_root = Path(args.repository_root).resolve()
+    print(
+        json.dumps(
+            build_lineage_state(repository_root, args.lineage_family_id),
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+    return 0
+
+
+def command_adopt_lineage(args: argparse.Namespace) -> int:
+    repository_root = Path(args.repository_root).resolve()
+    if REVIEW_ID_PATTERN.fullmatch(args.lineage_family_id) is None:
+        raise BootstrapError("Target lineage family ID is invalid")
+    if REVIEW_ID_PATTERN.fullmatch(args.legacy_change_id) is None:
+        raise BootstrapError("Legacy change ID is invalid")
+    if args.lineage_family_id == args.legacy_change_id:
+        raise BootstrapError("Lineage adoption must bridge distinct legacy and target identities")
+    policy_path = ensure_within(
+        Path(args.policy_authority) if Path(args.policy_authority).is_absolute()
+        else repository_root / args.policy_authority,
+        repository_root,
+        "Lineage adoption policy",
+    )
+    if not policy_path.is_file():
+        raise BootstrapError("Lineage adoption policy does not exist")
+    try:
+        policy_text = policy_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise BootstrapError("Lineage adoption policy is unreadable") from exc
+    if not policy_text_is_accepted(policy_text):
+        raise BootstrapError("Lineage adoption policy must be Accepted")
+    known_runs = {
+        repository_relative_path(run_dir, repository_root): (run_dir, manifest)
+        for run_dir, manifest in review_run_manifests(repository_root)
+    }
+    historical_runs: list[dict[str, str]] = []
+    selected: set[str] = set()
+    for raw in args.historical_run_dir:
+        candidate = Path(raw)
+        if not candidate.is_absolute():
+            candidate = repository_root / candidate
+        run_dir = ensure_within(candidate, repository_root, "Historical review run")
+        relative = repository_relative_path(run_dir, repository_root)
+        if relative in selected:
+            raise BootstrapError("Historical review runs must be unique")
+        selected.add(relative)
+        registered = known_runs.get(relative)
+        if registered is None:
+            raise BootstrapError("Historical review run is not registered")
+        _registered_dir, manifest = registered
+        if manifest.get("lineageFamilyId") is not None or manifest.get("changeId") != args.legacy_change_id:
+            raise BootstrapError("Historical review run is not part of the declared legacy change")
+        historical_runs.append({
+            "runDirectory": relative,
+            "reviewInputHash": manifest["inputHash"],
+            "manifestFileHash": file_hash(run_dir / "review-input.json"),
+        })
+    historical_runs.sort(key=lambda item: item["runDirectory"])
+    output = Path(args.out)
+    if not output.is_absolute():
+        output = repository_root / output
+    output = ensure_within(output, repository_root, "Lineage adoption output")
+    if not output.name.endswith("lineage-adoption.v1.json"):
+        raise BootstrapError("Lineage adoption output must end with lineage-adoption.v1.json")
+    if output.exists():
+        raise BootstrapError("Lineage adoption output is append-only")
+    adoption = {
+        "schemaVersion": LINEAGE_ADOPTION_SCHEMA,
+        "targetLineageFamilyId": args.lineage_family_id,
+        "legacyChangeId": args.legacy_change_id,
+        "historicalRuns": historical_runs,
+        "policyAuthority": {
+            "path": repository_relative_path(policy_path, repository_root),
+            "sha256": file_hash(policy_path),
+            "status": "Accepted",
+        },
+        "reason": args.reason.strip(),
+        "authorizes": [],
+    }
+    if not adoption["reason"]:
+        raise BootstrapError("Lineage adoption reason is required")
+    adoption["adoptionHash"] = value_hash(adoption)
+    errors = schema_validation_errors("bootstrap-lineage-adoption.v1.schema.json", adoption)
+    if errors:
+        raise BootstrapError("Lineage adoption is invalid: " + "; ".join(errors))
+    write_json(output, adoption)
+    _register_review_artifact(repository_root, adoption_path=output)
+    print(f"Recorded lineage adoption at {output}")
     return 0
 
 
@@ -5622,9 +6767,32 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--repository-root", required=True)
     prepare.add_argument("--review-id", required=True)
     prepare.add_argument("--change-id", required=True)
+    prepare.add_argument(
+        "--lineage-family-id",
+        help="Stable semantic-review budget identity; successors for the same target keep this value",
+    )
     prepare.add_argument("--review-round", required=True, type=int)
     prepare.add_argument("--predecessor-run-dir")
     prepare.add_argument("--repair-closure")
+    prepare.add_argument(
+        "--acceptance-repair-route",
+        help="Acceptance-owned bounded re-entry route for implementation-conformance repair rounds",
+    )
+    prepare.add_argument(
+        "--acceptance-repair-completeness",
+        help="Acceptance-owned repair completeness projection bound by the re-entry route",
+    )
+    prepare.add_argument(
+        "--round-entry-reason",
+        choices=sorted(ROUND_THREE_ENTRY_REASONS),
+        help="Typed Round 3 entry reason; invalid outside Round 3",
+    )
+    prepare.add_argument(
+        "--high-risk-boundary",
+        action="append",
+        default=[],
+        help="Changed repository-relative boundary artifact for high_risk_boundary_changed",
+    )
     prepare.add_argument("--profile", required=True)
     prepare.add_argument("--scope", action="append", required=True)
     prepare.add_argument(
@@ -5724,6 +6892,12 @@ def build_parser() -> argparse.ArgumentParser:
     lease.add_argument("--state", choices=sorted(LEASE_STATES - {"acquired"}))
     lease.add_argument("--note")
     lease.set_defaults(handler=command_process_lease)
+    semantic_start = subparsers.add_parser(
+        "mark-semantic-start",
+        help="Append the semantic-start fact for a manual or specialized review round",
+    )
+    semantic_start.add_argument("--run-dir", required=True)
+    semantic_start.set_defaults(handler=command_mark_semantic_start)
     validate_layer = subparsers.add_parser(
         "validate-layer", help="Validate one reviewer output without writing gate sidecars"
     )
@@ -5755,8 +6929,28 @@ def build_parser() -> argparse.ArgumentParser:
     list_runs = subparsers.add_parser("list-runs", help="Rebuild the repository Bootstrap run index")
     list_runs.add_argument("--repository-root", required=True)
     list_runs.add_argument("--change-id")
+    list_runs.add_argument("--lineage-family-id")
     list_runs.add_argument("--out")
     list_runs.set_defaults(handler=command_list_runs)
+    inspect_lineage = subparsers.add_parser(
+        "inspect-lineage",
+        help="Inspect the cumulative semantic-round budget for one lineage family",
+    )
+    inspect_lineage.add_argument("--repository-root", required=True)
+    inspect_lineage.add_argument("--lineage-family-id", required=True)
+    inspect_lineage.set_defaults(handler=command_inspect_lineage)
+    adopt_lineage = subparsers.add_parser(
+        "adopt-lineage",
+        help="Bind explicitly selected legacy changeId history into a target lineage family",
+    )
+    adopt_lineage.add_argument("--repository-root", required=True)
+    adopt_lineage.add_argument("--lineage-family-id", required=True)
+    adopt_lineage.add_argument("--legacy-change-id", required=True)
+    adopt_lineage.add_argument("--historical-run-dir", action="append", required=True)
+    adopt_lineage.add_argument("--policy-authority", required=True)
+    adopt_lineage.add_argument("--reason", required=True)
+    adopt_lineage.add_argument("--out", required=True)
+    adopt_lineage.set_defaults(handler=command_adopt_lineage)
     inspect_run = subparsers.add_parser("inspect-run", help="Inspect one run without mutating it")
     inspect_run.add_argument("--run-dir", required=True)
     inspect_run.set_defaults(handler=command_inspect_run)

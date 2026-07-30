@@ -15,7 +15,19 @@
     "scope_strategy": "minimal-complete-closure",
     "transport_failure": "retry-same-run-without-semantic-round",
     "p2_only": "current-run-disposition-and-targeted-validation",
-    "acceptance_target": "original-plan-directory"
+    "acceptance_target": "original-plan-directory",
+    "lineage_identity": "stable-original-plan-target-family",
+    "lineage_projection": "hash-bound-inspect-lineage-required-even-zero",
+    "default_full_review_rounds": 2,
+    "hard_full_review_rounds": 3,
+    "successor_resets_round_budget": false,
+    "round_three_entry_reasons": ["novel_p0_p1", "authority_context_graph_changed", "high_risk_boundary_changed"],
+    "repair_delta": "changed-files-direct-consumers-targeted-tests-validation-refs",
+    "changed_path_binding": "content-hash-or-deletion-tombstone",
+    "root_cause_inventory": "all-discovered-callsites-addressed-or-excluded",
+    "composition_validation": "controlled-command-receipt-required",
+    "composition_scope_binding": "changed-path-direct-consumer-validation-ref",
+    "hard_limit_route": "manual_pause"
   },
   "required_files": [
     "SKILL.md",
@@ -44,5 +56,5 @@
   "forbidden_default_terms": ["requires at least five questions", "requires three Bootstrap rounds", "requires a cross-process lock", "requires reviewer identity attestation"],
   "forbidden_fixture_names": ["clarification-cases.json", "clarification-state-pass.json", "compliance-scenarios.json", "compliance-trace-pass.jsonl", "compliance-trace-write-before-clarification.jsonl", "compliance-trace-implementation-first.jsonl"],
   "forbidden_live_plan_patterns": ["execution-plans[\\\\/]+20[0-9]{2}-[0-9]{2}-[0-9]{2}", "RMAP-", "C:\\\\Users\\\\", "/Users/"],
-  "required_profile_case_ids": ["standard-clear", "resumable-interrupted", "self-hosted-routing", "slice-local-stale", "shared-contract-replay", "legacy-regression", "optional-review", "standard-no-report", "self-hosted-competing-pressure", "in-place-repair-round", "minimal-review-closure", "transport-attempt-retry", "p2-only-disposition"]
+  "required_profile_case_ids": ["standard-clear", "resumable-interrupted", "self-hosted-routing", "slice-local-stale", "shared-contract-replay", "legacy-regression", "optional-review", "standard-no-report", "self-hosted-competing-pressure", "in-place-repair-round", "minimal-review-closure", "transport-attempt-retry", "p2-only-disposition", "bounded-review-family", "repair-completeness", "round-three-exception", "exhausted-review-family"]
 }

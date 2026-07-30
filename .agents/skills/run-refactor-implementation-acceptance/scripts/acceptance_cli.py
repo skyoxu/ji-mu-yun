@@ -34,15 +34,18 @@ from task_checklist import audit_task_checklist
 from source_clauses import extract_heading_clauses
 from matrix_phase import project_acceptance_impact, publish_candidate_result, publish_final_result
 from knowledge_context import freeze_knowledge_context
+from repair_completeness import audit_repair_completeness
 from bootstrap_integration import (
     BootstrapBindingError,
     bind_capabilities,
     build_attestation_scope,
     build_minimal_review_scope,
+    load_current_lineage_state,
     load_verified_bootstrap_import,
     validate_finding_mapping,
     validate_mapping_approval,
     project_bootstrap_execution_state,
+    project_bounded_review_route,
 )
 
 
@@ -52,10 +55,12 @@ def _read_json(path: str) -> object:
 
 def _publish_new_json(output_path: str, value: dict) -> dict:
     output = Path(output_path)
-    if output.exists():
-        raise InputError("output is append-only")
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(value, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
+    try:
+        with output.open("x", encoding="utf-8", newline="\n") as stream:
+            stream.write(json.dumps(value, sort_keys=True, indent=2) + "\n")
+    except FileExistsError as exc:
+        raise InputError("output is append-only") from exc
     return value
 
 
@@ -90,9 +95,6 @@ def prepare_run(input_path: str, output_path: str, knowledge_context_path: str |
         if knowledge_context_path is not None
         else None
     )
-    output = Path(output_path)
-    if output.exists():
-        raise InputError("run input output is append-only")
     result = {
         "schemaVersion": "acceptance-run-input.v1",
         "input": value,
@@ -101,9 +103,7 @@ def prepare_run(input_path: str, output_path: str, knowledge_context_path: str |
         **({"knowledgeContext": knowledge_context} if knowledge_context is not None else {}),
         "authorizes": [],
     }
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
-    return result
+    return _publish_new_json(output_path, result)
 
 
 def resolve_phase_policy_command(policy_path: str, baseline_path: str, candidate_path: str, adapter_hash: str) -> dict:
@@ -173,7 +173,13 @@ def run_phase_scan_command(
     return result
 
 
-def run_command_command(repository_root: str, registry_path: str, command_id: str, output_path: str) -> dict:
+def run_command_command(
+    repository_root: str,
+    registry_path: str,
+    command_id: str,
+    output_path: str,
+    input_paths: list[str] | None = None,
+) -> dict:
     root = Path(repository_root).resolve()
     from execution_control import resolve_registered_command
     try:
@@ -185,7 +191,7 @@ def run_command_command(repository_root: str, registry_path: str, command_id: st
         output.relative_to(root)
     except ValueError as exc:
         raise InputError("controlled command receipt must be inside repository root") from exc
-    receipt = run_controlled_command(root, descriptor)
+    receipt = run_controlled_command(root, descriptor, input_paths=input_paths)
     publish_receipt(output, receipt)
     return receipt
 
@@ -201,6 +207,13 @@ def audit_task_checklist_command(repository_root: str, request_path: str, output
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
     return result
+
+
+def audit_repair_completeness_command(request_path: str, output_path: str) -> dict:
+    return _publish_new_json(
+        output_path,
+        audit_repair_completeness(_read_json(request_path)),
+    )
 
 
 def extract_source_clauses_command(source_path: str, repository_root: str) -> dict:
@@ -314,15 +327,25 @@ def decide_bootstrap_command(request_path: str, output_path: str) -> dict:
 def prepare_bootstrap_command(request_path: str, output_path: str) -> dict:
     request = _read_json(request_path)
     base_fields = {"decision", "binding", "launch_authorization"}
+    optional_fields = {
+        "repository_root", "scope_inputs", "lineage_state", "repair_completeness",
+        "repair_completeness_request",
+    }
     if (
         not isinstance(request, dict)
         or not base_fields.issubset(request)
-        or set(request) - (base_fields | {"scope_inputs"})
+        or set(request) - (base_fields | optional_fields)
     ):
         raise InputError("bootstrap preparation request fields are invalid")
     required = request["decision"].get("requirement") == "required"
-    if required and "scope_inputs" not in request:
-        raise InputError("required bootstrap preparation needs minimal review scope inputs")
+    if required and (
+        "scope_inputs" not in request
+        or not isinstance(request.get("repository_root"), str)
+        or not request["repository_root"].strip()
+    ):
+        raise InputError(
+            "required bootstrap preparation needs repository root and minimal review scope inputs"
+        )
     try:
         review_scope = (
             build_minimal_review_scope(request["scope_inputs"])
@@ -331,16 +354,56 @@ def prepare_bootstrap_command(request_path: str, output_path: str) -> dict:
         )
     except BootstrapBindingError as exc:
         raise InputError(str(exc)) from exc
+    if required:
+        try:
+            current_lineage = load_current_lineage_state(
+                Path(request["repository_root"]), review_scope["lineageFamilyId"]
+            )
+        except BootstrapBindingError as exc:
+            raise InputError(str(exc)) from exc
+        if request.get("lineage_state") != current_lineage:
+            raise InputError(
+                "bootstrap lineage state is not the current repository-owned projection"
+            )
+        repair_projection = request.get("repair_completeness")
+        repair_request = request.get("repair_completeness_request")
+        if repair_projection is None:
+            if repair_request is not None:
+                raise InputError("initial bootstrap route cannot attach a repair request")
+        else:
+            if not isinstance(repair_request, dict):
+                raise InputError("repair route requires its producer request for replay")
+            replayed = audit_repair_completeness(repair_request)
+            if replayed != repair_projection:
+                raise InputError(
+                    "repair completeness projection is stale or not producer-reproducible"
+                )
     state = project_bootstrap_execution_state(
         request["decision"],
         binding=request["binding"],
         launch_authorization=request["launch_authorization"],
     )
+    try:
+        review_route = project_bounded_review_route(
+            request["decision"],
+            review_scope,
+            request.get("lineage_state"),
+            request.get("repair_completeness"),
+        )
+    except BootstrapBindingError as exc:
+        raise InputError(str(exc)) from exc
+    next_actions = {
+        "deterministic_only": "deterministic-only-evaluation",
+        "focused_repair_review": "run-phase-bootstrap-review",
+        "full_implementation_conformance": "run-phase-bootstrap-review",
+        "manual_pause": "manual-pause",
+    }
     route = {
         "schemaVersion": "implementation-acceptance-bootstrap-route.v1",
         "bootstrapExecutionState": state,
         "reviewScope": review_scope,
-        "nextAction": "run-phase-bootstrap-review" if request["decision"].get("requirement") == "required" else "deterministic-only-evaluation",
+        **review_route,
+        "nextAction": next_actions[review_route["routeKind"]],
         "authorizes": [],
     }
     return _publish_new_json(output_path, route)
@@ -439,11 +502,15 @@ def main() -> int:
     controlled.add_argument("--repository-root", required=True)
     controlled.add_argument("--command-registry", required=True)
     controlled.add_argument("--command-id", required=True)
+    controlled.add_argument("--input-path", action="append", default=[])
     controlled.add_argument("--out", required=True)
     checklist = subcommands.add_parser("audit-task-checklist")
     checklist.add_argument("--repository-root", required=True)
     checklist.add_argument("--request", required=True)
     checklist.add_argument("--out", required=True)
+    repair_completeness = subcommands.add_parser("audit-repair-completeness")
+    repair_completeness.add_argument("--request", required=True)
+    repair_completeness.add_argument("--out", required=True)
     clauses = subcommands.add_parser("extract-source-clauses")
     clauses.add_argument("--source", required=True)
     clauses.add_argument("--repository-root", required=True)
@@ -513,10 +580,19 @@ def main() -> int:
         print(json.dumps(run_phase_scan_command(args.repository_root, args.scan_kind, args.execution_mode, args.baseline, args.candidate, args.command_registry, args.command_id, args.candidate_snapshot, args.out), sort_keys=True))
         return 0
     if args.command == "run-command":
-        print(json.dumps(run_command_command(args.repository_root, args.command_registry, args.command_id, args.out), sort_keys=True))
+        print(json.dumps(run_command_command(
+            args.repository_root,
+            args.command_registry,
+            args.command_id,
+            args.out,
+            args.input_path,
+        ), sort_keys=True))
         return 0
     if args.command == "audit-task-checklist":
         print(json.dumps(audit_task_checklist_command(args.repository_root, args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "audit-repair-completeness":
+        print(json.dumps(audit_repair_completeness_command(args.request, args.out), sort_keys=True))
         return 0
     if args.command == "extract-source-clauses":
         print(json.dumps(extract_source_clauses_command(args.source, args.repository_root), sort_keys=True))

@@ -17,6 +17,7 @@ class SchemaTests(unittest.TestCase):
             "phase-diff-coverage-result.v1.schema.json",
             "task-checklist-closure.v1.schema.json",
             "phase-scan-bundle-result.v1.schema.json",
+            "acceptance-repair-completeness.v1.schema.json",
         ]
         for name in names:
             value = json.loads((SKILL_ROOT / "schemas" / name).read_text(encoding="utf-8"))

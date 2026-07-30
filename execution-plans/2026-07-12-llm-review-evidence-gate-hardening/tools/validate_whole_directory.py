@@ -633,6 +633,14 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
         "hardFullReviewRoundLimit": 3,
         "p2OnlyTriggersFullReview": False,
         "onHardLimit": "manual_pause",
+        "roundIdentity": "lineage_family",
+        "successorResetsRoundBudget": False,
+        "roundThreeEntryReasons": [
+            "novel_p0_p1",
+            "authority_context_graph_changed",
+            "high_risk_boundary_changed",
+        ],
+        "repairReviewScope": "repair_delta_closure",
     }
     content_trust_policy = {
         "reviewedArtifacts": "untrusted_data",

@@ -12,9 +12,10 @@ Use the repository-owned control plane. This Skill owns the executable protocol 
 Read these before operating the workflow:
 
 1. `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`.
-2. `docs/standards/bootstrap-review-control-plane.md`.
-3. `references/review-profiles.v1.json`.
-4. `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md` for migration examples.
+2. `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`.
+3. `docs/standards/bootstrap-review-control-plane.md`.
+4. `references/review-profiles.v1.json`.
+5. `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md` for migration examples.
 
 The repository entrypoint is:
 
@@ -29,7 +30,7 @@ The 2026-07-12 CLI is a revision-bound compatibility adapter only. Do not add du
 - Keep Blind Hunter, Edge Case Hunter, and Acceptance Auditor isolated. Do not share candidates or suspected findings before gate.
 - Require complete artifact and context coverage. Sampling is prohibited and zero findings are valid.
 - Use an independent verifier for every accepted P0/P1.
-- Never run more than three complete semantic rounds for one `changeId` under the current policy.
+- Use one stable `lineageFamilyId` for the same acceptance target. Its default budget is two semantic rounds and its hard limit is three; changing `reviewId`, `changeId`, or successor directory never resets it.
 - Do not mutate reviewed files while a review run is active.
 - Never edit reviewer, verifier, gate, process-event, or final evidence to make a run pass.
 - Do not treat Bootstrap output as protected handoff, production gateway, commit, release, or plan-local validator authority.
@@ -56,14 +57,33 @@ When a run may already exist, use read-only recovery first:
 
 ```text
 py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py list-runs --repository-root <repo>
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py inspect-lineage --repository-root <repo> --lineage-family-id <family>
 py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py inspect-run --run-dir <run>
 ```
 
-Follow the reported `nextAction`. Do not infer current state from an old assistant summary.
+Pass the hash-bound `inspect-lineage` result to the consumer even when it
+reports zero rounds; omission must never mean a fresh family. Follow the
+reported `nextAction`. Do not infer current state from an old assistant summary.
+The local Git registry is only a performance index: every registered manifest
+and adoption record is re-hashed before use, and damaged registered history
+fails closed. The index binds its source Git revision. A changed HEAD triggers
+one repository reconciliation scan; controller-created runs and adoptions at
+the same HEAD are registered explicitly, so ordinary inspection does not scan
+the repository repeatedly.
+When canonical profile content changes, add the outgoing revision and its
+authority-root binding to `references/historical-policy-revisions.v1.json` in
+the same change. The archive exists only to replay historical typed decisions;
+it cannot prepare a new run.
+
+When pre-family history must count toward a target-derived family, use
+`adopt-lineage` once with explicit historical run directories and a hash-bound
+Accepted policy authority. Never rewrite old `review-input.json` files or infer
+adoption from directory proximity. One historical run cannot be adopted by
+multiple families.
 
 ## Prepare
 
-Create a new run with stable `reviewId`, `changeId`, round, profile, scopes, context classes, execution mode, and exclusivity attestation.
+Create a new run with stable `reviewId`, `changeId`, `lineageFamilyId`, round, profile, scopes, context classes, execution mode, and exclusivity attestation. Derive the family from the original acceptance target and retain it for every in-place repair or successor that still evaluates that target. New runs require `--lineage-family-id`.
 
 Declare:
 
@@ -79,7 +99,20 @@ rules, referenced standards, and current acceptance evidence. If a directory
 is genuinely the minimal complete closure, prepare requires
 `--directory-scope-attestation directory-is-minimal-complete-closure`.
 
-Round 2 and Round 3 also require `--predecessor-run-dir` and a hash-bound `--repair-closure`. The closure must cover the exact finalized predecessor finding set, including confirmed, advisory, and refuted dispositions.
+Round 2 and Round 3 also require `--predecessor-run-dir` and a hash-bound `--repair-closure`. The closure must cover the exact finalized predecessor finding set, including confirmed, advisory, and refuted dispositions. Round 2 defaults to the computed repair delta and its reachable support artifacts. Round 3 additionally requires `--round-entry-reason` with `novel_p0_p1`, `authority_context_graph_changed`, or `high_risk_boundary_changed`; the last reason also requires explicit changed `--high-risk-boundary` artifacts.
+
+For `bootstrap-implementation-conformance`, repair rounds also require
+`--acceptance-repair-route <route.json>` and
+`--acceptance-repair-completeness <projection.json>`. Use the exact output of
+Acceptance `prepare-bootstrap` and its replayed completeness projection. The
+controller binds both files, family, consumed round, next round, and typed
+Round 3 reason before preparing reviewer material.
+
+The current scope lists live repair and support files. A truly deleted
+predecessor artifact is inferred from the frozen predecessor manifest and its
+current absence; do not pass a nonexistent path as `--scope`. Its old bytes are
+copied into the current Artifact View deleted tree and remain formal reviewer
+evidence.
 
 Prepare freezes Git HEAD, Git index, direct artifacts, execution read set, dependency closure, context graph, cost estimate, and, for Codex Exec, `artifact-view.v1`. A replacement for a stale run uses a new review ID and fresh snapshot; the new run does not inherit stale state.
 
@@ -196,11 +229,18 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py vali
 
 The envelope is validation evidence only. It always has `authorizes=[]` and explicitly excludes plan acceptance, implementation acceptance, protected handoff, release, commit, and done authority. A plan-local validator may consume the envelope, but must independently apply its own acceptance predicate.
 
-After a third-round manual pause, re-entry requires a schema-valid `bootstrap-successor-policy-decision.v1` bound to a trusted authorization event and a genuinely new change, policy, authority, review, and input lineage. The successor authority must bind the exact authority-root registry frozen by that policy revision; a run-local null-predecessor authority is invalid. The consumer must rerun `validate-finalized-run`; a saved minimal envelope or self-declared independence flag cannot clear the pause.
+After a third-round manual pause, a successor policy cannot reset the existing lineage family. A new family is valid only after an explicit supersede or incompatible-scope decision creates a genuinely different acceptance target. The successor authority must still bind the exact authority-root registry frozen by that policy revision; a run-local null-predecessor authority is invalid. The consumer must rerun `validate-finalized-run`; a new change ID, saved minimal envelope, or self-declared independence flag cannot clear the old target's pause.
 
 ## Repair Rounds
 
 Repair all accepted findings as one batch outside the read-only review run. Use deterministic targeted checks during repair; do not launch another full review after each finding.
+
+For implementation acceptance, require the Acceptance-owned repair completeness
+audit before re-entry. Its Quick Dev handoff identifies changed files, direct
+consumers, targeted tests, validation references, generated sibling-callsite
+inventories, and successful controlled producer/consumer composition receipts.
+Bootstrap consumes the resulting bounded route but does not authorize it or
+reimplement the consumer audit.
 
 A clean or P2-only finalized predecessor does not authorize a new complete
 semantic round. Dispose P2 in the current run and use the registered targeted

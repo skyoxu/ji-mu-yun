@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Code Review Policy Binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "policyId", "policyRevision", "policyHash", "candidateManifestHash", "adapterHash", "triggeredPaths", "unreviewedExternalDomainPaths", "activatedCheckIds", "bindingHash", "authorizes"],
+  "properties": {
+    "schemaVersion": {"const": "code-review-policy-binding.v1"},
+    "policyId": {"const": "phase-service-code-review"},
+    "policyRevision": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "policyHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "candidateManifestHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "adapterHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "triggeredPaths": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "unreviewedExternalDomainPaths": {"type": "array", "items": {"type": "string"}},
+    "activatedCheckIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+    "bindingHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorizes": {"const": []}
+  }
+}

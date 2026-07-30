@@ -29,6 +29,7 @@ class PackageTests(unittest.TestCase):
     def test_cli_exposes_required_workflow_transitions(self) -> None:
         expected = {
             "prepare", "resolve-code-review-policy", "inventory", "audit-task-checklist",
+            "audit-repair-completeness",
             "collect-evidence", "run-command", "run-static-analysis", "run-security-scan",
             "analyze-diff-coverage", "evaluate", "render", "decide-bootstrap",
             "bind-bootstrap-capabilities", "prepare-attestation", "prepare-bootstrap",

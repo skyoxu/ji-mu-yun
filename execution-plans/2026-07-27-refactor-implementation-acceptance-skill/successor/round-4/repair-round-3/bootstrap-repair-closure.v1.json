@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3-successor-r4-r2",
+  "predecessorInputHash": "sha256:22e2bcfd56f01f7e53bdb01316fd30a32a0d43c7ef2035eb2ce61fa233341c77",
+  "predecessorResultHash": "sha256:5e4e2fdaad93adf28ec61a5fc4d72bccba726af8e5946dab09dddeca2e6c4da1",
+  "findingIds": ["BSR-DF6993FB778C01F0", "BSR-F8BDBA3E897E7505"],
+  "items": [
+    {
+      "findingId": "BSR-DF6993FB778C01F0",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "regression",
+      "reason": "The two ADR-0041 acceptance-control-plane Skill roots now trigger the Phase-service policy while unrelated paths remain external.",
+      "fixRefs": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],
+      "validationCommands": ["python unittest acceptance suite", "7-27 validate_all"],
+      "evidence": [{"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py", "sha256": "sha256:4f13988a194de7d66df928e5314893be38984487639f37506b34512961e4c20e"}]
+    },
+    {
+      "findingId": "BSR-F8BDBA3E897E7505",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "regression",
+      "reason": "JSON evidence publication now uses exclusive creation and preserves an existing output under collision.",
+      "fixRefs": [".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],
+      "validationCommands": ["python unittest acceptance suite", "7-27 validate_all"],
+      "evidence": [{"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py", "sha256": "sha256:4f13988a194de7d66df928e5314893be38984487639f37506b34512961e4c20e"}]
+    }
+  ],
+  "currentBindings": {"candidateHash": "sha256:282e81e0476e298059e121e73a37a104b003317378d8cce120cbde9ac16129cc", "sourceHash": "sha256:beb54304a35a9ba22aa5990ba62775d00bb03a83fd2bc2b784fb29ae19833614", "validatorHash": "sha256:c86b3ba1168c0a7a207fbc865f1440e5c9088e8841b22daba678ee37e5404282"},
+  "gitIndexHash": "sha256:fa02a42905bfc3fa619034054570922eca9436a512f2214ffc02cb6a6ad79f64",
+  "writeSetHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "executionReadSetHash": "sha256:c63ae0b15ce9d3a664ad1658003a5c0fc02d2cf69f47d178e088c1c2d902c328",
+  "dependencyClosureHash": "sha256:c63ae0b15ce9d3a664ad1658003a5c0fc02d2cf69f47d178e088c1c2d902c328"
+}

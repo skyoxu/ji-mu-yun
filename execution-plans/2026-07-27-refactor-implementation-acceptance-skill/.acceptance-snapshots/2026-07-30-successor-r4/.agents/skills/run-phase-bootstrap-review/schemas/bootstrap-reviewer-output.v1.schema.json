@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-reviewer-output.v1.schema.json",
+  "title": "Bootstrap Reviewer Output v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reviewId",
+    "reviewerLayer",
+    "routeVersion",
+    "authorityRevision",
+    "inputHash",
+    "status",
+    "coverage",
+    "candidates"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "bootstrap-reviewer-output.v1" },
+    "reviewId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$" },
+    "reviewerLayer": {
+      "enum": ["blind_hunter", "edge_case_hunter", "acceptance_auditor"]
+    },
+    "routeVersion": { "type": "string", "minLength": 1 },
+    "authorityRevision": { "type": "string", "minLength": 1 },
+    "inputHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "attemptId": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["pending", "completed", "failed"] },
+    "failureReason": { "type": "string", "minLength": 1 },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiredArtifacts", "readArtifacts", "missingArtifacts"],
+      "properties": {
+        "requiredArtifacts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "readArtifacts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "missingArtifacts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "candidateId", "artifactKind", "artifact", "artifactHash", "startLine", "endLine",
+          "exactEvidence", "triggerInput", "requiredState", "badOutcome", "contextRead",
+          "existingGuardAnalysis", "proposedSeverity", "severityRationale", "confidence",
+          "dimension", "authorityOwner", "consumer", "validatorRef"
+        ],
+        "properties": {
+          "candidateId": { "type": "string", "pattern": "^[A-Z][A-Z0-9-]{4,63}$" },
+          "artifactKind": { "enum": ["code", "document", "plan", "schema", "fixture"] },
+          "artifact": { "type": "string", "minLength": 1 },
+          "artifactHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+          "startLine": { "type": "integer", "minimum": 1 },
+          "endLine": { "type": "integer", "minimum": 1 },
+          "exactEvidence": { "type": "string", "minLength": 1 },
+          "triggerInput": { "type": "string", "minLength": 1 },
+          "requiredState": { "type": "string", "minLength": 1 },
+          "badOutcome": { "type": "string", "minLength": 1 },
+          "contextRead": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "existingGuardAnalysis": { "type": "string", "minLength": 1 },
+          "proposedSeverity": { "enum": ["P0", "P1", "P2"] },
+          "severityRationale": { "type": "string", "minLength": 1 },
+          "confidence": { "type": "number", "minimum": 0.8, "maximum": 1 },
+          "dimension": { "enum": ["code", "document", "plan", "security", "acceptance", "edge-case"] },
+          "authorityOwner": { "type": "string", "minLength": 1 },
+          "consumer": { "type": "string", "minLength": 1 },
+          "validatorRef": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "pending" } }, "required": ["status"] },
+      "then": {
+        "not": { "required": ["failureReason"] },
+        "properties": { "candidates": { "maxItems": 0 } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] },
+      "then": { "required": ["failureReason"], "properties": { "candidates": { "maxItems": 0 } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "completed" } }, "required": ["status"] },
+      "then": { "not": { "required": ["failureReason"] } }
+    }
+  ]
+}

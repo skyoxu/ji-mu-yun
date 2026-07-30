@@ -25,6 +25,27 @@ bounded repair slices, and hash-bound closure. Validators must accept ordered
 repair rounds without rewriting completed initial slices. A successor requires
 an explicit supersede or incompatible-scope decision.
 
+If Bootstrap implementation review is selected, record one stable lineage family derived from the original plan target and retain it across in-place
+repairs and successor history for that target. The default full-review budget is two semantic rounds and the hard limit is three. A successor never resets
+the budget. Round 3 is allowed only for a new P0/P1 finding, an authority or
+context graph change, or a high-risk boundary change; after the hard limit,
+route to manual pause.
+Require a current hash-bound inspect-lineage projection even for zero consumed rounds; a missing projection must fail closed instead of opening Round 1.
+Legacy pre-family history is bridged only by an explicit lineage-adoption
+record bound to an Accepted policy authority and exact historical run hashes.
+
+Each P0/P1 repair re-entry includes a generated root-cause callsite inventory
+that disposes every discovered sibling as changed or explicitly excluded. It
+also includes a successful controlled producer/consumer composition receipt.
+The repair changed set comes from hash-bound complete baseline/candidate
+manifests, and the receipt binds the current bytes of every producer and
+consumer input.
+The repair delta names changed files, direct consumers, targeted tests, and
+validation references. When two rounds are consumed and no Round 3 trigger
+exists, use deterministic closure rather than another complete review.
+Bind every present changed path to its content hash and every deleted path to an explicit tombstone.
+Each composition check covers a changed path, uses declared direct consumers, and exposes its receipt as a validation reference.
+
 Review scope is the smallest complete consumer closure. Name explicit changed
 files, direct consumers, targeted tests, plan authority, standards, repository
 rules, and current acceptance evidence. Do not use a whole source, test, Skill,

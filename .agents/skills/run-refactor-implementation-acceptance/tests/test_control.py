@@ -58,6 +58,20 @@ class ExecutionControlTests(unittest.TestCase):
         self.assertTrue(receipt["processResultHash"].startswith("sha256:"))
         self.assertEqual(descriptor["registry_hash"], receipt["commandRegistryHash"])
 
+    def test_controlled_command_rejects_duplicate_normalized_input_paths(self) -> None:
+        import tempfile
+        import execution_control
+
+        descriptor = {"id": "probe", "executable": sys.executable, "argv": ["-c", "print('ok')"], "cwd": ".", "timeout_seconds": 10, "shell": False, "allowed_write_roots": [], "forbidden_write_roots": [], "registry_hash": "sha256:" + "a" * 64, "environment_allowlist": [], "typed_placeholders": {}, "placeholder_values": {}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "src").mkdir()
+            (root / "src" / "input.py").write_text("pass\n", encoding="utf-8", newline="\n")
+            with self.assertRaisesRegex(execution_control.ControlError, "duplicated"):
+                execution_control.run_controlled_command(
+                    root, descriptor, input_paths=["src/input.py", "src\\input.py"]
+                )
+
     def test_controlled_command_records_timeout_as_closed_failure(self) -> None:
         import tempfile
         import execution_control

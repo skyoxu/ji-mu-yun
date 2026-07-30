@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/acceptance-repair-completeness.v1.schema.json",
+  "title": "Acceptance Repair Completeness v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "acceptanceTarget",
+    "lineageFamilyId",
+    "semanticRoundsConsumed",
+    "predecessorRun",
+    "baselineManifest",
+    "candidateManifest",
+    "changedPaths",
+    "changedPathBindings",
+    "directConsumers",
+    "targetedTests",
+    "validationRefs",
+    "rootCauseInventories",
+    "compositionChecks",
+    "novelP0P1FindingIds",
+    "authorityGraphChanged",
+    "authorityGraphArtifacts",
+    "highRiskBoundaryChanged",
+    "highRiskBoundaryArtifacts",
+    "requestHash",
+    "authorizes"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "acceptance-repair-completeness.v1"},
+    "status": {"const": "passed"},
+    "acceptanceTarget": {"type": "string", "pattern": "^execution-plans/"},
+    "lineageFamilyId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "semanticRoundsConsumed": {"type": "integer", "minimum": 0, "maximum": 3},
+    "predecessorRun": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/path"}
+      ]
+    },
+    "baselineManifest": {"$ref": "#/$defs/fileBinding"},
+    "candidateManifest": {"$ref": "#/$defs/fileBinding"},
+    "changedPaths": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/path"}
+    },
+    "changedPathBindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "state", "sha256"],
+        "properties": {
+          "path": {"$ref": "#/$defs/path"},
+          "state": {"enum": ["present", "deleted"]},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    },
+    "directConsumers": {"$ref": "#/$defs/fileBindings"},
+    "targetedTests": {"$ref": "#/$defs/fileBindings"},
+    "validationRefs": {"$ref": "#/$defs/fileBindings"},
+    "rootCauseInventories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["inventoryId", "searchTerm", "searchRoots", "matches", "addressedPaths", "exclusions"],
+        "properties": {
+          "inventoryId": {"$ref": "#/$defs/id"},
+          "searchTerm": {"type": "string", "minLength": 3},
+          "searchRoots": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+          "matches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "sha256", "lineNumbers"],
+              "properties": {
+                "path": {"$ref": "#/$defs/path"},
+                "sha256": {"$ref": "#/$defs/hash"},
+                "lineNumbers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}}
+              }
+            }
+          },
+          "addressedPaths": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+          "exclusions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "reason"],
+              "properties": {
+                "path": {"$ref": "#/$defs/path"},
+                "reason": {"type": "string", "minLength": 1}
+              }
+            }
+          }
+        }
+      }
+    },
+    "compositionChecks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkId", "bindings", "commandRegistry", "receipt"],
+        "properties": {
+          "checkId": {"$ref": "#/$defs/id"},
+          "bindings": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["role", "path", "sha256"],
+              "properties": {
+                "role": {"enum": ["producer", "consumer"]},
+                "path": {"$ref": "#/$defs/path"},
+                "sha256": {"$ref": "#/$defs/hash"}
+              }
+            }
+          },
+          "commandRegistry": {"$ref": "#/$defs/fileBinding"},
+          "receipt": {
+            "$ref": "#/$defs/fileBinding"
+          }
+        }
+      }
+    },
+    "novelP0P1FindingIds": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/findingId"}},
+    "authorityGraphChanged": {"type": "boolean"},
+    "authorityGraphArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+    "highRiskBoundaryChanged": {"type": "boolean"},
+    "highRiskBoundaryArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+    "requestHash": {"$ref": "#/$defs/hash"},
+    "authorizes": {"type": "array", "maxItems": 0}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"},
+    "findingId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,95}$"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"},
+    "fileBindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/fileBinding"}
+    },
+    "fileBinding": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"$ref": "#/$defs/path"},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    }
+}

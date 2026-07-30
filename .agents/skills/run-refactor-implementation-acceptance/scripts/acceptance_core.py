@@ -23,7 +23,17 @@ _ROLES = {"implementation", "consumer", "source", "authority", "test", "evidence
 _CHANGE_TYPES = {"unchanged", "added", "modified", "deleted", "renamed", "copied", "untracked"}
 _EXTRACTION_MODES = {"registry_backed", "parser_backed", "semantic_candidate"}
 _COMPLETENESS = {"deterministic_complete", "semantically_attested_complete", "candidate", "incomplete"}
-_PHASE_PREFIXES = ("PhaseA.Platform/", "PhaseA.Platform.Tests/", "runtime/phase-a/", "scripts/python/phase_a_", "scripts/python/phase_b_", "scripts/sc/_llm_backend.py")
+# ADR-0041 keeps these Skills in the repository-owned Phase acceptance control plane.
+_PHASE_PREFIXES = (
+    "PhaseA.Platform/",
+    "PhaseA.Platform.Tests/",
+    "runtime/phase-a/",
+    "scripts/python/phase_a_",
+    "scripts/python/phase_b_",
+    "scripts/sc/_llm_backend.py",
+    ".agents/skills/run-refactor-implementation-acceptance/",
+    ".agents/skills/run-phase-bootstrap-review/",
+)
 _GODOT_PREFIXES = ("Game.Godot/", "Tests.Godot/", "Game.Core/", "Game.Core.Tests/")
 
 

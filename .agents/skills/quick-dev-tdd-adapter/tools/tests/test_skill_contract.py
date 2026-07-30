@@ -13,6 +13,8 @@ class SkillContractTests(unittest.TestCase):
             "references/implementation-backend-contract.md": "not select a plan",
             "references/tdd-run-protocol.md": "prepare -> RED -> GREEN -> REFACTOR -> candidate",
             "references/evidence-and-freshness.md": "logs/tdd-adapter",
+            "references/repair-review-handoff.md": "audit-repair-completeness",
+            "tools/build_repair_review_handoff.py": "acceptance-repair-completeness-request.v1",
         }
         for relative, marker in required.items():
             with self.subTest(relative=relative):
@@ -24,6 +26,9 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("--plan-dir", content)
         self.assertIn("Do not enumerate, index", content)
         self.assertIn("run-state.v1.json", content)
+        self.assertIn("root-cause callsite inventory", content)
+        self.assertIn("controlled producer/consumer composition receipts", content)
+        self.assertIn("Do not select an acceptance route", content)
 
     def test_version_currency_commit_gate_is_conditional_and_non_authoritative(self) -> None:
         content = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")

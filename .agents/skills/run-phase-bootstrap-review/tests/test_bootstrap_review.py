@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -57,6 +58,52 @@ class BootstrapReviewCliTests(unittest.TestCase):
             json.dumps(value, indent=2) + "\n", encoding="utf-8", newline="\n"
         )
 
+    def write_synthetic_blocked_result(
+        self, finding_id: str, *, semantic_key: str | None = None
+    ) -> None:
+        manifest = self.read_json("review-input.json")
+        finding = {
+            "findingId": finding_id,
+            "proposedSeverity": "P1",
+            "status": "confirmed",
+            "artifact": self.target.relative_to(self.repo).as_posix(),
+            "dimension": "correctness",
+            "triggerInput": f"trigger {semantic_key or finding_id}",
+            "requiredState": "required state",
+            "badOutcome": "bad outcome",
+        }
+        self.write_json(
+            "review-gate-result.json",
+            {
+                "schemaVersion": "review-result.v1",
+                **bootstrap.bootstrap_sidecar_binding(manifest),
+                "status": "blocked",
+                "findings": [finding],
+            },
+        )
+        self.write_json(
+            "review-dispositions.json",
+            {
+                "schemaVersion": "bootstrap-review-dispositions.v1",
+                **bootstrap.bootstrap_sidecar_binding(manifest),
+                "dispositions": [
+                    {"findingId": finding_id, "status": "confirmed", "reason": "test blocker"}
+                ],
+            },
+        )
+        self.write_json(
+            "review-candidates.json",
+            {"schemaVersion": "review-candidates.v1", "findings": [finding]},
+        )
+        self.write_json(
+            "review-metrics.json",
+            {
+                "schemaVersion": "bootstrap-review-metrics.v1",
+                **bootstrap.bootstrap_sidecar_binding(manifest),
+                "status": "blocked",
+            },
+        )
+
     def prepare(
         self,
         profile: str = "bootstrap-upstream-plan",
@@ -64,9 +111,14 @@ class BootstrapReviewCliTests(unittest.TestCase):
         execution_mode: str = "manual",
         review_id: str = "upstream-manual-001",
         change_id: str = "upstream-change-001",
+        lineage_family_id: str | None = None,
         review_round: int = 1,
         predecessor_run: Path | None = None,
+        round_entry_reason: str | None = None,
+        high_risk_boundaries: list[str] | None = None,
         knowledge_context: Path | None = None,
+        acceptance_route: Path | None = None,
+        acceptance_completeness: Path | None = None,
         expected_result: int = 0,
     ) -> None:
         profile_contract = bootstrap.load_profile(profile)
@@ -82,7 +134,22 @@ class BootstrapReviewCliTests(unittest.TestCase):
             else []
         )
         predecessor_args = [] if predecessor_run is None else ["--predecessor-run-dir", str(predecessor_run)]
+        round_entry_args = [] if round_entry_reason is None else [
+            "--round-entry-reason", round_entry_reason
+        ]
+        for boundary in high_risk_boundaries or []:
+            round_entry_args.extend(["--high-risk-boundary", boundary])
         knowledge_args = [] if knowledge_context is None else ["--knowledge-context", str(knowledge_context.relative_to(self.repo))]
+        acceptance_args = []
+        if acceptance_route is not None:
+            acceptance_args.extend([
+                "--acceptance-repair-route", str(acceptance_route.relative_to(self.repo))
+            ])
+        if acceptance_completeness is not None:
+            acceptance_args.extend([
+                "--acceptance-repair-completeness",
+                str(acceptance_completeness.relative_to(self.repo)),
+            ])
         repair_closure_args = []
         if 1 < review_round <= bootstrap.REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"] and predecessor_run is not None:
             repository_root = self.repo.resolve()
@@ -153,9 +220,12 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 "--repository-root", str(self.repo),
                 "--review-id", review_id,
                 "--change-id", change_id,
+                "--lineage-family-id", lineage_family_id or change_id,
                 "--review-round", str(review_round),
                 *predecessor_args,
                 *repair_closure_args,
+                *acceptance_args,
+                *round_entry_args,
                 "--profile", profile,
                 "--scope", str(self.scope),
                 *scope_policy_args,
@@ -658,6 +728,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                         "--repository-root", str(self.repo),
                         "--review-id", f"profile-manual-{index:03d}",
                         "--change-id", f"profile-change-{index:03d}",
+                        "--lineage-family-id", f"profile-change-{index:03d}",
                         "--review-round", "1",
                         "--profile", profile_name,
                         *profile_args,
@@ -825,10 +896,27 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "schemas/bootstrap-verifier-output.v1.schema.json",
             "schemas/bootstrap-review-launch-authorization.v1.schema.json",
             "schemas/bootstrap-process-leases.v1.schema.json",
+            "schemas/bootstrap-repair-review-delta.v1.schema.json",
+            "schemas/bootstrap-review-lineage-state.v1.schema.json",
+            "schemas/bootstrap-review-round-entry-decision.v1.schema.json",
+            "schemas/bootstrap-lineage-adoption.v1.schema.json",
+            "schemas/bootstrap-finalized-run-validation.v1.schema.json",
+            "schemas/bootstrap-finalized-run-validation.v2.schema.json",
+            "schemas/bootstrap-historical-policy-revisions.v1.schema.json",
             "references/review-profiles.v1.json",
+            "references/historical-policy-revisions.v1.json",
         ):
             value = json.loads((plan_root / relative).read_text(encoding="utf-8"))
             self.assertIsInstance(value, dict)
+
+    def test_finalized_v1_schema_remains_frozen_while_v2_owns_lineage_fields(self) -> None:
+        plan_root = MODULE_PATH.parents[1]
+        v1 = json.loads((plan_root / "schemas/bootstrap-finalized-run-validation.v1.schema.json").read_text(encoding="utf-8"))
+        v2 = json.loads((plan_root / "schemas/bootstrap-finalized-run-validation.v2.schema.json").read_text(encoding="utf-8"))
+        self.assertNotIn("lineageFamilyId", v1["required"])
+        self.assertIn("lineageFamilyId", v2["required"])
+        self.assertEqual("bootstrap-finalized-run-validator.v2", v1["properties"]["validatorRevision"]["const"])
+        self.assertEqual("bootstrap-finalized-run-validator.v3", v2["properties"]["validatorRevision"]["const"])
 
     def test_prepare_rejects_scope_outside_repository_before_writing(self) -> None:
         outside = Path(self.temp.name) / "outside.md"
@@ -1364,7 +1452,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
         envelope = json.loads(output.read_text(encoding="utf-8"))
         manifest = self.read_json("review-input.json")
-        self.assertEqual("bootstrap-finalized-run-validation.v1", envelope["schemaVersion"])
+        self.assertEqual("bootstrap-finalized-run-validation.v2", envelope["schemaVersion"])
         self.assertEqual("passed", envelope["validationStatus"])
         self.assertEqual("clean", envelope["finalStatus"])
         self.assertEqual([], envelope["authorizes"])
@@ -1384,7 +1472,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             envelope["artifactHashes"]["verifierOutput"],
         )
         self.assertIsNone(envelope["artifactHashes"]["p2Dispositions"])
-        self.assertEqual("bootstrap-finalized-run-validator.v2", envelope["validatorRevision"])
+        self.assertEqual("bootstrap-finalized-run-validator.v3", envelope["validatorRevision"])
 
     def test_validate_finalized_run_rejects_stale_verifier_output(self) -> None:
         self.prepare()
@@ -1883,7 +1971,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.complete_process_lease("verifier", "independent_verifier")
         self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
 
-    def test_review_cycle_cannot_restart_round_one_with_new_review_id(self) -> None:
+    def test_launch_authorization_does_not_consume_round_one(self) -> None:
         self.prepare()
         self.complete_preflight()
         self.authorize_launch()
@@ -1891,9 +1979,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.prepare(
             review_id="upstream-manual-restarted",
             change_id="upstream-change-001",
-            expected_result=1,
         )
-        self.assertFalse((self.run_dir / "review-input.json").exists())
+        self.assertTrue((self.run_dir / "review-input.json").exists())
 
     def test_unlaunched_prepare_does_not_consume_review_round(self) -> None:
         self.prepare()
@@ -2104,6 +2191,434 @@ class BootstrapReviewCliTests(unittest.TestCase):
             predecessor_run=predecessor,
             expected_result=1,
         )
+
+    def test_lineage_family_prevents_successor_change_id_from_restarting_round_one(self) -> None:
+        family_id = "stable-acceptance-target"
+        self.prepare(lineage_family_id=family_id)
+        self.complete_preflight()
+        self.authorize_launch()
+        self.assertEqual(0, bootstrap.main(["mark-semantic-start", "--run-dir", str(self.run_dir)]))
+        first = self.run_dir
+
+        state = bootstrap.build_lineage_state(self.repo, family_id)
+        self.assertEqual(1, state["semanticRoundsConsumed"])
+        self.assertEqual(2, state["nextFullReviewRound"])
+        self.assertEqual(
+            bootstrap.value_hash({key: value for key, value in state.items() if key != "lineageStateHash"}),
+            state["lineageStateHash"],
+        )
+
+        self.run_dir = self.repo / "bootstrap-run-successor-reset"
+        self.prepare(
+            review_id="upstream-successor-reset",
+            change_id="renamed-successor-change",
+            lineage_family_id=family_id,
+            expected_result=1,
+        )
+        self.assertTrue(first.is_dir())
+        self.assertFalse((self.run_dir / "review-input.json").exists())
+
+    def test_lineage_history_ignores_artifact_view_and_snapshot_copies(self) -> None:
+        family_id = "stable-artifact-view-family"
+        self.prepare(lineage_family_id=family_id)
+        self.complete_preflight()
+        self.authorize_launch()
+        self.assertEqual(0, bootstrap.main(["mark-semantic-start", "--run-dir", str(self.run_dir)]))
+
+        copied_run = (
+            self.repo
+            / "logs"
+            / "ci"
+            / "review-copy-holder"
+            / "artifact-view"
+            / "tree"
+            / "logs"
+            / "ci"
+            / "copied-round-one"
+        )
+        shutil.copytree(self.run_dir, copied_run)
+        snapshot_run = (
+            self.repo
+            / "execution-plans"
+            / "example"
+            / ".acceptance-snapshots"
+            / "candidate"
+            / "logs"
+            / "ci"
+            / "copied-round-one"
+        )
+        shutil.copytree(self.run_dir, snapshot_run)
+        worktree_run = (
+            self.repo
+            / "logs"
+            / "agent-worktrees"
+            / "detached-copy"
+            / "logs"
+            / "ci"
+            / "copied-round-one"
+        )
+        shutil.copytree(self.run_dir, worktree_run)
+
+        state = bootstrap.build_lineage_state(self.repo, family_id)
+        self.assertEqual(1, state["semanticRoundsConsumed"])
+        self.assertEqual(
+            [self.run_dir.relative_to(self.repo).as_posix()],
+            [item["runDirectory"] for item in state["runs"]],
+        )
+
+    def test_round_three_requires_typed_novel_finding_entry_and_repair_delta(self) -> None:
+        family_id = "bounded-repair-family"
+        self.prepare(lineage_family_id=family_id)
+        self.write_synthetic_blocked_result("BSR-FIRST")
+        round_one = self.run_dir
+
+        self.target.write_text("# Plan\n\nRound two repair.\n", encoding="utf-8", newline="\n")
+        self.run_dir = self.repo / "bootstrap-run-round-2-success"
+        self.prepare(
+            review_id="upstream-round-two",
+            lineage_family_id=family_id,
+            review_round=2,
+            predecessor_run=round_one,
+        )
+        self.assertEqual("repair_delta_closure", self.read_json("review-input.json")["repairReviewDelta"]["strategy"])
+        self.write_synthetic_blocked_result("BSR-SECOND")
+        round_two = self.run_dir
+
+        self.target.write_text("# Plan\n\nRound three repair.\n", encoding="utf-8", newline="\n")
+        self.run_dir = self.repo / "bootstrap-run-round-3-missing-entry"
+        self.prepare(
+            review_id="upstream-round-three-missing",
+            lineage_family_id=family_id,
+            review_round=3,
+            predecessor_run=round_two,
+            expected_result=1,
+        )
+        self.assertFalse((self.run_dir / "review-input.json").exists())
+
+        self.run_dir = self.repo / "bootstrap-run-round-3-success"
+        self.prepare(
+            review_id="upstream-round-three",
+            lineage_family_id=family_id,
+            review_round=3,
+            predecessor_run=round_two,
+            round_entry_reason="novel_p0_p1",
+        )
+        decision = self.read_json("review-input.json")["reviewEntryDecision"]
+        self.assertEqual("novel_p0_p1", decision["reason"])
+        self.assertEqual(["BSR-SECOND"], decision["triggerFindingIds"])
+
+    def test_repair_delta_support_contains_only_reachable_unchanged_artifacts(self) -> None:
+        before = {
+            "artifacts": [
+                {"artifact": "scope/changed.md", "sha256": "sha256:" + "a" * 64},
+                {"artifact": "scope/reachable.md", "sha256": "sha256:" + "b" * 64},
+                {"artifact": "scope/unrelated.md", "sha256": "sha256:" + "c" * 64},
+            ]
+        }
+        current = [
+            {"artifact": "scope/changed.md", "sha256": "sha256:" + "d" * 64},
+            {"artifact": "scope/reachable.md", "sha256": "sha256:" + "b" * 64},
+            {"artifact": "scope/unrelated.md", "sha256": "sha256:" + "c" * 64},
+        ]
+        delta = bootstrap.build_repair_review_delta(
+            self.repo,
+            "logs/review-1",
+            before,
+            current,
+            "sha256:" + "e" * 64,
+            ["scope/changed.md", "scope/reachable.md"],
+        )
+        self.assertEqual(["scope/reachable.md"], delta["supportArtifacts"])
+
+    def test_repair_delta_does_not_treat_omitted_unchanged_artifact_as_deleted(self) -> None:
+        omitted = self.repo / "upstream-plan" / "omitted.md"
+        omitted.write_text("unchanged\n", encoding="utf-8", newline="\n")
+        digest = bootstrap.file_hash(omitted)
+        delta = bootstrap.build_repair_review_delta(
+            self.repo,
+            "logs/review-1",
+            {"artifacts": [
+                {"artifact": "upstream-plan/plan.md", "sha256": "sha256:" + "a" * 64},
+                {"artifact": "upstream-plan/omitted.md", "sha256": digest},
+            ]},
+            [{"artifact": "upstream-plan/plan.md", "sha256": "sha256:" + "b" * 64}],
+            "sha256:" + "c" * 64,
+            ["upstream-plan/plan.md"],
+        )
+        self.assertEqual([], delta["removedArtifacts"])
+
+    def test_round_three_rejects_same_semantic_blocker_with_a_new_finding_id(self) -> None:
+        family_id = "stable-novelty-family"
+        self.prepare(lineage_family_id=family_id)
+        self.write_synthetic_blocked_result("BSR-FIRST", semantic_key="same-defect")
+        round_one = self.run_dir
+        self.target.write_text("# Plan\n\nRound two repair.\n", encoding="utf-8", newline="\n")
+        self.run_dir = self.repo / "bootstrap-stable-round-2"
+        self.prepare(
+            review_id="stable-round-two",
+            lineage_family_id=family_id,
+            review_round=2,
+            predecessor_run=round_one,
+        )
+        self.write_synthetic_blocked_result("BSR-SECOND", semantic_key="same-defect")
+        round_two = self.run_dir
+        self.target.write_text("# Plan\n\nRound three repair.\n", encoding="utf-8", newline="\n")
+        self.run_dir = self.repo / "bootstrap-stable-round-3"
+        self.prepare(
+            review_id="stable-round-three",
+            lineage_family_id=family_id,
+            review_round=3,
+            predecessor_run=round_two,
+            round_entry_reason="novel_p0_p1",
+            expected_result=1,
+        )
+
+    def test_gate_only_predecessor_is_not_finalized(self) -> None:
+        self.prepare(lineage_family_id="gate-only-family")
+        manifest = self.read_json("review-input.json")
+        self.write_json(
+            "review-gate-result.json",
+            {
+                "schemaVersion": "review-result.v1",
+                **bootstrap.bootstrap_sidecar_binding(manifest),
+                "status": "awaiting_verification",
+                "findings": [],
+            },
+        )
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "not finalized"):
+            bootstrap.finalized_review_result(self.run_dir, manifest)
+
+    def test_acceptance_repair_route_binds_replayed_completeness(self) -> None:
+        completeness = {
+            "schemaVersion": "acceptance-repair-completeness.v1",
+            "status": "passed",
+            "lineageFamilyId": "acceptance-family",
+            "semanticRoundsConsumed": 1,
+            "authorizes": [],
+        }
+        route = {
+            "schemaVersion": "implementation-acceptance-bootstrap-route.v1",
+            "routeKind": "focused_repair_review",
+            "lineageFamilyId": "acceptance-family",
+            "semanticRoundsConsumed": 1,
+            "nextFullReviewRound": 2,
+            "roundEntryReason": None,
+            "repairCompletenessHash": bootstrap.value_hash(completeness),
+            "authorizes": [],
+        }
+        route_path = self.repo / "route.json"
+        completeness_path = self.repo / "completeness.json"
+        route_path.write_text(json.dumps(route), encoding="utf-8", newline="\n")
+        completeness_path.write_text(
+            json.dumps(completeness), encoding="utf-8", newline="\n"
+        )
+        bindings = bootstrap.validate_acceptance_repair_route(
+            route_path,
+            completeness_path,
+            self.repo,
+            "acceptance-family",
+            2,
+            None,
+        )
+        self.assertEqual("route.json", bindings["acceptanceRepairRoute"]["path"])
+        tampered = dict(completeness)
+        tampered["semanticRoundsConsumed"] = 0
+        completeness_path.write_text(json.dumps(tampered), encoding="utf-8", newline="\n")
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "matching Acceptance"):
+            bootstrap.validate_acceptance_repair_route(
+                route_path,
+                completeness_path,
+                self.repo,
+                "acceptance-family",
+                2,
+                None,
+            )
+
+    def test_implementation_conformance_repair_prepare_requires_acceptance_route(self) -> None:
+        family_id = "acceptance-prepare-family"
+        self.prepare(
+            profile="bootstrap-implementation-conformance",
+            lineage_family_id=family_id,
+        )
+        self.write_synthetic_blocked_result("BSR-ACCEPTANCE-FIRST")
+        predecessor = self.run_dir
+        self.target.write_text("# Plan\n\nRepair.\n", encoding="utf-8", newline="\n")
+        completeness = {
+            "schemaVersion": "acceptance-repair-completeness.v1",
+            "status": "passed",
+            "lineageFamilyId": family_id,
+            "semanticRoundsConsumed": 1,
+            "authorizes": [],
+        }
+        route = {
+            "schemaVersion": "implementation-acceptance-bootstrap-route.v1",
+            "routeKind": "focused_repair_review",
+            "lineageFamilyId": family_id,
+            "semanticRoundsConsumed": 1,
+            "nextFullReviewRound": 2,
+            "roundEntryReason": None,
+            "repairCompletenessHash": bootstrap.value_hash(completeness),
+            "authorizes": [],
+        }
+        route_path = self.repo / "acceptance-route.json"
+        completeness_path = self.repo / "acceptance-completeness.json"
+        route_path.write_text(json.dumps(route), encoding="utf-8", newline="\n")
+        completeness_path.write_text(
+            json.dumps(completeness), encoding="utf-8", newline="\n"
+        )
+        self.run_dir = self.repo / "bootstrap-implementation-round-2-missing-route"
+        self.prepare(
+            profile="bootstrap-implementation-conformance",
+            review_id="implementation-round-two-missing",
+            lineage_family_id=family_id,
+            review_round=2,
+            predecessor_run=predecessor,
+            expected_result=1,
+        )
+        self.run_dir = self.repo / "bootstrap-implementation-round-2"
+        self.prepare(
+            profile="bootstrap-implementation-conformance",
+            review_id="implementation-round-two",
+            lineage_family_id=family_id,
+            review_round=2,
+            predecessor_run=predecessor,
+            acceptance_route=route_path,
+            acceptance_completeness=completeness_path,
+        )
+        manifest = self.read_json("review-input.json")
+        self.assertEqual(
+            "acceptance-route.json", manifest["acceptanceRepairRoute"]["path"]
+        )
+
+    def test_review_registry_reconciles_repository_history_and_revalidates_bytes(self) -> None:
+        self.prepare()
+        discovered = self.repo / "imported-review"
+        shutil.copytree(self.run_dir, discovered)
+        subprocess.run(["git", "add", "imported-review"], cwd=self.repo, check=True)
+        subprocess.run(
+            ["git", "commit", "-qm", "import review history"], cwd=self.repo, check=True
+        )
+        rows = bootstrap.review_run_manifests(self.repo)
+        self.assertEqual(
+            {self.run_dir.resolve(), discovered.resolve()},
+            {path for path, _manifest in rows},
+        )
+        manifest_path = self.run_dir / "review-input.json"
+        manifest_path.write_text(
+            manifest_path.read_text(encoding="utf-8") + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "missing or stale"):
+            bootstrap.review_run_manifests(self.repo)
+
+    def test_explicit_adoption_bridges_only_selected_legacy_history(self) -> None:
+        legacy_dir = self.repo / "legacy-review"
+        legacy_dir.mkdir()
+        manifest = {
+            "schemaVersion": "bootstrap-review-input.v1",
+            "reviewId": "legacy-review-001",
+            "changeId": "legacy-change-001",
+            "fullReviewRound": 1,
+            "inputHash": "sha256:" + "a" * 64,
+            "executionMode": "manual",
+            "processLeasePolicy": {"sidecar": "process-leases.json"},
+        }
+        (legacy_dir / "review-input.json").write_text(
+            json.dumps(manifest), encoding="utf-8", newline="\n"
+        )
+        (legacy_dir / "process-events.jsonl").write_text(
+            json.dumps({
+                "schemaVersion": "bootstrap-process-event.v1",
+                "eventType": bootstrap.SEMANTIC_ROUND_STARTED_EVENT,
+                "reviewId": manifest["reviewId"],
+                "inputHash": manifest["inputHash"],
+            }) + "\n",
+            encoding="utf-8", newline="\n",
+        )
+        policy = self.repo / "docs" / "adr" / "ADR-test.md"
+        policy.parent.mkdir(parents=True)
+        policy.write_text("# Test policy\n\nStatus: Accepted\n", encoding="utf-8", newline="\n")
+        registry = bootstrap._review_registry_path(self.repo)
+        if registry.exists():
+            registry.unlink()
+        output = self.repo / "decision-logs" / "legacy.lineage-adoption.v1.json"
+        self.assertEqual(0, bootstrap.main([
+            "adopt-lineage",
+            "--repository-root", str(self.repo),
+            "--lineage-family-id", "ria-current-family",
+            "--legacy-change-id", "legacy-change-001",
+            "--historical-run-dir", "legacy-review",
+            "--policy-authority", "docs/adr/ADR-test.md",
+            "--reason", "Explicitly preserve the approved legacy round budget",
+            "--out", str(output),
+        ]))
+        state = bootstrap.build_lineage_state(self.repo, "ria-current-family")
+        self.assertEqual(1, state["semanticRoundsConsumed"])
+        self.assertEqual(["legacy-review"], [item["runDirectory"] for item in state["runs"]])
+
+    def test_round_three_high_risk_boundary_accepts_a_removed_artifact(self) -> None:
+        family_id = "removed-boundary-family"
+        boundary = self.scope / "security-boundary.txt"
+        boundary.write_text("protected\n", encoding="utf-8", newline="\n")
+        self.prepare(lineage_family_id=family_id)
+        self.write_synthetic_blocked_result("BSR-FIRST-BOUNDARY")
+        round_one = self.run_dir
+
+        self.target.write_text("# Plan\n\nRound two repair.\n", encoding="utf-8", newline="\n")
+        self.run_dir = self.repo / "bootstrap-boundary-round-2"
+        self.prepare(
+            review_id="boundary-round-two",
+            lineage_family_id=family_id,
+            review_round=2,
+            predecessor_run=round_one,
+        )
+        self.write_synthetic_blocked_result("BSR-SECOND-BOUNDARY")
+        round_two = self.run_dir
+
+        boundary.unlink()
+        self.target.write_text("# Plan\n\nRound three boundary repair.\n", encoding="utf-8", newline="\n")
+        self.run_dir = self.repo / "bootstrap-boundary-round-3"
+        boundary_relative = boundary.relative_to(self.repo).as_posix()
+        self.prepare(
+            review_id="boundary-round-three",
+            lineage_family_id=family_id,
+            review_round=3,
+            predecessor_run=round_two,
+            round_entry_reason="high_risk_boundary_changed",
+            high_risk_boundaries=[boundary_relative],
+        )
+        manifest = self.read_json("review-input.json")
+        self.assertIn(boundary_relative, manifest["repairReviewDelta"]["removedArtifacts"])
+        self.assertEqual(
+            [boundary_relative],
+            manifest["reviewEntryDecision"]["highRiskBoundaryArtifacts"],
+        )
+        prompt = bootstrap.prompt_text("blind_hunter", manifest, self.run_dir)
+        self.assertIn(f"Removed artifact tombstones: `{boundary_relative}`", prompt)
+        removed = manifest["repairReviewDelta"]["removedArtifactSnapshots"][0]
+        self.assertIn(boundary_relative, bootstrap.reviewer_template("blind_hunter", manifest)["coverage"]["requiredArtifacts"])
+        deleted_candidate = self.candidate("DELETED-BOUNDARY-001")
+        deleted_candidate.update(
+            {
+                "artifact": boundary_relative,
+                "artifactHash": removed["sha256"],
+                "startLine": 1,
+                "endLine": 1,
+                "exactEvidence": "protected",
+                "contextRead": [f"{boundary_relative}:1"],
+            }
+        )
+        self.assertEqual(
+            (None, ""),
+            bootstrap.candidate_reason(
+                deleted_candidate, manifest, self.repo, self.run_dir
+            ),
+        )
+        snapshot = self.run_dir / removed["snapshotPath"]
+        snapshot.write_text("tampered\n", encoding="utf-8", newline="\n")
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "Artifact View"):
+            bootstrap.load_run(str(self.run_dir))
 
 
     def test_codex_prepare_creates_artifact_view_and_fresh_replacement(self) -> None:

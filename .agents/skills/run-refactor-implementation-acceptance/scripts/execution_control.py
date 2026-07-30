@@ -438,12 +438,38 @@ def resolve_typed_argv(
 def run_controlled_command(
     repository_root: Path,
     descriptor: Any,
+    input_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     """Run one typed local command and return non-authorizing process evidence."""
     validate_command_descriptor(descriptor)
     root = repository_root.resolve()
     if not root.is_dir():
         raise ControlError("repository root is invalid")
+    raw_inputs = input_paths or []
+    if not isinstance(raw_inputs, list):
+        raise ControlError("controlled command input paths are invalid")
+    input_bindings: list[dict[str, str]] = []
+    seen_inputs: set[str] = set()
+    for relative in raw_inputs:
+        if not isinstance(relative, str):
+            raise ControlError("controlled command input path is invalid")
+        candidate = (root / relative).resolve()
+        try:
+            normalized = candidate.relative_to(root).as_posix()
+        except ValueError as exc:
+            raise ControlError("controlled command input escapes repository root") from exc
+        if normalized != relative.replace("\\", "/") or not candidate.is_file():
+            raise ControlError("controlled command input is missing or non-canonical")
+        if normalized in seen_inputs:
+            raise ControlError("controlled command input paths are duplicated")
+        seen_inputs.add(normalized)
+        input_bindings.append(
+            {
+                "path": normalized,
+                "sha256": "sha256:" + hashlib.sha256(candidate.read_bytes()).hexdigest(),
+            }
+        )
+    input_bindings.sort(key=lambda item: item["path"])
     allowed_write_roots = descriptor["allowed_write_roots"]
     forbidden_write_roots = descriptor["forbidden_write_roots"]
     resolved_argv = resolve_typed_argv(
@@ -509,6 +535,18 @@ def run_controlled_command(
         "exitCode": result["exitCode"],
         "authorizes": [],
     }
+    if input_bindings:
+        current_bindings = [
+            {
+                "path": item["path"],
+                "sha256": "sha256:" + hashlib.sha256((root / item["path"]).read_bytes()).hexdigest(),
+            }
+            for item in input_bindings
+        ]
+        if current_bindings != input_bindings:
+            raise ControlError("controlled command inputs changed during execution")
+        receipt["inputBindings"] = input_bindings
+        receipt["inputBindingsHash"] = _canonical_hash(input_bindings)
     after_manifest = _repository_status_manifest(root) if read_only else build_write_manifest(root)
     delta = (
         _validate_read_only_status_delta(before_manifest, after_manifest)

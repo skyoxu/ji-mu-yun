@@ -15,14 +15,32 @@ This Skill builds deterministic implementation-acceptance evidence for exactly o
 ## Bootstrap Routing
 
 When the immutable Bootstrap requirement decision is `required`, deterministic
-validation must publish an append-only `review_required` route through
-`prepare-bootstrap`. The route freezes the consumer-side decision, capability
-binding, and Bootstrap-owned launch sidecar, then directs the caller to
-`run-phase-bootstrap-review`.
+validation must publish an append-only route through `prepare-bootstrap`. The
+route freezes the consumer-side decision, capability binding, Bootstrap-owned
+launch sidecar, stable target-derived `lineageFamilyId`, consumed-round view,
+and optional repair-completeness result. It selects exactly one route kind:
+`deterministic_only`, `focused_repair_review`,
+`full_implementation_conformance`, or `manual_pause`.
 
-This Skill never launches LLM reviewers itself. A caller must complete the
-Bootstrap preflight, identity-equivalent access probe, and explicit high-cost
-launch authorization before any reviewer layer starts. A deterministic pass
+For every required Bootstrap route, pass `repository_root` and obtain a fresh
+hash-bound `inspect-lineage` projection, including the zero-round initial state. Omitting
+the projection fails closed; absence is never interpreted as a fresh budget.
+`prepare-bootstrap` replays that projection itself. A repair route must also
+carry its original repair-completeness request so the result can be reproduced
+from current repository bytes.
+
+When the route selects `focused_repair_review` or
+`full_implementation_conformance`, pass the saved route to Bootstrap as
+`--acceptance-repair-route` and its replayed completeness projection as
+`--acceptance-repair-completeness`. Bootstrap revalidates their byte, family,
+round, and typed-entry bindings. Do not pass deleted paths as live `--scope`
+arguments; Bootstrap recovers their old bytes from predecessor evidence.
+
+The deterministic CLI never launches an LLM process. The Skill orchestrator
+must invoke `run-phase-bootstrap-review` when the selected route requires it,
+then complete Bootstrap preflight, identity-equivalent access probe, and
+explicit high-cost launch authorization before any reviewer layer starts. It
+must not merely report that review is required and stop. A deterministic pass
 without a required finalized Bootstrap envelope remains a non-authorizing
 candidate, not an implementation-acceptance pass.
 
@@ -43,6 +61,31 @@ semantic round or require a successor lineage. P2-only results are disposed in
 the current run and use deterministic targeted closure. They do not trigger a
 new complete semantic review. The original target plan remains the acceptance
 target unless an explicit supersede or incompatible-scope decision exists.
+
+The lineage family is derived from the original `execution-plans/<target>`
+root. In-place repairs and successor history for that target retain it; a new
+`changeId` does not reset the review budget. Round 1 uses full implementation
+conformance. After the first P0/P1 repair, the default route is a focused
+repair-delta review. After two consumed rounds, a complete repair with no new
+P0/P1, authority/context graph change, or high-risk boundary change routes to
+deterministic closure. Only those typed triggers may open Round 3. Three
+consumed rounds route to `manual_pause`.
+
+Before any repair re-entry, require Quick Dev's standard handoff and run
+`audit-repair-completeness`. The audit discovers sibling callsites from the
+declared roots, requires each match to be changed or explicitly excluded, and
+validates successful controlled producer/consumer composition receipts whose
+input bindings cover every producer and consumer. It derives the exact changed
+set from a hash-bound complete candidate manifest and binds present changed
+files by content hash, deleted files by their baseline hash, direct consumers,
+targeted tests, and validation references. Each
+composition check must cover a changed path, use declared direct consumers,
+and expose its receipt as a validation reference. Before routing, require all
+changed paths, inventory matches, composition bindings, command registries,
+receipts, consumers, tests, and validation references to be members of the
+same hash-bound `minimal-complete-closure`; consumers and tests must also be in
+their corresponding context classes. The audit and route carry `authorizes=[]`;
+the plan-local final predicate still decides implementation acceptance.
 
 ## Current Core
 
@@ -82,5 +125,12 @@ against both its source commit and current worktree before the summary freezes.
 `analyze-diff-coverage` consumes a frozen `phase-changed-line-set.v1` and a current Cobertura report. It uses only added or modified executable `PhaseA.Platform/**/*.cs` lines for the denominator, records every exclusion reason, and returns `incomplete` when a source mapping is missing. It never substitutes repository-wide coverage.
 
 `audit-task-checklist` reads only explicitly declared authority checklist files. A checked item is `verified` only when its stable item identity has current matrix, implementation, test, and evidence references; source hash drift, checkbox-only closure, and request-controlled optionality fail the result. `run-command` resolves an exact descriptor from a hash-bound command registry; it never executes a caller-supplied descriptor. `run-phase-scan` is available only in `controlled_validation`, executes that registered shell-free command from a hash-verified frozen candidate snapshot, and requires its declared Phase read scope to exactly cover the candidate's Phase changed paths.
+
+`audit-repair-completeness` consumes the append-only Quick Dev handoff without
+translation. It revalidates the baseline/candidate manifests and rejects an
+omitted or invented changed path. Every inventory is discovered from current repository bytes and
+every composition check must reference a successful controlled-command
+receipt. Feed its result and the Bootstrap `inspect-lineage` projection into
+`prepare-bootstrap`; do not hand-author consumed rounds or route kinds.
 
 The matrix, conditional Bootstrap import, action recovery, and final authorization stages are implemented only when their own plan slices and predicates are complete. A passing unit test or a Bootstrap `clean` result is not Program DoD.

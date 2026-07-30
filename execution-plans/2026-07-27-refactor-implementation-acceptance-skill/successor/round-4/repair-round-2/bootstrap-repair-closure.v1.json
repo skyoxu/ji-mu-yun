@@ -11,8 +11,8 @@
     {"findingId":"BSR-96F3A4C389685A27","disposition":"fixed","risk":"normal","proofFamily":"regression","reason":"The CLI imports and normalizes ControlError.","fixRefs":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"],"validationCommands":["bootstrap P2 closure command"],"evidence":[{"path":".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py","sha256":"sha256:3e6d96b86462816003f7d6af306eea04e69b6afb8fc92f1541a94aa302d2416f"}]},
     {"findingId":"BSR-9F1FF1E862436805","disposition":"fixed","risk":"normal","proofFamily":"regression","reason":"The same resolver failure boundary is normalized by the imported ControlError.","fixRefs":[".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"],"validationCommands":["bootstrap P2 closure command"],"evidence":[{"path":".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py","sha256":"sha256:3e6d96b86462816003f7d6af306eea04e69b6afb8fc92f1541a94aa302d2416f"}]}
   ],
-  "currentBindings":{"candidateHash":"sha256:9fd7a696276db65ca772c5072057e2d1d096e507ad610c562da0438452361144","sourceHash":"sha256:beb54304a35a9ba22aa5990ba62775d00bb03a83fd2bc2b784fb29ae19833614","validatorHash":"sha256:c86b3ba1168c0a7a207fbc865f1440e5c9088e8841b22daba678ee37e5404282"},
-  "gitIndexHash":"sha256:14238ce2abbe32c19feed6895b660d808625850d8ee40139090bc422c43314b2",
+  "currentBindings":{"candidateHash":"sha256:22705463eb79576157052718f0a5eca316d51586a7efcf4098f933a0f479beae","sourceHash":"sha256:beb54304a35a9ba22aa5990ba62775d00bb03a83fd2bc2b784fb29ae19833614","validatorHash":"sha256:c86b3ba1168c0a7a207fbc865f1440e5c9088e8841b22daba678ee37e5404282"},
+  "gitIndexHash":"sha256:fa02a42905bfc3fa619034054570922eca9436a512f2214ffc02cb6a6ad79f64",
   "writeSetHash":"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
   "executionReadSetHash":"sha256:c63ae0b15ce9d3a664ad1658003a5c0fc02d2cf69f47d178e088c1c2d902c328",
   "dependencyClosureHash":"sha256:c63ae0b15ce9d3a664ad1658003a5c0fc02d2cf69f47d178e088c1c2d902c328"

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-lineage-adoption.v1.schema.json",
+  "title": "Bootstrap Lineage Adoption v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "targetLineageFamilyId",
+    "legacyChangeId",
+    "historicalRuns",
+    "policyAuthority",
+    "reason",
+    "adoptionHash",
+    "authorizes"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-lineage-adoption.v1"},
+    "targetLineageFamilyId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "legacyChangeId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "historicalRuns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["runDirectory", "reviewInputHash", "manifestFileHash"],
+        "properties": {
+          "runDirectory": {"$ref": "#/$defs/path"},
+          "reviewInputHash": {"$ref": "#/$defs/hash"},
+          "manifestFileHash": {"$ref": "#/$defs/hash"}
+        }
+      }
+    },
+    "policyAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "status"],
+      "properties": {
+        "path": {"$ref": "#/$defs/path"},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "status": {"const": "Accepted"}
+      }
+    },
+    "reason": {"type": "string", "minLength": 1},
+    "adoptionHash": {"$ref": "#/$defs/hash"},
+    "authorizes": {"type": "array", "maxItems": 0}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"}
+  }
+}

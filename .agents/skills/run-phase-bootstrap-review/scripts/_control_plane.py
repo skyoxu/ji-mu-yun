@@ -118,6 +118,7 @@ def create_artifact_view(
     artifacts: list[dict[str, Any]],
     context_classes: dict[str, list[str]],
     authority_revision: str,
+    deleted_artifacts: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     view_root = run_dir / "artifact-view"
     tree_root = view_root / "tree"
@@ -162,6 +163,43 @@ def create_artifact_view(
             ],
         }
         entries.append(entry)
+    for artifact in deleted_artifacts or []:
+        relative = artifact["artifact"]
+        case_identity = relative.replace("\\", "/").casefold()
+        previous = case_identities.get(case_identity)
+        if previous is not None:
+            raise ControlPlaneError(
+                f"Deleted artifact collides with a current Artifact View entry: {relative}"
+            )
+        case_identities[case_identity] = relative
+        source = Path(artifact["sourcePath"]).resolve()
+        raw = source.read_bytes()
+        if bytes_hash(raw) != artifact["sha256"]:
+            raise ControlPlaneError(f"Deleted predecessor artifact drifted: {relative}")
+        snapshot = view_root / "deleted-tree" / Path(relative)
+        if view_root == snapshot or view_root in snapshot.parents:
+            atomic_write_bytes(snapshot, raw)
+        else:
+            raise ControlPlaneError(f"Deleted artifact snapshot escapes view: {relative}")
+        entries.append(
+            {
+                "originalPath": relative,
+                "snapshotPath": snapshot.relative_to(run_dir).as_posix(),
+                "originalSha256": artifact["sha256"],
+                "snapshotSha256": bytes_hash(raw),
+                "sizeBytes": len(raw),
+                "encoding": artifact.get("textEncoding"),
+                "lineCount": artifact.get("lineCount"),
+                "fileType": Path(relative).suffix.casefold() or "none",
+                "contentKind": "text" if artifact.get("textEncoding") else "binary",
+                "reparsePoint": False,
+                "windowsCaseIdentity": case_identity,
+                "contextClasses": [],
+                "sourceScopes": [],
+                "sourceState": "deleted",
+                "predecessorRun": artifact["predecessorRun"],
+            }
+        )
     manifest = {
         "schemaVersion": "artifact-view.v1",
         "authorityRevision": authority_revision,
@@ -195,10 +233,14 @@ def validate_artifact_view(
     for entry in entries:
         original = repository_root / entry["originalPath"]
         snapshot = run_dir / entry["snapshotPath"]
-        if require_live_originals and (
-            not original.is_file() or bytes_hash(original.read_bytes()) != entry["originalSha256"]
-        ):
-            raise ControlPlaneError(f"Live artifact drifted: {entry['originalPath']}")
+        if require_live_originals:
+            if entry.get("sourceState") == "deleted":
+                if original.exists():
+                    raise ControlPlaneError(
+                        f"Deleted artifact reappeared: {entry['originalPath']}"
+                    )
+            elif not original.is_file() or bytes_hash(original.read_bytes()) != entry["originalSha256"]:
+                raise ControlPlaneError(f"Live artifact drifted: {entry['originalPath']}")
         if not snapshot.is_file() or bytes_hash(snapshot.read_bytes()) != entry["snapshotSha256"]:
             raise ControlPlaneError(f"Artifact View drifted: {entry['snapshotPath']}")
         if entry["originalSha256"] != entry["snapshotSha256"]:

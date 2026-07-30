@@ -1,6 +1,6 @@
 # Bootstrap Review 操作与兼容迁移指南
 
-当前通用权威位于 `.agents/skills/run-phase-bootstrap-review/`，control-plane revision 为 `bootstrap-control-plane.v2`。本文保留 7-12 计划的迁移示例；`tools/run_bootstrap_review.py` 只是 revision-bound 无状态 adapter，通用 runner、profile、schema、Artifact View、attempt/event、repair closure 和恢复命令均归仓库自有 Skill。长期语义见 `docs/standards/bootstrap-review-control-plane.md`，所有权决策见 `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`、`docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md` 和 `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`。
+当前通用权威位于 `.agents/skills/run-phase-bootstrap-review/`，control-plane revision 为 `bootstrap-control-plane.v2`。本文保留 7-12 计划的迁移示例；`tools/run_bootstrap_review.py` 只是 revision-bound 无状态 adapter，通用 runner、profile、schema、Artifact View、attempt/event、repair closure 和恢复命令均归仓库自有 Skill。长期语义见 `docs/standards/bootstrap-review-control-plane.md`，所有权决策见 `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`、`docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`、`docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md` 和 `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`。
 
 ## 1. 适用范围
 
@@ -44,6 +44,7 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
   --repository-root C:\jimuyun `
   --review-id gdd-to-module-manual-001 `
   --change-id gdd-to-module-hardening `
+  --lineage-family-id gdd-to-module-hardening `
   --review-round 1 `
   --profile bootstrap-upstream-plan `
   --scope execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening `
@@ -67,6 +68,7 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
   --repository-root C:\jimuyun `
   --review-id frontend-boundary-manual-001 `
   --change-id frontend-boundary-hardening `
+  --lineage-family-id frontend-boundary-hardening `
   --review-round 1 `
   --profile bootstrap-upstream-plan `
   --scope execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan `
@@ -86,7 +88,9 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
 
 98/99 的 source coverage 以原单体计划为 authority；缺少第二个 scope 时 reviewer 必须 fail closed。每次 review 使用新目录，不覆盖旧 evidence。
 
-`prepare` 还必须绑定 `changeId`、`fullReviewRound`、`executionMode` 和固定 attestation `no-other-semantic-review-in-cycle`。同一 change 的 round 1 在语义执行开始后只能存在一次；`codex-exec` 以首条 reviewer `attempt-started` event 作为 round 开始，只有 access/model probe 的失败 run 可替换且不消耗 round；round 2/3 必须用 `--predecessor-run-dir` 指向相邻已 finalized run，并提供 `--repair-closure`。换 review ID 不能重开 round 1，round 4 永远拒绝，round 3 仅在 predecessor 有 P0/P1 或 authority/context graph 改变时允许。
+`prepare` 还必须绑定 `changeId`、稳定的 `lineageFamilyId`、`fullReviewRound`、`executionMode` 和固定 attestation `no-other-semantic-review-in-cycle`。`lineageFamilyId` 由原始验收目标派生；只要仍验收同一目标，in-place repair、successor 目录和新的 `changeId` 都必须沿用它。同一 family 的 round 1 在语义执行开始后只能存在一次；`codex-exec` 以首条 reviewer `attempt-started` event 作为 round 开始，只有 access/model probe 的失败 run 可替换且不消耗 round；round 2/3 必须用 `--predecessor-run-dir` 指向相邻已 finalized run，并提供 `--repair-closure`。换 review ID、change ID 或 successor 目录不能重开 round 1，round 4 永远拒绝；round 3 还必须以 `novel_p0_p1`、`authority_context_graph_changed` 或 `high_risk_boundary_changed` 之一作为类型化准入原因。
+
+开始新 run 前先执行 `inspect-lineage --repository-root <repo> --lineage-family-id <family>`。该只读视图给出已消耗轮次和下一可用轮次，带有可复算的 `lineageStateHash`，不授予 launch 或 acceptance 权限。即使为零轮，Acceptance 也必须显式消费该投影；缺省值不能解释成新 family。
 
 `--write-set` 声明本次变更可能写入的路径；`--execution-read-set` 与 `--dependency` 必须已经纳入 scope。并发只阻断 write-set 重叠，但 authorize-launch 会冻结 Git index，并对 reviewed artifacts、execution read-set、dependency closure、profile、schema、validator 与 preflight 漂移 fail closed。
 
@@ -286,8 +290,8 @@ Bootstrap manifest、gate 中间结果、candidate/rejection/disposition/metrics
 1. 首轮完整 Review 后汇总全部 accepted findings，再退出只读 run；
 2. 在独立实现步骤中批量修复全部 accepted findings，同时检查相邻回归风险；
 3. 中间只运行 targeted tests、schema、validator、build/smoke 和反例，不得逐 finding 重跑三层 reviewer；
-4. 批量修复完成后，用新 review ID/input hash 运行一次最终完整 Review；目标变更导致旧 input stale，但不要求立即重跑；
-5. 默认完整轮次上限为两轮；最终轮出现新的 P0/P1 或 authority/context graph 改变时，最多允许第三轮；
+4. 批量修复完成后，先生成 sibling callsite inventory 并运行受控的 producer/consumer 组合校验；每个发现的调用点必须已修改或有明确排除，组合命令必须有成功 receipt；
+5. 默认完整轮次预算为两轮；Round 2 聚焦 repair delta、直接消费者、targeted tests 和 validation refs；只有新的 P0/P1、authority/context graph 改变或 high-risk boundary 改变时，最多允许第三轮；
 6. P2-only 不自动触发完整复审；达到三轮仍未闭合时进入 `manual_pause`，不得继续自动循环。
 
 Transport attempt failures do not consume a full semantic review round and do
@@ -299,7 +303,7 @@ registered targeted closure or recheck command.
 
 Round 2/3 的 `repair-closure.json` 是当前计划的 implementation-contract 实例；通用 schema 归仓库 Skill。prepare 校验 predecessor identity、finalized finding exact set、evidence path 和 proof-family，authorize-launch 再校验 evidence/current source/validator hash、Git index、write-set、execution read-set、dependency closure 与 context freshness。遗漏任何 finalized finding 或 evidence 漂移时，reviewer event/lease 数量必须保持为零。
 
-用户可以显式要求新的 Review，但普通授权不能绕过 profile 的三轮硬上限；继续需要新的 policy decision，而不是沿用旧 run。
+用户可以显式要求新的 Review，但普通授权不能绕过 family 的三轮硬上限。successor policy 不能重置同一验收目标；只有正式 supersede 或 incompatible-scope 决策形成真正不同的验收目标后，才能派生新的 family。
 
 ## 8. 验收与排错
 
@@ -339,7 +343,8 @@ py -3 C:/Users/Administrator/.codex/skills/.system/skill-creator/scripts/quick_v
 - Given preflight 已通过但 authority 或 artifact 改变，When authorize-launch/validate/gate/finalize，Then fail closed 且旧授权不可复用。
 - Given同一 operation 的 PID 仍 alive，When工具等待超时后再次 acquire，Then拒绝重复启动并要求 reattach/poll；Given dead PID acquire、release 缺/错 PID 或 live PID identity 漂移，Then不得形成 completed lease。
 - Given implementation profile 未声明 plan-bound required check，When prepare，Then在写 manifest 前失败。
-- Given同一 change 已有 round 1，When换 review ID 再 prepare round 1，Then失败；round 4 永远失败。
+- Given同一 lineage family 已有 round 1，When换 review ID、change ID 或 successor 目录再 prepare round 1，Then失败；round 4 永远失败。
+- Given同一验收目标已经消耗两轮，When修复完整性审计通过且没有新的 P0/P1、authority/context graph 或 high-risk boundary 变化，Then路由到 deterministic closure，不启动 Round 3。
 - Given codex-exec 父进程可读但 child access handshake 失败，When prove-access/run-layer，Then语义阶段不形成正式 candidate，formal output 保持 pending。
 - Given completed reviewer/verifier payload 在最后一次 frozen-authority 校验前发生漂移，When parent 准备发布 formal output，Then attempt 失败且原 formal bytes 不变；Given child 显式返回 `status=failed`、malformed JSON 或 invalid Artifact View receipt，Then记录 transport failed attempt、formal bytes 不变且同一 run 可重试。
 - Given两个 active attempt 的 write-set 不重叠，When并发运行，Then允许；Given formal write-set 重叠，Then第二个 attempt 在启动 child 前失败。

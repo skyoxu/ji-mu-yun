@@ -52,6 +52,32 @@ a hash-bound `repair-closure.json`. Initial slices and historical evidence stay
 immutable. The original directory remains the only acceptance target; use a
 successor only after an explicit supersede or incompatible-scope decision.
 
+When the plan opts into Bootstrap implementation review, declare one stable `lineageFamilyId` derived from the original plan target. Keep that family for
+all in-place repairs and successor history that still evaluates the same
+acceptance target. The default budget is two semantic rounds and the hard
+limit is three. A successor does not reset that budget. Round 3 requires one
+typed trigger: `novel_p0_p1`, `authority_context_graph_changed`, or
+`high_risk_boundary_changed`; exhaustion routes to `manual_pause`.
+Require a current hash-bound `inspect-lineage` projection even when it reports zero rounds; omission must not create a fresh budget.
+If approved legacy `changeId` history predates the target-derived family,
+require an explicit Bootstrap `adopt-lineage` record bound to an Accepted ADR
+or decision. Never solve migration by editing historical review manifests or
+automatically absorbing every run under the plan directory.
+
+Before a repaired target can re-enter review, generate a read-only root-cause callsite inventory from the affected source roots. Every discovered sibling
+callsite must be changed or carry an explicit exclusion. Run at least one
+registered producer/consumer composition command and bind its successful
+controlled receipt. Handwritten callsite counts and unit-only producer or
+consumer checks do not establish repair completeness.
+Derive the complete changed set from hash-bound baseline and candidate content
+manifests. Bind each present changed path by content hash and each deleted path
+by its baseline hash. Composition receipts must bind the current producer and
+consumer bytes as controlled-command input paths.
+Require each composition check to cover a changed path, declare its consumer as a direct consumer, and expose its receipt as a validation reference.
+Require the generated review scope to contain every repair path, inventory match,
+composition binding, command registry, receipt, targeted test, and validation
+reference; keep consumers and tests in their named context classes.
+
 ## Knowledge Preflight
 
 After mandatory authority reads and before freezing plan sources, run the
@@ -94,6 +120,14 @@ deterministic validation; they do not start another complete semantic review.
 Repair evidence stays under the original execution-plan directory, which
 remains the acceptance target unless an explicit supersede or incompatible-
 scope decision says otherwise.
+
+Round 1 reviews the minimal complete implementation-conformance closure.
+After a P0/P1 repair, Round 2 defaults to the repair delta: changed files,
+direct consumers, targeted tests, and validation references, while retaining
+reachable authority context. After two consumed rounds, a passing repair
+completeness audit with no typed Round 3 trigger routes to deterministic
+closure instead of another full review. P2-only repair never opens a new
+semantic round.
 
 `resumable` and `self-hosted` plans create `95-*.md` before implementation and add its entry to `execution-plans/95-implementation-report-index.v1.json` in the same change. The report is append-only, non-authorizing, records corrections and the final implementation result, and is excluded from candidate hashes. `standard` may omit it unless requested.
 

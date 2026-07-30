@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Acceptance Impact Projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "baseMatrixHash", "codeReviewPolicyBindingHash", "phasePolicyResultHashes", "bootstrapImportEnvelopeHash", "findingMapHash", "approvalImportReceiptHashes", "externalAndProtectedGateResults", "phaseGraphHash", "partitionImpacts", "effectiveOverallCompleteness", "scopeCompleteness", "checkImpacts", "status", "authorizes"],
+  "properties": {"schemaVersion": {"const": "acceptance-impact-projection.v1"}, "status": {"enum": ["current", "incomplete", "stale"]}, "passedGateScopes": {"type": "object"}, "authorizes": {"const": []}}
+}

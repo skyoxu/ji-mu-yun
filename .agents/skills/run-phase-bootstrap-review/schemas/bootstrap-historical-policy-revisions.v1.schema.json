@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-historical-policy-revisions.v1.schema.json",
+  "title": "Bootstrap Historical Policy Revisions v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "revisions", "authorizes"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-historical-policy-revisions.v1"},
+    "revisions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profileName", "policyRevision", "authorityRootRegistry"],
+        "properties": {
+          "profileName": {"type": "string", "minLength": 1},
+          "policyRevision": {"$ref": "#/$defs/hash"},
+          "authorityRootRegistry": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256", "registryId"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1},
+              "sha256": {"$ref": "#/$defs/hash"},
+              "registryId": {"const": "bootstrap-authority-roots.v1"}
+            }
+          }
+        }
+      }
+    },
+    "authorizes": {"type": "array", "maxItems": 0}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}

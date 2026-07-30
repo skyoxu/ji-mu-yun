@@ -651,6 +651,27 @@ class RunInputTests(unittest.TestCase):
         self.assertEqual(["Game.Godot/Player.cs"], binding["unreviewedExternalDomainPaths"])
         self.assertEqual([], binding["authorizes"])
 
+    def test_phase_policy_accepts_self_hosted_control_plane_and_retains_docs_partition(self) -> None:
+        from acceptance_core import resolve_phase_policy
+
+        policy = json.loads((SKILL_ROOT / "policies/phase-service-code-review.v1.json").read_text(encoding="utf-8"))
+        baseline = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": []}
+        candidate = {"schemaVersion": "acceptance-candidate-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": [
+            {"change_type": "added", "roles": ["implementation"], "baseline_path": None, "baseline_sha256": None, "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py", "candidate_sha256": "sha256:" + "a" * 64, "inclusion_reason": "self-hosted control plane"},
+            {"change_type": "added", "roles": ["authority"], "baseline_path": None, "baseline_sha256": None, "candidate_path": "docs/standards/acceptance.md", "candidate_sha256": "sha256:" + "b" * 64, "inclusion_reason": "external documentation"},
+        ]}
+        binding = resolve_phase_policy(policy, candidate, baseline, "sha256:" + "c" * 64)
+        self.assertEqual([".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py"], binding["triggeredPaths"])
+        self.assertEqual(["docs/standards/acceptance.md"], binding["unreviewedExternalDomainPaths"])
+
+    def test_cli_json_publisher_rejects_existing_output_without_replacement(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "evidence.json"
+            output.write_text('{"old":true}\n', encoding="utf-8")
+            with self.assertRaisesRegex(acceptance_core.InputError, "append-only"):
+                acceptance_cli._publish_new_json(str(output), {"new": True})
+            self.assertEqual('{"old":true}\n', output.read_text(encoding="utf-8"))
+
     def test_phase_policy_ignores_unchanged_phase_entries(self) -> None:
         from acceptance_core import InputError, resolve_phase_policy
 

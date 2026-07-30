@@ -37,6 +37,37 @@ EXPECTED_REVIEW_REENTRY_POLICY = {
     "transport_failure": "retry-same-run-without-semantic-round",
     "p2_only": "current-run-disposition-and-targeted-validation",
     "acceptance_target": "original-plan-directory",
+    "lineage_identity": "stable-original-plan-target-family",
+    "lineage_projection": "hash-bound-inspect-lineage-required-even-zero",
+    "default_full_review_rounds": 2,
+    "hard_full_review_rounds": 3,
+    "successor_resets_round_budget": False,
+    "round_three_entry_reasons": [
+        "novel_p0_p1",
+        "authority_context_graph_changed",
+        "high_risk_boundary_changed",
+    ],
+    "repair_delta": "changed-files-direct-consumers-targeted-tests-validation-refs",
+    "changed_path_binding": "content-hash-or-deletion-tombstone",
+    "root_cause_inventory": "all-discovered-callsites-addressed-or-excluded",
+    "composition_validation": "controlled-command-receipt-required",
+    "composition_scope_binding": "changed-path-direct-consumer-validation-ref",
+    "hard_limit_route": "manual_pause",
+}
+
+EXPECTED_REVIEW_REENTRY_TEXT = {
+    "SKILL.md": (
+        "stable `lineageFamilyId` derived from the original plan target",
+        "A successor does not reset that budget",
+        "hash-bound `inspect-lineage` projection even when it reports zero rounds",
+        "root-cause callsite inventory",
+    ),
+    "references/solo-maintainer-vdd-standard.md": (
+        "stable lineage family derived from the original plan target",
+        "The default full-review budget is two semantic rounds",
+        "hash-bound inspect-lineage projection even for zero consumed rounds",
+        "controlled producer/consumer composition receipt",
+    ),
 }
 
 EXPECTED_ROUTE_TEXT = {
@@ -150,6 +181,27 @@ def validate_input_routes(skill_root: Path, contract: dict[str, Any]) -> list[di
     return findings
 
 
+def validate_review_reentry_text(skill_root: Path) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    for relative, phrases in EXPECTED_REVIEW_REENTRY_TEXT.items():
+        path = skill_root / relative
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            findings.append(finding("VDD-REVIEW-REENTRY-TEXT", relative, str(exc)))
+            continue
+        for phrase in phrases:
+            if phrase not in text:
+                findings.append(
+                    finding(
+                        "VDD-REVIEW-REENTRY-TEXT",
+                        relative,
+                        f"missing review re-entry statement: {phrase}",
+                    )
+                )
+    return findings
+
+
 def validate_clarification_fixtures(skill_root: Path, contract: dict[str, Any]) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     fixture_root = skill_root / "scripts" / "fixtures"
@@ -227,6 +279,22 @@ def validate_profile_cases(skill_root: Path, contract: dict[str, Any]) -> list[d
             "expected_p2_path",
             "current-run-disposition-and-targeted-validation",
         ),
+        "bounded-review-family": (
+            "expected_review_budget",
+            "stable-family-two-default-three-hard",
+        ),
+        "repair-completeness": (
+            "expected_repair_proof",
+            "inventory-plus-controlled-composition",
+        ),
+        "round-three-exception": (
+            "expected_round_three_entry",
+            "typed-novel-or-authority-or-high-risk",
+        ),
+        "exhausted-review-family": (
+            "expected_hard_limit_route",
+            "manual-pause-no-successor-reset",
+        ),
     }
     for case_id, (field, expected) in expectations.items():
         if by_id.get(case_id, {}).get(field) != expected:
@@ -273,6 +341,7 @@ def validate_skill(skill_root: Path) -> dict[str, Any]:
             "review re-entry policy must preserve minimal scope, transport retry, P2, and original target rules",
         ))
     findings.extend(validate_input_routes(skill_root, contract))
+    findings.extend(validate_review_reentry_text(skill_root))
     for relative in contract["required_files"]:
         if not (skill_root / relative).is_file():
             findings.append(finding("VDD-SKILL-FILE", relative, "required file is missing"))

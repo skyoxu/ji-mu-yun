@@ -11,12 +11,20 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from acceptance_core import InputError
+from repair_completeness import validate_repair_completeness_projection
+from review_cycle_policy import (
+    DEFAULT_FULL_REVIEW_ROUND_LIMIT,
+    HARD_FULL_REVIEW_ROUND_LIMIT,
+)
+
 
 class BootstrapBindingError(ValueError):
     pass
 
 
 _HASH = re.compile(r"sha256:[a-f0-9]{64}$")
+_LINEAGE_ID = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}$")
 _REVIEW_SCOPE_INPUTS = {
     "implementation_plan": "implementation-plan",
     "changed_production_code": "changed-production-code",
@@ -32,6 +40,29 @@ def _canonical_hash(value: Any) -> str:
     return "sha256:" + hashlib.sha256(
         json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
+
+
+def _load_bootstrap_module(repository_root: Path) -> Any:
+    root = repository_root.resolve()
+    module_path = root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+    if str(module_path.parent) not in sys.path:
+        sys.path.insert(0, str(module_path.parent))
+    spec = importlib.util.spec_from_file_location("ria_bootstrap_review", module_path)
+    if spec is None or spec.loader is None:
+        raise BootstrapBindingError("Bootstrap control plane is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_current_lineage_state(
+    repository_root: Path, lineage_family_id: str
+) -> dict[str, Any]:
+    module = _load_bootstrap_module(repository_root)
+    try:
+        return module.build_lineage_state(repository_root.resolve(), lineage_family_id)
+    except (OSError, ValueError, module.BootstrapError) as exc:
+        raise BootstrapBindingError("Bootstrap lineage state cannot be reconstructed") from exc
 
 
 def _normalize_review_paths(values: Any, label: str) -> list[str]:
@@ -67,6 +98,7 @@ def build_minimal_review_scope(scope_inputs: Any) -> dict[str, Any]:
         context_class: _normalize_review_paths(scope_inputs[source], context_class)
         for source, context_class in _REVIEW_SCOPE_INPUTS.items()
     }
+    lineage = derive_acceptance_lineage(context_classes["implementation-plan"])
     scope = sorted({path for paths in context_classes.values() for path in paths})
     closure = {
         "schemaVersion": "implementation-acceptance-bootstrap-scope.v1",
@@ -75,10 +107,296 @@ def build_minimal_review_scope(scope_inputs: Any) -> dict[str, Any]:
         "scope": scope,
         "contextClasses": context_classes,
         "directoryScopeAttestation": None,
+        **lineage,
         "authorizes": [],
     }
     closure["scopeHash"] = _canonical_hash(closure)
     return closure
+
+
+def derive_acceptance_lineage(implementation_plan_paths: Any) -> dict[str, str]:
+    """Derive one stable review-budget family from the original plan target."""
+    normalized = _normalize_review_paths(implementation_plan_paths, "implementation-plan")
+    anchors: set[str] = set()
+    for value in normalized:
+        parts = PurePosixPath(value).parts
+        if len(parts) < 2 or parts[0].casefold() != "execution-plans":
+            raise BootstrapBindingError(
+                "implementation-plan review scope must be under execution-plans"
+            )
+        anchor = (
+            PurePosixPath(*parts).as_posix()
+            if len(parts) == 2
+            else PurePosixPath(*parts[:2]).as_posix()
+        )
+        anchors.add(anchor)
+    if len(anchors) != 1:
+        raise BootstrapBindingError(
+            "implementation-plan review scope must resolve to one acceptance target"
+        )
+    anchor = next(iter(anchors))
+    digest = hashlib.sha256(
+        ("refactor-implementation-acceptance:" + anchor.casefold()).encode("utf-8")
+    ).hexdigest()[:32]
+    return {"lineageAnchor": anchor, "lineageFamilyId": "ria-" + digest}
+
+
+def _validate_minimal_review_scope(value: Any) -> None:
+    required = {
+        "schemaVersion", "profile", "strategy", "scope", "contextClasses",
+        "directoryScopeAttestation", "lineageAnchor", "lineageFamilyId",
+        "authorizes", "scopeHash",
+    }
+    if (
+        not isinstance(value, dict)
+        or set(value) != required
+        or value.get("schemaVersion") != "implementation-acceptance-bootstrap-scope.v1"
+        or value.get("profile") != "bootstrap-implementation-conformance"
+        or value.get("strategy") != "minimal-complete-closure"
+        or value.get("directoryScopeAttestation") is not None
+        or value.get("authorizes") != []
+        or value.get("scopeHash")
+        != _canonical_hash({key: item for key, item in value.items() if key != "scopeHash"})
+    ):
+        raise BootstrapBindingError("bootstrap review scope is invalid")
+    context = value.get("contextClasses")
+    if not isinstance(context, dict) or set(context) != set(_REVIEW_SCOPE_INPUTS.values()):
+        raise BootstrapBindingError("bootstrap review context classes are invalid")
+    normalized_context: dict[str, list[str]] = {}
+    for context_class, paths in context.items():
+        normalized = _normalize_review_paths(paths, context_class)
+        if paths != normalized:
+            raise BootstrapBindingError("bootstrap review context paths are not canonical")
+        normalized_context[context_class] = normalized
+    expected_scope = sorted({path for paths in normalized_context.values() for path in paths})
+    if value.get("scope") != expected_scope:
+        raise BootstrapBindingError("bootstrap review scope does not match its context classes")
+    lineage = derive_acceptance_lineage(normalized_context["implementation-plan"])
+    if any(value.get(key) != expected for key, expected in lineage.items()):
+        raise BootstrapBindingError("bootstrap review scope lineage is invalid")
+
+
+def _validate_lineage_state(value: Any, family_id: str) -> int:
+    required = {
+        "schemaVersion", "lineageFamilyId", "semanticRoundsConsumed",
+        "consumedRoundNumbers", "defaultFullReviewRoundLimit",
+        "hardFullReviewRoundLimit", "nextFullReviewRound", "state", "runs",
+        "authorizes", "lineageStateHash",
+    }
+    if (
+        not isinstance(value, dict)
+        or set(value) != required
+        or value.get("schemaVersion") != "bootstrap-review-lineage-state.v1"
+        or value.get("lineageFamilyId") != family_id
+        or value.get("defaultFullReviewRoundLimit") != DEFAULT_FULL_REVIEW_ROUND_LIMIT
+        or value.get("hardFullReviewRoundLimit") != HARD_FULL_REVIEW_ROUND_LIMIT
+        or value.get("authorizes") != []
+        or value.get("lineageStateHash")
+        != _canonical_hash({key: item for key, item in value.items() if key != "lineageStateHash"})
+    ):
+        raise BootstrapBindingError("bootstrap lineage state is invalid")
+    rounds = value.get("semanticRoundsConsumed")
+    consumed = value.get("consumedRoundNumbers")
+    runs = value.get("runs")
+    if (
+        not isinstance(rounds, int)
+        or isinstance(rounds, bool)
+        or not 0 <= rounds <= HARD_FULL_REVIEW_ROUND_LIMIT
+        or consumed != list(range(1, rounds + 1))
+        or not isinstance(runs, list)
+        or len(runs) != rounds
+    ):
+        raise BootstrapBindingError("bootstrap lineage round history is invalid")
+    seen_runs: set[str] = set()
+    seen_reviews: set[str] = set()
+    for expected_round, run in enumerate(runs, start=1):
+        run_fields = {"runDirectory", "reviewId", "changeId", "fullReviewRound", "inputHash"}
+        if (
+            not isinstance(run, dict)
+            or set(run) != run_fields
+            or run.get("fullReviewRound") != expected_round
+            or not isinstance(run.get("reviewId"), str)
+            or _LINEAGE_ID.fullmatch(run["reviewId"]) is None
+            or not isinstance(run.get("changeId"), str)
+            or _LINEAGE_ID.fullmatch(run["changeId"]) is None
+            or _HASH.fullmatch(str(run.get("inputHash"))) is None
+        ):
+            raise BootstrapBindingError("bootstrap lineage run history is invalid")
+        try:
+            run_directory = _normalize_review_paths(
+                [run.get("runDirectory")], "bootstrap lineage run"
+            )[0]
+        except BootstrapBindingError as exc:
+            raise BootstrapBindingError("bootstrap lineage run history is invalid") from exc
+        if run_directory in seen_runs or run["reviewId"] in seen_reviews:
+            raise BootstrapBindingError("bootstrap lineage run history is duplicated")
+        seen_runs.add(run_directory)
+        seen_reviews.add(run["reviewId"])
+    expected_next = None if rounds == HARD_FULL_REVIEW_ROUND_LIMIT else rounds + 1
+    expected_state = "manual_pause" if rounds == HARD_FULL_REVIEW_ROUND_LIMIT else "available"
+    if value.get("nextFullReviewRound") != expected_next or value.get("state") != expected_state:
+        raise BootstrapBindingError("bootstrap lineage next-round projection is invalid")
+    return rounds
+
+
+def _validate_repair_completeness(
+    value: Any,
+    family_id: str,
+    lineage_anchor: str,
+    rounds: int,
+    review_scope: dict[str, Any],
+) -> None:
+    try:
+        validate_repair_completeness_projection(value)
+    except InputError as exc:
+        raise BootstrapBindingError("repair completeness projection is invalid") from exc
+    if (
+        value.get("lineageFamilyId") != family_id
+        or value.get("acceptanceTarget") != lineage_anchor
+        or value.get("semanticRoundsConsumed") != rounds
+    ):
+        raise BootstrapBindingError("repair completeness projection is invalid")
+    closure = set(review_scope["scope"])
+    context = review_scope["contextClasses"]
+    changed = set(value["changedPaths"])
+    consumers = {item["path"] for item in value["directConsumers"]}
+    tests = {item["path"] for item in value["targetedTests"]}
+    validation = {item["path"] for item in value["validationRefs"]}
+    inventory_paths = {
+        item["path"]
+        for inventory in value["rootCauseInventories"]
+        for item in inventory["matches"]
+    }
+    composition_paths = {
+        binding["path"]
+        for check in value["compositionChecks"]
+        for binding in check["bindings"]
+    } | {
+        check[field]["path"]
+        for check in value["compositionChecks"]
+        for field in ("commandRegistry", "receipt")
+    }
+    if not (
+        changed
+        | consumers
+        | tests
+        | validation
+        | inventory_paths
+        | composition_paths
+    ).issubset(closure):
+        raise BootstrapBindingError(
+            "repair completeness artifacts are outside the bootstrap review scope"
+        )
+    if not consumers.issubset(set(context["affected-consumers"])):
+        raise BootstrapBindingError(
+            "repair completeness consumers are outside the affected-consumer scope"
+        )
+    if not tests.issubset(set(context["tests-and-acceptance"])):
+        raise BootstrapBindingError(
+            "repair completeness tests are outside the tests-and-acceptance scope"
+        )
+    evidence_scope = set(context["tests-and-acceptance"]) | set(context["runtime-evidence"])
+    if not validation.issubset(evidence_scope):
+        raise BootstrapBindingError(
+            "repair completeness validation references are outside the evidence scope"
+        )
+
+
+def project_bounded_review_route(
+    decision: Any,
+    scope: dict[str, Any] | None,
+    lineage_state: Any,
+    repair_completeness: Any,
+) -> dict[str, Any]:
+    """Choose the bounded semantic-review lane without authorizing a launch."""
+    if not isinstance(decision, dict) or decision.get("requirement") not in {
+        "required", "not_required",
+    }:
+        raise BootstrapBindingError("bootstrap requirement decision is invalid")
+    if decision["requirement"] == "not_required":
+        if lineage_state is not None or repair_completeness is not None:
+            raise BootstrapBindingError(
+                "deterministic-only acceptance cannot attach review lineage evidence"
+            )
+        return {
+            "routeKind": "deterministic_only",
+            "lineageAnchor": None,
+            "lineageFamilyId": None,
+            "semanticRoundsConsumed": 0,
+            "nextFullReviewRound": None,
+            "roundEntryReason": None,
+            "lineageStateHash": None,
+            "repairCompletenessHash": None,
+        }
+    if not isinstance(scope, dict):
+        raise BootstrapBindingError("required Bootstrap route needs a review scope")
+    _validate_minimal_review_scope(scope)
+    family_id = scope.get("lineageFamilyId")
+    anchor = scope.get("lineageAnchor")
+    if not isinstance(family_id, str) or _LINEAGE_ID.fullmatch(family_id) is None:
+        raise BootstrapBindingError("review scope lineage family is invalid")
+    if not isinstance(anchor, str) or not anchor:
+        raise BootstrapBindingError("review scope lineage anchor is invalid")
+    if lineage_state is None:
+        raise BootstrapBindingError(
+            "required Bootstrap route needs a current inspect-lineage projection"
+        )
+    rounds = _validate_lineage_state(lineage_state, family_id)
+    if rounds == 0:
+        if repair_completeness is not None:
+            raise BootstrapBindingError("initial review cannot attach repair completeness")
+        route_kind = "full_implementation_conformance"
+        entry_reason = None
+        repair_hash = None
+    elif rounds == HARD_FULL_REVIEW_ROUND_LIMIT:
+        if repair_completeness is not None:
+            _validate_repair_completeness(
+                repair_completeness, family_id, anchor, rounds, scope
+            )
+        route_kind = "manual_pause"
+        entry_reason = None
+        repair_hash = (
+            _canonical_hash(repair_completeness)
+            if repair_completeness is not None
+            else None
+        )
+    else:
+        _validate_repair_completeness(
+            repair_completeness, family_id, anchor, rounds, scope
+        )
+        repair_hash = _canonical_hash(repair_completeness)
+        novel = repair_completeness["novelP0P1FindingIds"]
+        authority_changed = repair_completeness["authorityGraphChanged"]
+        boundary_changed = repair_completeness["highRiskBoundaryChanged"]
+        if rounds == 1:
+            route_kind = "focused_repair_review"
+            entry_reason = None
+        elif novel:
+            route_kind = "full_implementation_conformance"
+            entry_reason = "novel_p0_p1"
+        elif authority_changed:
+            route_kind = "full_implementation_conformance"
+            entry_reason = "authority_context_graph_changed"
+        elif boundary_changed:
+            route_kind = "full_implementation_conformance"
+            entry_reason = "high_risk_boundary_changed"
+        else:
+            route_kind = "deterministic_only"
+            entry_reason = None
+    return {
+        "routeKind": route_kind,
+        "lineageAnchor": anchor,
+        "lineageFamilyId": family_id,
+        "semanticRoundsConsumed": rounds,
+        "nextFullReviewRound": (
+            rounds + 1
+            if route_kind in {"focused_repair_review", "full_implementation_conformance"}
+            else None
+        ),
+        "roundEntryReason": entry_reason,
+        "lineageStateHash": lineage_state.get("lineageStateHash"),
+        "repairCompletenessHash": repair_hash,
+    }
 
 
 def _required_capability(binding: Any) -> dict[str, Any]:
@@ -206,6 +524,44 @@ def validate_inventory_attestation(attestation: Any, binding: Any, scope: Any) -
 
 def validate_import_envelope(envelope: Any, expected_hashes: Any) -> None:
     """Reject partial or drifted Bootstrap imports before they reach acceptance calculation."""
+    if isinstance(envelope, dict) and envelope.get("schemaVersion") == "bootstrap-import-envelope.v2":
+        required = {
+            "schemaVersion", "controlPlaneRevision", "bootstrapRunDir", "finalizedRun",
+            "finalizedRunCoreHash", "inventoryAttestation", "inventoryAttestationHash",
+            "bindingHash", "scopeHash", "authorizes",
+        }
+        if not isinstance(expected_hashes, dict) or set(expected_hashes) != {"binding", "scope"}:
+            raise BootstrapBindingError("v2 import envelope expectations are invalid")
+        binding, scope = expected_hashes["binding"], expected_hashes["scope"]
+        finalized = envelope.get("finalizedRun")
+        attestation = envelope.get("inventoryAttestation")
+        if (
+            set(envelope) != required
+            or envelope.get("controlPlaneRevision") != "bootstrap-control-plane.v2"
+            or envelope.get("authorizes") != []
+            or not isinstance(envelope.get("bootstrapRunDir"), str)
+            or not envelope["bootstrapRunDir"]
+            or not isinstance(finalized, dict)
+            or finalized.get("schemaVersion") not in {
+                "bootstrap-finalized-run-validation.v1",
+                "bootstrap-finalized-run-validation.v2",
+            }
+            or finalized.get("validationStatus") != "passed"
+            or finalized.get("finalStatus") != "clean"
+            or finalized.get("controlPlaneRevision") != envelope.get("controlPlaneRevision")
+            or not isinstance(attestation, dict)
+        ):
+            raise BootstrapBindingError("bootstrap import envelope v2 is invalid")
+        finalized_core = {key: value for key, value in finalized.items() if key != "generatedAt"}
+        if (
+            envelope.get("finalizedRunCoreHash") != _canonical_hash(finalized_core)
+            or envelope.get("inventoryAttestationHash") != _canonical_hash(attestation)
+            or envelope.get("bindingHash") != _canonical_hash(binding)
+            or envelope.get("scopeHash") != _canonical_hash(scope)
+        ):
+            raise BootstrapBindingError("bootstrap import envelope v2 hash is stale")
+        validate_inventory_attestation(attestation, binding, scope)
+        return
     required_hashes = {
         "decisionHash", "bindingHash", "launchAuthorizationHash", "localReceiptHash", "reviewInputHash",
         "artifactViewHash", "roleBundleHash", "attestationHash", "candidateHash", "baseMatrixHash", "findingPolicyHash",
@@ -233,18 +589,13 @@ def load_verified_bootstrap_import(
         run_dir.relative_to(root)
     except ValueError as exc:
         raise BootstrapBindingError("bootstrap run directory escapes repository root") from exc
-    module_path = root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
-    if str(module_path.parent) not in sys.path:
-        sys.path.insert(0, str(module_path.parent))
-    spec = importlib.util.spec_from_file_location("ria_bootstrap_review", module_path)
-    if spec is None or spec.loader is None:
-        raise BootstrapBindingError("Bootstrap control plane is unavailable")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    module = _load_bootstrap_module(root)
     try:
         manifest = module.read_json(run_dir / "review-input.json")
         envelope = module.validate_finalized_run_evidence(run_dir, manifest, root)
-        bundle = module.read_json(run_dir / "reviewer-outputs" / "acceptance_auditor.json")
+        bundle = module.read_json(
+            run_dir / "reviewer-outputs" / "acceptance_auditor.role-bundle.json"
+        )
     except Exception as exc:
         raise BootstrapBindingError("Bootstrap finalized evidence is missing or invalid") from exc
     if envelope.get("finalStatus") != "clean":
@@ -252,7 +603,23 @@ def load_verified_bootstrap_import(
     if not isinstance(bundle, dict) or not isinstance(bundle.get("inventoryAttestation"), dict):
         raise BootstrapBindingError("Bootstrap Acceptance Auditor bundle is invalid")
     validate_inventory_attestation(bundle["inventoryAttestation"], binding, scope)
-    return {"envelope": envelope, "attestation": bundle["inventoryAttestation"]}
+    finalized_core = {key: value for key, value in envelope.items() if key != "generatedAt"}
+    attestation = bundle["inventoryAttestation"]
+    result = {
+        "controlPlaneRevision": envelope["controlPlaneRevision"],
+        "bootstrapRunDir": run_dir.relative_to(root).as_posix(),
+        "finalizedRun": envelope,
+        "finalizedRunCoreHash": _canonical_hash(finalized_core),
+        "inventoryAttestation": attestation,
+        "inventoryAttestationHash": _canonical_hash(attestation),
+        "bindingHash": _canonical_hash(binding),
+        "scopeHash": _canonical_hash(scope),
+    }
+    validate_import_envelope(
+        {"schemaVersion": "bootstrap-import-envelope.v2", **result, "authorizes": []},
+        {"binding": binding, "scope": scope},
+    )
+    return result
 
 
 def project_bootstrap_execution_state(
