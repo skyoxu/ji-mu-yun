@@ -161,8 +161,29 @@ def build_attestation_scope(
 def validate_inventory_attestation(attestation: Any, binding: Any, scope: Any) -> None:
     """Validate a Bootstrap-produced attestation without treating it as local output."""
     capability = _required_capability(binding)
-    if not isinstance(scope, dict) or not _HASH.fullmatch(str(scope.get("scopeHash"))):
+    scope_fields = {
+        "schemaVersion", "decisionHash", "bindingHash", "sourceInventoryHash",
+        "sourceClausesHash", "baseMatrixHash", "consumerScopeHash", "scopeHash",
+        "authorizes",
+    }
+    if (
+        not isinstance(scope, dict)
+        or set(scope) != scope_fields
+        or scope.get("schemaVersion") != "bootstrap-inventory-attestation-scope.v1"
+        or scope.get("authorizes") != []
+        or any(not _HASH.fullmatch(str(scope.get(key))) for key in scope_fields - {"schemaVersion", "authorizes", "consumerScopeHash", "scopeHash"})
+        or not _HASH.fullmatch(str(scope.get("consumerScopeHash")))
+        or not _HASH.fullmatch(str(scope.get("scopeHash")))
+    ):
         raise BootstrapBindingError("attestation scope is invalid")
+    consumer_scope = {
+        key: scope[key]
+        for key in ("schemaVersion", "decisionHash", "bindingHash", "sourceInventoryHash", "sourceClausesHash", "baseMatrixHash", "authorizes")
+    }
+    if scope["consumerScopeHash"] != _canonical_hash(consumer_scope):
+        raise BootstrapBindingError("attestation consumer scope hash is stale")
+    if scope["bindingHash"] != _canonical_hash(binding):
+        raise BootstrapBindingError("attestation binding is stale")
     required = {
         "schemaVersion", "reviewId", "attemptId", "inputHash", "capabilityId", "capabilityVersion",
         "producerRole", "status", "scopeHash", "coverage",

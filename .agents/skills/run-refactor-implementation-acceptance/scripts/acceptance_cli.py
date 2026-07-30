@@ -20,6 +20,7 @@ from acceptance_core import (
 from package_validation import validate_package
 from requirement_inventory import extract_requirement_inventory
 from execution_control import (
+    ControlError,
     inspect_run,
     inspect_persisted_run,
     publish_receipt,
@@ -34,6 +35,7 @@ from source_clauses import extract_heading_clauses
 from matrix_phase import project_acceptance_impact, publish_candidate_result, publish_final_result
 from knowledge_context import freeze_knowledge_context
 from bootstrap_integration import (
+    BootstrapBindingError,
     bind_capabilities,
     build_attestation_scope,
     build_minimal_review_scope,
@@ -214,6 +216,15 @@ def project_acceptance_impact_command(request_path: str, output_path: str) -> di
     request = _read_json(request_path)
     if not isinstance(request, dict):
         raise InputError("impact projection request must be an object")
+    required_check_ids = request.get("required_check_ids")
+    if (
+        not isinstance(required_check_ids, list)
+        or not required_check_ids
+        or any(not isinstance(value, str) or not value for value in required_check_ids)
+        or len(set(required_check_ids)) != len(required_check_ids)
+    ):
+        raise InputError("impact projection required_check_ids must be a unique string array")
+    request = {**request, "required_check_ids": set(required_check_ids)}
     result = project_acceptance_impact(**request)
     output = Path(output_path)
     if output.exists():

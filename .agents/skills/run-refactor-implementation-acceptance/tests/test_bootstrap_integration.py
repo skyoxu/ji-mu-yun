@@ -48,13 +48,21 @@ class BootstrapIntegrationTests(unittest.TestCase):
         import bootstrap_integration
 
         binding = {"schemaVersion": "bootstrap-capability-binding.v1", "status": "bound", "requiredCompanionCapabilities": [{"capabilityId": "acceptance-inventory-attestation", "capabilityVersion": "1.0", "producerRole": "acceptance_auditor", "schemaPath": "schema.json", "schemaHash": "sha256:" + "a" * 64}], "authorizes": []}
-        scope = {"scopeHash": "sha256:" + "b" * 64}
+        decision = {"requirement": "required", "requiredCompanionCapabilityExpectations": [{"capabilityId": "acceptance-inventory-attestation", "capabilityVersion": "1.0", "producerRole": "acceptance_auditor"}]}
+        scope = bootstrap_integration.build_attestation_scope(
+            decision, binding, {"partitions": ["semantic"]}, {"clauses": ["c1"]},
+            {"checks": ["k1"]}, "sha256:" + "b" * 64,
+        )
         attestation = {"schemaVersion": "bootstrap-acceptance-inventory-attestation.v1", "reviewId": "review-1", "attemptId": "attempt-1", "inputHash": "sha256:" + "c" * 64, "capabilityId": "acceptance-inventory-attestation", "capabilityVersion": "1.0", "producerRole": "acceptance_auditor", "status": "complete", "scopeHash": scope["scopeHash"], "coverage": []}
         bootstrap_integration.validate_inventory_attestation(attestation, binding, scope)
         wrong = copy.deepcopy(attestation)
         wrong["scopeHash"] = "sha256:" + "d" * 64
         with self.assertRaisesRegex(bootstrap_integration.BootstrapBindingError, "scope"):
             bootstrap_integration.validate_inventory_attestation(wrong, binding, scope)
+        stale_scope = copy.deepcopy(scope)
+        stale_scope["sourceInventoryHash"] = "sha256:" + "d" * 64
+        with self.assertRaisesRegex(bootstrap_integration.BootstrapBindingError, "consumer scope hash"):
+            bootstrap_integration.validate_inventory_attestation(attestation, binding, stale_scope)
 
     def test_import_envelope_requires_all_hash_bound_consumer_inputs(self) -> None:
         import bootstrap_integration

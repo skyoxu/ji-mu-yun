@@ -71,6 +71,27 @@ class MatrixPhaseTests(unittest.TestCase):
         import acceptance_cli
         self.assertTrue(callable(acceptance_cli.project_acceptance_impact_command))
 
+    def test_cli_impact_projection_converts_json_check_array(self) -> None:
+        import json
+        import tempfile
+        import acceptance_cli
+
+        row = self._verified_row()
+        request = {
+            "base_rows": [row], "required_check_ids": ["A"],
+            "partitions": [], "phase_consumed_partitions": {}, "gates": [],
+            "base_matrix_hash": "sha256:" + "a" * 64,
+            "code_review_policy_binding_hash": "sha256:" + "a" * 64,
+            "phase_policy_result_hashes": {key: "sha256:" + "b" * 64 for key in ("taskChecklistClosure", "diffCoverage", "staticAnalysis", "securityScan")},
+            "phase_graph_hash": "sha256:" + "c" * 64,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, output = root / "request.json", root / "output.json"
+            source.write_text(json.dumps(request), encoding="utf-8")
+            result = acceptance_cli.project_acceptance_impact_command(str(source), str(output))
+        self.assertEqual([], result["authorizes"])
+
     def test_candidate_and_final_results_use_distinct_append_only_paths(self) -> None:
         import tempfile
         import matrix_phase
