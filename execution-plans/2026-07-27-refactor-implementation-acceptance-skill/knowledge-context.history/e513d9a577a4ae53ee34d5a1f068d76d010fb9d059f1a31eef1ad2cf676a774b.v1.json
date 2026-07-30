@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-7-27-context-r4f-2026-07-30",
+    "request_id": "vdd-7-27-context-r4e-2026-07-30",
     "consumer": "vdd",
     "query": "repository guide AGENTS phase service rules",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "e1a575e30c1397dfa791cd834ec288e93005e64b"
+      "commit": "0aae9be169b0750ccb3dfda6e1ae691728c9cbba"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -593,13 +593,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-7-27-context-r4f-2026-07-30",
+    "request_id": "vdd-7-27-context-r4e-2026-07-30",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "e1a575e30c1397dfa791cd834ec288e93005e64b",
+      "commit": "0aae9be169b0750ccb3dfda6e1ae691728c9cbba",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:e1bfe8b8dc5bed5ba9a3958d98dd167618e64eafb2f9423f4160e0274e7f106b",
+    "source_snapshot_id": "sha256:f5a3a73aa0dcd7bea8c5df2e4dd847d0f50c81fab2c9662c13ed2e37a2342c14",
     "status": "matched"
   },
   "required_modules": [
@@ -729,11 +729,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:a24c38693521ed3f500b3391c510aff01da5daf36ce4ed45ecc9cd64f4afcab9",
-  "result_sha256": "sha256:62ca40cd7db1d8fa6dbb6b5c4b21aa5a1461ae09040e0450ed6ebdb791722820",
+  "request_sha256": "sha256:514f2b9d35ed750c12ff9e5548519af2eaf303ac8e19c939cb0a8967c155fa51",
+  "result_sha256": "sha256:6560e3d33c4bed9de4576576a352ea2b3c3056fc6196ed535a29386e71358267",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:230fc785e7e7bd04a31f25a0b45ee6c76834460d32e5f3f1c6c949480f6b4a4a"
+    "context_sha256": "sha256:edf3923469e348f3b5920b20aa85c17977d760b3abacf2d8ccd006c8b79619f9"
   }
 }
