@@ -2,13 +2,14 @@
   "schema_version": "vdd.plan-state.v2",
   "plan_id": "refactor-implementation-acceptance-skill",
   "profile": "self-hosted",
-  "status": "implementation-authorized",
-  "authorizes": ["implementation-authorized"],
+  "status": "implementation-complete",
+  "authorizes": ["implementation-complete"],
   "git_baseline": {"head": "108d3112e7c701e97014842600068a912236b7f3", "scope": "current local main before plan creation"},
   "status_history": [
     {"status": "draft", "reason": "VDD knowledge preflight was blocked before catalog bootstrap and CLI contract repair.", "evidence": ["knowledge-context.v1.json"]},
     {"status": "plan-ready", "reason": "VDD reread and hash-verified the main-pinned repository-rules candidate selected by the stable Locator.", "evidence": ["knowledge-context.v1.json", "knowledge/indexes/derived-index.v1.json"]}
     ,{"status": "plan-ready", "reason": "Knowledge context was refreshed from the current catalog source snapshot; every Locator candidate now has an adapter-owned decision.", "evidence": ["knowledge-context.v1.json", "tools/validate_plan.py --require-plan-ready"]},
-    {"status": "implementation-authorized", "reason": "Maintainer explicitly authorized implementation after plan-local validation and Bootstrap review repair closure.", "evidence": ["tools/validate_plan.py", "tools/tests/test_validate_plan.py", "logs/ci/2026-07-27/review-gateway-bootstrap-refactor-implementation-acceptance-plan-r2-20260727/validation-envelope.json"]}
+    {"status": "implementation-authorized", "reason": "Maintainer explicitly authorized implementation after plan-local validation and Bootstrap review repair closure.", "evidence": ["tools/validate_plan.py", "tools/tests/test_validate_plan.py", "logs/ci/2026-07-27/review-gateway-bootstrap-refactor-implementation-acceptance-plan-r2-20260727/validation-envelope.json"]},
+    {"status": "implementation-complete", "reason": "All S0-S5 slices and the bounded round-6 orchestration repairs passed deterministic terminal validation.", "evidence": ["repair/round-6/repair-closure.json", "tools/validate_plan.py", "tools/validate_all.py"]}
   ]
 }

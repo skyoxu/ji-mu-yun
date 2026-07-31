@@ -844,12 +844,13 @@ def main() -> int:
         ), sort_keys=True))
         return 0
     if args.command == "resume-persisted-run":
-        print(json.dumps(resume_persisted_run(
+        result = resume_persisted_run(
             Path(args.repository_root), Path(args.run_dir), _read_json(args.actions),
             _read_json(args.command_registry), args.run_input_hash, args.contract_hash,
             args.knowledge_context_hash,
-        ), sort_keys=True))
-        return 0
+        )
+        print(json.dumps(result, sort_keys=True))
+        return 0 if result.get("receipt", {}).get("exitCode") == 0 else 1
     findings = validate_package(Path(__file__).resolve().parents[1])
     print(json.dumps({"status": "pass" if not findings else "fail", "findings": findings, "authorizes": []}, sort_keys=True))
     return 0 if not findings else 1

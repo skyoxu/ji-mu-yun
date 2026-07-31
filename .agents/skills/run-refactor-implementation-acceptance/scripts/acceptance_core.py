@@ -111,8 +111,23 @@ def _resolve_commit(repository_root: Path, revision: str, field: str) -> str:
 def _git_blob(repository_root: Path, commit: str, path: str, field: str) -> bytes:
     normalized = _normalized_relative(path, field)
     try:
-        return _git(repository_root, "cat-file", "blob", f"{commit}:{normalized}")
-    except InputError as exc:
+        tree = _git(
+            repository_root, "ls-tree", "-z", commit, "--", f":(literal){normalized}"
+        )
+        entries = [entry for entry in tree.split(b"\0") if entry]
+        if len(entries) != 1:
+            raise InputError("Git tree path did not resolve uniquely")
+        metadata, resolved_path = entries[0].split(b"\t", 1)
+        mode, object_type, object_id = metadata.split(b" ", 2)
+        if (
+            resolved_path.decode("utf-8", errors="strict") != normalized
+            or object_type != b"blob"
+            or re.fullmatch(rb"[0-9a-f]{40,64}", object_id) is None
+            or not mode
+        ):
+            raise InputError("Git tree entry is not an immutable blob")
+        return _git(repository_root, "cat-file", "blob", object_id.decode("ascii"))
+    except (InputError, UnicodeDecodeError, ValueError) as exc:
         raise InputError(f"{field} is missing from its declared Git revision") from exc
 
 

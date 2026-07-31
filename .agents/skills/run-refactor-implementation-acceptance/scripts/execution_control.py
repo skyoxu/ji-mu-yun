@@ -433,7 +433,7 @@ def resume_persisted_run(
         run_dir, run_input_hash, contract_hash, knowledge_context_hash
     )
     completed = reconstruct_completed_actions(run_dir)
-    action = next_action(actions, completed, {key: index for index, key in enumerate(command_registry)} if isinstance(command_registry, dict) else None)
+    action = next_action(actions, completed, _command_registry_order(command_registry))
     claim_path = claim_persisted_action(run_dir, action["actionId"], action["commandId"])
     state, _ = _load_persisted_run(run_dir)
     attempt_id = _next_attempt_id(run_dir, action["actionId"])
@@ -888,13 +888,17 @@ def inspect_run(actions: Any, completed_action_ids: Any, command_registry_order:
 
 
 def resume_run(repository_root: Path, actions: Any, completed_action_ids: Any, command_registry: Any) -> dict[str, Any]:
-    if not isinstance(command_registry, dict):
-        raise ControlError("command registry is invalid")
-    order = {command_id: index for index, command_id in enumerate(command_registry)}
+    order = _command_registry_order(command_registry)
     action = next_action(actions, completed_action_ids, order)
-    descriptor = command_registry.get(action["commandId"])
-    if descriptor is None:
-        raise ControlError("ready action command is absent from registry")
+    if set(command_registry) in (
+        {"schema_version", "commands"},
+        {"schemaVersion", "commands", "registryHash"},
+    ):
+        descriptor = resolve_registered_command(command_registry, action["commandId"])
+    else:
+        descriptor = command_registry.get(action["commandId"])
+        if descriptor is None:
+            raise ControlError("ready action command is absent from registry")
     receipt = run_controlled_command(repository_root, descriptor)
     return {
         "schemaVersion": "acceptance-run-resume-result.v1",
@@ -903,6 +907,36 @@ def resume_run(repository_root: Path, actions: Any, completed_action_ids: Any, c
         "receipt": receipt,
         "authorizes": [],
     }
+
+
+def _command_registry_order(command_registry: Any) -> dict[str, int]:
+    if not isinstance(command_registry, dict):
+        raise ControlError("command registry is invalid")
+    if set(command_registry) in (
+        {"schema_version", "commands"},
+        {"schemaVersion", "commands", "registryHash"},
+    ):
+        commands = command_registry.get("commands")
+        if not isinstance(commands, list):
+            raise ControlError("command registry commands are invalid")
+        command_ids = [
+            command.get("id") if isinstance(command, dict) else None
+            for command in commands
+        ]
+        if (
+            any(not isinstance(command_id, str) or not command_id for command_id in command_ids)
+            or len(command_ids) != len(set(command_ids))
+        ):
+            raise ControlError("command registry identities are invalid")
+        return {command_id: index for index, command_id in enumerate(command_ids)}
+    if any(
+        not isinstance(command_id, str)
+        or not command_id
+        or not isinstance(descriptor, dict)
+        for command_id, descriptor in command_registry.items()
+    ):
+        raise ControlError("command registry is invalid")
+    return {command_id: index for index, command_id in enumerate(command_registry)}
 
 
 def validate_command_descriptor(value: Any) -> None:

@@ -66,9 +66,24 @@ class RefactorAcceptancePlanTests(unittest.TestCase):
             },
             validator.REPAIR_FINDINGS_BY_ROUND[5],
         )
+        self.assertEqual(
+            {
+                "RIA-ORCH-LEGACY-REGISTRY",
+                "RIA-ORCH-FAILURE-EXIT",
+                "RIA-CUSTODY-WINDOWS-LONG-PATH",
+                "RIA-PLAN-LIFECYCLE-COMPLETE-BLOCKED",
+            },
+            validator.REPAIR_FINDINGS_BY_ROUND[6],
+        )
 
     def test_successor_round_requires_the_authorized_successor_lineage(self) -> None:
         self.assertTrue(validator.validate_successor_round())
+
+    def test_validator_accepts_the_complete_post_implementation_lifecycle(self) -> None:
+        context = validator.load("knowledge-context.v1.json")
+        catalog = json.loads((validator.REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v1.json").read_text(encoding="utf-8"))
+        for status in ("implementation-complete", "acceptance-passed", "archived"):
+            self.assertTrue(validator.validate_lifecycle_context(status, context, catalog))
 
 
 if __name__ == "__main__":

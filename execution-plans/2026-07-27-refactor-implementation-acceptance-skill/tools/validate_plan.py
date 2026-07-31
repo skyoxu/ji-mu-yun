@@ -53,12 +53,19 @@ REPAIR_FINDINGS_BY_ROUND = {
         "RIA-ACCEPT-CATALOG-HEAD-SELF-REFERENCE",
         "RIA-ACCEPT-DERIVED-CONTEXT-SOURCE-CYCLE",
     },
+    6: {
+        "RIA-ORCH-LEGACY-REGISTRY",
+        "RIA-ORCH-FAILURE-EXIT",
+        "RIA-CUSTODY-WINDOWS-LONG-PATH",
+        "RIA-PLAN-LIFECYCLE-COMPLETE-BLOCKED",
+    },
 }
 REPAIR_PREDECESSOR_PREFIXES_BY_ROUND = {
     2: ("logs/ci/",),
     3: ("logs/ci/",),
     4: ("execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/",),
     5: ("execution-plans/2026-07-27-refactor-implementation-acceptance-skill/repair/round-4/",),
+    6: ("execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/",),
 }
 REPAIR_WRITE_ROOT_PREFIXES_BY_ROUND = {
     2: (".agents/skills/",),
@@ -70,6 +77,10 @@ REPAIR_WRITE_ROOT_PREFIXES_BY_ROUND = {
     5: (
         "scripts/python/",
         "knowledge/",
+        "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/",
+    ),
+    6: (
+        ".agents/skills/",
         "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/",
     ),
 }
@@ -335,13 +346,7 @@ def validate() -> list[str]:
     state = load("plan-state.v1.json")
     index = (PLAN_ROOT / "00-index.md").read_text(encoding="utf-8")
     status = state.get("status")
-    if status == "draft":
-        if context.get("preflight", {}).get("status") != "blocked":
-            findings.append("RIA-PLAN-KNOWLEDGE-CONTEXT")
-    elif status in {"plan-ready", "implementation-authorized"}:
-        if not validate_knowledge_context(context, catalog):
-            findings.append("RIA-PLAN-KNOWLEDGE-CONTEXT")
-    else:
+    if not validate_lifecycle_context(status, context, catalog):
         findings.append("RIA-PLAN-KNOWLEDGE-CONTEXT")
     expected_authorizes = [] if status == "draft" else [status]
     if state.get("authorizes") != expected_authorizes or not re.search(rf"^- Status: {re.escape(state.get('status', 'invalid'))}$", index, re.MULTILINE):
@@ -368,7 +373,7 @@ def validate() -> list[str]:
         findings.append("RIA-PLAN-PREFLIGHT-REGISTRY")
     execution_registry = load("command-registry.v1.json")
     execution_command_ids = {item.get("id") for item in execution_registry.get("commands", []) if isinstance(item, dict)}
-    expected_execution_commands = {"s0-companion-red", "s0-companion-suite", "bootstrap-regression-suite", "s1-core-red", "s1-core-suite", "s2-matrix-red", "s2-matrix-suite", "s3-control-red", "s3-control-suite", "s4-bootstrap-red", "s4-bootstrap-suite", "s5-package-red", "s5-package-suite", "plan-validator", "r2-baseline-suite", "r2-checklist-suite", "r2-bootstrap-dispatch-suite", "r2-attestation-scope-suite", "r3-candidate-suite", "r3-coverage-suite", "r4-plan-validator", "r4-whole-directory-validator", "r4-validator-tests", "r5-knowledge-tests", "r5-catalog-check", "r5-whole-directory-validator", "successor-policy-suite", "successor-coverage-suite", "successor-phase-scan-suite"}
+    expected_execution_commands = {"s0-companion-red", "s0-companion-suite", "bootstrap-regression-suite", "s1-core-red", "s1-core-suite", "s2-matrix-red", "s2-matrix-suite", "s3-control-red", "s3-control-suite", "s4-bootstrap-red", "s4-bootstrap-suite", "s5-package-red", "s5-package-suite", "plan-validator", "r2-baseline-suite", "r2-checklist-suite", "r2-bootstrap-dispatch-suite", "r2-attestation-scope-suite", "r3-candidate-suite", "r3-coverage-suite", "r4-plan-validator", "r4-whole-directory-validator", "r4-validator-tests", "r5-knowledge-tests", "r5-catalog-check", "r5-whole-directory-validator", "r6-acceptance-suite", "r6-validator-tests", "r6-whole-directory-validator", "successor-policy-suite", "successor-coverage-suite", "successor-phase-scan-suite"}
     if execution_command_ids != expected_execution_commands:
         findings.append("RIA-PLAN-EXECUTION-REGISTRY")
     elif any(
@@ -379,6 +384,17 @@ def validate() -> list[str]:
     ):
         findings.append("RIA-PLAN-REPAIR-COMMANDS")
     return findings
+
+
+def validate_lifecycle_context(status: object, context: dict, catalog: dict) -> bool:
+    if status == "draft":
+        return context.get("preflight", {}).get("status") == "blocked"
+    if status in {
+        "plan-ready", "implementation-authorized", "implementation-complete",
+        "acceptance-passed", "archived",
+    }:
+        return validate_knowledge_context(context, catalog)
+    return False
 
 
 def main() -> int:

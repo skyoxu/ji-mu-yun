@@ -79,3 +79,9 @@ This append-only continuity report has `authorizes: []`. It cannot publish plan 
 - Round 1 keeps its Acceptance route for later import without passing repair
   bindings to Bootstrap. Round 2/3 repair routes retain the existing typed
   route and completeness handoff.
+
+## 2026-07-31: Deterministic orchestration closure
+
+- A live scoped Acceptance run exposed four bounded defects after all three semantic rounds had already been consumed: the persisted runner could not consume the plan-owned legacy registry directly, command failure did not propagate through the CLI process status, Windows long Git paths used the unsafe `commit:path` form, and the plan validator rejected the legitimate `implementation-complete` lifecycle state.
+- Repair round 6 consumes the existing `manual_pause` route as predecessor evidence and closes these defects with focused regression tests. Git blob reads now resolve an immutable object ID through `ls-tree` before `cat-file`, and controlled-command failure becomes observable to polling orchestration.
+- The plan publishes `implementation-complete` only after deterministic terminal validation. This does not authorize `acceptance-passed`, a fourth semantic review round, release, deployment, handoff, or archive; final disposition remains with the maintainer.

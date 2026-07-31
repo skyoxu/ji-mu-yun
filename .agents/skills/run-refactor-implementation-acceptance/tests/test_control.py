@@ -4,6 +4,7 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -269,6 +270,61 @@ class ExecutionControlTests(unittest.TestCase):
         self.assertEqual("r3-candidate-suite", descriptor["id"])
         self.assertTrue(descriptor["registry_hash"].startswith("sha256:"))
         self.assertFalse(descriptor["shell"])
+
+    def test_persisted_resume_consumes_plan_owned_legacy_registry_directly(self) -> None:
+        import subprocess
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            run = execution_control.create_persisted_run(
+                root, "run-legacy", "sha256:" + "a" * 64, "sha256:" + "b" * 64
+            )
+            actions = [{
+                "actionId": "probe", "dependsOn": [], "order": 1,
+                "commandId": "probe", "activation": True,
+            }]
+            registry = {
+                "schema_version": "ria.command-registry.v1",
+                "commands": [{
+                    "id": "probe", "executable": sys.executable,
+                    "argv": ["-c", "print('ok')"],
+                    "cwd": {"type": "repo_path", "value": "."},
+                    "timeout_seconds": 10, "shell": False,
+                }],
+            }
+
+            result = execution_control.resume_persisted_run(
+                root, run, actions, registry,
+                "sha256:" + "a" * 64, "sha256:" + "b" * 64,
+            )
+
+            self.assertEqual(0, result["receipt"]["exitCode"])
+            self.assertEqual("completed", result["actionEvent"]["status"])
+
+    def test_cli_resume_persisted_run_propagates_controlled_command_failure(self) -> None:
+        import acceptance_cli
+
+        result = {
+            "schemaVersion": "acceptance-persisted-resume-result.v1",
+            "receipt": {"exitCode": 1},
+            "authorizes": [],
+        }
+        argv = [
+            "acceptance_cli.py", "resume-persisted-run",
+            "--repository-root", ".", "--run-dir", "run",
+            "--actions", "actions.json", "--command-registry", "registry.json",
+            "--run-input-hash", "sha256:" + "a" * 64,
+            "--contract-hash", "sha256:" + "b" * 64,
+        ]
+        with (
+            mock.patch.object(sys, "argv", argv),
+            mock.patch.object(acceptance_cli, "_read_json", return_value={}),
+            mock.patch.object(acceptance_cli, "resume_persisted_run", return_value=result),
+        ):
+            self.assertEqual(1, acceptance_cli.main())
 
     def test_not_applicable_event_closes_a_dependency_for_persisted_inspection(self) -> None:
         import tempfile

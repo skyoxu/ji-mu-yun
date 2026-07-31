@@ -185,6 +185,23 @@ class RunInputTests(unittest.TestCase):
             self.assertEqual(baseline_revision, result["candidateCustody"]["baselineResolvedCommit"])
             self.assertEqual(candidate_revision, result["candidateCustody"]["candidateResolvedCommit"])
 
+    def test_git_blob_resolves_object_id_before_reading_long_repository_path(self) -> None:
+        import acceptance_core
+
+        object_id = "a" * 40
+        relative = "nested/" + ("long-segment/" * 24) + "artifact.json"
+        tree_entry = f"100644 blob {object_id}\t{relative}\0".encode("utf-8")
+        with mock.patch.object(
+            acceptance_core, "_git", side_effect=[tree_entry, b"immutable bytes"]
+        ) as git_call:
+            payload = acceptance_core._git_blob(Path("."), "b" * 40, relative, "candidate")
+
+        self.assertEqual(b"immutable bytes", payload)
+        self.assertEqual(
+            (Path("."), "cat-file", "blob", object_id),
+            git_call.call_args_list[1].args,
+        )
+
     def test_prepare_commit_rejects_complete_manifest_that_omits_changed_file(self) -> None:
         from acceptance_core import InputError
 
