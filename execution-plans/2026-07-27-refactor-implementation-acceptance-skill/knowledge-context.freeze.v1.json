@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:6d7d054845d47e6bc361cdf79896757e1ee17c933241a5c182a8d7c1d4117052",
-  "canonical_context_sha256": "sha256:74532bc989955316576a6c824c7369f2b291999631b8d0494311202e7780e371",
-  "request_sha256": "sha256:a24c38693521ed3f500b3391c510aff01da5daf36ce4ed45ecc9cd64f4afcab9",
-  "result_sha256": "sha256:62ca40cd7db1d8fa6dbb6b5c4b21aa5a1461ae09040e0450ed6ebdb791722820",
+  "context_sha256": "sha256:68840bbdea4a95eefff4a7d53b7b23980a2d61f6a0d6963e91ca6b00b9378bfc",
+  "canonical_context_sha256": "sha256:20b02e29f97503e43cbbf9615e17a0081a96c1103ccfc8c0433b6f5809ba65f9",
+  "request_sha256": "sha256:af9bfe6a04b2310589af9355d137bbff273130f85f274396a9482f9ac5a9dab0",
+  "result_sha256": "sha256:574129f4708aa1c5504599fbf832df33799e41a63fa64cffed4a96eb1c8b17b7",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "e1a575e30c1397dfa791cd834ec288e93005e64b"
+    "commit": "1cd6a6ddfca700e0fff5735ec4526b1fca2e56f0"
   },
-  "source_snapshot_id": "sha256:e1bfe8b8dc5bed5ba9a3958d98dd167618e64eafb2f9423f4160e0274e7f106b",
+  "source_snapshot_id": "sha256:946b19b675894dbe7cbe97f29dc302505566a4573ee1c8285f6047f6faad85cb",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -22,8 +22,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:e513d9a577a4ae53ee34d5a1f068d76d010fb9d059f1a31eef1ad2cf676a774b",
-    "freeze_receipt_path": "knowledge-context.freeze.history/e513d9a577a4ae53ee34d5a1f068d76d010fb9d059f1a31eef1ad2cf676a774b.v1.json",
-    "reason": "successor Bootstrap Round 2 requires catalog-aligned published main context"
+    "context_sha256": "sha256:6d7d054845d47e6bc361cdf79896757e1ee17c933241a5c182a8d7c1d4117052",
+    "freeze_receipt_path": "knowledge-context.freeze.history/6d7d054845d47e6bc361cdf79896757e1ee17c933241a5c182a8d7c1d4117052.v1.json",
+    "reason": "refresh-current-main-before-acceptance-orchestration"
   }
 }

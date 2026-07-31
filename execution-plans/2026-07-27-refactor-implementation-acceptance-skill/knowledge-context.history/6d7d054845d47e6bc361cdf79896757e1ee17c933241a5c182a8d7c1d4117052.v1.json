@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-7-27-acceptance-refresh-2026-07-31",
+    "request_id": "vdd-7-27-context-r4f-2026-07-30",
     "consumer": "vdd",
     "query": "repository guide AGENTS phase service rules",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "1cd6a6ddfca700e0fff5735ec4526b1fca2e56f0"
+      "commit": "e1a575e30c1397dfa791cd834ec288e93005e64b"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -342,13 +342,13 @@
           {
             "path": "docs/architecture/ADR_INDEX_PHASE.md",
             "role": "primary",
-            "source_sha256": "ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415"
+            "source_sha256": "04392e70c88ac49776e0c453f8d156d2e5541cfaf6179f0d7a59804f9ef7c8df"
           }
         ],
         "relations": [],
         "semantic_eligible": true,
         "source_role": "collection-index",
-        "source_sha256": "ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415",
+        "source_sha256": "04392e70c88ac49776e0c453f8d156d2e5541cfaf6179f0d7a59804f9ef7c8df",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -593,13 +593,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-7-27-acceptance-refresh-2026-07-31",
+    "request_id": "vdd-7-27-context-r4f-2026-07-30",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "1cd6a6ddfca700e0fff5735ec4526b1fca2e56f0",
+      "commit": "e1a575e30c1397dfa791cd834ec288e93005e64b",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:946b19b675894dbe7cbe97f29dc302505566a4573ee1c8285f6047f6faad85cb",
+    "source_snapshot_id": "sha256:e1bfe8b8dc5bed5ba9a3958d98dd167618e64eafb2f9423f4160e0274e7f106b",
     "status": "matched"
   },
   "required_modules": [
@@ -672,7 +672,7 @@
       "owner": "adapter",
       "candidate": {
         "path": "docs/architecture/ADR_INDEX_PHASE.md",
-        "source_sha256": "ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415"
+        "source_sha256": "04392e70c88ac49776e0c453f8d156d2e5541cfaf6179f0d7a59804f9ef7c8df"
       },
       "decision": "rejected",
       "satisfies": [],
@@ -729,11 +729,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:af9bfe6a04b2310589af9355d137bbff273130f85f274396a9482f9ac5a9dab0",
-  "result_sha256": "sha256:574129f4708aa1c5504599fbf832df33799e41a63fa64cffed4a96eb1c8b17b7",
+  "request_sha256": "sha256:a24c38693521ed3f500b3391c510aff01da5daf36ce4ed45ecc9cd64f4afcab9",
+  "result_sha256": "sha256:62ca40cd7db1d8fa6dbb6b5c4b21aa5a1461ae09040e0450ed6ebdb791722820",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:6dcc8beed2744ad46c4e83745c722fe187c86678f3c28166c553b8eb7cb4a300"
+    "context_sha256": "sha256:230fc785e7e7bd04a31f25a0b45ee6c76834460d32e5f3f1c6c949480f6b4a4a"
   }
 }
