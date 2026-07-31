@@ -1,0 +1,58 @@
+{
+  "artifacts": {
+    "catalog_v1": {
+      "bundle_path": "layers/repository-knowledge-catalog.v1.json",
+      "repository_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "sha256": "sha256:d7f03bf69f7e7248e5a0ef6c415d607e9ab799a86ba3c4e1184f4d5c54cb69ad"
+    },
+    "catalog_v2": {
+      "bundle_path": "layers/repository-knowledge-catalog.v2.json",
+      "repository_path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "sha256": "sha256:2e1f64b32c77bcc60f040b11cb3db4f7434e4057c6503758b1a5a2b81c450d6a"
+    },
+    "exclusions": {
+      "bundle_path": "inputs/source-exclusions.v1.json",
+      "repository_path": "knowledge/policies/source-exclusions.v1.json",
+      "sha256": "sha256:c12514d500252b84c93041ccb2b564419a6d72bc77546af20dfde1e378287f2d"
+    },
+    "policy": {
+      "bundle_path": "inputs/consumer-policies.v2.json",
+      "repository_path": "knowledge/policies/consumer-policies.v2.json",
+      "sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7"
+    },
+    "projections": {
+      "bundle_path": "layers/consumer-projections.v1.json",
+      "repository_path": "knowledge/projections/consumer-projections.v1.json",
+      "sha256": "sha256:0cf8a572e7eba0cc67b52047e1a9696b889b2de9bf70a610fa1c96c41009ace5"
+    },
+    "query_report": {
+      "bundle_path": "evaluation/query-report.v1.json",
+      "repository_path": "logs/knowledge-context",
+      "sha256": "sha256:2b00ef75334c3da7d63df420b312d7f932daa9c8d154dddf46d3ccd139a8f32b"
+    },
+    "query_suite": {
+      "bundle_path": "inputs/repository-knowledge-query-suite.v1.json",
+      "repository_path": "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
+      "sha256": "sha256:806fcd0541a6fc4c8a2605293e553d196cb7c1162ec0cad2169b9ef604a70e31"
+    },
+    "snapshot": {
+      "bundle_path": "layers/repository-source-snapshot.v1.json",
+      "repository_path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "sha256": "sha256:5890fc5ec48093dd69bfdacb7ab86d3f0480c610e7202d24c6e061bf539c6fed"
+    }
+  },
+  "evaluation_summary": {
+    "failed": 0,
+    "passed": 108,
+    "protocol_failed": 0,
+    "protocol_passed": 4,
+    "protocol_total": 4,
+    "status": "passed",
+    "total": 108
+  },
+  "generation_id": "66355c2edf7caeb59af54e2e4f183f412e17ddbbe174017b26266201f9d8a73c",
+  "main_commit": "1cd6a6ddfca700e0fff5735ec4526b1fca2e56f0",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "schema_version": "jimuyun.knowledge-publication-generation.v1",
+  "source_snapshot_id": "sha256:946b19b675894dbe7cbe97f29dc302505566a4573ee1c8285f6047f6faad85cb"
+}
