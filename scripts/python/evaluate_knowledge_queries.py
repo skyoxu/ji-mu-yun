@@ -275,9 +275,10 @@ def evaluate(
                 raise ValueError("catalog source snapshot does not match refs/heads/main")
     elif current_commit != commit:
         raise ValueError("catalog source snapshot does not match refs/heads/main")
-    # ADR-0050 keeps generation provenance on the source commit while each
-    # Locator invocation binds its result to the current, source-equivalent main.
-    request_snapshot = {"ref": "refs/heads/main", "commit": current_commit}
+    # The Locator binds every request to the catalog's source snapshot. The
+    # ancestry and complete source-byte checks above prove that the snapshot
+    # remains a valid projection of current main after publication is committed.
+    request_snapshot = {"ref": "refs/heads/main", "commit": commit}
     policy_revision = suite.get("policy_revision")
     if policies.get("policy_revision") != policy_revision:
         raise ValueError("suite and policy revisions differ")
