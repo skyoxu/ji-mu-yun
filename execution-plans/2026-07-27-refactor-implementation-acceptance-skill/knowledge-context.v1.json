@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-7-27-post-publication-refresh-2026-07-31",
+    "request_id": "vdd-7-27-complete-refresh-2026-07-31",
     "consumer": "vdd",
     "query": "repository guide AGENTS phase service rules",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "e0f789d1dd989f91cbdfbc31015a41bc14ef0146"
+      "commit": "5ba6c99463f00c2177db5510cee1f3d02c1aa140"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -593,13 +593,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-7-27-post-publication-refresh-2026-07-31",
+    "request_id": "vdd-7-27-complete-refresh-2026-07-31",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "e0f789d1dd989f91cbdfbc31015a41bc14ef0146",
+      "commit": "5ba6c99463f00c2177db5510cee1f3d02c1aa140",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:15ff45d4757b9f772f229f62d411e57eeaa17533b4a28cd9ec8fa5b84e54ef93",
+    "source_snapshot_id": "sha256:253e65022512124b69937031cd78e59c362e5eb2c5830669b5bb315d4fbb63a6",
     "status": "matched"
   },
   "required_modules": [
@@ -729,11 +729,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:6e687c476326b424b30f49c2da555070267e40d9909b7af4c34ac45380276b62",
-  "result_sha256": "sha256:28f05969473028b8e63d7a8bd2010afa144b89201298cc4a7fb4cd73a2d2e249",
+  "request_sha256": "sha256:53b84e12dc6caeb6d6e481b527ad772656f8dfadeba8350efbac49d5ac7a333b",
+  "result_sha256": "sha256:fcd6ba5ffb1ffe9a5e8371cd93cf90adcf6be43264f912b0d2df1e61477dec81",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:ed6727e8e0085e26847ef5510de9a325f3e007a78cf341430984e13da7ffb805"
+    "context_sha256": "sha256:5fdb4b28c6b3c6f7969730fcb424b747f3a08c7ad39a51b41f0c77908c769585"
   }
 }

@@ -1,0 +1,180 @@
+{
+  "schema_version": "jimuyun.knowledge-consumer-context.v1",
+  "consumer": "refactor-acceptance",
+  "locator_request": {
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "request_id": "refactor-acceptance-7-27-complete-2026-07-31",
+    "consumer": "refactor-acceptance",
+    "query": "2026-07-27-refactor-implementation-acceptance-skill source clauses",
+    "snapshot": {
+      "ref": "refs/heads/main",
+      "commit": "5ba6c99463f00c2177db5510cee1f3d02c1aa140"
+    },
+    "policy_revision": "knowledge-consumer-policies.v2"
+  },
+  "locator_result": {
+    "candidates": [
+      {
+        "anchor": "Refactor Implementation Acceptance Skill Execution Plan",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "execution-plan",
+        "lifecycle": "repository-source",
+        "line_end": 7,
+        "line_start": 7,
+        "module_id": "plan.2026-07-27-refactor-implementation-acceptance-skill",
+        "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "high",
+          "score": 146,
+          "strategy": "hybrid-token",
+          "token_matches": 3
+        },
+        "read_set": [
+          {
+            "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+            "role": "primary",
+            "source_sha256": "84e81f792214857056e4ee3de4d6d6e296937278e9291245ad473074a1498fe6"
+          },
+          {
+            "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
+            "role": "authority-manifest",
+            "source_sha256": "6b8c446006bd56369335e38e6c5f140669957e4712c027ca5b7a6600566b87d9"
+          },
+          {
+            "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json",
+            "role": "command-registry",
+            "source_sha256": "724048bafd8b056aa43efbae1c31555302114e942ef1889a77f7976be7924462"
+          },
+          {
+            "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
+            "role": "implementation-contract",
+            "source_sha256": "370a0d20d1e0adf761ab09a92e9c44bdffdb8e392345a909d0975d8654e57156"
+          },
+          {
+            "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/plan-state.v1.json",
+            "role": "plan-state",
+            "source_sha256": "32824ab81c11092115420f4123e25d96e211cf3cb8c1bd82183d73582a26c02f"
+          },
+          {
+            "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/requirements-ledger.v1.json",
+            "role": "requirements-ledger",
+            "source_sha256": "a8dccbac7925ec6deedd06815f2cf6787cd80604f407c9d4c340228b3c859167"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0041",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "plan-index",
+        "source_sha256": "84e81f792214857056e4ee3de4d6d6e296937278e9291245ad473074a1498fe6",
+        "status": "historical",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "ADR-0041: Bootstrap Review Execution Control Plane Ownership",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0041",
+        "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 7,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+            "role": "primary",
+            "source_sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      }
+    ],
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "request_id": "refactor-acceptance-7-27-complete-2026-07-31",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "5ba6c99463f00c2177db5510cee1f3d02c1aa140",
+      "ref": "refs/heads/main"
+    },
+    "source_snapshot_id": "sha256:253e65022512124b69937031cd78e59c362e5eb2c5830669b5bb315d4fbb63a6",
+    "status": "matched"
+  },
+  "required_modules": [
+    "acceptance-scope"
+  ],
+  "decisions": [
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+        "source_sha256": "84e81f792214857056e4ee3de4d6d6e296937278e9291245ad473074a1498fe6"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "acceptance-scope"
+      ],
+      "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "source_sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    }
+  ],
+  "request_sha256": "sha256:df3dce908cf557eae1feae80781aed3583ee3520306886b2f50b8cef8e638489",
+  "result_sha256": "sha256:769858f51e7ca427cd519d3690571f5cc91d93edf181840731bfcc39d5769e89",
+  "preflight": {
+    "status": "ready",
+    "failure_code": null,
+    "context_sha256": "sha256:4a98ee758227b8a9854c923e74cf13c4fa885c04af8a37e53d856e0db8548e52"
+  }
+}

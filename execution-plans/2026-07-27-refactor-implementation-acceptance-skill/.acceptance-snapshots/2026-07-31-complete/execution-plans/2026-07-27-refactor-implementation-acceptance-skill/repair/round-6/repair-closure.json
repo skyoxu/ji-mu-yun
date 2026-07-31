@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "refactor-acceptance.repair-closure.v1",
+  "round": 6,
+  "status": "closed",
+  "predecessor": {
+    "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/acceptance-runs/acceptance-9146dc30fefaa707/bootstrap-route.v1.json",
+    "sha256": "sha256:61b1e0ca651c766aea52f50cffc8a62b4ba5c178818f58e9e47217ac3a36b4c1"
+  },
+  "findingClosure": [
+    {
+      "findingId": "RIA-ORCH-LEGACY-REGISTRY",
+      "disposition": "fixed",
+      "evidence": [
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py", "sha256": "sha256:977c8dbb08fbe29018d4af073ba15226937648f34c11f2ab0042dae42947d05b"},
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py", "sha256": "sha256:221554ac68f9ea8697cb4860cb3f99fb72ac9f2102d647038569dde583304258"}
+      ]
+    },
+    {
+      "findingId": "RIA-ORCH-FAILURE-EXIT",
+      "disposition": "fixed",
+      "evidence": [
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "sha256": "sha256:5aa8669abf7413cf6d9bb523cda879841c5cb3ca142027e02660b37bce6bfaf4"},
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py", "sha256": "sha256:221554ac68f9ea8697cb4860cb3f99fb72ac9f2102d647038569dde583304258"}
+      ]
+    },
+    {
+      "findingId": "RIA-CUSTODY-WINDOWS-LONG-PATH",
+      "disposition": "fixed",
+      "evidence": [
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py", "sha256": "sha256:cb1af1cb3d3817e20b90d3ae12c78372f299497121f02046947c7313d8b9e43d"},
+        {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py", "sha256": "sha256:fb6ce2a0e7d4ae3feddee1ce2eb970b60ec62960815b0d56c677a33f1d5c7c32"}
+      ]
+    },
+    {
+      "findingId": "RIA-PLAN-LIFECYCLE-COMPLETE-BLOCKED",
+      "disposition": "fixed",
+      "evidence": [
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/validate_plan.py", "sha256": "sha256:c4fa0ee6e229374d13006deec46fbedd8ca6189b20172fc6cb569a16edb530e1"},
+        {"path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/tools/tests/test_validate_plan.py", "sha256": "sha256:c89daf83cf5c6eba37547a7dfb3f35082fcdf9d8ddcb6eec3b290a1563996aba"}
+      ]
+    }
+  ],
+  "finalBindings": {
+    "repairPlanHash": "sha256:9a884267241fe4d6f64a256b5431fc8722fe1090345764b7de6e2c9bb5592840",
+    "predecessorRouteKind": "manual_pause",
+    "semanticRoundsConsumed": 3,
+    "nextFullReviewRound": null
+  },
+  "validation": {
+    "acceptanceSkillTests": {"passed": 178, "failed": 0},
+    "planValidatorTests": {"passed": 9, "failed": 0},
+    "plan": "pass",
+    "wholeDirectory": "pass",
+    "package": "pass",
+    "windowsGitBlobProbe": {"status": "pass", "transport": "ls-tree-object-id-then-cat-file"},
+    "validationSnapshot": {
+      "authority_root": "sha256:e99ce7d7d22cc6917a0288417f32973266a4b5e084becc4708257bdd5b4ddc03",
+      "candidate_hash": "sha256:dc258f268885ad9d10191279449878c5fe5f6c40d1ee94b890bafc9ed5169d08",
+      "closure_definition_hash": "sha256:1ce08e79d39e534923db177c4034c95d6e3c89e7269a4048a445db07cc9b4972",
+      "predicate_input_root": "sha256:d3353b11a29d305e31fdd8e4cb3094097bccc56e066fd970c03a8362ed8b6a8a",
+      "validator_root": "sha256:345d4a89ed1e48aa386d8770af94e1c015d7adf0d94a7dd01453b70db24b280c"
+    }
+  },
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "acceptance-passed",
+    "bootstrap-round-4",
+    "release",
+    "deployment",
+    "handoff",
+    "archive"
+  ]
+}

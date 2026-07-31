@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Phase Scan Bundle Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "bundleId", "candidateContentManifestHash", "commandRegistryHash", "commandId", "toolHash", "requiredChangedPaths", "readChangedPaths", "missingChangedPaths", "processResult", "processResultHash", "findings", "status", "authorizes"],
+  "properties": {
+    "schemaVersion": {"const": "phase-scan-bundle-result.v1"},
+    "bundleId": {"enum": ["phase-static-analysis", "phase-security-scan"]},
+    "status": {"enum": ["passed", "failed", "incomplete", "stale"]},
+    "requiredChangedPaths": {"type": "array", "uniqueItems": true},
+    "readChangedPaths": {"type": "array", "uniqueItems": true},
+    "missingChangedPaths": {"type": "array", "uniqueItems": true},
+    "authorizes": {"const": []}
+  }
+}
