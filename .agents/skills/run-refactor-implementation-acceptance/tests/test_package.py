@@ -35,6 +35,7 @@ class PackageTests(unittest.TestCase):
             "bind-bootstrap-capabilities", "prepare-attestation", "prepare-bootstrap",
             "import-bootstrap-launch-authorization", "import-bootstrap", "map-findings",
             "import-mapping-approval", "project-acceptance-impact", "finalize", "inspect-run", "resume",
+            "route-acceptance", "start-or-resume",
         }
         result = subprocess.run(
             [sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"), "--help"],
@@ -78,6 +79,108 @@ class PackageTests(unittest.TestCase):
             result = subprocess.run([sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"), "import-bootstrap", "--request", str(missing), "--out", str(output)], capture_output=True, text=True, encoding="utf-8", check=False)
         self.assertNotEqual(0, result.returncode)
         self.assertFalse(output.exists())
+
+    def test_route_acceptance_is_the_prepare_bootstrap_thin_alias(self) -> None:
+        request = {
+            "decision": {"requirement": "not_required"},
+            "binding": None,
+            "launch_authorization": None,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            request_path = root / "route.request.json"
+            output_path = root / "route.v1.json"
+            request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
+            result = subprocess.run(
+                [
+                    sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
+                    "route-acceptance", "--request", str(request_path), "--out", str(output_path),
+                ],
+                capture_output=True, text=True, encoding="utf-8", check=False,
+            )
+            self.assertEqual(0, result.returncode, result.stderr)
+            route = json.loads(output_path.read_text(encoding="utf-8"))
+            self.assertEqual("deterministic_only", route["routeKind"])
+            self.assertEqual("deterministic-only-evaluation", route["nextAction"])
+
+            injected_path = root / "injected.request.json"
+            injected_output = root / "injected-route.v1.json"
+            injected_path.write_text(
+                json.dumps({**request, "review_history_baseline": "logs/baseline.json"}),
+                encoding="utf-8",
+                newline="\n",
+            )
+            rejected = subprocess.run(
+                [
+                    sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
+                    "route-acceptance", "--request", str(injected_path), "--out", str(injected_output),
+                ],
+                capture_output=True, text=True, encoding="utf-8", check=False,
+            )
+            self.assertNotEqual(0, rejected.returncode)
+            self.assertFalse(injected_output.exists())
+
+            help_result = subprocess.run(
+                [
+                    sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
+                    "route-acceptance", "--help",
+                ],
+                capture_output=True, text=True, encoding="utf-8", check=False,
+            )
+            self.assertEqual(0, help_result.returncode, help_result.stderr)
+            self.assertIn("route-acceptance", help_result.stdout)
+
+    def test_start_or_resume_cli_allocates_and_reuses_the_bound_run(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repo"
+            (repository / "execution-plans" / "feature-a").mkdir(parents=True)
+            command = [
+                sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
+                "start-or-resume", "--repository-root", str(repository),
+                "--target-plan", "execution-plans/feature-a",
+                "--run-input-hash", "sha256:" + "a" * 64,
+                "--contract-hash", "sha256:" + "b" * 64,
+                "--knowledge-context-hash", "sha256:" + "c" * 64,
+            ]
+            created = subprocess.run(
+                command, capture_output=True, text=True, encoding="utf-8", check=False
+            )
+            self.assertEqual(0, created.returncode, created.stderr)
+            created_value = json.loads(created.stdout)
+            self.assertEqual("created", created_value["disposition"])
+            run_dir = repository / created_value["runDirectory"]
+            self.assertTrue((run_dir / "run-state.json").is_file())
+
+            resumed = subprocess.run(
+                command, capture_output=True, text=True, encoding="utf-8", check=False
+            )
+            self.assertEqual(0, resumed.returncode, resumed.stderr)
+            self.assertEqual("resumed", json.loads(resumed.stdout)["disposition"])
+
+            actions = Path(directory) / "actions.json"
+            actions.write_text(
+                json.dumps([{
+                    "actionId": "validate", "dependsOn": [], "order": 1,
+                    "commandId": "validate", "activation": True,
+                }]),
+                encoding="utf-8",
+                newline="\n",
+            )
+            inspect_command = [
+                sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
+                "inspect-persisted-run", "--run-dir", str(run_dir),
+                "--actions", str(actions), "--run-input-hash", "sha256:" + "a" * 64,
+                "--contract-hash", "sha256:" + "b" * 64,
+            ]
+            missing_context = subprocess.run(
+                inspect_command, capture_output=True, text=True, encoding="utf-8", check=False
+            )
+            self.assertNotEqual(0, missing_context.returncode)
+            inspected = subprocess.run(
+                inspect_command + ["--knowledge-context-hash", "sha256:" + "c" * 64],
+                capture_output=True, text=True, encoding="utf-8", check=False,
+            )
+            self.assertEqual(0, inspected.returncode, inspected.stderr)
 
 
 if __name__ == "__main__":

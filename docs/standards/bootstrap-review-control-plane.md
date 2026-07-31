@@ -163,6 +163,18 @@ The current `bootstrap-finalized-run-validation.v3` envelope binds review/change
 
 Plans consume this envelope instead of reimplementing a partial Bootstrap profile or lifecycle validator. The consumer calls the repository producer, compares the full saved and recomputed envelope except `generatedAt`, and then applies only its own candidate and predicate rules. A plan-local validator remains solely responsible for its own candidate and acceptance predicates. Envelope validation alone cannot clear a review-cycle manual pause or create a new semantic-review round. A successor policy decision may authorize consideration of a genuinely superseding target, but it cannot reset the lineage family of the existing target. The consuming plan must bind the explicit supersede or incompatible-scope decision and derive a different acceptance target before a new family is valid; a new change ID, saved minimal envelope, arbitrary event JSON, or `independent=true` assertion is insufficient.
 
+Refactor Acceptance may expose a thin `route-acceptance` alias over its existing
+`prepare-bootstrap` projection and may create or resume a target-owned
+append-only run from the run-input, implementation-contract, and frozen
+knowledge-context hashes. This convenience surface must not launch Bootstrap,
+duplicate its lifecycle, or accept a historical review baseline as route
+authority. Later inspect and resume operations for a new run must replay all
+three bindings. Artifact-only legacy run directories are preserved rather than
+auto-migrated. High-cost launch acknowledgement remains Bootstrap-owned. An
+initial Round 1 full-conformance route is retained for Acceptance import but
+must not be supplied to Bootstrap as a repair-route binding; those arguments
+apply only after at least one semantic round has been consumed.
+
 New manifests and v3 envelopes bind `candidateBindingHash`. A replayed legacy
 manifest may expose a null v3 binding, and frozen v1/v2 envelopes remain
 readable; neither form is eligible for exact reuse. Refactor Acceptance exact

@@ -1,11 +1,118 @@
 ---
 name: run-refactor-implementation-acceptance
-description: Build deterministic implementation-acceptance evidence for one explicit refactor plan.
+description: Build, resume, and route deterministic implementation-acceptance evidence for one explicit refactor plan, including bounded Bootstrap review handoff and exact finalized-run reuse.
 ---
 
 # Refactor Implementation Acceptance
 
-This Skill builds deterministic implementation-acceptance evidence for exactly one explicit target plan. It does not implement target code, run Bootstrap automatically, approve a review, commit, hand off, release, or deploy.
+This Skill builds deterministic implementation-acceptance evidence for exactly
+one explicit target plan. It does not implement target code, approve a review,
+authorize a protected handoff, commit, release, or deploy. It may route to the
+Bootstrap Skill, but Bootstrap retains model launch, high-cost acknowledgement,
+and review-lifecycle ownership.
+
+## Default Orchestration
+
+Own the complete coordination loop when invoked for a new or existing target.
+Do not stop after reporting that another Skill or review is required. Continue
+until a typed user-acknowledgement boundary, protected-path boundary,
+`manual_pause`, or terminal Acceptance result is reached.
+
+Resolve entry inputs in this order:
+
+1. Require one repository-relative `execution-plans/<target>` directory.
+2. Prefer `candidate_mode=commit`. If the caller omits the candidate, use the
+   current `HEAD` only when the relevant worktree is clean and report the full
+   resolved commit. Otherwise require a frozen dirty-worktree or
+   proposed-commit-set snapshot.
+3. Read an unambiguous frozen Git baseline from the target plan. If none exists,
+   require an explicit baseline revision. Never infer the baseline as
+   `candidate^`; one target may span multiple commits.
+4. Derive the run directory after creating the typed run request and its
+   canonical input hash, but before publishing the `prepare-run` output. Do not
+   ask the caller to name it unless they need an explicit recovery identity.
+
+Require the implementation contract, complete baseline and candidate content
+manifests, typed run request, action DAG, and command registry before starting
+the persisted run. Resolve their fields from the target plan and an explicit
+VDD or Quick Dev handoff. The orchestrator may materialize them
+deterministically from those bindings and immutable Git bytes, but must not
+guess scope, revisions, changed paths, commands, or acceptance actions. If a
+required source is missing or ambiguous, report `prerequisite_blocked` with the
+missing artifacts and stop before `start-or-resume`.
+
+Create the knowledge context only through the canonical Locator. If it returns
+`blocked`, including `catalog_stale`, route to `maintain-knowledge-base` and
+stop this Acceptance attempt until a fresh context succeeds. Never hand-author
+candidate selections, accept an old context, or bypass Locator freshness.
+
+Create or resume the target-owned append-only run with the canonical run-input
+request hash that `prepare-run` will publish as `inputHash`, plus the
+implementation-contract file hash and frozen knowledge-context file hash:
+
+```text
+py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py start-or-resume \
+  --repository-root <repo> --target-plan <execution-plans/target> \
+  --run-input-hash <sha256:...> --contract-hash <sha256:...> \
+  --knowledge-context-hash <sha256:...>
+```
+
+`run-input-hash` is the canonical JSON hash that `prepare-run` computes as
+`inputHash`. The other two values are SHA-256 hashes of the exact contract
+and frozen context file bytes; use the context `sha256` emitted by
+`freeze_knowledge_context`, not its semantic `contextHash`.
+
+Omitting `--run-id` derives `acceptance-<16-hex-binding-id>` from all three
+hashes. The same target and bindings resume the same persisted run without
+rewriting it. Any input, contract, or knowledge-context drift fails closed;
+prepare a new candidate/run or use the existing explicit stale-successor
+recovery instead of overwriting history.
+
+Treat a historical Acceptance directory without `run-state.json` as an
+artifact-only legacy run. Preserve it for replay, never auto-migrate it into
+the persisted lifecycle, and create a new binding-derived run directory.
+
+Execute the orchestration in this order:
+
+1. Inspect the target for an existing request and matching persisted run before
+   creating new evidence.
+2. Resolve or deterministically materialize the complete manifests, action DAG,
+   command registry, Acceptance-owned knowledge context, and typed run request;
+   then compute the three entry hashes.
+3. Run `start-or-resume`, write the `prepare-run` output inside the returned run
+   directory, and inspect/resume its existing action evidence with all three
+   hashes. A new persisted run must reject inspect or resume when the frozen
+   knowledge-context hash is omitted.
+4. Run the deterministic inventory, policy, matrix, checklist, scan, coverage,
+   and evidence actions required by the target contract.
+5. Publish the immutable Bootstrap requirement decision and obtain a fresh
+   repository-owned `inspect-lineage` projection, including zero rounds.
+6. Produce the bounded route with `route-acceptance`, the thin public alias for
+   `prepare-bootstrap`:
+
+```text
+py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py route-acceptance \
+  --request <bootstrap-route-request.json> --out <bootstrap-route.v1.json>
+```
+
+7. Before starting a semantic run, attempt `import-bootstrap` only with an
+   explicitly selected finalized run and the exact prepared input and route.
+8. Follow the route's typed `nextAction`. Invoke `run-phase-bootstrap-review`
+   for `full_implementation_conformance` or `focused_repair_review`, but stop
+   for its explicit high-cost acknowledgement before any model process starts.
+9. Import the finalized Bootstrap result, then continue finding mapping,
+   impact projection, evaluation, finalization, and package validation.
+
+Treat `review-history-index.v1.json` and cost-calibration candidates as
+non-authorizing observations only. They may explain expected cost and semantic
+yield but must never enter a `route-acceptance` request, change `routeKind`,
+create `clean`, or satisfy exact reuse. A promoted Bootstrap calibration is
+consumed by the Bootstrap producer under its own binding.
+
+For P2-only output, dispose findings in the current semantic run and use
+targeted deterministic closure. For P0/P1 repair, require the Quick Dev handoff
+and `audit-repair-completeness` before routing the next bounded round. Never
+open Round 3 without its typed trigger and never create Round 4.
 
 ## Modes
 
@@ -29,12 +136,15 @@ the projection fails closed; absence is never interpreted as a fresh budget.
 carry its original repair-completeness request so the result can be reproduced
 from current repository bytes.
 
-When the route selects `focused_repair_review` or
-`full_implementation_conformance`, pass the saved route to Bootstrap as
-`--acceptance-repair-route` and its replayed completeness projection as
-`--acceptance-repair-completeness`. Bootstrap revalidates their byte, family,
-round, and typed-entry bindings. Do not pass deleted paths as live `--scope`
-arguments; Bootstrap recovers their old bytes from predecessor evidence.
+When a repair route has already consumed at least one semantic round and
+selects `focused_repair_review` or `full_implementation_conformance`, pass the
+saved route to Bootstrap as `--acceptance-repair-route` and its replayed
+completeness projection as `--acceptance-repair-completeness`. Bootstrap
+revalidates their byte, family, round, and typed-entry bindings. For the initial
+Round 1 `full_implementation_conformance` route, do not pass either repair
+argument; retain that route only for the later Acceptance import binding. Do
+not pass deleted paths as live `--scope` arguments; Bootstrap recovers their
+old bytes from predecessor evidence.
 
 The deterministic CLI never launches an LLM process. The Skill orchestrator
 must invoke `run-phase-bootstrap-review` when the selected route requires it,

@@ -61,6 +61,20 @@ cross-run LLM cache.
   Current profile, policy, authority, and candidate binding must still match.
 - Rejected reuse does not create a semantic round and does not convert the
   existing bounded route into a pass. The caller continues that route.
+- Refactor Acceptance exposes only a thin orchestration surface over its
+  existing append-only run state and Bootstrap route projection. A
+  `start-or-resume` entry derives or reuses the target-owned run directory from
+  the run-input, implementation-contract, and frozen knowledge-context
+  bindings, and `route-acceptance` delegates exactly to `prepare-bootstrap`.
+  Neither entry launches a model or creates a second lifecycle. Historical
+  review baselines remain observation-only and are not accepted as route
+  inputs.
+- New persisted runs require the frozen knowledge-context binding during later
+  inspect and resume operations. Artifact-only legacy Acceptance directories
+  remain historical evidence and are never auto-migrated into that lifecycle.
+- The initial Round 1 full-conformance route is retained for later import but
+  is not passed to Bootstrap as a repair-route argument. Those bindings apply
+  only after at least one semantic round has been consumed.
 
 This extends ADR-0041 and ADR-0051 and supersedes none. Round limits, reviewer
 isolation, severity handling, model routing, and plan-local acceptance
@@ -74,6 +88,9 @@ authority do not change.
   follows the existing bounded review route.
 - Old runs remain useful for history and replay but cannot gain exact-reuse
   authority retroactively.
+- One-target Acceptance can be resumed through a stable entry without asking
+  the operator to hand-select an evidence directory or duplicating Bootstrap
+  ownership.
 
 ## References
 

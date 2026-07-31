@@ -28,6 +28,7 @@ from execution_control import (
     resume_persisted_run,
     resume_run,
     run_controlled_command,
+    start_or_resume_target_run,
 )
 from evidence_analysis import analyze_diff_coverage
 from phase_scan import run_phase_scan
@@ -703,10 +704,21 @@ def main() -> int:
     render = subcommands.add_parser("render")
     render.add_argument("--input", required=True)
     render.add_argument("--out", required=True)
-    for name in ("collect-evidence", "decide-bootstrap", "prepare-bootstrap", "import-bootstrap-launch-authorization", "import-bootstrap", "map-findings", "import-mapping-approval"):
+    for name in ("collect-evidence", "decide-bootstrap", "import-bootstrap-launch-authorization", "import-bootstrap", "map-findings", "import-mapping-approval"):
         action = subcommands.add_parser(name)
         action.add_argument("--request", required=True)
         action.add_argument("--out", required=True)
+    for name in ("prepare-bootstrap", "route-acceptance"):
+        route = subcommands.add_parser(name)
+        route.add_argument("--request", required=True)
+        route.add_argument("--out", required=True)
+    start = subcommands.add_parser("start-or-resume")
+    start.add_argument("--repository-root", required=True)
+    start.add_argument("--target-plan", required=True)
+    start.add_argument("--run-input-hash", required=True)
+    start.add_argument("--contract-hash", required=True)
+    start.add_argument("--knowledge-context-hash", required=True)
+    start.add_argument("--run-id")
     inspect = subcommands.add_parser("inspect-run")
     inspect.add_argument("--actions", required=True)
     inspect.add_argument("--completed", required=True)
@@ -720,6 +732,7 @@ def main() -> int:
     inspect_persisted.add_argument("--actions", required=True)
     inspect_persisted.add_argument("--run-input-hash", required=True)
     inspect_persisted.add_argument("--contract-hash", required=True)
+    inspect_persisted.add_argument("--knowledge-context-hash")
     resume_persisted = subcommands.add_parser("resume-persisted-run")
     resume_persisted.add_argument("--repository-root", required=True)
     resume_persisted.add_argument("--run-dir", required=True)
@@ -727,6 +740,7 @@ def main() -> int:
     resume_persisted.add_argument("--command-registry", required=True)
     resume_persisted.add_argument("--run-input-hash", required=True)
     resume_persisted.add_argument("--contract-hash", required=True)
+    resume_persisted.add_argument("--knowledge-context-hash")
     subcommands.add_parser("validate-package")
     args = parser.parse_args()
     if args.command == "parse-run-input":
@@ -792,8 +806,18 @@ def main() -> int:
     if args.command == "decide-bootstrap":
         print(json.dumps(decide_bootstrap_command(args.request, args.out), sort_keys=True))
         return 0
-    if args.command == "prepare-bootstrap":
+    if args.command in {"prepare-bootstrap", "route-acceptance"}:
         print(json.dumps(prepare_bootstrap_command(args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "start-or-resume":
+        print(json.dumps(start_or_resume_target_run(
+            Path(args.repository_root),
+            args.target_plan,
+            args.run_input_hash,
+            args.contract_hash,
+            args.knowledge_context_hash,
+            run_id=args.run_id,
+        ), sort_keys=True))
         return 0
     if args.command == "import-bootstrap-launch-authorization":
         print(json.dumps(import_bootstrap_launch_authorization_command(args.request, args.out), sort_keys=True))
@@ -814,10 +838,17 @@ def main() -> int:
         print(json.dumps(resume_run(Path(args.repository_root), _read_json(args.actions), set(_read_json(args.completed)), _read_json(args.command_registry)), sort_keys=True))
         return 0
     if args.command == "inspect-persisted-run":
-        print(json.dumps(inspect_persisted_run(Path(args.run_dir), _read_json(args.actions), args.run_input_hash, args.contract_hash), sort_keys=True))
+        print(json.dumps(inspect_persisted_run(
+            Path(args.run_dir), _read_json(args.actions), args.run_input_hash,
+            args.contract_hash, args.knowledge_context_hash,
+        ), sort_keys=True))
         return 0
     if args.command == "resume-persisted-run":
-        print(json.dumps(resume_persisted_run(Path(args.repository_root), Path(args.run_dir), _read_json(args.actions), _read_json(args.command_registry), args.run_input_hash, args.contract_hash), sort_keys=True))
+        print(json.dumps(resume_persisted_run(
+            Path(args.repository_root), Path(args.run_dir), _read_json(args.actions),
+            _read_json(args.command_registry), args.run_input_hash, args.contract_hash,
+            args.knowledge_context_hash,
+        ), sort_keys=True))
         return 0
     findings = validate_package(Path(__file__).resolve().parents[1])
     print(json.dumps({"status": "pass" if not findings else "fail", "findings": findings, "authorizes": []}, sort_keys=True))

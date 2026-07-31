@@ -51,17 +51,25 @@ def create_persisted_run(
     contract_hash: str,
     *,
     predecessor_run_id: str | None = None,
+    knowledge_context_hash: str | None = None,
 ) -> Path:
     """Create one append-only run root with hash-bound non-authorizing state."""
     for value, label in ((run_input_hash, "run input"), (contract_hash, "contract")):
         if not isinstance(value, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", value):
             raise ControlError(label + " hash is invalid")
+    if knowledge_context_hash is not None and (
+        not isinstance(knowledge_context_hash, str)
+        or not re.fullmatch(r"sha256:[a-f0-9]{64}", knowledge_context_hash)
+    ):
+        raise ControlError("knowledge context hash is invalid")
     run_dir = create_run_directory(root, run_id)
     state: dict[str, Any] = {
         "schemaVersion": "acceptance-execution-run.v1", "runId": run_id,
         "runInputHash": run_input_hash, "contractHash": contract_hash,
         "createdUtc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "authorizes": [],
     }
+    if knowledge_context_hash is not None:
+        state["knowledgeContextHash"] = knowledge_context_hash
     if predecessor_run_id is not None:
         if not isinstance(predecessor_run_id, str) or _RUN_ID.fullmatch(predecessor_run_id) is None:
             raise ControlError("predecessor run identity is invalid")
@@ -73,12 +81,106 @@ def create_persisted_run(
     return run_dir
 
 
+def start_or_resume_target_run(
+    repository_root: Path,
+    target_plan: str,
+    run_input_hash: str,
+    contract_hash: str,
+    knowledge_context_hash: str,
+    *,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    """Create or resume one target-owned run without inventing a second lifecycle."""
+    for value, label in (
+        (run_input_hash, "run input"),
+        (contract_hash, "contract"),
+        (knowledge_context_hash, "knowledge context"),
+    ):
+        if not isinstance(value, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", value):
+            raise ControlError(label + " hash is invalid")
+    root = repository_root.resolve()
+    if not root.is_dir() or not isinstance(target_plan, str) or not target_plan.strip():
+        raise ControlError("target plan is invalid")
+    supplied_target = Path(target_plan)
+    if supplied_target.is_absolute():
+        raise ControlError("target plan must be repository-relative")
+    target = (root / supplied_target).resolve()
+    try:
+        relative_target = target.relative_to(root)
+    except ValueError as exc:
+        raise ControlError("target plan escapes repository") from exc
+    if (
+        len(relative_target.parts) < 2
+        or relative_target.parts[0].lower() != "execution-plans"
+        or not target.is_dir()
+    ):
+        raise ControlError("target plan must be an execution-plans directory")
+
+    binding_id = hashlib.sha256(
+        "\0".join((run_input_hash, contract_hash, knowledge_context_hash)).encode("ascii")
+    ).hexdigest()[:16]
+    selected_run_id = run_id or "acceptance-" + binding_id
+    if _RUN_ID.fullmatch(selected_run_id) is None:
+        raise ControlError("run identity is invalid")
+    run_root = target / "acceptance-runs"
+    try:
+        run_root.mkdir(exist_ok=True)
+    except OSError as exc:
+        raise ControlError("acceptance run root cannot be created") from exc
+    if run_root.is_symlink() or not run_root.is_dir():
+        raise ControlError("acceptance run root is invalid")
+    resolved_run_root = run_root.resolve()
+    try:
+        resolved_run_root.relative_to(target)
+    except ValueError as exc:
+        raise ControlError("acceptance run root escapes target plan") from exc
+    run_root = resolved_run_root
+
+    run_dir = run_root / selected_run_id
+    if run_dir.exists():
+        if run_dir.is_symlink():
+            raise ControlError("persisted run directory is invalid")
+        if not (run_dir / "run-state.json").is_file():
+            raise ControlError(
+                "legacy artifact-only run cannot be resumed; create a new binding-derived run"
+            )
+        _verify_persisted_binding(
+            run_dir, run_input_hash, contract_hash, knowledge_context_hash
+        )
+        state, _events_path = _load_persisted_run(run_dir)
+        if state.get("runId") != selected_run_id:
+            raise ControlError("persisted run identity is stale")
+        disposition = "resumed"
+    else:
+        # ADR-0041/ADR-0052: reuse the existing append-only run state; this entry is not authority.
+        run_dir = create_persisted_run(
+            run_root,
+            selected_run_id,
+            run_input_hash,
+            contract_hash,
+            knowledge_context_hash=knowledge_context_hash,
+        )
+        disposition = "created"
+    return {
+        "schemaVersion": "acceptance-run-entry.v1",
+        "runId": selected_run_id,
+        "runDirectory": run_dir.relative_to(root).as_posix(),
+        "disposition": disposition,
+        "runInputHash": run_input_hash,
+        "contractHash": contract_hash,
+        "knowledgeContextHash": knowledge_context_hash,
+        "authorizes": [],
+    }
+
+
 def create_stale_linked_successor(
     root: Path,
     run_id: str,
     predecessor_run_dir: Path,
     run_input_hash: str,
     contract_hash: str,
+    *,
+    knowledge_context_hash: str | None = None,
 ) -> Path:
     """Create a new run bound to a stale predecessor without changing its evidence."""
     predecessor_state, _ = _load_persisted_run(predecessor_run_dir)
@@ -91,15 +193,26 @@ def create_stale_linked_successor(
         run_input_hash,
         contract_hash,
         predecessor_run_id=predecessor_id,
+        knowledge_context_hash=(
+            knowledge_context_hash
+            if knowledge_context_hash is not None
+            else predecessor_state.get("knowledgeContextHash")
+        ),
     )
     state, _ = _load_persisted_run(successor)
+    lifecycle_inputs = {
+        "runInputHash": state["runInputHash"],
+        "contractHash": state["contractHash"],
+    }
+    if "knowledgeContextHash" in state:
+        lifecycle_inputs["knowledgeContextHash"] = state["knowledgeContextHash"]
     record_lifecycle_event(
         successor,
         action_id="recovery",
         attempt_id="supersede-001",
         action_type="run-recovery",
         event_type="run-superseded",
-        input_hashes={"runInputHash": state["runInputHash"], "contractHash": state["contractHash"]},
+        input_hashes=lifecycle_inputs,
         owner_token="owner-" + state["runId"],
         formal_write_set=[],
     )
@@ -232,10 +345,20 @@ def record_lifecycle_event(
     return event
 
 
-def _verify_persisted_binding(run_dir: Path, run_input_hash: str, contract_hash: str) -> None:
+def _verify_persisted_binding(
+    run_dir: Path,
+    run_input_hash: str,
+    contract_hash: str,
+    knowledge_context_hash: str | None = None,
+) -> None:
     state, _ = _load_persisted_run(run_dir)
     if state.get("runInputHash") != run_input_hash or state.get("contractHash") != contract_hash:
         raise ControlError("persisted run binding is stale")
+    persisted_context_hash = state.get("knowledgeContextHash")
+    if persisted_context_hash is not None and knowledge_context_hash is None:
+        raise ControlError("persisted run knowledge context binding is required")
+    if persisted_context_hash != knowledge_context_hash:
+        raise ControlError("persisted run knowledge context binding is stale")
 
 
 def claim_persisted_action(run_dir: Path, action_id: str, command_id: str) -> Path:
@@ -287,8 +410,16 @@ def _next_attempt_id(run_dir: Path, action_id: str) -> str:
     return f"attempt-{number:03d}"
 
 
-def inspect_persisted_run(run_dir: Path, actions: Any, run_input_hash: str, contract_hash: str) -> dict[str, Any]:
-    _verify_persisted_binding(run_dir, run_input_hash, contract_hash)
+def inspect_persisted_run(
+    run_dir: Path,
+    actions: Any,
+    run_input_hash: str,
+    contract_hash: str,
+    knowledge_context_hash: str | None = None,
+) -> dict[str, Any]:
+    _verify_persisted_binding(
+        run_dir, run_input_hash, contract_hash, knowledge_context_hash
+    )
     inspection = inspect_run(actions, reconstruct_closed_actions(run_dir))
     return {**inspection, "runId": _load_persisted_run(run_dir)[0]["runId"], "authorizes": []}
 
@@ -296,14 +427,19 @@ def inspect_persisted_run(run_dir: Path, actions: Any, run_input_hash: str, cont
 def resume_persisted_run(
     repository_root: Path, run_dir: Path, actions: Any, command_registry: Any,
     run_input_hash: str, contract_hash: str,
+    knowledge_context_hash: str | None = None,
 ) -> dict[str, Any]:
-    _verify_persisted_binding(run_dir, run_input_hash, contract_hash)
+    _verify_persisted_binding(
+        run_dir, run_input_hash, contract_hash, knowledge_context_hash
+    )
     completed = reconstruct_completed_actions(run_dir)
     action = next_action(actions, completed, {key: index for index, key in enumerate(command_registry)} if isinstance(command_registry, dict) else None)
     claim_path = claim_persisted_action(run_dir, action["actionId"], action["commandId"])
     state, _ = _load_persisted_run(run_dir)
     attempt_id = _next_attempt_id(run_dir, action["actionId"])
     lifecycle_inputs = {"runInputHash": state["runInputHash"], "contractHash": state["contractHash"]}
+    if "knowledgeContextHash" in state:
+        lifecycle_inputs["knowledgeContextHash"] = state["knowledgeContextHash"]
     lifecycle_args = {
         "action_id": action["actionId"], "attempt_id": attempt_id, "action_type": "run-command",
         "input_hashes": lifecycle_inputs, "owner_token": "owner-" + state["runId"],

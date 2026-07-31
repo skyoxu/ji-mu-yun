@@ -56,3 +56,26 @@ This append-only continuity report has `authorizes: []`. It cannot publish plan 
 - Replaced byte-for-byte regeneration comparison in `build_knowledge_catalog.py --check` with semantic layer validation: registered current-main source hashes, module and route semantics, source-snapshot ancestry, projection bindings, and legacy compatibility bindings must all remain current.
 - Regenerated the catalog from source commit `4c6e7b27369d391feea040109e9842584f0913ab` and refreshed the 7-27 context without registering the derived context as a source.
 - The append-only post-commit validation sidecar records the final bindings. This closes the freshness loop without rewriting the already committed round-5 closure.
+
+## 2026-07-31: Thin orchestration entry
+
+- Added a target-owned `start-or-resume` entry over the existing persisted-run
+  state, bound to the run input, implementation contract, and frozen knowledge
+  context, plus a `route-acceptance` alias over `prepare-bootstrap`.
+- The Skill-level orchestration now resolves commit-first candidate defaults,
+  requires a plan-frozen or explicit Git baseline, derives the run directory,
+  attempts exact finalized-run reuse before semantic launch, and pauses at the
+  existing high-cost, protected-path, and manual boundaries.
+- Historical cost and finding baselines remain non-authorizing observations and
+  cannot enter route selection. Bootstrap retains all model execution,
+  semantic lifecycle, lineage, gate, and launch-authorization ownership.
+- This entry is a usability and recovery extension only. It does not authorize
+  target acceptance, handoff, commit, release, deployment, or archive.
+- New persisted inspection and resume replay the knowledge-context binding;
+  artifact-only legacy runs remain immutable history and are not migrated.
+- The orchestration fails closed when target-plan or VDD/Quick Dev sources do
+  not provide the complete manifests, request, action DAG, or command registry,
+  and it routes stale Locator state to knowledge-base maintenance.
+- Round 1 keeps its Acceptance route for later import without passing repair
+  bindings to Bootstrap. Round 2/3 repair routes retain the existing typed
+  route and completeness handoff.

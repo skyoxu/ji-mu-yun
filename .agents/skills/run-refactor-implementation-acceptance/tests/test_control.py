@@ -350,6 +350,151 @@ class ExecutionControlTests(unittest.TestCase):
             events = [json.loads(line) for line in (successor / "acceptance-events.jsonl").read_text(encoding="utf-8").splitlines()]
             self.assertEqual("run-superseded", events[0]["eventType"])
 
+    def test_target_run_entry_creates_then_resumes_the_same_bound_run(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repo"
+            target = repository / "execution-plans" / "feature-a"
+            target.mkdir(parents=True)
+            run_input_hash = "sha256:" + "a" * 64
+            contract_hash = "sha256:" + "b" * 64
+            knowledge_context_hash = "sha256:" + "c" * 64
+            created = execution_control.start_or_resume_target_run(
+                repository,
+                "execution-plans/feature-a",
+                run_input_hash,
+                contract_hash,
+                knowledge_context_hash,
+            )
+            self.assertEqual("created", created["disposition"])
+            self.assertRegex(created["runId"], r"^acceptance-[a-f0-9]{16}$")
+            run_dir = repository / created["runDirectory"]
+            state_before = (run_dir / "run-state.json").read_bytes()
+
+            resumed = execution_control.start_or_resume_target_run(
+                repository,
+                "execution-plans/feature-a",
+                run_input_hash,
+                contract_hash,
+                knowledge_context_hash,
+            )
+            self.assertEqual("resumed", resumed["disposition"])
+            self.assertEqual(created["runDirectory"], resumed["runDirectory"])
+            self.assertEqual(state_before, (run_dir / "run-state.json").read_bytes())
+            actions = [{
+                "actionId": "validate", "dependsOn": [], "order": 1,
+                "commandId": "validate", "activation": True,
+            }]
+            with self.assertRaisesRegex(execution_control.ControlError, "binding is required"):
+                execution_control.inspect_persisted_run(
+                    run_dir, actions, run_input_hash, contract_hash
+                )
+            inspection = execution_control.inspect_persisted_run(
+                run_dir, actions, run_input_hash, contract_hash, knowledge_context_hash
+            )
+            self.assertEqual("validate", inspection["nextAction"]["actionId"])
+            with self.assertRaisesRegex(execution_control.ControlError, "binding is stale"):
+                execution_control.start_or_resume_target_run(
+                    repository,
+                    "execution-plans/feature-a",
+                    "sha256:" + "c" * 64,
+                    contract_hash,
+                    knowledge_context_hash,
+                    run_id=created["runId"],
+                )
+            with self.assertRaisesRegex(execution_control.ControlError, "knowledge context"):
+                execution_control.start_or_resume_target_run(
+                    repository,
+                    "execution-plans/feature-a",
+                    run_input_hash,
+                    contract_hash,
+                    "sha256:" + "d" * 64,
+                    run_id=created["runId"],
+                )
+            state = json.loads(state_before)
+            state["runId"] = "acceptance-wrong-run"
+            (run_dir / "run-state.json").write_text(
+                json.dumps(state), encoding="utf-8", newline="\n"
+            )
+            with self.assertRaisesRegex(execution_control.ControlError, "identity is stale"):
+                execution_control.start_or_resume_target_run(
+                    repository,
+                    "execution-plans/feature-a",
+                    run_input_hash,
+                    contract_hash,
+                    knowledge_context_hash,
+                )
+
+    def test_target_run_entry_does_not_migrate_legacy_artifact_only_run(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repo"
+            target = repository / "execution-plans" / "feature-a"
+            legacy = target / "acceptance-runs" / "legacy-run"
+            legacy.mkdir(parents=True)
+            marker = legacy / "historical-evidence.json"
+            marker.write_text("{}\n", encoding="utf-8", newline="\n")
+            with self.assertRaisesRegex(execution_control.ControlError, "legacy artifact-only"):
+                execution_control.start_or_resume_target_run(
+                    repository,
+                    "execution-plans/feature-a",
+                    "sha256:" + "a" * 64,
+                    "sha256:" + "b" * 64,
+                    "sha256:" + "c" * 64,
+                    run_id="legacy-run",
+                )
+            self.assertEqual(b"{}\n", marker.read_bytes())
+
+    def test_stale_successor_preserves_the_knowledge_context_binding(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            knowledge_context_hash = "sha256:" + "c" * 64
+            predecessor = execution_control.create_persisted_run(
+                root,
+                "run-bound",
+                "sha256:" + "a" * 64,
+                "sha256:" + "b" * 64,
+                knowledge_context_hash=knowledge_context_hash,
+            )
+            successor = execution_control.create_stale_linked_successor(
+                root,
+                "run-successor",
+                predecessor,
+                "sha256:" + "d" * 64,
+                "sha256:" + "e" * 64,
+            )
+            state = json.loads((successor / "run-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(knowledge_context_hash, state["knowledgeContextHash"])
+            event = json.loads(
+                (successor / "acceptance-events.jsonl").read_text(encoding="utf-8").strip()
+            )
+            self.assertEqual(
+                knowledge_context_hash, event["inputHashes"]["knowledgeContextHash"]
+            )
+
+    def test_target_run_entry_rejects_non_plan_directories(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repo"
+            (repository / "docs").mkdir(parents=True)
+            with self.assertRaisesRegex(execution_control.ControlError, "execution-plans"):
+                execution_control.start_or_resume_target_run(
+                    repository,
+                    "docs",
+                    "sha256:" + "a" * 64,
+                    "sha256:" + "b" * 64,
+                    "sha256:" + "c" * 64,
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
