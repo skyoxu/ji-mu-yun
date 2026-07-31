@@ -3918,6 +3918,7 @@ def command_prove_access(args: argparse.Namespace) -> int:
             "eventType": "attempt-started", "timestamp": utc_now(), "attemptId": attempt_id,
             "operationId": operation_id, "role": "model_probe", "pid": process.pid,
             "processIdentity": identity, "writeSet": [],
+            "requestHash": value_hash(request), "selectedModel": model,
         },
     )
     rebuild_process_leases_from_events(run_dir, manifest)
@@ -4559,6 +4560,7 @@ def run_codex_attempt(
             "eventType": "attempt-started", "timestamp": utc_now(), "attemptId": attempt_id,
             "operationId": operation_id, "role": role, "pid": process.pid,
             "processIdentity": identity, "writeSet": request["writeSet"],
+            "requestHash": value_hash(request), "selectedModel": model,
         },
     )
     stdout, stderr = process.communicate(prompt)
@@ -6742,6 +6744,7 @@ def structured_run_cost_evidence(
             attempt_reasons.add(f"invalid-request-binding:{attempt_dir.name}")
 
         argv = request.get("argv")
+        selected_model: str | None = None
         model_positions = (
             [index + 1 for index, item in enumerate(argv) if item == "-m"]
             if isinstance(argv, list) else []
@@ -6817,6 +6820,13 @@ def structured_run_cost_evidence(
             attempt_reasons.add(f"invalid-lifecycle-cardinality:{attempt_dir.name}")
         start_index, start_event = starts[0] if len(starts) == 1 else (-1, {})
         terminal_index, terminal_event = terminals[0] if len(terminals) == 1 else (-1, {})
+        if (
+            start_event.get("requestHash") != value_hash(request)
+            or start_event.get("selectedModel") != selected_model
+        ):
+            attempt_reasons.add(
+                f"invalid-lifecycle-request-binding:{attempt_dir.name}"
+            )
         expected_operation = (
             "verifier" if role == "independent_verifier"
             else (f"reviewer:{role}" if role in LAYERS else None)
@@ -7102,14 +7112,13 @@ def _baseline_runs(
         if run_dir in seen:
             raise BootstrapError("Baseline input contains a duplicate explicit run")
         seen.add(run_dir)
-        manifest_path = run_dir / "review-input.json"
-        manifest = read_json(manifest_path)
-        if manifest.get("schemaVersion") != "bootstrap-review-input.v1":
-            raise BootstrapError(f"Explicit Bootstrap run has an invalid manifest at {manifest_path}")
-        unhashed = dict(manifest)
-        expected_hash = unhashed.pop("inputHash", None)
-        if expected_hash != value_hash(unhashed):
-            raise BootstrapError(f"Explicit Bootstrap run has a stale input hash at {manifest_path}")
+        loaded_dir, manifest, loaded_root = load_run(
+            str(run_dir), require_fresh_artifacts=False
+        )
+        if loaded_dir != run_dir or loaded_root != repository_root.resolve():
+            raise BootstrapError(
+                "Explicit Bootstrap run resolved to another repository identity"
+            )
         found.append((run_dir, manifest))
     return sorted(found, key=lambda item: repository_relative_path(item[0], repository_root))
 

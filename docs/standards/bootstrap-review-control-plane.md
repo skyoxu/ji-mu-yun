@@ -183,17 +183,22 @@ bounded review route in force.
 ## Historical Baseline And Cost Calibration
 
 - `build-review-baseline` consumes only the validated Git-local registry or
-  explicitly supplied formal run directories; it does not recursively infer
-  authority from arbitrary `logs/**` content.
+  explicitly supplied formal run directories. Every explicit directory passes
+  the same complete historical `load_run` validation before it can become even
+  a nonterminal operational row; a hash-self-consistent partial manifest is not
+  a formal run. The builder does not recursively infer authority from arbitrary
+  `logs/**` content.
 - Its append-only history index includes all lifecycle states. Finalized rows
   must pass complete evidence replay and retain their exact finding closure;
   the index aggregates candidate, visible, confirmed, refuted, unverified, and
   P2 disposition yield. Cost cohorts additionally require every required
   reviewer, required verifier, and access probe to have a unique ordered
-  lifecycle, a matching process result, and token usage rederived from the same
-  Codex JSONL stdout. Probe, reviewer, verifier, and transport-retry costs remain
-  distinguishable. Wall time is the union of active attempt intervals, so idle
-  gaps are excluded. Zero-token and mixed-model samples do not enter a cohort.
+  lifecycle whose `attempt-started` event binds the exact request hash and
+  selected model, a matching process result, and token usage rederived from the
+  same Codex JSONL stdout. Probe, reviewer, verifier, and transport-retry costs
+  remain distinguishable. Wall time is the union of active attempt intervals,
+  so idle gaps are excluded. Zero-token, mixed-model, or legacy unbound-request
+  samples do not enter a cohort.
 - Baseline output directories must be append-only descendants of `logs/`.
 - The history index and calibration candidate are validated before publication
   and published together by one staged-directory rename. A failed build cannot

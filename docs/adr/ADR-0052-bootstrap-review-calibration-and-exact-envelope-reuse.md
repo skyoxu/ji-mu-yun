@@ -24,9 +24,12 @@ cross-run LLM cache.
   build. Nonterminal runs remain operational rows; only complete structured
   token and process-event evidence enters a cost cohort. Token evidence is
   extracted from Codex JSONL for the same attempt, attempt directories must be
-  event-backed, zero-token samples are excluded, and mixed-model runs stay out
-  of single-model cohorts. The history index and calibration candidate publish
-  atomically as one append-only directory.
+  event-backed, and each counted start event binds the exact attempt request and
+  selected model. Explicit run directories pass the same complete historical
+  run validation before becoming operational rows. Zero-token, legacy
+  unbound-request, and mixed-model samples stay out of single-model cohorts.
+  The history index and calibration candidate publish atomically as one
+  append-only directory.
 - Generated history and calibration candidates carry `authorizes=[]`. They do
   not authorize clean status, acceptance, handoff, commit, release, or done.
 - A promoted calibration is a reviewed, committed Skill reference bound by

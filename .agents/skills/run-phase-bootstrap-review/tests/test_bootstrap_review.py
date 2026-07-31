@@ -150,7 +150,13 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "processIdentity": f"test-process:{pid}",
             "writeSet": write_set,
         }
-        events = [{"eventType": "attempt-started", "timestamp": timestamp(start), **common}]
+        events = [{
+            "eventType": "attempt-started",
+            "timestamp": timestamp(start),
+            "requestHash": bootstrap.value_hash(request),
+            "selectedModel": model,
+            **common,
+        }]
         if exit_code == 0:
             events.append({
                 "eventType": "attempt-process-completed",
@@ -3773,6 +3779,18 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "model_reasoning_effort=high"
         )
         request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
+        model_index = request["argv"].index("-m") + 1
+        manifest["codexExecPolicy"]["fallbackModels"] = ["gpt-other"]
+        request["argv"][model_index] = "gpt-other"
+        request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            model_drift = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertIn(
+            "invalid-lifecycle-request-binding:reviewer",
+            model_drift["exclusionReasons"],
+        )
+        request["argv"][model_index] = "gpt-test"
+        request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
         missing_request = run_dir / "attempts" / "missing-request"
         missing_request.mkdir()
         with mock.patch.object(bootstrap, "read_process_events", return_value=events):
@@ -3814,15 +3832,15 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.complete_layers()
         self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
         self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        finalized_dir = self.run_dir
         prepared_dir = self.repo / "prepared-history-run"
-        prepared_dir.mkdir()
-        prepared_manifest = self.read_json("review-input.json")
-        prepared_manifest["reviewId"] = "prepared-history-001"
-        prepared_manifest.pop("inputHash")
-        prepared_manifest["inputHash"] = bootstrap.value_hash(prepared_manifest)
-        (prepared_dir / "review-input.json").write_text(
-            json.dumps(prepared_manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
+        self.run_dir = prepared_dir
+        self.prepare(
+            review_id="prepared-history-001",
+            change_id="prepared-history-change-001",
+            lineage_family_id="prepared-history-family-001",
         )
+        self.run_dir = finalized_dir
         out_dir = self.repo / "logs" / "review-governance" / "baseline-test"
         self.assertEqual(0, bootstrap.main([
             "build-review-baseline", "--repository-root", str(self.repo),
@@ -3880,6 +3898,21 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 )
         self.assertFalse(failed_out.exists())
         self.assertEqual([], list(failed_out.parent.glob(f".{failed_out.name}.stage-*")))
+
+    def test_explicit_baseline_rejects_a_hash_self_consistent_non_run(self) -> None:
+        fake_dir = self.repo / "not-a-formal-run"
+        fake_dir.mkdir()
+        manifest = {
+            "schemaVersion": "bootstrap-review-input.v1",
+            "reviewId": "synthetic-not-formal",
+            "fullReviewRound": 1,
+        }
+        manifest["inputHash"] = bootstrap.value_hash(manifest)
+        (fake_dir / "review-input.json").write_text(
+            json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        with self.assertRaises(bootstrap.BootstrapError):
+            bootstrap._baseline_runs(self.repo, [str(fake_dir)])
 
     def test_baseline_accepts_historical_access_proof_and_run_seal(self) -> None:
         self.prepare(execution_mode="codex-exec")
@@ -4386,9 +4419,15 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
         self.assertEqual(1, len(popen_calls))
         self.assertEqual(formal_before, formal_path.read_bytes())
+        events = bootstrap.read_process_events(self.run_dir)
+        started = [event for event in events if event.get("eventType") == "attempt-started"]
+        self.assertEqual(1, len(started))
+        request = self.read_json(f"attempts/{started[0]['attemptId']}/request.json")
+        self.assertEqual(bootstrap.value_hash(request), started[0]["requestHash"])
+        self.assertEqual(model, started[0]["selectedModel"])
         rejected = [
             event
-            for event in bootstrap.read_process_events(self.run_dir)
+            for event in events
             if event.get("eventType") == "attempt-rejected"
         ]
         self.assertEqual(1, len(rejected))
