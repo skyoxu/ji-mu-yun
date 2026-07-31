@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "bootstrap-review-lineage-state.v1",
+  "lineageFamilyId": "ria-95d18fc8ea6b99abeed685c3eb198e7a",
+  "semanticRoundsConsumed": 3,
+  "consumedRoundNumbers": [1, 2, 3],
+  "defaultFullReviewRoundLimit": 2,
+  "hardFullReviewRoundLimit": 3,
+  "nextFullReviewRound": null,
+  "state": "manual_pause",
+  "runs": [
+    {"runDirectory":"logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3-successor-r4-r1","reviewId":"ria-reacceptance-r3-successor-r4-r1-20260730","changeId":"ria-reacceptance-r3-successor-r4-20260730","fullReviewRound":1,"inputHash":"sha256:c0079d73d1e0ced56e549ddafa62d4d53935ff970cbc1e7a165405ffb38e71c7"},
+    {"runDirectory":"logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3-successor-r4-r2","reviewId":"ria-reacceptance-r3-successor-r4-r2-20260730","changeId":"ria-reacceptance-r3-successor-r4-20260730","fullReviewRound":2,"inputHash":"sha256:22e2bcfd56f01f7e53bdb01316fd30a32a0d43c7ef2035eb2ce61fa233341c77"},
+    {"runDirectory":"logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3-successor-r4-r3","reviewId":"ria-reacceptance-r3-successor-r4-r3-20260730","changeId":"ria-reacceptance-r3-successor-r4-20260730","fullReviewRound":3,"inputHash":"sha256:44ee377ecb4d652ddeed6e70ec645fafbc7a624cfd32b9766fd6ed84de77e3da"}
+  ],
+  "authorizes": [],
+  "lineageStateHash": "sha256:c123f9c0431a21360ab24d54153ed9ae05a0b6f4898b521f5975c76b24696ac7"
+}

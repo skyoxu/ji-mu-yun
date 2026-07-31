@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-7-27-final-refresh-2026-07-31",
+    "request_id": "vdd-7-27-complete-refresh-2026-07-31",
     "consumer": "vdd",
     "query": "repository guide AGENTS phase service rules",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "27f1f670a66f2ff4156c2341d02f45911f80685c"
+      "commit": "5ba6c99463f00c2177db5510cee1f3d02c1aa140"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -593,13 +593,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-7-27-final-refresh-2026-07-31",
+    "request_id": "vdd-7-27-complete-refresh-2026-07-31",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "27f1f670a66f2ff4156c2341d02f45911f80685c",
+      "commit": "5ba6c99463f00c2177db5510cee1f3d02c1aa140",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:3e7150e2a8d84608b07166017d45bf4d7348d894329a188484aea559c4ba3a89",
+    "source_snapshot_id": "sha256:253e65022512124b69937031cd78e59c362e5eb2c5830669b5bb315d4fbb63a6",
     "status": "matched"
   },
   "required_modules": [
@@ -729,11 +729,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:37c379aa83f79e79785783b9c193b15b3ce5ceaffce60c1bc556f3379bc6c5a7",
-  "result_sha256": "sha256:d688ac706c868f9dfba4951ce2a9739d837a2ae629c9446cc2e9cb12c8080026",
+  "request_sha256": "sha256:53b84e12dc6caeb6d6e481b527ad772656f8dfadeba8350efbac49d5ac7a333b",
+  "result_sha256": "sha256:fcd6ba5ffb1ffe9a5e8371cd93cf90adcf6be43264f912b0d2df1e61477dec81",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:7f6fc954572d8053327c01c0a89cf174270ee3d2ef8686b4fce0d5cd5a034292"
+    "context_sha256": "sha256:5fdb4b28c6b3c6f7969730fcb424b747f3a08c7ad39a51b41f0c77908c769585"
   }
 }

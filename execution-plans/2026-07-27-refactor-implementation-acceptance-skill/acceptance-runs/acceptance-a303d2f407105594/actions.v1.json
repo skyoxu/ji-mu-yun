@@ -1,0 +1,8 @@
+[
+  {"actionId":"plan-validator","dependsOn":[],"order":1,"commandId":"r4-plan-validator","activation":true},
+  {"actionId":"whole-directory-validator","dependsOn":["plan-validator"],"order":2,"commandId":"r4-whole-directory-validator","activation":true},
+  {"actionId":"plan-validator-tests","dependsOn":["whole-directory-validator"],"order":3,"commandId":"r4-validator-tests","activation":true},
+  {"actionId":"acceptance-skill-suite","dependsOn":["plan-validator-tests"],"order":4,"commandId":"s1-core-suite","activation":true},
+  {"actionId":"bootstrap-companion-suite","dependsOn":["acceptance-skill-suite"],"order":5,"commandId":"s0-companion-suite","activation":true},
+  {"actionId":"package-validation-suite","dependsOn":["bootstrap-companion-suite"],"order":6,"commandId":"s5-package-suite","activation":true}
+]

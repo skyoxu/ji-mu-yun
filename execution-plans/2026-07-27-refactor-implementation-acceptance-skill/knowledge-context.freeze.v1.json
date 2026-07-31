@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:ebdf648a57fbc52e34240ccec9d50be3e56dd7ede80919739a33a6234fcfe05f",
-  "canonical_context_sha256": "sha256:d670d1f29c9b5e7bd2130afc6b3ce2142440ea98a575095ad7866d8c258a9b37",
-  "request_sha256": "sha256:53b84e12dc6caeb6d6e481b527ad772656f8dfadeba8350efbac49d5ac7a333b",
-  "result_sha256": "sha256:fcd6ba5ffb1ffe9a5e8371cd93cf90adcf6be43264f912b0d2df1e61477dec81",
+  "context_sha256": "sha256:fa5a7b3ef4dce9fec37f6ff88fcfd8161ec4c55d05d5520968e1f3ddac889d17",
+  "canonical_context_sha256": "sha256:25488b42f75cda1907ea2b083844f28daa65e953351e846c1ddddad10b9e3756",
+  "request_sha256": "sha256:37c379aa83f79e79785783b9c193b15b3ce5ceaffce60c1bc556f3379bc6c5a7",
+  "result_sha256": "sha256:d688ac706c868f9dfba4951ce2a9739d837a2ae629c9446cc2e9cb12c8080026",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "5ba6c99463f00c2177db5510cee1f3d02c1aa140"
+    "commit": "27f1f670a66f2ff4156c2341d02f45911f80685c"
   },
-  "source_snapshot_id": "sha256:253e65022512124b69937031cd78e59c362e5eb2c5830669b5bb315d4fbb63a6",
+  "source_snapshot_id": "sha256:3e7150e2a8d84608b07166017d45bf4d7348d894329a188484aea559c4ba3a89",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -22,8 +22,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:106461d8cbbc791cfdee68534e457a67e3b87f44bcbc2409fad08c251157bfb7",
-    "freeze_receipt_path": "knowledge-context.freeze.history/106461d8cbbc791cfdee68534e457a67e3b87f44bcbc2409fad08c251157bfb7.v1.json",
-    "reason": "Refresh frozen VDD context after implementation-complete publication and catalog lifecycle update."
+    "context_sha256": "sha256:ebdf648a57fbc52e34240ccec9d50be3e56dd7ede80919739a33a6234fcfe05f",
+    "freeze_receipt_path": "knowledge-context.freeze.history/ebdf648a57fbc52e34240ccec9d50be3e56dd7ede80919739a33a6234fcfe05f.v1.json",
+    "reason": "Refresh frozen VDD context after the snapshot-bound evaluator publication."
   }
 }
