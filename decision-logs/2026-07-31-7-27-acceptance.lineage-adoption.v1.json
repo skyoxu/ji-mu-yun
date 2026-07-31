@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "bootstrap-lineage-adoption.v1",
+  "targetLineageFamilyId": "ria-95d18fc8ea6b99abeed685c3eb198e7a",
+  "legacyChangeId": "ria-reacceptance-r3-successor-r4-20260730",
+  "historicalRuns": [
+    {
+      "runDirectory": "logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3-successor-r4-r1",
+      "reviewInputHash": "sha256:c0079d73d1e0ced56e549ddafa62d4d53935ff970cbc1e7a165405ffb38e71c7",
+      "manifestFileHash": "sha256:03fe2604df0aadeb4230373878ee043059616c61ffb83a349c4a882817bf6363"
+    },
+    {
+      "runDirectory": "logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3-successor-r4-r2",
+      "reviewInputHash": "sha256:22e2bcfd56f01f7e53bdb01316fd30a32a0d43c7ef2035eb2ce61fa233341c77",
+      "manifestFileHash": "sha256:f7faf65a1de718bd3508b0db8c665e72ba75cae7783a9681fa758ad0a2019157"
+    },
+    {
+      "runDirectory": "logs/ci/2026-07-30/review-gateway-bootstrap-ria-reacceptance-r3-successor-r4-r3",
+      "reviewInputHash": "sha256:44ee377ecb4d652ddeed6e70ec645fafbc7a624cfd32b9766fd6ed84de77e3da",
+      "manifestFileHash": "sha256:59d5b23ae6a63d9c109ffcca1a41fd4240ddc9b7c0033672d10a9a7dd54b3902"
+    }
+  ],
+  "policyAuthority": {
+    "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+    "sha256": "sha256:e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc",
+    "status": "Accepted"
+  },
+  "reason": "preserve-pre-family-semantic-round-budget-for-original-7-27-acceptance-target",
+  "authorizes": [],
+  "adoptionHash": "sha256:7033cce7dd78b644fb375ac7fdb524a6d8082a9232dcef5ef7db2c1c931ff625"
+}
