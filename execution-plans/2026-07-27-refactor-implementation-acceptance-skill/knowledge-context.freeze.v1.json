@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:68840bbdea4a95eefff4a7d53b7b23980a2d61f6a0d6963e91ca6b00b9378bfc",
-  "canonical_context_sha256": "sha256:20b02e29f97503e43cbbf9615e17a0081a96c1103ccfc8c0433b6f5809ba65f9",
-  "request_sha256": "sha256:af9bfe6a04b2310589af9355d137bbff273130f85f274396a9482f9ac5a9dab0",
-  "result_sha256": "sha256:574129f4708aa1c5504599fbf832df33799e41a63fa64cffed4a96eb1c8b17b7",
+  "context_sha256": "sha256:106461d8cbbc791cfdee68534e457a67e3b87f44bcbc2409fad08c251157bfb7",
+  "canonical_context_sha256": "sha256:38be4c41eb10501ff4f53057adea86447350ac3d9b14b7bd14d5597a80d8ea56",
+  "request_sha256": "sha256:6e687c476326b424b30f49c2da555070267e40d9909b7af4c34ac45380276b62",
+  "result_sha256": "sha256:28f05969473028b8e63d7a8bd2010afa144b89201298cc4a7fb4cd73a2d2e249",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "1cd6a6ddfca700e0fff5735ec4526b1fca2e56f0"
+    "commit": "e0f789d1dd989f91cbdfbc31015a41bc14ef0146"
   },
-  "source_snapshot_id": "sha256:946b19b675894dbe7cbe97f29dc302505566a4573ee1c8285f6047f6faad85cb",
+  "source_snapshot_id": "sha256:15ff45d4757b9f772f229f62d411e57eeaa17533b4a28cd9ec8fa5b84e54ef93",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -22,8 +22,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:6d7d054845d47e6bc361cdf79896757e1ee17c933241a5c182a8d7c1d4117052",
-    "freeze_receipt_path": "knowledge-context.freeze.history/6d7d054845d47e6bc361cdf79896757e1ee17c933241a5c182a8d7c1d4117052.v1.json",
-    "reason": "refresh-current-main-before-acceptance-orchestration"
+    "context_sha256": "sha256:68840bbdea4a95eefff4a7d53b7b23980a2d61f6a0d6963e91ca6b00b9378bfc",
+    "freeze_receipt_path": "knowledge-context.freeze.history/68840bbdea4a95eefff4a7d53b7b23980a2d61f6a0d6963e91ca6b00b9378bfc.v1.json",
+    "reason": "Refresh VDD context after canonical knowledge generation publication."
   }
 }
