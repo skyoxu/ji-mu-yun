@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "acceptance-run-supersession.v1",
+  "predecessorRunId": "acceptance-61aa0207d1960de4",
+  "successorRunId": "acceptance-9146dc30fefaa707",
+  "reason": "current_scoped_candidate_binding_required",
+  "authorizes": []
+}

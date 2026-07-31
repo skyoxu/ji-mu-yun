@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Program DoD Candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "baseMatrixHash", "codeReviewPolicyBindingHash", "status", "authorizes"],
+  "properties": {"schemaVersion": {"const": "program-dod-candidate.v1"}, "status": {"enum": ["passed", "failed", "blocked", "incomplete", "stale"]}, "authorizes": {"const": []}}
+}

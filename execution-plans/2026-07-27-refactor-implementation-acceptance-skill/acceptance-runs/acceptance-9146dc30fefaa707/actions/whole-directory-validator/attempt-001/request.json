@@ -1,0 +1,20 @@
+{
+  "actionId": "whole-directory-validator",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "r4-whole-directory-validator",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:370a0d20d1e0adf761ab09a92e9c44bdffdb8e392345a909d0975d8654e57156",
+    "knowledgeContextHash": "sha256:d36a707d4ed46801778bc28288b2e283e3513c9a08e546de184c6aab10352728",
+    "runInputHash": "sha256:4b3d7141e0e65d7f6d156510ae75e98b122c50db73943ffd38a926f0c80e9b05"
+  },
+  "ownerToken": "owner-acceptance-9146dc30fefaa707",
+  "processId": 6604,
+  "recordedUtc": "2026-07-31T07:03:08.928076Z",
+  "runId": "acceptance-9146dc30fefaa707",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 4
+}
