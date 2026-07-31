@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "bootstrap-review-calibration-corpus.v1",
+  "syntheticOnly": true,
+  "runtimePromptConsumption": "forbidden",
+  "pairs": [
+    {
+      "pairId": "missing-boundary-guard",
+      "defectFamily": "reachable-missing-guard",
+      "confirmed": {
+        "syntheticArtifact": "if request.allowed: delete(record)",
+        "trigger": "allowed is client-controlled",
+        "guardState": "no server authorization is evaluated",
+        "badOutcome": "an unauthorized record is deleted",
+        "verifierDecision": "confirmed",
+        "expectedDisposition": "confirmed"
+      },
+      "refuted": {
+        "syntheticArtifact": "if policy.authorize(actor, record): delete(record)",
+        "trigger": "an authenticated actor requests deletion",
+        "guardState": "the server policy checks actor ownership before deletion",
+        "badOutcome": "the alleged unauthorized path is unreachable",
+        "verifierDecision": "refuted",
+        "expectedDisposition": "refuted"
+      }
+    }
+  ],
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "plan-acceptance",
+    "implementation-acceptance",
+    "protected-handoff",
+    "release",
+    "commit",
+    "done"
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-review-history-index.v1.schema.json",
+  "title": "Bootstrap Review History Index v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "repositoryRevision", "runCount", "eligibleRunCount", "semanticYield", "runs", "authorizes", "doesNotAuthorize", "generatedAt"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-review-history-index.v1"},
+    "repositoryRevision": {"type": "string", "minLength": 1},
+    "runCount": {"type": "integer", "minimum": 0},
+    "eligibleRunCount": {"type": "integer", "minimum": 0},
+    "semanticYield": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligibleRunCount", "totals", "candidatesPerEligibleRun", "visibleFindingsPerEligibleRun", "confirmedPerEligibleRun", "refutedPerEligibleRun"],
+      "properties": {
+        "eligibleRunCount": {"type": "integer", "minimum": 0},
+        "totals": {"$ref": "#/$defs/findingClosure"},
+        "candidatesPerEligibleRun": {"type": "number", "minimum": 0},
+        "visibleFindingsPerEligibleRun": {"type": "number", "minimum": 0},
+        "confirmedPerEligibleRun": {"type": "number", "minimum": 0},
+        "refutedPerEligibleRun": {"type": "number", "minimum": 0}
+      }
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["runDirectory", "reviewId", "changeId", "lineageFamilyId", "fullReviewRound", "profileName", "runExecutionState", "runRelationship", "changeCycleState", "finalStatus", "eligibleForSemanticStatistics", "eligibleForCostCalibration", "manifestHash", "validationEnvelopeHash", "findingClosure", "costEvidence"],
+        "properties": {
+          "runDirectory": {"type": "string", "minLength": 1},
+          "reviewId": {"type": ["string", "null"]},
+          "changeId": {"type": ["string", "null"]},
+          "lineageFamilyId": {"type": ["string", "null"]},
+          "fullReviewRound": {"type": "integer", "minimum": 1, "maximum": 3},
+          "profileName": {"type": ["string", "null"]},
+          "runExecutionState": {"type": "string", "minLength": 1},
+          "runRelationship": {"type": "string", "minLength": 1},
+          "changeCycleState": {"type": "string", "minLength": 1},
+          "finalStatus": {"type": ["string", "null"]},
+          "eligibleForSemanticStatistics": {"type": "boolean"},
+          "eligibleForCostCalibration": {"type": "boolean"},
+          "manifestHash": {"$ref": "#/$defs/hash"},
+          "validationEnvelopeHash": {"oneOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+          "findingClosure": {"oneOf": [{"$ref": "#/$defs/findingClosure"}, {"type": "null"}]},
+          "costEvidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["complete", "reviewerTokens", "verifierTokens", "probeTokens", "transportRetryTokens", "totalTokens", "wallSeconds", "wallTimeMethod", "attemptCount", "requiredRoles", "completedRoles", "selectedModel", "modelConsistent", "exclusionReasons"],
+            "properties": {
+              "complete": {"type": "boolean"},
+              "reviewerTokens": {"type": "integer", "minimum": 0},
+              "verifierTokens": {"type": "integer", "minimum": 0},
+              "probeTokens": {"type": "integer", "minimum": 0},
+              "transportRetryTokens": {"type": "integer", "minimum": 0},
+              "totalTokens": {"type": "integer", "minimum": 0},
+              "wallSeconds": {"type": ["number", "null"], "minimum": 0},
+              "wallTimeMethod": {"const": "union-of-attempt-intervals"},
+              "attemptCount": {"type": "integer", "minimum": 0},
+              "requiredRoles": {"$ref": "#/$defs/roles"},
+              "completedRoles": {"$ref": "#/$defs/roles"},
+              "selectedModel": {"type": ["string", "null"], "minLength": 1},
+              "modelConsistent": {"type": "boolean"},
+              "exclusionReasons": {
+                "type": "array", "uniqueItems": true,
+                "items": {"type": "string", "minLength": 1}
+              }
+            }
+          }
+        }
+      }
+    },
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {"$ref": "#/$defs/exclusions"},
+    "generatedAt": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "findingClosure": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidateCount", "visibleFindingCount", "confirmedCount", "advisoryCount", "unverifiedCount", "refutedCount", "p2FixedCount", "p2DeferredCount", "p2RefutedCount"],
+      "properties": {
+        "candidateCount": {"type": "integer", "minimum": 0},
+        "visibleFindingCount": {"type": "integer", "minimum": 0},
+        "confirmedCount": {"type": "integer", "minimum": 0},
+        "advisoryCount": {"type": "integer", "minimum": 0},
+        "unverifiedCount": {"type": "integer", "minimum": 0},
+        "refutedCount": {"type": "integer", "minimum": 0},
+        "p2FixedCount": {"type": "integer", "minimum": 0},
+        "p2DeferredCount": {"type": "integer", "minimum": 0},
+        "p2RefutedCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "roles": {
+      "type": "array", "uniqueItems": true,
+      "items": {"enum": ["blind_hunter", "edge_case_hunter", "acceptance_auditor", "independent_verifier", "model_probe"]}
+    },
+    "exclusions": {"type": "array", "minItems": 6, "uniqueItems": true, "items": {"enum": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
+  }
+}

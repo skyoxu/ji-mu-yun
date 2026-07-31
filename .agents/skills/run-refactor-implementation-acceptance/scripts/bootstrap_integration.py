@@ -25,6 +25,12 @@ class BootstrapBindingError(ValueError):
 
 _HASH = re.compile(r"sha256:[a-f0-9]{64}$")
 _LINEAGE_ID = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}$")
+_EXACT_REUSE_PROFILE = "bootstrap-implementation-conformance"
+_EXACT_REUSE_REVIEW_PROFILE = "review-policy://bootstrap-implementation-conformance/v1"
+_FINALIZED_EXCLUSIONS = {
+    "plan-acceptance", "implementation-acceptance", "protected-handoff",
+    "release", "commit", "done",
+}
 _REVIEW_SCOPE_INPUTS = {
     "implementation_plan": "implementation-plan",
     "changed_production_code": "changed-production-code",
@@ -45,13 +51,25 @@ def _canonical_hash(value: Any) -> str:
 def _load_bootstrap_module(repository_root: Path) -> Any:
     root = repository_root.resolve()
     module_path = root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
-    if str(module_path.parent) not in sys.path:
-        sys.path.insert(0, str(module_path.parent))
+    scripts_path = str(module_path.parent)
     spec = importlib.util.spec_from_file_location("ria_bootstrap_review", module_path)
     if spec is None or spec.loader is None:
         raise BootstrapBindingError("Bootstrap control plane is unavailable")
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    original_path = list(sys.path)
+    displaced = {
+        name: sys.modules.pop(name)
+        for name in ("_control_plane", "knowledge_context")
+        if name in sys.modules
+    }
+    try:
+        sys.path.insert(0, scripts_path)
+        spec.loader.exec_module(module)
+    finally:
+        sys.path[:] = original_path
+        for name in ("_control_plane", "knowledge_context"):
+            sys.modules.pop(name, None)
+        sys.modules.update(displaced)
     return module
 
 
@@ -522,6 +540,98 @@ def validate_inventory_attestation(attestation: Any, binding: Any, scope: Any) -
             raise BootstrapBindingError("inventory attestation capability is invalid")
 
 
+def _validate_finalized_reuse_envelope(value: Any) -> None:
+    fields = {
+        "schemaVersion", "validationStatus", "reviewId", "changeId", "lineageFamilyId",
+        "fullReviewRound", "profileName", "reviewProfile", "routeVersion",
+        "controlPlaneRevision", "policyRevision", "profileHash", "authorityRevision",
+        "inputHash", "authorityContextHash", "candidateBindingHash",
+        "reviewEntryDecisionHash", "repairReviewDeltaHash", "artifactHashes",
+        "finalStatus", "findingClosure", "validatorRevision", "validatorHash",
+        "authorizes", "doesNotAuthorize", "generatedAt",
+    }
+    hash_fields = {
+        "policyRevision", "profileHash", "inputHash", "authorityContextHash",
+        "candidateBindingHash", "validatorHash",
+    }
+    if (
+        not isinstance(value, dict)
+        or set(value) != fields
+        or value.get("schemaVersion") != "bootstrap-finalized-run-validation.v3"
+        or value.get("validationStatus") != "passed"
+        or value.get("finalStatus") != "clean"
+        or value.get("profileName") != _EXACT_REUSE_PROFILE
+        or value.get("reviewProfile") != _EXACT_REUSE_REVIEW_PROFILE
+        or value.get("controlPlaneRevision") != "bootstrap-control-plane.v2"
+        or value.get("validatorRevision") != "bootstrap-finalized-run-validator.v4"
+        or value.get("authorizes") != []
+        or not isinstance(value.get("doesNotAuthorize"), list)
+        or len(value["doesNotAuthorize"]) != len(_FINALIZED_EXCLUSIONS)
+        or any(not isinstance(item, str) for item in value["doesNotAuthorize"])
+        or set(value["doesNotAuthorize"]) != _FINALIZED_EXCLUSIONS
+        or any(not _HASH.fullmatch(str(value.get(field))) for field in hash_fields)
+        or not isinstance(value.get("reviewId"), str)
+        or not value["reviewId"]
+        or not isinstance(value.get("changeId"), str)
+        or not value["changeId"]
+        or _LINEAGE_ID.fullmatch(str(value.get("lineageFamilyId"))) is None
+        or not isinstance(value.get("fullReviewRound"), int)
+        or isinstance(value.get("fullReviewRound"), bool)
+        or not 1 <= value["fullReviewRound"] <= HARD_FULL_REVIEW_ROUND_LIMIT
+        or not isinstance(value.get("routeVersion"), str)
+        or not value["routeVersion"]
+        or not isinstance(value.get("authorityRevision"), str)
+        or not value["authorityRevision"]
+    ):
+        raise BootstrapBindingError("Bootstrap finalized reuse envelope is invalid")
+    for field in ("reviewEntryDecisionHash", "repairReviewDeltaHash"):
+        if value.get(field) is not None and not _HASH.fullmatch(str(value[field])):
+            raise BootstrapBindingError("Bootstrap finalized reuse envelope hash is invalid")
+
+    artifact_fields = {
+        "reviewInput", "preflightResult", "gateState", "candidates", "rejections",
+        "finalResult", "dispositions", "metrics", "verifierOutput", "p2Dispositions",
+    }
+    artifact_hashes = value.get("artifactHashes")
+    if (
+        not isinstance(artifact_hashes, dict)
+        or set(artifact_hashes) != artifact_fields
+        or any(
+            not _HASH.fullmatch(str(artifact_hashes.get(field)))
+            for field in artifact_fields - {"p2Dispositions"}
+        )
+        or (
+            artifact_hashes.get("p2Dispositions") is not None
+            and not _HASH.fullmatch(str(artifact_hashes["p2Dispositions"]))
+        )
+    ):
+        raise BootstrapBindingError("Bootstrap finalized artifact bindings are invalid")
+
+    closure_fields = {
+        "candidateCount", "visibleFindingCount", "confirmedCount", "advisoryCount",
+        "unverifiedCount", "refutedCount", "p2FixedCount", "p2DeferredCount",
+        "p2RefutedCount",
+    }
+    closure = value.get("findingClosure")
+    if (
+        not isinstance(closure, dict)
+        or set(closure) != closure_fields
+        or any(
+            not isinstance(closure.get(field), int)
+            or isinstance(closure.get(field), bool)
+            or closure[field] < 0
+            for field in closure_fields
+        )
+    ):
+        raise BootstrapBindingError("Bootstrap finalized finding closure is invalid")
+    try:
+        generated_at = datetime.fromisoformat(str(value.get("generatedAt")).replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise BootstrapBindingError("Bootstrap finalized timestamp is invalid") from exc
+    if generated_at.tzinfo is None:
+        raise BootstrapBindingError("Bootstrap finalized timestamp must be timezone-aware")
+
+
 def validate_import_envelope(envelope: Any, expected_hashes: Any) -> None:
     """Reject partial or drifted Bootstrap imports before they reach acceptance calculation."""
     if isinstance(envelope, dict) and envelope.get("schemaVersion") == "bootstrap-import-envelope.v2":
@@ -562,6 +672,61 @@ def validate_import_envelope(envelope: Any, expected_hashes: Any) -> None:
             raise BootstrapBindingError("bootstrap import envelope v2 hash is stale")
         validate_inventory_attestation(attestation, binding, scope)
         return
+    if isinstance(envelope, dict) and envelope.get("schemaVersion") == "bootstrap-import-envelope.v3":
+        required = {
+            "schemaVersion", "controlPlaneRevision", "bootstrapRunDir", "finalizedRun",
+            "finalizedRunCoreHash", "inventoryAttestation", "inventoryAttestationHash",
+            "bindingHash", "scopeHash", "candidateIdentity", "candidateIdentityHash",
+            "bootstrapRoutePath", "bootstrapRouteFileHash", "bootstrapRouteHash",
+            "authorizes",
+        }
+        if not isinstance(expected_hashes, dict) or set(expected_hashes) != {
+            "bootstrapRunDir", "binding", "scope", "candidateIdentity", "bootstrapRoute"
+        }:
+            raise BootstrapBindingError("v3 import envelope expectations are invalid")
+        binding, scope = expected_hashes["binding"], expected_hashes["scope"]
+        candidate_identity = expected_hashes["candidateIdentity"]
+        _validate_candidate_identity(candidate_identity)
+        bootstrap_route = expected_hashes["bootstrapRoute"]
+        _validate_bootstrap_route_binding(bootstrap_route)
+        expected_run_dir = _normalize_review_paths(
+            [expected_hashes["bootstrapRunDir"]], "Bootstrap run directory"
+        )[0]
+        finalized = envelope.get("finalizedRun")
+        attestation = envelope.get("inventoryAttestation")
+        if (
+            set(envelope) != required
+            or envelope.get("controlPlaneRevision") != "bootstrap-control-plane.v2"
+            or envelope.get("authorizes") != []
+            or envelope.get("bootstrapRunDir") != expected_run_dir
+            or not isinstance(finalized, dict)
+            or finalized.get("controlPlaneRevision") != envelope.get("controlPlaneRevision")
+            or not isinstance(attestation, dict)
+        ):
+            raise BootstrapBindingError("bootstrap import envelope v3 is invalid")
+        _validate_finalized_reuse_envelope(finalized)
+        finalized_core = {key: value for key, value in finalized.items() if key != "generatedAt"}
+        if (
+            envelope.get("finalizedRunCoreHash") != _canonical_hash(finalized_core)
+            or envelope.get("inventoryAttestationHash") != _canonical_hash(attestation)
+            or envelope.get("bindingHash") != _canonical_hash(binding)
+            or envelope.get("scopeHash") != _canonical_hash(scope)
+            or envelope.get("candidateIdentity") != candidate_identity
+            or envelope.get("candidateIdentityHash") != _canonical_hash(candidate_identity)
+            or envelope.get("bootstrapRoutePath") != bootstrap_route["path"]
+            or envelope.get("bootstrapRouteFileHash") != bootstrap_route["fileHash"]
+            or envelope.get("bootstrapRouteHash") != bootstrap_route["routeHash"]
+        ):
+            raise BootstrapBindingError("bootstrap import envelope v3 hash is stale")
+        validate_inventory_attestation(attestation, binding, scope)
+        if (
+            attestation.get("reviewId") != finalized.get("reviewId")
+            or attestation.get("inputHash") != finalized.get("inputHash")
+        ):
+            raise BootstrapBindingError(
+                "bootstrap inventory attestation does not bind the finalized run"
+            )
+        return
     required_hashes = {
         "decisionHash", "bindingHash", "launchAuthorizationHash", "localReceiptHash", "reviewInputHash",
         "artifactViewHash", "roleBundleHash", "attestationHash", "candidateHash", "baseMatrixHash", "findingPolicyHash",
@@ -579,45 +744,316 @@ def validate_import_envelope(envelope: Any, expected_hashes: Any) -> None:
         raise BootstrapBindingError("bootstrap import envelope hash is stale")
 
 
+def _validate_candidate_identity(value: Any) -> None:
+    fields = {
+        "schemaVersion", "acceptanceRunInputPath", "acceptanceRunInputFileHash",
+        "candidateContentManifestPath", "candidateContentManifestFileHash",
+        "candidateContentManifestHash", "candidateCustodyHash", "changedPaths",
+        "changedPathBindings", "knowledgeArtifacts", "authorizes", "identityHash",
+    }
+    if (
+        not isinstance(value, dict)
+        or set(value) != fields
+        or value.get("schemaVersion") != "acceptance-bootstrap-reuse-candidate.v2"
+        or value.get("authorizes") != []
+        or any(
+            not _HASH.fullmatch(str(value.get(field)))
+            for field in (
+                "acceptanceRunInputFileHash", "candidateContentManifestFileHash",
+                "candidateContentManifestHash", "candidateCustodyHash", "identityHash",
+            )
+        )
+    ):
+        raise BootstrapBindingError("Acceptance candidate identity is invalid")
+    stable = {key: item for key, item in value.items() if key != "identityHash"}
+    if value["identityHash"] != _canonical_hash(stable):
+        raise BootstrapBindingError("Acceptance candidate identity hash is stale")
+    _normalize_review_paths(
+        [value["acceptanceRunInputPath"], value["candidateContentManifestPath"]],
+        "Acceptance candidate identity path",
+    )
+    changed = _normalize_review_paths(value.get("changedPaths"), "Acceptance changed path")
+    if value["changedPaths"] != changed:
+        raise BootstrapBindingError("Acceptance changed paths are not canonical")
+    changed_bindings = value.get("changedPathBindings")
+    if not isinstance(changed_bindings, list) or not changed_bindings:
+        raise BootstrapBindingError("Acceptance changed path bindings are invalid")
+    binding_paths: list[str] = []
+    for binding in changed_bindings:
+        if (
+            not isinstance(binding, dict)
+            or set(binding) != {"path", "state", "sha256"}
+            or binding.get("state") not in {"present", "deleted"}
+            or not _HASH.fullmatch(str(binding.get("sha256")))
+        ):
+            raise BootstrapBindingError("Acceptance changed path bindings are invalid")
+        binding_paths.append(binding.get("path"))
+    normalized_bindings = _normalize_review_paths(
+        binding_paths, "Acceptance changed path binding"
+    )
+    if binding_paths != normalized_bindings or binding_paths != changed:
+        raise BootstrapBindingError("Acceptance changed path bindings are not canonical")
+    knowledge = value.get("knowledgeArtifacts")
+    if not isinstance(knowledge, list) or not knowledge:
+        raise BootstrapBindingError("Acceptance knowledge artifact binding is invalid")
+    knowledge_paths: list[str] = []
+    for artifact in knowledge:
+        if (
+            not isinstance(artifact, dict)
+            or set(artifact) != {"path", "sha256"}
+            or not _HASH.fullmatch(str(artifact.get("sha256")))
+        ):
+            raise BootstrapBindingError("Acceptance knowledge artifact binding is invalid")
+        knowledge_paths.append(artifact.get("path"))
+    normalized_knowledge = _normalize_review_paths(
+        knowledge_paths, "Acceptance knowledge artifact"
+    )
+    if knowledge_paths != normalized_knowledge:
+        raise BootstrapBindingError("Acceptance knowledge artifact paths are not canonical")
+
+
+def _validate_bootstrap_route_binding(value: Any) -> None:
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"path", "fileHash", "route", "routeHash"}
+        or not _HASH.fullmatch(str(value.get("fileHash")))
+        or not _HASH.fullmatch(str(value.get("routeHash")))
+        or value.get("routeHash") != _canonical_hash(value.get("route"))
+    ):
+        raise BootstrapBindingError("Bootstrap route binding is invalid")
+    if _normalize_review_paths([value.get("path")], "Bootstrap route")[0] != value["path"]:
+        raise BootstrapBindingError("Bootstrap route path is not canonical")
+    route = value["route"]
+    required = {
+        "schemaVersion", "bootstrapExecutionState", "reviewScope", "routeKind",
+        "lineageAnchor", "lineageFamilyId", "semanticRoundsConsumed",
+        "nextFullReviewRound", "roundEntryReason", "lineageStateHash",
+        "repairCompletenessHash", "nextAction", "authorizes",
+    }
+    if (
+        not isinstance(route, dict)
+        or set(route) != required
+        or route.get("schemaVersion") != "implementation-acceptance-bootstrap-route.v1"
+        or route.get("routeKind") not in {
+            "full_implementation_conformance", "focused_repair_review"
+        }
+        or route.get("nextAction") != "run-phase-bootstrap-review"
+        or route.get("authorizes") != []
+    ):
+        raise BootstrapBindingError("Bootstrap route is not eligible for exact reuse")
+    _validate_minimal_review_scope(route.get("reviewScope"))
+
+
+def _validate_exact_reuse_lineage(
+    repository_root: Path,
+    bootstrap_route: dict[str, Any],
+    finalized: dict[str, Any],
+) -> None:
+    route = bootstrap_route["route"]
+    family_id = route["lineageFamilyId"]
+    if (
+        family_id != route["reviewScope"]["lineageFamilyId"]
+        or route["lineageAnchor"] != route["reviewScope"]["lineageAnchor"]
+        or finalized.get("lineageFamilyId") != family_id
+    ):
+        raise BootstrapBindingError("Bootstrap exact-reuse lineage family is invalid")
+    current = load_current_lineage_state(repository_root, family_id)
+    rounds = _validate_lineage_state(current, family_id)
+    finalized_round = finalized.get("fullReviewRound")
+    prior_rounds = route.get("semanticRoundsConsumed")
+    if (
+        rounds != finalized_round
+        or prior_rounds != finalized_round - 1
+        or route.get("nextFullReviewRound") != finalized_round
+        or not current["runs"]
+    ):
+        raise BootstrapBindingError(
+            "Bootstrap route does not describe the current lineage transition"
+        )
+    current_run = current["runs"][-1]
+    for run_field, finalized_field in (
+        ("reviewId", "reviewId"), ("changeId", "changeId"),
+        ("fullReviewRound", "fullReviewRound"), ("inputHash", "inputHash"),
+    ):
+        if current_run[run_field] != finalized.get(finalized_field):
+            raise BootstrapBindingError("Bootstrap finalized run is not the current lineage head")
+    predecessor = {
+        "schemaVersion": "bootstrap-review-lineage-state.v1",
+        "lineageFamilyId": family_id,
+        "semanticRoundsConsumed": prior_rounds,
+        "consumedRoundNumbers": list(range(1, prior_rounds + 1)),
+        "defaultFullReviewRoundLimit": DEFAULT_FULL_REVIEW_ROUND_LIMIT,
+        "hardFullReviewRoundLimit": HARD_FULL_REVIEW_ROUND_LIMIT,
+        "nextFullReviewRound": finalized_round,
+        "state": "available",
+        "runs": current["runs"][:-1],
+        "authorizes": [],
+    }
+    predecessor["lineageStateHash"] = _canonical_hash(predecessor)
+    if route.get("lineageStateHash") != predecessor["lineageStateHash"]:
+        raise BootstrapBindingError("Bootstrap route lineage state is stale")
+
+
 def load_verified_bootstrap_import(
     repository_root: Path, bootstrap_run_dir: str, binding: Any, scope: Any,
+    candidate_identity: Any, bootstrap_route: Any,
 ) -> dict[str, Any]:
     """Load and revalidate Bootstrap-owned evidence before consumer import."""
     root = repository_root.resolve()
-    run_dir = (root / bootstrap_run_dir).resolve()
+    normalized_run_dir = _normalize_review_paths(
+        [bootstrap_run_dir], "Bootstrap run directory"
+    )[0]
+    run_dir = (root / normalized_run_dir).resolve()
     try:
         run_dir.relative_to(root)
     except ValueError as exc:
         raise BootstrapBindingError("bootstrap run directory escapes repository root") from exc
+    if run_dir.relative_to(root).as_posix() != normalized_run_dir:
+        raise BootstrapBindingError("bootstrap run directory is not canonical")
+    _validate_candidate_identity(candidate_identity)
+    _validate_bootstrap_route_binding(bootstrap_route)
     module = _load_bootstrap_module(root)
     try:
-        manifest = module.read_json(run_dir / "review-input.json")
+        loaded_dir, manifest, loaded_root = module.load_run(str(run_dir))
         envelope = module.validate_finalized_run_evidence(run_dir, manifest, root)
         bundle = module.read_json(
             run_dir / "reviewer-outputs" / "acceptance_auditor.role-bundle.json"
         )
     except Exception as exc:
         raise BootstrapBindingError("Bootstrap finalized evidence is missing or invalid") from exc
+    if loaded_dir.resolve() != run_dir or loaded_root.resolve() != root:
+        raise BootstrapBindingError("Bootstrap run resolved to another repository identity")
+    if (
+        manifest.get("profileName") != _EXACT_REUSE_PROFILE
+        or manifest.get("reviewProfile") != _EXACT_REUSE_REVIEW_PROFILE
+    ):
+        raise BootstrapBindingError(
+            "Bootstrap exact reuse requires the implementation-conformance profile"
+        )
+    _validate_finalized_reuse_envelope(envelope)
+    seal_path = run_dir / "run-seal.json"
+    if seal_path.is_file():
+        raise BootstrapBindingError("Bootstrap exact reuse requires an active finalized run")
+    _validate_exact_reuse_lineage(root, bootstrap_route, envelope)
     if envelope.get("finalStatus") != "clean":
         raise BootstrapBindingError("Bootstrap run is not clean")
+    candidate_binding_hash = envelope.get("candidateBindingHash")
+    if (
+        not _HASH.fullmatch(str(candidate_binding_hash))
+        or manifest.get("candidateBindingHash") != candidate_binding_hash
+    ):
+        raise BootstrapBindingError("Bootstrap run is not eligible for exact candidate reuse")
+    artifact_hashes: dict[str, str] = {}
+    for artifact in manifest.get("artifacts", []):
+        if (
+            not isinstance(artifact, dict)
+            or not isinstance(artifact.get("artifact"), str)
+            or artifact["artifact"] in artifact_hashes
+            or not _HASH.fullmatch(str(artifact.get("sha256")))
+        ):
+            raise BootstrapBindingError("Bootstrap candidate artifact binding is invalid")
+        artifact_hashes[artifact["artifact"]] = artifact["sha256"]
+    review_scope = bootstrap_route["route"]["reviewScope"]
+    if manifest.get("contextClassArtifacts") != review_scope["contextClasses"]:
+        raise BootstrapBindingError(
+            "Bootstrap run context classes do not match the Acceptance route"
+        )
+    finalized_round = envelope["fullReviewRound"]
+    repair_route_binding = manifest.get("acceptanceRepairRoute")
+    if finalized_round > 1:
+        if repair_route_binding != {
+            "path": bootstrap_route["path"],
+            "sha256": bootstrap_route["fileHash"],
+        }:
+            raise BootstrapBindingError(
+                "Bootstrap run was launched by another Acceptance repair route"
+            )
+    elif repair_route_binding is not None:
+        raise BootstrapBindingError("Bootstrap Round 1 has an unexpected repair route binding")
+    changed_scope = set(review_scope["contextClasses"]["changed-production-code"])
+    if not set(candidate_identity["changedPaths"]).issubset(changed_scope):
+        raise BootstrapBindingError(
+            "Acceptance changed paths are outside the Bootstrap changed-production scope"
+        )
+    required_candidate_artifacts = {
+        candidate_identity["acceptanceRunInputPath"]: candidate_identity["acceptanceRunInputFileHash"],
+        candidate_identity["candidateContentManifestPath"]: candidate_identity["candidateContentManifestFileHash"],
+        **{
+            item["path"]: item["sha256"]
+            for item in candidate_identity["knowledgeArtifacts"]
+        },
+    }
+    if any(artifact_hashes.get(path) != digest for path, digest in required_candidate_artifacts.items()):
+        raise BootstrapBindingError("Bootstrap run does not bind the current Acceptance candidate")
+    deleted_hashes: dict[str, str] = {}
+    repair_delta = manifest.get("repairReviewDelta")
+    removed_snapshots = (
+        repair_delta.get("removedArtifactSnapshots", [])
+        if isinstance(repair_delta, dict)
+        else []
+    )
+    for artifact in removed_snapshots:
+        if (
+            not isinstance(artifact, dict)
+            or not isinstance(artifact.get("artifact"), str)
+            or artifact["artifact"] in deleted_hashes
+            or not _HASH.fullmatch(str(artifact.get("sha256")))
+        ):
+            raise BootstrapBindingError("Bootstrap deleted artifact binding is invalid")
+        deleted_hashes[artifact["artifact"]] = artifact["sha256"]
+    for binding in candidate_identity["changedPathBindings"]:
+        source = artifact_hashes if binding["state"] == "present" else deleted_hashes
+        if source.get(binding["path"]) != binding["sha256"]:
+            raise BootstrapBindingError(
+                "Bootstrap reviewed bytes do not match the Acceptance candidate"
+            )
+    if not set(review_scope["scope"]).issubset(artifact_hashes):
+        raise BootstrapBindingError("Bootstrap run does not bind the complete review scope")
+    candidate_context_paths = {
+        candidate_identity["acceptanceRunInputPath"],
+        candidate_identity["candidateContentManifestPath"],
+        *[item["path"] for item in candidate_identity["knowledgeArtifacts"]],
+    }
+    if not candidate_context_paths.issubset(set(review_scope["scope"])):
+        raise BootstrapBindingError(
+            "Acceptance candidate context is outside the Bootstrap review scope"
+        )
     if not isinstance(bundle, dict) or not isinstance(bundle.get("inventoryAttestation"), dict):
         raise BootstrapBindingError("Bootstrap Acceptance Auditor bundle is invalid")
-    validate_inventory_attestation(bundle["inventoryAttestation"], binding, scope)
-    finalized_core = {key: value for key, value in envelope.items() if key != "generatedAt"}
     attestation = bundle["inventoryAttestation"]
+    validate_inventory_attestation(attestation, binding, scope)
+    if (
+        attestation.get("reviewId") != envelope.get("reviewId")
+        or attestation.get("inputHash") != envelope.get("inputHash")
+    ):
+        raise BootstrapBindingError(
+            "Bootstrap Acceptance Auditor attestation is bound to another run"
+        )
+    finalized_core = {key: value for key, value in envelope.items() if key != "generatedAt"}
     result = {
         "controlPlaneRevision": envelope["controlPlaneRevision"],
-        "bootstrapRunDir": run_dir.relative_to(root).as_posix(),
+        "bootstrapRunDir": normalized_run_dir,
         "finalizedRun": envelope,
         "finalizedRunCoreHash": _canonical_hash(finalized_core),
         "inventoryAttestation": attestation,
         "inventoryAttestationHash": _canonical_hash(attestation),
         "bindingHash": _canonical_hash(binding),
         "scopeHash": _canonical_hash(scope),
+        "candidateIdentity": candidate_identity,
+        "candidateIdentityHash": _canonical_hash(candidate_identity),
+        "bootstrapRoutePath": bootstrap_route["path"],
+        "bootstrapRouteFileHash": bootstrap_route["fileHash"],
+        "bootstrapRouteHash": bootstrap_route["routeHash"],
     }
     validate_import_envelope(
-        {"schemaVersion": "bootstrap-import-envelope.v2", **result, "authorizes": []},
-        {"binding": binding, "scope": scope},
+        {"schemaVersion": "bootstrap-import-envelope.v3", **result, "authorizes": []},
+        {
+            "bootstrapRunDir": normalized_run_dir,
+            "binding": binding,
+            "scope": scope,
+            "candidateIdentity": candidate_identity,
+            "bootstrapRoute": bootstrap_route,
+        },
     )
     return result
 

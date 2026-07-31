@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -62,6 +63,165 @@ def _publish_new_json(output_path: str, value: dict) -> dict:
     except FileExistsError as exc:
         raise InputError("output is append-only") from exc
     return value
+
+
+def _file_hash(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def load_current_candidate_identity(repository_root: Path, prepared_run_input: str) -> dict:
+    root = repository_root.resolve()
+    prepared = (root / prepared_run_input).resolve()
+    try:
+        prepared.relative_to(root)
+    except ValueError as exc:
+        raise InputError("prepared acceptance run input escapes repository root") from exc
+    document = _read_json(str(prepared))
+    required = {"schemaVersion", "input", "inputHash", "candidateCustody", "authorizes"}
+    if (
+        not isinstance(document, dict)
+        or set(document) not in {frozenset(required), frozenset(required | {"knowledgeContext"})}
+        or document.get("schemaVersion") != "acceptance-run-input.v1"
+        or document.get("authorizes") != []
+    ):
+        raise InputError("prepared acceptance run input is invalid")
+    run_input = document["input"]
+    validate_run_input(run_input)
+    if document.get("inputHash") != canonical_hash(run_input):
+        raise InputError("prepared acceptance run input hash is stale")
+    target_root = Path(run_input["target"]).resolve()
+    try:
+        target_root.relative_to(root)
+    except ValueError as exc:
+        raise InputError("acceptance target escapes repository root") from exc
+
+    def target_file(relative_path: str, label: str) -> Path:
+        value = (target_root / relative_path).resolve()
+        try:
+            value.relative_to(target_root)
+        except ValueError as exc:
+            raise InputError(f"{label} escapes acceptance target") from exc
+        return value
+
+    baseline_path = target_file(
+        run_input["baseline_content_manifest_path"], "baseline content manifest"
+    )
+    candidate_path = target_file(
+        run_input["candidate_content_manifest_path"], "candidate content manifest"
+    )
+    baseline = _read_json(str(baseline_path))
+    candidate = _read_json(str(candidate_path))
+    validate_baseline_manifest(baseline)
+    validate_candidate_manifest(candidate, baseline)
+    if sorted(run_input.get("changed_paths", [])) != candidate_changed_paths(candidate):
+        raise InputError("run input changed_paths does not match candidate content manifest")
+    if canonical_hash(baseline) != run_input["baseline_content_manifest_hash"]:
+        raise InputError("baseline content manifest hash is stale")
+    if canonical_hash(candidate) != run_input["candidate_content_manifest_hash"]:
+        raise InputError("candidate content manifest hash is stale")
+    if verify_manifest_bytes(target_root, run_input, baseline, candidate) != document["candidateCustody"]:
+        raise InputError("prepared acceptance candidate custody is stale")
+    knowledge_context = document.get("knowledgeContext")
+    if not isinstance(knowledge_context, dict) or not isinstance(
+        knowledge_context.get("path"), str
+    ):
+        raise InputError("prepared acceptance knowledge context is required for exact reuse")
+    if freeze_knowledge_context(target_root, knowledge_context["path"]) != knowledge_context:
+        raise InputError("prepared acceptance knowledge context is stale")
+    knowledge_path = target_file(knowledge_context["path"], "knowledge context")
+    knowledge_artifacts = [{
+        "path": knowledge_path.relative_to(root).as_posix(),
+        "sha256": knowledge_context["sha256"],
+    }]
+    for decision in knowledge_context.get("acceptedDecisions", []):
+        knowledge_candidate = (
+            decision.get("candidate") if isinstance(decision, dict) else None
+        )
+        path = (
+            knowledge_candidate.get("path")
+            if isinstance(knowledge_candidate, dict)
+            else None
+        )
+        digest = (
+            knowledge_candidate.get("source_sha256")
+            if isinstance(knowledge_candidate, dict)
+            else None
+        )
+        if (
+            not isinstance(path, str)
+            or not path
+            or not isinstance(digest, str)
+            or not digest
+        ):
+            raise InputError("prepared acceptance knowledge source is invalid")
+        knowledge_artifacts.append({
+            "path": path.replace("\\", "/"),
+            "sha256": digest if digest.startswith("sha256:") else "sha256:" + digest,
+        })
+    knowledge_by_path: dict[str, str] = {}
+    for artifact in knowledge_artifacts:
+        previous = knowledge_by_path.setdefault(artifact["path"], artifact["sha256"])
+        if previous != artifact["sha256"]:
+            raise InputError("prepared acceptance knowledge source binding is ambiguous")
+    changed_path_bindings: list[dict[str, str]] = []
+
+    def add_changed_binding(relative_path: str, state: str, digest: str) -> None:
+        changed_path_bindings.append({
+            "path": (target_root / relative_path).resolve().relative_to(root).as_posix(),
+            "state": state,
+            "sha256": digest,
+        })
+
+    for item in candidate["files"]:
+        kind = item["change_type"]
+        if kind == "unchanged":
+            continue
+        if kind in {"deleted", "renamed"}:
+            add_changed_binding(item["baseline_path"], "deleted", item["baseline_sha256"])
+        elif kind == "copied":
+            add_changed_binding(item["baseline_path"], "present", item["baseline_sha256"])
+        if kind != "deleted":
+            add_changed_binding(item["candidate_path"], "present", item["candidate_sha256"])
+    changed_path_bindings.sort(key=lambda item: item["path"])
+    changed_paths = [item["path"] for item in changed_path_bindings]
+    if changed_paths != sorted(
+        (target_root / path).resolve().relative_to(root).as_posix()
+        for path in candidate_changed_paths(candidate)
+    ):
+        raise InputError("candidate changed path bindings are incomplete")
+    identity = {
+        "schemaVersion": "acceptance-bootstrap-reuse-candidate.v2",
+        "acceptanceRunInputPath": prepared.relative_to(root).as_posix(),
+        "acceptanceRunInputFileHash": _file_hash(prepared),
+        "candidateContentManifestPath": candidate_path.relative_to(root).as_posix(),
+        "candidateContentManifestFileHash": _file_hash(candidate_path),
+        "candidateContentManifestHash": canonical_hash(candidate),
+        "candidateCustodyHash": canonical_hash(document["candidateCustody"]),
+        "changedPaths": changed_paths,
+        "changedPathBindings": changed_path_bindings,
+        "knowledgeArtifacts": [
+            {"path": path, "sha256": knowledge_by_path[path]}
+            for path in sorted(knowledge_by_path)
+        ],
+        "authorizes": [],
+    }
+    return {**identity, "identityHash": canonical_hash(identity)}
+
+
+def load_current_bootstrap_route(repository_root: Path, route_path: str) -> dict:
+    root = repository_root.resolve()
+    route_file = (root / route_path).resolve()
+    try:
+        relative = route_file.relative_to(root).as_posix()
+    except ValueError as exc:
+        raise InputError("bootstrap route escapes repository root") from exc
+    route = _read_json(str(route_file))
+    return {
+        "path": relative,
+        "fileHash": _file_hash(route_file),
+        "route": route,
+        "routeHash": canonical_hash(route),
+    }
 
 
 def prepare_run(input_path: str, output_path: str, knowledge_context_path: str | None = None) -> dict:
@@ -421,16 +581,27 @@ def import_bootstrap_launch_authorization_command(request_path: str, output_path
 
 def import_bootstrap_command(request_path: str, output_path: str) -> dict:
     request = _read_json(request_path)
-    required = {"repositoryRoot", "bootstrapRunDir", "binding", "scope"}
+    required = {
+        "repositoryRoot", "bootstrapRunDir", "binding", "scope", "acceptanceRunInput",
+        "bootstrapRoute",
+    }
     if not isinstance(request, dict) or set(request) != required:
         raise InputError("bootstrap import request fields are invalid")
     try:
+        repository_root = Path(request["repositoryRoot"])
+        candidate_identity = load_current_candidate_identity(
+            repository_root, request["acceptanceRunInput"]
+        )
+        bootstrap_route = load_current_bootstrap_route(
+            repository_root, request["bootstrapRoute"]
+        )
         result = load_verified_bootstrap_import(
-            Path(request["repositoryRoot"]), request["bootstrapRunDir"], request["binding"], request["scope"],
+            repository_root, request["bootstrapRunDir"], request["binding"], request["scope"],
+            candidate_identity, bootstrap_route,
         )
     except (TypeError, ValueError) as exc:
         raise InputError(str(exc)) from exc
-    return _publish_new_json(output_path, {"schemaVersion": "bootstrap-import-envelope.v2", **result, "authorizes": []})
+    return _publish_new_json(output_path, {"schemaVersion": "bootstrap-import-envelope.v3", **result, "authorizes": []})
 
 
 def map_findings_command(request_path: str, output_path: str) -> dict:

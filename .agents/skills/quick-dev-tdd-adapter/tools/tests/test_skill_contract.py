@@ -29,6 +29,9 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("root-cause callsite inventory", content)
         self.assertIn("controlled producer/consumer composition receipts", content)
         self.assertIn("Do not select an acceptance route", content)
+        self.assertIn("does not read Bootstrap history baselines", content)
+        self.assertIn("Refactor Acceptance alone may", content)
+        self.assertIn("historical match never changes", content)
 
     def test_version_currency_commit_gate_is_conditional_and_non_authoritative(self) -> None:
         content = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")

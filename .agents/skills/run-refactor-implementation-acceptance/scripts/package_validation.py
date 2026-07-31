@@ -26,6 +26,7 @@ REQUIRED = (
     "policies/phase-service-code-review.v1.json",
     "schemas/acceptance-run-input.v1.schema.json",
     "schemas/bootstrap-import-envelope.v2.schema.json",
+    "schemas/bootstrap-import-envelope.v3.schema.json",
     "schemas/acceptance-repair-completeness.v1.schema.json",
     "schemas/acceptance-baseline-content-manifest.v1.schema.json",
     "schemas/acceptance-candidate-content-manifest.v1.schema.json",

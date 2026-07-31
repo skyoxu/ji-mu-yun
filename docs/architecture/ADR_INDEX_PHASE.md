@@ -19,6 +19,7 @@ This index tracks Phase service ADRs for the hosted Phase A/B platform and Phase
 - ADR-0049: Bootstrap Controller-Owned Coverage And Attempt Retry (extends ADR-0041; complements ADR-0045; supersedes neither) - `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`
 - ADR-0050: Knowledge Publication LKG Recovery And Generation Retention (extends ADR-0048; complements ADR-0044; supersedes neither) - `docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md`
 - ADR-0051: Bootstrap Lineage Family And Bounded Repair Re-entry (extends ADR-0041; complements ADR-0045/0049; supersedes none) - `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`
+- ADR-0052: Bootstrap Review Calibration And Exact Envelope Reuse (extends ADR-0041/0051; supersedes none) - `docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md`
 
 ## Proposed
 

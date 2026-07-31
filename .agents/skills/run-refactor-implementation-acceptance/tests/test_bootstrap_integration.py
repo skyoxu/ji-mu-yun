@@ -14,6 +14,99 @@ sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 
 class BootstrapIntegrationTests(unittest.TestCase):
+    def finalized_envelope(
+        self,
+        *,
+        candidate_binding_hash: str = "sha256:" + "2" * 64,
+        review_id: str = "review-1",
+        input_hash: str = "sha256:" + "1" * 64,
+        lineage_family_id: str | None = None,
+    ) -> dict:
+        hashes = {
+            "reviewInput": "sha256:" + "1" * 64,
+            "preflightResult": "sha256:" + "2" * 64,
+            "gateState": "sha256:" + "3" * 64,
+            "candidates": "sha256:" + "4" * 64,
+            "rejections": "sha256:" + "5" * 64,
+            "finalResult": "sha256:" + "6" * 64,
+            "dispositions": "sha256:" + "7" * 64,
+            "metrics": "sha256:" + "8" * 64,
+            "verifierOutput": "sha256:" + "9" * 64,
+            "p2Dispositions": None,
+        }
+        return {
+            "schemaVersion": "bootstrap-finalized-run-validation.v3",
+            "validationStatus": "passed",
+            "reviewId": review_id,
+            "changeId": "stable-change",
+            "lineageFamilyId": lineage_family_id or self.review_scope()["lineageFamilyId"],
+            "fullReviewRound": 1,
+            "profileName": "bootstrap-implementation-conformance",
+            "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
+            "routeVersion": "bootstrap-review-route.v2",
+            "controlPlaneRevision": "bootstrap-control-plane.v2",
+            "policyRevision": "sha256:" + "a" * 64,
+            "profileHash": "sha256:" + "b" * 64,
+            "authorityRevision": "0123456789abcdef0123456789abcdef01234567",
+            "inputHash": input_hash,
+            "authorityContextHash": "sha256:" + "d" * 64,
+            "candidateBindingHash": candidate_binding_hash,
+            "reviewEntryDecisionHash": None,
+            "repairReviewDeltaHash": None,
+            "artifactHashes": hashes,
+            "finalStatus": "clean",
+            "findingClosure": {
+                "candidateCount": 0,
+                "visibleFindingCount": 0,
+                "confirmedCount": 0,
+                "advisoryCount": 0,
+                "unverifiedCount": 0,
+                "refutedCount": 0,
+                "p2FixedCount": 0,
+                "p2DeferredCount": 0,
+                "p2RefutedCount": 0,
+            },
+            "validatorRevision": "bootstrap-finalized-run-validator.v4",
+            "validatorHash": "sha256:" + "e" * 64,
+            "authorizes": [],
+            "doesNotAuthorize": [
+                "plan-acceptance", "implementation-acceptance", "protected-handoff",
+                "release", "commit", "done",
+            ],
+            "generatedAt": "2026-07-30T00:00:00Z",
+        }
+
+    def candidate_identity(self) -> dict:
+        import bootstrap_integration
+
+        value = {
+            "schemaVersion": "acceptance-bootstrap-reuse-candidate.v2",
+            "acceptanceRunInputPath": "execution-plans/example/acceptance-run.json",
+            "acceptanceRunInputFileHash": "sha256:" + "d" * 64,
+            "candidateContentManifestPath": "execution-plans/example/candidate.json",
+            "candidateContentManifestFileHash": "sha256:" + "e" * 64,
+            "candidateContentManifestHash": "sha256:" + "f" * 64,
+            "candidateCustodyHash": "sha256:" + "1" * 64,
+            "changedPaths": ["PhaseA.Platform/Feature.cs"],
+            "changedPathBindings": [{
+                "path": "PhaseA.Platform/Feature.cs",
+                "state": "present",
+                "sha256": "sha256:" + "0" * 64,
+            }],
+            "knowledgeArtifacts": [
+                {
+                    "path": "AGENTS.md",
+                    "sha256": "sha256:" + "a" * 64,
+                },
+                {
+                    "path": "execution-plans/example/knowledge-context.json",
+                    "sha256": "sha256:" + "b" * 64,
+                },
+            ],
+            "authorizes": [],
+        }
+        return {**value, "identityHash": bootstrap_integration._canonical_hash(value)}
+
     def minimal_scope_inputs(self) -> dict[str, list[str]]:
         return {
             "implementation_plan": ["execution-plans/example/plan.md"],
@@ -21,6 +114,9 @@ class BootstrapIntegrationTests(unittest.TestCase):
             "affected_consumers": ["PhaseA.Platform/Program.cs"],
             "tests_and_acceptance": [
                 "PhaseA.Platform.Tests/FeatureTests.cs",
+                "execution-plans/example/acceptance-run.json",
+                "execution-plans/example/candidate.json",
+                "execution-plans/example/knowledge-context.json",
                 "logs/ci/example/command-registry.json",
             ],
             "runtime_evidence": [
@@ -30,6 +126,48 @@ class BootstrapIntegrationTests(unittest.TestCase):
             "repository_rules": ["AGENTS.md"],
             "referenced_standards": ["docs/standards/phase-service.md"],
         }
+
+    def review_scope(self) -> dict:
+        import bootstrap_integration
+
+        return bootstrap_integration.build_minimal_review_scope(self.minimal_scope_inputs())
+
+    def bootstrap_route(self) -> dict:
+        import bootstrap_integration
+
+        scope = self.review_scope()
+        lineage = self.lineage_state(scope["lineageFamilyId"], 0)
+        projection = bootstrap_integration.project_bounded_review_route(
+            {"requirement": "required"}, scope, lineage, None
+        )
+        route = {
+            "schemaVersion": "implementation-acceptance-bootstrap-route.v1",
+            "bootstrapExecutionState": {"state": "awaiting_external"},
+            "reviewScope": scope,
+            **projection,
+            "nextAction": "run-phase-bootstrap-review",
+            "authorizes": [],
+        }
+        return {
+            "path": "logs/ci/example/bootstrap-route.json",
+            "fileHash": "sha256:" + "b" * 64,
+            "route": route,
+            "routeHash": bootstrap_integration._canonical_hash(route),
+        }
+
+    def bootstrap_artifacts(self) -> list[dict]:
+        scope = self.review_scope()
+        candidate = self.candidate_identity()
+        hashes = {path: "sha256:" + "0" * 64 for path in scope["scope"]}
+        hashes.update({
+            candidate["acceptanceRunInputPath"]: candidate["acceptanceRunInputFileHash"],
+            candidate["candidateContentManifestPath"]: candidate["candidateContentManifestFileHash"],
+            **{item["path"]: item["sha256"] for item in candidate["knowledgeArtifacts"]},
+        })
+        return [
+            {"artifact": path, "sha256": digest}
+            for path, digest in sorted(hashes.items())
+        ]
 
     def lineage_state(self, family_id: str, rounds: int) -> dict:
         import bootstrap_integration
@@ -199,7 +337,147 @@ class BootstrapIntegrationTests(unittest.TestCase):
         with self.assertRaisesRegex(bootstrap_integration.BootstrapBindingError, "fields"):
             bootstrap_integration.validate_import_envelope(incomplete, expected)
 
-    def test_import_v2_producer_output_satisfies_the_only_v2_consumer_contract(self) -> None:
+    def test_current_candidate_identity_revalidates_manifest_bytes_and_custody(self) -> None:
+        import acceptance_cli
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "execution-plans" / "example"
+            target.mkdir(parents=True)
+            baseline = {"baseline": "current"}
+            candidate = {
+                "candidate": "current",
+                "files": [{
+                    "change_type": "modified",
+                    "baseline_path": "Feature.cs",
+                    "baseline_sha256": "sha256:" + "1" * 64,
+                    "candidate_path": "Feature.cs",
+                    "candidate_sha256": "sha256:" + "2" * 64,
+                }],
+            }
+            (target / "baseline.json").write_text(json.dumps(baseline), encoding="utf-8")
+            (target / "candidate.json").write_text(json.dumps(candidate), encoding="utf-8")
+            run_input = {
+                "target": str(target),
+                "changed_paths": ["Feature.cs"],
+                "baseline_content_manifest_path": "baseline.json",
+                "baseline_content_manifest_hash": acceptance_cli.canonical_hash(baseline),
+                "candidate_content_manifest_path": "candidate.json",
+                "candidate_content_manifest_hash": acceptance_cli.canonical_hash(candidate),
+            }
+            custody = {"schemaVersion": "acceptance-candidate-custody.v1", "authorizes": []}
+            knowledge = {
+                "path": "knowledge-context.json",
+                "sha256": "sha256:" + "a" * 64,
+                "acceptedDecisions": [{
+                    "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64}
+                }],
+            }
+            prepared = {
+                "schemaVersion": "acceptance-run-input.v1",
+                "input": run_input,
+                "inputHash": acceptance_cli.canonical_hash(run_input),
+                "candidateCustody": custody,
+                "knowledgeContext": knowledge,
+                "authorizes": [],
+            }
+            prepared_path = target / "acceptance-run.json"
+            prepared_path.write_text(json.dumps(prepared), encoding="utf-8")
+            with (
+                mock.patch.object(acceptance_cli, "validate_run_input"),
+                mock.patch.object(acceptance_cli, "validate_baseline_manifest"),
+                mock.patch.object(acceptance_cli, "validate_candidate_manifest"),
+                mock.patch.object(
+                    acceptance_cli,
+                    "candidate_changed_paths",
+                    side_effect=lambda value: ["Feature.cs"] if "candidate" in value else self.fail(
+                        "changed paths were derived from a non-candidate document"
+                    ),
+                ),
+                mock.patch.object(
+                    acceptance_cli, "verify_manifest_bytes", return_value=custody
+                ),
+                mock.patch.object(
+                    acceptance_cli, "freeze_knowledge_context", return_value=knowledge
+                ),
+            ):
+                identity = acceptance_cli.load_current_candidate_identity(
+                    root, prepared_path.relative_to(root).as_posix()
+                )
+                self.assertEqual(
+                    "execution-plans/example/candidate.json",
+                    identity["candidateContentManifestPath"],
+                )
+                self.assertEqual(
+                    ["AGENTS.md", "execution-plans/example/knowledge-context.json"],
+                    [item["path"] for item in identity["knowledgeArtifacts"]],
+                )
+                self.assertEqual([{
+                    "path": "execution-plans/example/Feature.cs",
+                    "state": "present",
+                    "sha256": "sha256:" + "2" * 64,
+                }], identity["changedPathBindings"])
+                with mock.patch.object(
+                    acceptance_cli, "candidate_changed_paths", return_value=["unexpected.txt"]
+                ):
+                    with self.assertRaisesRegex(acceptance_cli.InputError, "changed_paths"):
+                        acceptance_cli.load_current_candidate_identity(
+                            root, prepared_path.relative_to(root).as_posix()
+                        )
+                (target / "candidate.json").write_text(
+                    json.dumps({"candidate": "drifted"}), encoding="utf-8"
+                )
+                with self.assertRaisesRegex(
+                    acceptance_cli.InputError, "candidate content manifest hash is stale"
+                ):
+                    acceptance_cli.load_current_candidate_identity(
+                        root, prepared_path.relative_to(root).as_posix()
+                    )
+
+    def test_current_candidate_identity_revalidates_knowledge_context(self) -> None:
+        import acceptance_cli
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "execution-plans" / "example"
+            target.mkdir(parents=True)
+            baseline = {"baseline": "current"}
+            candidate = {"candidate": "current"}
+            (target / "baseline.json").write_text(json.dumps(baseline), encoding="utf-8")
+            (target / "candidate.json").write_text(json.dumps(candidate), encoding="utf-8")
+            run_input = {
+                "target": str(target), "changed_paths": [],
+                "baseline_content_manifest_path": "baseline.json",
+                "baseline_content_manifest_hash": acceptance_cli.canonical_hash(baseline),
+                "candidate_content_manifest_path": "candidate.json",
+                "candidate_content_manifest_hash": acceptance_cli.canonical_hash(candidate),
+            }
+            custody = {"schemaVersion": "acceptance-candidate-custody.v1", "authorizes": []}
+            knowledge = {"path": "knowledge-context.v1.json", "sha256": "sha256:" + "a" * 64}
+            prepared = {
+                "schemaVersion": "acceptance-run-input.v1", "input": run_input,
+                "inputHash": acceptance_cli.canonical_hash(run_input),
+                "candidateCustody": custody, "knowledgeContext": knowledge, "authorizes": [],
+            }
+            prepared_path = target / "acceptance-run.json"
+            prepared_path.write_text(json.dumps(prepared), encoding="utf-8")
+            with (
+                mock.patch.object(acceptance_cli, "validate_run_input"),
+                mock.patch.object(acceptance_cli, "validate_baseline_manifest"),
+                mock.patch.object(acceptance_cli, "validate_candidate_manifest"),
+                mock.patch.object(acceptance_cli, "candidate_changed_paths", return_value=[]),
+                mock.patch.object(acceptance_cli, "verify_manifest_bytes", return_value=custody),
+                mock.patch.object(
+                    acceptance_cli, "freeze_knowledge_context",
+                    return_value={**knowledge, "sha256": "sha256:" + "b" * 64},
+                ),
+            ):
+                with self.assertRaisesRegex(acceptance_cli.InputError, "knowledge context is stale"):
+                    acceptance_cli.load_current_candidate_identity(
+                        root, prepared_path.relative_to(root).as_posix()
+                    )
+
+    def test_import_v3_producer_output_satisfies_the_exact_reuse_contract(self) -> None:
         import acceptance_cli
         import bootstrap_integration
 
@@ -227,7 +505,7 @@ class BootstrapIntegrationTests(unittest.TestCase):
             "schemaVersion": "bootstrap-acceptance-inventory-attestation.v1",
             "reviewId": "review-1",
             "attemptId": "attempt-1",
-            "inputHash": "sha256:" + "c" * 64,
+            "inputHash": "sha256:" + "1" * 64,
             "capabilityId": "acceptance-inventory-attestation",
             "capabilityVersion": "1.0",
             "producerRole": "acceptance_auditor",
@@ -235,13 +513,8 @@ class BootstrapIntegrationTests(unittest.TestCase):
             "scopeHash": scope["scopeHash"],
             "coverage": [],
         }
-        finalized = {
-            "schemaVersion": "bootstrap-finalized-run-validation.v1",
-            "validationStatus": "passed",
-            "finalStatus": "clean",
-            "controlPlaneRevision": "bootstrap-control-plane.v2",
-            "generatedAt": "2026-07-30T00:00:00Z",
-        }
+        finalized = self.finalized_envelope(candidate_binding_hash="sha256:" + "d" * 64)
+        bootstrap_route = self.bootstrap_route()
         result = {
             "controlPlaneRevision": "bootstrap-control-plane.v2",
             "bootstrapRunDir": "logs/ci/review-1",
@@ -253,23 +526,71 @@ class BootstrapIntegrationTests(unittest.TestCase):
             "inventoryAttestationHash": bootstrap_integration._canonical_hash(attestation),
             "bindingHash": bootstrap_integration._canonical_hash(binding),
             "scopeHash": bootstrap_integration._canonical_hash(scope),
+            "candidateIdentity": self.candidate_identity(),
+            "candidateIdentityHash": bootstrap_integration._canonical_hash(
+                self.candidate_identity()
+            ),
+            "bootstrapRoutePath": bootstrap_route["path"],
+            "bootstrapRouteFileHash": bootstrap_route["fileHash"],
+            "bootstrapRouteHash": bootstrap_route["routeHash"],
         }
         request = {
             "repositoryRoot": ".",
             "bootstrapRunDir": "logs/ci/review-1",
             "binding": binding,
             "scope": scope,
+            "acceptanceRunInput": "execution-plans/example/acceptance-run.json",
+            "bootstrapRoute": bootstrap_route["path"],
         }
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             request_path, output_path = root / "request.json", root / "output.json"
             request_path.write_text(json.dumps(request), encoding="utf-8")
-            with mock.patch.object(acceptance_cli, "load_verified_bootstrap_import", return_value=result):
+            with (
+                mock.patch.object(
+                    acceptance_cli, "load_current_candidate_identity",
+                    return_value=self.candidate_identity(),
+                ),
+                mock.patch.object(
+                    acceptance_cli, "load_verified_bootstrap_import", return_value=result
+                ),
+                mock.patch.object(
+                    acceptance_cli, "load_current_bootstrap_route",
+                    return_value=bootstrap_route,
+                ),
+            ):
                 produced = acceptance_cli.import_bootstrap_command(
                     str(request_path), str(output_path)
                 )
         bootstrap_integration.validate_import_envelope(
-            produced, {"binding": binding, "scope": scope}
+            produced, {
+                "bootstrapRunDir": "logs/ci/review-1",
+                "binding": binding,
+                "scope": scope,
+                "candidateIdentity": self.candidate_identity(),
+                "bootstrapRoute": bootstrap_route,
+            }
+        )
+        legacy_finalized = {
+            "schemaVersion": "bootstrap-finalized-run-validation.v2",
+            "validationStatus": "passed",
+            "finalStatus": "clean",
+            "controlPlaneRevision": "bootstrap-control-plane.v2",
+        }
+        legacy = {
+            "schemaVersion": "bootstrap-import-envelope.v2",
+            "controlPlaneRevision": "bootstrap-control-plane.v2",
+            "bootstrapRunDir": "logs/ci/legacy-review",
+            "finalizedRun": legacy_finalized,
+            "finalizedRunCoreHash": bootstrap_integration._canonical_hash(legacy_finalized),
+            "inventoryAttestation": attestation,
+            "inventoryAttestationHash": bootstrap_integration._canonical_hash(attestation),
+            "bindingHash": bootstrap_integration._canonical_hash(binding),
+            "scopeHash": bootstrap_integration._canonical_hash(scope),
+            "authorizes": [],
+        }
+        bootstrap_integration.validate_import_envelope(
+            legacy, {"binding": binding, "scope": scope}
         )
         tampered = copy.deepcopy(produced)
         tampered["finalizedRun"]["finalStatus"] = "blocked"
@@ -277,8 +598,144 @@ class BootstrapIntegrationTests(unittest.TestCase):
             bootstrap_integration.BootstrapBindingError, "invalid"
         ):
             bootstrap_integration.validate_import_envelope(
-                tampered, {"binding": binding, "scope": scope}
+                tampered, {
+                    "bootstrapRunDir": "logs/ci/review-1",
+                    "binding": binding,
+                    "scope": scope,
+                    "candidateIdentity": self.candidate_identity(),
+                    "bootstrapRoute": bootstrap_route,
+                }
             )
+
+        drifted_attestation = copy.deepcopy(produced)
+        drifted_attestation["inventoryAttestation"]["reviewId"] = "another-review"
+        drifted_attestation["inventoryAttestationHash"] = bootstrap_integration._canonical_hash(
+            drifted_attestation["inventoryAttestation"]
+        )
+        with self.assertRaisesRegex(
+            bootstrap_integration.BootstrapBindingError, "does not bind"
+        ):
+            bootstrap_integration.validate_import_envelope(drifted_attestation, {
+                "bootstrapRunDir": "logs/ci/review-1",
+                "binding": binding,
+                "scope": scope,
+                "candidateIdentity": self.candidate_identity(),
+                "bootstrapRoute": bootstrap_route,
+            })
+
+        legacy = copy.deepcopy(produced)
+        legacy["finalizedRun"]["schemaVersion"] = "bootstrap-finalized-run-validation.v1"
+        legacy["finalizedRun"].pop("candidateBindingHash")
+        legacy["finalizedRunCoreHash"] = bootstrap_integration._canonical_hash({
+            key: value for key, value in legacy["finalizedRun"].items() if key != "generatedAt"
+        })
+        with self.assertRaisesRegex(bootstrap_integration.BootstrapBindingError, "invalid"):
+            bootstrap_integration.validate_import_envelope(legacy, {
+                "bootstrapRunDir": "logs/ci/review-1",
+                "binding": binding, "scope": scope,
+                "candidateIdentity": self.candidate_identity(),
+                "bootstrapRoute": bootstrap_route,
+            })
+
+        minimal = copy.deepcopy(produced)
+        minimal["finalizedRun"] = {
+            "schemaVersion": "bootstrap-finalized-run-validation.v3",
+            "validationStatus": "passed",
+            "finalStatus": "clean",
+            "controlPlaneRevision": "bootstrap-control-plane.v2",
+            "candidateBindingHash": "sha256:" + "d" * 64,
+        }
+        minimal["finalizedRunCoreHash"] = bootstrap_integration._canonical_hash(
+            minimal["finalizedRun"]
+        )
+        with self.assertRaisesRegex(bootstrap_integration.BootstrapBindingError, "invalid"):
+            bootstrap_integration.validate_import_envelope(minimal, {
+                "bootstrapRunDir": "logs/ci/review-1",
+                "binding": binding,
+                "scope": scope,
+                "candidateIdentity": self.candidate_identity(),
+                "bootstrapRoute": bootstrap_route,
+            })
+
+        drifted_dir = copy.deepcopy(produced)
+        drifted_dir["bootstrapRunDir"] = "logs/ci/another-review"
+        with self.assertRaisesRegex(bootstrap_integration.BootstrapBindingError, "invalid"):
+            bootstrap_integration.validate_import_envelope(drifted_dir, {
+                "bootstrapRunDir": "logs/ci/review-1",
+                "binding": binding,
+                "scope": scope,
+                "candidateIdentity": self.candidate_identity(),
+                "bootstrapRoute": bootstrap_route,
+            })
+
+        manual_route = copy.deepcopy(bootstrap_route)
+        manual_route["route"]["routeKind"] = "manual_pause"
+        manual_route["route"]["nextAction"] = "manual-pause"
+        manual_route["routeHash"] = bootstrap_integration._canonical_hash(
+            manual_route["route"]
+        )
+        with self.assertRaisesRegex(
+            bootstrap_integration.BootstrapBindingError, "not eligible"
+        ):
+            bootstrap_integration.validate_import_envelope(produced, {
+                "bootstrapRunDir": "logs/ci/review-1",
+                "binding": binding,
+                "scope": scope,
+                "candidateIdentity": self.candidate_identity(),
+                "bootstrapRoute": manual_route,
+            })
+
+    def test_import_v2_schema_remains_legacy_compatible_and_v3_owns_exact_reuse(self) -> None:
+        legacy = json.loads(
+            (SKILL_ROOT / "schemas" / "bootstrap-import-envelope.v2.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual("bootstrap-import-envelope.v2", legacy["properties"]["schemaVersion"]["const"])
+        self.assertNotIn("candidateIdentity", legacy["required"])
+        self.assertEqual(
+            ["bootstrap-finalized-run-validation.v1", "bootstrap-finalized-run-validation.v2"],
+            legacy["properties"]["finalizedRun"]["properties"]["schemaVersion"]["enum"],
+        )
+        exact = json.loads(
+            (SKILL_ROOT / "schemas" / "bootstrap-import-envelope.v3.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual("bootstrap-import-envelope.v3", exact["properties"]["schemaVersion"]["const"])
+        self.assertIn("bootstrapRouteHash", exact["required"])
+        self.assertIn("changedPaths", exact["properties"]["candidateIdentity"]["required"])
+        self.assertIn(
+            "changedPathBindings",
+            exact["properties"]["candidateIdentity"]["required"],
+        )
+        self.assertIn("knowledgeArtifacts", exact["properties"]["candidateIdentity"]["required"])
+        self.assertIn("reviewId", exact["$defs"]["finalizedRun"]["required"])
+        self.assertIn(
+            "capabilityId", exact["$defs"]["inventoryAttestation"]["required"]
+        )
+        import bootstrap_integration
+
+        bootstrap = bootstrap_integration._load_bootstrap_module(SKILL_ROOT.parents[2])
+        runtime = bootstrap.load_schema_runtime()
+        invalid = {
+            "schemaVersion": "bootstrap-import-envelope.v3",
+            "controlPlaneRevision": "bootstrap-control-plane.v2",
+            "bootstrapRunDir": "logs/review-1",
+            "finalizedRun": {},
+            "finalizedRunCoreHash": "sha256:" + "1" * 64,
+            "inventoryAttestation": {},
+            "inventoryAttestationHash": "sha256:" + "2" * 64,
+            "bindingHash": "sha256:" + "3" * 64,
+            "scopeHash": "sha256:" + "4" * 64,
+            "candidateIdentity": self.candidate_identity(),
+            "candidateIdentityHash": "sha256:" + "5" * 64,
+            "bootstrapRoutePath": "logs/bootstrap-route.json",
+            "bootstrapRouteFileHash": "sha256:" + "6" * 64,
+            "bootstrapRouteHash": "sha256:" + "7" * 64,
+            "authorizes": [],
+        }
+        self.assertTrue(runtime.schema_errors(exact, invalid, {}))
 
     def test_verified_import_reads_acceptance_role_bundle(self) -> None:
         import bootstrap_integration
@@ -289,32 +746,298 @@ class BootstrapIntegrationTests(unittest.TestCase):
             bundle_path = run_dir / "reviewer-outputs" / "acceptance_auditor.role-bundle.json"
             bundle_path.parent.mkdir(parents=True)
             (run_dir / "review-input.json").write_text("{}", encoding="utf-8")
+            finalized = self.finalized_envelope()
+            attestation = {
+                "status": "complete",
+                "reviewId": finalized["reviewId"],
+                "inputHash": finalized["inputHash"],
+            }
             bundle_path.write_text(
-                json.dumps({"inventoryAttestation": {"status": "complete"}}),
+                json.dumps({"inventoryAttestation": attestation}),
                 encoding="utf-8",
             )
             module = mock.Mock()
             module.read_json.side_effect = lambda path: json.loads(path.read_text(encoding="utf-8"))
-            module.validate_finalized_run_evidence.return_value = {
-                "schemaVersion": "bootstrap-finalized-run-validation.v2",
-                "validationStatus": "passed",
-                "finalStatus": "clean",
-                "controlPlaneRevision": "bootstrap-control-plane.v2",
-                "generatedAt": "2026-07-30T00:00:00Z",
+            candidate_identity = self.candidate_identity()
+            bootstrap_route = self.bootstrap_route()
+            manifest = {
+                "candidateBindingHash": "sha256:" + "2" * 64,
+                "profileName": "bootstrap-implementation-conformance",
+                "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
+                "artifacts": self.bootstrap_artifacts(),
+                "contextClassArtifacts": bootstrap_route["route"]["reviewScope"][
+                    "contextClasses"
+                ],
             }
+            module.load_run.return_value = (run_dir, manifest, root)
+            module.validate_finalized_run_evidence.return_value = finalized
+            module.build_lineage_state.return_value = self.lineage_state(
+                finalized["lineageFamilyId"], 1
+            )
             with (
                 mock.patch.object(bootstrap_integration, "_load_bootstrap_module", return_value=module),
                 mock.patch.object(bootstrap_integration, "validate_inventory_attestation"),
                 mock.patch.object(bootstrap_integration, "validate_import_envelope"),
             ):
                 result = bootstrap_integration.load_verified_bootstrap_import(
-                    root, "logs/review-1", {}, {}
+                    root, "logs/review-1", {}, {}, candidate_identity, bootstrap_route
                 )
-        self.assertEqual({"status": "complete"}, result["inventoryAttestation"])
+                incomplete_manifest = copy.deepcopy(manifest)
+                missing_scope_path = "docs/standards/phase-service.md"
+                incomplete_manifest["artifacts"] = [
+                    artifact
+                    for artifact in incomplete_manifest["artifacts"]
+                    if artifact["artifact"] != missing_scope_path
+                ]
+                module.load_run.return_value = (run_dir, incomplete_manifest, root)
+                with self.assertRaisesRegex(
+                    bootstrap_integration.BootstrapBindingError,
+                    "complete review scope",
+                ):
+                    bootstrap_integration.load_verified_bootstrap_import(
+                        root, "logs/review-1", {}, {}, candidate_identity, bootstrap_route
+                    )
+                outside_candidate = copy.deepcopy(candidate_identity)
+                outside_candidate["changedPaths"] = ["PhaseA.Platform/Outside.cs"]
+                outside_candidate["changedPathBindings"][0]["path"] = (
+                    "PhaseA.Platform/Outside.cs"
+                )
+                stable = {
+                    key: value
+                    for key, value in outside_candidate.items()
+                    if key != "identityHash"
+                }
+                outside_candidate["identityHash"] = bootstrap_integration._canonical_hash(stable)
+                module.load_run.return_value = (run_dir, manifest, root)
+                with self.assertRaisesRegex(
+                    bootstrap_integration.BootstrapBindingError,
+                    "changed-production scope",
+                ):
+                    bootstrap_integration.load_verified_bootstrap_import(
+                        root, "logs/review-1", {}, {}, outside_candidate, bootstrap_route
+                    )
+                module.build_lineage_state.return_value = self.lineage_state(
+                    finalized["lineageFamilyId"], 2
+                )
+                with self.assertRaisesRegex(
+                    bootstrap_integration.BootstrapBindingError,
+                    "current lineage transition",
+                ):
+                    bootstrap_integration.load_verified_bootstrap_import(
+                        root, "logs/review-1", {}, {}, candidate_identity, bootstrap_route
+                    )
+                module.build_lineage_state.return_value = self.lineage_state(
+                    finalized["lineageFamilyId"], 1
+                )
+                drifted_candidate = copy.deepcopy(candidate_identity)
+                drifted_candidate["changedPathBindings"][0]["sha256"] = (
+                    "sha256:" + "9" * 64
+                )
+                stable = {
+                    key: value
+                    for key, value in drifted_candidate.items()
+                    if key != "identityHash"
+                }
+                drifted_candidate["identityHash"] = (
+                    bootstrap_integration._canonical_hash(stable)
+                )
+                with self.assertRaisesRegex(
+                    bootstrap_integration.BootstrapBindingError,
+                    "reviewed bytes",
+                ):
+                    bootstrap_integration.load_verified_bootstrap_import(
+                        root, "logs/review-1", {}, {}, drifted_candidate, bootstrap_route
+                    )
+                alternate_route = copy.deepcopy(bootstrap_route)
+                context = alternate_route["route"]["reviewScope"]["contextClasses"]
+                tests_path = context["tests-and-acceptance"].pop()
+                runtime_path = context["runtime-evidence"].pop()
+                context["tests-and-acceptance"].append(runtime_path)
+                context["runtime-evidence"].append(tests_path)
+                context["tests-and-acceptance"].sort()
+                context["runtime-evidence"].sort()
+                scope = alternate_route["route"]["reviewScope"]
+                stable_scope = {key: value for key, value in scope.items() if key != "scopeHash"}
+                scope["scopeHash"] = bootstrap_integration._canonical_hash(stable_scope)
+                alternate_route["routeHash"] = bootstrap_integration._canonical_hash(
+                    alternate_route["route"]
+                )
+                with self.assertRaisesRegex(
+                    bootstrap_integration.BootstrapBindingError,
+                    "context classes",
+                ):
+                    bootstrap_integration.load_verified_bootstrap_import(
+                        root, "logs/review-1", {}, {}, candidate_identity, alternate_route
+                    )
+                (run_dir / "run-seal.json").write_text(
+                    "{}\n", encoding="utf-8", newline="\n"
+                )
+                with self.assertRaisesRegex(
+                    bootstrap_integration.BootstrapBindingError,
+                    "active finalized run",
+                ):
+                    bootstrap_integration.load_verified_bootstrap_import(
+                        root, "logs/review-1", {}, {}, candidate_identity, bootstrap_route
+                    )
+        self.assertEqual(attestation, result["inventoryAttestation"])
         self.assertIn(
             "acceptance_auditor.role-bundle.json",
             str(module.read_json.call_args_list[-1].args[0]),
         )
+
+    def test_verified_import_rejects_candidate_not_bound_by_bootstrap_artifacts(self) -> None:
+        import bootstrap_integration
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            run_dir = root / "logs" / "review-1"
+            run_dir.mkdir(parents=True)
+            candidate_identity = self.candidate_identity()
+            bootstrap_route = self.bootstrap_route()
+            manifest = {
+                "candidateBindingHash": "sha256:" + "2" * 64,
+                "profileName": "bootstrap-implementation-conformance",
+                "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
+                "contextClassArtifacts": bootstrap_route["route"]["reviewScope"][
+                    "contextClasses"
+                ],
+                "artifacts": [{
+                    "artifact": candidate_identity["acceptanceRunInputPath"],
+                    "sha256": "sha256:" + "9" * 64,
+                }],
+            }
+            module = mock.Mock()
+            module.load_run.return_value = (run_dir, manifest, root)
+            finalized = self.finalized_envelope()
+            module.validate_finalized_run_evidence.return_value = finalized
+            module.read_json.return_value = {"inventoryAttestation": {"status": "complete"}}
+            module.build_lineage_state.return_value = self.lineage_state(
+                finalized["lineageFamilyId"], 1
+            )
+            with (
+                mock.patch.object(
+                    bootstrap_integration, "_load_bootstrap_module", return_value=module
+                ),
+                self.assertRaisesRegex(
+                    bootstrap_integration.BootstrapBindingError,
+                    "does not bind the current Acceptance candidate",
+                ),
+            ):
+                bootstrap_integration.load_verified_bootstrap_import(
+                    root, "logs/review-1", {}, {}, candidate_identity, bootstrap_route
+                )
+
+    def test_round_two_import_rejects_a_different_launch_route_binding(self) -> None:
+        import bootstrap_integration
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            run_dir = root / "logs" / "review-2"
+            bundle_path = run_dir / "reviewer-outputs" / "acceptance_auditor.role-bundle.json"
+            bundle_path.parent.mkdir(parents=True)
+            bundle_path.write_text(
+                json.dumps({"inventoryAttestation": {"status": "complete"}}),
+                encoding="utf-8",
+            )
+            candidate_identity = self.candidate_identity()
+            scope = self.review_scope()
+            family_id = scope["lineageFamilyId"]
+            predecessor = self.lineage_state(family_id, 1)
+            projection = bootstrap_integration.project_bounded_review_route(
+                {"requirement": "required"},
+                scope,
+                predecessor,
+                self.repair_completeness(family_id, 1),
+            )
+            route = {
+                "schemaVersion": "implementation-acceptance-bootstrap-route.v1",
+                "bootstrapExecutionState": {"state": "awaiting_external"},
+                "reviewScope": scope,
+                **projection,
+                "nextAction": "run-phase-bootstrap-review",
+                "authorizes": [],
+            }
+            bootstrap_route = {
+                "path": "logs/ci/example/round-2-route.json",
+                "fileHash": "sha256:" + "b" * 64,
+                "route": route,
+                "routeHash": bootstrap_integration._canonical_hash(route),
+            }
+            finalized = self.finalized_envelope(
+                review_id="review-2",
+                input_hash="sha256:" + "2" * 64,
+                lineage_family_id=family_id,
+            )
+            finalized["fullReviewRound"] = 2
+            manifest = {
+                "candidateBindingHash": finalized["candidateBindingHash"],
+                "profileName": "bootstrap-implementation-conformance",
+                "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
+                "contextClassArtifacts": scope["contextClasses"],
+                "artifacts": self.bootstrap_artifacts(),
+                "acceptanceRepairRoute": {
+                    "path": bootstrap_route["path"],
+                    "sha256": bootstrap_route["fileHash"],
+                },
+            }
+            module = mock.Mock()
+            module.load_run.return_value = (run_dir, manifest, root)
+            module.validate_finalized_run_evidence.return_value = finalized
+            module.read_json.side_effect = lambda path: json.loads(
+                path.read_text(encoding="utf-8")
+            )
+            module.build_lineage_state.return_value = self.lineage_state(family_id, 2)
+            alternate_route = copy.deepcopy(bootstrap_route)
+            alternate_route["path"] = "logs/ci/example/other-round-2-route.json"
+            alternate_route["fileHash"] = "sha256:" + "c" * 64
+            with (
+                mock.patch.object(
+                    bootstrap_integration, "_load_bootstrap_module", return_value=module
+                ),
+                self.assertRaisesRegex(
+                    bootstrap_integration.BootstrapBindingError,
+                    "another Acceptance repair route",
+                ),
+            ):
+                bootstrap_integration.load_verified_bootstrap_import(
+                    root,
+                    "logs/review-2",
+                    {},
+                    {},
+                    candidate_identity,
+                    alternate_route,
+                )
+
+    def test_verified_import_rejects_non_conformance_profile(self) -> None:
+        import bootstrap_integration
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            run_dir = root / "logs" / "review-1"
+            run_dir.mkdir(parents=True)
+            manifest = {
+                "candidateBindingHash": "sha256:" + "2" * 64,
+                "profileName": "bootstrap-upstream-plan",
+                "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
+                "artifacts": [],
+            }
+            module = mock.Mock()
+            module.load_run.return_value = (run_dir, manifest, root)
+            module.validate_finalized_run_evidence.return_value = self.finalized_envelope()
+            module.read_json.return_value = {"inventoryAttestation": {}}
+            with (
+                mock.patch.object(
+                    bootstrap_integration, "_load_bootstrap_module", return_value=module
+                ),
+                self.assertRaisesRegex(
+                    bootstrap_integration.BootstrapBindingError,
+                    "implementation-conformance profile",
+                ),
+            ):
+                bootstrap_integration.load_verified_bootstrap_import(
+                    root, "logs/review-1", {}, {}, self.candidate_identity(),
+                    self.bootstrap_route(),
+                )
 
     def test_execution_projection_keeps_required_bootstrap_awaiting_authorization(self) -> None:
         import bootstrap_integration
@@ -341,7 +1064,7 @@ class BootstrapIntegrationTests(unittest.TestCase):
             },
             set(result["contextClasses"]),
         )
-        self.assertEqual(9, len(result["scope"]))
+        self.assertEqual(12, len(result["scope"]))
         self.assertIsNone(result["directoryScopeAttestation"])
         self.assertEqual("execution-plans/example", result["lineageAnchor"])
         self.assertTrue(result["lineageFamilyId"].startswith("ria-"))

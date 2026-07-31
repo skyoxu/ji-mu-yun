@@ -12,6 +12,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -57,6 +58,107 @@ class BootstrapReviewCliTests(unittest.TestCase):
         (self.run_dir / relative).write_text(
             json.dumps(value, indent=2) + "\n", encoding="utf-8", newline="\n"
         )
+
+    def write_cost_attempt(
+        self,
+        run_dir: Path,
+        attempt_id: str,
+        role: str,
+        tokens: int,
+        *,
+        input_hash: str,
+        model: str = "gpt-test",
+        start_minute: int = 0,
+        duration_seconds: int = 60,
+        terminal_type: str = "attempt-completed",
+        exit_code: int = 0,
+    ) -> list[dict]:
+        attempt = run_dir / "attempts" / attempt_id
+        attempt.mkdir(parents=True)
+        start = datetime(2026, 7, 30, tzinfo=timezone.utc) + timedelta(minutes=start_minute)
+        process_completed = start + timedelta(seconds=max(1, duration_seconds // 2))
+        terminal = start + timedelta(seconds=duration_seconds)
+        timestamp = lambda value: value.isoformat().replace("+00:00", "Z")
+        operation_id = (
+            "verifier" if role == "independent_verifier"
+            else (f"model-probe:{model}" if role == "model_probe" else f"reviewer:{role}")
+        )
+        pid = 1000 + start_minute
+        write_set = [] if role == "model_probe" else [f"logs/cost/{attempt_id}.json"]
+        helper_path = attempt / "access-handshake-helper.py"
+        handshake_request_path = attempt / "access-handshake-request.json"
+        helper_path.write_text("# test helper\n", encoding="utf-8", newline="\n")
+        handshake_request_path.write_text("{}\n", encoding="utf-8", newline="\n")
+        request = {
+            "schemaVersion": "bootstrap-attempt-request.v1",
+            "attemptId": attempt_id,
+            "role": role,
+            "inputHash": input_hash,
+            "argv": [
+                "codex", "exec", "--sandbox", "workspace-write", "-m", model,
+                "-c", "model_reasoning_effort=high", "--json",
+                "--output-last-message", "candidate-output.json", "-",
+            ],
+            "shell": False,
+            "environmentAllowlist": list(bootstrap.ENVIRONMENT_ALLOWLIST),
+            "environmentEvidence": {},
+            "typedPlaceholders": bootstrap.TYPED_PLACEHOLDERS,
+            "writeSet": write_set,
+            "executionReadSet": [],
+            "dependencyClosure": [],
+            "handshakeHelperPath": helper_path.relative_to(run_dir).as_posix(),
+            "handshakeHelperHash": bootstrap.file_hash(helper_path),
+            "handshakeRequestPath": handshake_request_path.relative_to(run_dir).as_posix(),
+            "handshakeRequestHash": bootstrap.file_hash(handshake_request_path),
+            "createdAt": timestamp(start),
+        }
+        if role != "model_probe":
+            request.update({
+                "runDirectory": str(run_dir),
+                "artifactViewManifestPath": str(run_dir / "artifact-view/manifest.json"),
+                "artifactViewManifestHash": "sha256:" + "f" * 64,
+            })
+        (attempt / "request.json").write_text(
+            json.dumps(request), encoding="utf-8", newline="\n"
+        )
+        (attempt / "process-result.json").write_text(json.dumps({
+            "schemaVersion": "bootstrap-process-result.v1",
+            "attemptId": attempt_id,
+            "pid": pid,
+            "exitCode": exit_code,
+            "completedAt": timestamp(process_completed),
+        }), encoding="utf-8", newline="\n")
+        (attempt / "token-usage.json").write_text(json.dumps({
+            "schemaVersion": "bootstrap-token-usage.v1", "tokens": tokens,
+        }), encoding="utf-8", newline="\n")
+        (attempt / "stdout.log").write_text(json.dumps({
+            "type": "turn.completed", "usage": {"total_tokens": tokens},
+        }) + "\n", encoding="utf-8", newline="\n")
+        (attempt / "stderr.log").write_text("", encoding="utf-8", newline="\n")
+        if terminal_type == "attempt-completed":
+            (attempt / "candidate-output.json").write_text(
+                "{}\n", encoding="utf-8", newline="\n"
+            )
+            (attempt / "access-handshake.json").write_text(
+                "{}\n", encoding="utf-8", newline="\n"
+            )
+        common = {
+            "attemptId": attempt_id,
+            "operationId": operation_id,
+            "role": role,
+            "pid": pid,
+            "processIdentity": f"test-process:{pid}",
+            "writeSet": write_set,
+        }
+        events = [{"eventType": "attempt-started", "timestamp": timestamp(start), **common}]
+        if exit_code == 0:
+            events.append({
+                "eventType": "attempt-process-completed",
+                "timestamp": timestamp(process_completed),
+                **common,
+            })
+        events.append({"eventType": terminal_type, "timestamp": timestamp(terminal), **common})
+        return events
 
     def write_synthetic_blocked_result(
         self, finding_id: str, *, semantic_key: str | None = None
@@ -902,21 +1004,30 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "schemas/bootstrap-lineage-adoption.v1.schema.json",
             "schemas/bootstrap-finalized-run-validation.v1.schema.json",
             "schemas/bootstrap-finalized-run-validation.v2.schema.json",
+            "schemas/bootstrap-finalized-run-validation.v3.schema.json",
             "schemas/bootstrap-historical-policy-revisions.v1.schema.json",
+            "schemas/bootstrap-review-history-index.v1.schema.json",
+            "schemas/bootstrap-review-cost-calibration.v1.schema.json",
+            "schemas/bootstrap-review-calibration-corpus.v1.schema.json",
             "references/review-profiles.v1.json",
             "references/historical-policy-revisions.v1.json",
+            "references/review-cost-calibration.v1.json",
         ):
             value = json.loads((plan_root / relative).read_text(encoding="utf-8"))
             self.assertIsInstance(value, dict)
 
-    def test_finalized_v1_schema_remains_frozen_while_v2_owns_lineage_fields(self) -> None:
+    def test_finalized_legacy_schemas_remain_frozen_while_v3_owns_reuse_binding(self) -> None:
         plan_root = MODULE_PATH.parents[1]
         v1 = json.loads((plan_root / "schemas/bootstrap-finalized-run-validation.v1.schema.json").read_text(encoding="utf-8"))
         v2 = json.loads((plan_root / "schemas/bootstrap-finalized-run-validation.v2.schema.json").read_text(encoding="utf-8"))
+        v3 = json.loads((plan_root / "schemas/bootstrap-finalized-run-validation.v3.schema.json").read_text(encoding="utf-8"))
         self.assertNotIn("lineageFamilyId", v1["required"])
         self.assertIn("lineageFamilyId", v2["required"])
+        self.assertNotIn("candidateBindingHash", v2["required"])
+        self.assertIn("candidateBindingHash", v3["required"])
         self.assertEqual("bootstrap-finalized-run-validator.v2", v1["properties"]["validatorRevision"]["const"])
         self.assertEqual("bootstrap-finalized-run-validator.v3", v2["properties"]["validatorRevision"]["const"])
+        self.assertEqual("bootstrap-finalized-run-validator.v4", v3["properties"]["validatorRevision"]["const"])
 
     def test_prepare_rejects_scope_outside_repository_before_writing(self) -> None:
         outside = Path(self.temp.name) / "outside.md"
@@ -1452,7 +1563,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
         envelope = json.loads(output.read_text(encoding="utf-8"))
         manifest = self.read_json("review-input.json")
-        self.assertEqual("bootstrap-finalized-run-validation.v2", envelope["schemaVersion"])
+        self.assertEqual("bootstrap-finalized-run-validation.v3", envelope["schemaVersion"])
         self.assertEqual("passed", envelope["validationStatus"])
         self.assertEqual("clean", envelope["finalStatus"])
         self.assertEqual([], envelope["authorizes"])
@@ -1472,7 +1583,20 @@ class BootstrapReviewCliTests(unittest.TestCase):
             envelope["artifactHashes"]["verifierOutput"],
         )
         self.assertIsNone(envelope["artifactHashes"]["p2Dispositions"])
-        self.assertEqual("bootstrap-finalized-run-validator.v3", envelope["validatorRevision"])
+        self.assertEqual("bootstrap-finalized-run-validator.v4", envelope["validatorRevision"])
+        self.assertEqual(manifest["candidateBindingHash"], envelope["candidateBindingHash"])
+        legacy_v2 = dict(envelope)
+        legacy_v2["schemaVersion"] = "bootstrap-finalized-run-validation.v2"
+        legacy_v2["validatorRevision"] = "bootstrap-finalized-run-validator.v3"
+        legacy_v2.pop("candidateBindingHash")
+        self.assertEqual([], bootstrap.schema_validation_errors(
+            "bootstrap-finalized-run-validation.v2.schema.json", legacy_v2
+        ))
+        replayed_legacy_v3 = dict(envelope)
+        replayed_legacy_v3["candidateBindingHash"] = None
+        self.assertEqual([], bootstrap.schema_validation_errors(
+            "bootstrap-finalized-run-validation.v3.schema.json", replayed_legacy_v3
+        ))
 
     def test_validate_finalized_run_rejects_stale_verifier_output(self) -> None:
         self.prepare()
@@ -3394,6 +3518,499 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertGreaterEqual(estimate["estimatedTotalTokens"]["p90"], 500000)
         self.assertEqual(17, estimate["basisSampleCount"])
         self.assertEqual("low", estimate["confidence"])
+        self.assertEqual("bootstrap-cost-calibration-legacy-v1", estimate["costCalibration"]["calibrationId"])
+        self.assertEqual("conservative-fallback", estimate["costCalibrationCohortId"])
+        replayed = bootstrap.review_cost_estimate(
+            profile, artifacts, calibration_ref=estimate["costCalibration"]
+        )
+        self.assertEqual(estimate, replayed)
+        legacy = bootstrap.legacy_review_cost_estimate(profile, artifacts)
+        self.assertNotIn("costCalibration", legacy)
+        self.assertNotIn("schemaVersion", legacy)
+        self.assertEqual(
+            max(1, int(sum(item["sizeBytes"] for item in artifacts) // 4 * 1.25)),
+            legacy["estimatedInputTokens"]["high"],
+        )
+        self.assertTrue(legacy["highCost"])
+        self.assertEqual(17, legacy["basisSampleCount"])
+
+    def test_cost_calibration_rejects_inverted_percentiles(self) -> None:
+        calibration = json.loads(bootstrap.COST_CALIBRATION_PATH.read_text(encoding="utf-8"))
+        calibration["conservativeFallback"]["tokenMultiplierP90"] = 0.1
+        with mock.patch.object(bootstrap, "read_json", return_value=calibration), mock.patch.object(
+            bootstrap, "schema_validation_errors", return_value=[]
+        ):
+            with self.assertRaisesRegex(bootstrap.BootstrapError, "inverted percentiles"):
+                bootstrap.load_cost_calibration()
+
+    def test_cost_calibration_rejects_non_finite_statistics(self) -> None:
+        calibration = json.loads(bootstrap.COST_CALIBRATION_PATH.read_text(encoding="utf-8"))
+        calibration["conservativeFallback"]["tokenMultiplierP90"] = math.inf
+        with mock.patch.object(bootstrap, "read_json", return_value=calibration), mock.patch.object(
+            bootstrap, "schema_validation_errors", return_value=[]
+        ):
+            with self.assertRaisesRegex(bootstrap.BootstrapError, "non-finite"):
+                bootstrap.load_cost_calibration()
+        calibration["conservativeFallback"]["tokenMultiplierP90"] = 10 ** 10000
+        with mock.patch.object(bootstrap, "read_json", return_value=calibration), mock.patch.object(
+            bootstrap, "schema_validation_errors", return_value=[]
+        ):
+            with self.assertRaisesRegex(bootstrap.BootstrapError, "non-finite"):
+                bootstrap.load_cost_calibration()
+
+    def test_cost_estimate_rejects_corrupt_promoted_calibration_binding(self) -> None:
+        profile = bootstrap.load_profile("bootstrap-skill-route")
+        with mock.patch.object(bootstrap, "COST_CALIBRATION_HASH", "sha256:" + "0" * 64):
+            with self.assertRaisesRegex(bootstrap.BootstrapError, "hash-invalid"):
+                bootstrap.review_cost_estimate(profile, [])
+
+    def test_cost_estimate_uses_matching_promoted_cohort(self) -> None:
+        profile = bootstrap.load_profile("bootstrap-skill-route")
+        artifacts = [{
+            "artifact": "scope/item.md", "sha256": "sha256:" + "a" * 64,
+            "sizeBytes": 4000, "textEncoding": "utf-8", "lineCount": 40,
+        }]
+        match = {
+            "reviewProfile": profile["reviewProfile"],
+            "policyRevision": profile["policyRevision"],
+            "routeVersion": profile["routeVersion"],
+            "controlPlaneRevision": profile["controlPlaneRevision"],
+            "model": profile["codexExecPolicy"]["preferredModel"],
+            "reasoningProfile": bootstrap.value_hash(
+                profile["codexExecPolicy"]["reasoningEffortByRole"]
+            ),
+            "fullReviewRound": 1,
+            "workloadBucket": "small",
+        }
+        statistics = {
+            "basisSampleCount": 6, "confidence": "medium",
+            "tokenMultiplierP50": 1.0, "tokenMultiplierP90": 2.0,
+            "minimumTotalTokensP50": 30000, "minimumTotalTokensP90": 60000,
+            "tokensPerWallMinute": 12000, "retryRisk": "low",
+        }
+        calibration = {
+            "conservativeFallback": statistics,
+            "cohorts": [{"cohortId": "matched", "match": match, "statistics": statistics}],
+        }
+        with mock.patch.object(
+            bootstrap, "load_cost_calibration",
+            return_value=(calibration, {"calibrationId": "test-calibration"}),
+        ):
+            estimate = bootstrap.review_cost_estimate(profile, artifacts)
+        self.assertEqual("matched", estimate["costCalibrationCohortId"])
+        self.assertEqual(6, estimate["basisSampleCount"])
+
+    def test_structured_cost_evidence_separates_roles_probe_and_retry(self) -> None:
+        run_dir = self.repo / "cost-run"
+        input_hash = "sha256:" + "a" * 64
+        manifest = {
+            "executionMode": "codex-exec",
+            "inputHash": input_hash,
+            "requiredLayers": ["blind_hunter"],
+            "executionReadSet": [],
+            "dependencyClosure": [],
+            "artifactView": {
+                "manifestPath": "artifact-view/manifest.json",
+                "manifestHash": "sha256:" + "f" * 64,
+            },
+            "codexExecPolicy": {
+                "preferredModel": "gpt-test",
+                "fallbackModels": [],
+                "reasoningEffortByRole": {
+                    "blind_hunter": "high", "independent_verifier": "high",
+                },
+            },
+        }
+        run_dir.mkdir()
+        (run_dir / "review-candidates.json").write_text(json.dumps({
+            "findings": [{"proposedSeverity": "P1"}],
+        }), encoding="utf-8", newline="\n")
+        events = []
+        events.extend(self.write_cost_attempt(
+            run_dir, "reviewer-failed", "blind_hunter", 100,
+            input_hash=input_hash, start_minute=0, terminal_type="attempt-failed",
+            exit_code=1,
+        ))
+        events.extend(self.write_cost_attempt(
+            run_dir, "reviewer-success", "blind_hunter", 120,
+            input_hash=input_hash, start_minute=3,
+        ))
+        events.extend(self.write_cost_attempt(
+            run_dir, "verifier-attempt", "independent_verifier", 40,
+            input_hash=input_hash, start_minute=5,
+        ))
+        events.extend(self.write_cost_attempt(
+            run_dir, "probe-attempt", "model_probe", 10,
+            input_hash=input_hash, start_minute=7,
+        ))
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            result = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertTrue(result["complete"])
+        self.assertEqual(220, result["reviewerTokens"])
+        self.assertEqual(40, result["verifierTokens"])
+        self.assertEqual(10, result["probeTokens"])
+        self.assertEqual(100, result["transportRetryTokens"])
+        self.assertEqual(270, result["totalTokens"])
+        self.assertEqual("gpt-test", result["selectedModel"])
+        self.assertEqual(240.0, result["wallSeconds"])
+        self.assertEqual([], result["exclusionReasons"])
+
+        (run_dir / "attempts" / "reviewer-success" / "candidate-output.json").unlink()
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            incomplete = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertFalse(incomplete["complete"])
+        self.assertIn(
+            "missing-completed-attempt-evidence:reviewer-success:candidate-output.json",
+            incomplete["exclusionReasons"],
+        )
+
+    def test_structured_cost_evidence_rejects_orphan_attempt_and_mixed_models(self) -> None:
+        run_dir = self.repo / "mixed-cost-run"
+        run_dir.mkdir()
+        input_hash = "sha256:" + "b" * 64
+        manifest = {
+            "executionMode": "codex-exec",
+            "inputHash": input_hash,
+            "requiredLayers": ["blind_hunter"],
+            "executionReadSet": [],
+            "dependencyClosure": [],
+            "artifactView": {
+                "manifestPath": "artifact-view/manifest.json",
+                "manifestHash": "sha256:" + "f" * 64,
+            },
+            "codexExecPolicy": {
+                "preferredModel": "gpt-a",
+                "fallbackModels": ["gpt-b"],
+                "reasoningEffortByRole": {"blind_hunter": "high"},
+            },
+        }
+        events = self.write_cost_attempt(
+            run_dir, "first", "blind_hunter", 10,
+            input_hash=input_hash, model="gpt-a", start_minute=0,
+        )
+        events += self.write_cost_attempt(
+            run_dir, "second", "blind_hunter", 10,
+            input_hash=input_hash, model="gpt-b", start_minute=2,
+        )
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            result = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertFalse(result["complete"])
+        self.assertFalse(result["modelConsistent"])
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events[:3]):
+            orphaned = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertFalse(orphaned["complete"])
+
+    def test_codex_token_usage_reads_machine_jsonl(self) -> None:
+        stdout = "\n".join([
+            json.dumps({"type": "item.completed"}),
+            json.dumps({"type": "turn.completed", "usage": {"input_tokens": 12, "output_tokens": 3}}),
+        ])
+        self.assertEqual(15, bootstrap.codex_token_usage(stdout))
+        self.assertIsNone(bootstrap.codex_token_usage("not-json"))
+
+    def test_structured_cost_evidence_rejects_sidecar_and_lifecycle_drift(self) -> None:
+        run_dir = self.repo / "drifted-cost-run"
+        run_dir.mkdir()
+        input_hash = "sha256:" + "c" * 64
+        manifest = {
+            "executionMode": "codex-exec",
+            "inputHash": input_hash,
+            "requiredLayers": list(bootstrap.LAYERS),
+            "executionReadSet": [],
+            "dependencyClosure": [],
+            "artifactView": {
+                "manifestPath": "artifact-view/manifest.json",
+                "manifestHash": "sha256:" + "f" * 64,
+            },
+            "codexExecPolicy": {
+                "preferredModel": "gpt-test",
+                "fallbackModels": [],
+                "reasoningEffortByRole": {
+                    "blind_hunter": "high", "edge_case_hunter": "high",
+                    "acceptance_auditor": "high", "independent_verifier": "high",
+                },
+            },
+        }
+        events = self.write_cost_attempt(
+            run_dir, "reviewer", "blind_hunter", 25,
+            input_hash=input_hash, start_minute=0,
+        )
+        events += self.write_cost_attempt(
+            run_dir, "probe", "model_probe", 5,
+            input_hash=input_hash, start_minute=4,
+        )
+        token_path = run_dir / "attempts" / "reviewer" / "token-usage.json"
+        token_path.write_text(json.dumps({
+            "schemaVersion": "bootstrap-token-usage.v1", "tokens": 999,
+        }), encoding="utf-8", newline="\n")
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            mismatch = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertFalse(mismatch["complete"])
+        self.assertIn("token-jsonl-mismatch:reviewer", mismatch["exclusionReasons"])
+        self.assertIn(
+            "required-role-not-complete:edge_case_hunter", mismatch["exclusionReasons"]
+        )
+        self.assertIn(
+            "required-role-not-complete:acceptance_auditor", mismatch["exclusionReasons"]
+        )
+
+        token_path.write_text(json.dumps({
+            "schemaVersion": "bootstrap-token-usage.v1", "tokens": 25,
+        }), encoding="utf-8", newline="\n")
+        request_path = run_dir / "attempts" / "reviewer" / "request.json"
+        request = json.loads(request_path.read_text(encoding="utf-8"))
+        request["argv"][request["argv"].index("model_reasoning_effort=high")] = (
+            "model_reasoning_effort=medium"
+        )
+        request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            policy_drift = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertIn(
+            "invalid-execution-policy-binding:reviewer",
+            policy_drift["exclusionReasons"],
+        )
+        request["argv"][request["argv"].index("model_reasoning_effort=medium")] = (
+            "model_reasoning_effort=high"
+        )
+        request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
+        missing_request = run_dir / "attempts" / "missing-request"
+        missing_request.mkdir()
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            missing = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertIn("missing-request:missing-request", missing["exclusionReasons"])
+        missing_request.rmdir()
+
+        duplicate = [events[0], *events]
+        with mock.patch.object(bootstrap, "read_process_events", return_value=duplicate):
+            duplicated = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertFalse(duplicated["complete"])
+        self.assertIn(
+            "invalid-lifecycle-cardinality:reviewer", duplicated["exclusionReasons"]
+        )
+
+        request_path = run_dir / "attempts" / "reviewer" / "request.json"
+        request = json.loads(request_path.read_text(encoding="utf-8"))
+        request.pop("environmentEvidence")
+        request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            incomplete_request = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertIn(
+            "invalid-request-binding:reviewer", incomplete_request["exclusionReasons"]
+        )
+
+        lifecycle_without_identity = [dict(event) for event in events]
+        lifecycle_without_identity[0].pop("processIdentity")
+        with mock.patch.object(
+            bootstrap, "read_process_events", return_value=lifecycle_without_identity
+        ):
+            incomplete_event = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertIn(
+            "invalid-lifecycle-execution-facts:reviewer",
+            incomplete_event["exclusionReasons"],
+        )
+
+    def test_build_review_baseline_keeps_manual_cost_operational_only(self) -> None:
+        self.prepare()
+        self.complete_layers()
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        prepared_dir = self.repo / "prepared-history-run"
+        prepared_dir.mkdir()
+        prepared_manifest = self.read_json("review-input.json")
+        prepared_manifest["reviewId"] = "prepared-history-001"
+        prepared_manifest.pop("inputHash")
+        prepared_manifest["inputHash"] = bootstrap.value_hash(prepared_manifest)
+        (prepared_dir / "review-input.json").write_text(
+            json.dumps(prepared_manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        out_dir = self.repo / "logs" / "review-governance" / "baseline-test"
+        self.assertEqual(0, bootstrap.main([
+            "build-review-baseline", "--repository-root", str(self.repo),
+            "--run-dir", str(self.run_dir), "--run-dir", str(prepared_dir),
+            "--out-dir", str(out_dir),
+        ]))
+        history = json.loads((out_dir / "review-history-index.v1.json").read_text(encoding="utf-8"))
+        calibration = json.loads((out_dir / "review-cost-calibration-candidate.v1.json").read_text(encoding="utf-8"))
+        self.assertEqual([], history["authorizes"])
+        self.assertEqual(2, history["runCount"])
+        self.assertEqual(1, history["eligibleRunCount"])
+        finalized_row = next(
+            item for item in history["runs"] if item["runDirectory"] == "bootstrap-run"
+        )
+        prepared_row = next(
+            item for item in history["runs"] if item["runDirectory"] == "prepared-history-run"
+        )
+        self.assertTrue(finalized_row["eligibleForSemanticStatistics"])
+        self.assertFalse(finalized_row["eligibleForCostCalibration"])
+        self.assertEqual(0, finalized_row["findingClosure"]["candidateCount"])
+        self.assertEqual(
+            finalized_row["findingClosure"], history["semanticYield"]["totals"]
+        )
+        self.assertEqual(0.0, history["semanticYield"]["confirmedPerEligibleRun"])
+        self.assertIn(
+            "not-a-codex-exec-run", finalized_row["costEvidence"]["exclusionReasons"]
+        )
+        self.assertEqual("prepared", prepared_row["runExecutionState"])
+        self.assertFalse(prepared_row["eligibleForSemanticStatistics"])
+        self.assertIsNone(prepared_row["findingClosure"])
+        self.assertEqual([], calibration["cohorts"])
+        self.assertEqual(0, calibration["eligibleSampleCount"])
+        self.assertEqual([], calibration["authorizes"])
+        self.assertEqual(1, bootstrap.main([
+            "build-review-baseline", "--repository-root", str(self.repo),
+            "--run-dir", str(self.run_dir), "--run-dir", str(prepared_dir),
+            "--out-dir", str(out_dir),
+        ]))
+        self.assertEqual(1, bootstrap.main([
+            "build-review-baseline", "--repository-root", str(self.repo),
+            "--run-dir", str(self.run_dir),
+            "--out-dir", str(self.repo / "baseline-outside-logs"),
+        ]))
+
+        failed_out = self.repo / "logs" / "review-governance" / "baseline-write-failure"
+        original_write = bootstrap.write_json
+        def fail_second_document(path, value, **kwargs):
+            if Path(path).name == "review-cost-calibration-candidate.v1.json":
+                raise bootstrap.BootstrapError("synthetic publication failure")
+            return original_write(path, value, **kwargs)
+        with mock.patch.object(bootstrap, "write_json", side_effect=fail_second_document):
+            with self.assertRaisesRegex(bootstrap.BootstrapError, "synthetic publication failure"):
+                bootstrap.build_review_baseline(
+                    self.repo, [str(self.run_dir), str(prepared_dir)], failed_out
+                )
+        self.assertFalse(failed_out.exists())
+        self.assertEqual([], list(failed_out.parent.glob(f".{failed_out.name}.stage-*")))
+
+    def test_baseline_accepts_historical_access_proof_and_run_seal(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        self.complete_access_proof(manifest)
+        bootstrap.validate_baseline_formal_sidecars(self.run_dir, manifest)
+        self.assertEqual(0, bootstrap.main([
+            "seal-run", "--run-dir", str(self.run_dir), "--state", "abandoned",
+            "--reason", "operator-replaced-run",
+        ]))
+        bootstrap.validate_baseline_formal_sidecars(self.run_dir, manifest)
+
+    def test_historical_launch_replay_ignores_current_environment_identity(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        self.complete_preflight()
+        self.authorize_launch()
+        manifest = self.read_json("review-input.json")
+        with mock.patch.object(
+            bootstrap,
+            "child_environment",
+            return_value=({}, {"PATH": "drifted-after-review"}),
+        ):
+            with self.assertRaisesRegex(
+                bootstrap.BootstrapError, "environment identity has drifted"
+            ):
+                bootstrap.validate_launch_authorization(self.run_dir, manifest)
+            bootstrap.validate_launch_authorization(
+                self.run_dir, manifest, historical_replay=True
+            )
+
+    def test_historical_finalized_replay_uses_frozen_candidate_bytes(self) -> None:
+        self.prepare()
+        self.complete_layers({"blind_hunter": [self.candidate()]})
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        finding_id = self.read_json("review-candidates.json")["findings"][0]["findingId"]
+        verifier = self.read_json("verifier-output.json")
+        verifier["decisions"] = [{
+            "findingId": finding_id,
+            "decision": "refuted",
+            "reason": "Frozen context shows the reported outcome is already guarded",
+            "evidenceChecked": ["upstream-plan/plan.md:1", "upstream-plan/plan.md:3"],
+        }]
+        self.write_json("verifier-output.json", verifier)
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        manifest = self.read_json("review-input.json")
+        self.target.write_text(
+            "# Plan\n\nRepaired after the finalized review.\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        with self.assertRaisesRegex(
+            bootstrap.BootstrapError, "no longer reproduce review-candidates"
+        ):
+            bootstrap.validate_finalized_run_evidence(
+                self.run_dir, manifest, self.repo
+            )
+        envelope = bootstrap.validate_finalized_run_evidence(
+            self.run_dir, manifest, self.repo, historical_replay=True
+        )
+        self.assertEqual("clean", envelope["finalStatus"])
+
+    def test_baseline_replays_round_one_after_round_two_is_consumed(self) -> None:
+        family_id = "baseline-replay-family"
+        self.prepare(lineage_family_id=family_id)
+        self.write_synthetic_blocked_result("BSR-BASELINE-ROUND-ONE")
+        round_one = self.run_dir
+        self.target.write_text(
+            "# Plan\n\nRound two repair.\n", encoding="utf-8", newline="\n"
+        )
+        self.run_dir = self.repo / "bootstrap-run-round-2"
+        self.prepare(
+            review_id="baseline-replay-round-two",
+            lineage_family_id=family_id,
+            review_round=2,
+            predecessor_run=round_one,
+        )
+        self.write_synthetic_blocked_result("BSR-BASELINE-ROUND-TWO")
+        loaded_dir, loaded_manifest, loaded_root = bootstrap.load_run(
+            str(round_one), require_fresh_artifacts=False
+        )
+        self.assertEqual(round_one.resolve(), loaded_dir)
+        self.assertEqual(self.repo.resolve(), loaded_root)
+        self.assertEqual(1, loaded_manifest["fullReviewRound"])
+
+    def test_baseline_rejects_terminal_residue_without_final_gate(self) -> None:
+        self.prepare()
+        self.complete_layers()
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        (self.run_dir / "review-gate-result.json").unlink()
+        with self.assertRaisesRegex(
+            bootstrap.BootstrapError, "missing review-gate-result.json"
+        ):
+            bootstrap.build_review_baseline(
+                self.repo,
+                [str(self.run_dir)],
+                self.repo / "logs" / "review-governance" / "terminal-residue",
+            )
+
+    def test_registry_baseline_rejects_stale_manifest_input_hash(self) -> None:
+        run_dir = self.repo / "registered-run"
+        run_dir.mkdir()
+        manifest = {
+            "schemaVersion": "bootstrap-review-input.v1",
+            "inputHash": "sha256:" + "0" * 64,
+        }
+        with mock.patch.object(
+            bootstrap, "review_run_manifests", return_value=[(run_dir, manifest)]
+        ):
+            with self.assertRaisesRegex(bootstrap.BootstrapError, "stale input hash"):
+                bootstrap._baseline_runs(self.repo, None)
+
+    def test_synthetic_calibration_corpus_is_paired_and_non_authorizing(self) -> None:
+        path = Path(__file__).resolve().parent / "fixtures" / "review-calibration-corpus.v1.json"
+        corpus = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual([], bootstrap.schema_validation_errors(
+            "bootstrap-review-calibration-corpus.v1.schema.json", corpus
+        ))
+        self.assertEqual([], corpus["authorizes"])
+        self.assertEqual("forbidden", corpus["runtimePromptConsumption"])
+        for pair in corpus["pairs"]:
+            for case_name in ("confirmed", "refuted"):
+                case = pair[case_name]
+                projected = bootstrap.project_verified_blocker_disposition({
+                    "findingId": f"synthetic-{case_name}",
+                    "decision": case["verifierDecision"],
+                    "reason": case["guardState"],
+                })
+                self.assertEqual(case["expectedDisposition"], projected["status"])
+            self.assertNotIn("exactEvidence", pair["confirmed"])
+            self.assertNotIn("exactEvidence", pair["refuted"])
 
     def test_p2_requires_disposition_and_rejects_high_risk_deferral(self) -> None:
         self.prepare()

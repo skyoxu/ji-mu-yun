@@ -44,6 +44,34 @@ must not merely report that review is required and stop. A deterministic pass
 without a required finalized Bootstrap envelope remains a non-authorizing
 candidate, not an implementation-acceptance pass.
 
+Before starting a new semantic run, the caller may invoke `import-bootstrap`
+with one explicit finalized run, the append-only `prepare-run` output, and the
+exact append-only `prepare-bootstrap` route that launched that run. The command
+revalidates the current candidate manifest, changed paths, custody, frozen
+knowledge context and accepted knowledge sources, reruns Bootstrap
+`validate-finalized-run`, and requires every file in the route's complete
+seven-class `reviewScope` to be present in the run's frozen artifact binding.
+The prepared Acceptance input, candidate manifest, and knowledge artifacts
+must also match their frozen artifact entries. The v3 import envelope directly
+binds the route's file hash and canonical document hash; Round 1 does not
+pretend the route was a repair-route artifact. Every candidate changed path
+must be in the route's `changed-production-code` class.
+
+Exact reuse is emitted only as `bootstrap-import-envelope.v3`. It requires a
+non-null exact `candidateBindingHash`, current profile/policy/authority, the
+`bootstrap-implementation-conformance` profile, a complete finalized v3
+validation envelope, `clean` final status, and a
+`full_implementation_conformance` or `focused_repair_review` route. The route's
+lineage state must be the immediate predecessor of the selected finalized run,
+and that run must be the current reconstructed lineage head. Historical import
+envelope v2 evidence remains readable under its original v1/v2 finalized-run
+contract but never grants exact reuse. The import binds the canonical
+repository-relative Bootstrap run directory and requires the Acceptance
+Auditor attestation to match the finalized review/input identity. Any drift
+rejects the import and leaves the existing bounded review route unchanged. This is
+deterministic validation reuse, not LLM-output caching; historical cost or
+finding baselines cannot authorize it.
+
 For a required review, `prepare-bootstrap` must build a
 `minimal-complete-closure` from explicit repository-relative files in all
 seven implementation-conformance classes: implementation plan, changed

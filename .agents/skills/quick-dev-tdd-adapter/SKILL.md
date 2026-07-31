@@ -42,6 +42,13 @@ After the target plan's current declared terminal predicate passes, append its o
    Do not select an acceptance route, launch Bootstrap, create a review
    successor, or change the stable lineage family.
 
+The adapter does not read Bootstrap history baselines, promote cost
+calibration, or select a finalized run for reuse. Refactor Acceptance alone may
+reuse a run after revalidating the prepared Acceptance candidate, custody,
+Bootstrap candidate binding, scope, profile, policy, authority, and clean
+status. A historical match never changes this adapter's terminal predicate or
+its non-authorizing handoff.
+
 ## Knowledge Consumption
 
 When a VDD plan contains frozen knowledge context, verify its accepted decisions

@@ -2,7 +2,7 @@
 
 Status: Accepted
 Language: English
-Authorities: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`, `docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`, `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`, and `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`
+Authorities: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`, `docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`, `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`, `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`, and `docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md`
 
 ## Purpose
 
@@ -81,7 +81,7 @@ The implementation backend never owns review acceptance, severity, done, commit,
 
 ## Attempts And Lifecycle
 
-Each process attempt has a unique immutable directory containing request, process result, stdout, stderr, token usage, and structured candidate output. `process-events.jsonl` records append-only lifecycle events. Codex Exec children return structured candidates only; they never edit formal reviewer/verifier outputs or invoke the formal validator. Child process failure, malformed JSON, invalid binding, invalid read receipt, or invalid candidate shape appends a transport-class `attempt-failed`, preserves formal bytes, and retries in the same run without consuming a semantic round or requiring a successor lineage.
+Each process attempt has a unique immutable directory containing request, process result, stdout, stderr, and token usage. A completed attempt must also retain its structured candidate output, access handshake, and exact helper/request bytes. A failed transport attempt may lack valid candidate or handshake output, but its cost remains usable only when its process, token, and append-only lifecycle evidence is complete. `process-events.jsonl` records append-only lifecycle events. Codex Exec children return structured candidates only; they never edit formal reviewer/verifier outputs or invoke the formal validator. Child process failure, malformed JSON, invalid binding, invalid read receipt, or invalid candidate shape appends a transport-class `attempt-failed`, preserves formal bytes, and retries in the same run without consuming a semantic round or requiring a successor lineage.
 
 Verifier recovery directories are immutable execution evidence. An open recovery is valid only while the live formal verifier bytes still equal the archived rejected hash. Its process event projects the verifier lease to `failed`, allowing a new reservation; only a later semantically valid publication and `attempt-completed` event close it. Finalize and finalized-run validation fail closed on an open or stale recovery lineage.
 
@@ -159,9 +159,55 @@ Round 2 and Round 3 require an implementation-contract instance named `repair-cl
 
 The repository-owned Skill exposes `validate-finalized-run` as the only durable plan-consumption surface for a finalized Bootstrap run. The command reloads the current profile and run authority, revalidates preflight and gate evidence, reproduces candidate/rejection projection from reviewer outputs, and recomputes final result, disposition, metrics, and byte hashes.
 
-The current `bootstrap-finalized-run-validation.v2` envelope binds review/change/lineage-family/round identity, repair delta and entry-decision state, the complete canonical profile hash, route and control-plane revisions, policy and authority identity, final status, finding closure, validator identity, and hashes of every consumed final artifact. The v1 schema remains unchanged for stored-envelope compatibility; new producer output uses v2. Both include direct hashes for `verifier-output.json` and the applicable `p2-dispositions.json`; a metrics-only transitive reference or file-existence check is insufficient. They always carry `authorizes=[]` and explicitly exclude plan acceptance, implementation acceptance, protected handoff, release, commit, and done.
+The current `bootstrap-finalized-run-validation.v3` envelope binds review/change/lineage-family/round identity, repair delta and entry-decision state, the complete canonical profile hash, route and control-plane revisions, policy and authority identity, final status, finding closure, validator identity, and hashes of every consumed final artifact. The v1 and v2 schemas remain unchanged for stored-envelope compatibility; new producer output uses v3. All versions include direct hashes for `verifier-output.json` and the applicable `p2-dispositions.json`; a metrics-only transitive reference or file-existence check is insufficient. They always carry `authorizes=[]` and explicitly exclude plan acceptance, implementation acceptance, protected handoff, release, commit, and done.
 
 Plans consume this envelope instead of reimplementing a partial Bootstrap profile or lifecycle validator. The consumer calls the repository producer, compares the full saved and recomputed envelope except `generatedAt`, and then applies only its own candidate and predicate rules. A plan-local validator remains solely responsible for its own candidate and acceptance predicates. Envelope validation alone cannot clear a review-cycle manual pause or create a new semantic-review round. A successor policy decision may authorize consideration of a genuinely superseding target, but it cannot reset the lineage family of the existing target. The consuming plan must bind the explicit supersede or incompatible-scope decision and derive a different acceptance target before a new family is valid; a new change ID, saved minimal envelope, arbitrary event JSON, or `independent=true` assertion is insufficient.
+
+New manifests and v3 envelopes bind `candidateBindingHash`. A replayed legacy
+manifest may expose a null v3 binding, and frozen v1/v2 envelopes remain
+readable; neither form is eligible for exact reuse. Refactor Acceptance exact
+reuse requires the implementation-conformance profile, a non-null binding, a
+fresh `validate-finalized-run`, `clean` status, current profile/policy/authority
+validation, and `bootstrap-import-envelope.v3`. The v3 consumer binds the exact
+append-only `prepare-bootstrap` route, requires that route to be the immediate
+lineage predecessor of the current finalized lineage head, and rejects
+`manual_pause` or deterministic-only routes. Every route-scope file must be in
+the Bootstrap artifact set; the current prepared run input, candidate manifest,
+knowledge context and accepted knowledge sources receive additional exact
+artifact bindings, while v3 directly binds the route file and canonical hashes.
+Frozen import-envelope v2
+evidence remains readable only under its original finalized v1/v2 contract and
+cannot grant exact reuse. Reuse failure is non-authorizing and leaves the
+bounded review route in force.
+
+## Historical Baseline And Cost Calibration
+
+- `build-review-baseline` consumes only the validated Git-local registry or
+  explicitly supplied formal run directories; it does not recursively infer
+  authority from arbitrary `logs/**` content.
+- Its append-only history index includes all lifecycle states. Finalized rows
+  must pass complete evidence replay and retain their exact finding closure;
+  the index aggregates candidate, visible, confirmed, refuted, unverified, and
+  P2 disposition yield. Cost cohorts additionally require every required
+  reviewer, required verifier, and access probe to have a unique ordered
+  lifecycle, a matching process result, and token usage rederived from the same
+  Codex JSONL stdout. Probe, reviewer, verifier, and transport-retry costs remain
+  distinguishable. Wall time is the union of active attempt intervals, so idle
+  gaps are excluded. Zero-token and mixed-model samples do not enter a cohort.
+- Baseline output directories must be append-only descendants of `logs/`.
+- The history index and calibration candidate are validated before publication
+  and published together by one staged-directory rename. A failed build cannot
+  reserve the append-only destination with only one of the two documents.
+- History indexes and generated calibration candidates always carry
+  `authorizes=[]`. They are operational projections, not clean, acceptance,
+  handoff, commit, release, or done authority.
+- Only a reviewed committed calibration reference bound by schema, path, and
+  hash may affect new estimates. Missing cohorts use its declared conservative
+  fallback. Generated candidates never promote themselves. Promotion adds a
+  new versioned reference and retains every reference already bound by a run.
+- Historical exact evidence is not a runtime finding corpus. Synthetic paired
+  confirmed/refuted fixtures are shadow tests only and are forbidden from
+  runtime reviewer prompts.
 
 ## Acceptance Inventory Attestation Companion
 

@@ -457,5 +457,5 @@ def render_codex_command(
         "--sandbox", sandbox, "-m", model,
         "-c", f"model_reasoning_effort={reasoning_effort}",
     ]
-    command.extend(["--output-last-message", str(output_path), "-"])
+    command.extend(["--json", "--output-last-message", str(output_path), "-"])
     return command

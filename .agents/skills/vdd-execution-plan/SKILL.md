@@ -105,6 +105,14 @@ Use a declared Git baseline plus either a frozen commit range or a complete scop
 
 Review is optional unless requested by the maintainer or a protected-path rule requires it. Batch accepted findings, run deterministic targeted checks, and do not rerun a complete semantic review for P2-only findings automatically. Review validates the supplied requirements or implementation; it is not an unbounded discovery loop.
 
+Bootstrap history indexes, cost-calibration candidates, and synthetic shadow
+corpora are non-authorizing operational inputs. VDD may use their cost signal
+when presenting an optional review, but it never treats a historical finding,
+similar sample, or prior clean run as current plan readiness. Exact finalized-
+envelope reuse belongs to the consuming acceptance workflow and requires a
+fresh Bootstrap validation plus byte-identical current candidate binding; VDD
+does not select or import that envelope.
+
 When a plan includes Bootstrap Review, freeze a `minimal-complete-closure`,
 not an entire repository area by default. For implementation conformance, list
 the changed production files, direct consumers, targeted tests and acceptance,

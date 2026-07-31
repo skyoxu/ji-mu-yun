@@ -194,6 +194,12 @@ class SkillContractTests(unittest.TestCase):
             result = self.validator.validate_skill(copied)
             self.assertIn("VDD-REVIEW-REENTRY", {item["rule_id"] for item in result["findings"]})
 
+    def test_review_history_remains_non_authorizing_and_acceptance_owned(self) -> None:
+        content = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("non-authorizing operational inputs", content)
+        self.assertIn("never treats a historical finding", content)
+        self.assertIn("belongs to the consuming acceptance workflow", content)
+
     def test_excluded_recovery_architecture_is_absent(self) -> None:
         sources = {
             path.relative_to(SKILL_ROOT).as_posix(): path.read_text(encoding="utf-8")

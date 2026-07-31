@@ -14,6 +14,7 @@ import re
 import subprocess
 import sys
 import importlib.util
+import tempfile
 import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -64,7 +65,7 @@ HASH_PREFIX = "sha256:"
 AUTHORITY_CLASS = "supplemental_bootstrap"
 REVIEW_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}")
 CHECK_ID_PATTERN = re.compile(r"[a-z][a-z0-9-]{2,63}")
-FINALIZED_VALIDATOR_REVISION = "bootstrap-finalized-run-validator.v3"
+FINALIZED_VALIDATOR_REVISION = "bootstrap-finalized-run-validator.v4"
 FINALIZED_DOES_NOT_AUTHORIZE = [
     "plan-acceptance",
     "implementation-acceptance",
@@ -78,6 +79,8 @@ SEMANTIC_ROUND_STARTED_EVENT = "semantic-round-started"
 REVIEW_RUN_REGISTRY_SCHEMA = "bootstrap-review-run-registry.v1"
 LINEAGE_ADOPTION_SCHEMA = "bootstrap-lineage-adoption.v1"
 HISTORICAL_POLICY_PATH = SKILL_ROOT / "references" / "historical-policy-revisions.v1.json"
+COST_CALIBRATION_PATH = SKILL_ROOT / "references" / "review-cost-calibration.v1.json"
+COST_CALIBRATION_HASH = "sha256:72b1b76b6de9bd73f5828e84efc28216080aa20a17e66c527d6a3965b9a5b601"
 
 ACCESS_HANDSHAKE_HELPER = r'''#!/usr/bin/env python3
 from __future__ import annotations
@@ -960,7 +963,122 @@ def authority_context_hash(
     )
 
 
-def review_cost_estimate(profile: dict[str, Any], artifacts: list[dict[str, Any]]) -> dict[str, Any]:
+def load_cost_calibration(
+    requested_ref: dict[str, Any] | None = None,
+) -> tuple[dict[str, Any], dict[str, str]]:
+    if requested_ref is None:
+        calibration_path = COST_CALIBRATION_PATH
+        expected_hash = COST_CALIBRATION_HASH
+        expected_id = None
+    else:
+        if (
+            not isinstance(requested_ref, dict)
+            or set(requested_ref) != {"path", "sha256", "calibrationId"}
+            or HASH_PATTERN.fullmatch(str(requested_ref.get("sha256"))) is None
+            or not isinstance(requested_ref.get("calibrationId"), str)
+        ):
+            raise BootstrapError("Review cost calibration binding is invalid")
+        calibration_path = ensure_within(
+            REPOSITORY_ROOT / str(requested_ref.get("path")),
+            SKILL_ROOT / "references",
+            "Review cost calibration reference",
+        )
+        expected_hash = requested_ref["sha256"]
+        expected_id = requested_ref["calibrationId"]
+    if not calibration_path.is_file() or file_hash(calibration_path) != expected_hash:
+        raise BootstrapError("Promoted review cost calibration is missing or hash-invalid")
+    calibration = read_json(calibration_path)
+    errors = schema_validation_errors("bootstrap-review-cost-calibration.v1.schema.json", calibration)
+    if errors:
+        raise BootstrapError("Promoted review cost calibration is invalid: " + "; ".join(errors))
+    if (
+        calibration.get("status") != "promoted"
+        or calibration.get("authorizes") != []
+        or (expected_id is not None and calibration.get("calibrationId") != expected_id)
+    ):
+        raise BootstrapError("Review cost calibration is not a non-authorizing promoted reference")
+    expected_dimensions = [
+        "reviewProfile", "policyRevision", "routeVersion", "controlPlaneRevision",
+        "model", "reasoningProfile", "fullReviewRound", "workloadBucket",
+    ]
+    if calibration.get("cohortDimensions") != expected_dimensions:
+        raise BootstrapError("Review cost calibration has unsupported cohort dimensions")
+    for label, statistics in [
+        ("conservative fallback", calibration["conservativeFallback"]),
+        *((f"cohort {item['cohortId']}", item["statistics"]) for item in calibration["cohorts"]),
+    ]:
+        numeric_values = [
+            value for key, value in statistics.items()
+            if key not in {"confidence", "retryRisk"}
+        ]
+        try:
+            non_finite = any(
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(float(value))
+                for value in numeric_values
+            )
+        except (OverflowError, TypeError, ValueError):
+            non_finite = True
+        if non_finite:
+            raise BootstrapError(f"Review cost calibration has non-finite statistics in {label}")
+        ordered_pairs = [
+            ("tokenMultiplier", statistics["tokenMultiplierP50"], statistics["tokenMultiplierP90"]),
+            ("minimumTotalTokens", statistics["minimumTotalTokensP50"], statistics["minimumTotalTokensP90"]),
+        ]
+        if "observedTotalTokensP50" in statistics or "observedTotalTokensP90" in statistics:
+            ordered_pairs.append((
+                "observedTotalTokens", statistics.get("observedTotalTokensP50"),
+                statistics.get("observedTotalTokensP90"),
+            ))
+        if "observedWallSecondsP50" in statistics or "observedWallSecondsP90" in statistics:
+            ordered_pairs.append((
+                "observedWallSeconds", statistics.get("observedWallSecondsP50"),
+                statistics.get("observedWallSecondsP90"),
+            ))
+        if any(low is None or high is None or high < low for _name, low, high in ordered_pairs):
+            raise BootstrapError(f"Review cost calibration has inverted percentiles in {label}")
+    return calibration, {
+        "path": calibration_path.relative_to(REPOSITORY_ROOT).as_posix(),
+        "sha256": expected_hash,
+        "calibrationId": calibration["calibrationId"],
+    }
+
+
+def review_workload_bucket(artifact_count: int, total_bytes: int) -> str:
+    if artifact_count >= 50 or total_bytes >= 1048576:
+        return "large"
+    if artifact_count >= 20 or total_bytes >= 262144:
+        return "medium"
+    return "small"
+
+
+def _matching_cost_cohort(
+    calibration: dict[str, Any], profile: dict[str, Any], full_review_round: int,
+    workload_bucket: str,
+) -> dict[str, Any] | None:
+    identity = {
+        "reviewProfile": profile["reviewProfile"],
+        "policyRevision": profile["policyRevision"],
+        "routeVersion": profile["routeVersion"],
+        "controlPlaneRevision": profile["controlPlaneRevision"],
+        "model": profile["codexExecPolicy"]["preferredModel"],
+        "reasoningProfile": value_hash(profile["codexExecPolicy"]["reasoningEffortByRole"]),
+        "fullReviewRound": full_review_round,
+        "workloadBucket": workload_bucket,
+    }
+    matches = [
+        item for item in calibration.get("cohorts", [])
+        if isinstance(item, dict) and item.get("match") == identity
+    ]
+    if len(matches) > 1:
+        raise BootstrapError("Promoted review cost calibration has duplicate matching cohorts")
+    return matches[0] if matches else None
+
+
+def legacy_review_cost_estimate(
+    profile: dict[str, Any], artifacts: list[dict[str, Any]],
+) -> dict[str, Any]:
     effort_units = {"medium": 1, "high": 2}
     reviewer_units = sum(
         effort_units[profile["codexExecPolicy"]["reasoningEffortByRole"][layer]]
@@ -996,6 +1114,61 @@ def review_cost_estimate(profile: dict[str, Any], artifacts: list[dict[str, Any]
         "retryRisk": "high" if artifact_count >= 40 else ("medium" if artifact_count >= 20 else "low"),
         "basisSampleCount": 17,
         "confidence": "low",
+    }
+
+
+def review_cost_estimate(
+    profile: dict[str, Any], artifacts: list[dict[str, Any]], full_review_round: int = 1,
+    calibration_ref: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    calibration, resolved_calibration_ref = load_cost_calibration(calibration_ref)
+    effort_units = {"medium": 1, "high": 2}
+    reviewer_units = sum(
+        effort_units[profile["codexExecPolicy"]["reasoningEffortByRole"][layer]]
+        for layer in LAYERS
+    )
+    artifact_count = len(artifacts)
+    total_bytes = sum(item["sizeBytes"] for item in artifacts)
+    text_bytes = sum(item["sizeBytes"] for item in artifacts if item.get("textEncoding"))
+    estimated_input = max(1, text_bytes // 4)
+    workload_bucket = review_workload_bucket(artifact_count, total_bytes)
+    cohort = _matching_cost_cohort(calibration, profile, full_review_round, workload_bucket)
+    statistics = cohort["statistics"] if cohort else calibration["conservativeFallback"]
+    estimated_p50 = max(
+        statistics["minimumTotalTokensP50"],
+        int(estimated_input * reviewer_units * statistics["tokenMultiplierP50"]),
+    )
+    estimated_p90 = max(
+        statistics["minimumTotalTokensP90"],
+        int(estimated_input * reviewer_units * statistics["tokenMultiplierP90"]),
+    )
+    high_cost = (
+        artifact_count >= REVIEW_COST_POLICY["highCostArtifactThreshold"]
+        or total_bytes >= REVIEW_COST_POLICY["highCostByteThreshold"]
+        or estimated_p90 >= 500000
+    )
+    return {
+        "artifactCount": artifact_count,
+        "totalBytes": total_bytes,
+        "reviewerReasoningUnits": reviewer_units,
+        "relativeWorkUnits": artifact_count * reviewer_units,
+        "workloadBucket": workload_bucket,
+        "highCost": high_cost,
+        "estimatedInputTokens": {
+            "low": max(1, int(estimated_input * 0.75)),
+            "high": max(1, int(estimated_input * 1.25)),
+        },
+        "estimatedTotalTokens": {"p50": estimated_p50, "p90": estimated_p90},
+        "estimatedWallMinutes": {
+            "p50": max(5, int(estimated_p50 / statistics["tokensPerWallMinute"])),
+            "p90": max(10, int(estimated_p90 / statistics["tokensPerWallMinute"])),
+        },
+        "verifierLikelihood": "high" if profile["reviewObjectType"] == "implementation-conformance" else "medium",
+        "retryRisk": statistics["retryRisk"],
+        "basisSampleCount": statistics["basisSampleCount"],
+        "confidence": statistics["confidence"],
+        "costCalibration": resolved_calibration_ref,
+        "costCalibrationCohortId": cohort["cohortId"] if cohort else "conservative-fallback",
     }
 
 
@@ -1727,6 +1900,7 @@ def validate_review_cycle(
     dependency_closure: list[str],
     round_entry_reason: str | None = None,
     high_risk_boundaries: list[str] | None = None,
+    historical_replay: bool = False,
 ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     legacy_lineage = lineage_family_id is None
     family_id = lineage_family_id or change_id
@@ -1752,7 +1926,7 @@ def validate_review_cycle(
             f"Lineage family {family_id} already has full review round {review_round}"
         )
     if review_round == 1:
-        if counted_family:
+        if counted_family and not historical_replay:
             raise BootstrapError(
                 f"Lineage family {family_id} already has review history; a successor cannot restart round 1"
             )
@@ -1901,7 +2075,12 @@ def validate_required_process_leases(
         )
 
 
-def validate_launch_authorization(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
+def validate_launch_authorization(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    *,
+    historical_replay: bool = False,
+) -> dict[str, Any]:
     path = run_dir / manifest["authorityFreezePolicy"]["authorizationSidecar"]
     authorization = read_json(path)
     errors = schema_validation_errors("bootstrap-review-launch-authorization.v1.schema.json", authorization)
@@ -1933,7 +2112,14 @@ def validate_launch_authorization(run_dir: Path, manifest: dict[str, Any]) -> di
             if authorization.get("preflightResultHash") != preflight_hash:
                 errors.append("preflightResultHash is stale")
         try:
-            access_proof_hash = validate_access_proof(run_dir, manifest)
+            if historical_replay:
+                validate_baseline_access_proof(run_dir, manifest)
+                access_proof_path = run_dir / "access-proof.json"
+                access_proof_hash = (
+                    file_hash(access_proof_path) if access_proof_path.is_file() else None
+                )
+            else:
+                access_proof_hash = validate_access_proof(run_dir, manifest)
         except BootstrapError as exc:
             errors.append(str(exc))
         else:
@@ -2625,7 +2811,7 @@ def command_prepare(args: argparse.Namespace) -> int:
         repository_root, args.required_check, artifacts, args.profile, profile
     )
     preflight_policy = derive_preflight_policy(profile, plan_bound_checks)
-    cost_estimate = review_cost_estimate(profile, artifacts)
+    cost_estimate = review_cost_estimate(profile, artifacts, args.review_round)
     context_hash = authority_context_hash(args.profile, profile, context_class_artifacts, plan_bound_checks)
     write_set = normalize_write_set(repository_root, args.write_set)
     execution_read_set = prepared_artifact_set(
@@ -2968,7 +3154,16 @@ def validate_manifest_controls(manifest: dict[str, Any], profile: dict[str, Any]
     expected_preflight = derive_preflight_policy(profile, plan_bound_checks)
     if manifest.get("deterministicPreflightPolicy") != expected_preflight:
         raise BootstrapError("review-input.json has stale or substituted deterministicPreflightPolicy")
-    if manifest.get("reviewCostEstimate") != review_cost_estimate(profile, manifest.get("artifacts", [])):
+    saved_cost_estimate = manifest.get("reviewCostEstimate")
+    expected_cost_estimate = (
+        review_cost_estimate(
+            profile, manifest.get("artifacts", []), manifest.get("fullReviewRound", 1),
+            saved_cost_estimate.get("costCalibration"),
+        )
+        if isinstance(saved_cost_estimate, dict) and "costCalibration" in saved_cost_estimate
+        else legacy_review_cost_estimate(profile, manifest.get("artifacts", []))
+    )
+    if saved_cost_estimate != expected_cost_estimate:
         raise BootstrapError("review-input.json has stale or substituted reviewCostEstimate")
     expected_authority_context = authority_context_hash(
         manifest.get("profileName", ""),
@@ -3030,6 +3225,7 @@ def load_run(
         manifest.get("dependencyClosure", []),
         entry.get("reason") if isinstance(entry, dict) else None,
         entry.get("highRiskBoundaryArtifacts", []) if isinstance(entry, dict) else [],
+        historical_replay=not require_fresh_artifacts,
     )
     if isinstance(repair_delta, dict) and repair_delta.get("removedArtifacts"):
         predecessor_dir = ensure_within(
@@ -3733,7 +3929,10 @@ def command_prove_access(args: argparse.Namespace) -> int:
         {"schemaVersion": "bootstrap-process-result.v1", "attemptId": attempt_id, "pid": process.pid,
          "exitCode": process.returncode, "completedAt": utc_now()},
     )
-    write_json(attempt_dir / "token-usage.json", {"schemaVersion": "bootstrap-token-usage.v1", "tokens": None})
+    write_json(
+        attempt_dir / "token-usage.json",
+        {"schemaVersion": "bootstrap-token-usage.v1", "tokens": codex_token_usage(stdout)},
+    )
     event_type = "attempt-process-completed" if process.returncode == 0 else "attempt-failed"
     append_process_event(
         run_dir,
@@ -3816,6 +4015,28 @@ def parse_child_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise TransportAttemptError("Codex child candidate output must be an object")
     return value
+
+
+def codex_token_usage(stdout: str) -> int | None:
+    """Return total tokens from Codex JSONL without guessing from prose output."""
+    completed_usage: dict[str, Any] | None = None
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(event, dict) and event.get("type") == "turn.completed" and isinstance(event.get("usage"), dict):
+            completed_usage = event["usage"]
+    if completed_usage is None:
+        return None
+    total = completed_usage.get("total_tokens")
+    if isinstance(total, int) and not isinstance(total, bool) and total >= 0:
+        return total
+    input_tokens = completed_usage.get("input_tokens")
+    output_tokens = completed_usage.get("output_tokens")
+    if all(isinstance(value, int) and not isinstance(value, bool) and value >= 0 for value in (input_tokens, output_tokens)):
+        return input_tokens + output_tokens
+    return None
 
 
 def rebuild_process_leases_from_events(run_dir: Path, manifest: dict[str, Any]) -> None:
@@ -4350,7 +4571,10 @@ def run_codex_attempt(
             "pid": process.pid, "exitCode": process.returncode, "completedAt": utc_now(),
         },
     )
-    write_json(attempt_dir / "token-usage.json", {"schemaVersion": "bootstrap-token-usage.v1", "tokens": None})
+    write_json(
+        attempt_dir / "token-usage.json",
+        {"schemaVersion": "bootstrap-token-usage.v1", "tokens": codex_token_usage(stdout)},
+    )
     process_event = {
         "eventType": "attempt-process-completed" if process.returncode == 0 else "attempt-failed",
         "timestamp": utc_now(),
@@ -4672,6 +4896,8 @@ def candidate_reason(
     manifest: dict[str, Any],
     repository_root: Path,
     run_dir: Path,
+    *,
+    use_frozen_evidence: bool = False,
 ) -> tuple[str | None, str]:
     if not isinstance(candidate, dict):
         return "schema_invalid", "Candidate must be an object"
@@ -4692,7 +4918,20 @@ def candidate_reason(
     if candidate.get("artifactHash") != artifact_map[artifact]["sha256"]:
         return "stale_evidence", "Candidate artifactHash does not match prepared input"
     prepared_artifact = artifact_map[artifact]
-    if prepared_artifact.get("sourceState") == "deleted":
+    if use_frozen_evidence:
+        view = read_json(run_dir / manifest["artifactView"]["manifestPath"])
+        entries = [
+            entry for entry in view.get("entries", [])
+            if isinstance(entry, dict) and entry.get("originalPath") == artifact
+        ] if isinstance(view, dict) else []
+        if len(entries) != 1 or entries[0].get("originalSha256") != prepared_artifact["sha256"]:
+            return "stale_evidence", "Frozen artifact binding does not match prepared input"
+        path = ensure_within(
+            run_dir / entries[0].get("snapshotPath", ""),
+            run_dir / "artifact-view",
+            "Frozen candidate snapshot",
+        )
+    elif prepared_artifact.get("sourceState") == "deleted":
         path = ensure_within(
             run_dir / prepared_artifact.get("snapshotPath", ""),
             run_dir / "artifact-view",
@@ -4706,7 +4945,8 @@ def candidate_reason(
     else:
         path = ensure_within(repository_root / artifact, repository_root, "Candidate artifact")
     if not path.is_file() or file_hash(path) != prepared_artifact["sha256"]:
-        return "stale_evidence", "Current artifact hash differs from prepared input"
+        evidence_class = "Frozen" if use_frozen_evidence else "Current"
+        return "stale_evidence", f"{evidence_class} artifact hash differs from prepared input"
     if prepared_artifact.get("textEncoding") != "utf-8":
         return "missing_location", "Candidate evidence must reference a UTF-8 text artifact"
     start, end = candidate.get("startLine"), candidate.get("endLine")
@@ -4872,7 +5112,10 @@ def evaluate_reviewer_outputs(
     preflight_result_hash: str | None = None,
     *,
     validate_live_evidence: bool = True,
+    use_frozen_evidence: bool = False,
 ) -> dict[str, Any]:
+    if validate_live_evidence and use_frozen_evidence:
+        raise BootstrapError("Reviewer evidence cannot be both live and frozen")
     if preflight_result_hash is None:
         preflight_result_hash = validate_preflight_result(run_dir, manifest)
     completed: list[str] = []
@@ -4920,8 +5163,17 @@ def evaluate_reviewer_outputs(
             continue
         completed.append(layer)
         for candidate in output["candidates"]:
-            code, reason = (candidate_reason(candidate, manifest, repository_root, run_dir)
-                             if validate_live_evidence else (None, ""))
+            code, reason = (
+                candidate_reason(
+                    candidate,
+                    manifest,
+                    repository_root,
+                    run_dir,
+                    use_frozen_evidence=use_frozen_evidence,
+                )
+                if validate_live_evidence or use_frozen_evidence
+                else (None, "")
+            )
             if code:
                 rejections.append(rejection(candidate, layer, manifest, code, reason))
                 continue
@@ -5111,6 +5363,26 @@ def validate_verifier(
     if missing:
         raise BootstrapError(f"Verifier decisions are missing for: {', '.join(sorted(missing))}")
     return decisions
+
+
+def project_verified_blocker_disposition(decision: dict[str, Any]) -> dict[str, Any]:
+    status = decision.get("decision")
+    if status not in {"confirmed", "refuted", "unverified"}:
+        raise BootstrapError("Cannot project an invalid verifier decision")
+    projected = {
+        "findingId": decision["findingId"],
+        "status": status,
+        "reason": decision["reason"],
+    }
+    if status == "unverified":
+        classification = decision["unverifiedClass"]
+        projected.update({
+            "unverifiedClass": classification,
+            "unverifiedDisposition": (
+                "blocking" if classification in {"security", "data_loss"} else "manual_pause"
+            ),
+        })
+    return projected
 
 
 def command_recover_verifier(args: argparse.Namespace) -> int:
@@ -5706,8 +5978,12 @@ def validate_finalized_run_evidence(
     run_dir: Path,
     manifest: dict[str, Any],
     repository_root: Path,
+    *,
+    historical_replay: bool = False,
 ) -> dict[str, Any]:
-    validate_launch_authorization(run_dir, manifest)
+    validate_launch_authorization(
+        run_dir, manifest, historical_replay=historical_replay
+    )
     gate = read_json(run_dir / "review-gate-state.json")
     validate_gate_state(gate, manifest)
     preflight_result_hash = validate_preflight_result(run_dir, manifest)
@@ -5726,7 +6002,8 @@ def validate_finalized_run_evidence(
         raise BootstrapError("review-rejections.json changed after gate")
     reevaluated = evaluate_reviewer_outputs(
         run_dir, manifest, repository_root, preflight_result_hash,
-        validate_live_evidence=True,
+        validate_live_evidence=not historical_replay,
+        use_frozen_evidence=historical_replay,
     )
     if reevaluated["candidatesDoc"] != candidate_doc:
         raise BootstrapError("Reviewer outputs no longer reproduce review-candidates.json")
@@ -5912,7 +6189,7 @@ def validate_finalized_run_evidence(
         "p2RefutedCount": p2_status_counts["p2_refuted"],
     }
     return {
-        "schemaVersion": "bootstrap-finalized-run-validation.v2",
+        "schemaVersion": "bootstrap-finalized-run-validation.v3",
         "validationStatus": "passed",
         "reviewId": manifest["reviewId"],
         "changeId": manifest["changeId"],
@@ -5927,6 +6204,7 @@ def validate_finalized_run_evidence(
         "authorityRevision": manifest["authorityRevision"],
         "inputHash": manifest["inputHash"],
         "authorityContextHash": manifest["authorityContextHash"],
+        "candidateBindingHash": manifest.get("candidateBindingHash"),
         "reviewEntryDecisionHash": (
             value_hash(manifest["reviewEntryDecision"])
             if isinstance(manifest.get("reviewEntryDecision"), dict)
@@ -5963,7 +6241,7 @@ def command_validate_finalized_run(args: argparse.Namespace) -> int:
     run_dir, manifest, repository_root = load_run(args.run_dir)
     envelope = validate_finalized_run_evidence(run_dir, manifest, repository_root)
     errors = schema_validation_errors(
-        "bootstrap-finalized-run-validation.v2.schema.json", envelope
+        "bootstrap-finalized-run-validation.v3.schema.json", envelope
     )
     if errors:
         raise BootstrapError("Finalized-run validation envelope is invalid: " + "; ".join(errors))
@@ -6073,7 +6351,7 @@ def command_finalize(args: argparse.Namespace) -> int:
             continue
         decision = decisions[finding_id]
         current["status"] = decision["decision"]
-        disposition = {"findingId": finding_id, "status": decision["decision"], "reason": decision["reason"]}
+        disposition = project_verified_blocker_disposition(decision)
         if decision["decision"] == "confirmed":
             has_blocking = True
             visible.append(current)
@@ -6082,7 +6360,6 @@ def command_finalize(args: argparse.Namespace) -> int:
             machine_disposition = "blocking" if classification in {"security", "data_loss"} else "manual_pause"
             current["unverifiedClass"] = classification
             current["unverifiedDisposition"] = machine_disposition
-            disposition.update({"unverifiedClass": classification, "unverifiedDisposition": machine_disposition})
             has_blocking |= machine_disposition == "blocking"
             has_manual_pause |= machine_disposition == "manual_pause"
             visible.append(current)
@@ -6344,6 +6621,886 @@ def command_run_p2_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _parse_event_timestamp(value: Any) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else None
+
+
+def structured_run_cost_evidence(
+    run_dir: Path, manifest: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    events = read_process_events(run_dir)
+    semantic_roles = {*LAYERS, "independent_verifier"}
+    cost_roles = {*semantic_roles, "model_probe"}
+    terminal_types = {"attempt-completed", "attempt-failed", "attempt-rejected", "attempt-stale"}
+    reasons: set[str] = set()
+    if manifest is None:
+        manifest_path = run_dir / "review-input.json"
+        manifest = read_json(manifest_path) if manifest_path.is_file() else None
+    if not isinstance(manifest, dict):
+        reasons.add("missing-or-invalid-manifest")
+
+    event_attempts: dict[str, list[tuple[int, dict[str, Any]]]] = {}
+    for index, event in enumerate(events):
+        if event.get("role") not in cost_roles:
+            continue
+        attempt_id = event.get("attemptId")
+        if not isinstance(attempt_id, str) or not attempt_id:
+            reasons.add("invalid-cost-event-attempt-id")
+            continue
+        event_attempts.setdefault(attempt_id, []).append((index, event))
+
+    totals = {"reviewer": 0, "verifier": 0, "probe": 0, "retry": 0}
+    attempt_count = 0
+    directory_attempts: set[str] = set()
+    selected_models: set[str] = set()
+    completed_role_counts = {role: 0 for role in cost_roles}
+    intervals: list[tuple[datetime, datetime]] = []
+    attempts_root = run_dir / "attempts"
+    attempt_dirs = sorted(
+        (path for path in attempts_root.iterdir() if path.is_dir()),
+        key=lambda path: path.name,
+    ) if attempts_root.is_dir() else []
+    for attempt_dir in attempt_dirs:
+        attempt_reasons: set[str] = set()
+        transport_retry = False
+        request_path = attempt_dir / "request.json"
+        if not request_path.is_file():
+            reasons.add(f"missing-request:{attempt_dir.name}")
+            continue
+        request = read_json(request_path)
+        if not isinstance(request, dict):
+            reasons.add(f"invalid-request:{attempt_dir.name}")
+            continue
+        role = request.get("role")
+        if role not in cost_roles:
+            reasons.add(f"unexpected-attempt-role:{attempt_dir.name}")
+            continue
+        directory_attempts.add(attempt_dir.name)
+        attempt_count += 1
+        common_request_fields = {
+            "schemaVersion", "attemptId", "role", "inputHash", "argv", "shell",
+            "environmentAllowlist", "environmentEvidence", "typedPlaceholders",
+            "writeSet", "executionReadSet", "dependencyClosure", "handshakeHelperPath",
+            "handshakeHelperHash", "handshakeRequestPath", "handshakeRequestHash",
+            "createdAt",
+        }
+        semantic_request_fields = {
+            "runDirectory", "artifactViewManifestPath", "artifactViewManifestHash",
+        }
+        expected_request_fields = common_request_fields | (
+            semantic_request_fields if role in semantic_roles else set()
+        )
+        request_write_set = request.get("writeSet")
+        environment_evidence = request.get("environmentEvidence")
+        manifest_execution_read_set = (
+            manifest.get("executionReadSet") if isinstance(manifest, dict) else None
+        )
+        manifest_dependency_closure = (
+            manifest.get("dependencyClosure") if isinstance(manifest, dict) else None
+        )
+        artifact_view = manifest.get("artifactView") if isinstance(manifest, dict) else None
+        if (
+            set(request) != expected_request_fields
+            or request.get("schemaVersion") != "bootstrap-attempt-request.v1"
+            or request.get("attemptId") != attempt_dir.name
+            or not isinstance(request.get("inputHash"), str)
+            or (
+                isinstance(manifest, dict)
+                and request.get("inputHash") != manifest.get("inputHash")
+            )
+            or request.get("shell") is not False
+            or request.get("environmentAllowlist") != list(ENVIRONMENT_ALLOWLIST)
+            or not isinstance(environment_evidence, dict)
+            or set(environment_evidence) - set(ENVIRONMENT_ALLOWLIST)
+            or request.get("typedPlaceholders") != TYPED_PLACEHOLDERS
+            or not isinstance(request_write_set, list)
+            or any(not isinstance(item, str) or not item for item in request_write_set)
+            or request.get("executionReadSet") != manifest_execution_read_set
+            or request.get("dependencyClosure") != manifest_dependency_closure
+            or not isinstance(request.get("handshakeHelperPath"), str)
+            or not request["handshakeHelperPath"]
+            or HASH_PATTERN.fullmatch(str(request.get("handshakeHelperHash"))) is None
+            or not isinstance(request.get("handshakeRequestPath"), str)
+            or not request["handshakeRequestPath"]
+            or HASH_PATTERN.fullmatch(str(request.get("handshakeRequestHash"))) is None
+            or _parse_event_timestamp(request.get("createdAt")) is None
+        ):
+            attempt_reasons.add(f"invalid-request-binding:{attempt_dir.name}")
+        if role in semantic_roles and (
+            not isinstance(artifact_view, dict)
+            or request.get("runDirectory") != str(run_dir)
+            or request.get("artifactViewManifestPath")
+            != str(run_dir / str(artifact_view.get("manifestPath", "")))
+            or request.get("artifactViewManifestHash") != artifact_view.get("manifestHash")
+        ):
+            attempt_reasons.add(f"invalid-request-binding:{attempt_dir.name}")
+
+        argv = request.get("argv")
+        model_positions = (
+            [index + 1 for index, item in enumerate(argv) if item == "-m"]
+            if isinstance(argv, list) else []
+        )
+        if (
+            len(model_positions) != 1
+            or model_positions[0] >= len(argv)
+            or not isinstance(argv[model_positions[0]], str)
+            or not argv[model_positions[0]]
+        ):
+            attempt_reasons.add(f"invalid-model-binding:{attempt_dir.name}")
+        else:
+            selected_model = argv[model_positions[0]]
+            selected_models.add(selected_model)
+            raw_policy = manifest.get("codexExecPolicy") if isinstance(manifest, dict) else None
+            policy = raw_policy if isinstance(raw_policy, dict) else {}
+            allowed_models = [
+                policy.get("preferredModel"),
+                *policy.get("fallbackModels", []),
+            ] if isinstance(policy.get("fallbackModels", []), list) else []
+            allowed_models = [item for item in allowed_models if isinstance(item, str)]
+            reasoning_policy = policy.get("reasoningEffortByRole", {})
+            reasoning_role = "blind_hunter" if role == "model_probe" else role
+            expected_reasoning = (
+                reasoning_policy.get(reasoning_role)
+                if isinstance(reasoning_policy, dict) else None
+            )
+            sandbox_positions = [
+                index + 1 for index, item in enumerate(argv) if item == "--sandbox"
+            ]
+            output_positions = [
+                index + 1 for index, item in enumerate(argv) if item == "--output-last-message"
+            ]
+            config_values = [
+                argv[index + 1] for index, item in enumerate(argv[:-1])
+                if item == "-c" and isinstance(argv[index + 1], str)
+            ]
+            if (
+                not allowed_models
+                or selected_model not in allowed_models
+                or not isinstance(expected_reasoning, str)
+                or f"model_reasoning_effort={expected_reasoning}" not in config_values
+                or len(sandbox_positions) != 1
+                or sandbox_positions[0] >= len(argv)
+                or argv[sandbox_positions[0]] != "workspace-write"
+                or "--json" not in argv
+                or len(output_positions) != 1
+                or output_positions[0] >= len(argv)
+                or not isinstance(argv[output_positions[0]], str)
+                or not argv[output_positions[0]]
+                or not argv
+                or argv[-1] != "-"
+            ):
+                attempt_reasons.add(f"invalid-execution-policy-binding:{attempt_dir.name}")
+
+        lifecycle = event_attempts.get(attempt_dir.name, [])
+        if any(
+            not isinstance(event.get("processIdentity"), str)
+            or not event["processIdentity"]
+            or not isinstance(event.get("writeSet"), list)
+            or any(not isinstance(item, str) or not item for item in event["writeSet"])
+            for _index, event in lifecycle
+        ):
+            attempt_reasons.add(f"invalid-lifecycle-execution-facts:{attempt_dir.name}")
+        starts = [(index, event) for index, event in lifecycle if event.get("eventType") == "attempt-started"]
+        terminals = [(index, event) for index, event in lifecycle if event.get("eventType") in terminal_types]
+        process_completions = [
+            (index, event)
+            for index, event in lifecycle
+            if event.get("eventType") == "attempt-process-completed"
+        ]
+        if len(starts) != 1 or len(terminals) != 1:
+            attempt_reasons.add(f"invalid-lifecycle-cardinality:{attempt_dir.name}")
+        start_index, start_event = starts[0] if len(starts) == 1 else (-1, {})
+        terminal_index, terminal_event = terminals[0] if len(terminals) == 1 else (-1, {})
+        expected_operation = (
+            "verifier" if role == "independent_verifier"
+            else (f"reviewer:{role}" if role in LAYERS else None)
+        )
+        operation_ids = {
+            event.get("operationId") for _index, event in lifecycle
+            if isinstance(event.get("operationId"), str)
+        }
+        if (
+            not lifecycle
+            or any(event.get("role") != role for _index, event in lifecycle)
+            or len(operation_ids) != 1
+            or (expected_operation is not None and operation_ids != {expected_operation})
+            or (
+                role == "model_probe"
+                and (
+                    len(operation_ids) != 1
+                    or not next(iter(operation_ids), "").startswith("model-probe:")
+                )
+            )
+        ):
+            attempt_reasons.add(f"invalid-lifecycle-binding:{attempt_dir.name}")
+
+        start_time = _parse_event_timestamp(start_event.get("timestamp"))
+        terminal_time = _parse_event_timestamp(terminal_event.get("timestamp"))
+        if (
+            start_index < 0
+            or terminal_index <= start_index
+            or start_time is None
+            or terminal_time is None
+            or terminal_time < start_time
+        ):
+            attempt_reasons.add(f"invalid-lifecycle-order:{attempt_dir.name}")
+        else:
+            intervals.append((start_time, terminal_time))
+
+        process_path = attempt_dir / "process-result.json"
+        token_path = attempt_dir / "token-usage.json"
+        stdout_path = attempt_dir / "stdout.log"
+        stderr_path = attempt_dir / "stderr.log"
+        missing = [
+            path.name for path in (process_path, token_path, stdout_path, stderr_path)
+            if not path.is_file()
+        ]
+        if missing:
+            attempt_reasons.add(
+                f"missing-attempt-sidecars:{attempt_dir.name}:{','.join(sorted(missing))}"
+            )
+
+        terminal_type = terminal_event.get("eventType")
+        if terminal_type == "attempt-completed":
+            candidate_path = attempt_dir / "candidate-output.json"
+            handshake_path = attempt_dir / "access-handshake.json"
+            completed_missing = [
+                path.name for path in (candidate_path, handshake_path)
+                if not path.is_file()
+            ]
+            if completed_missing:
+                attempt_reasons.add(
+                    "missing-completed-attempt-evidence:"
+                    f"{attempt_dir.name}:{','.join(sorted(completed_missing))}"
+                )
+            for path, label in (
+                (candidate_path, "candidate-output"),
+                (handshake_path, "access-handshake"),
+            ):
+                if path.is_file():
+                    try:
+                        value = read_json(path)
+                    except BootstrapError:
+                        attempt_reasons.add(
+                            f"invalid-completed-{label}:{attempt_dir.name}"
+                        )
+                    else:
+                        if not isinstance(value, dict):
+                            attempt_reasons.add(
+                                f"invalid-completed-{label}:{attempt_dir.name}"
+                            )
+            for path_field, hash_field, label in (
+                ("handshakeHelperPath", "handshakeHelperHash", "helper"),
+                ("handshakeRequestPath", "handshakeRequestHash", "request"),
+            ):
+                try:
+                    bound_path = ensure_within(
+                        run_dir / str(request.get(path_field, "")),
+                        attempt_dir,
+                        f"Completed attempt handshake {label}",
+                    )
+                except BootstrapError:
+                    attempt_reasons.add(
+                        f"invalid-completed-handshake-{label}:{attempt_dir.name}"
+                    )
+                else:
+                    if (
+                        not bound_path.is_file()
+                        or file_hash(bound_path) != request.get(hash_field)
+                    ):
+                        attempt_reasons.add(
+                            f"invalid-completed-handshake-{label}:{attempt_dir.name}"
+                        )
+
+        process_result: Any = read_json(process_path) if process_path.is_file() else None
+        normal_process_fields = {"schemaVersion", "attemptId", "pid", "exitCode", "completedAt"}
+        launch_error_fields = normal_process_fields | {"launchError"}
+        if (
+            not isinstance(process_result, dict)
+            or set(process_result) not in (normal_process_fields, launch_error_fields)
+            or process_result.get("schemaVersion") != "bootstrap-process-result.v1"
+            or process_result.get("attemptId") != attempt_dir.name
+            or _parse_event_timestamp(process_result.get("completedAt")) is None
+        ):
+            attempt_reasons.add(f"invalid-process-result:{attempt_dir.name}")
+        else:
+            process_pid = process_result.get("pid")
+            exit_code = process_result.get("exitCode")
+            process_result_time = _parse_event_timestamp(process_result.get("completedAt"))
+            launched = (
+                isinstance(process_pid, int) and not isinstance(process_pid, bool) and process_pid > 0
+                and isinstance(exit_code, int) and not isinstance(exit_code, bool)
+            )
+            if (
+                not launched
+                or start_event.get("pid") != process_pid
+                or terminal_event.get("pid") != process_pid
+            ):
+                attempt_reasons.add(f"invalid-process-identity:{attempt_dir.name}")
+            if (
+                process_result_time is None
+                or (start_time is not None and process_result_time < start_time)
+                or (terminal_time is not None and process_result_time > terminal_time)
+            ):
+                attempt_reasons.add(f"invalid-process-result-order:{attempt_dir.name}")
+            transport_retry = terminal_type == "attempt-failed" and (
+                terminal_event.get("failureClass") == "transport" or exit_code != 0
+            )
+            if terminal_type == "attempt-completed" and exit_code != 0:
+                attempt_reasons.add(f"completed-attempt-nonzero-exit:{attempt_dir.name}")
+            if exit_code == 0:
+                if len(process_completions) != 1:
+                    attempt_reasons.add(f"invalid-process-completion:{attempt_dir.name}")
+                else:
+                    completion_index, completion_event = process_completions[0]
+                    completion_time = _parse_event_timestamp(completion_event.get("timestamp"))
+                    if (
+                        completion_index <= start_index
+                        or completion_index >= terminal_index
+                        or completion_time is None
+                        or (start_time is not None and completion_time < start_time)
+                        or (terminal_time is not None and completion_time > terminal_time)
+                    ):
+                        attempt_reasons.add(f"invalid-process-completion-order:{attempt_dir.name}")
+            elif process_completions or terminal_type != "attempt-failed":
+                attempt_reasons.add(f"invalid-failed-process-lifecycle:{attempt_dir.name}")
+
+        tokens: Any = None
+        if token_path.is_file():
+            token_doc = read_json(token_path)
+            tokens = token_doc.get("tokens") if isinstance(token_doc, dict) else None
+            if (
+                not isinstance(token_doc, dict)
+                or set(token_doc) != {"schemaVersion", "tokens"}
+                or token_doc.get("schemaVersion") != "bootstrap-token-usage.v1"
+                or not isinstance(tokens, int)
+                or isinstance(tokens, bool)
+                or tokens < 0
+            ):
+                attempt_reasons.add(f"invalid-token-sidecar:{attempt_dir.name}")
+                tokens = None
+        if stdout_path.is_file():
+            try:
+                stdout = stdout_path.read_text(encoding="utf-8")
+            except (OSError, UnicodeError):
+                attempt_reasons.add(f"invalid-stdout:{attempt_dir.name}")
+            else:
+                jsonl_tokens = codex_token_usage(stdout)
+                if jsonl_tokens is None or tokens != jsonl_tokens:
+                    attempt_reasons.add(f"token-jsonl-mismatch:{attempt_dir.name}")
+
+        if isinstance(tokens, int) and not isinstance(tokens, bool):
+            if role == "model_probe":
+                totals["probe"] += tokens
+            elif role == "independent_verifier":
+                totals["verifier"] += tokens
+            else:
+                totals["reviewer"] += tokens
+            if transport_retry:
+                totals["retry"] += tokens
+        if not attempt_reasons and terminal_event.get("eventType") == "attempt-completed":
+            completed_role_counts[role] += 1
+        reasons.update(attempt_reasons)
+
+    for attempt_id in sorted(set(event_attempts) - directory_attempts):
+        reasons.add(f"orphan-cost-event:{attempt_id}")
+    if not directory_attempts:
+        reasons.add("no-cost-attempts")
+
+    required_roles: set[str] = set()
+    if isinstance(manifest, dict) and manifest.get("executionMode") == "codex-exec":
+        layers = manifest.get("requiredLayers")
+        if not isinstance(layers, list) or any(role not in LAYERS for role in layers):
+            reasons.add("invalid-required-role-set")
+        else:
+            required_roles.update(layers)
+        required_roles.add("model_probe")
+        candidate_path = run_dir / "review-candidates.json"
+        if candidate_path.is_file():
+            candidate_doc = read_json(candidate_path)
+            findings = candidate_doc.get("findings") if isinstance(candidate_doc, dict) else None
+            if not isinstance(findings, list):
+                reasons.add("invalid-candidate-evidence")
+            elif any(
+                isinstance(item, dict) and item.get("proposedSeverity") in {"P0", "P1"}
+                for item in findings
+            ):
+                required_roles.add("independent_verifier")
+    else:
+        reasons.add("not-a-codex-exec-run")
+    for role in sorted(required_roles):
+        if completed_role_counts.get(role, 0) < 1:
+            reasons.add(f"required-role-not-complete:{role}")
+
+    wall_seconds: float | None = None
+    if intervals:
+        merged: list[list[datetime]] = []
+        for start, end in sorted(intervals, key=lambda item: (item[0], item[1])):
+            if not merged or start > merged[-1][1]:
+                merged.append([start, end])
+            elif end > merged[-1][1]:
+                merged[-1][1] = end
+        wall_seconds = sum((end - start).total_seconds() for start, end in merged)
+    else:
+        reasons.add("missing-valid-attempt-interval")
+    model_consistent = len(selected_models) == 1
+    if not model_consistent:
+        reasons.add("model-selection-not-unique")
+    completed_roles = sorted(role for role, count in completed_role_counts.items() if count >= 1)
+    return {
+        "complete": not reasons,
+        "reviewerTokens": totals["reviewer"],
+        "verifierTokens": totals["verifier"],
+        "probeTokens": totals["probe"],
+        "transportRetryTokens": totals["retry"],
+        "totalTokens": totals["reviewer"] + totals["verifier"] + totals["probe"],
+        "wallSeconds": wall_seconds,
+        "wallTimeMethod": "union-of-attempt-intervals",
+        "attemptCount": attempt_count,
+        "requiredRoles": sorted(required_roles),
+        "completedRoles": completed_roles,
+        "selectedModel": next(iter(selected_models)) if model_consistent else None,
+        "modelConsistent": model_consistent,
+        "exclusionReasons": sorted(reasons),
+    }
+
+
+def nearest_rank_percentile(values: list[float], percentile: float) -> float:
+    if not values:
+        raise BootstrapError("Cannot calculate a percentile from an empty sample")
+    if any(not math.isfinite(value) for value in values):
+        raise BootstrapError("Cannot calculate a percentile from non-finite samples")
+    ordered = sorted(values)
+    rank = max(1, math.ceil(percentile * len(ordered)))
+    return ordered[rank - 1]
+
+
+def _baseline_runs(
+    repository_root: Path, explicit_run_dirs: list[str] | None,
+) -> list[tuple[Path, dict[str, Any]]]:
+    if not explicit_run_dirs:
+        found = review_run_manifests(repository_root)
+        for run_dir, manifest in found:
+            unhashed = dict(manifest)
+            expected_hash = unhashed.pop("inputHash", None)
+            if expected_hash != value_hash(unhashed):
+                raise BootstrapError(
+                    f"Registered Bootstrap run has a stale input hash at {run_dir / 'review-input.json'}"
+                )
+        return found
+    found: list[tuple[Path, dict[str, Any]]] = []
+    seen: set[Path] = set()
+    for value in explicit_run_dirs:
+        run_dir = ensure_within(Path(value) if Path(value).is_absolute() else repository_root / value,
+                                repository_root, "Explicit Bootstrap run")
+        if run_dir in seen:
+            raise BootstrapError("Baseline input contains a duplicate explicit run")
+        seen.add(run_dir)
+        manifest_path = run_dir / "review-input.json"
+        manifest = read_json(manifest_path)
+        if manifest.get("schemaVersion") != "bootstrap-review-input.v1":
+            raise BootstrapError(f"Explicit Bootstrap run has an invalid manifest at {manifest_path}")
+        unhashed = dict(manifest)
+        expected_hash = unhashed.pop("inputHash", None)
+        if expected_hash != value_hash(unhashed):
+            raise BootstrapError(f"Explicit Bootstrap run has a stale input hash at {manifest_path}")
+        found.append((run_dir, manifest))
+    return sorted(found, key=lambda item: repository_relative_path(item[0], repository_root))
+
+
+def validate_baseline_access_proof(run_dir: Path, manifest: dict[str, Any]) -> None:
+    path = run_dir / "access-proof.json"
+    if not path.is_file():
+        return
+    proof = read_json(path)
+    base_fields = {
+        "schemaVersion", "reviewId", "inputHash", "artifactViewManifestHash", "model",
+        "reasoningEffort", "sandbox", "workspaceRootClass", "shell", "commandIdentity",
+        "environmentAllowlist", "environmentEvidenceHash", "userIdentity", "platform",
+        "highCostAcknowledged", "handshakePath", "handshakeFileHash",
+        "accessHandshakeHash", "provenAt",
+    }
+    helper_fields = {
+        "handshakeHelperPath", "handshakeHelperHash", "handshakeRequestPath",
+        "handshakeRequestHash",
+    }
+    expected = {
+        "schemaVersion": "bootstrap-access-proof.v1",
+        "reviewId": manifest.get("reviewId"),
+        "inputHash": manifest.get("inputHash"),
+        "artifactViewManifestHash": manifest.get("artifactView", {}).get("manifestHash"),
+        "sandbox": "workspace-write",
+        "workspaceRootClass": "attempt-directory-only",
+        "shell": False,
+    }
+    if (
+        not isinstance(proof, dict)
+        or set(proof) not in (base_fields, base_fields | helper_fields)
+        or any(proof.get(key) != value for key, value in expected.items())
+        or not isinstance(proof.get("model"), str)
+        or not proof["model"]
+        or not isinstance(proof.get("reasoningEffort"), str)
+        or not proof["reasoningEffort"]
+        or HASH_PATTERN.fullmatch(str(proof.get("commandIdentity"))) is None
+        or proof.get("environmentAllowlist") != list(ENVIRONMENT_ALLOWLIST)
+        or HASH_PATTERN.fullmatch(str(proof.get("environmentEvidenceHash"))) is None
+        or not isinstance(proof.get("userIdentity"), str)
+        or not proof["userIdentity"]
+        or not isinstance(proof.get("platform"), str)
+        or not proof["platform"]
+        or not isinstance(proof.get("highCostAcknowledged"), bool)
+        or not isinstance(proof.get("handshakePath"), str)
+        or not proof["handshakePath"]
+        or HASH_PATTERN.fullmatch(str(proof.get("handshakeFileHash"))) is None
+        or HASH_PATTERN.fullmatch(str(proof.get("accessHandshakeHash"))) is None
+        or _parse_event_timestamp(proof.get("provenAt")) is None
+    ):
+        raise BootstrapError(f"Formal Bootstrap access proof is invalid at {path}")
+    handshake_path = ensure_within(
+        run_dir / proof["handshakePath"], run_dir / "attempts", "Historical access handshake"
+    )
+    if not handshake_path.is_file() or file_hash(handshake_path) != proof["handshakeFileHash"]:
+        raise BootstrapError(f"Formal Bootstrap access proof handshake is stale at {path}")
+    handshake_hash = validate_access_handshake_payload(
+        run_dir, manifest, "model_probe", read_json(handshake_path)
+    )
+    if handshake_hash != proof["accessHandshakeHash"]:
+        raise BootstrapError(f"Formal Bootstrap access proof binding is invalid at {path}")
+    if helper_fields.issubset(proof):
+        if (
+            not isinstance(proof.get("handshakeHelperPath"), str)
+            or not proof["handshakeHelperPath"]
+            or not isinstance(proof.get("handshakeRequestPath"), str)
+            or not proof["handshakeRequestPath"]
+        ):
+            raise BootstrapError(f"Formal Bootstrap access proof helper path is invalid at {path}")
+        helper_path = ensure_within(
+            run_dir / proof["handshakeHelperPath"], run_dir / "attempts",
+            "Historical handshake helper",
+        )
+        request_path = ensure_within(
+            run_dir / proof["handshakeRequestPath"], run_dir / "attempts",
+            "Historical handshake request",
+        )
+        if (
+            HASH_PATTERN.fullmatch(str(proof.get("handshakeHelperHash"))) is None
+            or HASH_PATTERN.fullmatch(str(proof.get("handshakeRequestHash"))) is None
+            or not helper_path.is_file()
+            or file_hash(helper_path) != proof["handshakeHelperHash"]
+            or not request_path.is_file()
+            or file_hash(request_path) != proof["handshakeRequestHash"]
+        ):
+            raise BootstrapError(f"Formal Bootstrap access proof helper binding is invalid at {path}")
+
+
+def validate_baseline_formal_sidecars(run_dir: Path, manifest: dict[str, Any]) -> None:
+    """Validate present controller-owned JSON without applying current-time authority checks."""
+    code_validated_schemas = {
+        "bootstrap-review-input.v1",
+        "bootstrap-review-candidates.v1",
+        "bootstrap-review-rejections.v1",
+        "bootstrap-review-dispositions.v1",
+        "bootstrap-review-metrics.v1",
+        "bootstrap-run-summary.v1",
+        "bootstrap-access-proof.v1",
+        "bootstrap-run-seal.v1",
+    }
+    candidates = [*run_dir.glob("*.json")]
+    reviewer_root = run_dir / "reviewer-outputs"
+    if reviewer_root.is_dir():
+        candidates.extend(reviewer_root.glob("*.json"))
+    for path in sorted(candidates):
+        document = read_json(path)
+        if not isinstance(document, dict):
+            raise BootstrapError(f"Formal Bootstrap sidecar must be an object: {path}")
+        schema_version = document.get("schemaVersion")
+        schema_name = f"{schema_version}.schema.json"
+        if not isinstance(schema_version, str):
+            raise BootstrapError(f"Formal Bootstrap sidecar has no schema identity: {path}")
+        if schema_name not in schema_registry():
+            if schema_version in code_validated_schemas:
+                continue
+            raise BootstrapError(f"Formal Bootstrap sidecar has an unknown schema at {path}")
+        errors = schema_validation_errors(schema_name, document)
+        if errors:
+            raise BootstrapError(f"Formal Bootstrap sidecar is invalid at {path}: " + "; ".join(errors))
+    gate_path = run_dir / "review-gate-result.json"
+    terminal_residues = [
+        run_dir / "review-dispositions.json",
+        run_dir / "review-metrics.json",
+    ]
+    if not gate_path.is_file() and any(path.is_file() for path in terminal_residues):
+        raise BootstrapError(
+            f"Formal Bootstrap finalized sidecars are missing review-gate-result.json at {run_dir}"
+        )
+    validate_baseline_access_proof(run_dir, manifest)
+    seal_path = run_dir / "run-seal.json"
+    if seal_path.is_file():
+        seal = read_json(seal_path)
+        if (
+            set(seal) != {"schemaVersion", "reviewId", "inputHash", "state", "reason", "successor", "sealedAt"}
+            or seal.get("schemaVersion") != "bootstrap-run-seal.v1"
+            or seal.get("reviewId") != manifest.get("reviewId")
+            or seal.get("inputHash") != manifest.get("inputHash")
+            or seal.get("state") not in {"abandoned", "superseded", "replaced-after-probe-failure"}
+            or _parse_event_timestamp(seal.get("sealedAt")) is None
+        ):
+            raise BootstrapError(f"Formal Bootstrap run seal is invalid at {seal_path}")
+
+
+def _cost_cohort_identity(manifest: dict[str, Any]) -> dict[str, Any]:
+    # Callers inject the actual selected model after locating the run. The
+    # preferred model remains the deterministic fallback for manual history.
+    return {
+        "reviewProfile": manifest.get("reviewProfile"),
+        "policyRevision": manifest.get("policyRevision"),
+        "routeVersion": manifest.get("routeVersion"),
+        "controlPlaneRevision": manifest.get("controlPlaneRevision"),
+        "model": manifest.get("codexExecPolicy", {}).get("preferredModel"),
+        "reasoningProfile": value_hash(manifest.get("codexExecPolicy", {}).get("reasoningEffortByRole", {})),
+        "fullReviewRound": manifest.get("fullReviewRound"),
+        "workloadBucket": manifest.get("reviewCostEstimate", {}).get("workloadBucket") or review_workload_bucket(
+            len(manifest.get("artifacts", [])),
+            sum(item.get("sizeBytes", 0) for item in manifest.get("artifacts", []) if isinstance(item, dict)),
+        ),
+    }
+
+
+def build_review_baseline(
+    repository_root: Path, explicit_run_dirs: list[str] | None, output_dir: Path,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    cohort_samples: dict[str, dict[str, Any]] = {}
+    for run_dir, manifest in _baseline_runs(repository_root, explicit_run_dirs):
+        validate_baseline_formal_sidecars(run_dir, manifest)
+        classification = classify_run(run_dir, manifest)
+        semantic_eligible = classification["runExecutionState"] == "finalized"
+        validation_hash = None
+        finding_closure = None
+        if semantic_eligible:
+            loaded_dir, loaded_manifest, loaded_root = load_run(
+                str(run_dir), require_fresh_artifacts=False
+            )
+            if loaded_dir != run_dir.resolve() or loaded_root != repository_root.resolve():
+                raise BootstrapError("Baseline finalized run resolved to another repository identity")
+            if loaded_manifest != manifest:
+                raise BootstrapError("Baseline finalized run manifest changed during replay")
+            envelope = validate_finalized_run_evidence(
+                run_dir,
+                loaded_manifest,
+                repository_root,
+                historical_replay=True,
+            )
+            envelope_schema = f"{envelope.get('schemaVersion')}.schema.json"
+            envelope_errors = (
+                schema_validation_errors(envelope_schema, envelope)
+                if envelope_schema in schema_registry() else ["unknown envelope schema"]
+            )
+            if envelope_errors:
+                raise BootstrapError(
+                    "Baseline finalized envelope is invalid: " + "; ".join(envelope_errors)
+                )
+            stable_envelope = {key: value for key, value in envelope.items() if key != "generatedAt"}
+            validation_hash = value_hash(stable_envelope)
+            finding_closure = envelope["findingClosure"]
+        cost = structured_run_cost_evidence(run_dir, manifest)
+        cost_eligible = (
+            semantic_eligible and cost["complete"] and cost["totalTokens"] > 0
+            and cost["modelConsistent"]
+        )
+        row = {
+            "runDirectory": repository_relative_path(run_dir, repository_root),
+            "reviewId": classification["reviewId"],
+            "changeId": classification["changeId"],
+            "lineageFamilyId": classification["lineageFamilyId"],
+            "fullReviewRound": classification["fullReviewRound"],
+            "profileName": manifest.get("profileName"),
+            "runExecutionState": classification["runExecutionState"],
+            "runRelationship": classification["runRelationship"],
+            "changeCycleState": classification["changeCycleState"],
+            "finalStatus": classification["finalStatus"],
+            "eligibleForSemanticStatistics": semantic_eligible,
+            "eligibleForCostCalibration": cost_eligible,
+            "manifestHash": file_hash(run_dir / "review-input.json"),
+            "validationEnvelopeHash": validation_hash,
+            "findingClosure": finding_closure,
+            "costEvidence": cost,
+        }
+        rows.append(row)
+        if not cost_eligible:
+            continue
+        identity = _cost_cohort_identity(manifest)
+        identity["model"] = cost["selectedModel"]
+        cohort_key = value_hash(identity)
+        sample = cohort_samples.setdefault(cohort_key, {"match": identity, "runs": []})
+        estimate = manifest.get("reviewCostEstimate", {})
+        input_range = estimate.get("estimatedInputTokens", {})
+        try:
+            input_midpoint = max(
+                1.0,
+                (float(input_range.get("low", 1)) + float(input_range.get("high", 1))) / 2.0,
+            )
+            reasoning_units = max(1.0, float(estimate.get("reviewerReasoningUnits", 1)))
+            multiplier = cost["totalTokens"] / (input_midpoint * reasoning_units)
+        except (OverflowError, TypeError, ValueError, ZeroDivisionError) as exc:
+            raise BootstrapError("Eligible cost evidence cannot produce a finite multiplier") from exc
+        if not all(math.isfinite(value) and value > 0 for value in (
+            input_midpoint, reasoning_units, multiplier,
+        )):
+            raise BootstrapError("Eligible cost evidence produced a non-finite multiplier")
+        sample["runs"].append({
+            "tokens": cost["totalTokens"],
+            "wallSeconds": cost["wallSeconds"],
+            "multiplier": multiplier,
+            "retry": cost["transportRetryTokens"] > 0,
+        })
+
+    rows.sort(key=lambda item: item["runDirectory"])
+    exclusions = list(FINALIZED_DOES_NOT_AUTHORIZE)
+    generated_at = utc_now()
+    yield_fields = (
+        "candidateCount", "visibleFindingCount", "confirmedCount", "advisoryCount",
+        "unverifiedCount", "refutedCount", "p2FixedCount", "p2DeferredCount",
+        "p2RefutedCount",
+    )
+    eligible_closures = [
+        item["findingClosure"] for item in rows
+        if item["eligibleForSemanticStatistics"] and isinstance(item["findingClosure"], dict)
+    ]
+    yield_totals = {
+        field: sum(int(closure[field]) for closure in eligible_closures)
+        for field in yield_fields
+    }
+    eligible_count = len(eligible_closures)
+    history = {
+        "schemaVersion": "bootstrap-review-history-index.v1",
+        "repositoryRevision": git_revision(repository_root),
+        "runCount": len(rows),
+        "eligibleRunCount": eligible_count,
+        "semanticYield": {
+            "eligibleRunCount": eligible_count,
+            "totals": yield_totals,
+            "candidatesPerEligibleRun": (
+                yield_totals["candidateCount"] / eligible_count if eligible_count else 0.0
+            ),
+            "visibleFindingsPerEligibleRun": (
+                yield_totals["visibleFindingCount"] / eligible_count if eligible_count else 0.0
+            ),
+            "confirmedPerEligibleRun": (
+                yield_totals["confirmedCount"] / eligible_count if eligible_count else 0.0
+            ),
+            "refutedPerEligibleRun": (
+                yield_totals["refutedCount"] / eligible_count if eligible_count else 0.0
+            ),
+        },
+        "runs": rows,
+        "authorizes": [],
+        "doesNotAuthorize": exclusions,
+        "generatedAt": generated_at,
+    }
+    history_errors = schema_validation_errors("bootstrap-review-history-index.v1.schema.json", history)
+    if history_errors:
+        raise BootstrapError("Generated review history index is invalid: " + "; ".join(history_errors))
+    logs_root = (repository_root / "logs").resolve()
+    output_dir = ensure_within(output_dir, logs_root, "Review baseline output directory")
+    if output_dir == logs_root:
+        raise BootstrapError("Review baseline output directory must be below logs/")
+    if output_dir.exists():
+        raise BootstrapError("Review baseline outputs are append-only")
+    history_file_hash = HASH_PREFIX + hashlib.sha256(
+        (json.dumps(history, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
+    ).hexdigest()
+
+    cohorts = []
+    for cohort_key, cohort in sorted(cohort_samples.items()):
+        samples = cohort["runs"]
+        token_values = [float(item["tokens"]) for item in samples]
+        wall_values = [float(item["wallSeconds"]) for item in samples]
+        multiplier_values = [float(item["multiplier"]) for item in samples]
+        sample_count = len(samples)
+        retry_rate = sum(item["retry"] for item in samples) / sample_count
+        cohorts.append({
+            "cohortId": cohort_key.removeprefix(HASH_PREFIX)[:24],
+            "match": cohort["match"],
+            "statistics": {
+                "basisSampleCount": sample_count,
+                "confidence": "high" if sample_count >= 20 else ("medium" if sample_count >= 5 else "low"),
+                "tokenMultiplierP50": nearest_rank_percentile(multiplier_values, 0.50),
+                "tokenMultiplierP90": nearest_rank_percentile(multiplier_values, 0.90),
+                "minimumTotalTokensP50": max(1, int(nearest_rank_percentile(token_values, 0.50))),
+                "minimumTotalTokensP90": max(1, int(nearest_rank_percentile(token_values, 0.90))),
+                "tokensPerWallMinute": max(1, int(sum(token_values) / max(1.0, sum(wall_values) / 60.0))),
+                "retryRisk": "high" if retry_rate >= 0.5 else ("medium" if retry_rate > 0 else "low"),
+                "observedTotalTokensP50": int(nearest_rank_percentile(token_values, 0.50)),
+                "observedTotalTokensP90": int(nearest_rank_percentile(token_values, 0.90)),
+                "observedWallSecondsP50": nearest_rank_percentile(wall_values, 0.50),
+                "observedWallSecondsP90": nearest_rank_percentile(wall_values, 0.90),
+            },
+        })
+    promoted, _promoted_ref = load_cost_calibration()
+    calibration = {
+        "schemaVersion": "bootstrap-review-cost-calibration.v1",
+        "calibrationId": "bootstrap-cost-candidate-" + value_hash({
+            "repositoryRevision": git_revision(repository_root),
+            "history": {key: value for key, value in history.items() if key != "generatedAt"},
+        }).removeprefix(HASH_PREFIX)[:16],
+        "status": "candidate",
+        "sourceHistoryIndex": {
+            "path": repository_relative_path(output_dir / "review-history-index.v1.json", repository_root),
+            "sha256": history_file_hash,
+        },
+        "cohortDimensions": promoted["cohortDimensions"],
+        "conservativeFallback": promoted["conservativeFallback"],
+        "cohorts": cohorts,
+        "eligibleSampleCount": sum(
+            len(cohort["runs"]) for cohort in cohort_samples.values()
+        ),
+        "authorizes": [],
+        "doesNotAuthorize": exclusions,
+        "generatedAt": generated_at,
+    }
+    calibration_errors = schema_validation_errors("bootstrap-review-cost-calibration.v1.schema.json", calibration)
+    if calibration_errors:
+        raise BootstrapError("Generated review cost calibration is invalid: " + "; ".join(calibration_errors))
+    output_dir.parent.mkdir(parents=True, exist_ok=True)
+    stage_dir = Path(tempfile.mkdtemp(prefix=f".{output_dir.name}.stage-", dir=output_dir.parent))
+    history_path = stage_dir / "review-history-index.v1.json"
+    calibration_path = stage_dir / "review-cost-calibration-candidate.v1.json"
+    try:
+        write_json(history_path, history)
+        write_json(calibration_path, calibration)
+        os.replace(stage_dir, output_dir)
+    finally:
+        if stage_dir.exists():
+            history_path.unlink(missing_ok=True)
+            calibration_path.unlink(missing_ok=True)
+            stage_dir.rmdir()
+    return history, calibration
+
+
+def command_build_review_baseline(args: argparse.Namespace) -> int:
+    repository_root = Path(args.repository_root).resolve()
+    output_dir = Path(args.out_dir)
+    if not output_dir.is_absolute():
+        output_dir = repository_root / output_dir
+    history, calibration = build_review_baseline(
+        repository_root, args.run_dir, output_dir.resolve()
+    )
+    print(json.dumps({
+        "runCount": history["runCount"],
+        "eligibleRunCount": history["eligibleRunCount"],
+        "costCohortCount": len(calibration["cohorts"]),
+        "outputDirectory": repository_relative_path(output_dir.resolve(), repository_root),
+    }, indent=2))
+    return 0
+
+
 def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
     seal_path = run_dir / "run-seal.json"
     seal = read_json(seal_path) if seal_path.is_file() else None
@@ -6405,7 +7562,7 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
                 expired_p2 = True
             else:
                 expired_p2 |= expiry <= datetime.now(timezone.utc)
-    if relationship != "active":
+    if relationship != "active" or execution_state == "abandoned":
         cycle_state = "closed"
     elif expired_p2:
         cycle_state = "repair-required"
@@ -6417,8 +7574,6 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
         cycle_state = "repair-required"
     elif execution_state in {"awaiting-verification", "layers-running", "authorized"}:
         cycle_state = "review-required"
-    elif execution_state == "abandoned" and relationship == "superseded":
-        cycle_state = "closed"
     else:
         cycle_state = "review-required"
     next_action = "use-successor-or-create-fresh-run" if relationship != "active" else {
@@ -6926,6 +8081,14 @@ def build_parser() -> argparse.ArgumentParser:
     validate_finalized.add_argument("--run-dir", required=True)
     validate_finalized.add_argument("--output", required=True)
     validate_finalized.set_defaults(handler=command_validate_finalized_run)
+    build_baseline = subparsers.add_parser(
+        "build-review-baseline",
+        help="Build non-authorizing history and cost-calibration candidate projections",
+    )
+    build_baseline.add_argument("--repository-root", required=True)
+    build_baseline.add_argument("--run-dir", action="append")
+    build_baseline.add_argument("--out-dir", required=True)
+    build_baseline.set_defaults(handler=command_build_review_baseline)
     list_runs = subparsers.add_parser("list-runs", help="Rebuild the repository Bootstrap run index")
     list_runs.add_argument("--repository-root", required=True)
     list_runs.add_argument("--change-id")

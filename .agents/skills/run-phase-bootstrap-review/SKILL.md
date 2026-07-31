@@ -61,6 +61,27 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py insp
 py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py inspect-run --run-dir <run>
 ```
 
+For cost/yield governance, build a non-authorizing baseline from the validated
+registry or an explicit set of formal run directories:
+
+```text
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py build-review-baseline \
+  --repository-root <repo> --out-dir logs/review-governance/baselines/<id> \
+  [--run-dir <formal-run> ...]
+```
+
+The history index includes every located lifecycle state. Only finalized runs
+that pass full evidence replay enter semantic statistics, and only those with
+complete structured attempt token and process-event evidence enter cost
+cohorts. Token counts come from the same Codex JSONL execution, every counted
+attempt directory must match a started and terminal process-event lifecycle,
+and a run that selected more than one model remains operational-only rather
+than being attributed to one model cohort. The history index and calibration
+candidate publish as one staged directory. A finalized run that fails replay
+fails the complete build. Generated
+calibration is a candidate and never updates the promoted reference
+automatically. Baselines and calibration always carry `authorizes=[]`.
+
 Pass the hash-bound `inspect-lineage` result to the consumer even when it
 reports zero rounds; omission must never mean a fresh family. Follow the
 reported `nextAction`. Do not infer current state from an old assistant summary.
@@ -228,6 +249,30 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py vali
 ```
 
 The envelope is validation evidence only. It always has `authorizes=[]` and explicitly excludes plan acceptance, implementation acceptance, protected handoff, release, commit, and done authority. A plan-local validator may consume the envelope, but must independently apply its own acceptance predicate.
+
+New v3 envelopes also bind `candidateBindingHash`, covering the frozen artifact
+set, authority context, write set, execution read set, and dependency closure.
+This permits a consumer to prove exact deterministic reuse after rerunning
+`validate-finalized-run`; it is not an LLM result cache. Stored legacy envelopes
+without this binding remain readable under their frozen v1/v2 schemas but are
+ineligible for exact reuse.
+
+`build-review-baseline` writes only below `logs/`. It records each replayed
+finalized run's complete finding closure and aggregate semantic yield. A run
+enters a cost cohort only when every required reviewer, required verifier, and
+access probe has a unique ordered lifecycle, a bound process result, and token
+usage rederived from the same Codex JSONL stdout. Wall time is the union of
+active attempt intervals, excluding idle gaps between attempts.
+
+Cost estimates use the schema-validated promoted calibration reference at
+`references/review-cost-calibration.v1.json` with an implementation-bound file
+hash. Missing cohorts use its declared conservative fallback. A missing,
+corrupt, candidate-status, or substituted promoted reference fails closed.
+Promotion adds a new versioned reference and updates the producer binding; it
+does not overwrite a reference already bound by historical run manifests.
+Synthetic confirmed/refuted calibration pairs live only under test fixtures;
+they must never be copied from historical exact evidence or consumed by a
+runtime reviewer prompt.
 
 After a third-round manual pause, a successor policy cannot reset the existing lineage family. A new family is valid only after an explicit supersede or incompatible-scope decision creates a genuinely different acceptance target. The successor authority must still bind the exact authority-root registry frozen by that policy revision; a run-local null-predecessor authority is invalid. The consumer must rerun `validate-finalized-run`; a new change ID, saved minimal envelope, or self-declared independence flag cannot clear the old target's pause.
 
