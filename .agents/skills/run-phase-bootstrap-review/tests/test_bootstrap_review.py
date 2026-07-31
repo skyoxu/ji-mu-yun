@@ -1098,6 +1098,38 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 },
             )
 
+    def test_runner_owned_preflight_accepts_registered_dotnet_build(self) -> None:
+        argv, cwd, timeout = bootstrap._preflight_descriptor(
+            self.repo,
+            self.scope,
+            self.run_dir,
+            {
+                "executable": "dotnet",
+                "argv": ["test", "PhaseA.Platform.Tests.csproj"],
+                "cwd": {"type": "repo_path", "value": "."},
+                "timeout_seconds": 2400,
+            },
+        )
+        self.assertEqual(
+            ["dotnet", "test", "PhaseA.Platform.Tests.csproj"], argv
+        )
+        self.assertEqual(self.repo, cwd)
+        self.assertEqual(2400, timeout)
+
+    def test_runner_owned_preflight_rejects_excessive_timeout(self) -> None:
+        with self.assertRaises(bootstrap.BootstrapError):
+            bootstrap._preflight_descriptor(
+                self.repo,
+                self.scope,
+                self.run_dir,
+                {
+                    "executable": "py",
+                    "argv": ["-3", "check.py"],
+                    "cwd": {"type": "repo_path", "value": "."},
+                    "timeout_seconds": 3601,
+                },
+            )
+
     def test_gate_rejects_stale_preflight_evidence(self) -> None:
         self.prepare()
         self.complete_layers()

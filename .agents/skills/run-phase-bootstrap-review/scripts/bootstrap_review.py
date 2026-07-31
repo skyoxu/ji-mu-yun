@@ -3393,7 +3393,7 @@ def _preflight_descriptor(
     repository_root: Path, plan_dir: Path, run_dir: Path, descriptor: dict[str, Any]
 ) -> tuple[list[str], Path, int]:
     """Compile a plan-owned shell-free command descriptor for preflight."""
-    if descriptor.get("executable") not in {"py", "python"}:
+    if descriptor.get("executable") not in {"py", "python", "dotnet"}:
         raise BootstrapError("Preflight command executable is not allowlisted")
     argv = descriptor.get("argv")
     if not isinstance(argv, list) or not argv:
@@ -3421,7 +3421,7 @@ def _preflight_descriptor(
     if not isinstance(cwd, dict) or cwd.get("type") != "repo_path" or cwd.get("value") != ".":
         raise BootstrapError("Preflight command cwd is not the repository root")
     timeout = descriptor.get("timeout_seconds")
-    if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0 or timeout > 900:
+    if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0 or timeout > 3600:
         raise BootstrapError("Preflight command timeout is invalid")
     return values, repository_root, timeout
 
