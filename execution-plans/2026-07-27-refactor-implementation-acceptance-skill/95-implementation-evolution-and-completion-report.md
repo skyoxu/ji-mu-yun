@@ -85,3 +85,11 @@ This append-only continuity report has `authorizes: []`. It cannot publish plan 
 - A live scoped Acceptance run exposed four bounded defects after all three semantic rounds had already been consumed: the persisted runner could not consume the plan-owned legacy registry directly, command failure did not propagate through the CLI process status, Windows long Git paths used the unsafe `commit:path` form, and the plan validator rejected the legitimate `implementation-complete` lifecycle state.
 - Repair round 6 consumes the existing `manual_pause` route as predecessor evidence and closes these defects with focused regression tests. Git blob reads now resolve an immutable object ID through `ls-tree` before `cat-file`, and controlled-command failure becomes observable to polling orchestration.
 - The plan publishes `implementation-complete` only after deterministic terminal validation. This does not authorize `acceptance-passed`, a fourth semantic review round, release, deployment, handoff, or archive; final disposition remains with the maintainer.
+
+## 2026-07-31: Maintainer acceptance disposition
+
+- The final scoped candidate is commit `ef1770a037005bfc45141be36474090751ef9e5e`; the persisted Acceptance run is `acceptance-runs/acceptance-a303d2f407105594`.
+- All six deterministic actions completed successfully. Plan validation, whole-directory validation, plan-validator tests, the Acceptance Skill suite, the Bootstrap companion suite, and package validation passed against the frozen candidate bindings.
+- The lineage consumed its three permitted semantic rounds and correctly routed to `manual_pause`; no fourth round, successor budget reset, or new acceptance target was created.
+- The maintainer accepted the residual risk after confirming that all previously confirmed P0/P1 findings have repair and regression evidence. The plan lifecycle is therefore published as `acceptance-passed`.
+- This disposition authorizes only `acceptance-passed`. It does not authorize release, deployment, handoff, archive, or modification of historical Bootstrap or Acceptance evidence.
