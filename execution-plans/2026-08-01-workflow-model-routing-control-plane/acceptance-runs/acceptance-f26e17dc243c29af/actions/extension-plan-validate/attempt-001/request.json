@@ -1,0 +1,20 @@
+{
+  "actionId": "extension-plan-validate",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "extension-plan-validate",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:73790f3a844335aec656f56be1fd2f64b0d3705c25e2440d5f7d7a4e76563e73",
+    "knowledgeContextHash": "sha256:62cb6207c13b55375f35d21cf4264ac63ac7ffcdd2bb5df6e6cd576acb36fbaa",
+    "runInputHash": "sha256:a8b6a3f7a431a4d8e86521bf524581d09b3b1a8552f7a179c0613feae6addc7f"
+  },
+  "ownerToken": "owner-acceptance-f26e17dc243c29af",
+  "processId": 10452,
+  "recordedUtc": "2026-07-31T19:11:52.212529Z",
+  "runId": "acceptance-f26e17dc243c29af",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 4
+}

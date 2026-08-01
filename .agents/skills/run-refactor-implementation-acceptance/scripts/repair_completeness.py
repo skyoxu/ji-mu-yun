@@ -116,13 +116,25 @@ def _candidate_path_bindings(candidate: dict[str, Any]) -> dict[str, dict[str, A
 
 def _bootstrap_module(root: Path) -> Any:
     module_path = root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
-    if str(module_path.parent) not in sys.path:
-        sys.path.insert(0, str(module_path.parent))
+    module_directory = str(module_path.parent)
     spec = importlib.util.spec_from_file_location("repair_bootstrap_review", module_path)
     if spec is None or spec.loader is None:
         raise InputError("Bootstrap control plane is unavailable")
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    original_path = list(sys.path)
+    displaced = {
+        name: sys.modules.pop(name)
+        for name in ("_control_plane", "knowledge_context")
+        if name in sys.modules
+    }
+    try:
+        sys.path[:] = [module_directory, *[item for item in sys.path if item != module_directory]]
+        spec.loader.exec_module(module)
+    finally:
+        sys.path[:] = original_path
+        for name in ("_control_plane", "knowledge_context"):
+            sys.modules.pop(name, None)
+        sys.modules.update(displaced)
     return module
 
 
@@ -283,6 +295,7 @@ def _validate_receipt(
     command_id: str,
     registry_relative: str,
     expected_input_paths: list[str],
+    required_command_paths: list[str],
 ) -> tuple[dict[str, str], dict[str, str]]:
     registry_path = _resolve(root, registry_relative, "composition command registry")
     try:
@@ -338,6 +351,15 @@ def _validate_receipt(
         {"path": item, "sha256": _file_hash(_resolve(root, item, "composition input"))}
         for item in sorted(expected_input_paths)
     ]
+    normalized_argv = {
+        str(item).replace("\\", "/")
+        for item in expected_invocation["argv"]
+    }
+    command_paths_bound = all(
+        relative_path in normalized_argv
+        or str((root / relative_path).resolve()).replace("\\", "/") in normalized_argv
+        for relative_path in required_command_paths
+    )
     if (
         set(receipt) != {
             "schemaVersion", "commandId", "commandRegistryHash",
@@ -370,6 +392,7 @@ def _validate_receipt(
         or receipt.get("writeManifestDeltaHash") != canonical_hash(write_delta)
         or receipt.get("inputBindings") != expected_input_bindings
         or receipt.get("inputBindingsHash") != canonical_hash(expected_input_bindings)
+        or not command_paths_bound
     ):
         raise InputError("composition receipt is invalid or failed")
     return (
@@ -693,6 +716,7 @@ def audit_repair_completeness(request: Any) -> dict[str, Any]:
     )
     direct_consumers = _bind_files(root, request.get("directConsumers"), "direct consumer")
     targeted_tests = _bind_files(root, request.get("targetedTests"), "targeted test")
+    targeted_test_paths = {item["path"] for item in targeted_tests}
     validation_refs = _bind_files(root, request.get("validationRefs"), "validation reference")
     direct_consumer_paths = {item["path"] for item in direct_consumers}
     validation_ref_paths = {item["path"] for item in validation_refs}
@@ -798,7 +822,8 @@ def audit_repair_completeness(request: Any) -> dict[str, Any]:
             receipt_path,
             check_id,
             registry_path,
-            sorted(set(producers) | set(consumers)),
+            sorted(set(producers) | set(consumers) | targeted_test_paths),
+            sorted(targeted_test_paths),
         )
         check_results.append(
             {

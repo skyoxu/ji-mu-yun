@@ -1,0 +1,74 @@
+{
+  "authorizes": [],
+  "commandId": "workflow-model-routing-repair-composition",
+  "commandRegistryHash": "sha256:925b9b66c51cb9db252057c465c8a2a7290747127649a9faa82624f66c937c42",
+  "environmentIdentity": {
+    "hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "names": []
+  },
+  "exitCode": 1,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/model_routing.py",
+      "sha256": "sha256:fcf66ecc0d82685343f2bc18b22e2b001e2f37edb82d249408b31c532d3a169c"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+      "sha256": "sha256:419ecbd6bc571607d77bfbbd3a5b722986682fc7ea740a2c0aafefe019e20aec"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+      "sha256": "sha256:d8ae6d692edecdd9c49a704566c4a10aa21d4917c714411a2c31fd9f9387fddb"
+    },
+    {
+      "path": "scripts/sc/config/workflow_model_routes.v1.json",
+      "sha256": "sha256:355e5d4b39ec84c1818fefdbdc366b3b873bf8f694c2a15422598ddcd0ffa912"
+    },
+    {
+      "path": "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+      "sha256": "sha256:b4bc08f7bac8d56a3e4db0361574a753bf4d51014c3d866968fe07a6869018e2"
+    },
+    {
+      "path": "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+      "sha256": "sha256:cc673431cd13922d7a1a7b2789cbbf88189a2f44bd0814648a9d617124ac74c5"
+    },
+    {
+      "path": "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json",
+      "sha256": "sha256:885635a6ecf1c186bcc87f42a3fd574a7565cb3f372caa8dffd5956f9a1385ed"
+    },
+    {
+      "path": "scripts/sc/workflow_model_routing.py",
+      "sha256": "sha256:16808f7f911e057ec3b5e65d63e51857404422a2087914b7b7da8f7d4578793a"
+    }
+  ],
+  "inputBindingsHash": "sha256:da907b2dce3a101c2f049b1f8560e2b370841d6647d45bd66af2701b8cf20307",
+  "invocation": {
+    "argv": [
+      "-3",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+    ],
+    "commandId": "workflow-model-routing-repair-composition",
+    "cwd": ".",
+    "environmentAllowlist": [],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 360
+  },
+  "invocationHash": "sha256:d0e61b934f5dd8c51e85363e885dc5dc3db412957188c82e228b75233ed90ff0",
+  "processResult": {
+    "commandId": "workflow-model-routing-repair-composition",
+    "exitCode": 1,
+    "stderrSha256": "sha256:e09f409590aca9e2352179fb9e78c16b577d63f02bdd1fc0ccb294756a1fc300",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:c59e033e0d403b6f09d7969293b5a6ddbed577fffce685bf854d4a77d107125d",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

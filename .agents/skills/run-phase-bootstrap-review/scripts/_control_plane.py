@@ -26,7 +26,7 @@ ENVIRONMENT_ALLOWLIST = (
 TYPED_PLACEHOLDERS = {
     "codex_command": "executable_path",
     "model": "model_id",
-    "reasoning_effort": "enum:medium|high",
+    "reasoning_effort": "enum:medium|high|max",
     "sandbox": "enum:read-only|workspace-write",
     "output_path": "absolute_path",
     "workspace_root": "absolute_attempt_path",
@@ -442,7 +442,7 @@ def render_codex_command(
     sandbox: str,
     output_path: Path,
 ) -> list[str]:
-    if reasoning_effort not in {"medium", "high"}:
+    if reasoning_effort not in {"medium", "high", "max"}:
         raise ControlPlaneError("reasoning_effort violates its typed placeholder")
     if sandbox not in {"read-only", "workspace-write"}:
         raise ControlPlaneError("sandbox violates its typed placeholder")

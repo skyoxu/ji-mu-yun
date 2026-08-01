@@ -1,0 +1,22 @@
+{
+  "schema_version":"vdd.scoped-dirty-worktree-baseline.v1",
+  "plan_id":"refactor-acceptance-toolchain-compact-vdd",
+  "captured_utc":"2026-07-31T18:00:47Z",
+  "git":{"head":"990732dadadbeeee35418588acfcf91a420386e0","scoped_tracked_diff_sha256":"sha256:e76d52c43daf605f1f7f7d4d6b7a013e953cf5803bffe4a091c641f31ed69573","scoped_index_diff_sha256":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+  "scope_roots":[".agents/skills/run-refactor-implementation-acceptance/","execution-plans/95-implementation-report-index.v1.json","docs/adr/","docs/architecture/ADR_INDEX_PHASE.md"],
+  "preexisting_dirty_paths":[
+    {"path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","sha256":"c5a9ff0de9ac6288d412a38085b1b27c8e3ce7c027c37c577d7f5f6040b46bb2","disposition":"incorporate-current-bytes"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py","sha256":"91e795353f0df8e19433753fb355e9a95fd0eadf891685ceddf213cba02fe4a9","disposition":"incorporate-current-bytes"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py","sha256":"cf5408d7de48e7bd10ee2ace8c4d0653d849df8bfef097ed091d56c0b72d0cd9","disposition":"preserve-no-overlap"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py","sha256":"0b21b7dca334725cd2ecf8d0e9f32cae53c88e9f18fdf9fc6602970b407b4e12","disposition":"preserve-no-overlap"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py","sha256":"a806f6e275239ee0be8edbe2458082911c0dce297932268d593a1ad402000f44","disposition":"incorporate-current-bytes"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py","sha256":"b8e56df7ce7cdd19e25240f0aa66551cf1c1b64fb187241515c6256e78a181d2","disposition":"preserve-no-overlap"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py","sha256":"c864e23654998012e945bd059ebdb80140a5b3a216cbaadc27552537fe5dd974","disposition":"preserve-no-overlap"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py","sha256":"5f310f0584653ba6f1ddad6e091288e7a08f8c699c65b258db24500a2fe7fc3c","disposition":"incorporate-current-bytes"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py","sha256":"419ecbd6bc571607d77bfbbd3a5b722986682fc7ea740a2c0aafefe019e20aec","disposition":"preserve-untracked-dependency"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py","sha256":"ace4ff6377a37daa8cfa1b23b7ef2bf297bb056153b047bcdaa6df8e48a33d79","disposition":"preserve-untracked-dependency"},
+    {"path":"execution-plans/95-implementation-report-index.v1.json","sha256":"feaaabf9a0768e8a54ed8f38413a814799d2775129cc01e5d08d0c5a45ca51c8","disposition":"append-one-entry"}
+  ],
+  "excluded_generated_or_unrelated":["execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/","execution-plans/2026-08-01-workflow-model-routing-control-plane/acceptance-runs/","logs/","other dirty worktree paths"],
+  "authorizes":[]
+}

@@ -12,6 +12,7 @@ from acceptance_core import (
     canonical_hash,
     candidate_changed_paths,
     parse_run_input,
+    resolve_code_review_policy,
     resolve_phase_policy,
     validate_baseline_manifest,
     validate_candidate_manifest,
@@ -37,6 +38,10 @@ from source_clauses import extract_heading_clauses
 from matrix_phase import project_acceptance_impact, publish_candidate_result, publish_final_result
 from knowledge_context import freeze_knowledge_context
 from repair_completeness import audit_repair_completeness
+from manual_pause_closure import (
+    finalize_manual_pause_closure,
+    prepare_manual_pause_closure,
+)
 from bootstrap_integration import (
     BootstrapBindingError,
     bind_capabilities,
@@ -271,6 +276,10 @@ def resolve_phase_policy_command(policy_path: str, baseline_path: str, candidate
     return resolve_phase_policy(_read_json(policy_path), _read_json(candidate_path), _read_json(baseline_path), adapter_hash)
 
 
+def resolve_code_review_policy_command(policy_path: str, baseline_path: str, candidate_path: str, adapter_hash: str) -> dict:
+    return resolve_code_review_policy(_read_json(policy_path), _read_json(candidate_path), _read_json(baseline_path), adapter_hash)
+
+
 def extract_requirements_command(source_path: str, repository_root: str, output_path: str | None = None) -> dict:
     source = Path(source_path).resolve()
     root = Path(repository_root).resolve()
@@ -374,6 +383,29 @@ def audit_repair_completeness_command(request_path: str, output_path: str) -> di
     return _publish_new_json(
         output_path,
         audit_repair_completeness(_read_json(request_path)),
+    )
+
+
+def prepare_manual_pause_closure_command(request_path: str, output_path: str) -> dict:
+    return _publish_new_json(
+        output_path,
+        prepare_manual_pause_closure(_read_json(request_path), Path(request_path).as_posix()),
+    )
+
+
+def finalize_manual_pause_closure_command(request_path: str, output_path: str) -> dict:
+    request = _read_json(request_path)
+    if not isinstance(request, dict) or set(request) != {
+        "repositoryRoot", "challengePath", "acknowledgement",
+    }:
+        raise InputError("manual-pause finalization request fields are invalid")
+    return _publish_new_json(
+        output_path,
+        finalize_manual_pause_closure(
+            Path(request["repositoryRoot"]),
+            request["challengePath"],
+            request["acknowledgement"],
+        ),
     )
 
 
@@ -683,6 +715,10 @@ def main() -> int:
     repair_completeness = subcommands.add_parser("audit-repair-completeness")
     repair_completeness.add_argument("--request", required=True)
     repair_completeness.add_argument("--out", required=True)
+    for name in ("prepare-manual-pause-closure", "finalize-manual-pause-closure"):
+        manual_pause = subcommands.add_parser(name)
+        manual_pause.add_argument("--request", required=True)
+        manual_pause.add_argument("--out", required=True)
     clauses = subcommands.add_parser("extract-source-clauses")
     clauses.add_argument("--source", required=True)
     clauses.add_argument("--repository-root", required=True)
@@ -750,7 +786,8 @@ def main() -> int:
         print(json.dumps(prepare_run(args.input, args.out, args.knowledge_context), sort_keys=True))
         return 0
     if args.command in {"resolve-code-review-policy", "resolve-phase-policy"}:
-        print(json.dumps(resolve_phase_policy_command(args.policy, args.baseline, args.candidate, args.adapter_hash), sort_keys=True))
+        command = resolve_phase_policy_command if args.command == "resolve-phase-policy" else resolve_code_review_policy_command
+        print(json.dumps(command(args.policy, args.baseline, args.candidate, args.adapter_hash), sort_keys=True))
         return 0
     if args.command in {"inventory", "extract-requirements"}:
         print(json.dumps(extract_requirements_command(args.source, args.repository_root, args.out), sort_keys=True))
@@ -778,6 +815,12 @@ def main() -> int:
         return 0
     if args.command == "audit-repair-completeness":
         print(json.dumps(audit_repair_completeness_command(args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "prepare-manual-pause-closure":
+        print(json.dumps(prepare_manual_pause_closure_command(args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "finalize-manual-pause-closure":
+        print(json.dumps(finalize_manual_pause_closure_command(args.request, args.out), sort_keys=True))
         return 0
     if args.command == "extract-source-clauses":
         print(json.dumps(extract_source_clauses_command(args.source, args.repository_root), sort_keys=True))

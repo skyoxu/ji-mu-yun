@@ -20,6 +20,8 @@ This index tracks Phase service ADRs for the hosted Phase A/B platform and Phase
 - ADR-0050: Knowledge Publication LKG Recovery And Generation Retention (extends ADR-0048; complements ADR-0044; supersedes neither) - `docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md`
 - ADR-0051: Bootstrap Lineage Family And Bounded Repair Re-entry (extends ADR-0041; complements ADR-0045/0049; supersedes none) - `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`
 - ADR-0052: Bootstrap Review Calibration And Exact Envelope Reuse (extends ADR-0041/0051; supersedes none) - `docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md`
+- ADR-0053: Refactor Acceptance Toolchain Domain And Compact VDD Projection (extends ADR-0041/0052; supersedes none) - `docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md`
+- ADR-0054: Refactor Acceptance Manual-Pause Deterministic Closure (extends ADR-0041/0051/0052; supersedes none) - `docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md`
 
 ## Proposed
 

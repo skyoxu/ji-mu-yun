@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/workflow-model-route-decision.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "decisionId",
+    "consumer",
+    "routeId",
+    "classification",
+    "typedInputs",
+    "triggers",
+    "blockingReasons",
+    "policyRevision",
+    "policyHash",
+    "rolloutMode",
+    "requestedExecution",
+    "actualExecution",
+    "override",
+    "capability",
+    "status",
+    "authorizes"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "jimuyun.workflow-model-route-decision.v1"},
+    "decisionId": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "consumer": {"enum": ["vdd", "quick_dev", "refactor_acceptance", "bootstrap_review"]},
+    "routeId": {"type": "string", "minLength": 1},
+    "classification": {"type": ["string", "null"]},
+    "typedInputs": {"type": "object"},
+    "triggers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "blockingReasons": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "policyRevision": {"type": "string", "minLength": 1},
+    "policyHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "rolloutMode": {"enum": ["observe_only", "active", "disabled"]},
+    "requestedExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["launchMode", "backend", "model", "effort", "sandbox"],
+      "properties": {
+        "launchMode": {"enum": ["child", "none", "external_profile"]},
+        "backend": {"type": ["string", "null"]},
+        "model": {"type": ["string", "null"]},
+        "effort": {"type": ["string", "null"]},
+        "sandbox": {"type": ["string", "null"]}
+      }
+    },
+    "actualExecution": {"type": ["object", "null"]},
+    "override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestedClass", "disposition", "reasonCode"],
+      "properties": {
+        "requestedClass": {"type": ["string", "null"]},
+        "disposition": {"enum": ["none", "accepted_upgrade", "rejected_downgrade", "rejected_invalid"]},
+        "reasonCode": {"type": ["string", "null"]}
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "state", "proofHash", "shadowPredicateState"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "state": {"enum": ["not_required", "missing", "passed", "failed"]},
+        "proofHash": {"type": ["string", "null"]},
+        "shadowPredicateState": {"enum": ["not_required", "missing", "passed", "failed"]}
+      }
+    },
+    "status": {"enum": ["observe_only", "ready", "blocked", "disabled", "external"]},
+    "authorizes": {"const": []}
+  }
+}

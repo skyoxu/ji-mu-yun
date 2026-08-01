@@ -1,0 +1,830 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-context.v1",
+  "locator_request": {
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "request_id": "vdd-workflow-model-routing-20260801-bootstrap-refresh03",
+    "consumer": "vdd",
+    "query": "DELIVERY_PROFILE fast-ship",
+    "snapshot": {
+      "ref": "refs/heads/main",
+      "commit": "990732dadadbeeee35418588acfcf91a420386e0"
+    },
+    "policy_revision": "knowledge-consumer-policies.v2"
+  },
+  "locator_result": {
+    "candidates": [
+      {
+        "anchor": "Repository Workflow Kernel Boundary",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "repository-guide",
+        "lifecycle": "repository-source",
+        "line_end": 108,
+        "line_start": 108,
+        "module_id": "repository-rules",
+        "path": "AGENTS.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 20,
+          "strategy": "hybrid-token",
+          "token_matches": 2
+        },
+        "read_set": [
+          {
+            "path": "AGENTS.md",
+            "role": "primary",
+            "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "repository-authority",
+        "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "5. Deployment View",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-overlay",
+        "lifecycle": "repository-source",
+        "line_end": 305,
+        "line_start": 305,
+        "module_id": "architecture.overlay.phase-a-cloud-runner.08-phase-a-cloud-runner-architecture",
+        "path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 20,
+          "strategy": "hybrid-token",
+          "token_matches": 2
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md",
+            "role": "primary",
+            "source_sha256": "83a1207b37179a19f5527a5b22fb031ec3b32a0bd78df377aad6247d542e0010"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0015",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0018",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0019",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0025",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0031",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "83a1207b37179a19f5527a5b22fb031ec3b32a0bd78df377aad6247d542e0010",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "3.3 Task-scoped acceptance (recommended)",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-module",
+        "lifecycle": "repository-source",
+        "line_end": 66,
+        "line_start": 66,
+        "module_id": "architecture.base.07-dev-build-and-gates-v2",
+        "path": "docs/architecture/base/07-dev-build-and-gates-v2.md",
+        "primary_domain": "workspace",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 10,
+          "strategy": "hybrid-token",
+          "token_matches": 1
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/base/07-dev-build-and-gates-v2.md",
+            "role": "primary",
+            "source_sha256": "cf47db256b4bef579891c2f4751cfb1c6b020cecf2e07901cb7fccaf16343d35"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0003",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0005",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0011",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0015",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0018",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0019",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0025",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0031",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "cf47db256b4bef579891c2f4751cfb1c6b020cecf2e07901cb7fccaf16343d35",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "dependency",
+          "workspace": "active"
+        }
+      },
+      {
+        "anchor": "ADR-0003: 可观测性与 Release Health（Sentry）",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0003",
+        "path": "docs/adr/ADR-0003-observability-release-health.md",
+        "primary_domain": "workspace",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0003-observability-release-health.md",
+            "role": "primary",
+            "source_sha256": "7daaeff4894e6b1656ca53353eca83b723c8bfa74753d1323e3a1caab929f9d1"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0005",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0008",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0011",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0019",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "7daaeff4894e6b1656ca53353eca83b723c8bfa74753d1323e3a1caab929f9d1",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "dependency",
+          "workspace": "active"
+        }
+      },
+      {
+        "anchor": "ADR-0005: 质量门禁（Godot + C#）",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0005",
+        "path": "docs/adr/ADR-0005-quality-gates.md",
+        "primary_domain": "workspace",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0005-quality-gates.md",
+            "role": "primary",
+            "source_sha256": "d4e19c9a06585fac45d63fb4169d109eedbaf2c96dbec23b4adb9d25f9932395"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0003",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0008",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0011",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0015",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0018",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0019",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0020",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0025",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0031",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "d4e19c9a06585fac45d63fb4169d109eedbaf2c96dbec23b4adb9d25f9932395",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "dependency",
+          "workspace": "active"
+        }
+      },
+      {
+        "anchor": "ADR-0011: 平台与 CI 策略（Windows-only）",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0011",
+        "path": "docs/adr/ADR-0011-windows-only-platform-and-ci.md",
+        "primary_domain": "workspace",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0011-windows-only-platform-and-ci.md",
+            "role": "primary",
+            "source_sha256": "fdcc4a9295232f62ea91deb727a2270898f78fc72cbbdbfbe227393dbf658dde"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0005",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0008",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0009",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "fdcc4a9295232f62ea91deb727a2270898f78fc72cbbdbfbe227393dbf658dde",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "dependency",
+          "workspace": "active"
+        }
+      },
+      {
+        "anchor": "ADR-0015: 性能预算与门禁（Godot 4.5 + C#）",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0015",
+        "path": "docs/adr/ADR-0015-performance-budgets-and-gates.md",
+        "primary_domain": "workspace",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0015-performance-budgets-and-gates.md",
+            "role": "primary",
+            "source_sha256": "00c3625daf1400b8f0e2b65a4ca3f642da0c1e82e19aecdc8343f6ed90fe4a20"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0003",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0005",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0011",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0018",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "00c3625daf1400b8f0e2b65a4ca3f642da0c1e82e19aecdc8343f6ed90fe4a20",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "dependency",
+          "workspace": "active"
+        }
+      },
+      {
+        "anchor": "ADR-0018: Godot Runtime and Distribution",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0018",
+        "path": "docs/adr/ADR-0018-godot-runtime-and-distribution.md",
+        "primary_domain": "workspace",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0018-godot-runtime-and-distribution.md",
+            "role": "primary",
+            "source_sha256": "e73954aecacc7b3b694d0e3ea3cdeb9fcd03fffef65bab40bec2ddb8339f4d94"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0001",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0003",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0004",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0005",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0011",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0019",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0020",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "e73954aecacc7b3b694d0e3ea3cdeb9fcd03fffef65bab40bec2ddb8339f4d94",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "dependency",
+          "workspace": "active"
+        }
+      },
+      {
+        "anchor": "ADR-0019: Godot 4.5 安全基线（Windows Only）",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0019",
+        "path": "docs/adr/ADR-0019-godot-security-baseline.md",
+        "primary_domain": "workspace",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0019-godot-security-baseline.md",
+            "role": "primary",
+            "source_sha256": "28bb155badcf83bb8a05bd9a85af252fcaea3b0017cd26f929f80e59a561b110"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0002",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0003",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0011",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0031",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "28bb155badcf83bb8a05bd9a85af252fcaea3b0017cd26f929f80e59a561b110",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "dependency",
+          "workspace": "active"
+        }
+      },
+      {
+        "anchor": "ADR-0025: Godot 测试策略（xUnit + GdUnit4）",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0025",
+        "path": "docs/adr/ADR-0025-godot-test-strategy.md",
+        "primary_domain": "workspace",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0025-godot-test-strategy.md",
+            "role": "primary",
+            "source_sha256": "67e11300f164a11fd00c5c7694464483e7735dc239fd9263bb0a6a8368538628"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "67e11300f164a11fd00c5c7694464483e7735dc239fd9263bb0a6a8368538628",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "dependency",
+          "workspace": "active"
+        }
+      },
+      {
+        "anchor": "ADR-0031: Security Profile（host-safe 默认，strict 可选）",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0031",
+        "path": "docs/adr/ADR-0031-security-profile-host-safe-default.md",
+        "primary_domain": "workspace",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 1,
+          "strategy": "relation-expansion",
+          "token_matches": 0
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0031-security-profile-host-safe-default.md",
+            "role": "primary",
+            "source_sha256": "9c65cfec677cdf070e682efd26225646a87a3d10110c99ac9e6e049a82b4fee6"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0005",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0019",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "9c65cfec677cdf070e682efd26225646a87a3d10110c99ac9e6e049a82b4fee6",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "dependency",
+          "workspace": "active"
+        }
+      }
+    ],
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "request_id": "vdd-workflow-model-routing-20260801-bootstrap-refresh03",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "990732dadadbeeee35418588acfcf91a420386e0",
+      "ref": "refs/heads/main"
+    },
+    "source_snapshot_id": "sha256:2c8a4b95bed0d860fd60c5d132a77e4294708d98dfcb24d2ef6b46f244664bfd",
+    "status": "matched"
+  },
+  "required_modules": [
+    "repository-rules",
+    "existing-workflow"
+  ],
+  "decisions": [
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "AGENTS.md",
+        "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "repository-rules",
+        "existing-workflow"
+      ],
+      "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md",
+        "source_sha256": "83a1207b37179a19f5527a5b22fb031ec3b32a0bd78df377aad6247d542e0010"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/base/07-dev-build-and-gates-v2.md",
+        "source_sha256": "cf47db256b4bef579891c2f4751cfb1c6b020cecf2e07901cb7fccaf16343d35"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0003-observability-release-health.md",
+        "source_sha256": "7daaeff4894e6b1656ca53353eca83b723c8bfa74753d1323e3a1caab929f9d1"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0005-quality-gates.md",
+        "source_sha256": "d4e19c9a06585fac45d63fb4169d109eedbaf2c96dbec23b4adb9d25f9932395"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0011-windows-only-platform-and-ci.md",
+        "source_sha256": "fdcc4a9295232f62ea91deb727a2270898f78fc72cbbdbfbe227393dbf658dde"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0015-performance-budgets-and-gates.md",
+        "source_sha256": "00c3625daf1400b8f0e2b65a4ca3f642da0c1e82e19aecdc8343f6ed90fe4a20"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0018-godot-runtime-and-distribution.md",
+        "source_sha256": "e73954aecacc7b3b694d0e3ea3cdeb9fcd03fffef65bab40bec2ddb8339f4d94"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0019-godot-security-baseline.md",
+        "source_sha256": "28bb155badcf83bb8a05bd9a85af252fcaea3b0017cd26f929f80e59a561b110"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0025-godot-test-strategy.md",
+        "source_sha256": "67e11300f164a11fd00c5c7694464483e7735dc239fd9263bb0a6a8368538628"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0031-security-profile-host-safe-default.md",
+        "source_sha256": "9c65cfec677cdf070e682efd26225646a87a3d10110c99ac9e6e049a82b4fee6"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    }
+  ],
+  "request_sha256": "sha256:1511babdfee2eca0161feaf61d3a3a96645475d5cfa05043f8ad95f5ee51b4e9",
+  "result_sha256": "sha256:eca5ad4260e47d16dde9cefc578f0ef020ee1eb505d4cce51bb65162d6fe2164",
+  "preflight": {
+    "status": "ready",
+    "failure_code": null,
+    "context_sha256": "sha256:070fc84bf045d301314da06f1806aeb0d632923af8c36fea41d7fcc1797649c0"
+  }
+}

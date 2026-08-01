@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "baseline_sha256": "sha256:43221fc4478aae2cda6127754917e658770032c9f42d454318b1056dfd386a62",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "candidate_sha256": "sha256:68c7d840ef22d7cbe90a64e08f0b4bce94910e86388df940cf9d910234914022",
+      "inclusion_reason": "Confirmed Round 3 targeted-test receipt binding repair"
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "baseline_sha256": "sha256:43a810b62f052d12adf9d44722913e2082d90cbe6aa53ea8c066ceed29a67fdb",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "candidate_sha256": "sha256:17e001432d05950f5065aafcca20597d496e7a901e9dd72afb90bf18685827fc",
+      "inclusion_reason": "Confirmed Round 3 targeted-test receipt binding repair"
+    }
+  ]
+}

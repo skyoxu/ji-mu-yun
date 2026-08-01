@@ -1,0 +1,41 @@
+{
+  "acceptanceTarget": "execution-plans/2026-08-01-workflow-model-routing-control-plane",
+  "authorizes": [
+    "acceptance-passed"
+  ],
+  "challengeHash": "sha256:dd5505d872345e2b321585d38cd8a6e21558e6a94da1ca25b3d2d36f4d8b6465",
+  "challengePath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-3/manual-pause-closure.challenge.v1.json",
+  "closureBindingHash": "sha256:368c0770a7b18c39677574b9292baef4bcdde975f2038d31b47fd4744c367a99",
+  "confirmedFindingIds": [
+    "BSR-70B71A7460628393",
+    "BSR-9BC70F2A4289C44C",
+    "BSR-E5FA31807675B5D1"
+  ],
+  "doesNotAuthorize": [
+    "commit",
+    "release",
+    "archived"
+  ],
+  "lifecycleTransition": "acceptance-passed",
+  "lineageFamilyId": "ria-77945989035b122f005c98a2c3661cd2",
+  "maintainerAcknowledgement": {
+    "acknowledgedFindingIds": [
+      "BSR-70B71A7460628393",
+      "BSR-9BC70F2A4289C44C",
+      "BSR-E5FA31807675B5D1"
+    ],
+    "authorityRole": "maintainer",
+    "authorizes": [
+      "manual-pause-closure"
+    ],
+    "closureBindingHash": "sha256:368c0770a7b18c39677574b9292baef4bcdde975f2038d31b47fd4744c367a99",
+    "decision": "accept-repaired-target",
+    "rationale": "Maintainer confirmed the exact challenge and confirmed finding set presented for the repaired 8-1 acceptance target.",
+    "recordedAt": "2026-08-01T16:37:09.499253Z",
+    "schemaVersion": "acceptance-manual-pause-maintainer-ack.v1"
+  },
+  "repairCompletenessHash": "sha256:766e010756cede1bb470422c8a4da4ced880fd00b0366e3c05fcea60adde36ea",
+  "schemaVersion": "acceptance-manual-pause-closure.v1",
+  "semanticRoundsConsumed": 3,
+  "status": "passed"
+}

@@ -1,0 +1,68 @@
+{
+  "authorizes": [],
+  "commandId": "acceptance-bootstrap-loader-composition",
+  "commandRegistryHash": "sha256:b68d21300f5e53e3867caa6b26a8a7011b042524a728a6442e4354bc9d7344ce",
+  "environmentIdentity": {
+    "hash": "sha256:f047e9877601714fb21afd5c8eb5293900b6af5f27a7b05dfdddf5d4750114c6",
+    "names": [
+      "ComSpec",
+      "PATHEXT",
+      "Path",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "sha256": "sha256:3fe092b85ba59fe91cee9cd150dd47a0ae29cdfe188135d6000ee43aae8d2395"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "sha256": "sha256:43221fc4478aae2cda6127754917e658770032c9f42d454318b1056dfd386a62"
+    }
+  ],
+  "inputBindingsHash": "sha256:12eeb15158e7c2491ef45ccca27078a5743a943c0f7809af2cf161d1b81f6670",
+  "invocation": {
+    "argv": [
+      "-3",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+    ],
+    "commandId": "acceptance-bootstrap-loader-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "ComSpec",
+      "Path",
+      "PATHEXT",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ],
+    "executable": "C:\\Windows\\py.exe",
+    "shell": false,
+    "timeoutSeconds": 60
+  },
+  "invocationHash": "sha256:4d3b8c00c603dd46dcbc458b3c285fdd76303bbb7cfe820fb7fe6bf5a1cd8794",
+  "processResult": {
+    "commandId": "acceptance-bootstrap-loader-composition",
+    "exitCode": 0,
+    "stderrSha256": "sha256:8251a631afeb753edb2abcd8040a333975f4087a5ae623e09d270e0f50bf4f32",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:18880cf400e1ff34a98c651a29da291f9efa9362984828bc19ebdb88bd6dac68",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

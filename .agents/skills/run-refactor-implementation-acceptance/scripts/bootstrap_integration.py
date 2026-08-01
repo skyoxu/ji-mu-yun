@@ -51,6 +51,8 @@ def _canonical_hash(value: Any) -> str:
 def _load_bootstrap_module(repository_root: Path) -> Any:
     root = repository_root.resolve()
     module_path = root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+    if not module_path.is_file():
+        raise BootstrapBindingError("Repository-owned Bootstrap control plane is unavailable")
     scripts_path = str(module_path.parent)
     spec = importlib.util.spec_from_file_location("ria_bootstrap_review", module_path)
     if spec is None or spec.loader is None:
@@ -81,6 +83,40 @@ def load_current_lineage_state(
         return module.build_lineage_state(repository_root.resolve(), lineage_family_id)
     except (OSError, ValueError, module.BootstrapError) as exc:
         raise BootstrapBindingError("Bootstrap lineage state cannot be reconstructed") from exc
+
+
+def replay_finalized_bootstrap_run(
+    repository_root: Path, bootstrap_run_dir: str
+) -> dict[str, Any]:
+    """Replay one finalized run under its exact frozen control-plane policy."""
+    root = repository_root.resolve()
+    normalized_run_dir = _normalize_review_paths(
+        [bootstrap_run_dir], "Bootstrap run directory"
+    )[0]
+    run_dir = (root / normalized_run_dir).resolve()
+    try:
+        run_dir.relative_to(root)
+    except ValueError as exc:
+        raise BootstrapBindingError(
+            "bootstrap run directory escapes repository root"
+        ) from exc
+    module = _load_bootstrap_module(root)
+    try:
+        loaded_dir, manifest, loaded_root = module.load_run(
+            str(run_dir), require_fresh_artifacts=False
+        )
+        envelope = module.validate_finalized_run_evidence(
+            run_dir, manifest, root, historical_replay=True
+        )
+    except Exception as exc:
+        raise BootstrapBindingError(
+            "Bootstrap finalized evidence cannot be replayed"
+        ) from exc
+    if loaded_dir.resolve() != run_dir or loaded_root.resolve() != root:
+        raise BootstrapBindingError(
+            "Bootstrap run resolved to another repository identity"
+        )
+    return envelope
 
 
 def _normalize_review_paths(values: Any, label: str) -> list[str]:

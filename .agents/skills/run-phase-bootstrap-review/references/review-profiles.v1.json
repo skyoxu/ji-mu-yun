@@ -3,7 +3,7 @@
   "profiles": {
     "bootstrap-upstream-plan": {
       "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
-      "policyRevision": "sha256:5b6aa916dfd5ab0cf9e3b774beef5b5854e03bebca399744aa28222e7591c928",
+      "policyRevision": "sha256:4176d43a642fbee3d25bfd4e6b0ab9f2b7d54739c321471c1f2630e53cea012b",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -28,16 +28,41 @@
           "gpt-5.5",
           "gpt-5.4"
         ],
-        "forbiddenModels": [
-          "gpt-5.6-sol"
-        ],
+        "forbiddenModels": [],
         "toolProbeRequired": true,
+        "roundModelOverrides": {
+          "3": "gpt-5.6-sol"
+        },
+        "roundReasoningEffortOverrides": {
+          "3": {
+            "blind_hunter": "high",
+            "edge_case_hunter": "high",
+            "acceptance_auditor": "high"
+          }
+        },
         "reasoningEffortByRole": {
           "blind_hunter": "medium",
           "edge_case_hunter": "high",
           "acceptance_auditor": "high",
           "independent_verifier": "high"
         }
+      },
+      "verifierPolicy": {
+        "preferredModel": "gpt-5.6-sol",
+        "fallbackModels": [],
+        "defaultReasoningEffort": "high",
+        "escalatedReasoningEffort": "max",
+        "escalateOnSeverities": [
+          "P0"
+        ],
+        "escalateOnDimensions": [
+          "security"
+        ]
+      },
+      "accessProbePolicy": {
+        "discoverySidecar": "access-proof.json",
+        "verifierSidecar": "verifier-access-proof.json",
+        "verifierRequiresGate": true
       },
       "completenessPolicy": {
         "artifactCoverage": "all",
@@ -150,7 +175,7 @@
     },
     "bootstrap-implementation-conformance": {
       "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
-      "policyRevision": "sha256:958cdee6a99f285dc9a804e088d2d8731e26e7d162ab8789ae8fe5e01bc5a1d9",
+      "policyRevision": "sha256:177bbccd5905b4d644dea0e6a799075b6175f6a75e8582cfca89cfb85434d005",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -185,16 +210,41 @@
           "gpt-5.5",
           "gpt-5.4"
         ],
-        "forbiddenModels": [
-          "gpt-5.6-sol"
-        ],
+        "forbiddenModels": [],
         "toolProbeRequired": true,
+        "roundModelOverrides": {
+          "3": "gpt-5.6-sol"
+        },
+        "roundReasoningEffortOverrides": {
+          "3": {
+            "blind_hunter": "high",
+            "edge_case_hunter": "high",
+            "acceptance_auditor": "high"
+          }
+        },
         "reasoningEffortByRole": {
           "blind_hunter": "high",
           "edge_case_hunter": "high",
           "acceptance_auditor": "high",
           "independent_verifier": "high"
         }
+      },
+      "verifierPolicy": {
+        "preferredModel": "gpt-5.6-sol",
+        "fallbackModels": [],
+        "defaultReasoningEffort": "high",
+        "escalatedReasoningEffort": "max",
+        "escalateOnSeverities": [
+          "P0"
+        ],
+        "escalateOnDimensions": [
+          "security"
+        ]
+      },
+      "accessProbePolicy": {
+        "discoverySidecar": "access-proof.json",
+        "verifierSidecar": "verifier-access-proof.json",
+        "verifierRequiresGate": true
       },
       "completenessPolicy": {
         "artifactCoverage": "all",
@@ -307,7 +357,7 @@
     },
     "bootstrap-skill-route": {
       "reviewProfile": "review-policy://bootstrap-skill-route/v1",
-      "policyRevision": "sha256:f99ba09ae34906fee842ef0594d4e913e5c3f0c8449291b38faaae9136eca168",
+      "policyRevision": "sha256:43e5c0bcc9408150e7c1059e494cbb466f5790426603c2fe7583e1b76b237c9f",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -329,21 +379,46 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-5.6-terra",
+        "preferredModel": "gpt-5.6-sol",
         "fallbackModels": [
           "gpt-5.5",
           "gpt-5.4"
         ],
-        "forbiddenModels": [
-          "gpt-5.6-sol"
-        ],
+        "forbiddenModels": [],
         "toolProbeRequired": true,
+        "roundModelOverrides": {
+          "3": "gpt-5.6-sol"
+        },
+        "roundReasoningEffortOverrides": {
+          "3": {
+            "blind_hunter": "high",
+            "edge_case_hunter": "high",
+            "acceptance_auditor": "high"
+          }
+        },
         "reasoningEffortByRole": {
-          "blind_hunter": "medium",
+          "blind_hunter": "high",
           "edge_case_hunter": "high",
           "acceptance_auditor": "high",
           "independent_verifier": "high"
         }
+      },
+      "verifierPolicy": {
+        "preferredModel": "gpt-5.6-sol",
+        "fallbackModels": [],
+        "defaultReasoningEffort": "high",
+        "escalatedReasoningEffort": "max",
+        "escalateOnSeverities": [
+          "P0"
+        ],
+        "escalateOnDimensions": [
+          "security"
+        ]
+      },
+      "accessProbePolicy": {
+        "discoverySidecar": "access-proof.json",
+        "verifierSidecar": "verifier-access-proof.json",
+        "verifierRequiresGate": true
       },
       "completenessPolicy": {
         "artifactCoverage": "all",
@@ -456,7 +531,7 @@
     },
     "bootstrap-focused-change": {
       "reviewProfile": "review-policy://bootstrap-focused-change/v1",
-      "policyRevision": "sha256:bdb8bf81b47107d2ed8a44df8e3f447e055e342b6ea0100e1e7f4ad8407bd729",
+      "policyRevision": "sha256:a6ed31be4a093471268a6f02f5780260d03b2867f23162100e5d2fa488694402",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -481,16 +556,41 @@
           "gpt-5.5",
           "gpt-5.4"
         ],
-        "forbiddenModels": [
-          "gpt-5.6-sol"
-        ],
+        "forbiddenModels": [],
         "toolProbeRequired": true,
+        "roundModelOverrides": {
+          "3": "gpt-5.6-sol"
+        },
+        "roundReasoningEffortOverrides": {
+          "3": {
+            "blind_hunter": "high",
+            "edge_case_hunter": "high",
+            "acceptance_auditor": "high"
+          }
+        },
         "reasoningEffortByRole": {
           "blind_hunter": "medium",
           "edge_case_hunter": "high",
           "acceptance_auditor": "medium",
           "independent_verifier": "high"
         }
+      },
+      "verifierPolicy": {
+        "preferredModel": "gpt-5.6-sol",
+        "fallbackModels": [],
+        "defaultReasoningEffort": "high",
+        "escalatedReasoningEffort": "max",
+        "escalateOnSeverities": [
+          "P0"
+        ],
+        "escalateOnDimensions": [
+          "security"
+        ]
+      },
+      "accessProbePolicy": {
+        "discoverySidecar": "access-proof.json",
+        "verifierSidecar": "verifier-access-proof.json",
+        "verifierRequiresGate": true
       },
       "completenessPolicy": {
         "artifactCoverage": "all",

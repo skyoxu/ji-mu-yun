@@ -16,6 +16,18 @@
     {
       "plan_directory": "2026-07-27-refactor-implementation-acceptance-skill",
       "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-07-31-toolchain-workflow-evidence-catalog-v1",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-08-01-workflow-model-routing-control-plane",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-08-01-refactor-acceptance-toolchain-compact-vdd",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
     }
   ]
 }

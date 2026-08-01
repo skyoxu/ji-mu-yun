@@ -1,0 +1,147 @@
+{
+  "schema_version": "jimuyun.workflow-model-routing-plan-requirements.v1",
+  "plan_id": "workflow-model-routing-control-plane",
+  "profile": "self-hosted",
+  "requirements": [
+    {
+      "id": "RMR-001",
+      "text": "One versioned routing policy owns workflow route, model, effort, rollout, override, and capability semantics.",
+      "acceptance_ids": ["RMR-A01", "RMR-A02"],
+      "slice_ids": ["RMR-S0"]
+    },
+    {
+      "id": "RMR-002",
+      "text": "Classification and provider execution remain separate; Quick Dev may decide a class but cannot schedule a provider.",
+      "acceptance_ids": ["RMR-A03"],
+      "slice_ids": ["RMR-S0", "RMR-S1", "RMR-S2"]
+    },
+    {
+      "id": "RMR-003",
+      "text": "Quick Dev deterministically selects small_mechanical, normal, complex, or architectural by highest matching typed trigger.",
+      "acceptance_ids": ["RMR-A04", "RMR-A05", "RMR-A06"],
+      "slice_ids": ["RMR-S2"]
+    },
+    {
+      "id": "RMR-004",
+      "text": "VDD reuses standard, resumable, and self-hosted profile selection and uses max only for a typed, capability-gated complex recovery escalation.",
+      "acceptance_ids": ["RMR-A07"],
+      "slice_ids": ["RMR-S3"]
+    },
+    {
+      "id": "RMR-005",
+      "text": "Refactor Acceptance remains deterministic except for a closed complex-recovery route; Bootstrap model authority cannot be overridden.",
+      "acceptance_ids": ["RMR-A08", "RMR-A09"],
+      "slice_ids": ["RMR-S3"]
+    },
+    {
+      "id": "RMR-006",
+      "text": "The shared launcher uses UTF-8 stdin, shell-free invocation, explicit sandbox and model identity, and no hidden fallback.",
+      "acceptance_ids": ["RMR-A10", "RMR-A11"],
+      "slice_ids": ["RMR-S1"]
+    },
+    {
+      "id": "RMR-007",
+      "text": "Every decision records typed inputs, triggers, policy revision, requested route, override, capability state, and requested versus actual execution identity with authorizes empty.",
+      "acceptance_ids": ["RMR-A12"],
+      "slice_ids": ["RMR-S0", "RMR-S1"]
+    },
+    {
+      "id": "RMR-008",
+      "text": "User upgrades are allowed; downgrades cannot clear protected, architectural, or unresolved-boundary triggers.",
+      "acceptance_ids": ["RMR-A13"],
+      "slice_ids": ["RMR-S0", "RMR-S2"]
+    },
+    {
+      "id": "RMR-009",
+      "text": "Luna and Sol/max remain inactive until exact-surface capability probes and representative shadow predicates pass.",
+      "acceptance_ids": ["RMR-A14", "RMR-A15"],
+      "slice_ids": ["RMR-S1", "RMR-S4"]
+    },
+    {
+      "id": "RMR-010",
+      "text": "Rollout is backward-compatible, observe-only first, independently disableable by consumer, and preserves historical evidence.",
+      "acceptance_ids": ["RMR-A16", "RMR-A17"],
+      "slice_ids": ["RMR-S2", "RMR-S3", "RMR-S4"]
+    }
+  ],
+  "acceptance": [
+    {"id": "RMR-A01", "assertion": "A schema-valid registry covers every active consumer route with full model IDs and supported effort values."},
+    {"id": "RMR-A02", "assertion": "Unknown routes, short runtime aliases, and duplicate policy ownership fail closed."},
+    {"id": "RMR-A03", "assertion": "Tests prove the Quick Dev adapter emits decisions but the shared launcher alone invokes run_llm_exec."},
+    {"id": "RMR-A04", "assertion": "Table-driven tests cover all four Quick Dev classes and highest-match precedence."},
+    {"id": "RMR-A05", "assertion": "Every architectural trigger routes to architectural even when mechanical facts are also present."},
+    {"id": "RMR-A06", "assertion": "Unknown or contradictory facts never route to small_mechanical."},
+    {"id": "RMR-A07", "assertion": "VDD profile mapping is stable and max requires a typed recovery trigger plus a passing capability probe."},
+    {"id": "RMR-A08", "assertion": "Ordinary Acceptance actions execute no model process."},
+    {"id": "RMR-A09", "assertion": "Bootstrap profile, round, verifier, effort, and access-proof decisions byte-match Bootstrap authority and reject router overrides."},
+    {"id": "RMR-A10", "assertion": "Shared backend tests cover explicit model and all policy-supported reasoning efforts."},
+    {"id": "RMR-A11", "assertion": "Launcher tests prove stdin transport, shell-free execution, sandbox binding, no secret persistence, and no automatic fallback loop."},
+    {"id": "RMR-A12", "assertion": "Decision and execution evidence is schema-valid, hash-bound, redacted, non-authorizing, and records requested versus actual identity."},
+    {"id": "RMR-A13", "assertion": "Upgrade overrides pass and unsafe downgrade overrides fail with stable reason codes."},
+    {"id": "RMR-A14", "assertion": "A failed or unavailable exact-model probe leaves the route disabled without substituting another model."},
+    {"id": "RMR-A15", "assertion": "Shadow evaluation compares task predicates and reports quality, latency, and cost without granting activation authority."},
+    {"id": "RMR-A16", "assertion": "Observe-only mode changes no current-session model and launches no child process."},
+    {"id": "RMR-A17", "assertion": "Each consumer can be disabled independently and existing VDD, Quick Dev, Acceptance, and Bootstrap tests remain green."}
+  ],
+  "slices": [
+    {
+      "id": "RMR-S0",
+      "title": "Decision and policy kernel",
+      "depends_on": [],
+      "downstream": ["RMR-S1", "RMR-S2", "RMR-S3", "RMR-S4"],
+      "red_commands": ["py -3 scripts/sc/tests/test_workflow_model_routing.py PolicyContractTests"],
+      "green_commands": ["py -3 scripts/sc/tests/test_workflow_model_routing.py PolicyContractTests"],
+      "recovery": "Remove the new inactive policy and ADR changes; no caller behavior is enabled."
+    },
+    {
+      "id": "RMR-S1",
+      "title": "Shared launcher and capability boundary",
+      "depends_on": ["RMR-S0"],
+      "downstream": ["RMR-S2", "RMR-S3", "RMR-S4"],
+      "red_commands": [
+        "py -3 scripts/sc/tests/test_llm_backend.py",
+        "py -3 scripts/sc/tests/test_workflow_model_routing.py LauncherTests"
+      ],
+      "green_commands": [
+        "py -3 scripts/sc/tests/test_llm_backend.py",
+        "py -3 scripts/sc/tests/test_workflow_model_routing.py LauncherTests"
+      ],
+      "recovery": "Set rollout to observe_only and retain non-authorizing decisions."
+    },
+    {
+      "id": "RMR-S2",
+      "title": "Quick Dev four-class router",
+      "depends_on": ["RMR-S0", "RMR-S1"],
+      "downstream": ["RMR-S3", "RMR-S4"],
+      "red_commands": ["py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py"],
+      "green_commands": ["py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py"],
+      "recovery": "Disable the quick-dev consumer and continue using the caller session model."
+    },
+    {
+      "id": "RMR-S3",
+      "title": "VDD and Acceptance consumers",
+      "depends_on": ["RMR-S0", "RMR-S1", "RMR-S2"],
+      "downstream": ["RMR-S4"],
+      "red_commands": [
+        "py -3 .agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+        "py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py"
+      ],
+      "green_commands": [
+        "py -3 .agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+        "py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py"
+      ],
+      "recovery": "Disable VDD and Acceptance consumers independently; preserve historical runs."
+    },
+    {
+      "id": "RMR-S4",
+      "title": "Shadow evaluation, migration, and terminal replay",
+      "depends_on": ["RMR-S0", "RMR-S1", "RMR-S2", "RMR-S3"],
+      "downstream": [],
+      "red_commands": ["py -3 scripts/sc/tests/test_workflow_model_routing_evaluation.py"],
+      "green_commands": ["py -3 scripts/sc/tests/test_workflow_model_routing_evaluation.py"],
+      "recovery": "Keep observe_only and defer activation while preserving logs."
+    }
+  ],
+  "terminal_validation": "py -3 execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py",
+  "authorizes": []
+}

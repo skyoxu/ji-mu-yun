@@ -1,0 +1,90 @@
+{
+  "acceptanceTarget": "execution-plans/2026-08-01-workflow-model-routing-control-plane",
+  "authorizes": [],
+  "closureBindingHash": "sha256:368c0770a7b18c39677574b9292baef4bcdde975f2038d31b47fd4744c367a99",
+  "confirmedFindingIds": [
+    "BSR-70B71A7460628393",
+    "BSR-9BC70F2A4289C44C",
+    "BSR-E5FA31807675B5D1"
+  ],
+  "finalizedEnvelopeCoreHash": "sha256:18c3a3acaa4b928f146498ffc7e4494546545739d557cdc17d38f9e5368e1883",
+  "finalizedRun": {
+    "envelopePath": "logs/ci/2026-08-01/wmr-r3/finalized-run-validation.v3.json",
+    "envelopeSha256": "sha256:82a768bb995d169ca8a76e85fc169d0b131af2379c8aaa69bd46a362ebce38af",
+    "runDirectory": "logs/ci/2026-08-01/wmr-r3"
+  },
+  "findingRepairs": [
+    {
+      "changedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "findingId": "BSR-70B71A7460628393",
+      "targetedTests": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-3/repair-composition-receipt.v1.json",
+        "logs/ci/2026-08-01/manual-pause-closure-protocol-v2-r3/finalized-run-validation.v3.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "findingId": "BSR-9BC70F2A4289C44C",
+      "targetedTests": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-3/repair-composition-receipt.v1.json",
+        "logs/ci/2026-08-01/manual-pause-closure-protocol-v2-r3/finalized-run-validation.v3.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "findingId": "BSR-E5FA31807675B5D1",
+      "targetedTests": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-3/repair-composition-receipt.v1.json",
+        "logs/ci/2026-08-01/manual-pause-closure-protocol-v2-r3/finalized-run-validation.v3.json"
+      ]
+    }
+  ],
+  "lineageFamilyId": "ria-77945989035b122f005c98a2c3661cd2",
+  "lineageStateHash": "sha256:ffcf0d2c07083d103d66d5e22540000a1a16c5db4c374bab08bfacfa4d82bde6",
+  "manualPauseRoute": {
+    "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-3/manual-pause-route.v3.json",
+    "sha256": "sha256:6e410ccf1f4aa00dd26b6eccb7dd44bbd0a13e9ed9f38c6c8f57ad168ca4d6ac"
+  },
+  "manualPauseRouteRequest": {
+    "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-3/manual-pause-route.v3.request.json",
+    "sha256": "sha256:8c87fa5174fbaf459a9bcd8c1b3e0b46f860a1e094ded40c3bd0ae50e446ac69"
+  },
+  "protocolAuthorities": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "sha256": "sha256:1f58eab7f3f8c9184db7056632f882b6c54d88783e3b5160afab364012a643fe"
+    },
+    {
+      "path": "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
+      "sha256": "sha256:f1eb752e9713f398d8e091f34440f6545f33d89237ab42cea314ad608a29a060"
+    },
+    {
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "sha256": "sha256:661cb16a1a729e98f88f9800218f4f4f4b1ce81d3bcef3ecf13fa581fa1b9ad8"
+    }
+  ],
+  "repairCompletenessHash": "sha256:766e010756cede1bb470422c8a4da4ced880fd00b0366e3c05fcea60adde36ea",
+  "schemaVersion": "acceptance-manual-pause-closure-challenge.v1",
+  "semanticRoundsConsumed": 3,
+  "sourceRequestHash": "sha256:cdc0273fc7d5fcb95d6865b363e4a518ffe93c33bf1655a5e9ca99345a96aa5b",
+  "sourceRequestPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-3/manual-pause-closure.request.v1.json",
+  "status": "awaiting-maintainer-ack"
+}

@@ -1,0 +1,101 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:aa11f7704c7de588355dddf69d1a3ed0029e99273b840b417773f98c34707948",
+  "canonical_context_sha256": "sha256:7bb33173d47daad772e00fef256c06c48f5573f94eb485fcedcdca9280db9c31",
+  "request_sha256": "sha256:3ad89aab2405136fe265e59f06a7f89029e3dcbc586c601b00219d3dcc85b3c9",
+  "result_sha256": "sha256:43f830a6b804fd44efa6f83db364aba1625900eb6d30f3bfc3348d624ead1b29",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "dbe2a731c9465946d3dc21ac3888491e33340c28"
+  },
+  "source_snapshot_id": "sha256:1668b5e2a4a3fec1a33a390fe95171908d658452ea2b1e997959c0477855b6c0",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+      "source_sha256": "4861b20c1033fac1fbb4ee639b915408a9dd3c6d2e6d21895cfcd77e0c443e3f",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "source_sha256": "14708433db121d1ef0bd726081727a786642432146da08d70e71e0941db44b4d",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "satisfies": [
+        "repository-rules"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "source_sha256": "0292f716721b0b196ccf6c9d873faab7b75dba8160d141644155482185028170",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "source_sha256": "08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md",
+      "source_sha256": "495bd5176c006c870b6799cf26b176bf45e9ed2a4d0aa4707e274f2059c08529",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "source_sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+      "source_sha256": "dfcd328ea3a74841cb81271653392c7fdebf5390e2d9173f0184bbfa6a83445e",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+      "source_sha256": "f00a514bc41e1881f3a3f6a25226b9d757600b19412ab5233b9b6d819d2742fe",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+      "source_sha256": "6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    }
+  ],
+  "authorizes": []
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {"path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md", "sha256": "sha256:1b55d490b95363f68867ec2d833d47a176b0d61242bbdb839a3433d58d80ebbd", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py", "sha256": "sha256:d8c036b1ec766cfc251969144a3d83f11073d09f5e3a769e10f53216ac7cc5d3", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md", "sha256": "sha256:e5d10cada5dc9f3be6d1daf76f3aedfa4244a093ba7d4f68624f580a62d8e7f5", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py", "sha256": "sha256:0eb5a11c8d80b95708bb8d3bc9b3a52f937aa6a23f70075567ac2accbd5806cc", "roles": ["implementation"], "inclusion_reason": "Acceptance repair audit loader baseline"},
+    {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py", "sha256": "sha256:ace4ff6377a37daa8cfa1b23b7ef2bf297bb056153b047bcdaa6df8e48a33d79", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py", "sha256": "sha256:c010f4f10eabc1f8fa9338d4d32e83d731471dc7ac91658b0a84ce30f616729a", "roles": ["implementation"], "inclusion_reason": "Acceptance repair audit loader baseline"},
+    {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "sha256": "sha256:976364b8b3dd3936927c7745956ac1d2f3cc8f6642de597fbb86fc9598c595c8", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": ".agents/skills/vdd-execution-plan/scripts/model_routing.py", "sha256": "sha256:8b7fe32ede894b8b644bbef47a69e67f42603a25e719cf262b45e31fbc8676bf", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py", "sha256": "sha256:c6fbd2f1991414d3755c2cbf2c43b462495b39a3714977f8b889e17f7583f8c8", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md", "sha256": "sha256:4f28a8fea26c10b34f88289e65b9e01078c62223c89518f5f3cbdce3b425fa6f", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": "docs/architecture/phase-service/llm-codex-execution.md", "sha256": "sha256:4391f3eeb3ee5074aaba712093096889cffb98c08ac8d832068e2837bc003b69", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": "scripts/sc/config/workflow_model_routes.v1.json", "sha256": "sha256:51afa2c9bf6ab61fd4ffa6ef0bb59ae8361e75117759a6cd745d6aa3be0913fb", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json", "sha256": "sha256:c486828279cdc4efef7b283f90ee474716523b6760b7fcec5e1c455a7f9f7dde", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": "scripts/sc/tests/test_workflow_model_routing.py", "sha256": "sha256:f4f27853d315bf0a33104f0f38b73dda3a51bb93efe9f189368a185d924a1818", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"},
+    {"path": "scripts/sc/workflow_model_routing.py", "sha256": "sha256:27c407d4fa7d3ef83379bf67b56e0aebd69d241c98be448e0849e2137c2732ee", "roles": ["implementation"], "inclusion_reason": "Bootstrap Round 1 repair baseline"}
+  ]
+}

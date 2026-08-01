@@ -14,6 +14,8 @@ This standard defines the durable protocol for evidence-gated Bootstrap Review. 
 - Discovery roles do not share sessions, candidates, suspected findings, or a minimum finding quota.
 - Required artifacts and context are read completely. Sampling is prohibited.
 - P0/P1 candidates require an independent verifier that is not a discovery reviewer.
+- Discovery model routing is profile- and round-bound: ordinary implementation conformance uses Terra/high in Rounds 1-2, Skill/route review uses Sol/high in Rounds 1-2, and every valid Round 3 uses Sol/high. Repair review inherits the profile route; it does not automatically downgrade to Terra.
+- Independent verification uses Sol/high for a P1-only blocker set and Sol/max when any blocker is P0 or has the `security` dimension. Data-corruption and permission-boundary findings must be classified as P0 or `security`; the highest-risk blocker determines the effort for a mixed verifier run.
 - A stable lineage family has a default two-round budget and a three-full-round hard limit. Changing a review ID, `changeId`, or successor directory does not reset the family budget.
 - A final result cannot contain an open accepted P0 or P1.
 - A clean or P2-only finalized predecessor does not trigger another complete semantic review. P2 is disposed in the current run with typed targeted evidence.
@@ -50,6 +52,7 @@ The implementation backend never owns review acceptance, severity, done, commit,
 - Codex discovery children return semantic candidates plus a compact Artifact View read receipt, never formal coverage arrays. After validating the same-session handshake and receipt, the parent constructs `requiredArtifacts` and `readArtifacts` from the frozen manifest's ordered artifact list and sets `missingArtifacts=[]`. Manual and specialized-agent formal outputs retain explicit coverage validation.
 - The verifier runtime prompt derives each blocker's full inclusive evidence range and complete `contextRead` set from the frozen, hash-bound candidate sidecar. A saved or generated start-line-only summary is not sufficient execution input, and one `evidenceChecked` reference must cover the entire finding range.
 - Before publishing verifier output, the parent validates its binding, exact blocker evidence coverage, and complete `contextRead` coverage against the frozen gate. A semantic failure appends failed-attempt evidence and leaves formal output unchanged.
+- If interruption occurs after a valid discovery or verifier formal output is atomically published but before its `attempt-completed` event is appended, a retry reservation first proves the original controller process identity is no longer live, validates the completed formal bytes against frozen authority, and reconciles the original attempt with one append-only completion event. A still-live original controller prevents reconciliation, avoiding duplicate completion facts. Recovery never overwrites the formal output or launches another model for that role.
 - A completed semantically invalid Codex verifier output may be reopened only through `recover-verifier` under ADR-0045. The command preserves the rejected bytes in a unique hash-bound recovery directory, appends a `verifier-recovery-opened` process event, and does not clear the formal file. Valid, finalized, sealed, active-attempt, or non-Codex verifier state cannot use this recovery lane.
 
 ## Artifact View And Access Proof
@@ -60,7 +63,9 @@ The implementation backend never owns review acceptance, severity, done, commit,
 - Findings cite original paths. Snapshot evidence is projected back to original inclusive line ranges.
 - Codex Exec reviewer and verifier prompts identify the absolute run directory and Artifact View manifest. Sandboxed children resolve relative `snapshotPath` values against that run directory, read only snapshot content, and cite `originalPath`; they do not resolve snapshots against the attempt workspace or fall back to inaccessible or drifting live originals.
 - Binary artifacts cannot claim text line evidence.
-- Launch requires an identity-equivalent access probe. Each actual reviewer child must also complete a same-process, hash-bound access handshake before semantic work begins.
+- Discovery launch requires an identity-equivalent `access-proof.json` for the resolved discovery route. The launch authorization hash-binds this proof.
+- A Codex verifier requires a separate `verifier-access-proof.json`, created only after the gate has frozen at least one P0/P1 blocker. It binds the gate hash and the risk-derived Sol/high or Sol/max route; a discovery proof cannot authorize the verifier.
+- Each actual reviewer and verifier child must also complete a same-process, hash-bound access handshake before semantic work begins.
 - The handshake executable material is generated inside the immutable attempt evidence boundary. A sandboxed child must not depend on reading the repository-owned Skill entrypoint, and the parent control plane must independently recompute the expected Artifact View coverage and handshake hash before accepting the result.
 - A completed Codex discovery payload binds `bootstrap-artifact-view-read-receipt.v1` to the exact Artifact View manifest hash and artifact count. The receipt and handshake establish controller-visible execution coverage; neither claims to prove model cognition.
 - Later live authority drift marks the old run stale. A replacement run starts from a new frozen snapshot and must not inherit stale state.
@@ -107,6 +112,8 @@ P2 command results reference both their immutable event sidecar and the shared a
   for direct consumers, authority, targeted tests, and current validation.
 - Round 3 requires one schema-valid entry reason: `novel_p0_p1`,
   `authority_context_graph_changed`, or `high_risk_boundary_changed`.
+- Round 3 discovery always resolves to Sol/high for all three roles, regardless
+  of the profile's Round 1-2 defaults.
 - A successor for the same acceptance target retains the family. It cannot
   restart Round 1 or clear `manual_pause`. A genuinely different target needs
   an explicit supersede or incompatible-scope decision before deriving a new
@@ -130,6 +137,14 @@ P2 command results reference both their immutable event sidecar and the shared a
   family, consumed round, next round, route kind, and typed Round 3 reason must
   match the Bootstrap invocation. A generic repair closure alone is not valid
   implementation-acceptance re-entry evidence.
+- After three consumed rounds, Bootstrap remains in `manual_pause` and never
+  creates Round 4. Refactor Acceptance may separately close a repaired target
+  only through the ADR-0054 two-stage deterministic closure contract. That
+  contract must canonically replay the exact blocked finalized run, reject any
+  remaining unverified verifier decision, bind the confirmed finding set,
+  replay current repair completeness, require explicit maintainer
+  acknowledgement, and preserve all Bootstrap evidence as blocked history.
+  Bootstrap does not emit or reinterpret `acceptance-passed`.
 - Omitting an unchanged predecessor artifact from a bounded repair scope is not
   deletion. A predecessor artifact is deleted only when the live path is
   absent. Its frozen old bytes enter the current Artifact View deleted tree and
@@ -204,7 +219,7 @@ bounded review route in force.
   must pass complete evidence replay and retain their exact finding closure;
   the index aggregates candidate, visible, confirmed, refuted, unverified, and
   P2 disposition yield. Cost cohorts additionally require every required
-  reviewer, required verifier, and access probe to have a unique ordered
+  reviewer, required verifier, and every required role-specific access probe to have a unique ordered
   lifecycle whose `attempt-started` event binds the exact request hash and
   selected model, a matching process result, and token usage rederived from the
   same Codex JSONL stdout. Probe, reviewer, verifier, and transport-retry costs

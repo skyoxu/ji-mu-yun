@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "jimuyun.workflow-model-routing-shadow-fixture.v1",
+  "evaluationMode": "synthetic_contract_replay",
+  "cohorts": [
+    {
+      "cohortId": "luna-small-mechanical-shadow",
+      "routeId": "quick_dev.small_mechanical",
+      "candidateModel": "gpt-5.6-luna",
+      "exactCapabilityStatus": "unavailable",
+      "representativeExecution": false,
+      "samples": [
+        {
+          "sampleId": "single-file-format-preserving-edit",
+          "baselinePredicatePassed": true,
+          "candidatePredicatePassed": true,
+          "baselineLatencyMs": 1200,
+          "candidateLatencyMs": 780,
+          "baselineCostUsd": 0.012,
+          "candidateCostUsd": 0.006
+        },
+        {
+          "sampleId": "bounded-test-fixture-update",
+          "baselinePredicatePassed": true,
+          "candidatePredicatePassed": true,
+          "baselineLatencyMs": 1350,
+          "candidateLatencyMs": 820,
+          "baselineCostUsd": 0.014,
+          "candidateCostUsd": 0.007
+        }
+      ]
+    },
+    {
+      "cohortId": "sol-max-vdd-recovery-shadow",
+      "routeId": "vdd.complex_recovery",
+      "candidateModel": "gpt-5.6-sol",
+      "exactCapabilityStatus": "unavailable",
+      "representativeExecution": false,
+      "samples": [
+        {
+          "sampleId": "bounded-repair-exhaustion-replay",
+          "baselinePredicatePassed": true,
+          "candidatePredicatePassed": true,
+          "baselineLatencyMs": 4100,
+          "candidateLatencyMs": 4300,
+          "baselineCostUsd": 0.052,
+          "candidateCostUsd": 0.061
+        }
+      ]
+    }
+  ],
+  "authorizes": []
+}

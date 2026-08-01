@@ -1,0 +1,16 @@
+{
+  "schema_version":"vdd.plan-state.v1",
+  "plan_id":"refactor-acceptance-toolchain-compact-vdd",
+  "profile":"self-hosted",
+  "state":"implementation-complete",
+  "state_owner":"terminal-validator",
+  "updated_utc":"2026-07-31T18:00:47Z",
+  "resume":{"next_action":"resume-workflow-model-routing-acceptance","last_completed_step":"terminal-implementation-validation-pass","recovery_instruction":"Rerun tools/validate_plan.py and tools/validate_implementation.py after any candidate drift before using this extension."},
+  "slices":[
+    {"id":"RA-TC-S0","status":"completed","depends_on":[]},
+    {"id":"RA-TC-S1","status":"completed","depends_on":["RA-TC-S0"]},
+    {"id":"RA-TC-S2","status":"completed","depends_on":["RA-TC-S0","RA-TC-S1"]}
+  ],
+  "authorizes":["implementation-complete"],
+  "does_not_authorize":["acceptance-passed","release","archived"]
+}

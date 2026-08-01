@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "jimuyun.workflow-model-routing-policy.v1",
+  "policyRevision": "workflow-model-routing.v1",
+  "rolloutMode": "observe_only",
+  "backend": "codex-cli",
+  "sandbox": "workspace-write",
+  "supportedEfforts": ["medium", "high", "max"],
+  "models": {
+    "terra": {
+      "modelId": "gpt-5.6-terra",
+      "displayLabel": "Terra",
+      "activationState": "active"
+    },
+    "sol": {
+      "modelId": "gpt-5.6-sol",
+      "displayLabel": "Sol",
+      "activationState": "active"
+    },
+    "luna": {
+      "modelId": "gpt-5.6-luna",
+      "displayLabel": "Luna",
+      "activationState": "shadow_candidate"
+    }
+  },
+  "routes": {
+    "vdd.standard": {"consumer": "vdd", "model": "sol", "effort": "high", "launchMode": "child"},
+    "vdd.resumable": {"consumer": "vdd", "model": "sol", "effort": "high", "launchMode": "child"},
+    "vdd.self_hosted": {"consumer": "vdd", "model": "sol", "effort": "high", "launchMode": "child"},
+    "vdd.complex_recovery": {
+      "consumer": "vdd",
+      "model": "sol",
+      "effort": "max",
+      "launchMode": "child",
+      "activationState": "disabled_pending_evidence",
+      "requiresCapabilityProbe": true,
+      "requiresShadowPredicate": true
+    },
+    "quick_dev.small_mechanical": {
+      "consumer": "quick_dev",
+      "model": "terra",
+      "effort": "medium",
+      "launchMode": "child",
+      "shadowCandidate": {"model": "luna", "effort": "medium"}
+    },
+    "quick_dev.normal": {"consumer": "quick_dev", "model": "terra", "effort": "medium", "launchMode": "child"},
+    "quick_dev.complex": {"consumer": "quick_dev", "model": "terra", "effort": "high", "launchMode": "child"},
+    "quick_dev.architectural": {"consumer": "quick_dev", "model": "sol", "effort": "high", "launchMode": "child"},
+    "refactor_acceptance.deterministic": {"consumer": "refactor_acceptance", "launchMode": "none"},
+    "refactor_acceptance.complex_recovery": {
+      "consumer": "refactor_acceptance",
+      "model": "sol",
+      "effort": "high",
+      "launchMode": "child"
+    },
+    "bootstrap_review.external_profile": {
+      "consumer": "bootstrap_review",
+      "launchMode": "external_profile"
+    }
+  },
+  "quickDevClassification": {
+    "precedence": ["small_mechanical", "normal", "complex", "architectural"],
+    "unknownFactDisposition": "complex_blocked",
+    "overridePolicy": "upgrade_only"
+  },
+  "vddComplexRecoveryTriggers": [
+    "bounded_repair_exhausted",
+    "resume_state_recovery_failed",
+    "validator_control_plane_inconsistent"
+  ],
+  "refactorAcceptanceComplexRecoveryTriggers": [
+    "bootstrap_control_plane_unavailable",
+    "candidate_binding_recovery_failed",
+    "lineage_evidence_inconsistent"
+  ],
+  "authorizes": []
+}

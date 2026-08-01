@@ -1,0 +1,342 @@
+{
+  "decision": {
+    "schemaVersion": "implementation-acceptance-bootstrap-requirement.v1",
+    "requirement": "required",
+    "requirementSources": [
+      ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json#TOOLCHAIN-CR-AUTH-001",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/requirements.v1.json",
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md#Bootstrap-Routing",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md"
+    ],
+    "requiredCompanionCapabilityExpectations": [
+      {
+        "capabilityId": "acceptance-inventory-attestation",
+        "capabilityVersion": "1.0",
+        "producerRole": "acceptance_auditor"
+      }
+    ],
+    "authorizes": []
+  },
+  "binding": null,
+  "launch_authorization": null,
+  "repository_root": "C:/jimuyun",
+  "scope_inputs": {
+    "implementation_plan": [
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/00-index.md",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/95-implementation-evolution-and-completion-report.md",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/plan-state.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/requirements.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/repair-plan.md"
+    ],
+    "changed_production_code": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+    ],
+    "affected_consumers": [
+      ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py"
+    ],
+    "tests_and_acceptance": [
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_plan.py"
+    ],
+    "runtime_evidence": [
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/acceptance-loader-command-registry.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-loader-composition-receipt.v2.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-repair-completeness-request.v4.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/baseline-content-manifest.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/candidate-content-manifest.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/implementation-validation-command-registry.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/implementation-validation-receipt.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/quick-dev-handoff-input.v4.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/repair-completeness.v4.json",
+      "logs/ci/2026-08-01/wmr-r2/finalized-run-validation.v3.json"
+    ],
+    "repository_rules": [
+      "AGENTS.md",
+      "README.md"
+    ],
+    "referenced_standards": [
+      ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "docs/standards/bootstrap-review-control-plane.md",
+      "docs/standards/repository-maintenance-agent-protocol.md"
+    ]
+  },
+  "lineage_state": {
+    "schemaVersion": "bootstrap-review-lineage-state.v1",
+    "lineageFamilyId": "ria-77945989035b122f005c98a2c3661cd2",
+    "semanticRoundsConsumed": 2,
+    "consumedRoundNumbers": [
+      1,
+      2
+    ],
+    "defaultFullReviewRoundLimit": 2,
+    "hardFullReviewRoundLimit": 3,
+    "nextFullReviewRound": 3,
+    "state": "available",
+    "runs": [
+      {
+        "runDirectory": "logs/ci/2026-08-01/wmr-r1c",
+        "reviewId": "wmr-r1c",
+        "changeId": "workflow-model-routing-control-plane",
+        "fullReviewRound": 1,
+        "inputHash": "sha256:805dd782b9ed5265ca8ba9f56b83d025911dbc91304ec2f0c7286358f42ef2c2"
+      },
+      {
+        "runDirectory": "logs/ci/2026-08-01/wmr-r2",
+        "reviewId": "wmr-r2",
+        "changeId": "workflow-model-routing-control-plane",
+        "fullReviewRound": 2,
+        "inputHash": "sha256:3838c2b426ad68ace1da0f6e3f85727c727663ca9128b2c093e17c442b0ab531"
+      }
+    ],
+    "authorizes": [],
+    "lineageStateHash": "sha256:fed89ff1e5e569ef157a355cad5ca422f270e1cb042c5d5a05ac2ea9469ff2e2"
+  },
+  "repair_completeness": {
+    "acceptanceTarget": "execution-plans/2026-08-01-workflow-model-routing-control-plane",
+    "authorityGraphArtifacts": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+    ],
+    "authorityGraphChanged": true,
+    "authorizes": [],
+    "baselineManifest": {
+      "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/baseline-content-manifest.v1.json",
+      "sha256": "sha256:99bc59bdd5d16013d70edb69cbff21f7ce09a8ce5656e1b9c1ad722911b5bac7"
+    },
+    "candidateManifest": {
+      "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/candidate-content-manifest.v1.json",
+      "sha256": "sha256:57d7dfc9f6ff0dc5615d8295236111e06b16614705ea650608d8e79c0e3ec0e3"
+    },
+    "changedPathBindings": [
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        "sha256": "sha256:43221fc4478aae2cda6127754917e658770032c9f42d454318b1056dfd386a62",
+        "state": "present"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+        "sha256": "sha256:43a810b62f052d12adf9d44722913e2082d90cbe6aa53ea8c066ceed29a67fdb",
+        "state": "present"
+      }
+    ],
+    "changedPaths": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+    ],
+    "compositionChecks": [
+      {
+        "bindings": [
+          {
+            "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+            "role": "producer",
+            "sha256": "sha256:3fe092b85ba59fe91cee9cd150dd47a0ae29cdfe188135d6000ee43aae8d2395"
+          },
+          {
+            "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+            "role": "consumer",
+            "sha256": "sha256:43221fc4478aae2cda6127754917e658770032c9f42d454318b1056dfd386a62"
+          }
+        ],
+        "checkId": "acceptance-bootstrap-loader-composition",
+        "commandRegistry": {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/acceptance-loader-command-registry.v1.json",
+          "sha256": "sha256:0542bf5dd0b83a14831fe294bab1c1e86a44d2737192c5e136af196ee7c515d9"
+        },
+        "receipt": {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-loader-composition-receipt.v2.json",
+          "sha256": "sha256:a7d15e7cb1ab7b320d8e49cbf2d73c0910c28a9a90692057c502992e87147fa6"
+        }
+      }
+    ],
+    "directConsumers": [
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        "sha256": "sha256:43221fc4478aae2cda6127754917e658770032c9f42d454318b1056dfd386a62"
+      }
+    ],
+    "highRiskBoundaryArtifacts": [],
+    "highRiskBoundaryChanged": false,
+    "lineageFamilyId": "ria-77945989035b122f005c98a2c3661cd2",
+    "novelP0P1FindingIds": [
+      "BSR-0DB95E6CD25211BE",
+      "BSR-EC02384701FE25BF",
+      "BSR-F84FF255EDFC1969"
+    ],
+    "predecessorRun": "logs/ci/2026-08-01/wmr-r2",
+    "requestHash": "sha256:fa48a5785a2531977218f875b195c3ba662bdb9654b58d3b1434960ee1c2fb54",
+    "rootCauseInventories": [
+      {
+        "addressedPaths": [
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+        ],
+        "exclusions": [
+          {
+            "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+            "reason": "The sibling loader already displaces and restores _control_plane."
+          },
+          {
+            "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+            "reason": "Tests the already-correct sibling loader and is unchanged."
+          },
+          {
+            "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+            "reason": "The match describes a policy name and does not load a Python module."
+          }
+        ],
+        "inventoryId": "acceptance-bootstrap-control-plane-loader",
+        "matches": [
+          {
+            "lineNumbers": [
+              65,
+              73
+            ],
+            "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+            "sha256": "sha256:cf5408d7de48e7bd10ee2ace8c4d0653d849df8bfef097ed091d56c0b72d0cd9"
+          },
+          {
+            "lineNumbers": [
+              127,
+              135
+            ],
+            "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+            "sha256": "sha256:43221fc4478aae2cda6127754917e658770032c9f42d454318b1056dfd386a62"
+          },
+          {
+            "lineNumbers": [
+              17
+            ],
+            "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+            "sha256": "sha256:b8e56df7ce7cdd19e25240f0aa66551cf1c1b64fb187241515c6256e78a181d2"
+          },
+          {
+            "lineNumbers": [
+              50
+            ],
+            "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+            "sha256": "sha256:43a810b62f052d12adf9d44722913e2082d90cbe6aa53ea8c066ceed29a67fdb"
+          },
+          {
+            "lineNumbers": [
+              730
+            ],
+            "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+            "sha256": "sha256:5f310f0584653ba6f1ddad6e091288e7a08f8c699c65b258db24500a2fe7fc3c"
+          }
+        ],
+        "searchRoots": [
+          ".agents/skills/run-refactor-implementation-acceptance"
+        ],
+        "searchTerm": "_control_plane"
+      }
+    ],
+    "schemaVersion": "acceptance-repair-completeness.v1",
+    "semanticRoundsConsumed": 2,
+    "status": "passed",
+    "targetedTests": [
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+        "sha256": "sha256:43a810b62f052d12adf9d44722913e2082d90cbe6aa53ea8c066ceed29a67fdb"
+      }
+    ],
+    "validationRefs": [
+      {
+        "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-loader-composition-receipt.v2.json",
+        "sha256": "sha256:a7d15e7cb1ab7b320d8e49cbf2d73c0910c28a9a90692057c502992e87147fa6"
+      },
+      {
+        "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/implementation-validation-receipt.v1.json",
+        "sha256": "sha256:a7f251b98d2b6bac32b25f6736d757958d9c96cd34d2def5c3b964790b848794"
+      },
+      {
+        "path": "logs/ci/2026-08-01/wmr-r2/finalized-run-validation.v3.json",
+        "sha256": "sha256:56dd6be0bf136514a81a4c47fe29774cbbfaad878f2a6f215f52ea6d7eecaba4"
+      }
+    ]
+  },
+  "repair_completeness_request": {
+    "schemaVersion": "acceptance-repair-completeness-request.v1",
+    "repositoryRoot": "C:\\jimuyun",
+    "acceptanceTarget": "execution-plans/2026-08-01-workflow-model-routing-control-plane",
+    "lineageFamilyId": "ria-77945989035b122f005c98a2c3661cd2",
+    "semanticRoundsConsumed": 2,
+    "predecessorRun": "logs/ci/2026-08-01/wmr-r2",
+    "baselineManifestPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/baseline-content-manifest.v1.json",
+    "baselineManifestHash": "sha256:99bc59bdd5d16013d70edb69cbff21f7ce09a8ce5656e1b9c1ad722911b5bac7",
+    "candidateManifestPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/candidate-content-manifest.v1.json",
+    "candidateManifestHash": "sha256:57d7dfc9f6ff0dc5615d8295236111e06b16614705ea650608d8e79c0e3ec0e3",
+    "changedPaths": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+    ],
+    "directConsumers": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py"
+    ],
+    "targetedTests": [
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+    ],
+    "validationRefs": [
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-loader-composition-receipt.v2.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/implementation-validation-receipt.v1.json",
+      "logs/ci/2026-08-01/wmr-r2/finalized-run-validation.v3.json"
+    ],
+    "rootCauseInventories": [
+      {
+        "inventoryId": "acceptance-bootstrap-control-plane-loader",
+        "searchTerm": "_control_plane",
+        "searchRoots": [
+          ".agents/skills/run-refactor-implementation-acceptance"
+        ],
+        "addressedPaths": [
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+        ],
+        "exclusions": [
+          {
+            "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+            "reason": "The sibling loader already displaces and restores _control_plane."
+          },
+          {
+            "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+            "reason": "Tests the already-correct sibling loader and is unchanged."
+          },
+          {
+            "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+            "reason": "The match describes a policy name and does not load a Python module."
+          }
+        ]
+      }
+    ],
+    "compositionChecks": [
+      {
+        "checkId": "acceptance-bootstrap-loader-composition",
+        "producerPaths": [
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+        ],
+        "consumerPaths": [
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py"
+        ],
+        "receiptPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-loader-composition-receipt.v2.json",
+        "commandRegistryPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/acceptance-loader-command-registry.v1.json"
+      }
+    ],
+    "novelP0P1FindingIds": [
+      "BSR-0DB95E6CD25211BE",
+      "BSR-EC02384701FE25BF",
+      "BSR-F84FF255EDFC1969"
+    ],
+    "authorityGraphChanged": true,
+    "highRiskBoundaryChanged": false,
+    "authorizes": []
+  }
+}

@@ -24,6 +24,29 @@ _LIFECYCLE_EVENT_TYPES = {
     "action-not-applicable", "action-waiting-external", "action-stale", "run-superseded",
 }
 _PLACEHOLDER = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
+_LEGACY_ENVIRONMENT_ALLOWLIST = [
+    "PATH",
+    "PATHEXT",
+    "SystemRoot",
+    "WINDIR",
+    "TEMP",
+    "TMP",
+    "TMPDIR",
+    "HOME",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "USERPROFILE",
+    "APPDATA",
+    "LOCALAPPDATA",
+    "PROGRAMFILES",
+    "PROGRAMFILES(X86)",
+    "PROGRAMW6432",
+    "DOTNET_ROOT",
+    "LOGNAME",
+    "USER",
+    "LNAME",
+    "USERNAME",
+]
 
 
 def create_run_directory(root: Path, run_id: str) -> Path:
@@ -756,7 +779,8 @@ def _resolve_legacy_registered_command(registry: dict[str, Any], command_id: str
         "allowed_write_roots": [], "forbidden_write_roots": [
             "logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**",
         ],
-        "registry_hash": _canonical_hash(registry), "environment_allowlist": ["PATH", "SystemRoot", "WINDIR"],
+        "registry_hash": _canonical_hash(registry),
+        "environment_allowlist": _LEGACY_ENVIRONMENT_ALLOWLIST.copy(),
         "typed_placeholders": {}, "placeholder_values": {},
     }
     validate_command_descriptor(descriptor)

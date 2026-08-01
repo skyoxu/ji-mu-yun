@@ -42,6 +42,37 @@ After the target plan's current declared terminal predicate passes, append its o
    Do not select an acceptance route, launch Bootstrap, create a review
    successor, or change the stable lineage family.
 
+## Model Route Decision
+
+Before a slice backend is selected, derive the closed typed fact set consumed
+by `tools/model_routing.py` from the explicit plan, protected-path rules,
+declared write roots, consumers, tests, and unresolved boundaries. Select the
+highest matching class:
+
+- `architectural`: an ADR or invariant, public API, database schema,
+  auth/security, runtime/deployment, shared LLM entrypoint, protected path, or
+  workflow control-plane ownership changes.
+- `complex`: no architectural trigger, but cross-module consumers, state or
+  recovery semantics, concurrency/idempotency, multiple production write
+  roots, or an unresolved behavioral boundary exists.
+- `small_mechanical`: no higher trigger, the transform and behavior are fully
+  specified, at most one production root and one matching test root change,
+  and no contract or dependency is introduced.
+- `normal`: every other bounded implementation task.
+
+Unknown or contradictory facts route to blocked `complex`. An explicit user
+override may upgrade the class; it cannot downgrade the highest matched class.
+Emit the hash-bound decision as non-authorizing evidence. The adapter must not
+select a provider or invoke a model process. The shared workflow launcher owns
+child execution. In `observe_only`, continue with the current caller session;
+the decision neither launches a child nor replaces that session's model.
+
+The canonical policy owns Quick Dev's independent consumer enablement. When it
+is disabled, classification evidence remains deterministic but the route
+status is `disabled`; VDD and Refactor Acceptance controls are unaffected.
+Only the canonical policy may authorize execution, so a caller-supplied policy
+or capability assertion cannot turn a non-authorizing decision into a launch.
+
 The adapter does not read Bootstrap history baselines, promote cost
 calibration, or select a finalized run for reuse. Refactor Acceptance alone may
 reuse a run after revalidating the prepared Acceptance candidate, custody,

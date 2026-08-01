@@ -1,0 +1,99 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:fd47b86e122a634f5aa489609a74ae9befb85c74e6488d59de35d9b5045096df",
+  "canonical_context_sha256": "sha256:723b4e931a5f1a53b45e542bd5060c6198312276d9a1a5bead6de0a1f7e5a945",
+  "request_sha256": "sha256:6d7b15d25622507b63811f4629571d8903d786dbef4822f2401a2392e66ecd92",
+  "result_sha256": "sha256:72d020843f175fc2c0c98173e217e68e94fb5990d9b3836d6f78d9af36b588ac",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "990732dadadbeeee35418588acfcf91a420386e0"
+  },
+  "source_snapshot_id": "sha256:2c8a4b95bed0d860fd60c5d132a77e4294708d98dfcb24d2ef6b46f244664bfd",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "source_sha256": "8b3ac7c233bdf63cf040270f34aa21427bad062e0bcd625241ec8e9ee262becc",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "source_sha256": "08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+      "source_sha256": "dfcd328ea3a74841cb81271653392c7fdebf5390e2d9173f0184bbfa6a83445e",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+      "source_sha256": "6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "source_sha256": "0292f716721b0b196ccf6c9d873faab7b75dba8160d141644155482185028170",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md",
+      "source_sha256": "495bd5176c006c870b6799cf26b176bf45e9ed2a4d0aa4707e274f2059c08529",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "satisfies": [
+        "repository-rules"
+      ]
+    },
+    {
+      "path": "docs/architecture/ADR_INDEX_PHASE.md",
+      "source_sha256": "ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "source_sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:88d50549f14e81d2f2d846d0b8b4471d6bcb7c3a3f40eeb0833868f9de54b854",
+    "freeze_receipt_path": "knowledge-context.freeze.history/88d50549f14e81d2f2d846d0b8b4471d6bcb7c3a3f40eeb0833868f9de54b854.v1.json",
+    "reason": "Bootstrap control-plane commit advanced main and required a freshly published main-bound knowledge context."
+  }
+}

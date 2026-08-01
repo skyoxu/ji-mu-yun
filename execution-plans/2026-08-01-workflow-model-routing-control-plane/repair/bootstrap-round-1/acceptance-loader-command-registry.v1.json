@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "acceptance-command-registry.v1",
+  "commands": [
+    {
+      "id": "acceptance-bootstrap-loader-composition",
+      "executable": "C:\\Windows\\py.exe",
+      "argv": [
+        "-3",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 60,
+      "shell": false,
+      "allowed_write_roots": [],
+      "forbidden_write_roots": [],
+      "registry_hash": "sha256:b68d21300f5e53e3867caa6b26a8a7011b042524a728a6442e4354bc9d7344ce",
+      "environment_allowlist": [
+        "ComSpec",
+        "Path",
+        "PATHEXT",
+        "SystemRoot",
+        "TEMP",
+        "TMP",
+        "USERNAME",
+        "windir"
+      ],
+      "typed_placeholders": {},
+      "placeholder_values": {}
+    }
+  ],
+  "registryHash": "sha256:b68d21300f5e53e3867caa6b26a8a7011b042524a728a6442e4354bc9d7344ce"
+}

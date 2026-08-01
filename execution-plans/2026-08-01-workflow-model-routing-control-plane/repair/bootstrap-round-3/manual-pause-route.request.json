@@ -1,0 +1,103 @@
+{
+  "decision": {
+    "schemaVersion": "implementation-acceptance-bootstrap-requirement.v1",
+    "requirement": "required",
+    "requirementSources": [
+      ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json#TOOLCHAIN-CR-AUTH-001",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/requirements.v1.json",
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md#Bootstrap-Routing",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md"
+    ],
+    "requiredCompanionCapabilityExpectations": [
+      {
+        "capabilityId": "acceptance-inventory-attestation",
+        "capabilityVersion": "1.0",
+        "producerRole": "acceptance_auditor"
+      }
+    ],
+    "authorizes": []
+  },
+  "binding": null,
+  "launch_authorization": null,
+  "repository_root": "C:/jimuyun",
+  "scope_inputs": {
+    "implementation_plan": [
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/00-index.md",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/95-implementation-evolution-and-completion-report.md",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/plan-state.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/requirements.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/repair-plan.md"
+    ],
+    "changed_production_code": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+    ],
+    "affected_consumers": [
+      ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py"
+    ],
+    "tests_and_acceptance": [
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_plan.py"
+    ],
+    "runtime_evidence": [
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-loader-composition-receipt.v2.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/implementation-validation-receipt.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/repair-completeness.v4.json",
+      "logs/ci/2026-08-01/wmr-r2/finalized-run-validation.v3.json",
+      "logs/ci/2026-08-01/wmr-r3/finalized-run-validation.v3.json"
+    ],
+    "repository_rules": [
+      "AGENTS.md",
+      "README.md"
+    ],
+    "referenced_standards": [
+      ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "docs/standards/bootstrap-review-control-plane.md",
+      "docs/standards/repository-maintenance-agent-protocol.md"
+    ]
+  },
+  "lineage_state": {
+    "schemaVersion": "bootstrap-review-lineage-state.v1",
+    "lineageFamilyId": "ria-77945989035b122f005c98a2c3661cd2",
+    "semanticRoundsConsumed": 3,
+    "consumedRoundNumbers": [1, 2, 3],
+    "defaultFullReviewRoundLimit": 2,
+    "hardFullReviewRoundLimit": 3,
+    "nextFullReviewRound": null,
+    "state": "manual_pause",
+    "runs": [
+      {
+        "runDirectory": "logs/ci/2026-08-01/wmr-r1c",
+        "reviewId": "wmr-r1c",
+        "changeId": "workflow-model-routing-control-plane",
+        "fullReviewRound": 1,
+        "inputHash": "sha256:805dd782b9ed5265ca8ba9f56b83d025911dbc91304ec2f0c7286358f42ef2c2"
+      },
+      {
+        "runDirectory": "logs/ci/2026-08-01/wmr-r2",
+        "reviewId": "wmr-r2",
+        "changeId": "workflow-model-routing-control-plane",
+        "fullReviewRound": 2,
+        "inputHash": "sha256:3838c2b426ad68ace1da0f6e3f85727c727663ca9128b2c093e17c442b0ab531"
+      },
+      {
+        "runDirectory": "logs/ci/2026-08-01/wmr-r3",
+        "reviewId": "wmr-r3",
+        "changeId": "workflow-model-routing-control-plane",
+        "fullReviewRound": 3,
+        "inputHash": "sha256:66c25843863f3b8b378e362f3141241b9b334091ce00e607cc228e7413665a5e"
+      }
+    ],
+    "authorizes": [],
+    "lineageStateHash": "sha256:ffcf0d2c07083d103d66d5e22540000a1a16c5db4c374bab08bfacfa4d82bde6"
+  }
+}

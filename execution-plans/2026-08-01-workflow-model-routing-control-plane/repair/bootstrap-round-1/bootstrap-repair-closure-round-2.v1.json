@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/ci/2026-08-01/wmr-r1c",
+  "predecessorInputHash": "sha256:805dd782b9ed5265ca8ba9f56b83d025911dbc91304ec2f0c7286358f42ef2c2",
+  "predecessorResultHash": "sha256:aff19131906234a3cc813926101bb312a9f2d929692792379a10c4d0d22248dc",
+  "findingIds": [
+    "BSR-079733A4253DF035",
+    "BSR-8B28CC71423A1EF6",
+    "BSR-9E0C342DD2490B9B",
+    "BSR-C79990937337C218"
+  ],
+  "items": [
+    {
+      "findingId": "BSR-079733A4253DF035",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "regression",
+      "reason": "Independent per-consumer controls now exist and are replayed by the shared routing composition check.",
+      "fixRefs": [
+        "scripts/sc/config/workflow_model_routes.v1.json",
+        "scripts/sc/workflow_model_routing.py",
+        "scripts/sc/tests/test_workflow_model_routing.py"
+      ],
+      "validationCommands": [
+        "py -3 scripts/sc/tests/test_workflow_model_routing.py",
+        "py -3 execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "evidence": [
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-receipt.v5.json",
+          "sha256": "sha256:59beb36048fe840e35b5b7b8c23c459e99f90ad626295e489b179f6cb0ce7761"
+        },
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/repair-completeness.v3.json",
+          "sha256": "sha256:ec3136869f97282338263f48b5c382dbfae9cb3bb42bee0051faa853894c3b8b"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-8B28CC71423A1EF6",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "restricted-context",
+      "reason": "The VDD adapter no longer accepts caller-supplied capability proof and the shared producer replays policy-bound receipts before activation.",
+      "fixRefs": [
+        ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+        "scripts/sc/workflow_model_routing.py",
+        "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+        "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+        "py -3 scripts/sc/tests/test_workflow_model_routing.py"
+      ],
+      "evidence": [
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-receipt.v5.json",
+          "sha256": "sha256:59beb36048fe840e35b5b7b8c23c459e99f90ad626295e489b179f6cb0ce7761"
+        },
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/repair-completeness.v3.json",
+          "sha256": "sha256:ec3136869f97282338263f48b5c382dbfae9cb3bb42bee0051faa853894c3b8b"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-9E0C342DD2490B9B",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "negative-fixture",
+      "reason": "Capability passage now requires schema-valid producer-bound probe and representative shadow execution receipts rather than self-attested fields.",
+      "fixRefs": [
+        "scripts/sc/workflow_model_routing.py",
+        "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+        "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json",
+        "scripts/sc/tests/test_workflow_model_routing.py"
+      ],
+      "validationCommands": [
+        "py -3 scripts/sc/tests/test_workflow_model_routing.py",
+        "py -3 execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "evidence": [
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-receipt.v5.json",
+          "sha256": "sha256:59beb36048fe840e35b5b7b8c23c459e99f90ad626295e489b179f6cb0ce7761"
+        },
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/repair-completeness.v3.json",
+          "sha256": "sha256:ec3136869f97282338263f48b5c382dbfae9cb3bb42bee0051faa853894c3b8b"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-C79990937337C218",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "authority-predicate",
+      "reason": "Canonical policy now owns independent VDD, Quick Dev, and Refactor Acceptance consumer controls, and decision validation recomputes the selected consumer state.",
+      "fixRefs": [
+        "scripts/sc/config/workflow_model_routes.v1.json",
+        "scripts/sc/workflow_model_routing.py",
+        "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+        "scripts/sc/tests/test_workflow_model_routing.py"
+      ],
+      "validationCommands": [
+        "py -3 scripts/sc/tests/test_workflow_model_routing.py",
+        "py -3 execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "evidence": [
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-receipt.v5.json",
+          "sha256": "sha256:59beb36048fe840e35b5b7b8c23c459e99f90ad626295e489b179f6cb0ce7761"
+        },
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/repair-completeness.v3.json",
+          "sha256": "sha256:ec3136869f97282338263f48b5c382dbfae9cb3bb42bee0051faa853894c3b8b"
+        }
+      ]
+    }
+  ],
+  "currentBindings": {
+    "candidateHash": "sha256:402a66c482fc35846669a54c6b2585cc73529ff17697d5ff679567a7e8b5e1ff",
+    "sourceHash": "sha256:21601bbb2b69d27d7c67650a4d1bd3bab7f9deb60f48af161dc4f95edcdc0f1f",
+    "validatorHash": "sha256:00fa05b80e17ae51cd6c0ce4bf4acbdabb5c45a6cdefd7a0cea5a264e7d70311"
+  },
+  "gitIndexHash": "sha256:30df5f25076b9e1ed9ae9aeb7d4fde8a2173b2d8a2daf9d3ad64d9d06e8f8463",
+  "writeSetHash": "sha256:78527b134874f1d085d0e5af0ee87589934d5af66c28d29aa32086a0444a2053",
+  "executionReadSetHash": "sha256:7ce10cbc1af5a3214bc8e15fe10f3e67ca3facab6ce9ac8ed96c6d04f47c0ee1",
+  "dependencyClosureHash": "sha256:c79bca527c59889aeb80ef658b381b49baabaadbd6e700ebdff861d6f6b1f903"
+}

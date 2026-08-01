@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/workflow-model-capability-probe-receipt.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "receiptId", "producerId", "routeId", "policyRevision",
+    "status", "processResultRef", "observedAt", "authorizes"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "jimuyun.workflow-model-capability-probe-receipt.v1"},
+    "receiptId": {"type": "string", "minLength": 1},
+    "producerId": {"const": "workflow-model-capability-evidence-producer.v1"},
+    "routeId": {"type": "string", "minLength": 1},
+    "policyRevision": {"type": "string", "minLength": 1},
+    "status": {"const": "passed"},
+    "processResultRef": {"$ref": "#/$defs/evidenceRef"},
+    "observedAt": {"type": "string", "format": "date-time"},
+    "authorizes": {"const": []}
+  },
+  "$defs": {
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+      }
+    }
+  }
+}

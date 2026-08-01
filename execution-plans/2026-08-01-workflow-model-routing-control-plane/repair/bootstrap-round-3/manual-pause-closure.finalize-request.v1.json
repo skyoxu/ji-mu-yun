@@ -1,0 +1,20 @@
+{
+  "repositoryRoot": "C:\\jimuyun",
+  "challengePath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-3/manual-pause-closure.challenge.v1.json",
+  "acknowledgement": {
+    "schemaVersion": "acceptance-manual-pause-maintainer-ack.v1",
+    "decision": "accept-repaired-target",
+    "closureBindingHash": "sha256:368c0770a7b18c39677574b9292baef4bcdde975f2038d31b47fd4744c367a99",
+    "acknowledgedFindingIds": [
+      "BSR-70B71A7460628393",
+      "BSR-9BC70F2A4289C44C",
+      "BSR-E5FA31807675B5D1"
+    ],
+    "authorityRole": "maintainer",
+    "rationale": "Maintainer confirmed the exact challenge and confirmed finding set presented for the repaired 8-1 acceptance target.",
+    "recordedAt": "2026-08-01T16:37:09.499253Z",
+    "authorizes": [
+      "manual-pause-closure"
+    ]
+  }
+}

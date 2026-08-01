@@ -16,12 +16,12 @@ manual 与 specialized-agent 模式不调用 reviewer；`codex-exec` 模式可�
 
 | Review 对象 | Profile | 必须覆盖的上下文 | 推理配置 |
 | --- | --- | --- | --- |
-| 实施前计划、唯一事实源、Whole-directory | `bootstrap-upstream-plan` | 计划源、原始需求、仓库规则、当前现状、引用标准、schemas/fixtures | Blind `medium`；Edge/Acceptance/verifier `high` |
-| 重构/实施完成后的代码与功能闭合 | `bootstrap-implementation-conformance` | 实施计划、全部变更生产代码、受影响消费者、测试与验收、运行证据、仓库规则、引用标准 | 全部角色 `high` |
-| Skill/路由 | `bootstrap-skill-route` | Skill 本体、operator guide、route/CLI、profiles/config、schemas、tests、使用证据、仓库规则 | Blind `medium`；Edge/Acceptance/verifier `high` |
-| 聚焦 bugfix/hotfix/diff | `bootstrap-focused-change` | 变更意图、全部变更文件、受影响消费者、目标测试、仓库规则、引用标准 | Blind/Acceptance `medium`；Edge/verifier `high` |
+| 实施前计划、唯一事实源、Whole-directory | `bootstrap-upstream-plan` | 计划源、原始需求、仓库规则、当前现状、引用标准、schemas/fixtures | Round 1-2：Terra；Blind `medium`，Edge/Acceptance `high` |
+| 重构/实施完成后的代码与功能闭合 | `bootstrap-implementation-conformance` | 实施计划、全部变更生产代码、受影响消费者、测试与验收、运行证据、仓库规则、引用标准 | Round 1-2：Terra/high |
+| Skill/路由 | `bootstrap-skill-route` | Skill 本体、operator guide、route/CLI、profiles/config、schemas、tests、使用证据、仓库规则 | Round 1-2：Sol/high |
+| 聚焦 bugfix/hotfix/diff | `bootstrap-focused-change` | 变更意图、全部变更文件、受影响消费者、目标测试、仓库规则、引用标准 | Round 1-2：Terra；Blind/Acceptance `medium`，Edge `high` |
 
-四种 profile 的完整性合同完全相同：`artifactCoverage=all`、`samplingAllowed=false`、`contextClosureRequired=true`、缺上下文时 `status=failed`。推理等级只能改变分析深度，不能减少必读文件、调用方/消费者、测试或验收证据。每个 profile 还绑定 `reviewerInstructionPolicy`、`deterministicPreflightPolicy` 与 `reviewCyclePolicy`，跨会话不得改写。
+四种 profile 的完整性合同完全相同：`artifactCoverage=all`、`samplingAllowed=false`、`contextClosureRequired=true`、缺上下文时 `status=failed`。任何合法 Round 3 都覆盖为 Sol/high；Round 2 继承 profile 路由，Skill/控制面修复不会降级为 Terra。推理等级只能改变分析深度，不能减少必读文件、调用方/消费者、测试或验收证据。每个 profile 还绑定 `reviewerInstructionPolicy`、`verifierPolicy`、`accessProbePolicy`、`deterministicPreflightPolicy` 与 `reviewCyclePolicy`，跨会话不得改写。
 
 `prepare` 必须对 profile 的每个 `requiredContextClasses` 传入至少一个 `--context-class <class>=<scope>`。映射目标必须已经被某个 `--scope` 纳入，且实际含有该 class 的 authority；缺 class、未知 class 或零 artifact 映射时命令在写文件前失败。
 
@@ -107,7 +107,9 @@ py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bo
 - `reviewer-prompts/acceptance_auditor.md`；
 - `reviewer-outputs/<reviewer>.json` 空模板。
 
-`review-input.json.codexExecPolicy` 是跨会话模型权威：reviewer 和独立 verifier 首选模型固定为 `gpt-5.6-terra`，按顺序回退到 `gpt-5.5`、`gpt-5.4`，禁止使用 `gpt-5.6-sol`。主会话和子进程不得用全局默认模型覆盖该策略。
+`review-input.json.codexExecPolicy` 是 discovery 跨会话模型权威：普通实施验收 Round 1-2 使用 `gpt-5.6-terra`/high，Skill/路由 Round 1-2 使用 `gpt-5.6-sol`/high，所有合法 Round 3 使用 `gpt-5.6-sol`/high。显式 fallback 仍由 operator 单独发起，主会话和子进程不得用全局默认模型覆盖该策略。
+
+`review-input.json.verifierPolicy` 是独立核验权威：只有 P1 blocker 时使用 `gpt-5.6-sol`/high；任一 P0 或 `dimension=security` 时，整个 verifier run 使用 `gpt-5.6-sol`/max。数据损坏与权限边界问题必须在 discovery finding 中归为 P0 或 `security`，否则结构化 gate 无法触发 max。
 同一 manifest 的 `contextClassArtifacts` 必须对 `requiredContextClasses` 逐项提供非空、hash-bound artifact 列表；gate/finalize 恢复时重新验证映射。
 
 同一 manifest 还必须绑定 `reviewObjectType`、`reviewDepth`、`requiredContextClasses`、`completenessPolicy`、逐角色 `reasoningEffortByRole`、role rubric、误报清单、untrusted-content、deterministic preflight 和 full-review cycle policy。任何字段缺失或与 profile 不一致时，gate/finalize 必须 fail closed。
@@ -134,11 +136,12 @@ Preflight 全部通过后，`codex-exec` 必须先用相同 executable identity�
 py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prove-access `
   --run-dir <run-dir> `
   --codex-command <codex-executable> `
+  --role discovery `
   --model <profile-allowed-model> `
   --ack-high-cost
 ```
 
-该 proof 不缓存 artifact access、preflight 或 authority。high-cost run 必须在 access probe 启动任何模型前显示估算并取得 `--ack-high-cost`；不能把确认推迟到 probe 已消耗 token 之后。每个真实 reviewer/verifier child 还必须在同一 Codex session 内先运行 hash-bound `access-handshake`；失败时 formal reviewer/verifier output 保持原状，candidate 数量为零。
+该命令生成 `access-proof.json`，只证明 discovery 路由，不缓存 artifact access、preflight 或 authority。high-cost run 必须在 access probe 启动任何模型前显示估算并取得 `--ack-high-cost`；不能把确认推迟到 probe 已消耗 token 之后。每个真实 reviewer/verifier child 还必须在同一 Codex session 内先运行 hash-bound `access-handshake`；失败时 formal reviewer/verifier output 保持原状，candidate 数量为零。
 
 随后、任何 reviewer 启动前，必须冻结 authority：
 
@@ -161,7 +164,7 @@ CLI 会重验 Git revision、Git index、artifact hashes、Artifact View、acces
 - 三层都完成后，用户要求完整 review 时可以继续执行 gate；仅要求 prepare 或 reviewer 输出时应在对应阶段停止；
 - 每个 prompt 必须包含本角色 rubric、profile 专用误报抑制清单和 untrusted-content boundary；缺少任一项时拒绝启动；
 - 每个 reviewer 保存输出后必须重新读取自己的 JSON，并执行 `validate-layer --run-dir <run-dir> --layer <role>`；只有命令零退出才算该层完成。失败时由同一 reviewer 修正自己的输出或将该层保留为失败，主会话不得代修。
-- 使用仓库自有 `run-layer` 时，runner 通过 UTF-8 stdin 启动显式指定的单个模型，使用参数数组、`shell=False`、环境白名单和类型化占位符。它不隐藏 provider 调度、不自动循环 fallback；首选失败后若要使用 `gpt-5.5` 或 `gpt-5.4`，必须由 operator 发起新命令并保留上一 attempt evidence。`gpt-5.6-sol` 禁止用于 reviewer/verifier。
+- 使用仓库自有 `run-layer` 时，runner 通过 UTF-8 stdin 启动显式指定的单个模型，使用参数数组、`shell=False`、环境白名单和类型化占位符。它不隐藏 provider 调度、不自动循环 fallback；首选失败后若要使用 profile 声明的 fallback，必须由 operator 发起新命令并保留上一 attempt evidence。模型和 effort 必须匹配当前 profile、round 与 role 的解析结果。
 - `process-events.jsonl` 是执行事实权威；`process-leases.json` 由 event 重建，仅为 7-12 compatibility view。工具等待超时但 PID 仍 alive 时只能 inspect/reattach/poll，不得启动相同 operation。失败 attempt 不得覆盖 formal role output。
 - completed reviewer payload 在写入 formal sidecar 前必须再次通过 frozen launch authority 与完整 layer validation；这一步失败时 formal bytes 保持原状。模型显式返回的 `status=failed`、malformed JSON、invalid receipt 或 child process failure 只形成 transport-class failed attempt；formal output 保持原字节，并在同一 run/round 重试。
 
@@ -183,7 +186,7 @@ py -3 -c "from pathlib import Path; print(Path(r'<run-dir>/reviewer-prompts/blin
     -c 'model_reasoning_effort="<manifest-role-value>"' -
 ```
 
-独立 verifier 使用相同 `-m gpt-5.6-terra`，但必须启动全新进程并读取 `verification-prompt.md`。
+独立 verifier 不复用 discovery 命令或 proof；它使用 gate 派生的 Sol/high 或 Sol/max，并启动全新进程读取 `verification-prompt.md`。
 
 For repository-owned `run-layer`, a completed Codex discovery child returns
 semantic candidates plus `bootstrap-artifact-view-read-receipt.v1`. It must not
@@ -243,13 +246,22 @@ Dedup fingerprint 绑定 hash-bound artifact、inclusive line range、exact evid
 
 如果 gate 的 `blockerCandidateCount` 大于 0：
 
-1. 在与 discovery reviewer 分离的新 session 中手工运行，或由用户明确授权 Codex 启动独立 verifier；
-2. verifier 只能对现有 finding ID 返回 `confirmed|refuted|unverified`；
-3. verifier 不得新增问题或扩大 scope；
-4. `unverified` 必须选择 `security|data_loss|other` class，gateway 派生 disposition；
-5. 每条 `evidenceChecked` 必须覆盖 finding 精确证据行和全部 `contextRead`；无关但 in-scope 的引用无效；
+1. 对 `codex-exec` 先执行 `prove-access --role independent_verifier`，生成绑定当前 gate hash 与风险路由的 `verifier-access-proof.json`；`inspect-run` 在缺失时返回 `prove-verifier-access`；
+2. 在与 discovery reviewer 分离的新 session 中手工运行，或由用户明确授权 Codex 启动独立 verifier；
+3. verifier 只能对现有 finding ID 返回 `confirmed|refuted|unverified`；
+4. verifier 不得新增问题或扩大 scope；
+5. `unverified` 必须选择 `security|data_loss|other` class，gateway 派生 disposition；
+6. 每条 `evidenceChecked` 必须覆盖 finding 精确证据行和全部 `contextRead`；无关但 in-scope 的引用无效；
    path-only context 表示整文件，不能用单行引用替代；
-6. 保存到 run directory 的 `verifier-output.json`。
+7. 保存到 run directory 的 `verifier-output.json`。
+
+```powershell
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prove-access `
+  --run-dir <run-dir> `
+  --codex-command <codex-executable> `
+  --role independent_verifier `
+  --ack-high-cost
+```
 
 `gate` 生成的 verifier prompt 与 `run-layer` runtime wrapper 都必须从 hash-bound `review-candidates.json` 展开每个 blocker 的完整 inclusive range 和全部 `contextRead`。其中 finding range 必须由单个 `evidenceChecked` reference 完整覆盖，不能用多个局部 reference 拼接；runtime wrapper 不得依赖旧 prompt 中仅显示 start line 的候选摘要。
 

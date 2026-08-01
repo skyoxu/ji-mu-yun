@@ -270,6 +270,13 @@ class ExecutionControlTests(unittest.TestCase):
         self.assertEqual("r3-candidate-suite", descriptor["id"])
         self.assertTrue(descriptor["registry_hash"].startswith("sha256:"))
         self.assertFalse(descriptor["shell"])
+        self.assertIn("TEMP", descriptor["environment_allowlist"])
+        self.assertIn("TMP", descriptor["environment_allowlist"])
+        self.assertIn("USERNAME", descriptor["environment_allowlist"])
+        self.assertIn("USERPROFILE", descriptor["environment_allowlist"])
+        self.assertIn("APPDATA", descriptor["environment_allowlist"])
+        self.assertIn("PROGRAMFILES", descriptor["environment_allowlist"])
+        self.assertIn("PROGRAMFILES(X86)", descriptor["environment_allowlist"])
 
     def test_persisted_resume_consumes_plan_owned_legacy_registry_directly(self) -> None:
         import subprocess

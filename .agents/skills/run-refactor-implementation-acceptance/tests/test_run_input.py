@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -449,6 +450,64 @@ class RunInputTests(unittest.TestCase):
 
             with self.assertRaisesRegex(InputError, "shared hardlink"):
                 acceptance_cli.prepare_run(str(target / "input.json"), str(target / "hardlink-run.json"))
+
+    @unittest.skipUnless(os.name == "nt", "Windows long-path behavior")
+    def test_prepare_dirty_worktree_reads_long_snapshot_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / ("target-" + "x" * 96)
+            relative_path = (
+                Path("execution-plans")
+                / ("plan-" + "y" * 96)
+                / ("artifact-" + "z" * 96 + ".md")
+            )
+            frozen_bytes = b"long frozen candidate\n"
+            snapshot_file = acceptance_core._native_path(
+                target / ".acceptance-snapshots" / "run" / relative_path
+            )
+            snapshot_file.parent.mkdir(parents=True)
+            snapshot_file.write_bytes(frozen_bytes)
+            baseline = {
+                "schemaVersion": "acceptance-baseline-content-manifest.v1",
+                "status": "complete",
+                "coverageGaps": [],
+                "authorizes": [],
+                "files": [],
+            }
+            candidate = {
+                "schemaVersion": "acceptance-candidate-content-manifest.v1",
+                "status": "complete",
+                "coverageGaps": [],
+                "authorizes": [],
+                "files": [
+                    {
+                        "change_type": "untracked",
+                        "roles": ["evidence"],
+                        "baseline_path": None,
+                        "baseline_sha256": None,
+                        "candidate_path": relative_path.as_posix(),
+                        "candidate_sha256": _sha256(frozen_bytes),
+                        "inclusion_reason": "long frozen candidate path",
+                    }
+                ],
+            }
+            run_input = _run_input(
+                target,
+                baseline,
+                candidate,
+                candidate_mode="dirty_worktree",
+                snapshot_path=".acceptance-snapshots/run",
+            )
+            _write_prepare_inputs(target, baseline, candidate, run_input)
+
+            try:
+                result = acceptance_cli.prepare_run(
+                    str(target / "input.json"), str(target / "run.json")
+                )
+                self.assertEqual(
+                    "dirty_worktree", result["candidateCustody"]["candidateMode"]
+                )
+            finally:
+                shutil.rmtree(acceptance_core._native_path(target), ignore_errors=True)
 
     def test_git_path_lookup_fails_closed_for_invalid_object(self) -> None:
         from acceptance_core import InputError

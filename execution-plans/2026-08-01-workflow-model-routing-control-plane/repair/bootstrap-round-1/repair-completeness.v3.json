@@ -1,0 +1,454 @@
+{
+  "acceptanceTarget": "execution-plans/2026-08-01-workflow-model-routing-control-plane",
+  "authorityGraphArtifacts": [
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+    "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+    "docs/architecture/phase-service/llm-codex-execution.md",
+    "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+    "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+    "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json"
+  ],
+  "authorityGraphChanged": true,
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/baseline-content-manifest.v2.json",
+    "sha256": "sha256:0f3f4e291e4a861844b243683ac8f593d7d3f7c46ecbcb96348373169cb97cd5"
+  },
+  "candidateManifest": {
+    "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/candidate-content-manifest.v2.json",
+    "sha256": "sha256:c470bdb51285ea2caf065635e8f0ddbeef161bf6b803f21497519a38bb691697"
+  },
+  "changedPathBindings": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "sha256": "sha256:b95573911b40d7b67a44a2e3763748d4305ed9346227b25cd7c1d3fb0daf0891",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+      "sha256": "sha256:57d3eae5281b055a776ad77be83b510e2e7122c89368db2b3ac5cc7841824c5c",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "sha256": "sha256:3fe772c4cc53e35cda9e9e4060faeea6fcd0a9a7e6650ec4ded5bc786927b2f8",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "sha256": "sha256:8a53196cfd2f4d6427eec98cf1a4e40bc006782d1993a0c1638be4bbab8005db",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+      "sha256": "sha256:5f5d15dc5137fa0d426d89df5adfc746231acce27995b3ef87151c1253ad2b3d",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "sha256": "sha256:a7b6bf6eb8392b04e3aa3f91d09168de70561c8d10e56443ce01bb1d96a539ba",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "sha256": "sha256:283a4c423259a2c315f87786bc3c328680c40dcc2dc2900ec6c1e96f317567b2",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+      "sha256": "sha256:d8ae6d692edecdd9c49a704566c4a10aa21d4917c714411a2c31fd9f9387fddb",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+      "sha256": "sha256:f7995699099e2bf8386457f80239bb380fc899b218ac8728681ef248e5bf7c3a",
+      "state": "present"
+    },
+    {
+      "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+      "sha256": "sha256:c11097f51a38412c5672505e180a48c62fd52f10d999f0543e2a6946affe6f36",
+      "state": "present"
+    },
+    {
+      "path": "docs/architecture/phase-service/llm-codex-execution.md",
+      "sha256": "sha256:644247f67c05dfbbf9fd8d44cb93da560ed21c0697172591dcfc6b1398808d20",
+      "state": "present"
+    },
+    {
+      "path": "scripts/sc/config/workflow_model_routes.v1.json",
+      "sha256": "sha256:355e5d4b39ec84c1818fefdbdc366b3b873bf8f694c2a15422598ddcd0ffa912",
+      "state": "present"
+    },
+    {
+      "path": "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+      "sha256": "sha256:b4bc08f7bac8d56a3e4db0361574a753bf4d51014c3d866968fe07a6869018e2",
+      "state": "present"
+    },
+    {
+      "path": "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+      "sha256": "sha256:cc673431cd13922d7a1a7b2789cbbf88189a2f44bd0814648a9d617124ac74c5",
+      "state": "present"
+    },
+    {
+      "path": "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json",
+      "sha256": "sha256:885635a6ecf1c186bcc87f42a3fd574a7565cb3f372caa8dffd5956f9a1385ed",
+      "state": "present"
+    },
+    {
+      "path": "scripts/sc/tests/test_workflow_model_routing.py",
+      "sha256": "sha256:0134b07610520a359ca900f430a676a675ce91f6d7474052f2aca0938e6ac9a1",
+      "state": "present"
+    },
+    {
+      "path": "scripts/sc/workflow_model_routing.py",
+      "sha256": "sha256:16808f7f911e057ec3b5e65d63e51857404422a2087914b7b7da8f7d4578793a",
+      "state": "present"
+    }
+  ],
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+    "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+    "docs/architecture/phase-service/llm-codex-execution.md",
+    "scripts/sc/config/workflow_model_routes.v1.json",
+    "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+    "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+    "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json",
+    "scripts/sc/tests/test_workflow_model_routing.py",
+    "scripts/sc/workflow_model_routing.py"
+  ],
+  "compositionChecks": [
+    {
+      "bindings": [
+        {
+          "path": "scripts/sc/config/workflow_model_routes.v1.json",
+          "role": "producer",
+          "sha256": "sha256:355e5d4b39ec84c1818fefdbdc366b3b873bf8f694c2a15422598ddcd0ffa912"
+        },
+        {
+          "path": "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+          "role": "producer",
+          "sha256": "sha256:b4bc08f7bac8d56a3e4db0361574a753bf4d51014c3d866968fe07a6869018e2"
+        },
+        {
+          "path": "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+          "role": "producer",
+          "sha256": "sha256:cc673431cd13922d7a1a7b2789cbbf88189a2f44bd0814648a9d617124ac74c5"
+        },
+        {
+          "path": "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json",
+          "role": "producer",
+          "sha256": "sha256:885635a6ecf1c186bcc87f42a3fd574a7565cb3f372caa8dffd5956f9a1385ed"
+        },
+        {
+          "path": "scripts/sc/workflow_model_routing.py",
+          "role": "producer",
+          "sha256": "sha256:16808f7f911e057ec3b5e65d63e51857404422a2087914b7b7da8f7d4578793a"
+        },
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/model_routing.py",
+          "role": "consumer",
+          "sha256": "sha256:fcf66ecc0d82685343f2bc18b22e2b001e2f37edb82d249408b31c532d3a169c"
+        },
+        {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+          "role": "consumer",
+          "sha256": "sha256:419ecbd6bc571607d77bfbbd3a5b722986682fc7ea740a2c0aafefe019e20aec"
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+          "role": "consumer",
+          "sha256": "sha256:d8ae6d692edecdd9c49a704566c4a10aa21d4917c714411a2c31fd9f9387fddb"
+        }
+      ],
+      "checkId": "workflow-model-routing-repair-composition-v5",
+      "commandRegistry": {
+        "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-command-registry.v5.json",
+        "sha256": "sha256:09153593696e1d6c05911dde2732897f03a27d37505e1a14f795fd5c679d4804"
+      },
+      "receipt": {
+        "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-receipt.v5.json",
+        "sha256": "sha256:59beb36048fe840e35b5b7b8c23c459e99f90ad626295e489b179f6cb0ce7761"
+      }
+    },
+    {
+      "bindings": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          "role": "producer",
+          "sha256": "sha256:3fe092b85ba59fe91cee9cd150dd47a0ae29cdfe188135d6000ee43aae8d2395"
+        },
+        {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+          "role": "consumer",
+          "sha256": "sha256:8a53196cfd2f4d6427eec98cf1a4e40bc006782d1993a0c1638be4bbab8005db"
+        }
+      ],
+      "checkId": "acceptance-bootstrap-loader-composition",
+      "commandRegistry": {
+        "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/acceptance-loader-command-registry.v1.json",
+        "sha256": "sha256:0542bf5dd0b83a14831fe294bab1c1e86a44d2737192c5e136af196ee7c515d9"
+      },
+      "receipt": {
+        "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/acceptance-loader-composition-receipt.v1.json",
+        "sha256": "sha256:385e51176965652e025b20321b1e3c3cca49432360583e5fafa1b5408421248c"
+      }
+    }
+  ],
+  "directConsumers": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/model_routing.py",
+      "sha256": "sha256:fcf66ecc0d82685343f2bc18b22e2b001e2f37edb82d249408b31c532d3a169c"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+      "sha256": "sha256:419ecbd6bc571607d77bfbbd3a5b722986682fc7ea740a2c0aafefe019e20aec"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "sha256": "sha256:8a53196cfd2f4d6427eec98cf1a4e40bc006782d1993a0c1638be4bbab8005db"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+      "sha256": "sha256:d8ae6d692edecdd9c49a704566c4a10aa21d4917c714411a2c31fd9f9387fddb"
+    }
+  ],
+  "highRiskBoundaryArtifacts": [
+    "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+    "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+    "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+    "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json"
+  ],
+  "highRiskBoundaryChanged": true,
+  "lineageFamilyId": "ria-77945989035b122f005c98a2c3661cd2",
+  "novelP0P1FindingIds": [],
+  "predecessorRun": "logs/ci/2026-08-01/wmr-r1c",
+  "requestHash": "sha256:930c4477d48a3c27646e6b5bfed352881d786d70204170811d4e3e2c321306b2",
+  "rootCauseInventories": [
+    {
+      "addressedPaths": [
+        "scripts/sc/config/workflow_model_routes.v1.json",
+        "scripts/sc/tests/test_workflow_model_routing.py",
+        "scripts/sc/workflow_model_routing.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "shared-consumer-controls",
+      "matches": [
+        {
+          "lineNumbers": [
+            5
+          ],
+          "path": "scripts/sc/config/workflow_model_routes.v1.json",
+          "sha256": "sha256:355e5d4b39ec84c1818fefdbdc366b3b873bf8f694c2a15422598ddcd0ffa912"
+        },
+        {
+          "lineNumbers": [
+            60,
+            66
+          ],
+          "path": "scripts/sc/tests/test_workflow_model_routing.py",
+          "sha256": "sha256:0134b07610520a359ca900f430a676a675ce91f6d7474052f2aca0938e6ac9a1"
+        },
+        {
+          "lineNumbers": [
+            74,
+            414,
+            642
+          ],
+          "path": "scripts/sc/workflow_model_routing.py",
+          "sha256": "sha256:16808f7f911e057ec3b5e65d63e51857404422a2087914b7b7da8f7d4578793a"
+        }
+      ],
+      "searchRoots": [
+        "scripts/sc"
+      ],
+      "searchTerm": "consumerControls"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "vdd-route-projection",
+      "matches": [
+        {
+          "lineNumbers": [
+            21
+          ],
+          "path": ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+          "sha256": "sha256:d8ae6d692edecdd9c49a704566c4a10aa21d4917c714411a2c31fd9f9387fddb"
+        },
+        {
+          "lineNumbers": [
+            49
+          ],
+          "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+          "sha256": "sha256:f7995699099e2bf8386457f80239bb380fc899b218ac8728681ef248e5bf7c3a"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/vdd-execution-plan/scripts"
+      ],
+      "searchTerm": "routing.vdd_decision"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "quick-dev-consumer-control",
+      "matches": [
+        {
+          "lineNumbers": [
+            100,
+            104,
+            105
+          ],
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+          "sha256": "sha256:57d3eae5281b055a776ad77be83b510e2e7122c89368db2b3ac5cc7841824c5c"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "consumerControls"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "acceptance-consumer-control",
+      "matches": [
+        {
+          "lineNumbers": [
+            66,
+            73,
+            74
+          ],
+          "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+          "sha256": "sha256:5f5d15dc5137fa0d426d89df5adfc746231acce27995b3ef87151c1253ad2b3d"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests"
+      ],
+      "searchTerm": "consumerControls"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "exclusions": [
+        {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+          "reason": "Separate Bootstrap import loader is not used by repair completeness and was not modified."
+        },
+        {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+          "reason": "Tests the separate Bootstrap import loader and is unaffected by the repair audit import collision."
+        }
+      ],
+      "inventoryId": "acceptance-bootstrap-loader",
+      "matches": [
+        {
+          "lineNumbers": [
+            51,
+            82,
+            918
+          ],
+          "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+          "sha256": "sha256:cf5408d7de48e7bd10ee2ace8c4d0653d849df8bfef097ed091d56c0b72d0cd9"
+        },
+        {
+          "lineNumbers": [
+            117,
+            165
+          ],
+          "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+          "sha256": "sha256:8a53196cfd2f4d6427eec98cf1a4e40bc006782d1993a0c1638be4bbab8005db"
+        },
+        {
+          "lineNumbers": [
+            17,
+            23,
+            736,
+            795,
+            936,
+            1012,
+            1047
+          ],
+          "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+          "sha256": "sha256:b8e56df7ce7cdd19e25240f0aa66551cf1c1b64fb187241515c6256e78a181d2"
+        },
+        {
+          "lineNumbers": [
+            54
+          ],
+          "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+          "sha256": "sha256:a7b6bf6eb8392b04e3aa3f91d09168de70561c8d10e56443ce01bb1d96a539ba"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/run-refactor-implementation-acceptance"
+      ],
+      "searchTerm": "_bootstrap_module"
+    }
+  ],
+  "schemaVersion": "acceptance-repair-completeness.v1",
+  "semanticRoundsConsumed": 1,
+  "status": "passed",
+  "targetedTests": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+      "sha256": "sha256:57d3eae5281b055a776ad77be83b510e2e7122c89368db2b3ac5cc7841824c5c"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+      "sha256": "sha256:5f5d15dc5137fa0d426d89df5adfc746231acce27995b3ef87151c1253ad2b3d"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "sha256": "sha256:a7b6bf6eb8392b04e3aa3f91d09168de70561c8d10e56443ce01bb1d96a539ba"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+      "sha256": "sha256:f7995699099e2bf8386457f80239bb380fc899b218ac8728681ef248e5bf7c3a"
+    },
+    {
+      "path": "scripts/sc/tests/test_workflow_model_routing.py",
+      "sha256": "sha256:0134b07610520a359ca900f430a676a675ce91f6d7474052f2aca0938e6ac9a1"
+    }
+  ],
+  "validationRefs": [
+    {
+      "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/acceptance-loader-composition-receipt.v1.json",
+      "sha256": "sha256:385e51176965652e025b20321b1e3c3cca49432360583e5fafa1b5408421248c"
+    },
+    {
+      "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-receipt.v5.json",
+      "sha256": "sha256:59beb36048fe840e35b5b7b8c23c459e99f90ad626295e489b179f6cb0ce7761"
+    },
+    {
+      "path": "logs/ci/2026-08-01/wmr-r1c/finalized-run-validation.v3.json",
+      "sha256": "sha256:00742dd72d3c3db15bb8691ef2654d54318d6669f2416c9d8619e39731c1ad2e"
+    }
+  ]
+}

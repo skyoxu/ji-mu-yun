@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "code-review-policy-pack.v1",
+  "policyId": "toolchain-code-review",
+  "policyRevision": "sha256:9f541004c5edf4a2787b8f00667e038738a69dba9b715cdf656c310260ada6d2",
+  "targetDomain": "toolchain",
+  "authorityRefs": [
+    "AGENTS.md",
+    "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md"
+  ],
+  "pathRules": {
+    "ownedPrefixes": [
+      ".agents/skills/",
+      "scripts/sc/",
+      "execution-plans/",
+      "docs/adr/",
+      "docs/standards/",
+      "docs/architecture/phase-service/"
+    ],
+    "crossDomainPaths": [
+      "scripts/sc/_llm_backend.py"
+    ]
+  },
+  "checks": [
+    {"policyCheckId":"TOOLCHAIN-CR-AUTH-001","evaluationMode":"deterministic"},
+    {"policyCheckId":"TOOLCHAIN-CR-SCOPE-001","evaluationMode":"deterministic"},
+    {"policyCheckId":"TOOLCHAIN-CR-COMPAT-001","evaluationMode":"hybrid"},
+    {"policyCheckId":"TOOLCHAIN-CR-TEST-001","evaluationMode":"deterministic"},
+    {"policyCheckId":"TOOLCHAIN-CR-EVIDENCE-001","evaluationMode":"review_gate"}
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:79afbc3af9678a50bf800eb8e6df994addc6ea4f52529c872877048535a3237c",
+  "canonical_context_sha256": "sha256:7b0d5377178b8b7e7016ae63d6dc64986f96dbc605406e4a406033b12bae8f0f",
+  "request_sha256": "sha256:6d4c3ba467598a5ab9e44c24bb4d0ab36d6bde7b1d13f54f3548562631fb2c77",
+  "result_sha256": "sha256:192fe67646ca43af11a19b79d5d11468faf2ffadf6b7825f4a336439c8f718a1",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "990732dadadbeeee35418588acfcf91a420386e0"
+  },
+  "source_snapshot_id": "sha256:2c8a4b95bed0d860fd60c5d132a77e4294708d98dfcb24d2ef6b46f244664bfd",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "satisfies": [
+        "repository-rules"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+      "source_sha256": "dfcd328ea3a74841cb81271653392c7fdebf5390e2d9173f0184bbfa6a83445e",
+      "satisfies": [
+        "acceptance-boundary"
+      ]
+    }
+  ],
+  "authorizes": []
+}

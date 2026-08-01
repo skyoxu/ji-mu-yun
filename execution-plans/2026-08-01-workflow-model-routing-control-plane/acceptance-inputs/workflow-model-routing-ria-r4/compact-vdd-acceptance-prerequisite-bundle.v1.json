@@ -1,0 +1,37 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/workflow-model-routing-ria-r4/action-dag.v1.json",
+    "sha256": "sha256:1026e8f0c50501d2a32c319aabaaebef36767231e90dd4564d3b47dd33b8d47d"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/workflow-model-routing-ria-r4/baseline-content-manifest.v1.json",
+    "sha256": "sha256:ec8dc6407ca3b1f11a60e31a496f2a1f8c9e0fd0d6d951ba04ead62aaf9af50b"
+  },
+  "bundleHash": "sha256:a8cdf76b469725c8913b86035856691246d27456603e1dcd89b418967baa8944",
+  "candidateManifest": {
+    "path": "acceptance-inputs/workflow-model-routing-ria-r4/candidate-content-manifest.v1.json",
+    "sha256": "sha256:44d263adcea376c431d6dc086b17e63fcf899cd65fe362bf5da441e7c76e55e6"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/workflow-model-routing-ria-r4",
+  "commandRegistry": {
+    "path": "acceptance-inputs/workflow-model-routing-ria-r4/command-registry.v1.json",
+    "sha256": "sha256:d65fb5694452d2bf407e9743d682f0d58c6bcef6093f5972b76da7fc3f7f4b02"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance.r3.v1.json",
+    "sha256": "sha256:62cb6207c13b55375f35d21cf4264ac63ac7ffcdd2bb5df6e6cd576acb36fbaa"
+  },
+  "planStateHash": "sha256:539a3cb5eb39619fabce54e20d1243eaea88458b07c76572e2a75db757f44c33",
+  "policy": {
+    "path": "acceptance-inputs/workflow-model-routing-ria-r4/toolchain-code-review.v1.json",
+    "sha256": "sha256:277012dfae1be4f9b48e536c42eeaa8018d8d7a685fa922e9afd6a8a9e010d21"
+  },
+  "runId": "workflow-model-routing-ria-r4",
+  "runRequest": {
+    "path": "acceptance-run-request.workflow-model-routing-ria-r4.v1.json",
+    "sha256": "sha256:b0a649f430c5000158dbf22e6cd5429a6b179ba0322c593ad92f69696a39b22a"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-01-workflow-model-routing-control-plane"
+}

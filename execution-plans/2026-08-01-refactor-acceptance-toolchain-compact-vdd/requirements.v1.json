@@ -1,0 +1,37 @@
+{
+  "schema_version": "jimuyun.refactor-acceptance-toolchain-plan-requirements.v1",
+  "plan_id": "refactor-acceptance-toolchain-compact-vdd",
+  "profile": "self-hosted",
+  "requirements": [
+    {"id":"RA-TC-001","text":"Acceptance supports a versioned toolchain review domain without changing Phase service behavior.","acceptance_ids":["RA-TC-A01","RA-TC-A02"],"slice_ids":["RA-TC-S0"]},
+    {"id":"RA-TC-002","text":"Toolchain policy covers repository workflow control-plane paths and explicitly declared shared Phase entrypoints.","acceptance_ids":["RA-TC-A03","RA-TC-A04"],"slice_ids":["RA-TC-S0"]},
+    {"id":"RA-TC-003","text":"Policy resolution fails closed for unsupported domains, uncovered changed paths, stale policy revisions, and substituted identities.","acceptance_ids":["RA-TC-A05"],"slice_ids":["RA-TC-S0"]},
+    {"id":"RA-TC-004","text":"One compact-VDD projector builds all prerequisites from explicit plan and candidate inputs without repository-wide dirty inference.","acceptance_ids":["RA-TC-A06","RA-TC-A07"],"slice_ids":["RA-TC-S1"]},
+    {"id":"RA-TC-005","text":"Dirty candidate bytes are frozen under the target plan and complete baseline/candidate manifests bind additions, modifications, and deletions.","acceptance_ids":["RA-TC-A08","RA-TC-A09"],"slice_ids":["RA-TC-S1"]},
+    {"id":"RA-TC-006","text":"The projection emits a typed run request, action DAG, command registry, and non-authorizing contract binding consumable by Acceptance.","acceptance_ids":["RA-TC-A10"],"slice_ids":["RA-TC-S1"]},
+    {"id":"RA-TC-007","text":"Historical Phase inputs and artifact-only Acceptance runs remain readable and are never auto-migrated.","acceptance_ids":["RA-TC-A11"],"slice_ids":["RA-TC-S0","RA-TC-S2"]},
+    {"id":"RA-TC-008","text":"Package closure, docs, and terminal replay prove the new route without granting acceptance, Bootstrap, release, or archive authority.","acceptance_ids":["RA-TC-A12","RA-TC-A13"],"slice_ids":["RA-TC-S2"]}
+  ],
+  "acceptance": [
+    {"id":"RA-TC-A01","assertion":"A schema-valid run input accepts phase_service and toolchain only."},
+    {"id":"RA-TC-A02","assertion":"Existing Phase policy tests and CLI aliases remain green."},
+    {"id":"RA-TC-A03","assertion":"Toolchain policy activates every declared workflow control-plane changed path."},
+    {"id":"RA-TC-A04","assertion":"Shared Phase entrypoint coverage is explicit and evidence-visible."},
+    {"id":"RA-TC-A05","assertion":"Unknown domains, stale policies, and uncovered paths fail closed."},
+    {"id":"RA-TC-A06","assertion":"Projection requires one explicit completed compact VDD target and explicit changed paths."},
+    {"id":"RA-TC-A07","assertion":"Unrelated dirty paths cannot enter the candidate implicitly."},
+    {"id":"RA-TC-A08","assertion":"Frozen dirty snapshot bytes reproduce every present candidate hash."},
+    {"id":"RA-TC-A09","assertion":"Manifest deletion tombstones bind baseline bytes."},
+    {"id":"RA-TC-A10","assertion":"All prerequisite artifacts are hash-bound, closed, and carry authorizes empty."},
+    {"id":"RA-TC-A11","assertion":"Existing phase_service and legacy artifact behavior remains unchanged."},
+    {"id":"RA-TC-A12","assertion":"Acceptance package and Skill validators pass."},
+    {"id":"RA-TC-A13","assertion":"The terminal validator passes and does not authorize acceptance, release, or archive."}
+  ],
+  "slices": [
+    {"id":"RA-TC-S0","depends_on":[],"red_commands":["py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py"],"green_commands":["py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py","py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_run_input.py"],"recovery":"Disable the toolchain policy and retain Phase behavior."},
+    {"id":"RA-TC-S1","depends_on":["RA-TC-S0"],"red_commands":["py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py"],"green_commands":["py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py"],"recovery":"Remove the compact projector and preserve full-contract behavior."},
+    {"id":"RA-TC-S2","depends_on":["RA-TC-S0","RA-TC-S1"],"red_commands":["py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_package.py"],"green_commands":["py -3 execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py"],"recovery":"Keep target implementation-complete and disable the new Acceptance entry."}
+  ],
+  "terminal_validation":"py -3 execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+  "authorizes":[]
+}

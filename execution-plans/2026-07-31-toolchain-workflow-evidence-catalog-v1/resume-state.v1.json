@@ -1,0 +1,19 @@
+{
+  "schema_version": "vdd.resume-state.v2",
+  "plan_id": "toolchain-workflow-evidence-catalog-v1",
+  "profile": "resumable",
+  "current_slice": null,
+  "slice_status": {
+    "TEC-S0": "pending",
+    "TEC-S1": "pending",
+    "TEC-S2": "pending",
+    "TEC-S3": "pending",
+    "TEC-S4": "pending",
+    "TEC-S5": "pending",
+    "TEC-S6": "pending"
+  },
+  "invalidated_slices": [],
+  "next_action": "Obtain explicit implementation authorization before TEC-S0.",
+  "recovery": "Re-read 00-index.md, plan-state.v1.json, resume-state.v1.json, implementation-contract.v1.json, knowledge-context.freeze.v1.json, and the latest append-only report entry. Run tools/validate_plan.py. Preserve failures under logs/tdd-adapter/toolchain-workflow-evidence-catalog-v1/ and never modify producer evidence to recover the catalog.",
+  "live_phase_paths_allowed": false
+}

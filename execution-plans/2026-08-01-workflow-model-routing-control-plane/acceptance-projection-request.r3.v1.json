@@ -1,0 +1,182 @@
+{
+  "schemaVersion": "compact-vdd-acceptance-projection-request.v1",
+  "targetPlan": "execution-plans/2026-08-01-workflow-model-routing-control-plane",
+  "runId": "workflow-model-routing-ria-r3",
+  "changeId": "workflow-model-routing-control-plane-with-acceptance-prerequisite-r3",
+  "baselineRevision": "990732dadadbeeee35418588acfcf91a420386e0",
+  "baselineOverlaySources": {
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/round-1/baseline-overlays/acceptance_core.py"
+  },
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/model_routing.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-run-input.v1.schema.json",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-binding.v1.schema.json",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-pack.v1.schema.json",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/compact-vdd-acceptance-prerequisite-bundle.v1.schema.json",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+    ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+    "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+    "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+    "docs/architecture/ADR_INDEX_PHASE.md",
+    "docs/architecture/phase-service/llm-codex-execution.md",
+    "docs/standards/repository-maintenance-agent-protocol.md",
+    "scripts/sc/_llm_backend.py",
+    "scripts/sc/config/workflow_model_routes.v1.json",
+    "scripts/sc/config/workflow_model_routing_shadow_cases.v1.json",
+    "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+    "scripts/sc/tests/test_llm_backend.py",
+    "scripts/sc/tests/test_workflow_model_routing.py",
+    "scripts/sc/tests/test_workflow_model_routing_evaluation.py",
+    "scripts/sc/workflow_model_routing.py",
+    "scripts/sc/workflow_model_routing_evaluation.py"
+  ],
+  "affectedConsumerRefs": [
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+    "scripts/sc/_llm_backend.py",
+    "scripts/sc/workflow_model_routing.py"
+  ],
+  "targetPlanPaths": [
+    "00-index.md",
+    "95-implementation-evolution-and-completion-report.md",
+    "acceptance-projection-request.r1.v1.json",
+    "acceptance-projection-request.r2.v1.json",
+    "acceptance-runs/acceptance-2c8716ff8b4b2269/run-input.v1.json",
+    "acceptance-runs/acceptance-2c8716ff8b4b2269/run-state.json",
+    "baseline-and-scope.v1.json",
+    "knowledge-context.refactor-acceptance.r2.v1.json",
+    "knowledge-context.refactor-acceptance.r3.v1.json",
+    "knowledge-context.refactor-acceptance.v1.json",
+    "plan-state.v1.json",
+    "repair/round-1/baseline-overlays/acceptance_core.py",
+    "repair/round-1/repair-plan.md",
+    "requirements.v1.json",
+    "tools/build_acceptance_projection_r2.py",
+    "tools/build_acceptance_projection_r3.py",
+    "tools/materialize_acceptance_core_baseline.py",
+    "tools/validate_implementation.py",
+    "tools/validate_plan.py"
+  ],
+  "knowledgeContextPath": "knowledge-context.refactor-acceptance.r3.v1.json",
+  "codeReviewDomain": "toolchain",
+  "codeReviewPolicyPath": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+  "commands": [
+    {
+      "id": "original-plan-validate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_plan.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 120,
+      "shell": false
+    },
+    {
+      "id": "extension-plan-validate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_plan.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 120,
+      "shell": false
+    },
+    {
+      "id": "original-implementation-validate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 360,
+      "shell": false
+    },
+    {
+      "id": "extension-implementation-validate",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 360,
+      "shell": false
+    }
+  ],
+  "actions": [
+    {
+      "actionId": "original-plan-validate",
+      "dependsOn": [],
+      "order": 1,
+      "commandId": "original-plan-validate",
+      "activation": true
+    },
+    {
+      "actionId": "extension-plan-validate",
+      "dependsOn": [
+        "original-plan-validate"
+      ],
+      "order": 2,
+      "commandId": "extension-plan-validate",
+      "activation": true
+    },
+    {
+      "actionId": "original-implementation-validate",
+      "dependsOn": [
+        "extension-plan-validate"
+      ],
+      "order": 3,
+      "commandId": "original-implementation-validate",
+      "activation": true
+    },
+    {
+      "actionId": "extension-implementation-validate",
+      "dependsOn": [
+        "original-implementation-validate"
+      ],
+      "order": 4,
+      "commandId": "extension-implementation-validate",
+      "activation": true
+    }
+  ],
+  "authorizes": []
+}

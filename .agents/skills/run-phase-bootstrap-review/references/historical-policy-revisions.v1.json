@@ -36,6 +36,42 @@
         "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
         "registryId": "bootstrap-authority-roots.v1"
       }
+    },
+    {
+      "profileName": "bootstrap-upstream-plan",
+      "policyRevision": "sha256:5b6aa916dfd5ab0cf9e3b774beef5b5854e03bebca399744aa28222e7591c928",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-implementation-conformance",
+      "policyRevision": "sha256:958cdee6a99f285dc9a804e088d2d8731e26e7d162ab8789ae8fe5e01bc5a1d9",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-skill-route",
+      "policyRevision": "sha256:f99ba09ae34906fee842ef0594d4e913e5c3f0c8449291b38faaae9136eca168",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-focused-change",
+      "policyRevision": "sha256:bdb8bf81b47107d2ed8a44df8e3f447e055e342b6ea0100e1e7f4ad8407bd729",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
     }
   ],
   "authorizes": []

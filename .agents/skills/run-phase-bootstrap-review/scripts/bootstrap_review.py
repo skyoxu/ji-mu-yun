@@ -171,14 +171,21 @@ if __name__ == "__main__":
 OPERATION_ID_PATTERN = re.compile(r"[a-z][a-z0-9:._-]{2,95}")
 HASH_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 EXECUTION_MODES = {"manual", "codex-exec", "specialized-agent"}
-CODEX_EXEC_MODEL_POLICY = {
-    "preferredModel": "gpt-5.6-terra",
-    "fallbackModels": ["gpt-5.5", "gpt-5.4"],
-    "forbiddenModels": ["gpt-5.6-sol"],
-    "toolProbeRequired": True,
+CODEX_EXEC_POLICY_KEYS = {
+    "preferredModel", "fallbackModels", "forbiddenModels", "toolProbeRequired",
+    "roundModelOverrides", "roundReasoningEffortOverrides", "reasoningEffortByRole",
 }
 REASONING_ROLES = (*LAYERS, "independent_verifier")
-ALLOWED_REASONING_EFFORTS = {"medium", "high"}
+ALLOWED_REASONING_EFFORTS = {"medium", "high", "max"}
+VERIFIER_POLICY_KEYS = {
+    "preferredModel", "fallbackModels", "defaultReasoningEffort",
+    "escalatedReasoningEffort", "escalateOnSeverities", "escalateOnDimensions",
+}
+ACCESS_PROBE_POLICY = {
+    "discoverySidecar": "access-proof.json",
+    "verifierSidecar": "verifier-access-proof.json",
+    "verifierRequiresGate": True,
+}
 COMPLETENESS_POLICY = {
     "artifactCoverage": "all",
     "samplingAllowed": False,
@@ -256,6 +263,15 @@ CONTROL_PLANE_POLICY = {
     "processEventAuthority": "process-events.jsonl",
     "leaseAuthority": "derived-view",
 }
+HISTORICAL_CONTROL_PLANE_POLICIES = (
+    {
+        **CONTROL_PLANE_POLICY,
+        "typedPlaceholders": {
+            **TYPED_PLACEHOLDERS,
+            "reasoning_effort": "enum:medium|high",
+        },
+    },
+)
 P2_DISPOSITION_POLICY = {
     "allAcceptedP2RequireDisposition": True,
     "highRiskDeferralAllowed": False,
@@ -573,8 +589,16 @@ def load_profile(name: str) -> dict[str, Any]:
     if profile.get("requiredLayers") != list(LAYERS):
         raise BootstrapError("Bootstrap profile must require all three reviewer layers")
     codex_policy = profile.get("codexExecPolicy")
-    if not isinstance(codex_policy, dict) or any(
-        codex_policy.get(key) != value for key, value in CODEX_EXEC_MODEL_POLICY.items()
+    if (
+        not isinstance(codex_policy, dict)
+        or set(codex_policy) != CODEX_EXEC_POLICY_KEYS
+        or not isinstance(codex_policy.get("preferredModel"), str)
+        or not codex_policy["preferredModel"]
+        or not isinstance(codex_policy.get("fallbackModels"), list)
+        or any(not isinstance(item, str) or not item for item in codex_policy["fallbackModels"])
+        or not isinstance(codex_policy.get("forbiddenModels"), list)
+        or any(not isinstance(item, str) or not item for item in codex_policy["forbiddenModels"])
+        or codex_policy.get("toolProbeRequired") is not True
     ):
         raise BootstrapError("Bootstrap profile has an invalid Codex exec model policy")
     reasoning = codex_policy.get("reasoningEffortByRole") if isinstance(codex_policy, dict) else None
@@ -582,6 +606,32 @@ def load_profile(name: str) -> dict[str, Any]:
         value not in ALLOWED_REASONING_EFFORTS for value in reasoning.values()
     ):
         raise BootstrapError("Bootstrap profile has an invalid role reasoning policy")
+    round_models = codex_policy.get("roundModelOverrides")
+    round_reasoning = codex_policy.get("roundReasoningEffortOverrides")
+    if (
+        round_models != {"3": "gpt-5.6-sol"}
+        or not isinstance(round_reasoning, dict)
+        or set(round_reasoning) != {"3"}
+        or not isinstance(round_reasoning.get("3"), dict)
+        or set(round_reasoning["3"]) != set(LAYERS)
+        or any(value != "high" for value in round_reasoning["3"].values())
+        or "gpt-5.6-sol" in codex_policy["forbiddenModels"]
+    ):
+        raise BootstrapError("Bootstrap profile has an invalid round-specific Codex route")
+    verifier_policy = profile.get("verifierPolicy")
+    if (
+        not isinstance(verifier_policy, dict)
+        or set(verifier_policy) != VERIFIER_POLICY_KEYS
+        or verifier_policy.get("preferredModel") != "gpt-5.6-sol"
+        or verifier_policy.get("fallbackModels") != []
+        or verifier_policy.get("defaultReasoningEffort") != "high"
+        or verifier_policy.get("escalatedReasoningEffort") != "max"
+        or verifier_policy.get("escalateOnSeverities") != ["P0"]
+        or verifier_policy.get("escalateOnDimensions") != ["security"]
+    ):
+        raise BootstrapError("Bootstrap profile has an invalid independent verifier policy")
+    if profile.get("accessProbePolicy") != ACCESS_PROBE_POLICY:
+        raise BootstrapError("Bootstrap profile has an invalid role-specific access probe policy")
     if profile.get("completenessPolicy") != COMPLETENESS_POLICY:
         raise BootstrapError("Bootstrap profile must require complete artifact and context coverage")
     if profile.get("reviewObjectType") not in REVIEW_OBJECT_TYPES:
@@ -654,6 +704,50 @@ def load_profile(name: str) -> dict[str, Any]:
             profile, "acceptance-inventory-attestation", "1.0", "acceptance_auditor"
         )
     return profile
+
+
+def discovery_execution_route(policy_owner: dict[str, Any], role: str) -> dict[str, Any]:
+    if role not in LAYERS:
+        raise BootstrapError(f"Unsupported discovery role: {role}")
+    policy = policy_owner["codexExecPolicy"]
+    review_round = int(policy_owner.get("fullReviewRound", 1))
+    round_key = str(review_round)
+    model = policy.get("roundModelOverrides", {}).get(round_key, policy["preferredModel"])
+    effort = policy.get("roundReasoningEffortOverrides", {}).get(round_key, {}).get(
+        role, policy["reasoningEffortByRole"][role]
+    )
+    return {
+        "model": model,
+        "allowedModels": [model, *policy["fallbackModels"]],
+        "reasoningEffort": effort,
+    }
+
+
+def verifier_execution_route(
+    policy_owner: dict[str, Any], blockers: dict[str, dict[str, Any]] | list[dict[str, Any]],
+) -> dict[str, Any]:
+    values = list(blockers.values()) if isinstance(blockers, dict) else list(blockers)
+    policy = policy_owner.get("verifierPolicy")
+    if not isinstance(policy, dict):
+        codex_policy = policy_owner["codexExecPolicy"]
+        return {
+            "model": codex_policy["preferredModel"],
+            "allowedModels": [codex_policy["preferredModel"], *codex_policy["fallbackModels"]],
+            "reasoningEffort": codex_policy["reasoningEffortByRole"]["independent_verifier"],
+        }
+    escalated = any(
+        item.get("proposedSeverity") in policy["escalateOnSeverities"]
+        or item.get("dimension") in policy["escalateOnDimensions"]
+        for item in values
+        if isinstance(item, dict)
+    )
+    return {
+        "model": policy["preferredModel"],
+        "allowedModels": [policy["preferredModel"], *policy["fallbackModels"]],
+        "reasoningEffort": (
+            policy["escalatedReasoningEffort"] if escalated else policy["defaultReasoningEffort"]
+        ),
+    }
 
 
 def required_companion_capability(
@@ -1057,13 +1151,20 @@ def _matching_cost_cohort(
     calibration: dict[str, Any], profile: dict[str, Any], full_review_round: int,
     workload_bucket: str,
 ) -> dict[str, Any] | None:
+    route_owner = {**profile, "fullReviewRound": full_review_round}
+    discovery_routes = {
+        role: discovery_execution_route(route_owner, role) for role in LAYERS
+    }
+    selected_models = {route["model"] for route in discovery_routes.values()}
     identity = {
         "reviewProfile": profile["reviewProfile"],
         "policyRevision": profile["policyRevision"],
         "routeVersion": profile["routeVersion"],
         "controlPlaneRevision": profile["controlPlaneRevision"],
-        "model": profile["codexExecPolicy"]["preferredModel"],
-        "reasoningProfile": value_hash(profile["codexExecPolicy"]["reasoningEffortByRole"]),
+        "model": next(iter(selected_models)) if len(selected_models) == 1 else "mixed",
+        "reasoningProfile": value_hash({
+            role: discovery_routes[role]["reasoningEffort"] for role in LAYERS
+        }),
         "fullReviewRound": full_review_round,
         "workloadBucket": workload_bucket,
     }
@@ -1079,7 +1180,7 @@ def _matching_cost_cohort(
 def legacy_review_cost_estimate(
     profile: dict[str, Any], artifacts: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    effort_units = {"medium": 1, "high": 2}
+    effort_units = {"medium": 1, "high": 2, "max": 3}
     reviewer_units = sum(
         effort_units[profile["codexExecPolicy"]["reasoningEffortByRole"][layer]]
         for layer in LAYERS
@@ -1122,9 +1223,10 @@ def review_cost_estimate(
     calibration_ref: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     calibration, resolved_calibration_ref = load_cost_calibration(calibration_ref)
-    effort_units = {"medium": 1, "high": 2}
+    effort_units = {"medium": 1, "high": 2, "max": 3}
+    route_owner = {**profile, "fullReviewRound": full_review_round}
     reviewer_units = sum(
-        effort_units[profile["codexExecPolicy"]["reasoningEffortByRole"][layer]]
+        effort_units[discovery_execution_route(route_owner, layer)["reasoningEffort"]]
         for layer in LAYERS
     )
     artifact_count = len(artifacts)
@@ -2073,6 +2175,11 @@ def validate_required_process_leases(
             "Required Codex process leases are not completed: "
             + ", ".join(f"{operation}/{role}" for operation, role in missing)
         )
+    if (
+        ("verifier", "independent_verifier") in required_operations
+        and isinstance(manifest.get("accessProbePolicy"), dict)
+    ):
+        validate_access_proof(run_dir, manifest, "independent_verifier")
 
 
 def validate_launch_authorization(
@@ -2301,16 +2408,17 @@ Read `review-input.json`, inspect only its hash-bound artifacts, and fill
 Before exiting, re-read your saved JSON and run this read-only validator from the repository root:
 `py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bootstrap_review.py validate-layer --run-dir {run_dir} --layer {layer}`.
 Do not report success until it exits zero."""
+    route = discovery_execution_route(manifest, layer)
     return f"""# Isolated Bootstrap Review: {layer}
 
 Review ID: `{manifest['reviewId']}`
 Route: `{manifest['routeVersion']}`
 Authority revision: `{manifest['authorityRevision']}`
 Input hash: `{manifest['inputHash']}`
-Preferred Codex exec model: `{manifest['codexExecPolicy']['preferredModel']}`
+Preferred Codex exec model: `{route['model']}`
 Fallback models: `{', '.join(manifest['codexExecPolicy']['fallbackModels'])}`
 Forbidden models: `{', '.join(manifest['codexExecPolicy']['forbiddenModels'])}`
-Reasoning effort: `{manifest['codexExecPolicy']['reasoningEffortByRole'][layer]}`
+Reasoning effort: `{route['reasoningEffort']}`
 Review object type: `{manifest['reviewObjectType']}`
 Review depth: `{manifest['reviewDepth']}`
 Required context classes: `{', '.join(manifest['requiredContextClasses'])}`
@@ -2898,6 +3006,8 @@ def command_prepare(args: argparse.Namespace) -> int:
         "controlPlaneRevision": profile["controlPlaneRevision"],
         "requiredLayers": profile["requiredLayers"],
         "codexExecPolicy": profile["codexExecPolicy"],
+        "verifierPolicy": profile["verifierPolicy"],
+        "accessProbePolicy": profile["accessProbePolicy"],
         "reviewObjectType": profile["reviewObjectType"],
         "reviewDepth": profile["reviewDepth"],
         "reviewerInstructionPolicy": profile["reviewerInstructionPolicy"],
@@ -3034,7 +3144,12 @@ def command_prepare(args: argparse.Namespace) -> int:
     return 0
 
 
-def validate_manifest_controls(manifest: dict[str, Any], profile: dict[str, Any]) -> None:
+def validate_manifest_controls(
+    manifest: dict[str, Any],
+    profile: dict[str, Any],
+    *,
+    historical_replay: bool = False,
+) -> None:
     if REVIEW_ID_PATTERN.fullmatch(str(manifest.get("changeId", ""))) is None:
         raise BootstrapError("review-input.json has an invalid changeId")
     lineage_fields = {
@@ -3079,7 +3194,11 @@ def validate_manifest_controls(manifest: dict[str, Any], profile: dict[str, Any]
             raise BootstrapError("Round 3 requires repair delta and typed entry decision")
     if manifest.get("executionMode") not in EXECUTION_MODES:
         raise BootstrapError("review-input.json has an invalid executionMode")
-    if manifest.get("controlPlanePolicy") != CONTROL_PLANE_POLICY:
+    control_plane_policy = manifest.get("controlPlanePolicy")
+    if control_plane_policy != CONTROL_PLANE_POLICY and (
+        not historical_replay
+        or control_plane_policy not in HISTORICAL_CONTROL_PLANE_POLICIES
+    ):
         raise BootstrapError("review-input.json has a stale or substituted controlPlanePolicy")
     if manifest.get("p2DispositionPolicy") != P2_DISPOSITION_POLICY:
         raise BootstrapError("review-input.json has a stale or substituted p2DispositionPolicy")
@@ -3192,6 +3311,7 @@ def load_run(
     profile = load_profile(manifest.get("profileName", ""))
     for field in (
         "reviewProfile", "policyRevision", "routeVersion", "controlPlaneRevision", "requiredLayers", "codexExecPolicy",
+        "verifierPolicy", "accessProbePolicy",
         "reviewObjectType", "reviewDepth", "reviewerInstructionPolicy", "reviewCyclePolicy",
         "semanticReviewPolicy", "authorityFreezePolicy", "processLeasePolicy", "reviewCostPolicy",
         "planBoundCheckPolicy", "requiredContextClasses", "completenessPolicy", "authorityRootRegistry",
@@ -3201,7 +3321,11 @@ def load_run(
     if manifest.get("authorityClass") != AUTHORITY_CLASS:
         raise BootstrapError("review-input.json has an invalid bootstrap authority class")
     validate_context_class_artifacts(manifest, profile)
-    validate_manifest_controls(manifest, profile)
+    validate_manifest_controls(
+        manifest,
+        profile,
+        historical_replay=not require_fresh_artifacts,
+    )
     candidate_binding_hash = review_candidate_binding_hash(
         manifest.get("artifacts", []),
         manifest.get("authorityContextHash", ""),
@@ -3761,16 +3885,49 @@ def command_access_handshake(args: argparse.Namespace) -> int:
     return 0
 
 
-def validate_access_proof(run_dir: Path, manifest: dict[str, Any]) -> str | None:
+def access_proof_route(
+    run_dir: Path, manifest: dict[str, Any], proof_role: str,
+) -> tuple[Path, dict[str, Any], str | None]:
+    policy = manifest["accessProbePolicy"]
+    if proof_role == "discovery":
+        return (
+            run_dir / policy["discoverySidecar"],
+            discovery_execution_route(manifest, "blind_hunter"),
+            None,
+        )
+    if proof_role != "independent_verifier":
+        raise BootstrapError(f"Unsupported access proof role: {proof_role}")
+    gate_path = run_dir / "review-gate-result.json"
+    gate_state_path = run_dir / "review-gate-state.json"
+    if not gate_path.is_file() or not gate_state_path.is_file():
+        raise BootstrapError("Independent verifier access proof requires a completed gate")
+    blockers = load_gate_blockers(run_dir, manifest)
+    if not blockers:
+        raise BootstrapError("Independent verifier access proof requires a gated P0/P1 blocker")
+    return (
+        run_dir / policy["verifierSidecar"],
+        verifier_execution_route(manifest, blockers),
+        file_hash(gate_state_path),
+    )
+
+
+def validate_access_proof(
+    run_dir: Path, manifest: dict[str, Any], proof_role: str = "discovery",
+) -> str | None:
     if manifest["executionMode"] != "codex-exec":
         return None
-    path = run_dir / "access-proof.json"
+    path, route, gate_hash = access_proof_route(run_dir, manifest, proof_role)
+    if not path.is_file():
+        raise BootstrapError(f"Required {proof_role} access proof is missing: {path}")
     proof = read_json(path)
     expected = {
-        "schemaVersion": "bootstrap-access-proof.v1",
+        "schemaVersion": "bootstrap-access-proof.v2",
+        "proofRole": proof_role,
         "reviewId": manifest["reviewId"],
         "inputHash": manifest["inputHash"],
         "artifactViewManifestHash": manifest["artifactView"]["manifestHash"],
+        "reasoningEffort": route["reasoningEffort"],
+        "gateStateHash": gate_hash,
         "sandbox": "workspace-write",
         "workspaceRootClass": "attempt-directory-only",
         "shell": False,
@@ -3780,11 +3937,11 @@ def validate_access_proof(run_dir: Path, manifest: dict[str, Any]) -> str | None
     }
     if any(proof.get(key) != value for key, value in expected.items()):
         raise BootstrapError("Access proof is missing an identity-equivalent binding")
-    if proof.get("model") not in [
-        manifest["codexExecPolicy"]["preferredModel"],
-        *manifest["codexExecPolicy"]["fallbackModels"],
-    ]:
-        raise BootstrapError("Access proof used a model outside the profile route")
+    if (
+        proof.get("model") not in route["allowedModels"]
+        or proof.get("model") in manifest["codexExecPolicy"]["forbiddenModels"]
+    ):
+        raise BootstrapError("Access proof used a model outside the role-specific route")
     if manifest["reviewCostEstimate"]["highCost"] and proof.get("highCostAcknowledged") is not True:
         raise BootstrapError("High-cost access proof lacks explicit acknowledgement")
     if not isinstance(proof.get("commandIdentity"), str) or HASH_PATTERN.fullmatch(proof["commandIdentity"]) is None:
@@ -3818,7 +3975,11 @@ def command_prove_access(args: argparse.Namespace) -> int:
     run_dir, manifest, _repository_root = load_run(args.run_dir)
     if manifest["executionMode"] != "codex-exec":
         raise BootstrapError("prove-access is only valid for codex-exec runs")
-    validate_preflight_result(run_dir, manifest)
+    proof_role = args.role
+    if proof_role == "discovery":
+        validate_preflight_result(run_dir, manifest)
+    else:
+        validate_launch_authorization(run_dir, manifest)
     estimate = manifest["reviewCostEstimate"]
     if (
         estimate["highCost"]
@@ -3834,14 +3995,13 @@ def command_prove_access(args: argparse.Namespace) -> int:
             f"retryRisk={estimate['retryRisk']}, samples={estimate['basisSampleCount']}, "
             f"confidence={estimate['confidence']})"
         )
-    proof_path = run_dir / "access-proof.json"
+    proof_path, route, gate_hash = access_proof_route(run_dir, manifest, proof_role)
     if proof_path.exists():
-        validate_access_proof(run_dir, manifest)
+        validate_access_proof(run_dir, manifest, proof_role)
         print(f"Artifact access is already proven: {proof_path}")
         return 0
-    model = args.model or manifest["codexExecPolicy"]["preferredModel"]
-    allowed_models = [manifest["codexExecPolicy"]["preferredModel"], *manifest["codexExecPolicy"]["fallbackModels"]]
-    if model not in allowed_models or model in manifest["codexExecPolicy"]["forbiddenModels"]:
+    model = args.model or route["model"]
+    if model not in route["allowedModels"] or model in manifest["codexExecPolicy"]["forbiddenModels"]:
         raise BootstrapError(f"Model is not allowed by the review profile: {model}")
     attempt_id = f"access-probe-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}-{time.time_ns() % 100000000:08d}"
     attempt_dir = run_dir / "attempts" / attempt_id
@@ -3850,7 +4010,7 @@ def command_prove_access(args: argparse.Namespace) -> int:
     helper_path, handshake_request_path, handshake_path = materialize_access_handshake_helper(
         run_dir, manifest, "model_probe", attempt_dir
     )
-    reasoning = manifest["codexExecPolicy"]["reasoningEffortByRole"]["blind_hunter"]
+    reasoning = route["reasoningEffort"]
     try:
         argv = render_codex_command(args.codex_command, model, reasoning, "workspace-write", candidate_path)
     except ControlPlaneError as exc:
@@ -3888,7 +4048,7 @@ def command_prove_access(args: argparse.Namespace) -> int:
         "createdAt": utc_now(),
     }
     write_json(attempt_dir / "request.json", request)
-    operation_id = f"model-probe:{model}"
+    operation_id = f"model-probe:{proof_role}:{model}"
     try:
         process = subprocess.Popen(
             argv, cwd=manifest["repositoryRoot"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -3957,9 +4117,11 @@ def command_prove_access(args: argparse.Namespace) -> int:
         if candidate != expected:
             raise BootstrapError("Access probe candidate does not bind the same-session handshake")
         proof = {
-            "schemaVersion": "bootstrap-access-proof.v1", "reviewId": manifest["reviewId"],
+            "schemaVersion": "bootstrap-access-proof.v2", "proofRole": proof_role,
+            "reviewId": manifest["reviewId"],
             "inputHash": manifest["inputHash"], "artifactViewManifestHash": manifest["artifactView"]["manifestHash"],
-            "model": model, "reasoningEffort": reasoning, "sandbox": "workspace-write", "shell": False,
+            "model": model, "reasoningEffort": reasoning, "gateStateHash": gate_hash,
+            "sandbox": "workspace-write", "shell": False,
             "workspaceRootClass": "attempt-directory-only",
             "commandIdentity": command_identity, "environmentAllowlist": list(ENVIRONMENT_ALLOWLIST),
             "environmentEvidenceHash": value_hash(environment_evidence),
@@ -4259,6 +4421,68 @@ def reserve_codex_attempt(
         if operation_completed and not recovery["open"]:
             raise BootstrapError(f"Operation {operation_id} is already completed and cannot be rerun")
         if formal_output_is_completed(formal_path, role) and not recovery["open"]:
+            process_completed = [
+                event for event in events
+                if event.get("eventType") == "attempt-process-completed"
+                and event.get("operationId") == operation_id
+                and event.get("role") == role
+            ]
+            reconcilable = [
+                event for event in process_completed
+                if not any(
+                    later.get("attemptId") == event.get("attemptId")
+                    and later.get("eventType") in {"attempt-failed", "attempt-completed"}
+                    for later in events
+                )
+            ]
+            dead_reconcilable = []
+            for event in reconcilable:
+                reservations = [
+                    reserved for reserved in events
+                    if reserved.get("eventType") == "attempt-reserved"
+                    and reserved.get("attemptId") == event.get("attemptId")
+                ]
+                if len(reservations) != 1:
+                    continue
+                controller = reservations[0]
+                if (
+                    process_creation_identity(controller.get("pid"))
+                    != controller.get("processIdentity")
+                ):
+                    dead_reconcilable.append(event)
+            if role in {*LAYERS, "independent_verifier"} and dead_reconcilable:
+                formal = read_json(formal_path)
+                if role == "independent_verifier":
+                    validate_verifier(formal, manifest, load_gate_blockers(run_dir, manifest))
+                else:
+                    validate_reviewer_output(
+                        formal,
+                        manifest,
+                        role,
+                        Path(manifest["repositoryRoot"]),
+                        run_dir,
+                        require_completed=True,
+                    )
+                prior = dead_reconcilable[-1]
+                append_process_event(
+                    run_dir,
+                    {
+                        "eventType": "attempt-completed",
+                        "timestamp": utc_now(),
+                        "attemptId": prior["attemptId"],
+                        "operationId": operation_id,
+                        "role": role,
+                        "pid": prior["pid"],
+                        "processIdentity": prior["processIdentity"],
+                        "writeSet": prior.get("writeSet", formal_write_set),
+                        "note": "Reconciled validated formal output after interrupted completion publication",
+                    },
+                )
+                rebuild_process_leases_from_events(run_dir, manifest)
+                next_step = "finalize" if role == "independent_verifier" else "gate"
+                raise BootstrapError(
+                    f"Formal output for {role} was reconciled as completed; continue to {next_step}"
+                )
             raise BootstrapError(f"Formal output for {role} is already completed and cannot be overwritten")
         if recovery["open"]:
             rejected_hash = recovery["latestRecord"]["rejectedOutput"]["sha256"]
@@ -4387,6 +4611,29 @@ def runner_prompt(
             "artifact coverage.\n\n"
             + verifier_evidence_requirements(blockers)
         )
+    inventory_attestation_contract = ""
+    if role == "acceptance_auditor" and requires_acceptance_inventory_attestation(manifest):
+        inventory_attestation = {
+            "schemaVersion": "bootstrap-acceptance-inventory-attestation.v1",
+            "reviewId": manifest["reviewId"],
+            "attemptId": attempt_id,
+            "inputHash": manifest["inputHash"],
+            "capabilityId": "acceptance-inventory-attestation",
+            "capabilityVersion": "1.0",
+            "producerRole": "acceptance_auditor",
+            "status": "complete",
+            "scopeHash": acceptance_attestation_scope_hash(manifest),
+            "coverage": [],
+        }
+        inventory_attestation_contract = (
+            "For acceptance_auditor, payload must also contain inventoryAttestation equal to this "
+            "exact JSON object when inventory coverage is complete and has no gaps: "
+            + json.dumps(inventory_attestation, ensure_ascii=False, separators=(",", ":"))
+            + ". The attestation is distinct from artifactViewReadReceipt: do not copy "
+            "artifactViewManifestHash, artifactCount, complete, or authorizes into it. If inventory "
+            "coverage is incomplete, preserve every binding field, set status=incomplete, and list "
+            "the structured gaps in coverage. "
+        )
     handshake_command = [
         "py", "-3", str(helper_path),
         "--request", str(handshake_request_path), "--out", str(handshake_path),
@@ -4415,11 +4662,7 @@ def runner_prompt(
         f"artifactViewManifestHash={manifest['artifactView']['manifestHash']}, "
         f"artifactCount={len(reviewable_artifact_map(manifest))}, and complete=true. Do not return coverage arrays; "
         "the parent owns formal coverage. "
-        + (
-            "For acceptance_auditor, payload must also contain inventoryAttestation using "
-            "bootstrap-acceptance-inventory-attestation.v1, bound to this attempt and Artifact View. "
-            if role == "acceptance_auditor" and requires_acceptance_inventory_attestation(manifest) else ""
-        )
+        + inventory_attestation_contract
         + "For the verifier, payload contains decisions."
         + verifier_requirements
     )
@@ -4433,10 +4676,14 @@ def run_codex_attempt(
     model: str,
 ) -> tuple[dict[str, Any], Path]:
     policy = manifest["codexExecPolicy"]
-    allowed_models = [policy["preferredModel"], *policy["fallbackModels"]]
-    if model not in allowed_models or model in policy["forbiddenModels"]:
+    route = (
+        verifier_execution_route(manifest, load_gate_blockers(run_dir, manifest))
+        if role == "independent_verifier"
+        else discovery_execution_route(manifest, role)
+    )
+    if model not in route["allowedModels"] or model in policy["forbiddenModels"]:
         raise BootstrapError(f"Model is not allowed by the review profile: {model}")
-    reasoning = policy["reasoningEffortByRole"][role]
+    reasoning = route["reasoningEffort"]
     formal_path = (
         run_dir / "verifier-output.json"
         if role == "independent_verifier"
@@ -4653,8 +4900,11 @@ def command_run_layer(args: argparse.Namespace) -> int:
     if manifest["executionMode"] != "codex-exec":
         raise BootstrapError("run-layer v1 only supports codex-exec runs")
     validate_launch_authorization(run_dir, manifest)
-    selected_model = args.model or manifest["codexExecPolicy"]["preferredModel"]
-    proof = read_json(run_dir / "access-proof.json")
+    proof_role = "independent_verifier" if args.role == "independent_verifier" else "discovery"
+    proof_path, route, _gate_hash = access_proof_route(run_dir, manifest, proof_role)
+    validate_access_proof(run_dir, manifest, proof_role)
+    selected_model = args.model or route["model"]
+    proof = read_json(proof_path)
     command_path = Path(args.codex_command)
     command_identity = file_hash(command_path) if command_path.is_file() else value_hash(args.codex_command)
     if proof.get("model") != selected_model or proof.get("commandIdentity") != command_identity:
@@ -5065,14 +5315,15 @@ Do not modify the formal verifier output; return only the structured decisions p
 the Codex Exec runtime wrapper. Process events are execution authority and the lease sidecar may lag."""
     else:
         output_contract = "Fill `verifier-output.json` with the required decisions."
+    route = verifier_execution_route(manifest, blockers)
     return f"""# Manual Independent Blocker Verification
 
 Review ID: `{manifest['reviewId']}`
 Input hash: `{manifest['inputHash']}`
-Preferred Codex exec model: `{manifest['codexExecPolicy']['preferredModel']}`
-Fallback models: `{', '.join(manifest['codexExecPolicy']['fallbackModels'])}`
+Preferred Codex exec model: `{route['model']}`
+Fallback models: `{', '.join(manifest['verifierPolicy']['fallbackModels'])}`
 Forbidden models: `{', '.join(manifest['codexExecPolicy']['forbiddenModels'])}`
-Reasoning effort: `{manifest['codexExecPolicy']['reasoningEffortByRole']['independent_verifier']}`
+Reasoning effort: `{route['reasoningEffort']}`
 Review object type: `{manifest['reviewObjectType']}`
 Review depth: `{manifest['reviewDepth']}`
 Completeness: all blocker evidence and context closure are mandatory; sampling is forbidden.
@@ -6761,16 +7012,35 @@ def structured_run_cost_evidence(
             selected_models.add(selected_model)
             raw_policy = manifest.get("codexExecPolicy") if isinstance(manifest, dict) else None
             policy = raw_policy if isinstance(raw_policy, dict) else {}
-            allowed_models = [
-                policy.get("preferredModel"),
-                *policy.get("fallbackModels", []),
-            ] if isinstance(policy.get("fallbackModels", []), list) else []
-            allowed_models = [item for item in allowed_models if isinstance(item, str)]
-            reasoning_policy = policy.get("reasoningEffortByRole", {})
-            reasoning_role = "blind_hunter" if role == "model_probe" else role
-            expected_reasoning = (
-                reasoning_policy.get(reasoning_role)
-                if isinstance(reasoning_policy, dict) else None
+            route_candidates: list[dict[str, Any]] = []
+            if isinstance(manifest, dict):
+                try:
+                    candidate_doc = read_json(run_dir / "review-candidates.json")
+                    blocker_values = (
+                        candidate_doc.get("findings", [])
+                        if isinstance(candidate_doc, dict) else []
+                    )
+                    if role in LAYERS:
+                        route_candidates = [discovery_execution_route(manifest, role)]
+                    elif role == "independent_verifier":
+                        route_candidates = [verifier_execution_route(manifest, blocker_values)]
+                    elif role == "model_probe":
+                        route_candidates = [discovery_execution_route(manifest, "blind_hunter")]
+                        if isinstance(manifest.get("verifierPolicy"), dict):
+                            route_candidates.append(
+                                verifier_execution_route(manifest, blocker_values)
+                            )
+                except (BootstrapError, KeyError, TypeError, ValueError):
+                    route_candidates = []
+            forbidden_models = policy.get("forbiddenModels", [])
+            route_binding_valid = any(
+                selected_model in route.get("allowedModels", [])
+                and selected_model not in forbidden_models
+                and f"model_reasoning_effort={route.get('reasoningEffort')}" in [
+                    argv[index + 1] for index, item in enumerate(argv[:-1])
+                    if item == "-c" and isinstance(argv[index + 1], str)
+                ]
+                for route in route_candidates
             )
             sandbox_positions = [
                 index + 1 for index, item in enumerate(argv) if item == "--sandbox"
@@ -6783,10 +7053,7 @@ def structured_run_cost_evidence(
                 if item == "-c" and isinstance(argv[index + 1], str)
             ]
             if (
-                not allowed_models
-                or selected_model not in allowed_models
-                or not isinstance(expected_reasoning, str)
-                or f"model_reasoning_effort={expected_reasoning}" not in config_values
+                not route_binding_valid
                 or len(sandbox_positions) != 1
                 or sandbox_positions[0] >= len(argv)
                 or argv[sandbox_positions[0]] != "workspace-write"
@@ -7024,6 +7291,7 @@ def structured_run_cost_evidence(
         reasons.add("no-cost-attempts")
 
     required_roles: set[str] = set()
+    required_role_counts: dict[str, int] = {}
     if isinstance(manifest, dict) and manifest.get("executionMode") == "codex-exec":
         layers = manifest.get("requiredLayers")
         if not isinstance(layers, list) or any(role not in LAYERS for role in layers):
@@ -7031,6 +7299,9 @@ def structured_run_cost_evidence(
         else:
             required_roles.update(layers)
         required_roles.add("model_probe")
+        required_role_counts["model_probe"] = (
+            2 if (run_dir / "verifier-access-proof.json").is_file() else 1
+        )
         candidate_path = run_dir / "review-candidates.json"
         if candidate_path.is_file():
             candidate_doc = read_json(candidate_path)
@@ -7045,7 +7316,7 @@ def structured_run_cost_evidence(
     else:
         reasons.add("not-a-codex-exec-run")
     for role in sorted(required_roles):
-        if completed_role_counts.get(role, 0) < 1:
+        if completed_role_counts.get(role, 0) < required_role_counts.get(role, 1):
             reasons.add(f"required-role-not-complete:{role}")
 
     wall_seconds: float | None = None
@@ -7124,7 +7395,17 @@ def _baseline_runs(
 
 
 def validate_baseline_access_proof(run_dir: Path, manifest: dict[str, Any]) -> None:
-    path = run_dir / "access-proof.json"
+    _validate_baseline_access_proof_path(
+        run_dir, manifest, run_dir / "access-proof.json", "discovery"
+    )
+    _validate_baseline_access_proof_path(
+        run_dir, manifest, run_dir / "verifier-access-proof.json", "independent_verifier"
+    )
+
+
+def _validate_baseline_access_proof_path(
+    run_dir: Path, manifest: dict[str, Any], path: Path, proof_role: str,
+) -> None:
     if not path.is_file():
         return
     proof = read_json(path)
@@ -7139,8 +7420,13 @@ def validate_baseline_access_proof(run_dir: Path, manifest: dict[str, Any]) -> N
         "handshakeHelperPath", "handshakeHelperHash", "handshakeRequestPath",
         "handshakeRequestHash",
     }
+    v2_fields = {"proofRole", "gateStateHash"}
+    schema_version = proof.get("schemaVersion") if isinstance(proof, dict) else None
+    expected_fields = base_fields | helper_fields
+    if schema_version == "bootstrap-access-proof.v2":
+        expected_fields |= v2_fields
     expected = {
-        "schemaVersion": "bootstrap-access-proof.v1",
+        "schemaVersion": schema_version,
         "reviewId": manifest.get("reviewId"),
         "inputHash": manifest.get("inputHash"),
         "artifactViewManifestHash": manifest.get("artifactView", {}).get("manifestHash"),
@@ -7150,8 +7436,26 @@ def validate_baseline_access_proof(run_dir: Path, manifest: dict[str, Any]) -> N
     }
     if (
         not isinstance(proof, dict)
-        or set(proof) not in (base_fields, base_fields | helper_fields)
+        or schema_version not in {"bootstrap-access-proof.v1", "bootstrap-access-proof.v2"}
+        or (schema_version == "bootstrap-access-proof.v1" and proof_role != "discovery")
+        or set(proof) not in (
+            expected_fields - helper_fields,
+            expected_fields,
+        )
         or any(proof.get(key) != value for key, value in expected.items())
+        or (
+            schema_version == "bootstrap-access-proof.v2"
+            and (
+                proof.get("proofRole") != proof_role
+                or (
+                    proof_role == "discovery" and proof.get("gateStateHash") is not None
+                )
+                or (
+                    proof_role == "independent_verifier"
+                    and HASH_PATTERN.fullmatch(str(proof.get("gateStateHash"))) is None
+                )
+            )
+        )
         or not isinstance(proof.get("model"), str)
         or not proof["model"]
         or not isinstance(proof.get("reasoningEffort"), str)
@@ -7171,6 +7475,10 @@ def validate_baseline_access_proof(run_dir: Path, manifest: dict[str, Any]) -> N
         or _parse_event_timestamp(proof.get("provenAt")) is None
     ):
         raise BootstrapError(f"Formal Bootstrap access proof is invalid at {path}")
+    if proof_role == "independent_verifier":
+        gate_path = run_dir / "review-gate-state.json"
+        if not gate_path.is_file() or proof.get("gateStateHash") != file_hash(gate_path):
+            raise BootstrapError(f"Formal Bootstrap verifier access proof has a stale gate binding at {path}")
     handshake_path = ensure_within(
         run_dir / proof["handshakePath"], run_dir / "attempts", "Historical access handshake"
     )
@@ -7218,6 +7526,7 @@ def validate_baseline_formal_sidecars(run_dir: Path, manifest: dict[str, Any]) -
         "bootstrap-review-metrics.v1",
         "bootstrap-run-summary.v1",
         "bootstrap-access-proof.v1",
+        "bootstrap-access-proof.v2",
         "bootstrap-run-seal.v1",
     }
     candidates = [*run_dir.glob("*.json")]
@@ -7266,13 +7575,24 @@ def validate_baseline_formal_sidecars(run_dir: Path, manifest: dict[str, Any]) -
 def _cost_cohort_identity(manifest: dict[str, Any]) -> dict[str, Any]:
     # Callers inject the actual selected model after locating the run. The
     # preferred model remains the deterministic fallback for manual history.
+    try:
+        routes = {role: discovery_execution_route(manifest, role) for role in LAYERS}
+    except (BootstrapError, KeyError, TypeError, ValueError):
+        routes = {}
+    models = {route["model"] for route in routes.values()}
     return {
         "reviewProfile": manifest.get("reviewProfile"),
         "policyRevision": manifest.get("policyRevision"),
         "routeVersion": manifest.get("routeVersion"),
         "controlPlaneRevision": manifest.get("controlPlaneRevision"),
-        "model": manifest.get("codexExecPolicy", {}).get("preferredModel"),
-        "reasoningProfile": value_hash(manifest.get("codexExecPolicy", {}).get("reasoningEffortByRole", {})),
+        "model": (
+            next(iter(models)) if len(models) == 1
+            else manifest.get("codexExecPolicy", {}).get("preferredModel")
+        ),
+        "reasoningProfile": value_hash(
+            {role: routes[role]["reasoningEffort"] for role in LAYERS}
+            if routes else manifest.get("codexExecPolicy", {}).get("reasoningEffortByRole", {})
+        ),
         "fullReviewRound": manifest.get("fullReviewRound"),
         "workloadBucket": manifest.get("reviewCostEstimate", {}).get("workloadBucket") or review_workload_bucket(
             len(manifest.get("artifacts", [])),
@@ -7605,36 +7925,50 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
         next_action = "expired-p2-deferral-blocks"
     verifier_recovery_state = "none"
     if relationship == "active" and execution_state == "awaiting-verification":
-        try:
-            blockers = load_gate_blockers(run_dir, manifest)
-            recovery = validate_verifier_recovery_events(run_dir, manifest, blockers=blockers)
-            verifier_recovery_state = "open" if recovery["open"] else (
-                "closed" if recovery["latestRecord"] is not None else "none"
-            )
-            verifier_valid = False
-            try:
-                validate_verifier(read_json(run_dir / "verifier-output.json"), manifest, blockers)
-            except BootstrapError:
-                pass
-            else:
-                verifier_valid = True
-            effective_completion = (
-                recovery["latestCompletionIndex"] >= 0
-                and recovery["latestCompletionIndex"] > recovery["latestRecoveryIndex"]
-            )
-            if recovery["open"]:
-                next_action = "run-independent-verifier"
-            elif verifier_valid and (
-                manifest.get("executionMode") != "codex-exec" or effective_completion
-            ):
-                next_action = "finalize"
-            elif not verifier_valid and effective_completion:
-                next_action = "recover-invalid-verifier"
-            else:
-                next_action = "run-independent-verifier"
-        except (BootstrapError, ControlPlaneError):
-            verifier_recovery_state = "invalid"
-            next_action = "inspect-verifier-recovery-evidence"
+        verifier_proof_path = run_dir / manifest.get("accessProbePolicy", ACCESS_PROBE_POLICY)[
+            "verifierSidecar"
+        ]
+        if manifest.get("executionMode") == "codex-exec" and not verifier_proof_path.is_file():
+            next_action = "prove-verifier-access"
+        else:
+            verifier_proof_valid = True
+            if manifest.get("executionMode") == "codex-exec":
+                try:
+                    validate_access_proof(run_dir, manifest, "independent_verifier")
+                except (BootstrapError, ControlPlaneError):
+                    verifier_proof_valid = False
+                    next_action = "inspect-verifier-access-proof"
+            if verifier_proof_valid:
+                try:
+                    blockers = load_gate_blockers(run_dir, manifest)
+                    recovery = validate_verifier_recovery_events(run_dir, manifest, blockers=blockers)
+                    verifier_recovery_state = "open" if recovery["open"] else (
+                        "closed" if recovery["latestRecord"] is not None else "none"
+                    )
+                    verifier_valid = False
+                    try:
+                        validate_verifier(read_json(run_dir / "verifier-output.json"), manifest, blockers)
+                    except BootstrapError:
+                        pass
+                    else:
+                        verifier_valid = True
+                    effective_completion = (
+                        recovery["latestCompletionIndex"] >= 0
+                        and recovery["latestCompletionIndex"] > recovery["latestRecoveryIndex"]
+                    )
+                    if recovery["open"]:
+                        next_action = "run-independent-verifier"
+                    elif verifier_valid and (
+                        manifest.get("executionMode") != "codex-exec" or effective_completion
+                    ):
+                        next_action = "finalize"
+                    elif not verifier_valid and effective_completion:
+                        next_action = "recover-invalid-verifier"
+                    else:
+                        next_action = "run-independent-verifier"
+                except (BootstrapError, ControlPlaneError):
+                    verifier_recovery_state = "invalid"
+                    next_action = "inspect-verifier-recovery-evidence"
     return {
         "runDirectory": run_dir.as_posix(),
         "reviewId": manifest.get("reviewId"),
@@ -7678,6 +8012,7 @@ def write_run_summary(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]
                 event.get("eventType") == VERIFIER_RECOVERY_EVENT for event in events
             ),
             "accessProof": (run_dir / "access-proof.json").is_file(),
+            "verifierAccessProof": (run_dir / "verifier-access-proof.json").is_file(),
         },
         "evidenceHashes": {
             name: file_hash(run_dir / name)
@@ -7701,6 +8036,7 @@ def command_inspect_run(args: argparse.Namespace) -> int:
         name: file_hash(run_dir / name)
         for name in (
             "review-input.json", "preflight-result.json", "access-proof.json",
+            "verifier-access-proof.json",
             "review-launch-authorization.json", "process-events.jsonl", "process-leases.json",
             "review-gate-result.json", "review-dispositions.json", "review-metrics.json", "run-seal.json",
         )
@@ -8021,6 +8357,9 @@ def build_parser() -> argparse.ArgumentParser:
     prove_access.add_argument("--run-dir", required=True)
     prove_access.add_argument("--codex-command", required=True)
     prove_access.add_argument("--model")
+    prove_access.add_argument(
+        "--role", choices=["discovery", "independent_verifier"], default="discovery"
+    )
     prove_access.add_argument("--ack-high-cost", action="store_true")
     prove_access.set_defaults(handler=command_prove_access)
     handshake = subparsers.add_parser(

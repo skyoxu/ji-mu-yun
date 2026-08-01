@@ -1,0 +1,93 @@
+{
+  "authorizes": [],
+  "commandId": "workflow-model-routing-round-2-repair-validation",
+  "commandRegistryHash": "sha256:b76627ffa0b42115525ef342ee062f3509eb11ca5f29ecd0760314d30116ab77",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "sha256": "sha256:43221fc4478aae2cda6127754917e658770032c9f42d454318b1056dfd386a62"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "sha256": "sha256:43a810b62f052d12adf9d44722913e2082d90cbe6aa53ea8c066ceed29a67fdb"
+    },
+    {
+      "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py",
+      "sha256": "sha256:7fe6d98ad51f368a4e8eb4a3317c1ebd6bddcf1d3ace41e1b9b5ca2603f87dbf"
+    }
+  ],
+  "inputBindingsHash": "sha256:d432adedc38107e8966a10905820cf283b995bb73e849cdbc6d6087d31c52dc1",
+  "invocation": {
+    "argv": [
+      "-3",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+    ],
+    "commandId": "workflow-model-routing-round-2-repair-validation",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "C:\\Windows\\py.exe",
+    "shell": false,
+    "timeoutSeconds": 600
+  },
+  "invocationHash": "sha256:c1c115c7ce1ea9f2718017007c5ca9d392776c158b98e9a1a2b02e51df235a3b",
+  "processResult": {
+    "commandId": "workflow-model-routing-round-2-repair-validation",
+    "exitCode": 0,
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\r\n  \"authorizes\": [\r\n    \"implementation-complete\"\r\n  ],\r\n  \"does_not_authorize\": [\r\n    \"acceptance-passed\",\r\n    \"release\",\r\n    \"archived\"\r\n  ],\r\n  \"predicate\": \"implementation-complete\",\r\n  \"results\": [\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \"scripts/sc/tests/test_llm_backend.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \"scripts/sc/tests/test_workflow_model_routing.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \"scripts/sc/tests/test_workflow_model_routing_evaluation.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \".agents/skills/quick-dev-tdd-adapter/tools/tests/test_knowledge_context.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    },\r\n    {\r\n      \"command\": [\r\n        \"py\",\r\n        \"-3\",\r\n        \"-m\",\r\n        \"unittest\",\r\n        \"discover\",\r\n        \"-s\",\r\n        \"scripts/python/tests\",\r\n        \"-p\",\r\n        \"test_knowledge_locator_*.py\"\r\n      ],\r\n      \"exit_code\": 0\r\n    }\r\n  ],\r\n  \"rollout_mode\": \"observe_only\",\r\n  \"schema_version\": \"jimuyun.workflow-model-routing-implementation-validation.v1\",\r\n  \"status\": \"pass\"\r\n}\r\n",
+    "stdoutSha256": "sha256:e95b54a5e32959d4a03643b2e39fee25b9c7916ed0038b588175e867dfd4f03d"
+  },
+  "processResultHash": "sha256:49e9d47c5e82aa6a1b7f64cc029acdebc1e762ea57bbd7de0fd3e26082ec9409",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

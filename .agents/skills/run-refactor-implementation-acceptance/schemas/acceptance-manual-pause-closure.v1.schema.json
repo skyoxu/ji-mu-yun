@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/acceptance-manual-pause-closure.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "status", "acceptanceTarget", "lineageFamilyId",
+    "semanticRoundsConsumed", "confirmedFindingIds", "repairCompletenessHash",
+    "challengePath", "challengeHash", "closureBindingHash",
+    "maintainerAcknowledgement", "lifecycleTransition", "authorizes",
+    "doesNotAuthorize"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "acceptance-manual-pause-closure.v1"},
+    "status": {"const": "passed"},
+    "acceptanceTarget": {"type": "string", "minLength": 1},
+    "lineageFamilyId": {"type": "string", "minLength": 1},
+    "semanticRoundsConsumed": {"const": 3},
+    "confirmedFindingIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "repairCompletenessHash": {"$ref": "#/$defs/hash"},
+    "challengePath": {"type": "string", "minLength": 1},
+    "challengeHash": {"$ref": "#/$defs/hash"},
+    "closureBindingHash": {"$ref": "#/$defs/hash"},
+    "maintainerAcknowledgement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "decision", "closureBindingHash", "acknowledgedFindingIds", "authorityRole", "rationale", "recordedAt", "authorizes"],
+      "properties": {
+        "schemaVersion": {"const": "acceptance-manual-pause-maintainer-ack.v1"},
+        "decision": {"const": "accept-repaired-target"},
+        "closureBindingHash": {"$ref": "#/$defs/hash"},
+        "acknowledgedFindingIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "authorityRole": {"const": "maintainer"},
+        "rationale": {"type": "string", "minLength": 1},
+        "recordedAt": {"type": "string", "minLength": 1},
+        "authorizes": {"const": ["manual-pause-closure"]}
+      }
+    },
+    "lifecycleTransition": {"const": "acceptance-passed"},
+    "authorizes": {"const": ["acceptance-passed"]},
+    "doesNotAuthorize": {"const": ["commit", "release", "archived"]}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/acceptance-manual-pause-closure-challenge.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "status", "acceptanceTarget", "lineageFamilyId",
+    "semanticRoundsConsumed", "lineageStateHash", "manualPauseRoute", "manualPauseRouteRequest",
+    "finalizedRun", "finalizedEnvelopeCoreHash", "confirmedFindingIds",
+    "findingRepairs", "repairCompletenessHash", "protocolAuthorities",
+    "sourceRequestPath", "sourceRequestHash", "authorizes", "closureBindingHash"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "acceptance-manual-pause-closure-challenge.v1"},
+    "status": {"const": "awaiting-maintainer-ack"},
+    "acceptanceTarget": {"type": "string", "minLength": 1},
+    "lineageFamilyId": {"type": "string", "minLength": 1},
+    "semanticRoundsConsumed": {"const": 3},
+    "lineageStateHash": {"$ref": "#/$defs/hash"},
+    "manualPauseRoute": {"$ref": "#/$defs/fileBinding"},
+    "manualPauseRouteRequest": {"$ref": "#/$defs/fileBinding"},
+    "finalizedRun": {"type": "object"},
+    "finalizedEnvelopeCoreHash": {"$ref": "#/$defs/hash"},
+    "confirmedFindingIds": {"$ref": "#/$defs/nonemptyStrings"},
+    "findingRepairs": {"type": "array", "minItems": 1},
+    "repairCompletenessHash": {"$ref": "#/$defs/hash"},
+    "protocolAuthorities": {"type": "array", "minItems": 3},
+    "sourceRequestPath": {"type": "string", "minLength": 1},
+    "sourceRequestHash": {"$ref": "#/$defs/hash"},
+    "authorizes": {"const": []},
+    "closureBindingHash": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "fileBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "nonemptyStrings": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

@@ -1,0 +1,227 @@
+{
+  "schema_version": "tec.implementation-contract.v1",
+  "plan_id": "toolchain-workflow-evidence-catalog-v1",
+  "profile": "resumable",
+  "command_registry": "command-registry.v1.json",
+  "backend": {"hidden_state": false},
+  "protocol_artifacts": {
+    "context_layout": "context/<capsule-id>",
+    "attempt_layout": "attempts/<attempt-id>"
+  },
+  "authority": {
+    "index": "00-index.md",
+    "requirements": "01-requirements-and-acceptance.md",
+    "authority_manifest": "authority-manifest.v1.json"
+  },
+  "ownership": {
+    "skill": ".agents/skills/maintain-toolchain-workflow-evidence-catalog",
+    "runtime_evidence": "logs/toolchain-workflow-evidence-catalog",
+    "producer_evidence": "read-only producer-owned roots"
+  },
+  "lifecycle": {
+    "states": ["draft", "plan-ready", "implementation-authorized", "implementation-complete", "acceptance-passed", "archived"],
+    "plan_authorizes": ["plan-ready"],
+    "quick_dev_authorizes": ["implementation-complete"],
+    "bootstrap_authorizes": []
+  },
+  "global_forbidden_changes": [
+    "logs/phase-a-innernet/**",
+    "logs/phase-a-innernet/workspaces/**",
+    "runtime/phase-a/**",
+    "PhaseA.Platform/**",
+    "PhaseA.Platform.Tests/**",
+    ".agents/skills/vdd-execution-plan/**",
+    ".agents/skills/quick-dev-tdd-adapter/**",
+    ".agents/skills/run-phase-bootstrap-review/**",
+    ".agents/skills/run-refactor-implementation-acceptance/**",
+    ".agents/skills/maintain-knowledge-base/**"
+  ],
+  "profile_upgrade": {
+    "to": "self-hosted",
+    "trigger": "Any implementation need to modify an existing producer route, schema, lifecycle publisher, or controlling validator",
+    "action": "Stop before the change and route to VDD repair"
+  },
+  "terminal_validation": {
+    "command_id": "catalog-terminal",
+    "required_slice": "TEC-S6",
+    "authorizes": ["implementation-complete"],
+    "does_not_authorize": ["acceptance-passed", "archived", "handoff", "release", "deployment"]
+  },
+  "slices": [
+    {
+      "slice_id": "TEC-S0",
+      "title": "Narrow ADR and authority boundary",
+      "requirement_ids": ["TEC-001", "TEC-002", "TEC-003"],
+      "acceptance_ids": ["TEC-ACC-001", "TEC-ACC-002", "TEC-ACC-003"],
+      "source_refs": ["01-requirements-and-acceptance.md#requirements-and-acceptance"],
+      "depends_on": [],
+      "allowed_changes": {
+        "production": [],
+        "tests": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_authority.py"],
+        "documentation": ["docs/adr/ADR-0053-toolchain-workflow-evidence-catalog-boundary.md", "docs/architecture/ADR_INDEX_PHASE.md"]
+      },
+      "execution_snapshot_paths": ["docs/architecture/ADR_INDEX_PHASE.md"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**", ".agents/skills/run-refactor-implementation-acceptance/**"],
+      "execution_read_set": ["AGENTS.md", "docs/know8.txt", "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md", "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md", "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md", "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md", "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md"],
+      "dependency_closure": ["execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/01-requirements-and-acceptance.md"],
+      "tdd": {
+        "red": {"command_id": "plan-authority-negative", "test_selector": "test_narrow_adr_boundary", "mode": "red-first", "expected_exit": "nonzero", "expected_failure_family": "catalog_authority_expansion", "expected_failure_ids": ["TEC-AUTHORITY-EXPANSION"]},
+        "green": {"command_id": "plan-authority-negative", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "plan-authority-negative", "expected_exit": "zero"}]}
+      },
+      "post_refactor_command_id": "tec-s0-predicate",
+      "exit_predicate": "slice-ready",
+      "recovery": "Revert only TEC-S0 candidate files, preserve evidence, and rerun the plan validator before retrying."
+    },
+    {
+      "slice_id": "TEC-S1",
+      "title": "Schemas, registry, identity and path safety",
+      "requirement_ids": ["TEC-004", "TEC-005", "TEC-006", "TEC-007", "TEC-008", "TEC-009"],
+      "acceptance_ids": ["TEC-ACC-004", "TEC-ACC-005", "TEC-ACC-006", "TEC-ACC-007", "TEC-ACC-008", "TEC-ACC-009"],
+      "source_refs": ["01-requirements-and-acceptance.md#native-evidence-boundary"],
+      "depends_on": ["TEC-S0"],
+      "allowed_changes": {
+        "production": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/SKILL.md", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/schemas/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/registry/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/identity.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/path_boundary.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/contracts.py"],
+        "tests": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_contracts.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_path_boundary.py"],
+        "documentation": ["docs/standards/toolchain-workflow-evidence-catalog.md", "docs/standards/_index.md"]
+      },
+      "execution_snapshot_paths": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/SKILL.md"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**", ".agents/skills/run-refactor-implementation-acceptance/**"],
+      "execution_read_set": ["docs/adr/ADR-0053-toolchain-workflow-evidence-catalog-boundary.md", ".agents/skills/vdd-execution-plan/SKILL.md", ".agents/skills/quick-dev-tdd-adapter/SKILL.md", ".agents/skills/run-phase-bootstrap-review/SKILL.md", ".agents/skills/run-refactor-implementation-acceptance/SKILL.md"],
+      "dependency_closure": ["execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/implementation-contract.v1.json"],
+      "tdd": {
+        "red": {"command_id": "catalog-contract-negative", "test_selector": "test_unregistered_or_escaping_root_fails_closed", "mode": "red-first", "expected_exit": "nonzero", "expected_failure_family": "catalog_root_boundary", "expected_failure_ids": ["TEC-ROOT-UNREGISTERED", "TEC-PATH-ESCAPE"]},
+        "green": {"command_id": "catalog-contract-suite", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "catalog-contract-suite", "expected_exit": "zero"}]}
+      },
+      "post_refactor_command_id": "tec-s1-predicate",
+      "exit_predicate": "slice-ready",
+      "recovery": "Invalidate TEC-S1 and downstream slices if any schema, identity, registry, or path semantic changes."
+    },
+    {
+      "slice_id": "TEC-S2",
+      "title": "Pull-only producer adapters",
+      "requirement_ids": ["TEC-010", "TEC-011", "TEC-012", "TEC-013", "TEC-014"],
+      "acceptance_ids": ["TEC-ACC-010", "TEC-ACC-011", "TEC-ACC-012", "TEC-ACC-013", "TEC-ACC-014"],
+      "source_refs": ["01-requirements-and-acceptance.md#native-evidence-boundary"],
+      "depends_on": ["TEC-S1"],
+      "allowed_changes": {
+        "production": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/adapters/**"],
+        "tests": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_adapters.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/fixtures/producers/**"],
+        "documentation": []
+      },
+      "execution_snapshot_paths": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/adapters/vdd.py"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**", ".agents/skills/run-refactor-implementation-acceptance/**"],
+      "execution_read_set": [".agents/skills/vdd-execution-plan/SKILL.md", ".agents/skills/quick-dev-tdd-adapter/SKILL.md", ".agents/skills/run-phase-bootstrap-review/SKILL.md", ".agents/skills/run-refactor-implementation-acceptance/SKILL.md", "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md"],
+      "dependency_closure": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/schemas/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/registry/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/identity.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/path_boundary.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/contracts.py"],
+      "tdd": {
+        "red": {"command_id": "catalog-adapter-negative", "test_selector": "test_proximity_and_nested_copies_emit_no_relation_or_duplicate", "mode": "red-first", "expected_exit": "nonzero", "expected_failure_family": "catalog_relation_inference", "expected_failure_ids": ["TEC-RELATION-INFERRED", "TEC-NESTED-DUPLICATE"]},
+        "green": {"command_id": "catalog-adapter-suite", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "catalog-adapter-suite", "expected_exit": "zero"}]}
+      },
+      "post_refactor_command_id": "tec-s2-predicate",
+      "exit_predicate": "slice-ready",
+      "recovery": "Repair only the affected adapter unless shared schema, identity, or path semantics changed; then invalidate TEC-S1 onward."
+    },
+    {
+      "slice_id": "TEC-S3",
+      "title": "Immutable generation build, validation and inspection",
+      "requirement_ids": ["TEC-015", "TEC-016", "TEC-017", "TEC-018"],
+      "acceptance_ids": ["TEC-ACC-015", "TEC-ACC-016", "TEC-ACC-017", "TEC-ACC-018"],
+      "source_refs": ["01-requirements-and-acceptance.md#cli-contract"],
+      "depends_on": ["TEC-S2"],
+      "allowed_changes": {
+        "production": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/catalog.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/generation.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/query.py"],
+        "tests": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_generation.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_query.py"],
+        "documentation": []
+      },
+      "execution_snapshot_paths": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/catalog.py"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**", ".agents/skills/run-refactor-implementation-acceptance/**"],
+      "execution_read_set": ["docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md", "docs/know8.txt"],
+      "dependency_closure": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/adapters/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/schemas/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/registry/**"],
+      "tdd": {
+        "red": {"command_id": "catalog-generation-negative", "test_selector": "test_drifted_source_is_stale_and_build_does_not_publish", "mode": "red-first", "expected_exit": "nonzero", "expected_failure_family": "catalog_generation_freshness", "expected_failure_ids": ["TEC-SOURCE-DRIFT", "TEC-IMPLICIT-PUBLISH"]},
+        "green": {"command_id": "catalog-generation-suite", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "catalog-generation-suite", "expected_exit": "zero"}, {"command_id": "catalog-query-suite", "expected_exit": "zero"}]}
+      },
+      "post_refactor_command_id": "tec-s3-predicate",
+      "exit_predicate": "slice-ready",
+      "recovery": "Preserve failed staging evidence, remove no published generation, and retry from the explicit scan request after fixing the bounded cause."
+    },
+    {
+      "slice_id": "TEC-S4",
+      "title": "Atomic publication and LKG recovery",
+      "requirement_ids": ["TEC-019", "TEC-020", "TEC-021"],
+      "acceptance_ids": ["TEC-ACC-019", "TEC-ACC-020", "TEC-ACC-021"],
+      "source_refs": ["01-requirements-and-acceptance.md#cli-contract"],
+      "depends_on": ["TEC-S3"],
+      "allowed_changes": {
+        "production": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/publication.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/registry/publication-policy.v1.json"],
+        "tests": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_publication.py"],
+        "documentation": []
+      },
+      "execution_snapshot_paths": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/registry/publication-policy.v1.json"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**", ".agents/skills/run-refactor-implementation-acceptance/**"],
+      "execution_read_set": ["docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md", "docs/adr/ADR-0053-toolchain-workflow-evidence-catalog-boundary.md"],
+      "dependency_closure": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/catalog.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/generation.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/query.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/schemas/**"],
+      "tdd": {
+        "red": {"command_id": "catalog-publication-negative", "test_selector": "test_failed_activation_and_stale_lkg_preserve_current", "mode": "red-first", "expected_exit": "nonzero", "expected_failure_family": "catalog_publication_atomicity", "expected_failure_ids": ["TEC-ACTIVATION-ROLLBACK", "TEC-LKG-STALE"]},
+        "green": {"command_id": "catalog-publication-suite", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "catalog-publication-suite", "expected_exit": "zero"}]}
+      },
+      "post_refactor_command_id": "tec-s4-predicate",
+      "exit_predicate": "slice-ready",
+      "recovery": "Keep Current/LKG unchanged, retain append-only failure evidence, and rerun validation before any explicit publication or restore retry."
+    },
+    {
+      "slice_id": "TEC-S5",
+      "title": "Detached protocol closure and adversarial boundaries",
+      "requirement_ids": ["TEC-022", "TEC-023", "TEC-024"],
+      "acceptance_ids": ["TEC-ACC-022", "TEC-ACC-023", "TEC-ACC-024"],
+      "source_refs": ["01-requirements-and-acceptance.md#native-evidence-boundary"],
+      "depends_on": ["TEC-S4"],
+      "allowed_changes": {
+        "production": [],
+        "tests": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/fixtures/closed-loop/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/fixtures/path-cases/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_closed_loop.py", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_forbidden_boundaries.py"],
+        "documentation": []
+      },
+      "execution_snapshot_paths": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/fixtures/closed-loop/fixture-manifest.v1.json"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**", ".agents/skills/run-refactor-implementation-acceptance/**"],
+      "execution_read_set": ["execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md", "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md", "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md"],
+      "dependency_closure": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/schemas/**", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/registry/**"],
+      "tdd": {
+        "red": {"command_id": "catalog-closure-negative", "test_selector": "test_inferred_edge_nested_copy_and_phase_root_are_rejected", "mode": "red-first", "expected_exit": "nonzero", "expected_failure_family": "catalog_closure_boundary", "expected_failure_ids": ["TEC-CLOSURE-INFERRED", "TEC-CLOSURE-DUPLICATE", "TEC-PHASE-ROOT"]},
+        "green": {"command_id": "catalog-closure-suite", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "catalog-closure-suite", "expected_exit": "zero"}, {"command_id": "catalog-forbidden-suite", "expected_exit": "zero"}]}
+      },
+      "post_refactor_command_id": "tec-s5-predicate",
+      "exit_predicate": "implementation-candidate",
+      "recovery": "Repair only detached fixture or consumer code, preserve failed evidence, and replay TEC-S1 onward if shared semantics changed."
+    },
+    {
+      "slice_id": "TEC-S6",
+      "title": "Terminal validation and implementation completion",
+      "requirement_ids": ["TEC-025"],
+      "acceptance_ids": ["TEC-ACC-025"],
+      "source_refs": ["01-requirements-and-acceptance.md#acceptance-boundary"],
+      "depends_on": ["TEC-S5"],
+      "allowed_changes": {
+        "production": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/validate_catalog.py"],
+        "tests": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_terminal.py"],
+        "documentation": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/references/operations.md"]
+      },
+      "execution_snapshot_paths": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/validate_catalog.py"],
+      "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**", ".agents/skills/run-refactor-implementation-acceptance/**"],
+      "execution_read_set": ["AGENTS.md", "docs/adr/ADR-0053-toolchain-workflow-evidence-catalog-boundary.md", "docs/standards/toolchain-workflow-evidence-catalog.md"],
+      "dependency_closure": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/**", "docs/adr/ADR-0053-toolchain-workflow-evidence-catalog-boundary.md", "docs/standards/toolchain-workflow-evidence-catalog.md"],
+      "tdd": {
+        "red": {"command_id": "catalog-terminal-negative", "test_selector": "test_terminal_requires_every_v1_boundary", "mode": "red-first", "expected_exit": "nonzero", "expected_failure_family": "catalog_terminal_incomplete", "expected_failure_ids": ["TEC-TERMINAL-INCOMPLETE"]},
+        "green": {"command_id": "catalog-terminal", "expected_exit": "zero"},
+        "refactor": {"invocations": [{"command_id": "catalog-terminal", "expected_exit": "zero"}]}
+      },
+      "post_refactor_command_id": "tec-s6-predicate",
+      "exit_predicate": "implementation-complete",
+      "recovery": "Stabilize the smallest failing layer, rerun its targeted suite, then rerun the complete terminal command once; do not publish acceptance."
+    }
+  ]
+}

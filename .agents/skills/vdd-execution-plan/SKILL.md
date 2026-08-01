@@ -25,6 +25,29 @@ Choose the least complex profile that serves a real consumer. Record the selecte
 
 Do not create fixed `00-08`/`96-99` books, custom schemas, a custom validator, mutation fixtures, a 95 report, Bootstrap Review, trust roots, attempt ledgers, or effect-fold records for a `standard` plan unless a concrete consumer cannot use an existing repository command or contract. One owner artifact may map requirements, sources, acceptance, and coverage.
 
+## Model Route Decision
+
+Select `standard`, `resumable`, or `self-hosted` entirely from the profile table
+before model routing. Then pass that already-selected profile to
+`scripts/model_routing.py`; do not add another VDD complexity classifier.
+All three ordinary profiles currently request Sol/high. Only a closed typed
+complex-recovery trigger may request Sol/max, and that route remains blocked
+until an exact backend/model/effort/sandbox capability probe and its shadow
+predicate both pass. Free-form recovery reasons fail closed.
+
+The emitted route decision is hash-bound and non-authorizing. The shared
+workflow launcher alone may start a child process. In `observe_only`, continue
+planning in the current caller session; the decision neither launches a child
+nor replaces that session's model.
+
+The canonical policy owns VDD's independent consumer enablement. A disabled
+VDD consumer emits `disabled` without changing Quick Dev or Refactor
+Acceptance. Sol/max recovery evidence is loaded only from policy-bound
+path/hash references under the controlled capability-evidence root. Callers
+cannot supply or synthesize a capability-proof dictionary; activation requires
+the bound producer receipt, its successful process result, and representative
+shadow execution receipts to replay against the requested route identity.
+
 ## Clarify Only Material Boundaries
 
 Inspect repository authority, current state, relevant callers, protected paths, and existing tests before asking. Ask only when an answer changes scope, compatibility, destructive behavior, protected-path approval, or acceptance. Zero questions is valid.

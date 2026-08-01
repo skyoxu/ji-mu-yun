@@ -592,6 +592,7 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             "plan-authority",
             "authority-graph-and-current-state",
             ["plan-source", "original-requirements", "repository-rules", "current-state", "referenced-standards", "schemas-and-fixtures"],
+            "gpt-5.6-terra",
             {"blind_hunter": "medium", "edge_case_hunter": "high", "acceptance_auditor": "high", "independent_verifier": "high"},
         ),
         "bootstrap-implementation-conformance": (
@@ -599,6 +600,7 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             "implementation-conformance",
             "contract-to-runtime-closure",
             ["implementation-plan", "changed-production-code", "affected-consumers", "tests-and-acceptance", "runtime-evidence", "repository-rules", "referenced-standards"],
+            "gpt-5.6-terra",
             {"blind_hunter": "high", "edge_case_hunter": "high", "acceptance_auditor": "high", "independent_verifier": "high"},
         ),
         "bootstrap-skill-route": (
@@ -606,13 +608,15 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             "skill-route",
             "instruction-route-contract-closure",
             ["skill-source", "operator-guide", "route-or-cli", "profiles-and-config", "schemas", "tests", "usage-evidence", "repository-rules"],
-            {"blind_hunter": "medium", "edge_case_hunter": "high", "acceptance_auditor": "high", "independent_verifier": "high"},
+            "gpt-5.6-sol",
+            {"blind_hunter": "high", "edge_case_hunter": "high", "acceptance_auditor": "high", "independent_verifier": "high"},
         ),
         "bootstrap-focused-change": (
             "review-policy://bootstrap-focused-change/v1",
             "focused-change",
             "change-impact-closure",
             ["change-intent", "changed-files", "affected-consumers", "targeted-tests", "repository-rules", "referenced-standards"],
+            "gpt-5.6-terra",
             {"blind_hunter": "medium", "edge_case_hunter": "high", "acceptance_auditor": "medium", "independent_verifier": "high"},
         ),
     }
@@ -649,7 +653,22 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             "role", "scope", "output-target", "model", "tools", "severity", "finding-count",
         ],
     }
-    for name, (uri, object_type, depth, contexts, reasoning) in expected_profiles.items():
+    verifier_policy = {
+        "preferredModel": "gpt-5.6-sol",
+        "fallbackModels": [],
+        "defaultReasoningEffort": "high",
+        "escalatedReasoningEffort": "max",
+        "escalateOnSeverities": ["P0"],
+        "escalateOnDimensions": ["security"],
+    }
+    access_probe_policy = {
+        "discoverySidecar": "access-proof.json",
+        "verifierSidecar": "verifier-access-proof.json",
+        "verifierRequiresGate": True,
+    }
+    round_model_overrides = {"3": "gpt-5.6-sol"}
+    round_reasoning_overrides = {"3": {layer: "high" for layer in required_layers}}
+    for name, (uri, object_type, depth, contexts, preferred_model, reasoning) in expected_profiles.items():
         profile = profiles[name]
         if profile.get("requiredLayers") != required_layers:
             fail(errors, f"{name} must require all three reviewer layers")
@@ -699,12 +718,18 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
         if not isinstance(codex_policy, dict) or {
             key: codex_policy.get(key) for key in ("preferredModel", "fallbackModels", "forbiddenModels", "toolProbeRequired")
         } != {
-            "preferredModel": "gpt-5.6-terra",
+            "preferredModel": preferred_model,
             "fallbackModels": ["gpt-5.5", "gpt-5.4"],
-            "forbiddenModels": ["gpt-5.6-sol"],
+            "forbiddenModels": [],
             "toolProbeRequired": True,
-        } or codex_policy.get("reasoningEffortByRole") != reasoning:
+        } or codex_policy.get("reasoningEffortByRole") != reasoning \
+                or codex_policy.get("roundModelOverrides") != round_model_overrides \
+                or codex_policy.get("roundReasoningEffortOverrides") != round_reasoning_overrides:
             fail(errors, f"{name} Codex exec model/reasoning policy is invalid")
+        if profile.get("verifierPolicy") != verifier_policy:
+            fail(errors, f"{name} independent verifier policy is invalid")
+        if profile.get("accessProbePolicy") != access_probe_policy:
+            fail(errors, f"{name} role-specific access probe policy is invalid")
         revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
         canonical = json.dumps(revision_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
         expected_revision = "sha256:" + hashlib.sha256(canonical).hexdigest()

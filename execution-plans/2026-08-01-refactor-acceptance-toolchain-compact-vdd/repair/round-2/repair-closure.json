@@ -1,0 +1,37 @@
+{
+  "schema_version": "jimuyun.compact-vdd-repair-closure.v1",
+  "round": 2,
+  "status": "closed",
+  "failure_family": "self-hosted-knowledge-read-set-collision",
+  "binding": {
+    "failure_family": "self-hosted-knowledge-read-set-collision",
+    "repair_plan_sha256": "sha256:937c10454b2a9860fd2d07051b6bf9ff06b6863dc5730ed51d7229a5569584ee",
+    "repaired_files": [
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+        "sha256": "sha256:b23e82beee43bd9cd291a5af322f499fcd5479bc79889c7b737f39f7d01aa5ef"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+        "sha256": "sha256:0bf89705fbbf7dd724b43c9a837963e0f4c1c9c47186243ea9caf6fad2695e29"
+      }
+    ],
+    "terminal_validator_sha256": "sha256:b50552d0968025910a87c28a466e00f915bfdce580ba69b5ffb5fea5f3d09bb8"
+  },
+  "binding_sha256": "sha256:169ed924045b8b4ff74561a18e09f873e06740bb02f184fa40a47c3c7e2d5071",
+  "validation": [
+    {
+      "command": "py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+      "result": "pass",
+      "tests": 5
+    },
+    {
+      "command": "py -3 execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "result": "pass",
+      "registered_commands": 6,
+      "elapsed_seconds": 189.9
+    }
+  ],
+  "authorizes": [],
+  "does_not_authorize": ["acceptance-passed", "release", "archived"]
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "acceptance-command-registry.v1",
+  "commands": [
+    {
+      "id": "workflow-model-routing-repair-composition-v3",
+      "executable": "C:\\Windows\\py.exe",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 360,
+      "shell": false,
+      "allowed_write_roots": [],
+      "forbidden_write_roots": [],
+      "registry_hash": "sha256:02a9ead2f1302fd306e647b2c62bc9433647862c63c8159cb7e09ea954956113",
+      "environment_allowlist": [
+        "ComSpec",
+        "Path",
+        "PATHEXT",
+        "SystemRoot",
+        "TEMP",
+        "TMP",
+        "windir"
+      ],
+      "typed_placeholders": {},
+      "placeholder_values": {}
+    }
+  ],
+  "registryHash": "sha256:02a9ead2f1302fd306e647b2c62bc9433647862c63c8159cb7e09ea954956113"
+}

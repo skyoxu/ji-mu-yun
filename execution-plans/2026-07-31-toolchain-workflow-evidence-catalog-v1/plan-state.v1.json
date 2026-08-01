@@ -1,0 +1,30 @@
+{
+  "schema_version": "vdd.plan-state.v2",
+  "plan_id": "toolchain-workflow-evidence-catalog-v1",
+  "profile": "resumable",
+  "status": "plan-ready",
+  "authorizes": [
+    "plan-ready"
+  ],
+  "git_baseline": {
+    "head": "dbe2a731c9465946d3dc21ac3888491e33340c28",
+    "tree": "bb20a0f9ad45eadae2eb955dff56e9072e7a13ae",
+    "scope": "scoped dirty-worktree identity; unrelated existing changes excluded"
+  },
+  "status_history": [
+    {
+      "status": "draft",
+      "reason": "The resumable directory and frozen knowledge context were created; the plan-ready predicate has not yet been published.",
+      "evidence": [
+        "knowledge-context.freeze.v1.json"
+      ]
+    },
+    {
+      "status": "plan-ready",
+      "reason": "The complete resumable directory passed its deterministic plan-ready predicate.",
+      "evidence": [
+        "tools/validate_plan.py --publish-plan-ready"
+      ]
+    }
+  ]
+}

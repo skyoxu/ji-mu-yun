@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "sha256": "sha256:43221fc4478aae2cda6127754917e658770032c9f42d454318b1056dfd386a62",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Frozen Bootstrap Round 3 repair baseline"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "sha256": "sha256:43a810b62f052d12adf9d44722913e2082d90cbe6aa53ea8c066ceed29a67fdb",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Frozen Bootstrap Round 3 repair baseline"
+    }
+  ]
+}

@@ -165,17 +165,18 @@ Stop before semantic reviewers when a required check fails or evidence is stale.
 
 ## Prove Codex Access
 
-For `codex-exec`, run the explicit identity-equivalent access probe after preflight and before authorization:
+For `codex-exec`, run the discovery identity-equivalent access probe after preflight and before authorization:
 
 ```text
 py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prove-access \
   --run-dir <run> \
   --codex-command <codex executable> \
+  --role discovery \
   --model <profile-allowed model> \
   [--ack-high-cost]
 ```
 
-The probe must use the same executable identity, model route, sandbox, environment class, and Artifact View contract intended for reviewers. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
+The discovery route is profile- and round-bound. Ordinary implementation conformance uses Terra/high in Rounds 1-2, Skill/route review uses Sol/high in Rounds 1-2, and every valid Round 3 uses Sol/high. Round 2 inherits its profile route. The probe must use the same executable identity, resolved model route, sandbox, environment class, and Artifact View contract intended for reviewers. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
 
 The runner materializes the deterministic handshake helper inside each attempt directory so the sandboxed child does not need to read the repository `.agents` entrypoint. The parent revalidates the complete Artifact View coverage and handshake hash; a child-produced hash alone is never access proof.
 
@@ -199,6 +200,14 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py run-
 
 Each child must execute its same-session Artifact View handshake before semantic work and return only a structured candidate response. A completed Codex discovery payload returns semantic candidates and `bootstrap-artifact-view-read-receipt.v1`; it never reproduces coverage path arrays. The parent validates the receipt and handshake, constructs exact ordered formal coverage from the frozen manifest, validates the complete formal output, and writes it atomically. Manual and specialized-agent modes still fill and validate explicit coverage arrays because their reads occur outside the parent-owned Codex boundary. Every completed reviewer or verifier payload receives one final frozen-authority validation immediately before publication; a failure at that boundary leaves the prior formal bytes unchanged and records a failed attempt. Verifier output additionally requires exact blocker evidence and complete `contextRead` coverage against the frozen gate before publication. The verifier runtime prompt derives and re-emits every full inclusive blocker range and all `contextRead` references from the hash-bound candidate sidecar; it must not rely on a start-line-only summary in a saved prompt. Failed attempts remain under `attempts/<attempt-id>/` and never replace completed formal evidence.
 
+If a discovery or verifier formal output was validly published but interruption prevented
+the immediately following `attempt-completed` append, retry the same role. The
+reservation path first requires the original controller identity to be dead,
+validates the frozen formal output, and appends one reconciliation completion
+event for the original attempt. A live controller is left to finish its own
+append. After reconciliation, continue to gate or finalize without launching
+another model or overwriting the formal file.
+
 Child launch/exit failure, malformed strict JSON, invalid candidate binding or
 shape, and an invalid Artifact View receipt are transport attempt failures.
 They append `attempt-failed`, keep formal output bytes unchanged, and retry the
@@ -215,7 +224,19 @@ Manual and specialized-agent modes remain external execution boundaries. Their o
 
 After all three layers validate, run `gate`. Report accepted and rejected counts only from successful gate output.
 
-When gate returns `awaiting_verification`, run one independent verifier through `run-layer --role independent_verifier` or the approved external verifier boundary. The verifier must cover each blocker's exact evidence and every `contextRead` reference.
+When gate returns `awaiting_verification`, first prove the independent verifier route:
+
+```text
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prove-access \
+  --run-dir <run> \
+  --codex-command <codex executable> \
+  --role independent_verifier \
+  [--ack-high-cost]
+```
+
+This creates `verifier-access-proof.json` only after the gate exists. A P1-only blocker set resolves to Sol/high; any P0 or `security` blocker resolves the whole verifier run to Sol/max. Data-corruption and permission-boundary findings must be classified as P0 or `security` so the structured gate can trigger max effort. The discovery `access-proof.json` cannot authorize the verifier.
+
+Then run one independent verifier through `run-layer --role independent_verifier` or the approved external verifier boundary. The verifier must cover each blocker's exact evidence and every `contextRead` reference. If `inspect-run` reports `prove-verifier-access`, complete the verifier probe before launching the verifier.
 
 If `inspect-run` reports `recover-invalid-verifier`, use the explicit append-only recovery command before retrying:
 

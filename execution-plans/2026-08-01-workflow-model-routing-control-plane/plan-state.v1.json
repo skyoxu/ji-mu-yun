@@ -1,0 +1,27 @@
+{
+  "schema_version": "vdd.plan-state.v1",
+  "plan_id": "workflow-model-routing-control-plane",
+  "profile": "self-hosted",
+  "state": "implementation-complete",
+  "state_owner": "terminal-validator",
+  "updated_utc": "2026-08-01T08:33:37Z",
+  "resume": {
+    "next_action": "manual-pause-no-successor-reset",
+    "last_completed_step": "bootstrap-round-3-finalized-blocked",
+    "recovery_instruction": "Do not create Bootstrap Round 4 or reset the lineage family. Resume only from an explicit supersede or incompatible-scope decision that establishes a genuinely different acceptance target."
+  },
+  "slices": [
+    {"id": "RMR-S0", "status": "completed", "depends_on": []},
+    {"id": "RMR-S1", "status": "completed", "depends_on": ["RMR-S0"]},
+    {"id": "RMR-S2", "status": "completed", "depends_on": ["RMR-S0", "RMR-S1"]},
+    {"id": "RMR-S3", "status": "completed", "depends_on": ["RMR-S0", "RMR-S1", "RMR-S2"]},
+    {"id": "RMR-S4", "status": "completed", "depends_on": ["RMR-S0", "RMR-S1", "RMR-S2", "RMR-S3"]}
+  ],
+  "authorizes": ["implementation-complete"],
+  "does_not_authorize": [
+    "protected-path-write",
+    "acceptance-passed",
+    "release",
+    "archived"
+  ]
+}

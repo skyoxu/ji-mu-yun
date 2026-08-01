@@ -1,0 +1,136 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:14708433db121d1ef0bd726081727a786642432146da08d70e71e0941db44b4d"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-run-input.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:aa17b8b5ac51f1a468eb521879ffaf2ac165474b0e04dd903052ef11808ace40"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-binding.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ed523e09a5f329d345a46af5d9c212bcbe0f22a1e550a3add02b5046be241de9"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-pack.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:4784b040b47c4f2ddce0cde5501d9c870f491364594a491449c6b06e85ae7f79"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5aa8669abf7413cf6d9bb523cda879841c5cb3ca142027e02660b37bce6bfaf4"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:91e795353f0df8e19433753fb355e9a95fd0eadf891685ceddf213cba02fe4a9"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:2d08988a15a828f57163031ebfdd1c993757fde72ca077757d1dae362a8dacca"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:efceb70237f8df7d9e56dca1d143a3c51f59932cfb076ce0eb82dddddebc7b3a"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "docs/architecture/ADR_INDEX_PHASE.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "docs/architecture/phase-service/llm-codex-execution.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:83fec51044d4287038ade1a0f8462a905af792885322975c4dbce54e5f525aba"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:94cffef015f48d32e6370fabb14f75367399d8cc3b55f15e083f2a3ad1900574"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/sc/_llm_backend.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:fc2bb1a13b0d89c9ae60975ef65c4f96012cb5ee3c2c99ba902a186545c3eeb0"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/sc/tests/test_llm_backend.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:131c9ebc82b4811d9cbda17a79a7d4d92aa141e1a7f716962aa6224e933ea868"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

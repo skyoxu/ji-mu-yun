@@ -1,0 +1,144 @@
+{
+  "acceptanceTarget": "execution-plans/2026-08-01-workflow-model-routing-control-plane",
+  "authorityGraphChanged": true,
+  "authorizes": [],
+  "baselineManifestHash": "sha256:0f3f4e291e4a861844b243683ac8f593d7d3f7c46ecbcb96348373169cb97cd5",
+  "baselineManifestPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/baseline-content-manifest.v2.json",
+  "candidateManifestHash": "sha256:c470bdb51285ea2caf065635e8f0ddbeef161bf6b803f21497519a38bb691697",
+  "candidateManifestPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/candidate-content-manifest.v2.json",
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+    "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+    "docs/architecture/phase-service/llm-codex-execution.md",
+    "scripts/sc/config/workflow_model_routes.v1.json",
+    "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+    "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+    "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json",
+    "scripts/sc/tests/test_workflow_model_routing.py",
+    "scripts/sc/workflow_model_routing.py"
+  ],
+  "compositionChecks": [
+    {
+      "checkId": "workflow-model-routing-repair-composition-v5",
+      "commandRegistryPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-command-registry.v5.json",
+      "consumerPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/model_routing.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+        ".agents/skills/vdd-execution-plan/scripts/model_routing.py"
+      ],
+      "producerPaths": [
+        "scripts/sc/config/workflow_model_routes.v1.json",
+        "scripts/sc/schemas/workflow-model-capability-probe-receipt.v1.schema.json",
+        "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+        "scripts/sc/schemas/workflow-model-shadow-execution-receipt.v1.schema.json",
+        "scripts/sc/workflow_model_routing.py"
+      ],
+      "receiptPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-receipt.v5.json"
+    },
+    {
+      "checkId": "acceptance-bootstrap-loader-composition",
+      "commandRegistryPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/acceptance-loader-command-registry.v1.json",
+      "consumerPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py"
+      ],
+      "producerPaths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+      ],
+      "receiptPath": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/acceptance-loader-composition-receipt.v1.json"
+    }
+  ],
+  "directConsumers": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+    ".agents/skills/vdd-execution-plan/scripts/model_routing.py"
+  ],
+  "highRiskBoundaryChanged": true,
+  "lineageFamilyId": "ria-77945989035b122f005c98a2c3661cd2",
+  "novelP0P1FindingIds": [],
+  "predecessorRun": "logs/ci/2026-08-01/wmr-r1c",
+  "repositoryRoot": "C:\\jimuyun",
+  "rootCauseInventories": [
+    {
+      "addressedPaths": [
+        "scripts/sc/config/workflow_model_routes.v1.json",
+        "scripts/sc/tests/test_workflow_model_routing.py",
+        "scripts/sc/workflow_model_routing.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "shared-consumer-controls",
+      "searchRoots": [
+        "scripts/sc"
+      ],
+      "searchTerm": "consumerControls"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "vdd-route-projection",
+      "searchRoots": [
+        ".agents/skills/vdd-execution-plan/scripts"
+      ],
+      "searchTerm": "routing.vdd_decision"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "quick-dev-consumer-control",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "consumerControls"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "acceptance-consumer-control",
+      "searchRoots": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests"
+      ],
+      "searchTerm": "consumerControls"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "acceptance-bootstrap-loader",
+      "searchRoots": [
+        ".agents/skills/run-refactor-implementation-acceptance"
+      ],
+      "searchTerm": "_bootstrap_module"
+    }
+  ],
+  "schemaVersion": "acceptance-repair-completeness-request.v1",
+  "semanticRoundsConsumed": 1,
+  "targetedTests": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+    "scripts/sc/tests/test_workflow_model_routing.py"
+  ],
+  "validationRefs": [
+    "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/acceptance-loader-composition-receipt.v1.json",
+    "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-1/composition-receipt.v5.json",
+    "logs/ci/2026-08-01/wmr-r1c/finalized-run-validation.v3.json"
+  ]
+}

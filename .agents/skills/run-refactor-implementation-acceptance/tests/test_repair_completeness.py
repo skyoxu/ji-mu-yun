@@ -5,6 +5,7 @@ import hashlib
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
 
@@ -18,6 +19,7 @@ class RepairCompletenessTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name).resolve()
         (self.root / "src").mkdir()
+        (self.root / "tests").mkdir()
         (self.root / "logs").mkdir()
         (self.root / "execution-plans" / "example").mkdir(parents=True)
         (self.root / "src" / "producer.py").write_text(
@@ -27,6 +29,11 @@ class RepairCompletenessTests(unittest.TestCase):
         )
         (self.root / "src" / "consumer.py").write_text(
             "from producer import shared_route\nshared_route()\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        (self.root / "tests" / "test_consumer.py").write_text(
+            "from pathlib import Path\nassert Path('src/consumer.py').is_file()\n",
             encoding="utf-8",
             newline="\n",
         )
@@ -41,6 +48,26 @@ class RepairCompletenessTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+
+    def test_bootstrap_loader_isolates_same_named_dependency_modules(self) -> None:
+        import repair_completeness
+
+        repository_root = SKILL_ROOT.parents[2]
+        names = ("_control_plane", "knowledge_context")
+        previous = {name: sys.modules.get(name) for name in names}
+        collisions = {name: types.ModuleType(name) for name in names}
+        sys.modules.update(collisions)
+        try:
+            bootstrap = repair_completeness._bootstrap_module(repository_root)
+            self.assertTrue(callable(bootstrap.build_lineage_state))
+            for name, collision in collisions.items():
+                self.assertIs(collision, sys.modules[name])
+        finally:
+            for name, prior in previous.items():
+                if prior is None:
+                    sys.modules.pop(name, None)
+                else:
+                    sys.modules[name] = prior
 
     def test_copied_file_binds_source_and_candidate_bytes(self) -> None:
         from repair_completeness import _candidate_path_bindings
@@ -84,7 +111,7 @@ class RepairCompletenessTests(unittest.TestCase):
         receipt = run_controlled_command(
             self.root,
             self.command,
-            input_paths=["src/producer.py", "src/consumer.py"],
+            input_paths=["src/producer.py", "src/consumer.py", "tests/test_consumer.py"],
         )
         if exit_code != 0:
             receipt["exitCode"] = exit_code
@@ -100,7 +127,7 @@ class RepairCompletenessTests(unittest.TestCase):
         command = {
             "id": self.check_id,
             "executable": sys.executable,
-            "argv": ["-c", "print('ok')"],
+            "argv": ["tests/test_consumer.py"],
             "cwd": ".",
             "timeout_seconds": 10,
             "shell": False,
@@ -187,7 +214,7 @@ class RepairCompletenessTests(unittest.TestCase):
             "candidateManifestHash": self._hash_bytes(self.candidate_path.read_bytes()),
             "changedPaths": ["src/producer.py", "src/consumer.py"],
             "directConsumers": ["src/consumer.py"],
-            "targetedTests": ["src/consumer.py"],
+            "targetedTests": ["tests/test_consumer.py"],
             "validationRefs": ["logs/composition.json"],
             "rootCauseInventories": [{
                 "inventoryId": "shared-route-callsites",
@@ -269,6 +296,43 @@ class RepairCompletenessTests(unittest.TestCase):
         self.receipt_path.write_text(
             json.dumps(receipt), encoding="utf-8", newline="\n"
         )
+        with self.assertRaisesRegex(repair_completeness.InputError, "invalid or failed"):
+            repair_completeness.audit_repair_completeness(self.request())
+
+    def test_audit_rejects_receipt_for_stale_targeted_test_bytes(self) -> None:
+        import repair_completeness
+
+        (self.root / "tests" / "test_consumer.py").write_text(
+            "from pathlib import Path\nassert Path('src/producer.py').is_file()\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        with self.assertRaisesRegex(repair_completeness.InputError, "invalid or failed"):
+            repair_completeness.audit_repair_completeness(self.request())
+
+    def test_audit_rejects_targeted_test_not_named_by_command(self) -> None:
+        import repair_completeness
+
+        registry = json.loads(self.registry_path.read_text(encoding="utf-8"))
+        registry["commands"][0]["argv"] = ["-c", "print('ok')"]
+        from acceptance_core import canonical_hash
+
+        material = {
+            "schemaVersion": "acceptance-command-registry.v1",
+            "commands": [{
+                key: value
+                for key, value in registry["commands"][0].items()
+                if key != "registry_hash"
+            }],
+        }
+        registry_hash = canonical_hash(material)
+        registry["commands"][0]["registry_hash"] = registry_hash
+        registry["registryHash"] = registry_hash
+        self.registry_path.write_text(
+            json.dumps(registry), encoding="utf-8", newline="\n"
+        )
+        self.command = registry["commands"][0]
+        self._write_receipt(0)
         with self.assertRaisesRegex(repair_completeness.InputError, "invalid or failed"):
             repair_completeness.audit_repair_completeness(self.request())
 

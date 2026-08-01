@@ -1,0 +1,36 @@
+[
+  {
+    "actionId": "original-plan-validate",
+    "activation": true,
+    "commandId": "original-plan-validate",
+    "dependsOn": [],
+    "order": 1
+  },
+  {
+    "actionId": "extension-plan-validate",
+    "activation": true,
+    "commandId": "extension-plan-validate",
+    "dependsOn": [
+      "original-plan-validate"
+    ],
+    "order": 2
+  },
+  {
+    "actionId": "original-implementation-validate",
+    "activation": true,
+    "commandId": "original-implementation-validate",
+    "dependsOn": [
+      "extension-plan-validate"
+    ],
+    "order": 3
+  },
+  {
+    "actionId": "extension-implementation-validate",
+    "activation": true,
+    "commandId": "extension-implementation-validate",
+    "dependsOn": [
+      "original-implementation-validate"
+    ],
+    "order": 4
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:0bb945e31dc69e063de522a02a442768c95dd9cf73c08384cd040ff0a31465dd",
+  "canonical_context_sha256": "sha256:c9eb6421abd96184bf45649563812b8501930ef73acba1049ad9433cb3a3b479",
+  "request_sha256": "sha256:4164b72b8346fa404ba75a3c846f621cae51e208cdf494fe9bca20e6287856e9",
+  "result_sha256": "sha256:4b4a773667f07e30828d8c82b6b34621e161e2135e57da697788c9c7966e91f7",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "990732dadadbeeee35418588acfcf91a420386e0"
+  },
+  "source_snapshot_id": "sha256:2c8a4b95bed0d860fd60c5d132a77e4294708d98dfcb24d2ef6b46f244664bfd",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "satisfies": [
+        "repository-rules"
+      ]
+    },
+    {
+      "path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "source_sha256": "94cffef015f48d32e6370fabb14f75367399d8cc3b55f15e083f2a3ad1900574",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:ae517c0d0023aafc09507ba9ba3a94747f3eac9b4f72176fbd4d31108ba46e6b",
+    "freeze_receipt_path": "knowledge-context.freeze.history/ae517c0d0023aafc09507ba9ba3a94747f3eac9b4f72176fbd4d31108ba46e6b.v1.json",
+    "reason": "implementation-authority-document-updated"
+  }
+}

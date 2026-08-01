@@ -1,6 +1,6 @@
 ---
 name: run-refactor-implementation-acceptance
-description: Build, resume, and route deterministic implementation-acceptance evidence for one explicit refactor plan, including bounded Bootstrap review handoff and exact finalized-run reuse.
+description: Build, resume, and route deterministic implementation-acceptance evidence for one explicit Phase-service or repository-toolchain refactor plan, including compact-VDD prerequisite projection, bounded Bootstrap review handoff, and exact finalized-run reuse.
 ---
 
 # Refactor Implementation Acceptance
@@ -32,10 +32,16 @@ Resolve entry inputs in this order:
    canonical input hash, but before publishing the `prepare-run` output. Do not
    ask the caller to name it unless they need an explicit recovery identity.
 
-Require the implementation contract, complete baseline and candidate content
-manifests, typed run request, action DAG, and command registry before starting
-the persisted run. Resolve their fields from the target plan and an explicit
-VDD or Quick Dev handoff. The orchestrator may materialize them
+Require either the plan's full implementation contract or one current
+`compact-vdd-acceptance-prerequisite-bundle.v1`, plus complete baseline and
+candidate content manifests, typed run request, action DAG, and command
+registry before starting the persisted run. Resolve their fields from the
+target plan and an explicit VDD or Quick Dev handoff. For an
+`implementation-complete` compact VDD target, run
+`scripts/compact_vdd_projection.py` only with an explicit sorted changed-path
+list, consumer refs, commands, actions, policy, and Acceptance-owned knowledge
+context. The projector must not enumerate the dirty worktree to infer scope.
+The orchestrator may otherwise materialize prerequisites
 deterministically from those bindings and immutable Git bytes, but must not
 guess scope, revisions, changed paths, commands, or acceptance actions. If a
 required source is missing or ambiguous, report `prerequisite_blocked` with the
@@ -114,10 +120,60 @@ targeted deterministic closure. For P0/P1 repair, require the Quick Dev handoff
 and `audit-repair-completeness` before routing the next bounded round. Never
 open Round 3 without its typed trigger and never create Round 4.
 
+When the current lineage has consumed three rounds and routes to
+`manual_pause`, do not treat the pause as acceptance or create a successor to
+reset the budget. A repaired target may use the ADR-0054 two-stage deterministic
+closure lane:
+
+1. Repair every confirmed Round 3 finding and produce a current Quick Dev
+   handoff, controlled receipts, targeted tests, validation references, and a
+   reproducible repair-completeness projection with
+   `semanticRoundsConsumed=3` and the Round 3 run as predecessor.
+2. Run `prepare-manual-pause-closure` with the current manual-pause route and
+   the hash-bound `prepare-bootstrap` request that produced it, the
+   blocked finalized v3 envelope, exact finding-to-repair mappings, and the
+   current protocol authorities. It must canonically replay the complete
+   finalized run and reject every remaining `unverified` verifier decision;
+   selected envelope fields and maintainer judgement cannot replace either
+   check. The challenge carries `authorizes=[]`.
+   Replay the Bootstrap producer from the request repository's own Skill path;
+   a caller-adjacent producer or a missing repository-owned producer fails closed.
+3. Stop for an explicit maintainer acknowledgement bound to the challenge hash
+   and exact confirmed finding IDs.
+4. Run `finalize-manual-pause-closure`. It hashes the same challenge byte
+   snapshot that it validates and recomputes every binding;
+   only its final closure result may publish `acceptance-passed`.
+
+This lane never launches a model, reopens Bootstrap, creates Round 4, changes a
+verifier decision, or authorizes commit, release, or archive. Independently
+validate and review a new closure-protocol revision before using that revision
+to close a real target; the protocol cannot approve itself.
+
 ## Modes
 
 - `evidence_only` is the default. It reads current manifests and evidence and may only produce non-authorizing candidate conclusions.
 - `controlled_validation` is available only after the caller supplies typed commands and isolated write roots. It cannot write target production code, live Phase state, workspaces, or historical evidence.
+
+## Model Route Decision
+
+Keep every ordinary Acceptance next action deterministic and pass it through
+`scripts/model_routing.py` as the no-launch route. Request Sol/high only when
+the current failure matches one policy-owned complex-recovery trigger:
+Bootstrap control-plane unavailable, candidate-binding recovery failed, or
+lineage evidence inconsistent. Reject free-form recovery reasons. Do not use a
+model child for routine evidence collection, routing, replay, or finalization.
+
+The route decision is hash-bound and non-authorizing. The shared workflow
+launcher alone may start the child; this Skill does not call it from its
+deterministic CLI. In `observe_only`, no child starts and the current caller
+session model is unchanged. Bootstrap profile, round, verifier, effort, access
+proof, and launch authority remain external to this router.
+
+The canonical policy owns Refactor Acceptance's independent consumer
+enablement. Disabling this consumer does not disable VDD or Quick Dev. The
+shared launcher revalidates the canonical policy before execution and rejects
+caller-supplied policy substitutions; any capability-gated route must replay
+policy-bound producer and representative execution receipts.
 
 ## Bootstrap Routing
 
@@ -258,7 +314,14 @@ and never issue another Locator query. The shared context validator must
 byte-match current main, and the complete Locator read-set is revalidated
 against both its source commit and current worktree before the summary freezes.
 
-`scripts/acceptance_cli.py prepare-run` validates a hash-bound run input with replayable baseline and candidate content manifests, then writes a new non-authorizing run-input artifact. Commit candidates are checked against raw bytes from resolved immutable Git commits, and the resolved baseline/candidate OIDs are persisted in `candidateCustody`. Dirty-worktree and proposed-commit-set candidates must declare `candidate_frozen_snapshot_path` as `.acceptance-snapshots/<run_id>` beneath the target root; symlinks and live workspace substitutes are rejected, and the snapshot manifest receipt is persisted. `policies/phase-service-code-review.v1.json` is the Phase-only policy pack. Pure Godot inputs are rejected as an unsupported code-review domain; mixed candidates must retain an unreviewed external partition.
+`scripts/acceptance_cli.py prepare-run` validates a hash-bound run input with replayable baseline and candidate content manifests, then writes a new non-authorizing run-input artifact. Commit candidates are checked against raw bytes from resolved immutable Git commits, and the resolved baseline/candidate OIDs are persisted in `candidateCustody`. Dirty-worktree and proposed-commit-set candidates must declare `candidate_frozen_snapshot_path` as `.acceptance-snapshots/<run_id>` beneath the target root; symlinks and live workspace substitutes are rejected, and the snapshot manifest receipt is persisted.
+
+Select `policies/phase-service-code-review.v1.json` only for Phase candidates;
+it may retain an explicit unreviewed external partition for mixed candidates.
+Select `policies/toolchain-code-review.v1.json` for repository workflow
+control-plane candidates. Its closed path rules must cover every changed path,
+and its binding records shared Phase entrypoints as cross-domain dependencies.
+An uncovered toolchain path fails closed. Pure Godot inputs remain unsupported.
 
 `analyze-diff-coverage` consumes a frozen `phase-changed-line-set.v1` and a current Cobertura report. It uses only added or modified executable `PhaseA.Platform/**/*.cs` lines for the denominator, records every exclusion reason, and returns `incomplete` when a source mapping is missing. It never substitutes repository-wide coverage.
 

@@ -1,0 +1,34 @@
+{
+  "schema_version": "tec.authority-manifest.v1",
+  "plan_id": "toolchain-workflow-evidence-catalog-v1",
+  "git_baseline": {
+    "head": "dbe2a731c9465946d3dc21ac3888491e33340c28",
+    "tree": "bb20a0f9ad45eadae2eb955dff56e9072e7a13ae"
+  },
+  "scoped_worktree_identity": {
+    "tracked_scope": [".agents/skills/maintain-toolchain-workflow-evidence-catalog/**", "docs/adr/ADR-0053-toolchain-workflow-evidence-catalog-boundary.md", "docs/standards/toolchain-workflow-evidence-catalog.md"],
+    "tracked_diff_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "index_diff_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevant_untracked": [
+      {"path": "docs/know8.txt", "sha256": "b3371f2fa9224fa3ea177e3466897358e17d2fdd80c4ac40d99eb4d982616e13"}
+    ],
+    "exclusion": "All pre-existing worktree changes not explicitly listed are outside this plan and must remain untouched."
+  },
+  "sources": [
+    {"path": "AGENTS.md", "binding": "git-main", "role": "repository-rules", "sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"},
+    {"path": "docs/know8.txt", "binding": "worktree", "role": "user-intent", "sha256": "b3371f2fa9224fa3ea177e3466897358e17d2fdd80c4ac40d99eb4d982616e13"},
+    {"path": "knowledge-context.v1.json", "binding": "plan-local", "role": "knowledge-context", "sha256": "fd47b86e122a634f5aa489609a74ae9befb85c74e6488d59de35d9b5045096df"},
+    {"path": "knowledge-context.freeze.v1.json", "binding": "plan-local", "role": "knowledge-freeze", "sha256": "56a71abf4b3859027e09805ce4b7f9de268321f8cde62afaf1d0addd9299492f"},
+    {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "binding": "git-main", "role": "workflow-authority", "sha256": "7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72"},
+    {"path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md", "binding": "git-main", "role": "producer-contract", "sha256": "08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06"},
+    {"path": ".agents/skills/run-phase-bootstrap-review/SKILL.md", "binding": "git-main", "role": "producer-contract", "sha256": "0292f716721b0b196ccf6c9d873faab7b75dba8160d141644155482185028170"},
+    {"path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md", "binding": "git-main", "role": "producer-contract", "sha256": "14708433db121d1ef0bd726081727a786642432146da08d70e71e0941db44b4d"},
+    {"path": ".agents/skills/maintain-knowledge-base/SKILL.md", "binding": "git-main", "role": "derived-publication-reference", "sha256": "4861b20c1033fac1fbb4ee639b915408a9dd3c6d2e6d21895cfcd77e0c443e3f"},
+    {"path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md", "binding": "git-main", "role": "producer-contract", "sha256": "495bd5176c006c870b6799cf26b176bf45e9ed2a4d0aa4707e274f2059c08529"},
+    {"path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md", "binding": "git-main", "role": "accepted-adr", "sha256": "f00a514bc41e1881f3a3f6a25226b9d757600b19412ab5233b9b6d819d2742fe"},
+    {"path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md", "binding": "git-main", "role": "accepted-adr", "sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"},
+    {"path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md", "binding": "git-main", "role": "accepted-adr", "sha256": "6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"},
+    {"path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md", "binding": "git-main", "role": "accepted-adr", "sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc"},
+    {"path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md", "binding": "git-main", "role": "accepted-adr", "sha256": "dfcd328ea3a74841cb81271653392c7fdebf5390e2d9173f0184bbfa6a83445e"}
+  ]
+}

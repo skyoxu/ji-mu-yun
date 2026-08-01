@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "bootstrap-preflight-command-registry.v1",
+  "commands": [
+    {
+      "id": "round2-targeted-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-m",
+        "unittest",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+        "scripts/sc/tests/test_workflow_model_routing.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600
+    },
+    {
+      "id": "round2-plan-validator",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_plan.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600
+    },
+    {
+      "id": "round2-implementation-validator",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1800
+    }
+  ],
+  "authorizes": []
+}

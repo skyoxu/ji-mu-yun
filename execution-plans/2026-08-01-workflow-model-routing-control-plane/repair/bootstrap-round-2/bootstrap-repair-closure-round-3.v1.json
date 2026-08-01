@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/ci/2026-08-01/wmr-r2",
+  "predecessorInputHash": "sha256:3838c2b426ad68ace1da0f6e3f85727c727663ca9128b2c093e17c442b0ab531",
+  "predecessorResultHash": "sha256:2b6bea2ad50f284ae4acd2f47a4959672f1e581473d0f8e622c45fd1bd041d49",
+  "findingIds": [
+    "BSR-0DB95E6CD25211BE",
+    "BSR-EC02384701FE25BF",
+    "BSR-F84FF255EDFC1969"
+  ],
+  "items": [
+    {
+      "findingId": "BSR-0DB95E6CD25211BE",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "restricted-context",
+      "reason": "The repair loader now displaces and restores the cached _control_plane dependency before loading Bootstrap authority.",
+      "fixRefs": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+        "py -3 execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "evidence": [
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-loader-composition-receipt.v2.json",
+          "sha256": "sha256:a7d15e7cb1ab7b320d8e49cbf2d73c0910c28a9a90692057c502992e87147fa6"
+        },
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/implementation-validation-receipt.v1.json",
+          "sha256": "sha256:a7f251b98d2b6bac32b25f6736d757958d9c96cd34d2def5c3b964790b848794"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-EC02384701FE25BF",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "negative-fixture",
+      "reason": "The regression test preloads an incompatible _control_plane module and proves the repository-local dependency is used and the prior module restored.",
+      "fixRefs": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "evidence": [
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-loader-composition-receipt.v2.json",
+          "sha256": "sha256:a7d15e7cb1ab7b320d8e49cbf2d73c0910c28a9a90692057c502992e87147fa6"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-F84FF255EDFC1969",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "regression",
+      "reason": "The nonzero-round repair audit now loads the correct Bootstrap dependency regardless of ambient process module cache state.",
+      "fixRefs": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+        "py -3 execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "evidence": [
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/acceptance-loader-composition-receipt.v2.json",
+          "sha256": "sha256:a7d15e7cb1ab7b320d8e49cbf2d73c0910c28a9a90692057c502992e87147fa6"
+        },
+        {
+          "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/repair/bootstrap-round-2/implementation-validation-receipt.v1.json",
+          "sha256": "sha256:a7f251b98d2b6bac32b25f6736d757958d9c96cd34d2def5c3b964790b848794"
+        }
+      ]
+    }
+  ],
+  "currentBindings": {
+    "candidateHash": "sha256:417bcbe762de1e91cb88484fe918a78cd05e2a25cb74ea9c5e3740bff5b562cc",
+    "sourceHash": "sha256:f85a992aea1ef440ef2f772c915ac36b7715e11812d3ec111ffa0f7f5ac9103e",
+    "validatorHash": "sha256:00fa05b80e17ae51cd6c0ce4bf4acbdabb5c45a6cdefd7a0cea5a264e7d70311"
+  },
+  "gitIndexHash": "sha256:30df5f25076b9e1ed9ae9aeb7d4fde8a2173b2d8a2daf9d3ad64d9d06e8f8463",
+  "writeSetHash": "sha256:f5e64680eba04b61333273d6dc83932fe2c8c61359eae6369812d75aa551f481",
+  "executionReadSetHash": "sha256:7ce10cbc1af5a3214bc8e15fe10f3e67ca3facab6ce9ac8ed96c6d04f47c0ee1",
+  "dependencyClosureHash": "sha256:0008d7b695c1f052a98b768ad372befc8c92f9643b56cc672252a0dece50f684"
+}

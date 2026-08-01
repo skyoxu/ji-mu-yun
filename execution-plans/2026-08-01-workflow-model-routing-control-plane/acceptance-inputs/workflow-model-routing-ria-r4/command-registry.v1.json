@@ -1,0 +1,61 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_plan.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "original-plan-validate",
+      "shell": false,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_plan.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "extension-plan-validate",
+      "shell": false,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "original-implementation-validate",
+      "shell": false,
+      "timeout_seconds": 360
+    },
+    {
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "executable": "py",
+      "id": "extension-implementation-validate",
+      "shell": false,
+      "timeout_seconds": 360
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}

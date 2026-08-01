@@ -14,6 +14,58 @@ sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 
 class BootstrapIntegrationTests(unittest.TestCase):
+    def test_bootstrap_module_fails_when_requested_repository_has_no_control_plane(self) -> None:
+        import bootstrap_integration
+
+        with tempfile.TemporaryDirectory() as temp:
+            candidate_root = Path(temp) / "candidate-without-installed-skills"
+            candidate_root.mkdir()
+            with self.assertRaisesRegex(Exception, "Repository-owned"):
+                bootstrap_integration._load_bootstrap_module(candidate_root)
+
+    def test_bootstrap_module_comes_from_requested_repository(self) -> None:
+        import bootstrap_integration
+
+        with tempfile.TemporaryDirectory() as temp:
+            candidate_root = Path(temp).resolve()
+            module_path = candidate_root / ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+            module_path.parent.mkdir(parents=True)
+            module_path.write_text("REPOSITORY_MARKER = 'requested-root'\n", encoding="utf-8")
+            bootstrap = bootstrap_integration._load_bootstrap_module(candidate_root)
+
+        self.assertEqual("requested-root", bootstrap.REPOSITORY_MARKER)
+        self.assertEqual(module_path.resolve(), Path(bootstrap.__file__).resolve())
+
+    def test_finalized_replay_uses_bootstrap_historical_mode(self) -> None:
+        import bootstrap_integration
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            run_relative = "logs/ci/review-r3"
+            run_dir = root / run_relative
+            run_dir.mkdir(parents=True)
+            envelope = self.finalized_envelope()
+            module = mock.Mock()
+            module.load_run.return_value = (run_dir, {"reviewId": "review-1"}, root)
+            module.validate_finalized_run_evidence.return_value = envelope
+            with mock.patch.object(
+                bootstrap_integration, "_load_bootstrap_module", return_value=module
+            ):
+                result = bootstrap_integration.replay_finalized_bootstrap_run(
+                    root, run_relative
+                )
+
+        self.assertEqual(envelope, result)
+        module.load_run.assert_called_once_with(
+            str(run_dir), require_fresh_artifacts=False
+        )
+        module.validate_finalized_run_evidence.assert_called_once_with(
+            run_dir,
+            {"reviewId": "review-1"},
+            root,
+            historical_replay=True,
+        )
+
     def finalized_envelope(
         self,
         *,

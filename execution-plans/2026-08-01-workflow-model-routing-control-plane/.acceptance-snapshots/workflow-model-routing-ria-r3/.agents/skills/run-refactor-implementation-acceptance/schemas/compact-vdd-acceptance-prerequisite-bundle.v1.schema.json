@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Compact VDD Acceptance Prerequisite Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "targetPlan", "runId", "planStateHash", "baselineManifest", "candidateManifest", "candidateSnapshotPath", "runRequest", "actionDag", "commandRegistry", "knowledgeContext", "policy", "bundleHash", "authorizes"],
+  "properties": {
+    "schemaVersion": {"const": "compact-vdd-acceptance-prerequisite-bundle.v1"},
+    "targetPlan": {"type": "string"},
+    "runId": {"type": "string"},
+    "planStateHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "baselineManifest": {"$ref": "#/$defs/ref"},
+    "candidateManifest": {"$ref": "#/$defs/ref"},
+    "runRequest": {"$ref": "#/$defs/ref"},
+    "actionDag": {"$ref": "#/$defs/ref"},
+    "commandRegistry": {"$ref": "#/$defs/ref"},
+    "knowledgeContext": {"$ref": "#/$defs/ref"},
+    "policy": {"$ref": "#/$defs/ref"},
+    "candidateSnapshotPath": {"type": "string"},
+    "bundleHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorizes": {"const": []}
+  },
+  "$defs": {
+    "ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string"},
+        "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+      }
+    }
+  }
+}

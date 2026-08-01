@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "baseline_sha256": "sha256:8a53196cfd2f4d6427eec98cf1a4e40bc006782d1993a0c1638be4bbab8005db",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+      "candidate_sha256": "sha256:43221fc4478aae2cda6127754917e658770032c9f42d454318b1056dfd386a62",
+      "inclusion_reason": "Bootstrap Round 2 _control_plane loader isolation repair"
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "baseline_sha256": "sha256:a7b6bf6eb8392b04e3aa3f91d09168de70561c8d10e56443ce01bb1d96a539ba",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_repair_completeness.py",
+      "candidate_sha256": "sha256:43a810b62f052d12adf9d44722913e2082d90cbe6aa53ea8c066ceed29a67fdb",
+      "inclusion_reason": "Bootstrap Round 2 _control_plane loader isolation repair"
+    }
+  ]
+}

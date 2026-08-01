@@ -1,0 +1,142 @@
+{
+  "decision": {
+    "schemaVersion": "implementation-acceptance-bootstrap-requirement.v1",
+    "requirement": "required",
+    "requirementSources": [
+      ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json#TOOLCHAIN-CR-AUTH-001",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/requirements.v1.json",
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md#Bootstrap-Routing",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md"
+    ],
+    "requiredCompanionCapabilityExpectations": [
+      {
+        "capabilityId": "acceptance-inventory-attestation",
+        "capabilityVersion": "1.0",
+        "producerRole": "acceptance_auditor"
+      }
+    ],
+    "authorizes": []
+  },
+  "binding": null,
+  "launch_authorization": null,
+  "repository_root": "C:/jimuyun",
+  "scope_inputs": {
+    "implementation_plan": [
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/00-index.md",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/95-implementation-evolution-and-completion-report.md",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/baseline-and-scope.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/plan-state.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/requirements.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/acceptance-inputs/workflow-model-routing-ria-r4/compact-vdd-acceptance-prerequisite-bundle.v1.json"
+    ],
+    "changed_production_code": [
+      ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      ".agents/skills/quick-dev-tdd-adapter/tools/model_routing.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-run-input.v1.schema.json",
+      ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-binding.v1.schema.json",
+      ".agents/skills/run-refactor-implementation-acceptance/schemas/code-review-policy-pack.v1.schema.json",
+      ".agents/skills/run-refactor-implementation-acceptance/schemas/compact-vdd-acceptance-prerequisite-bundle.v1.schema.json",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/model_routing.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      ".agents/skills/vdd-execution-plan/SKILL.md",
+      ".agents/skills/vdd-execution-plan/scripts/model_routing.py",
+      ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+      "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+      "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+      "docs/architecture/ADR_INDEX_PHASE.md",
+      "docs/architecture/phase-service/llm-codex-execution.md",
+      "docs/standards/repository-maintenance-agent-protocol.md",
+      "scripts/sc/_llm_backend.py",
+      "scripts/sc/config/workflow_model_routes.v1.json",
+      "scripts/sc/config/workflow_model_routing_shadow_cases.v1.json",
+      "scripts/sc/schemas/workflow-model-route-decision.v1.schema.json",
+      "scripts/sc/tests/test_llm_backend.py",
+      "scripts/sc/tests/test_workflow_model_routing.py",
+      "scripts/sc/tests/test_workflow_model_routing_evaluation.py",
+      "scripts/sc/workflow_model_routing.py",
+      "scripts/sc/workflow_model_routing_evaluation.py"
+    ],
+    "affected_consumers": [
+      ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      ".agents/skills/vdd-execution-plan/SKILL.md",
+      "scripts/sc/_llm_backend.py",
+      "scripts/sc/workflow_model_routing.py"
+    ],
+    "tests_and_acceptance": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_model_routing.py",
+      ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_model_routing.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_model_routing.py",
+      "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_plan.py",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_plan.py",
+      "scripts/sc/tests/test_llm_backend.py",
+      "scripts/sc/tests/test_workflow_model_routing.py",
+      "scripts/sc/tests/test_workflow_model_routing_evaluation.py"
+    ],
+    "runtime_evidence": [
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/acceptance-inputs/workflow-model-routing-ria-r4/candidate-content-manifest.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/acceptance-run-input.workflow-model-routing-ria-r4.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/acceptance-runs/acceptance-c3d87ca2799828c6/action-events.jsonl",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/acceptance-runs/acceptance-c3d87ca2799828c6/code-review-policy-binding.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/acceptance-runs/acceptance-c3d87ca2799828c6/run-input.v1.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/acceptance-runs/acceptance-c3d87ca2799828c6/run-state.json",
+      "execution-plans/2026-08-01-workflow-model-routing-control-plane/knowledge-context.refactor-acceptance.r3.v1.json",
+      "logs/ci/2026-08-01/bootstrap-workflow-model-routing-ria-r1/reviewer-outputs/edge_case_hunter.json",
+      "logs/ci/2026-08-01/wmr-r1b/reviewer-outputs/blind_hunter.json",
+      "logs/ci/2026-08-01/wmr-r1b/reviewer-outputs/edge_case_hunter.json"
+    ],
+    "repository_rules": [
+      "AGENTS.md",
+      "README.md"
+    ],
+    "referenced_standards": [
+      ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+      "docs/architecture/ADR_INDEX_PHASE.md",
+      "docs/architecture/phase-service/llm-codex-execution.md",
+      "docs/standards/bootstrap-review-control-plane.md",
+      "docs/standards/repository-maintenance-agent-protocol.md"
+    ]
+  },
+  "lineage_state": {
+    "schemaVersion": "bootstrap-review-lineage-state.v1",
+    "lineageFamilyId": "ria-77945989035b122f005c98a2c3661cd2",
+    "semanticRoundsConsumed": 0,
+    "consumedRoundNumbers": [],
+    "defaultFullReviewRoundLimit": 2,
+    "hardFullReviewRoundLimit": 3,
+    "nextFullReviewRound": 1,
+    "state": "available",
+    "runs": [],
+    "authorizes": [],
+    "lineageStateHash": "sha256:8cf02749eb6409741ba92e1ba782c09170adb621eb18ca789114c90719cc2df9"
+  }
+}
