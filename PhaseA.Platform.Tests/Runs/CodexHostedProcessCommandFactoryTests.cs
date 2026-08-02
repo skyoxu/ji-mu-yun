@@ -66,7 +66,10 @@ public sealed class CodexHostedProcessCommandFactoryTests
             ["test-enforce"] = HostedContextGateMode.Enforce
         });
         var validator = new CapturingManifestValidator();
-        var envelope = new HostedContextEnvelope("manifest-1", "snapshot-1", "policy-1", "signature-1", Nonce: "nonce-1");
+        var envelope = new HostedContextEnvelope(
+            "manifest-1", "snapshot-1", "policy-1", "signature-1", Nonce: "nonce-1",
+            SchemaVersion: PhaseA.Platform.Data.HostedContextSignedPayloadV1.Schema,
+            SignedPayloadSha256: new string('a', 64));
 
         var command = await CodexHostedProcessCommandFactory.BuildAsync(
             new CodexHostedProcessRequest(

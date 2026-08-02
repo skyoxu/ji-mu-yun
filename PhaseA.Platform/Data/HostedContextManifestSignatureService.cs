@@ -31,7 +31,7 @@ public sealed class HostedContextManifestSignatureService
 
     public HostedContextManifestRecord Sign(HostedContextManifestRecord record)
     {
-        var unsigned = record with { KeyId = _primaryKeyId, Signature = string.Empty };
+        var unsigned = Normalize(record with { KeyId = _primaryKeyId, Signature = string.Empty });
         return unsigned with { Signature = ComputeBase64(unsigned, _keys[_primaryKeyId]) };
     }
 
@@ -53,12 +53,30 @@ public sealed class HostedContextManifestSignatureService
             return false;
         }
 
-        var expected = Convert.FromBase64String(ComputeBase64(record with { Signature = string.Empty }, key));
+        HostedContextManifestRecord normalized;
+        try
+        {
+            normalized = Normalize(record with { Signature = string.Empty });
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+        if (!string.Equals(normalized.SignedPayloadJson, record.SignedPayloadJson, StringComparison.Ordinal) ||
+            !string.Equals(normalized.SignedPayloadSha256, record.SignedPayloadSha256, StringComparison.Ordinal))
+        {
+            return false;
+        }
+        var expected = Convert.FromBase64String(ComputeBase64(normalized, key));
         return CryptographicOperations.FixedTimeEquals(provided, expected);
     }
 
     internal static string Canonicalize(HostedContextManifestRecord record)
     {
+        if (record.SchemaVersion == HostedContextSignedPayloadV1.Schema && !string.IsNullOrWhiteSpace(record.SignedPayloadJson))
+        {
+            return HostedContextSignedPayloadV1.Parse(record.SignedPayloadJson).CanonicalJson;
+        }
         using var stream = new MemoryStream();
         using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))
         {
@@ -84,5 +102,31 @@ public sealed class HostedContextManifestSignatureService
     {
         using var hmac = new HMACSHA256(key);
         return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(Canonicalize(record))));
+    }
+
+    private static HostedContextManifestRecord Normalize(HostedContextManifestRecord record)
+    {
+        if (record.SchemaVersion != HostedContextSignedPayloadV1.Schema)
+        {
+            return record;
+        }
+        var payload = HostedContextSignedPayloadV1.Parse(record.SignedPayloadJson ?? string.Empty);
+        if (!string.Equals(payload.ManifestId, record.ManifestId, StringComparison.Ordinal) ||
+            !string.Equals(payload.AccountId, record.AccountId, StringComparison.Ordinal) ||
+            !string.Equals(payload.ProjectId, record.ProjectId, StringComparison.Ordinal) ||
+            !string.Equals(payload.Operation, record.OperationKey, StringComparison.Ordinal) ||
+            !string.Equals(payload.ProjectSnapshotId, record.SnapshotId, StringComparison.Ordinal) ||
+            !string.Equals(payload.RoutePolicyRevision, record.PolicyRevision, StringComparison.Ordinal) ||
+            !string.Equals(payload.Nonce, record.Nonce, StringComparison.Ordinal) ||
+            !string.Equals(payload.ExpiresAtUtc, record.ExpiresUtc, StringComparison.Ordinal) ||
+            !string.Equals(payload.IssuedAtUtc, record.CreatedUtc, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Hosted Context indexed fields do not match the signed payload.", nameof(record));
+        }
+        return record with
+        {
+            SignedPayloadJson = payload.CanonicalJson,
+            SignedPayloadSha256 = HostedContextSignedPayloadV1.Sha256(payload.CanonicalJson)
+        };
     }
 }

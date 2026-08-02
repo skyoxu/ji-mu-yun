@@ -615,7 +615,8 @@ public sealed class GameDesignRequirementMapService
                         "llm:gdd-requirement-map",
                         BuildContextSnapshotId(project, gddText, sceneRoot, deterministicRequirements),
                         "gdd-requirement-map.v1",
-                        TimeSpan.FromMinutes(5)),
+                        TimeSpan.FromMinutes(5),
+                        prompt),
                     cancellationToken);
         }
         catch (InvalidOperationException)

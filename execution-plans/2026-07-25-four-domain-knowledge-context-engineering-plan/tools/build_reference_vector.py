@@ -22,6 +22,19 @@ def synthetic_hash(label: str) -> str:
 
 
 def build_signed_payload() -> dict[str, object]:
+    operation = "classify-\u77e5\u8bc6-GameDesignRequirementMap"
+    prompt_hash = synthetic_hash("execution-prompt")
+    project_snapshot_id = synthetic_hash("project-snapshot")
+    allowed_read_artifacts = [
+        {"artifact_ref": "prompt://execution", "sha256": prompt_hash},
+        {"artifact_ref": "phase://projects/project-synthetic-a/snapshot", "sha256": project_snapshot_id},
+    ]
+    allowed_read_hash = sha256_hex(canonicalize_jcs(allowed_read_artifacts))
+    context_assembly = {
+        "execution_prompt_sha256": prompt_hash,
+        "input_manifest_sha256": allowed_read_hash,
+        "project_snapshot_id": project_snapshot_id,
+    }
     return {
         "schema_version": "jimuyun.hosted-context-manifest.v1",
         "manifest_id": "manifest-synthetic-0001",
@@ -35,13 +48,13 @@ def build_signed_payload() -> dict[str, object]:
             "workspace": "active",
             "marketplace": "excluded",
         },
-        "visibility_policy_revision": "visibility-policy.synthetic.v1",
+        "visibility_policy_revision": "hosted-context-visibility.v1",
         "lifecycle": "run-artifact-view",
         "enforcement_level": "E2",
         "gate_mode": "enforce",
-        "route_id": "phase.synthetic.knowledge-context",
+        "route_id": operation,
         "skill_id": None,
-        "operation": "classify-\u77e5\u8bc6-GameDesignRequirementMap",
+        "operation": operation,
         "account_id": "account-synthetic-a",
         "project_id": "project-synthetic-a",
         "workspace_id": "workspace-synthetic-a",
@@ -49,71 +62,45 @@ def build_signed_payload() -> dict[str, object]:
         "run_id": "run-synthetic-1",
         "attempt_id": "attempt-synthetic-1",
         "dispatch_id": "dispatch-synthetic-1",
-        "global_policy_revision": "global-policy.synthetic.v1",
+        "global_policy_revision": "hosted-context-global.v1",
         "route_policy_revision": "route-policy.synthetic.v1",
         "skill_policy_revision": None,
-        "account_policy_revision": "account-policy.synthetic.v1",
+        "account_policy_revision": None,
         "project_restrictions_sha256": synthetic_hash("project-restrictions"),
-        "scope_profile_revision": "scope-profile.synthetic.v1",
+        "scope_profile_revision": "hosted-context-project-scope.v1",
         "effective_capabilities": ["read_project", "write_project_output"],
         "repository_snapshot_id": synthetic_hash("repository-snapshot"),
         "template_snapshot_id": synthetic_hash("template-snapshot"),
-        "project_snapshot_id": synthetic_hash("project-snapshot"),
-        "allowed_read_artifact_manifest_ref": "artifact://synthetic/allowed-read/1",
-        "allowed_read_artifact_manifest_sha256": synthetic_hash("allowed-read-manifest"),
+        "project_snapshot_id": project_snapshot_id,
+        "allowed_read_artifact_manifest_ref": "signed-payload://allowed_read_artifacts",
+        "allowed_read_artifact_manifest_sha256": allowed_read_hash,
+        "allowed_read_artifacts": allowed_read_artifacts,
         "allowed_write_paths": ["project://output/generated.json"],
-        "output_targets": ["artifact://synthetic/output/1"],
-        "context_assembly_result_ref": "artifact://synthetic/context-assembly/1",
-        "context_assembly_result_sha256": synthetic_hash("context-assembly"),
-        "context_budget_profile_revision": "context-budget.synthetic.v1",
+        "output_targets": ["project://output/generated.json"],
+        "context_assembly_result_ref": "signed-payload://context_assembly",
+        "context_assembly_result_sha256": sha256_hex(canonicalize_jcs(context_assembly)),
+        "context_assembly": context_assembly,
+        "context_budget_profile_revision": "hosted-context-budget.default.v1",
         "sandbox_policy": {
-            "revision": "sandbox.synthetic.v1",
+            "revision": "hosted-context-sandbox.v1",
             "mode": "workspace-write",
         },
         "network_policy": {
-            "revision": "network.synthetic.v1",
+            "revision": "hosted-context-network.provider-only.v1",
             "mode": "provider-only",
-            "allowlist_sha256": synthetic_hash("provider-allowlist"),
+            "allowlist_sha256": None,
         },
         "tool_execution_policy": {
-            "revision": "tools.synthetic.v1",
+            "revision": "hosted-context-tools.v1",
             "allowed_tools": [],
             "command_policy_sha256": synthetic_hash("command-policy"),
         },
         "hosted_route_contracts": {
-            "aggregate_ref": "artifact://synthetic/hosted-contracts/1",
-            "aggregate_sha256": synthetic_hash("hosted-contracts"),
-            "recovery_order": {
-                "contract_id": "hosted-route-recovery-order.v1",
-                "evidence_ref": "artifact://synthetic/recovery-order/1",
-                "evidence_sha256": synthetic_hash("recovery-order"),
-            },
-            "forbidden_source_scan": {
-                "contract_id": "hosted-route-forbidden-source-scan.v1",
-                "evidence_ref": "artifact://synthetic/forbidden-source-scan/1",
-                "evidence_sha256": synthetic_hash("forbidden-source-scan"),
-                "status": "clean",
-            },
-            "database_binding": {
-                "binding_id": "binding-synthetic-1",
-                "binding_sha256": synthetic_hash("database-binding"),
-            },
-            "succeeded_run_binding": {
-                "run_id": "run-synthetic-1",
-                "binding_sha256": synthetic_hash("succeeded-run-binding"),
-            },
-            "live_acceptance": {
-                "blocker_ref": "artifact://synthetic/live-blocker/none",
-                "blocker_sha256": synthetic_hash("live-blocker-none"),
-                "observed_at_utc": "2026-07-25T00:00:00Z",
-            },
-            "source_boundary_disposition": {
-                "mode": "required",
-                "evidence_ref": "artifact://synthetic/source-boundary/1",
-                "evidence_sha256": synthetic_hash("source-boundary"),
-            },
+            "mode": "not_applicable",
+            "applicability_policy_revision": "hosted-route-applicability.v1",
+            "reason_code": "no_pre_dispatch_hosted_route_aggregate",
         },
-        "execution_prompt_hash": synthetic_hash("execution-prompt"),
+        "execution_prompt_hash": prompt_hash,
         "persisted_prompt_hash": synthetic_hash("persisted-redacted-prompt"),
         "issued_at_utc": "2026-07-25T00:00:00Z",
         "not_before_utc": "2026-07-25T00:00:00Z",

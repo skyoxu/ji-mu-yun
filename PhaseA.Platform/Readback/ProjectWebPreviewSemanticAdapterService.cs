@@ -296,7 +296,12 @@ public sealed class ProjectWebPreviewSemanticAdapterService
                 "codex:web-preview-semantic-adapter",
                 snapshotId,
                 "web-preview-semantic-adapter.v1",
-                TimeSpan.FromMinutes(5)), cancellationToken);
+                TimeSpan.FromMinutes(5),
+                prompt,
+                request.RunId,
+                sandbox,
+                sandbox == "workspace-write" ? [request.ProjectRoot] : [],
+                [outputPath]), cancellationToken);
         }
 
         var command = await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(

@@ -22,11 +22,11 @@
       "report_filename": "95-implementation-evolution-and-completion-report.md"
     },
     {
-      "plan_directory": "2026-08-01-workflow-model-routing-control-plane",
+      "plan_directory": "2026-08-01-refactor-acceptance-toolchain-compact-vdd",
       "report_filename": "95-implementation-evolution-and-completion-report.md"
     },
     {
-      "plan_directory": "2026-08-01-refactor-acceptance-toolchain-compact-vdd",
+      "plan_directory": "2026-08-01-workflow-model-routing-control-plane",
       "report_filename": "95-implementation-evolution-and-completion-report.md"
     }
   ]

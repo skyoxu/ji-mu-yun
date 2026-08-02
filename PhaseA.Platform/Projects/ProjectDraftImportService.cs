@@ -489,7 +489,8 @@ public sealed class ProjectDraftImportService
                     operationKey,
                     Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, SHA256.HashData(Encoding.UTF8.GetBytes(draftText)))))).ToLowerInvariant(),
                     "prototype-draft-analysis.v1",
-                    TimeSpan.FromMinutes(5)),
+                    TimeSpan.FromMinutes(5),
+                    draftText),
                 cancellationToken);
         }
         catch (InvalidOperationException)

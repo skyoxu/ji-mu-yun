@@ -228,7 +228,8 @@ public sealed class ChatService
                         "llm:project-chat",
                         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, request.Message, memorySummary)))).ToLowerInvariant(),
                         "project-chat.v1",
-                        TimeSpan.FromMinutes(5)),
+                        TimeSpan.FromMinutes(5),
+                        prompt),
                     runToken);
             }
             catch (InvalidOperationException)

@@ -139,7 +139,12 @@ public sealed class PrototypeUiOptimizationService
                         "codex:prototype-ui-optimization",
                         snapshotId,
                         "prototype-ui-optimization.v1",
-                        TimeSpan.FromMinutes(5)),
+                        TimeSpan.FromMinutes(5),
+                        prompt,
+                        runId,
+                        "workspace-write",
+                        [projectRoot],
+                        [outputAbsolutePath]),
                     cancellationToken);
             }
 

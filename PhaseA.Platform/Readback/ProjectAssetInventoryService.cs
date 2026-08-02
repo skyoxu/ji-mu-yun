@@ -335,7 +335,8 @@ public sealed partial class ProjectAssetInventoryService
                             "llm:asset-inventory-judgement",
                             snapshotId,
                             "asset-inventory.v1",
-                            TimeSpan.FromMinutes(5)),
+                            TimeSpan.FromMinutes(5),
+                            prompt),
                         runToken);
                 }
                 catch (InvalidOperationException)

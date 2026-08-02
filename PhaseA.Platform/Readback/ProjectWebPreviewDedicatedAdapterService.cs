@@ -192,7 +192,12 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
                 "codex:web-preview-dedicated-adapter",
                 snapshotId,
                 "web-preview-dedicated-adapter.v1",
-                TimeSpan.FromMinutes(5)), cancellationToken);
+                TimeSpan.FromMinutes(5),
+                prompt,
+                request.RunId,
+                "workspace-write",
+                [request.ProjectRoot],
+                [outputPath]), cancellationToken);
         }
 
         var command = await CodexHostedProcessCommandFactory.BuildAsync(new CodexHostedProcessRequest(

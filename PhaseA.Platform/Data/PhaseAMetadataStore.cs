@@ -6418,8 +6418,10 @@ public sealed class PhaseAMetadataStore
         await using var command = connection.CreateCommand();
         command.CommandText = """
             INSERT OR IGNORE INTO hosted_context_manifests
-            (manifest_id, account_id, project_id, operation_key, snapshot_id, policy_revision, key_id, signature, nonce, expires_utc, created_utc)
-            VALUES ($manifest_id, $account_id, $project_id, $operation_key, $snapshot_id, $policy_revision, $key_id, $signature, $nonce, $expires_utc, $created_utc);
+            (manifest_id, account_id, project_id, operation_key, snapshot_id, policy_revision, key_id, signature, nonce, expires_utc, created_utc,
+             schema_version, signed_payload_json, signed_payload_sha256)
+            VALUES ($manifest_id, $account_id, $project_id, $operation_key, $snapshot_id, $policy_revision, $key_id, $signature, $nonce, $expires_utc, $created_utc,
+                    $schema_version, $signed_payload_json, $signed_payload_sha256);
             """;
         command.Parameters.AddWithValue("$manifest_id", record.ManifestId);
         command.Parameters.AddWithValue("$account_id", record.AccountId);
@@ -6432,9 +6434,35 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$nonce", record.Nonce);
         command.Parameters.AddWithValue("$expires_utc", record.ExpiresUtc);
         command.Parameters.AddWithValue("$created_utc", record.CreatedUtc);
+        command.Parameters.AddWithValue("$schema_version", record.SchemaVersion);
+        command.Parameters.AddWithValue("$signed_payload_json", (object?)record.SignedPayloadJson ?? DBNull.Value);
+        command.Parameters.AddWithValue("$signed_payload_sha256", (object?)record.SignedPayloadSha256 ?? DBNull.Value);
         return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
     }
 
+    public async Task<HostedContextManifestRecord?> GetHostedContextManifestAsync(string manifestId, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT manifest_id, account_id, project_id, operation_key, snapshot_id, policy_revision, key_id, signature,
+                   nonce, expires_utc, created_utc, schema_version, signed_payload_json, signed_payload_sha256
+            FROM hosted_context_manifests
+            WHERE manifest_id = $manifest_id;
+            """;
+        command.Parameters.AddWithValue("$manifest_id", manifestId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+        return new HostedContextManifestRecord(
+            reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5),
+            reader.GetString(6), reader.GetString(7), reader.GetString(8), reader.GetString(9), reader.GetString(10), reader.GetString(11),
+            reader.IsDBNull(12) ? null : reader.GetString(12), reader.IsDBNull(13) ? null : reader.GetString(13));
+    }
+
+    [Obsolete("Use ValidateAndConsumeHostedContextAsync so the complete signed payload is verified atomically.")]
     public async Task<bool> TryConsumeHostedContextNonceAsync(string manifestId, string accountId, string projectId, string operationKey, string nonce, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -6444,7 +6472,11 @@ public sealed class PhaseAMetadataStore
             SELECT manifest_id, nonce, $consumed_utc
             FROM hosted_context_manifests
             WHERE manifest_id = $manifest_id AND account_id = $account_id AND project_id = $project_id
-              AND operation_key = $operation_key AND nonce = $nonce AND expires_utc > $consumed_utc;
+              AND operation_key = $operation_key AND nonce = $nonce
+              AND schema_version = 'jimuyun.hosted-context-manifest.v1'
+              AND signed_payload_json IS NOT NULL AND signed_payload_sha256 IS NOT NULL
+              AND revoked_utc IS NULL AND superseded_by_manifest_id IS NULL
+              AND expires_utc > $consumed_utc;
             """;
         command.Parameters.AddWithValue("$manifest_id", manifestId);
         command.Parameters.AddWithValue("$account_id", accountId);
@@ -6466,7 +6498,12 @@ public sealed class PhaseAMetadataStore
             WHERE manifest_id = $manifest_id AND account_id = $account_id AND project_id = $project_id
               AND operation_key = $operation_key AND snapshot_id = $snapshot_id AND policy_revision = $policy_revision
               AND key_id = $key_id AND signature = $signature AND nonce = $nonce
-              AND expires_utc = $expires_utc AND created_utc = $created_utc AND expires_utc > $now;
+              AND expires_utc = $expires_utc AND created_utc = $created_utc
+              AND schema_version = $schema_version AND signed_payload_json = $signed_payload_json
+              AND signed_payload_sha256 = $signed_payload_sha256
+              AND schema_version = 'jimuyun.hosted-context-manifest.v1'
+              AND revoked_utc IS NULL AND superseded_by_manifest_id IS NULL
+              AND created_utc <= $now AND expires_utc > $now;
             """;
         command.Parameters.AddWithValue("$manifest_id", record.ManifestId);
         command.Parameters.AddWithValue("$account_id", record.AccountId);
@@ -6479,7 +6516,10 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$nonce", record.Nonce);
         command.Parameters.AddWithValue("$expires_utc", record.ExpiresUtc);
         command.Parameters.AddWithValue("$created_utc", record.CreatedUtc);
-        command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$schema_version", record.SchemaVersion);
+        command.Parameters.AddWithValue("$signed_payload_json", (object?)record.SignedPayloadJson ?? DBNull.Value);
+        command.Parameters.AddWithValue("$signed_payload_sha256", (object?)record.SignedPayloadSha256 ?? DBNull.Value);
+        command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'"));
         return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
     }
 

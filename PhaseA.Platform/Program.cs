@@ -139,35 +139,11 @@ builder.Services.AddHttpClient<IAiCodeMirrorResponsesClient, AiCodeMirrorRespons
 builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
 if (options.HostedContextSigningKeyRing is not null)
 {
-    var hostedContextGatePolicy = HostedContextGatePolicy.CreateWithOverrides(new Dictionary<string, HostedContextGateMode>(StringComparer.Ordinal)
-    {
-        ["llm:gdd-question-form"] = HostedContextGateMode.Enforce,
-        ["llm:gdd-question-form-cache-decision"] = HostedContextGateMode.Enforce,
-        ["llm:project-workflow-route-intent"] = HostedContextGateMode.Enforce,
-        ["llm:gdd-scene-route-draft"] = HostedContextGateMode.Enforce,
-        ["llm:gdd-requirement-map"] = HostedContextGateMode.Enforce,
-        ["llm:draft-analysis"] = HostedContextGateMode.Enforce,
-        ["llm:draft-coverage"] = HostedContextGateMode.Enforce,
-        ["llm:draft-coverage-retry"] = HostedContextGateMode.Enforce,
-        ["llm:project-chat"] = HostedContextGateMode.Enforce,
-        ["llm:project-asset-library-skill-selection"] = HostedContextGateMode.Enforce,
-        ["llm:repair-plan"] = HostedContextGateMode.Enforce,
-        ["llm:planning-analysis"] = HostedContextGateMode.Enforce,
-        ["llm:goal-plan"] = HostedContextGateMode.Enforce,
-        ["llm:prototype-skeleton-regeneration-guard"] = HostedContextGateMode.Enforce,
-        ["llm:plan-evaluation"] = HostedContextGateMode.Enforce,
-        ["llm:gdd-next-step-review"] = HostedContextGateMode.Enforce,
-        ["llm:asset-inventory-judgement"] = HostedContextGateMode.Enforce,
-        ["codex:prototype-iteration-goal"] = HostedContextGateMode.Enforce,
-        ["codex:prototype-quick-fix"] = HostedContextGateMode.Enforce,
-        ["codex:prototype-post-validation-repair"] = HostedContextGateMode.Enforce,
-        ["codex:prototype-ui-optimization"] = HostedContextGateMode.Enforce,
-        ["codex:gdd-document-generation"] = HostedContextGateMode.Enforce,
-        ["codex:web-preview-dedicated-adapter"] = HostedContextGateMode.Enforce,
-        ["codex:web-preview-semantic-adapter"] = HostedContextGateMode.Enforce,
-        ["codex:skill-action"] = HostedContextGateMode.Enforce,
-        ["llm:skill-action"] = HostedContextGateMode.Enforce
-    });
+    var hostedContextGatePolicy = HostedContextGatePolicy.CreateWithOverrides(
+        HostedContextRouteContractPolicy.EnforcedOperations.ToDictionary(
+            operation => operation,
+            _ => HostedContextGateMode.Enforce,
+            StringComparer.Ordinal));
     builder.Services.AddSingleton(hostedContextGatePolicy);
     builder.Services.AddSingleton<ILlmRouteEngine>(serviceProvider => new LlmRouteEngine(
         serviceProvider.GetRequiredService<ICodexChatClient>(),

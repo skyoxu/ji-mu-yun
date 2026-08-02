@@ -161,7 +161,12 @@ public sealed class SkillActionService
                     operationKey,
                     Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, runId, action.ActionId, request.Input, prompt)))).ToLowerInvariant(),
                     "skill-action.v1",
-                    TimeSpan.FromMinutes(5)), runToken);
+                    TimeSpan.FromMinutes(5),
+                    prompt,
+                    runId,
+                    sandbox,
+                    isWorkspaceWrite ? [project.RepoPath] : [],
+                    [outputAbsolutePath]), runToken);
             }
             catch (InvalidOperationException)
             {

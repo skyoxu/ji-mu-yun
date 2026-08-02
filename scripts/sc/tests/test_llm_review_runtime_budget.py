@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -33,6 +34,24 @@ review_engine = _load_module("sc_llm_review_engine_budget_module", "scripts/sc/_
 
 
 class LlmReviewRuntimeBudgetTests(unittest.TestCase):
+    def test_openai_runtime_identity_should_consume_shared_backend_inspection(self) -> None:
+        args = argparse.Namespace(llm_backend="openai-api", model_reasoning_effort="high")
+        backend_info = {
+            "model": "gpt-5.6-test",
+            "endpoint_sha256": "sha256:" + "b" * 64,
+            "sdk_version": "9.8.7",
+            "sdk_version_sha256": "sha256:" + "c" * 64,
+        }
+        with mock.patch.object(review_engine, "inspect_llm_backend", return_value=backend_info) as inspect_mock:
+            runtime = review_engine._runtime_input_descriptor(args)
+
+        inspect_mock.assert_called_once_with("openai-api")
+        self.assertEqual("gpt-5.6-test", runtime["model"])
+        self.assertEqual("sha256:" + "b" * 64, runtime["endpoint_sha256"])
+        self.assertEqual("9.8.7", runtime["sdk_version"])
+        self.assertEqual("sha256:" + "c" * 64, runtime["backend_version_sha256"])
+        self.assertEqual(["openai_credential_scope_unbound"], runtime["error_codes"])
+
     def test_runtime_identity_should_fail_closed_for_non_utf8_codex_config(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             codex_root = Path(directory)

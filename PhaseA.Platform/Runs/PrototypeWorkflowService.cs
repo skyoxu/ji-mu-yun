@@ -1624,7 +1624,12 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
                     "codex:prototype-post-validation-repair",
                     snapshotId,
                     "prototype-workflow-post-validation-repair.v1",
-                    TimeSpan.FromMinutes(5)),
+                    TimeSpan.FromMinutes(5),
+                    prompt,
+                    runId,
+                    "workspace-write",
+                    [project.RepoPath],
+                    [outputPath]),
                 cancellationToken);
         }
 

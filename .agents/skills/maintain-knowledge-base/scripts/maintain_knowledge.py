@@ -12,6 +12,11 @@ from pathlib import Path, PurePosixPath
 
 
 HARD_EXCLUDED_PREFIXES = ("docs/migration/",)
+ALLOWED_OUTPUT_PREFIXES = (
+    "knowledge/indexes/",
+    "knowledge/projections/",
+    "knowledge/snapshots/",
+)
 
 
 def sha256(data: bytes) -> str:
@@ -50,6 +55,80 @@ def catalog_source_snapshot(catalog: dict) -> dict | None:
     return snapshot
 
 
+def repository_relative_path(repo: Path, path: Path) -> str:
+    resolved = (path if path.is_absolute() else repo / path).resolve()
+    try:
+        return resolved.relative_to(repo).as_posix()
+    except ValueError as exc:
+        raise ValueError("invalid_output_path") from exc
+
+
+def collision_relative(value: str) -> str:
+    pure = PurePosixPath(value.replace("\\", "/"))
+    if pure.is_absolute() or ".." in pure.parts or not pure.parts:
+        raise ValueError("invalid_output_path")
+    return pure.as_posix()
+
+
+def validate_output_path(repo: Path, output: Path, request_path: Path, catalog_path: Path, request: dict, catalog: dict) -> Path:
+    output_relative = repository_relative_path(repo, output)
+    if not any(output_relative.startswith(prefix) for prefix in ALLOWED_OUTPUT_PREFIXES):
+        raise ValueError("invalid_output_path")
+
+    protected = {
+        repository_relative_path(repo, request_path),
+        repository_relative_path(repo, catalog_path),
+    }
+    raw_entries = catalog.get("modules") if isinstance(catalog.get("modules"), list) else catalog.get("entries")
+    if raw_entries is None and isinstance(catalog.get("files"), list):
+        raw_entries = catalog["files"]
+    for item in raw_entries or []:
+        if not isinstance(item, dict):
+            continue
+        source = item.get("source_path", item.get("path"))
+        if isinstance(source, str) and source:
+            protected.add(collision_relative(source))
+        for resource in item.get("resources", []):
+            if isinstance(resource, dict) and isinstance(resource.get("path"), str):
+                protected.add(collision_relative(resource["path"]))
+    snapshot = catalog.get("source_snapshot")
+    if isinstance(snapshot, dict):
+        for item in snapshot.get("sources", []):
+            if isinstance(item, dict) and isinstance(item.get("path"), str):
+                protected.add(collision_relative(item["path"]))
+    target = request.get("target")
+    if isinstance(target, dict) and isinstance(target.get("repo_relative_path"), str) and target["repo_relative_path"]:
+        protected.add(collision_relative(target["repo_relative_path"]))
+
+    if output_relative in protected or output_relative.startswith("logs/knowledge-context/"):
+        raise ValueError("invalid_output_path")
+    return repo / output_relative
+
+
+def render_preflight_failure(request: dict, failure_code: str) -> str:
+    result = {
+        "schema_version": "jimuyun.knowledge-maintenance-result.v1",
+        "request_id": request.get("request_id", "invalid"),
+        "mode": request.get("mode", "existing-only"),
+        "main_commit": request.get("authority", {}).get("main_commit", ""),
+        "status": "failed",
+        "before_snapshot_id": request.get("knowledge_snapshot_id", "invalid"),
+        "after_snapshot_id": request.get("knowledge_snapshot_id", "invalid"),
+        "entries": [],
+        "catalog_source_snapshot_status": "legacy",
+        "suggested_catalog_source_snapshot": None,
+        "lkg_disposition": "preserved",
+        "source_mutation_count": 0,
+        "log": {
+            "append_only": True,
+            "log_ref": "",
+            "main_commit": request.get("authority", {}).get("main_commit", ""),
+            "failure_code": failure_code,
+        },
+    }
+    return json.dumps(result, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--request", type=Path, required=True)
@@ -58,9 +137,14 @@ def main() -> int:
     parser.add_argument("--repo-root", type=Path, default=Path.cwd())
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    repo = args.repo_root.resolve()
     request = load_json(args.request)
     catalog = load_json(args.catalog)
-    repo = args.repo_root.resolve()
+    try:
+        output_path = validate_output_path(repo, args.output, args.request, args.catalog, request, catalog)
+    except ValueError:
+        print(render_preflight_failure(request, "invalid_output_path"), end="")
+        return 2
     failure = None
     entries_result: list[dict] = []
     suggested_sources: list[dict] = []
@@ -181,8 +265,8 @@ def main() -> int:
     result["log"]["log_ref"] = (Path("logs/knowledge-context") / log_date / result["request_id"] / log_name).as_posix()
     rendered = json.dumps(result, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
     if not args.dry_run:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(rendered, encoding="utf-8", newline="\n")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(rendered, encoding="utf-8", newline="\n")
         log_dir.mkdir(parents=True, exist_ok=True)
         (log_dir / log_name).write_text(rendered, encoding="utf-8", newline="\n")
     print(rendered, end="")

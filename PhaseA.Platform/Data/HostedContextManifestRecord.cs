@@ -11,4 +11,24 @@ public sealed record HostedContextManifestRecord(
     string Signature,
     string Nonce,
     string ExpiresUtc,
-    string CreatedUtc);
+    string CreatedUtc,
+    string SchemaVersion = "jimuyun.hosted-context-manifest-record.v0",
+    string? SignedPayloadJson = null,
+    string? SignedPayloadSha256 = null)
+{
+    public static HostedContextManifestRecord FromPayload(HostedContextSignedPayloadV1 payload) => new(
+        payload.ManifestId,
+        payload.AccountId,
+        payload.ProjectId,
+        payload.Operation,
+        payload.ProjectSnapshotId,
+        payload.RoutePolicyRevision,
+        string.Empty,
+        string.Empty,
+        payload.Nonce,
+        payload.ExpiresAtUtc,
+        payload.IssuedAtUtc,
+        HostedContextSignedPayloadV1.Schema,
+        payload.CanonicalJson,
+        HostedContextSignedPayloadV1.Sha256(payload.CanonicalJson));
+}

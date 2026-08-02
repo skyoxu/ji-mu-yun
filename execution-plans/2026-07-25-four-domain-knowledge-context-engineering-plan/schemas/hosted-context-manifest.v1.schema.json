@@ -180,6 +180,29 @@
           "pattern": "^[0-9a-f]{64}$",
           "type": "string"
         },
+        "allowed_read_artifacts": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "artifact_ref": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "sha256": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "artifact_ref",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "minItems": 2,
+          "type": "array",
+          "uniqueItems": true
+        },
         "allowed_write_paths": {
           "items": {
             "minLength": 1,
@@ -199,6 +222,29 @@
         "context_assembly_result_sha256": {
           "pattern": "^[0-9a-f]{64}$",
           "type": "string"
+        },
+        "context_assembly": {
+          "additionalProperties": false,
+          "properties": {
+            "execution_prompt_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "input_manifest_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "project_snapshot_id": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "execution_prompt_sha256",
+            "input_manifest_sha256",
+            "project_snapshot_id"
+          ],
+          "type": "object"
         },
         "context_budget_profile_revision": {
           "minLength": 1,
@@ -247,6 +293,10 @@
         "hosted_route_contracts": {
           "additionalProperties": false,
           "properties": {
+            "applicability_policy_revision": {
+              "minLength": 1,
+              "type": "string"
+            },
             "aggregate_ref": {
               "minLength": 1,
               "type": "string"
@@ -322,6 +372,15 @@
               ],
               "type": "object"
             },
+            "mode": {
+              "enum": [
+                "required",
+                "not_applicable"
+              ]
+            },
+            "reason_code": {
+              "const": "no_pre_dispatch_hosted_route_aggregate"
+            },
             "recovery_order": {
               "additionalProperties": false,
               "properties": {
@@ -388,15 +447,54 @@
               "type": "object"
             }
           },
+          "oneOf": [
+            {
+              "properties": {
+                "mode": {
+                  "const": "required"
+                }
+              },
+              "required": [
+                "mode",
+                "applicability_policy_revision",
+                "aggregate_ref",
+                "aggregate_sha256",
+                "recovery_order",
+                "forbidden_source_scan",
+                "database_binding",
+                "succeeded_run_binding",
+                "live_acceptance",
+                "source_boundary_disposition"
+              ]
+            },
+            {
+              "not": {
+                "anyOf": [
+                  { "required": ["aggregate_ref"] },
+                  { "required": ["aggregate_sha256"] },
+                  { "required": ["recovery_order"] },
+                  { "required": ["forbidden_source_scan"] },
+                  { "required": ["database_binding"] },
+                  { "required": ["succeeded_run_binding"] },
+                  { "required": ["live_acceptance"] },
+                  { "required": ["source_boundary_disposition"] }
+                ]
+              },
+              "properties": {
+                "mode": {
+                  "const": "not_applicable"
+                }
+              },
+              "required": [
+                "mode",
+                "applicability_policy_revision",
+                "reason_code"
+              ]
+            }
+          ],
           "required": [
-            "aggregate_ref",
-            "aggregate_sha256",
-            "recovery_order",
-            "forbidden_source_scan",
-            "database_binding",
-            "succeeded_run_binding",
-            "live_acceptance",
-            "source_boundary_disposition"
+            "mode",
+            "applicability_policy_revision"
           ],
           "type": "object"
         },
@@ -702,10 +800,12 @@
         "project_snapshot_id",
         "allowed_read_artifact_manifest_ref",
         "allowed_read_artifact_manifest_sha256",
+        "allowed_read_artifacts",
         "allowed_write_paths",
         "output_targets",
         "context_assembly_result_ref",
         "context_assembly_result_sha256",
+        "context_assembly",
         "context_budget_profile_revision",
         "sandbox_policy",
         "network_policy",

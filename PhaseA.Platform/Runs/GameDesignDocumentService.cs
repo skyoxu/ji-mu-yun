@@ -1674,7 +1674,12 @@ public sealed class GameDesignDocumentService
                     "codex:gdd-document-generation",
                     snapshotId,
                     "game-design-document.v1",
-                    TimeSpan.FromMinutes(5)),
+                    TimeSpan.FromMinutes(5),
+                    prompt,
+                    runId,
+                    "workspace-write",
+                    [project.RepoPath],
+                    [outputPath]),
                 cancellationToken);
         }
 

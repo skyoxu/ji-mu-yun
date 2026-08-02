@@ -60,7 +60,10 @@ def main() -> int:
         assert run("git", "commit", "-m", "fixture", cwd=repo).returncode == 0
         commit = run("git", "rev-parse", "refs/heads/main", cwd=repo).stdout.strip()
         catalog = {"entries": [{"entry_id": "fact", "source_path": "docs/fact.md", "source_sha256": "0" * 64}]}
-        catalog_path, request_path, output_path = repo / "catalog.json", repo / "request.json", repo / "derived.json"
+        catalog_path = repo / "catalog.json"
+        request_path = repo / "request.json"
+        output_path = repo / "knowledge" / "indexes" / "derived.json"
+        output_path.parent.mkdir(parents=True)
         write_json(catalog_path, catalog)
         write_json(request_path, request(commit))
         completed = execute(repo, request_path, catalog_path, output_path)
@@ -146,6 +149,38 @@ def main() -> int:
         excluded = execute(repo, request_path, catalog_path, output_path)
         assert excluded.returncode == 2
         assert json.loads(output_path.read_text(encoding="utf-8"))["log"]["failure_code"] == "source_path_excluded"
+
+        write_json(request_path, request(commit))
+        protected_paths = [catalog_path, request_path, fact, repo / "docs" / "unregistered.md"]
+        collision_paths = [
+            repo.parent / f"{repo.name}-escaped.json",
+            catalog_path,
+            request_path,
+            fact,
+            repo / "docs" / "unregistered.md",
+            repo / "logs" / "knowledge-context" / "collision.json",
+            repo / "derived.json",
+        ]
+        for collision_path in collision_paths:
+            before = {path: path.read_bytes() for path in protected_paths}
+            before_logs = {
+                path.relative_to(repo).as_posix(): path.read_bytes()
+                for path in (repo / "logs" / "knowledge-context").rglob("*")
+                if path.is_file()
+            }
+            completed = execute(repo, request_path, catalog_path, collision_path)
+            assert completed.returncode == 2, completed.stderr + completed.stdout
+            failure = json.loads(completed.stdout)
+            assert failure["log"]["failure_code"] == "invalid_output_path"
+            assert {path: path.read_bytes() for path in protected_paths} == before
+            after_logs = {
+                path.relative_to(repo).as_posix(): path.read_bytes()
+                for path in (repo / "logs" / "knowledge-context").rglob("*")
+                if path.is_file()
+            }
+            assert after_logs == before_logs
+            if collision_path == collision_paths[0]:
+                assert not collision_path.exists()
     print("MAINTAIN_KNOWLEDGE_TEST PASS")
     return 0
 

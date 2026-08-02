@@ -8,7 +8,12 @@ public sealed record HostedContextManifestIssue(
     string OperationKey,
     string SnapshotId,
     string PolicyRevision,
-    TimeSpan Lifetime);
+    TimeSpan Lifetime,
+    string ExecutionPrompt,
+    string? RunId = null,
+    string Sandbox = "read-only",
+    IReadOnlyList<string>? AllowedWritePaths = null,
+    IReadOnlyList<string>? OutputTargets = null);
 
 public sealed class HostedContextManifestIssuer
 {
@@ -36,24 +41,38 @@ public sealed class HostedContextManifestIssuer
         ArgumentException.ThrowIfNullOrWhiteSpace(issue.OperationKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(issue.SnapshotId);
         ArgumentException.ThrowIfNullOrWhiteSpace(issue.PolicyRevision);
+        ArgumentException.ThrowIfNullOrWhiteSpace(issue.ExecutionPrompt);
         if (issue.Lifetime <= TimeSpan.Zero || issue.Lifetime > MaximumLifetime)
         {
             throw new ArgumentOutOfRangeException(nameof(issue), "Hosted Context manifest lifetime must be greater than zero and no more than 15 minutes.");
         }
 
         var created = _timeProvider.GetUtcNow();
-        var record = _signatureService.Sign(new HostedContextManifestRecord(
-            Guid.NewGuid().ToString("N"),
-            issue.AccountId,
-            issue.ProjectId,
+        var project = await _metadataStore.GetProjectSnapshotAsync(issue.ProjectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, issue.AccountId, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Hosted Context project authority is unavailable.");
+        }
+        var manifestId = Guid.NewGuid().ToString("N");
+        var nonce = Guid.NewGuid().ToString("N");
+        var issuedAtUtc = created.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        var expiresAtUtc = created.Add(issue.Lifetime).UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        var payload = HostedContextSignedPayloadV1.CreateServerDerived(
+            manifestId,
+            project,
             issue.OperationKey,
             issue.SnapshotId,
             issue.PolicyRevision,
-            string.Empty,
-            string.Empty,
-            Guid.NewGuid().ToString("N"),
-            created.Add(issue.Lifetime).ToString("O"),
-            created.ToString("O")));
+            nonce,
+            issuedAtUtc,
+            expiresAtUtc,
+            issue.ExecutionPrompt,
+            persistedPrompt: null,
+            requestedRunId: issue.RunId,
+            sandbox: issue.Sandbox,
+            allowedWritePaths: issue.AllowedWritePaths,
+            outputTargets: issue.OutputTargets);
+        var record = _signatureService.Sign(HostedContextManifestRecord.FromPayload(payload));
         if (!await _metadataStore.SaveHostedContextManifestAsync(record, cancellationToken))
         {
             throw new InvalidOperationException("Hosted Context manifest ID collision.");
@@ -70,6 +89,8 @@ public sealed class HostedContextManifestIssuer
             OperationKey: record.OperationKey,
             Nonce: record.Nonce,
             ExpiresUtc: record.ExpiresUtc,
-            CreatedUtc: record.CreatedUtc);
+            CreatedUtc: record.CreatedUtc,
+            SchemaVersion: record.SchemaVersion,
+            SignedPayloadSha256: record.SignedPayloadSha256);
     }
 }

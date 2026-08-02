@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import subprocess
 import sys
@@ -32,6 +33,26 @@ llm_backend = _load_module("sc_llm_backend_module", "scripts/sc/_llm_backend.py"
 
 
 class LlmBackendTests(unittest.TestCase):
+    def test_inspect_openai_backend_should_publish_non_secret_runtime_identity(self) -> None:
+        with mock.patch.dict(
+            os.environ,
+            {
+                "OPENAI_API_KEY": "sk-test",
+                "OPENAI_BASE_URL": "https://example.invalid/v1",
+                "SC_OPENAI_MODEL": "gpt-5.6-test",
+            },
+            clear=False,
+        ), mock.patch.object(llm_backend.importlib.util, "find_spec", return_value=object()), \
+            mock.patch.object(llm_backend.importlib.metadata, "version", return_value="9.8.7"):
+            info = llm_backend.inspect_llm_backend("openai-api")
+
+        self.assertTrue(info["available"])
+        self.assertEqual("gpt-5.6-test", info["model"])
+        self.assertEqual(llm_backend._sha256_text("https://example.invalid/v1"), info["endpoint_sha256"])
+        self.assertEqual("9.8.7", info["sdk_version"])
+        self.assertEqual(llm_backend._sha256_text("9.8.7"), info["sdk_version_sha256"])
+        self.assertNotIn("sk-test", json.dumps(info, sort_keys=True))
+
     def test_reasoning_effort_parser_supports_policy_efforts(self) -> None:
         for effort in ("medium", "high", "max", "xhigh"):
             with self.subTest(effort=effort):

@@ -3239,7 +3239,8 @@ public sealed class PrototypeIterationPlanService
                     operationKey,
                     snapshotId,
                     "prototype-iteration-plan.v1",
-                    TimeSpan.FromMinutes(5)),
+                    TimeSpan.FromMinutes(5),
+                    prompt),
                 cancellationToken);
         }
         catch (InvalidOperationException)

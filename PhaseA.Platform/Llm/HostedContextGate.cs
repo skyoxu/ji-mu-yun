@@ -21,7 +21,9 @@ public sealed record HostedContextEnvelope(
     bool WithinBudget = true,
     string? Nonce = null,
     string? ExpiresUtc = null,
-    string? CreatedUtc = null);
+    string? CreatedUtc = null,
+    string? SchemaVersion = null,
+    string? SignedPayloadSha256 = null);
 
 public interface IHostedContextManifestValidator
 {
@@ -103,17 +105,10 @@ public static class HostedContextGate
         {
             failureCode = "context_manifest_invalid";
         }
-        else if (!envelope.SnapshotCurrent)
+        else if (envelope.SchemaVersion != Data.HostedContextSignedPayloadV1.Schema ||
+                 string.IsNullOrWhiteSpace(envelope.SignedPayloadSha256))
         {
-            failureCode = "context_snapshot_stale";
-        }
-        else if (!envelope.PolicyMatches)
-        {
-            failureCode = "context_policy_mismatch";
-        }
-        else if (!envelope.WithinBudget)
-        {
-            failureCode = "context_budget_exceeded";
+            failureCode = "context_manifest_invalid";
         }
 
         return mode == HostedContextGateMode.Observe

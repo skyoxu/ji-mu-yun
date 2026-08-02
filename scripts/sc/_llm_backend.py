@@ -5,6 +5,8 @@ Internal LLM backend seam for sc scripts.
 
 from __future__ import annotations
 
+import hashlib
+import importlib.metadata
 import importlib.util
 import json
 import os
@@ -14,6 +16,10 @@ import sys
 from pathlib import Path
 
 KNOWN_LLM_BACKENDS = ("codex-cli", "openai-api")
+
+
+def _sha256_text(value: str) -> str:
+    return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 def resolve_llm_backend(raw: str | None) -> str:
@@ -41,11 +47,21 @@ def inspect_llm_backend(backend: str | None) -> dict[str, object]:
     if backend_name == "openai-api":
         module_spec = importlib.util.find_spec("openai")
         api_key = str(os.environ.get("OPENAI_API_KEY") or "").strip()
+        endpoint = str(os.environ.get("OPENAI_BASE_URL") or "https://api.openai.com/v1").strip()
         blocking_errors: list[str] = []
         payload["python_module"] = "openai"
         payload["python_module_found"] = bool(module_spec)
         payload["api_key_env"] = "OPENAI_API_KEY"
         payload["api_key_present"] = bool(api_key)
+        payload["model"] = _resolve_openai_model()
+        payload["endpoint_sha256"] = _sha256_text(endpoint)
+        try:
+            sdk_version = importlib.metadata.version("openai")
+            payload["sdk_version"] = sdk_version
+            payload["sdk_version_sha256"] = _sha256_text(sdk_version)
+        except importlib.metadata.PackageNotFoundError:
+            payload["sdk_version"] = "unresolved"
+            payload["sdk_version_sha256"] = "unresolved"
         if module_spec is None:
             blocking_errors.append("python package 'openai' is not installed")
         if not api_key:

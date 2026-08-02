@@ -834,7 +834,12 @@ public sealed class PrototypeIterationGoalService
                     "codex:prototype-iteration-goal",
                     snapshotId,
                     "prototype-iteration-goal.v1",
-                    TimeSpan.FromMinutes(5)),
+                    TimeSpan.FromMinutes(5),
+                    prompt,
+                    runId,
+                    "workspace-write",
+                    [project.RepoPath],
+                    [outputPath]),
                 cancellationToken);
         }
 

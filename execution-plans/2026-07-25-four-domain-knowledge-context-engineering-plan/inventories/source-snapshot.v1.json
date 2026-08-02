@@ -103,23 +103,33 @@
     },
     {
       "path": "PhaseA.Platform/Data/HostedContextManifestIssuer.cs",
-      "sha256": "af57ce453ef8d576186f2b95da355d318811684d64dc418094aab7e673cc5d9e",
-      "size_bytes": 2868
+      "sha256": "7b71a9b21542a18cbbc15b9d017e0b10af3b2cd39f2f6972b8b3bb658706b329",
+      "size_bytes": 4041
     },
     {
       "path": "PhaseA.Platform/Data/HostedContextManifestRecord.cs",
-      "sha256": "eb4b71de38b1f2c855b0c136e2db193a179ad3daecc5416ee434e716ca4edf1b",
-      "size_bytes": 330
+      "sha256": "1ef2e577780006186fad78c9d165f428a69493e11e0709b8043d6351113447ca",
+      "size_bytes": 1039
     },
     {
       "path": "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs",
-      "sha256": "c311db670bf06355f05a75fd9c2ac31aa879e65673d068f2a82f9ae8178a5369",
-      "size_bytes": 3491
+      "sha256": "4881d36b55e3d849e7617490e3f6228f179703232eea1cfe47c845043f8f0462",
+      "size_bytes": 5754
     },
     {
       "path": "PhaseA.Platform/Data/HostedContextManifestValidator.cs",
-      "sha256": "e3f4e7ac06da65352f653655a1e7d76efbe9d8bf071a70d4acb71c13ef689054",
-      "size_bytes": 1758
+      "sha256": "b19e7694ca975cc16f0eea3d73161c4929642cdc00a551db4e679c3aa79c6fb3",
+      "size_bytes": 2770
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextRouteContractPolicy.cs",
+      "sha256": "378fe96d8ee7ab040d535333e58924b57374c47f0747f2d84069012294f2bb8c",
+      "size_bytes": 2027
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextSignedPayloadV1.cs",
+      "sha256": "9ef63939a991043f1369123207da685736405f734adb2ae58456b546a682b2c9",
+      "size_bytes": 20203
     },
     {
       "path": "PhaseA.Platform/Data/InterruptedRunSnapshot.cs",
@@ -143,8 +153,8 @@
     },
     {
       "path": "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
-      "sha256": "4d61aa453bb03e91d8c5b7c1c2b6cf8969fb95bf36941368f27f275acf98e0f9",
-      "size_bytes": 287064
+      "sha256": "8eae283f747174ff87a2fab0e23d50d0edacf730ed07f1fdf90d1380565ba0f3",
+      "size_bytes": 289977
     },
     {
       "path": "PhaseA.Platform/Data/ProjectChatMemorySnapshot.cs",
@@ -263,8 +273,8 @@
     },
     {
       "path": "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
-      "sha256": "c0166aa03b47dc72ab24c48f36101b1559d766fe2b02102e5f98485500c5c5b0",
-      "size_bytes": 78409
+      "sha256": "dd812e61e009e7064e1a89e0e48a08731dccc454ae04735e8e81a7172626cd3b",
+      "size_bytes": 80166
     },
     {
       "path": "PhaseA.Platform/Data/StaleProjectInitializationSnapshot.cs",
@@ -298,8 +308,8 @@
     },
     {
       "path": "PhaseA.Platform/Llm/ChatService.cs",
-      "sha256": "b7e722e5142eda810fa708895dcf7043a1170a6c6b856e402a99020d8b66d72a",
-      "size_bytes": 26394
+      "sha256": "3d041aff35bdb1b7f68a5daa560c79f17bc48fbe8abfe4f084445e0ef94ad06b",
+      "size_bytes": 26426
     },
     {
       "path": "PhaseA.Platform/Llm/CodexCliChatClient.cs",
@@ -323,8 +333,8 @@
     },
     {
       "path": "PhaseA.Platform/Llm/HostedContextGate.cs",
-      "sha256": "a9baea3470239b4b8a9828bb7c705d791e4b8fd253e1be4ea669be6713239368",
-      "size_bytes": 4511
+      "sha256": "fbdbe91cd124643ffdf0869b0415486b3cd63797d113aaa0ffad496e0d6b837e",
+      "size_bytes": 4475
     },
     {
       "path": "PhaseA.Platform/Llm/IAiCodeMirrorResponsesClient.cs",
@@ -403,8 +413,8 @@
     },
     {
       "path": "PhaseA.Platform/Program.cs",
-      "sha256": "8e3d2cd88b8f3f3e769f3b5746959f2d40e0f55fc744362246dad097eab92678",
-      "size_bytes": 137578
+      "sha256": "bda047c916281fd94fc1156c7ec37acca7a3d5e9495705b5aa5c55bf19d248cc",
+      "size_bytes": 135823
     },
     {
       "path": "PhaseA.Platform/Projects/ProjectCreationConcurrencyLimiter.cs",
@@ -448,8 +458,8 @@
     },
     {
       "path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
-      "sha256": "f24b9e89d09fb0c21af44cbeca2df365def213e866b0ecc5934b69e1f601e408",
-      "size_bytes": 57223
+      "sha256": "38941aa359f29e02ccfbf52acb96253635f8f697e4e0f4042909380bc2b0f7e4",
+      "size_bytes": 57254
     },
     {
       "path": "PhaseA.Platform/Projects/ProjectInitializationRecoveryService.cs",
@@ -583,13 +593,13 @@
     },
     {
       "path": "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
-      "sha256": "1f66b5d815189d08658d7eb5acbd127d774e7ffc0dd5c4a43acee9d8b95e0ad5",
-      "size_bytes": 39224
+      "sha256": "7e9159a2950cd9a780101a1472fb031ac803b82ad4be383cb15029efca11b1fe",
+      "size_bytes": 39260
     },
     {
       "path": "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
-      "sha256": "c4a5c8e75b5d56b0bb06b7f32695e99ece76739c2bad053d781318c918632821",
-      "size_bytes": 79728
+      "sha256": "5f00f0405ac81b669377d7199f9f24466fa7be3fb1bc971300cf812535025ba3",
+      "size_bytes": 79904
     },
     {
       "path": "PhaseA.Platform/Readback/ProjectAssetPreviewTicketService.cs",
@@ -648,8 +658,8 @@
     },
     {
       "path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
-      "sha256": "8928854f0b73a5c0f4ed1bf170e0b7bb62c992c0b46869922e32ace581db8a1b",
-      "size_bytes": 28998
+      "sha256": "d15c301dbfd1dae508e24a3fc021c206400175195b198c35dafd19b7470f17d7",
+      "size_bytes": 29157
     },
     {
       "path": "PhaseA.Platform/Readback/ProjectWebPreviewGameTypeCatalog.cs",
@@ -683,8 +693,8 @@
     },
     {
       "path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
-      "sha256": "5ae746a2e10ac9d87343c18b53780f61c3b20813bee071386bb6fe86d7916a55",
-      "size_bytes": 41741
+      "sha256": "9be842725c07d3b6fb57aef8b239c769f117faf45383d165d157f7fdc5ca4d8e",
+      "size_bytes": 41926
     },
     {
       "path": "PhaseA.Platform/Readback/ProjectWebPreviewService.cs",
@@ -733,8 +743,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
-      "sha256": "47ee6e01da7d191983e520f85f339433ebf5923e8a65dabdade54303291cebb7",
-      "size_bytes": 159459
+      "sha256": "362f2e3e74f657ae5b8fcb04d07a5a24389b1af4cbfad01c543ef3c4644c5bc2",
+      "size_bytes": 159627
     },
     {
       "path": "PhaseA.Platform/Runs/GameDesignOutlineModels.cs",
@@ -753,13 +763,13 @@
     },
     {
       "path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
-      "sha256": "f28225d20f69c7d1451bd506e16d5a2124567835287f670dd91ce5b45fec1e01",
-      "size_bytes": 31585
+      "sha256": "898ce90c41d7cd51eda29c224757f137636b1d1245b868fcc1c882188976b3b6",
+      "size_bytes": 31717
     },
     {
       "path": "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
-      "sha256": "66131883bab889504f54cd79cd09fe18e332adc4396239c86926fa079e76e424",
-      "size_bytes": 56723
+      "sha256": "48f3f00d2467fb2262de003cd862addd25dd55064b986891e87616e5363581a6",
+      "size_bytes": 56755
     },
     {
       "path": "PhaseA.Platform/Runs/GameDesignSceneRouteModels.cs",
@@ -768,8 +778,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
-      "sha256": "333a58bc82184e8fafc6312a433e7bd4696c7a3b7b9b014371368b86603fbafa",
-      "size_bytes": 40067
+      "sha256": "d6340e75261e08a88058fe4ef9504b0e29bbafe4a7b10dd67c55dd79c6a264be",
+      "size_bytes": 40128
     },
     {
       "path": "PhaseA.Platform/Runs/GameTypeDesignTemplateDetector.cs",
@@ -798,8 +808,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
-      "sha256": "6107e9006a86b1b2a2e68e64e7bc749b0a9dfa330f189627c11e7496624b6188",
-      "size_bytes": 106492
+      "sha256": "11212811310ab9cace48a79129e8fcc8e0365edb64ae45aab59a217dccb9fed9",
+      "size_bytes": 106520
     },
     {
       "path": "PhaseA.Platform/Runs/GddMilestoneTextParser.cs",
@@ -923,8 +933,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
-      "sha256": "870d1cd9b9ff470fa34cf7aded47cf501994e29d6dfc8ff6f82f80967fba133b",
-      "size_bytes": 48499
+      "sha256": "e8520ff8bcea2ea2dcea2b9f10b4aad2bfe61fe2f44638ff7cbd1f8ed5ad0cde",
+      "size_bytes": 48531
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeArtifactIndexer.cs",
@@ -1013,8 +1023,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
-      "sha256": "f0ceda1090febe843331a797cc6ced5cc2898d7f02ebf1513368716f20bfb53a",
-      "size_bytes": 72698
+      "sha256": "b04b64a3ca48a5c9c21b497824c49ee50f21a386ec53627b3b9b8d68ce0f14c3",
+      "size_bytes": 72866
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeIterationPlanEvaluationRequest.cs",
@@ -1048,8 +1058,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
-      "sha256": "4bb044b7d53c589aa9a52ce401d587c61f650ad6e5ce441b4d534c9f58cf5b74",
-      "size_bytes": 306314
+      "sha256": "3c0b9fb0f08cf3e9972a9612a34799ca15167c97fd7754a57206392bc9a139df",
+      "size_bytes": 306342
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeLocalEntryContractValidator.cs",
@@ -1098,8 +1108,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
-      "sha256": "65a101327638557a589a5a6ea058250a5b86f7a08aa1d964725842b195c534b0",
-      "size_bytes": 193925
+      "sha256": "f4d9b600bd77261c190282b373a3bf2e63f884bb25886cff3cd25b5bf560f6b3",
+      "size_bytes": 194091
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeRecordWriter.cs",
@@ -1113,8 +1123,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
-      "sha256": "17dfdbc2a050ba0995956d464c909a24f29fa7513b2dbaf6649cc2c95815fe29",
-      "size_bytes": 75489
+      "sha256": "a7eb03a0f1dd43481c1c798d17898a8e06dfd0bdc74700302af6605438470799",
+      "size_bytes": 75521
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeRepairRequest.cs",
@@ -1168,8 +1178,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
-      "sha256": "551aa983a6b293d84a51c2fe291316cd41353198978b6125a20778e85757f675",
-      "size_bytes": 42134
+      "sha256": "1def0193ceb8be9c23d8b2eae223cc396c494da3e172b1816b414e99f264050c",
+      "size_bytes": 42325
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeValidationProcessEnvironment.cs",
@@ -1198,8 +1208,8 @@
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
-      "sha256": "df02e31ce903c51b2ce508989cd684961db345207ddad1ef798df270182a0195",
-      "size_bytes": 169839
+      "sha256": "f58c6e52a102f77060f51227d654413adf3d05698d2a60d95758365125c0a63b",
+      "size_bytes": 170007
     },
     {
       "path": "PhaseA.Platform/Runs/PrototypeWorkflowValidation.cs",
@@ -1248,8 +1258,8 @@
     },
     {
       "path": "PhaseA.Platform/Skills/SkillActionService.cs",
-      "sha256": "7f0a8b10417ce3519e86f67bfade8c8a78ce8b5c6ae9beaf14ab0692884d4915",
-      "size_bytes": 18390
+      "sha256": "f1c3b93049d0b959a897af92c120e8f7a859414e58b6957b46dcb50800d15491",
+      "size_bytes": 18580
     },
     {
       "path": "PhaseA.Platform/TextAttachment.cs",
@@ -1383,8 +1393,8 @@
     },
     {
       "path": "PhaseA.Platform/Workspaces/ProjectWorkspaceSeeder.cs",
-      "sha256": "99b33d1ed273aec79d4a987097c308dc5f6671846cf470b46fa6a7670185e3de",
-      "size_bytes": 22703
+      "sha256": "666d69c66fb9d51c0bbc63cabf3b09233b231bea77a24e85947a24c8443b83ea",
+      "size_bytes": 26264
     },
     {
       "path": "PhaseA.Platform/Workspaces/WorkspaceLayout.cs",
@@ -1447,9 +1457,14 @@
       "size_bytes": 4831
     },
     {
+      "path": "scripts/python/_knowledge_catalog_builder.py",
+      "sha256": "157ecbf43d5d015b53b617d82890a788995b50cbb99a017755ce973d5dcc1f98",
+      "size_bytes": 38786
+    },
+    {
       "path": "scripts/python/_knowledge_locator_core.py",
-      "sha256": "7b21260b6f44b88c6f976b8a7c45bdf2b76e41d7d619243f6cbf2eb19e956006",
-      "size_bytes": 6521
+      "sha256": "41cd902ff272468eb97129a13ea6b578dea9d54f5381cb5389590ae138e0e934",
+      "size_bytes": 18965
     },
     {
       "path": "scripts/python/_obligations_freeze_pipeline_common.py",
@@ -1570,6 +1585,11 @@
       "path": "scripts/python/build_gdd_to_module_acceptance_matrix.py",
       "sha256": "18b64fb1cf64f7da993c4f8471acc9c32c08b5365c23379960cd5525af9a58c1",
       "size_bytes": 56380
+    },
+    {
+      "path": "scripts/python/build_knowledge_catalog.py",
+      "sha256": "25d98e4b3ac9dfa9a105e2cec387abd871717f9891ae4e50cf3a4b33cef4e52c",
+      "size_bytes": 6009
     },
     {
       "path": "scripts/python/build_knowledge_index.py",
@@ -1777,6 +1797,11 @@
       "size_bytes": 8769
     },
     {
+      "path": "scripts/python/evaluate_knowledge_queries.py",
+      "sha256": "c6ced4b4ad5f927bbb351be98768fb32fa043ce461071c021bb823a3007393b1",
+      "size_bytes": 29600
+    },
+    {
       "path": "scripts/python/evaluate_obligations_freeze_whitelist.py",
       "sha256": "44d4840cd36f0e2cd977c30c06fdb96a8029974634f4486529551fd3b9b1af33",
       "size_bytes": 10452
@@ -1842,9 +1867,14 @@
       "size_bytes": 49179
     },
     {
+      "path": "scripts/python/knowledge_context_validation.py",
+      "sha256": "984e052c35120cc0b69a948379f26848ca6c4576ce0bde7508536d791b3c392b",
+      "size_bytes": 18047
+    },
+    {
       "path": "scripts/python/knowledge_locator.py",
-      "sha256": "8a39fa8c2f2dff049b4c2bb942f6ec903b27a534eddc6ad697a232b0a4299e48",
-      "size_bytes": 2011
+      "sha256": "63c85df34a4e4d0c602cc9b4a427078de002a9249c0cc35f1ef2dd5682b1c813",
+      "size_bytes": 8430
     },
     {
       "path": "scripts/python/local_hard_checks_harness.py",
@@ -1990,6 +2020,16 @@
       "path": "scripts/python/prototype_main_menu_navigation_smoke.py",
       "sha256": "e70080ba42f619c77021695e1892142f36ef27cc6d405857f5250d22d8ede0b4",
       "size_bytes": 19817
+    },
+    {
+      "path": "scripts/python/prune_knowledge_generations.py",
+      "sha256": "7b92607c875d1ef1a4da76fb6c9a51088edfe83a0147e7f69b14c4d22a23d3b7",
+      "size_bytes": 17601
+    },
+    {
+      "path": "scripts/python/publish_knowledge_catalog.py",
+      "sha256": "5faec98277e3d4200fe9c7c525d85c9b317c0f986a8450e316c72faeb7895da2",
+      "size_bytes": 42922
     },
     {
       "path": "scripts/python/quality_gates.py",
@@ -2233,8 +2273,8 @@
     },
     {
       "path": "scripts/python/validate_knowledge_workflow_integration.py",
-      "sha256": "6eaea217345f5883c792f5f17528238562ab9c4afac7f1fe00b450ac94402698",
-      "size_bytes": 5280
+      "sha256": "245aa1ac1d3529f94665bcb88c1b92a594fbec5396f830cd19a92671d89f9e3d",
+      "size_bytes": 7401
     },
     {
       "path": "scripts/python/validate_overlay_execution.py",
@@ -2433,13 +2473,13 @@
     },
     {
       "path": "scripts/sc/_artifact_schema_fallback.py",
-      "sha256": "864be675ec06e515570d90a4ede68f10cbefdec4b009fd5eb7ed25c7c7ff80c6",
-      "size_bytes": 21347
+      "sha256": "326d755f0e233ccec9c78dda9ac84c88f963ba59226bbea14345fc186c8ba6a6",
+      "size_bytes": 21617
     },
     {
       "path": "scripts/sc/_change_scope.py",
-      "sha256": "ce16347aa3e906ba5734a80574d6bb17f348343eb11bff44a10e27281d0a89e5",
-      "size_bytes": 6402
+      "sha256": "d27f986b0f627c880a10b32283927e09b7e1c47a9e42fdf47b73bfa330190cee",
+      "size_bytes": 8884
     },
     {
       "path": "scripts/sc/_delivery_profile.py",
@@ -2477,14 +2517,19 @@
       "size_bytes": 6723
     },
     {
+      "path": "scripts/sc/_git_snapshot.py",
+      "sha256": "66db389b4e3f398326cd67d2cf26318d03ab8568bf10d3ed4efd0455bc2f4bdd",
+      "size_bytes": 10247
+    },
+    {
       "path": "scripts/sc/_harness_capabilities.py",
       "sha256": "617a2d48f23b661521cc6b8135be40ee9f99b3e4c9e883bfbd4c771ce3a9c847",
       "size_bytes": 1947
     },
     {
       "path": "scripts/sc/_llm_backend.py",
-      "sha256": "fc2bb1a13b0d89c9ae60975ef65c4f96012cb5ee3c2c99ba902a186545c3eeb0",
-      "size_bytes": 7527
+      "sha256": "1261e7bde204045605b29f41e19bab9bf5979cada9e6b7bd4fe2105ebd2f20b0",
+      "size_bytes": 8262
     },
     {
       "path": "scripts/sc/_llm_review_acceptance.py",
@@ -2498,13 +2543,18 @@
     },
     {
       "path": "scripts/sc/_llm_review_engine.py",
-      "sha256": "d8272a2e3ac585e79059cd9de4d93a2098bfd1ea81815b3b93f8ed302a03aeb6",
-      "size_bytes": 24864
+      "sha256": "9992113bb6fd7118234daf4ddaba24ddb065cf9c5f2c26a107b570ed5bf56cde",
+      "size_bytes": 35362
     },
     {
       "path": "scripts/sc/_llm_review_exec.py",
       "sha256": "5ad827b545e75ba22319fa019430e6dd21cc09254b72cb2d45de89f4200dbc08",
       "size_bytes": 4192
+    },
+    {
+      "path": "scripts/sc/_llm_review_identity.py",
+      "sha256": "2d8b45c0e7c69164ef21e527c6533b58e9dbdc0cae44f86f419f935c5d84f66d",
+      "size_bytes": 8672
     },
     {
       "path": "scripts/sc/_llm_review_models.py",
@@ -2678,8 +2728,8 @@
     },
     {
       "path": "scripts/sc/_pipeline_session.py",
-      "sha256": "a0a1b407785400dfd7d958e2b6fd5c42501b42985bc9852f770d9713760595a3",
-      "size_bytes": 21670
+      "sha256": "e2cae70f0c700de9144cc9fa1b808e005f1dc88addaefe46e3a91560d4092bda",
+      "size_bytes": 23143
     },
     {
       "path": "scripts/sc/_pipeline_support.py",
@@ -2703,8 +2753,8 @@
     },
     {
       "path": "scripts/sc/_repair_guidance.py",
-      "sha256": "f37f97d940d07d7fedcc6367fb9ae8d5d0120d47488b7f1a9624c2ee0acc5c87",
-      "size_bytes": 14852
+      "sha256": "c5d47ddc3428674d91203cf914a6ac8b13797c4efd9bb20acd828811fab52520",
+      "size_bytes": 15482
     },
     {
       "path": "scripts/sc/_repair_recommendations.py",
@@ -2788,8 +2838,8 @@
     },
     {
       "path": "scripts/sc/_summary_schema_fallback.py",
-      "sha256": "2b2cf71fcf9f50b662b9c211de170e870439b58e9029dd76f6f0ec3e9a7d246c",
-      "size_bytes": 22780
+      "sha256": "5350964374410092c48a8002b96f8247f62de928ffa16b1a89aa88945a5edddf",
+      "size_bytes": 23049
     },
     {
       "path": "scripts/sc/_summary_schema_local_hard_checks.py",
@@ -2933,8 +2983,8 @@
     },
     {
       "path": "scripts/sc/llm_review_needs_fix_fast.py",
-      "sha256": "3aab2cf72899356f2a2ba63bf0bc2bca639c2c6dc905b208f365a638f78bd5e6",
-      "size_bytes": 86015
+      "sha256": "4a466177719a90877e2a33fdc4822cee568390030454cc6549760173627cca58",
+      "size_bytes": 81897
     },
     {
       "path": "scripts/sc/llm_semantic_gate_all.py",
@@ -2948,17 +2998,27 @@
     },
     {
       "path": "scripts/sc/run_review_pipeline.py",
-      "sha256": "193c963a7530c9ac19965cb04ab8ae53bed4a45d16a153695e1bf35719e352e9",
-      "size_bytes": 107078
+      "sha256": "28a61add4ec6dc64f00db02f19ed542438e3b37a44138a0e52cb73e8ada6d2e0",
+      "size_bytes": 113129
     },
     {
       "path": "scripts/sc/test.py",
       "sha256": "a1bd6a0f6d99c0abc5985cd42cd8f915244b7a05cad2105f3169e18b1e7d7397",
       "size_bytes": 16486
+    },
+    {
+      "path": "scripts/sc/workflow_model_routing.py",
+      "sha256": "16808f7f911e057ec3b5e65d63e51857404422a2087914b7b7da8f7d4578793a",
+      "size_bytes": 31262
+    },
+    {
+      "path": "scripts/sc/workflow_model_routing_evaluation.py",
+      "sha256": "b13499ac9c891dfca0390e216e55540e59c03ec7dc0466d33d7c5115bc82af88",
+      "size_bytes": 6414
     }
   ],
   "scanner_revision": "hosted-inventory-scanner.v1",
   "schema_version": "jimuyun.knowledge-source-snapshot.v1",
   "snapshot_mode": "working-tree",
-  "source_snapshot_id": "85a76dbcff1943623a2f016e4d8b75651dda05b83ebd8d8fc4ea672935fa3ff3"
+  "source_snapshot_id": "f87c31b8c9d9b3911038a1dec1cc7f8f2a98ad517768ff46ba25319bdf509f9d"
 }

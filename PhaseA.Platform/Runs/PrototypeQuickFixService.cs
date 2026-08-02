@@ -1519,7 +1519,12 @@ public sealed partial class PrototypeQuickFixService
                     "codex:prototype-quick-fix",
                     snapshotId,
                     "prototype-quick-fix.v1",
-                    TimeSpan.FromMinutes(5)),
+                    TimeSpan.FromMinutes(5),
+                    prompt,
+                    runId,
+                    "workspace-write",
+                    [repositoryRoot],
+                    [outputPath]),
                 cancellationToken);
         }
 

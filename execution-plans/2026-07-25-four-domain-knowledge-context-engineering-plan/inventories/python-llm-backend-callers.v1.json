@@ -136,20 +136,20 @@
   "entrypoint_family": "python-backend",
   "excluded_candidates": [
     {
-      "callsite_fingerprint": "adc1a1e3b601c2215d07da8c0f3cd637a4c0d380b6397ec75b87d86d2fa1f8f5",
-      "callsite_id": "python-backend:adc1a1e3b601c2215d07",
+      "callsite_fingerprint": "8f2300fb23638818ec1410e8106443946dbfc90446c7a11e2876f51468afb6b4",
+      "callsite_id": "python-backend:8f2300fb23638818ec14",
       "column": 5,
       "context_envelope_status": "unassessed",
-      "line": 100,
+      "line": 116,
       "migration_status": "unassessed",
       "path": "scripts/sc/_llm_backend.py",
       "reachability_status": "unassessed",
       "reason": "entrypoint-definition",
-      "source_sha256": "fc2bb1a13b0d89c9ae60975ef65c4f96012cb5ee3c2c99ba902a186545c3eeb0",
+      "source_sha256": "1261e7bde204045605b29f41e19bab9bf5979cada9e6b7bd4fe2105ebd2f20b0",
       "symbol": "run_llm_exec"
     }
   ],
   "generated_by": "tools/build_hosted_inventory.py@hosted-inventory-scanner.v1",
   "schema_version": "jimuyun.hosted-caller-inventory.v1",
-  "source_snapshot_id": "85a76dbcff1943623a2f016e4d8b75651dda05b83ebd8d8fc4ea672935fa3ff3"
+  "source_snapshot_id": "f87c31b8c9d9b3911038a1dec1cc7f8f2a98ad517768ff46ba25319bdf509f9d"
 }

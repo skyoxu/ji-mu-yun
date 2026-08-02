@@ -2024,7 +2024,8 @@ public sealed class GddMilestoneStepService
                     "llm:gdd-next-step-review",
                     snapshotId,
                     "gdd-milestone-step.v1",
-                    TimeSpan.FromMinutes(5)),
+                    TimeSpan.FromMinutes(5),
+                    prompt),
                 cancellationToken);
         }
         catch (InvalidOperationException)

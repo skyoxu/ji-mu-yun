@@ -314,7 +314,8 @@ public sealed class GameDesignQuestionFormService
                         "llm:gdd-question-form",
                         BuildContextSnapshotId(project),
                         SchemaVersion,
-                        TimeSpan.FromMinutes(5)),
+                        TimeSpan.FromMinutes(5),
+                        prompt),
                     linkedCancellation.Token);
         }
         catch (InvalidOperationException)
@@ -384,6 +385,7 @@ public sealed class GameDesignQuestionFormService
         string accountId,
         CancellationToken cancellationToken)
     {
+        var cacheDecisionPrompt = BuildCacheDecisionPrompt(project, cached);
         HostedContextEnvelope? envelope;
         try
         {
@@ -396,7 +398,8 @@ public sealed class GameDesignQuestionFormService
                         "llm:gdd-question-form-cache-decision",
                         BuildContextSnapshotId(project),
                         "gdd-question-form-cache-decision.v1",
-                        TimeSpan.FromMinutes(5)),
+                        TimeSpan.FromMinutes(5),
+                        cacheDecisionPrompt),
                     cancellationToken);
         }
         catch (InvalidOperationException)
@@ -411,7 +414,7 @@ public sealed class GameDesignQuestionFormService
                     WorkspaceRoot: ResolveLlmWorkspace(project),
                     Purpose: "gdd-question-form-cache-decision",
                     Model: model,
-                    Prompt: BuildCacheDecisionPrompt(project, cached),
+                    Prompt: cacheDecisionPrompt,
                     Options: new CodexChatClientOptions(ReasoningEffort: "low"),
                     BillingAccountId: accountId,
                     RequireJsonObject: true,

@@ -1,10 +1,10 @@
 {
   "entries": [
     {
-      "callsite_id": "llm-route-engine:572b10efa5ad4d34e812",
+      "callsite_id": "llm-route-engine:08381b709925ae1471c7",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Llm/ChatService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -13,10 +13,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:0b75ba1250f78a3e9bb9",
+      "callsite_id": "llm-route-engine:2a11494578ada48471a6",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -26,10 +26,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:2254a7b54f1d49a4349d",
+      "callsite_id": "llm-route-engine:62a5fd03ac524e799380",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -39,10 +39,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:6f49a4c5a4948804040c",
+      "callsite_id": "llm-route-engine:87c21d81cc4ae393e262",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -52,10 +52,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:10958929c20fac14ddfc",
+      "callsite_id": "llm-route-engine:a8a6e576723640f75926",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -132,10 +132,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:94b2976157967b38be31",
+      "callsite_id": "llm-route-engine:18e900fc6e43d3eb0fe2",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -147,10 +147,10 @@
       ]
     },
     {
-      "callsite_id": "codex-hosted:6182e887f5838827eb6d",
+      "callsite_id": "codex-hosted:7ac97dbebb3002bd6383",
       "entrypoint_family": "codex-hosted",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -230,10 +230,10 @@
       ]
     },
     {
-      "callsite_id": "codex-hosted:4cb27a35c3f50b41ce0c",
+      "callsite_id": "codex-hosted:942f04266ef6873f7547",
       "entrypoint_family": "codex-hosted",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -313,10 +313,10 @@
       ]
     },
     {
-      "callsite_id": "codex-hosted:3a33e8fd768718fd5dcc",
+      "callsite_id": "codex-hosted:fc4f751e9d4e1b63b070",
       "entrypoint_family": "codex-hosted",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -390,10 +390,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:a576c28d6c9d340a47fb",
+      "callsite_id": "llm-route-engine:39c621adad012a188053",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -402,10 +402,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:d1a363fad0162e3180f4",
+      "callsite_id": "llm-route-engine:f39c98ff2c97b0814553",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -414,10 +414,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:1e12ff5331f851a75255",
+      "callsite_id": "llm-route-engine:92e9d1de31e4695ef930",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -491,10 +491,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:aedca7f28b9c2dcd4bc9",
+      "callsite_id": "llm-route-engine:3f6a989a6d03805584ae",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -569,10 +569,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:ca1582fc53f9dbb044a1",
+      "callsite_id": "llm-route-engine:b1c1e1adb7006666df82",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -586,10 +586,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:a87338da0a7a297dae79",
+      "callsite_id": "llm-route-engine:a4d963dab4c1896da516",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -673,10 +673,10 @@
       "routes": []
     },
     {
-      "callsite_id": "codex-hosted:b07c2a1659445595f40a",
+      "callsite_id": "codex-hosted:c41744869284f56e1228",
       "entrypoint_family": "codex-hosted",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -750,10 +750,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:0fbbcc1d3b8ea02534d5",
+      "callsite_id": "llm-route-engine:3c96008ec1a1843b6fe8",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -827,10 +827,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:4b5c9e835cd1a8871740",
+      "callsite_id": "llm-route-engine:9ad85785ca7bc876d37f",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -904,10 +904,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:4f1b937c9e6f4de82d1d",
+      "callsite_id": "llm-route-engine:9c62e6e988cabc3b1f96",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -981,10 +981,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:51d06ef0d04ae504d801",
+      "callsite_id": "llm-route-engine:d0b84987b80c8c5c9b01",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -1058,10 +1058,10 @@
       ]
     },
     {
-      "callsite_id": "codex-hosted:3820485f1ea7b75b1491",
+      "callsite_id": "codex-hosted:b5053c90a9d35b713b1c",
       "entrypoint_family": "codex-hosted",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -1135,10 +1135,10 @@
       ]
     },
     {
-      "callsite_id": "llm-route-engine:00ea88b7de7db34d358e",
+      "callsite_id": "llm-route-engine:218d20ea0c7ab839988d",
       "entrypoint_family": "llm-route-engine",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -1212,10 +1212,10 @@
       ]
     },
     {
-      "callsite_id": "codex-hosted:3b17c93162c290c7aa69",
+      "callsite_id": "codex-hosted:eba6e014f48cb8015a7d",
       "entrypoint_family": "codex-hosted",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -1290,10 +1290,10 @@
       ]
     },
     {
-      "callsite_id": "codex-hosted:64c176fc9792c70f0e7b",
+      "callsite_id": "codex-hosted:140cfefe2a9a31c1f2e3",
       "entrypoint_family": "codex-hosted",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -1367,10 +1367,10 @@
       ]
     },
     {
-      "callsite_id": "codex-hosted:34f1ed3b1c9fedbdfcda",
+      "callsite_id": "codex-hosted:7aac3453f5a0d69574b9",
       "entrypoint_family": "codex-hosted",
-      "initial_gate_mode": "enforce",
-      "migration_status": "enforced",
+      "initial_gate_mode": "legacy",
+      "migration_status": "pending",
       "path": "PhaseA.Platform/Skills/SkillActionService.cs",
       "reachability": "hosted-route",
       "reachability_evidence": "Program endpoint binding plus static PhaseA.Platform service dependency closure",
@@ -1420,7 +1420,7 @@
       "routes": []
     },
     {
-      "callsite_id": "python-backend:adc1a1e3b601c2215d07",
+      "callsite_id": "python-backend:8f2300fb23638818ec14",
       "entrypoint_family": "python-backend",
       "initial_gate_mode": "not-applicable",
       "migration_status": "excluded",
@@ -1502,5 +1502,5 @@
   ],
   "generated_by": "tools/build_hosted_migration_ledger.py@v1",
   "schema_version": "jimuyun.hosted-callsite-migration-ledger.v1",
-  "source_snapshot_id": "85a76dbcff1943623a2f016e4d8b75651dda05b83ebd8d8fc4ea672935fa3ff3"
+  "source_snapshot_id": "f87c31b8c9d9b3911038a1dec1cc7f8f2a98ad517768ff46ba25319bdf509f9d"
 }

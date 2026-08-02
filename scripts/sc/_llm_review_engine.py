@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import importlib.metadata
 import json
 import os
 import shutil
@@ -30,6 +29,7 @@ from _llm_review_cli import (
     validate_args,
 )
 from _llm_review_exec import auto_resolve_commit_for_task, build_diff_context, run_codex_exec
+from _llm_backend import inspect_llm_backend
 from _llm_review_identity import (
     LLM_INPUT_IDENTITY_SCHEMA,
     LLM_REVIEW_METRICS_SCHEMA,
@@ -113,15 +113,12 @@ def _runtime_input_descriptor(args: argparse.Namespace) -> dict[str, Any]:
     if adapter_sha256 == "unresolved":
         errors.append("backend_adapter_unreadable")
     if backend == "openai-api":
-        model = str(os.environ.get("SC_OPENAI_MODEL") or os.environ.get("OPENAI_MODEL") or "gpt-5").strip() or "gpt-5"
-        endpoint = str(os.environ.get("OPENAI_BASE_URL") or "https://api.openai.com/v1").strip()
-        endpoint_sha256 = _sha256_text(endpoint)
-        try:
-            sdk_version = importlib.metadata.version("openai")
-            version_sha256 = _sha256_text(sdk_version)
-        except importlib.metadata.PackageNotFoundError:
-            sdk_version = "unresolved"
-            version_sha256 = "unresolved"
+        backend_info = inspect_llm_backend(backend)
+        model = str(backend_info.get("model") or "unresolved")
+        endpoint_sha256 = str(backend_info.get("endpoint_sha256") or "unresolved")
+        sdk_version = str(backend_info.get("sdk_version") or "unresolved")
+        version_sha256 = str(backend_info.get("sdk_version_sha256") or "unresolved")
+        if sdk_version == "unresolved" or version_sha256 == "unresolved":
             errors.append("openai_sdk_unresolved")
         # Credential/account identity is deliberately not persisted. Without an
         # explicit non-secret cache scope, API results are not reusable.

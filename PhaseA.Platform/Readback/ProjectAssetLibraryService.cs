@@ -1544,7 +1544,8 @@ public sealed class ProjectAssetLibraryService
                             "llm:project-asset-library-skill-selection",
                             Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, unit.InstanceName, unit.NodeType, unit.ScenePath, unit.ResourcePath, unit.Kind, unit.IntendedUse, unit.Reason, floatingPrompt)))).ToLowerInvariant(),
                             "project-asset-library-skill-selection.v1",
-                            TimeSpan.FromMinutes(5)),
+                            TimeSpan.FromMinutes(5),
+                            floatingPrompt ?? string.Join("\n", unit.InstanceName, unit.NodeType, unit.ScenePath, unit.ResourcePath, unit.Kind, unit.IntendedUse, unit.Reason)),
                         cancellationToken);
                 }
                 catch (InvalidOperationException)

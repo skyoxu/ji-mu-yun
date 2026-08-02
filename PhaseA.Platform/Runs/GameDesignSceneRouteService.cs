@@ -68,6 +68,7 @@ public sealed class GameDesignSceneRouteService
         var message = Trim(request.Message, MaxMessageChars);
         var answers = NormalizeAnswers(request.Answers);
         var model = PrototypeModelPolicy.Normalize(request.Model);
+        var prompt = BuildPrompt(project, message, answers);
 
         var concurrency = await _concurrencyLimiter.TryAcquireAsync(accountId, cancellationToken);
         if (concurrency.Lease is null)
@@ -90,7 +91,8 @@ public sealed class GameDesignSceneRouteService
                         "llm:gdd-scene-route-draft",
                         BuildContextSnapshotId(project),
                         SchemaVersion,
-                        TimeSpan.FromMinutes(5)),
+                        TimeSpan.FromMinutes(5),
+                        prompt),
                     linkedCancellation.Token);
         }
         catch (InvalidOperationException)
@@ -106,7 +108,7 @@ public sealed class GameDesignSceneRouteService
                     WorkspaceRoot: ResolveLlmWorkspace(project),
                     Purpose: "gdd-scene-route-draft",
                     Model: model,
-                    Prompt: BuildPrompt(project, message, answers),
+                    Prompt: prompt,
                     Options: new CodexChatClientOptions(ReasoningEffort: "low"),
                     BillingAccountId: accountId,
                     RequireJsonObject: true,

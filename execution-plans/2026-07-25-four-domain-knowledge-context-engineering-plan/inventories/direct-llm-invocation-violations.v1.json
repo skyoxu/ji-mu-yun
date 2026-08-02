@@ -27,10 +27,24 @@
       "rule_id": "process_start_info",
       "source_sha256": "bdfa2fb9a0fbd9b1faeaafa0ae257832558790fa33d45b838ddb5f26eaccb216",
       "symbol": "process_start_info"
+    },
+    {
+      "callsite_fingerprint": "f31f8603e5310aa175fd6022ab460288e31cf9fc689b7f2490048503cbb0441e",
+      "callsite_id": "direct-llm-invocation:f31f8603e5310aa175fd",
+      "column": 70,
+      "context_envelope_status": "unassessed",
+      "line": 50,
+      "migration_status": "unassessed",
+      "path": "scripts/sc/_llm_backend.py",
+      "reachability_status": "unassessed",
+      "reason": "shared-python-llm-backend",
+      "rule_id": "provider_endpoint",
+      "source_sha256": "1261e7bde204045605b29f41e19bab9bf5979cada9e6b7bd4fe2105ebd2f20b0",
+      "symbol": "provider_endpoint"
     }
   ],
   "generated_by": "tools/build_hosted_inventory.py@hosted-inventory-scanner.v1",
   "schema_version": "jimuyun.direct-llm-invocation-violations.v1",
-  "source_snapshot_id": "85a76dbcff1943623a2f016e4d8b75651dda05b83ebd8d8fc4ea672935fa3ff3",
+  "source_snapshot_id": "f87c31b8c9d9b3911038a1dec1cc7f8f2a98ad517768ff46ba25319bdf509f9d",
   "violations": []
 }

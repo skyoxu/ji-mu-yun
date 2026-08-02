@@ -52,6 +52,41 @@ public static class SqliteMetadataSchema
         await AddColumnIfMissingAsync(
             connection,
             transaction,
+            "hosted_context_manifests",
+            "schema_version",
+            "ALTER TABLE hosted_context_manifests ADD COLUMN schema_version TEXT NOT NULL DEFAULT 'jimuyun.hosted-context-manifest-record.v0';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "hosted_context_manifests",
+            "signed_payload_json",
+            "ALTER TABLE hosted_context_manifests ADD COLUMN signed_payload_json TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "hosted_context_manifests",
+            "signed_payload_sha256",
+            "ALTER TABLE hosted_context_manifests ADD COLUMN signed_payload_sha256 TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "hosted_context_manifests",
+            "revoked_utc",
+            "ALTER TABLE hosted_context_manifests ADD COLUMN revoked_utc TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "hosted_context_manifests",
+            "superseded_by_manifest_id",
+            "ALTER TABLE hosted_context_manifests ADD COLUMN superseded_by_manifest_id TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
             "accounts",
             "spend_limit_cny",
             "ALTER TABLE accounts ADD COLUMN spend_limit_cny TEXT NULL;",
@@ -1474,7 +1509,12 @@ public static class SqliteMetadataSchema
             signature TEXT NOT NULL,
             nonce TEXT NOT NULL,
             expires_utc TEXT NOT NULL,
-            created_utc TEXT NOT NULL
+            created_utc TEXT NOT NULL,
+            schema_version TEXT NOT NULL DEFAULT 'jimuyun.hosted-context-manifest-record.v0',
+            signed_payload_json TEXT NULL,
+            signed_payload_sha256 TEXT NULL,
+            revoked_utc TEXT NULL,
+            superseded_by_manifest_id TEXT NULL
         );
         """,
         """

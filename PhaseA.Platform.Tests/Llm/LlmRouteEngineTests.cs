@@ -39,6 +39,23 @@ public sealed class LlmRouteEngineTests
     }
 
     [Fact]
+    public void HostedContextGate_ShouldRejectCompactEnvelopeAndIgnoreLegacyClientBooleans()
+    {
+        var compact = new HostedContextEnvelope("manifest", "snapshot", "policy", "signature");
+        HostedContextGate.Evaluate(HostedContextGateMode.Enforce, compact).Allowed.Should().BeFalse();
+
+        var v1 = compact with
+        {
+            SchemaVersion = PhaseA.Platform.Data.HostedContextSignedPayloadV1.Schema,
+            SignedPayloadSha256 = new string('a', 64),
+            SnapshotCurrent = false,
+            PolicyMatches = false,
+            WithinBudget = false
+        };
+        HostedContextGate.Evaluate(HostedContextGateMode.Enforce, v1).Allowed.Should().BeTrue();
+    }
+
+    [Fact]
     public void HostedContextGatePolicy_ShouldKeepUnknownOperationInLegacyMode()
     {
         var policy = new HostedContextGatePolicy();
@@ -127,7 +144,9 @@ public sealed class LlmRouteEngineTests
         var workspace = Path.Combine(Path.GetTempPath(), $"phase-a-llm-route-{Guid.NewGuid():N}");
         var envelope = new HostedContextEnvelope(
             "manifest-1", "snapshot-1", "policy-1", "signature-1",
-            AccountId: "account-1", ProjectId: "project-1", OperationKey: "llm:unit-enforce", Nonce: "nonce-1");
+            AccountId: "account-1", ProjectId: "project-1", OperationKey: "llm:unit-enforce", Nonce: "nonce-1",
+            SchemaVersion: PhaseA.Platform.Data.HostedContextSignedPayloadV1.Schema,
+            SignedPayloadSha256: new string('a', 64));
 
         try
         {

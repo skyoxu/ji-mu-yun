@@ -538,7 +538,8 @@ public sealed class PrototypeRepairPlanService
                         "llm:repair-plan",
                         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", project.ProjectId, project.AccountId, prompt)))).ToLowerInvariant(),
                         "repair-plan.v1",
-                        TimeSpan.FromMinutes(5)),
+                        TimeSpan.FromMinutes(5),
+                        prompt),
                     cancellationToken);
             }
             catch (InvalidOperationException)
