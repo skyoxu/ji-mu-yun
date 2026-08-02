@@ -61,7 +61,13 @@ class RepairReviewHandoffTests(unittest.TestCase):
         command = {
             "id": "route-composition",
             "executable": sys.executable,
-            "argv": ["-c", "print('ok')"],
+            "argv": [
+                "-c",
+                "print('ok')",
+                "src/producer.py",
+                "src/consumer.py",
+                "tests/test_route.py",
+            ],
             "cwd": ".",
             "timeout_seconds": 10,
             "shell": False,
@@ -88,7 +94,11 @@ class RepairReviewHandoffTests(unittest.TestCase):
         receipt = run_controlled_command(
             self.root,
             command,
-            input_paths=["src/producer.py", "src/consumer.py"],
+            input_paths=[
+                "src/producer.py",
+                "src/consumer.py",
+                "tests/test_route.py",
+            ],
         )
         self.receipt.write_text(
             json.dumps(receipt), encoding="utf-8", newline="\n"

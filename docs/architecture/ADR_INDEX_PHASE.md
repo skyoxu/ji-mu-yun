@@ -22,6 +22,7 @@ This index tracks Phase service ADRs for the hosted Phase A/B platform and Phase
 - ADR-0052: Bootstrap Review Calibration And Exact Envelope Reuse (extends ADR-0041/0051; supersedes none) - `docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md`
 - ADR-0053: Refactor Acceptance Toolchain Domain And Compact VDD Projection (extends ADR-0041/0052; supersedes none) - `docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md`
 - ADR-0054: Refactor Acceptance Manual-Pause Deterministic Closure (extends ADR-0041/0051/0052; supersedes none) - `docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md`
+- ADR-0055: Focused Repair Verification And Lightweight Closure (extends ADR-0051/0054; supersedes none) - `docs/adr/ADR-0055-focused-repair-verification-and-lightweight-closure.md`
 
 ## Proposed
 

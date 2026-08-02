@@ -104,7 +104,7 @@ py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_c
 7. Before starting a semantic run, attempt `import-bootstrap` only with an
    explicitly selected finalized run and the exact prepared input and route.
 8. Follow the route's typed `nextAction`. Invoke `run-phase-bootstrap-review`
-   for `full_implementation_conformance` or `focused_repair_review`, but stop
+   for `full_implementation_conformance` or `focused_repair_verification`, but stop
    for its explicit high-cost acknowledgement before any model process starts.
 9. Import the finalized Bootstrap result, then continue finding mapping,
    impact projection, evaluation, finalization, and package validation.
@@ -116,9 +116,12 @@ create `clean`, or satisfy exact reuse. A promoted Bootstrap calibration is
 consumed by the Bootstrap producer under its own binding.
 
 For P2-only output, dispose findings in the current semantic run and use
-targeted deterministic closure. For P0/P1 repair, require the Quick Dev handoff
-and `audit-repair-completeness` before routing the next bounded round. Never
-open Round 3 without its typed trigger and never create Round 4.
+targeted deterministic closure. New runs prefer the exact-set P2 v2 bundle;
+stored v1 chains remain read-only compatible. For P0/P1 repair, require the
+Quick Dev handoff and `audit-repair-completeness` before routing the next
+bounded action. A complete Round 1 repair without an escalation trigger routes
+to exactly one independent focused repair verifier. Never open a complete
+review without its typed trigger and never create Round 4.
 
 When the current lineage has consumed three rounds and routes to
 `manual_pause`, do not treat the pause as acceptance or create a successor to
@@ -182,7 +185,7 @@ validation must publish an append-only route through `prepare-bootstrap`. The
 route freezes the consumer-side decision, capability binding, Bootstrap-owned
 launch sidecar, stable target-derived `lineageFamilyId`, consumed-round view,
 and optional repair-completeness result. It selects exactly one route kind:
-`deterministic_only`, `focused_repair_review`,
+`deterministic_only`, `focused_repair_verification`,
 `full_implementation_conformance`, or `manual_pause`.
 
 For every required Bootstrap route, pass `repository_root` and obtain a fresh
@@ -193,7 +196,7 @@ carry its original repair-completeness request so the result can be reproduced
 from current repository bytes.
 
 When a repair route has already consumed at least one semantic round and
-selects `focused_repair_review` or `full_implementation_conformance`, pass the
+selects `focused_repair_verification` or `full_implementation_conformance`, pass the
 saved route to Bootstrap as `--acceptance-repair-route` and its replayed
 completeness projection as `--acceptance-repair-completeness`. Bootstrap
 revalidates their byte, family, round, and typed-entry bindings. For the initial
@@ -209,6 +212,11 @@ explicit high-cost launch authorization before any reviewer layer starts. It
 must not merely report that review is required and stop. A deterministic pass
 without a required finalized Bootstrap envelope remains a non-authorizing
 candidate, not an implementation-acceptance pass.
+
+After a focused repair run finalizes, call `import-focused-repair` with the
+repository-relative `focusedRun` directory plus the exact Acceptance route and
+repair-completeness path/hash references. The command canonically replays the
+Bootstrap producer; never accept a caller-supplied focused envelope.
 
 Before starting a new semantic run, the caller may invoke `import-bootstrap`
 with one explicit finalized run, the append-only `prepare-run` output, and the
@@ -259,11 +267,14 @@ target unless an explicit supersede or incompatible-scope decision exists.
 The lineage family is derived from the original `execution-plans/<target>`
 root. In-place repairs and successor history for that target retain it; a new
 `changeId` does not reset the review budget. Round 1 uses full implementation
-conformance. After the first P0/P1 repair, the default route is a focused
-repair-delta review. After two consumed rounds, a complete repair with no new
-P0/P1, authority/context graph change, or high-risk boundary change routes to
-deterministic closure. Only those typed triggers may open Round 3. Three
-consumed rounds route to `manual_pause`.
+conformance. After the first P0/P1 repair, the default route is a single
+focused repair verification only when no new P0/P1, authority/context graph
+change, or high-risk boundary change exists. Any such trigger selects complete
+three-layer review. A clean focused result closes the ordinary repair; a
+focused blocker or newly reported trigger routes to repair or complete review
+respectively. After two consumed complete rounds, a complete repair with no
+typed trigger routes to deterministic closure. Three consumed rounds route to
+`manual_pause`.
 
 Before any repair re-entry, require Quick Dev's standard handoff and run
 `audit-repair-completeness`. The audit discovers sibling callsites from the

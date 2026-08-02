@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/focused-repair-import.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "lineageFamilyId", "reviewId", "fullReviewRound", "status", "focusedEnvelopeHash", "acceptanceRepairRouteHash", "repairCompletenessHash", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "implementation-acceptance-focused-repair-import.v1"},
+    "lineageFamilyId": {"type": "string", "minLength": 1},
+    "reviewId": {"type": "string", "minLength": 1},
+    "fullReviewRound": {"const": 2},
+    "status": {"const": "ready_for_deterministic_evaluation"},
+    "focusedEnvelopeHash": {"$ref": "#/$defs/hash"},
+    "acceptanceRepairRouteHash": {"$ref": "#/$defs/hash"},
+    "repairCompletenessHash": {"$ref": "#/$defs/hash"},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {"type": "array", "minItems": 5, "uniqueItems": true, "items": {"enum": ["implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}
+}

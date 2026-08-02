@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-focused-repair-validation-envelope.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewId", "lineageFamilyId", "fullReviewRound", "predecessorRun", "inputHash", "policyRevision", "authorityRevision", "acceptanceRepairRouteHash", "repairClosureHash", "repairCompletenessHash", "status", "nextAction", "outputHash", "gateHash", "generatedAt", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-focused-repair-validation-envelope.v1"},
+    "reviewId": {"type": "string", "minLength": 1},
+    "lineageFamilyId": {"type": "string", "minLength": 1},
+    "fullReviewRound": {"const": 2},
+    "predecessorRun": {"$ref": "#/$defs/path"},
+    "inputHash": {"$ref": "#/$defs/hash"},
+    "policyRevision": {"$ref": "#/$defs/hash"},
+    "authorityRevision": {"type": "string", "minLength": 1},
+    "acceptanceRepairRouteHash": {"$ref": "#/$defs/hash"},
+    "repairClosureHash": {"$ref": "#/$defs/hash"},
+    "repairCompletenessHash": {"$ref": "#/$defs/hash"},
+    "status": {"enum": ["passed", "blocking", "escalation_required", "incomplete"]},
+    "nextAction": {"enum": ["deterministic-closure", "repair-required", "full-implementation-conformance", "retry-focused-verifier"]},
+    "outputHash": {"$ref": "#/$defs/hash"},
+    "gateHash": {"$ref": "#/$defs/hash"},
+    "generatedAt": {"type": "string", "format": "date-time"},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {"type": "array", "minItems": 6, "uniqueItems": true, "items": {"enum": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"}
+  }
+}

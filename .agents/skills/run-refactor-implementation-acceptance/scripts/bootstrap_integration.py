@@ -27,6 +27,7 @@ _HASH = re.compile(r"sha256:[a-f0-9]{64}$")
 _LINEAGE_ID = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}$")
 _EXACT_REUSE_PROFILE = "bootstrap-implementation-conformance"
 _EXACT_REUSE_REVIEW_PROFILE = "review-policy://bootstrap-implementation-conformance/v1"
+_FOCUSED_REPAIR_PROFILE = "bootstrap-focused-repair-verification"
 _FINALIZED_EXCLUSIONS = {
     "plan-acceptance", "implementation-acceptance", "protected-handoff",
     "release", "commit", "done",
@@ -105,9 +106,25 @@ def replay_finalized_bootstrap_run(
         loaded_dir, manifest, loaded_root = module.load_run(
             str(run_dir), require_fresh_artifacts=False
         )
-        envelope = module.validate_finalized_run_evidence(
-            run_dir, manifest, root, historical_replay=True
-        )
+        if manifest.get("profileName") == _FOCUSED_REPAIR_PROFILE:
+            saved_path = run_dir / "focused-repair-validation-envelope.json"
+            saved = json.loads(saved_path.read_text(encoding="utf-8"))
+            generated_at = saved.get("generatedAt") if isinstance(saved, dict) else None
+            if not isinstance(generated_at, str):
+                raise BootstrapBindingError(
+                    "Focused repair validation envelope is missing or invalid"
+                )
+            envelope = module.focused_repair_validation_envelope(
+                run_dir, manifest, root, generated_at=generated_at
+            )
+            if saved != envelope:
+                raise BootstrapBindingError(
+                    "Focused repair validation envelope is stale"
+                )
+        else:
+            envelope = module.validate_finalized_run_evidence(
+                run_dir, manifest, root, historical_replay=True
+            )
     except Exception as exc:
         raise BootstrapBindingError(
             "Bootstrap finalized evidence cannot be replayed"
@@ -422,10 +439,7 @@ def project_bounded_review_route(
         novel = repair_completeness["novelP0P1FindingIds"]
         authority_changed = repair_completeness["authorityGraphChanged"]
         boundary_changed = repair_completeness["highRiskBoundaryChanged"]
-        if rounds == 1:
-            route_kind = "focused_repair_review"
-            entry_reason = None
-        elif novel:
+        if novel:
             route_kind = "full_implementation_conformance"
             entry_reason = "novel_p0_p1"
         elif authority_changed:
@@ -434,6 +448,9 @@ def project_bounded_review_route(
         elif boundary_changed:
             route_kind = "full_implementation_conformance"
             entry_reason = "high_risk_boundary_changed"
+        elif rounds == 1:
+            route_kind = "focused_repair_verification"
+            entry_reason = None
         else:
             route_kind = "deterministic_only"
             entry_reason = None
@@ -444,7 +461,7 @@ def project_bounded_review_route(
         "semanticRoundsConsumed": rounds,
         "nextFullReviewRound": (
             rounds + 1
-            if route_kind in {"focused_repair_review", "full_implementation_conformance"}
+            if route_kind in {"focused_repair_verification", "full_implementation_conformance"}
             else None
         ),
         "roundEntryReason": entry_reason,
@@ -866,17 +883,28 @@ def _validate_bootstrap_route_binding(value: Any) -> None:
         "nextFullReviewRound", "roundEntryReason", "lineageStateHash",
         "repairCompletenessHash", "nextAction", "authorizes",
     }
+    allowed_fields = required | {
+        "repairCompletenessRequest", "repairCompletenessRequestHash",
+    }
     if (
         not isinstance(route, dict)
-        or set(route) != required
+        or not required.issubset(route)
+        or set(route) - allowed_fields
         or route.get("schemaVersion") != "implementation-acceptance-bootstrap-route.v1"
         or route.get("routeKind") not in {
-            "full_implementation_conformance", "focused_repair_review"
+            "full_implementation_conformance", "focused_repair_review",
+            "focused_repair_verification",
         }
         or route.get("nextAction") != "run-phase-bootstrap-review"
         or route.get("authorizes") != []
     ):
         raise BootstrapBindingError("Bootstrap route is not eligible for exact reuse")
+    repair_request = route.get("repairCompletenessRequest")
+    repair_request_hash = route.get("repairCompletenessRequestHash")
+    if (repair_request is None) != (repair_request_hash is None) or (
+        repair_request is not None and repair_request_hash != _canonical_hash(repair_request)
+    ):
+        raise BootstrapBindingError("Bootstrap repair request binding is invalid")
     _validate_minimal_review_scope(route.get("reviewScope"))
 
 

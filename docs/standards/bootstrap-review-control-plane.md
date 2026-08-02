@@ -2,7 +2,7 @@
 
 Status: Accepted
 Language: English
-Authorities: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`, `docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`, `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`, `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`, and `docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md`
+Authorities: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`, `docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`, `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`, `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`, `docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md`, and `docs/adr/ADR-0055-focused-repair-verification-and-lightweight-closure.md`
 
 ## Purpose
 
@@ -11,6 +11,7 @@ This standard defines the durable protocol for evidence-gated Bootstrap Review. 
 ## Semantic Invariants
 
 - A complete review uses three isolated discovery roles: Blind Hunter, Edge Case Hunter, and Acceptance Auditor.
+- A focused repair verification uses exactly one independent `focused_repair_verifier`. It is neither a discovery role nor the gate-after-discovery `independent_verifier`.
 - Discovery roles do not share sessions, candidates, suspected findings, or a minimum finding quota.
 - Required artifacts and context are read completely. Sampling is prohibited.
 - P0/P1 candidates require an independent verifier that is not a discovery reviewer.
@@ -18,8 +19,8 @@ This standard defines the durable protocol for evidence-gated Bootstrap Review. 
 - Independent verification uses Sol/high for a P1-only blocker set and Sol/max when any blocker is P0 or has the `security` dimension. Data-corruption and permission-boundary findings must be classified as P0 or `security`; the highest-risk blocker determines the effort for a mixed verifier run.
 - A stable lineage family has a default two-round budget and a three-full-round hard limit. Changing a review ID, `changeId`, or successor directory does not reset the family budget.
 - A final result cannot contain an open accepted P0 or P1.
-- A clean or P2-only finalized predecessor does not trigger another complete semantic review. P2 is disposed in the current run with typed targeted evidence.
-- Every accepted P2 must be fixed, refuted, or explicitly deferred. High-risk P2 cannot be deferred. A deferral requires schema-valid typed owner, command-registry, non-impact, recheck, and process-result documents bound to the current review, input, frozen candidate, policy, authority root, finding, scope, immutable command descriptor, runner identity, append-only process event, stdout/stderr bytes, success exit, and expiry. Expiry or any stale transitive byte blocks automatically. Successful typed closure-process evidence is required when the disposition becomes fixed or refuted, not while it remains deferred. These proof documents always carry `authorizes=[]` and exclude implementation acceptance, protected handoff, release, commit, and done.
+- A clean or P2-only finalized predecessor does not trigger another complete semantic review. New P2-only runs may use one exact-set `bootstrap-p2-closure.v2` bundle with typed targeted evidence; stored v1 disposition chains remain readable.
+- Every accepted P2 must be fixed, refuted, or explicitly deferred. High-risk P2 cannot be deferred. A v2 closure binds the exact finding set, current review and candidate, and structured JSON validation results by path/hash, schema version, and successful field/value; it carries `authorizes=[]`. Fixed or refuted findings require passed current validation. Normal-risk deferral requires a named owner, future expiry, bounded non-impact evidence, passed recheck evidence, and a recheck trigger in the same bundle. Stored v1 closures retain their authority-root, command-registry, process-event, and transitive freshness rules.
 - Each canonical profile hash-binds the authority-root registry. Successor and P2 owner authorities terminate only at that exact root, and command registries must use a root-authorized signer, runner, executable, consumer, and command class. Self-created null-predecessor authorities are not trust anchors.
 - Bootstrap evidence is supplemental and never substitutes for a protected handoff, plan-local acceptance validator, production release, or commit authority.
 
@@ -110,6 +111,16 @@ P2 command results reference both their immutable event sidecar and the shared a
 - Round 1 uses the minimal complete closure. Round 2 uses the repair delta:
   added, changed, and removed artifacts plus unchanged support artifacts needed
   for direct consumers, authority, targeted tests, and current validation.
+- For a new implementation-acceptance lineage, a complete Round 1 repair with
+  no escalation trigger routes to one focused repair verifier. The verifier
+  covers the exact predecessor finding set, finding-to-repair mappings, repair
+  diff, direct consumers, targeted tests, and controlled receipts. It may
+  report a still-blocking repair or an escalation trigger, but grants no
+  lifecycle authority.
+- Novel P0/P1, authority/context graph change, or high-risk boundary change
+  routes directly to complete three-layer review. Unknown trigger state blocks
+  routing. The same facts reported by a focused verifier select complete review
+  as the next action.
 - Round 3 requires one schema-valid entry reason: `novel_p0_p1`,
   `authority_context_graph_changed`, or `high_risk_boundary_changed`.
 - Round 3 discovery always resolves to Sol/high for all three roles, regardless
@@ -130,13 +141,19 @@ P2 command results reference both their immutable event sidecar and the shared a
   direct consumers, and binds its receipt as a validation reference. Repair
   paths, inventory matches, composition bindings, registries, receipts, tests,
   and validation evidence must all belong to the same minimal review closure.
-  After two rounds, a complete repair without a typed Round 3 trigger uses
-  deterministic closure rather than another semantic review.
+  A successful focused repair verification closes ordinary Round 1 repair
+  without consuming another complete discovery round. After two complete
+  rounds, a complete repair without a typed Round 3 trigger uses deterministic
+  closure rather than another semantic review.
 - An implementation-conformance repair prepare binds the Acceptance-owned
   route and replayed repair-completeness projection by current bytes. Their
   family, consumed round, next round, route kind, and typed Round 3 reason must
   match the Bootstrap invocation. A generic repair closure alone is not valid
   implementation-acceptance re-entry evidence.
+- A new focused repair route embeds and hash-binds the original deterministic
+  repair-completeness request. Bootstrap replays that producer request during
+  prepare and every live run load. Acceptance later imports the result only by
+  canonical replay of the finalized Bootstrap run directory.
 - After three consumed rounds, Bootstrap remains in `manual_pause` and never
   creates Round 4. Refactor Acceptance may separately close a repaired target
   only through the ADR-0054 two-stage deterministic closure contract. That

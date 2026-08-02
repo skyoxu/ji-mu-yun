@@ -61,6 +61,8 @@ PLAN_VALIDATOR_PATH = (
     / "validate_whole_directory.py"
 )
 LAYERS = ("blind_hunter", "edge_case_hunter", "acceptance_auditor")
+FOCUSED_REPAIR_ROLE = "focused_repair_verifier"
+REVIEWER_ROLES = (*LAYERS, FOCUSED_REPAIR_ROLE)
 HASH_PREFIX = "sha256:"
 AUTHORITY_CLASS = "supplemental_bootstrap"
 REVIEW_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}")
@@ -175,7 +177,7 @@ CODEX_EXEC_POLICY_KEYS = {
     "preferredModel", "fallbackModels", "forbiddenModels", "toolProbeRequired",
     "roundModelOverrides", "roundReasoningEffortOverrides", "reasoningEffortByRole",
 }
-REASONING_ROLES = (*LAYERS, "independent_verifier")
+REASONING_ROLES = (*REVIEWER_ROLES, "independent_verifier")
 ALLOWED_REASONING_EFFORTS = {"medium", "high", "max"}
 VERIFIER_POLICY_KEYS = {
     "preferredModel", "fallbackModels", "defaultReasoningEffort",
@@ -197,6 +199,7 @@ REVIEW_OBJECT_TYPES = {
     "implementation-conformance",
     "skill-route",
     "focused-change",
+    "focused-repair-verification",
 }
 REVIEW_CYCLE_POLICY = {
     "repairMode": "batch_all_accepted_findings",
@@ -219,6 +222,7 @@ REPAIR_DELTA_SCHEMA = "bootstrap-repair-review-delta.v1"
 ARTIFACT_VIEW_READ_RECEIPT_SCHEMA = "bootstrap-artifact-view-read-receipt.v1"
 BOUNDED_SCOPE_PROFILES = {
     "bootstrap-implementation-conformance",
+    "bootstrap-focused-repair-verification",
     "bootstrap-skill-route",
     "bootstrap-focused-change",
 }
@@ -277,7 +281,7 @@ P2_DISPOSITION_POLICY = {
     "highRiskDeferralAllowed": False,
     "expiredDeferralDisposition": "blocking",
 }
-LEASE_ROLES = {*LAYERS, "independent_verifier", "preflight", "model_probe"}
+LEASE_ROLES = {*REVIEWER_ROLES, "independent_verifier", "preflight", "model_probe"}
 LEASE_STATES = {"acquired", "completed", "failed", "stale"}
 REVIEW_HISTORY_PRUNED_DIRS = {
     ".git", ".vs", ".idea", ".acceptance-snapshots", "artifact-view",
@@ -582,12 +586,14 @@ def load_profile(name: str) -> dict[str, Any]:
     profile = registry.get("profiles", {}).get(name) if isinstance(registry, dict) else None
     if not isinstance(profile, dict):
         raise BootstrapError(f"Unknown bootstrap review profile: {name}")
+    focused = name == "bootstrap-focused-repair-verification"
     root_reference = profile.get("authorityRootRegistry")
     load_authority_root_registry(REPOSITORY_ROOT, root_reference)
     if profile.get("automaticInvocation") is not False or profile.get("readOnly") is not True:
         raise BootstrapError("Bootstrap profile must be read-only and prohibit automatic invocation")
-    if profile.get("requiredLayers") != list(LAYERS):
-        raise BootstrapError("Bootstrap profile must require all three reviewer layers")
+    expected_layers = [FOCUSED_REPAIR_ROLE] if focused else list(LAYERS)
+    if profile.get("requiredLayers") != expected_layers:
+        raise BootstrapError("Bootstrap profile does not require its exact reviewer layers")
     codex_policy = profile.get("codexExecPolicy")
     if (
         not isinstance(codex_policy, dict)
@@ -602,19 +608,20 @@ def load_profile(name: str) -> dict[str, Any]:
     ):
         raise BootstrapError("Bootstrap profile has an invalid Codex exec model policy")
     reasoning = codex_policy.get("reasoningEffortByRole") if isinstance(codex_policy, dict) else None
-    if not isinstance(reasoning, dict) or set(reasoning) != set(REASONING_ROLES) or any(
+    expected_reasoning_roles = {FOCUSED_REPAIR_ROLE, "independent_verifier"} if focused else set(REASONING_ROLES) - {FOCUSED_REPAIR_ROLE}
+    if not isinstance(reasoning, dict) or set(reasoning) != expected_reasoning_roles or any(
         value not in ALLOWED_REASONING_EFFORTS for value in reasoning.values()
     ):
         raise BootstrapError("Bootstrap profile has an invalid role reasoning policy")
     round_models = codex_policy.get("roundModelOverrides")
     round_reasoning = codex_policy.get("roundReasoningEffortOverrides")
     if (
-        round_models != {"3": "gpt-5.6-sol"}
+        (round_models != {} if focused else round_models != {"3": "gpt-5.6-sol"})
         or not isinstance(round_reasoning, dict)
-        or set(round_reasoning) != {"3"}
-        or not isinstance(round_reasoning.get("3"), dict)
-        or set(round_reasoning["3"]) != set(LAYERS)
-        or any(value != "high" for value in round_reasoning["3"].values())
+        or (set(round_reasoning) != set() if focused else set(round_reasoning) != {"3"})
+        or (not focused and not isinstance(round_reasoning.get("3"), dict))
+        or (not focused and set(round_reasoning["3"]) != set(LAYERS))
+        or (not focused and any(value != "high" for value in round_reasoning["3"].values()))
         or "gpt-5.6-sol" in codex_policy["forbiddenModels"]
     ):
         raise BootstrapError("Bootstrap profile has an invalid round-specific Codex route")
@@ -648,7 +655,7 @@ def load_profile(name: str) -> dict[str, Any]:
     role_rubrics = instruction_policy.get("roleRubrics")
     if (
         not isinstance(role_rubrics, dict)
-        or set(role_rubrics) != set(LAYERS)
+        or set(role_rubrics) != set(expected_layers)
         or any(
             not isinstance(items, list)
             or not items
@@ -707,7 +714,7 @@ def load_profile(name: str) -> dict[str, Any]:
 
 
 def discovery_execution_route(policy_owner: dict[str, Any], role: str) -> dict[str, Any]:
-    if role not in LAYERS:
+    if role not in REVIEWER_ROLES:
         raise BootstrapError(f"Unsupported discovery role: {role}")
     policy = policy_owner["codexExecPolicy"]
     review_round = int(policy_owner.get("fullReviewRound", 1))
@@ -1152,8 +1159,9 @@ def _matching_cost_cohort(
     workload_bucket: str,
 ) -> dict[str, Any] | None:
     route_owner = {**profile, "fullReviewRound": full_review_round}
+    roles = profile["requiredLayers"]
     discovery_routes = {
-        role: discovery_execution_route(route_owner, role) for role in LAYERS
+        role: discovery_execution_route(route_owner, role) for role in roles
     }
     selected_models = {route["model"] for route in discovery_routes.values()}
     identity = {
@@ -1163,7 +1171,7 @@ def _matching_cost_cohort(
         "controlPlaneRevision": profile["controlPlaneRevision"],
         "model": next(iter(selected_models)) if len(selected_models) == 1 else "mixed",
         "reasoningProfile": value_hash({
-            role: discovery_routes[role]["reasoningEffort"] for role in LAYERS
+            role: discovery_routes[role]["reasoningEffort"] for role in roles
         }),
         "fullReviewRound": full_review_round,
         "workloadBucket": workload_bucket,
@@ -1183,7 +1191,7 @@ def legacy_review_cost_estimate(
     effort_units = {"medium": 1, "high": 2, "max": 3}
     reviewer_units = sum(
         effort_units[profile["codexExecPolicy"]["reasoningEffortByRole"][layer]]
-        for layer in LAYERS
+        for layer in profile["requiredLayers"]
     )
     artifact_count = len(artifacts)
     total_bytes = sum(item["sizeBytes"] for item in artifacts)
@@ -1227,7 +1235,7 @@ def review_cost_estimate(
     route_owner = {**profile, "fullReviewRound": full_review_round}
     reviewer_units = sum(
         effort_units[discovery_execution_route(route_owner, layer)["reasoningEffort"]]
-        for layer in LAYERS
+        for layer in profile["requiredLayers"]
     )
     artifact_count = len(artifacts)
     total_bytes = sum(item["sizeBytes"] for item in artifacts)
@@ -1664,6 +1672,8 @@ def adopted_lineage_run_paths(repository_root: Path, lineage_family_id: str) -> 
 
 
 def run_consumes_semantic_round(path: Path, manifest: dict[str, Any]) -> bool:
+    if manifest.get("profileName") == "bootstrap-focused-repair-verification":
+        return False
     gate_started = (path / "review-gate-result.json").is_file()
     try:
         process_events = read_process_events(path)
@@ -2046,7 +2056,13 @@ def validate_review_cycle(
         raise BootstrapError("Predecessor run belongs to a different lineage family")
     if predecessor_manifest.get("fullReviewRound") != review_round - 1:
         raise BootstrapError("Predecessor run must be the immediately previous full review round")
-    if predecessor_manifest.get("profileName") != profile_name:
+    predecessor_profile = predecessor_manifest.get("profileName")
+    compatible_predecessor = (
+        profile_name == "bootstrap-focused-repair-verification"
+        and review_round == 2
+        and predecessor_profile == "bootstrap-implementation-conformance"
+    )
+    if predecessor_profile != profile_name and not compatible_predecessor:
         raise BootstrapError("Predecessor run uses a different review profile")
     predecessor_result = finalized_review_result(predecessor_dir, predecessor_manifest)
     predecessor_findings = [
@@ -2498,6 +2514,270 @@ def reviewer_template(
     return output
 
 
+def focused_repair_output_template(
+    manifest: dict[str, Any], *, attempt_id: str | None = None,
+) -> dict[str, Any]:
+    required_artifacts = list(reviewable_artifact_map(manifest))
+    output = {
+        "schemaVersion": "bootstrap-focused-repair-verifier-output.v1",
+        "reviewId": manifest["reviewId"],
+        "inputHash": manifest["inputHash"],
+        "policyRevision": manifest["policyRevision"],
+        "authorityRevision": manifest["authorityRevision"],
+        "role": FOCUSED_REPAIR_ROLE,
+        "repairClosureHash": manifest["repairClosure"]["sha256"],
+        "repairCompletenessHash": manifest["acceptanceRepairCompleteness"]["sha256"],
+        "status": "pending",
+        "coverage": {
+            "requiredArtifacts": required_artifacts,
+            "readArtifacts": [],
+            "missingArtifacts": required_artifacts,
+        },
+        "decisions": [],
+        "newBlockers": [],
+        "escalation": {
+            "novelP0P1FindingIds": [],
+            "authorityGraphChanged": False,
+            "authorityGraphArtifacts": [],
+            "highRiskBoundaryChanged": False,
+            "highRiskBoundaryArtifacts": [],
+        },
+        "authorizes": [],
+    }
+    if attempt_id is not None:
+        output["attemptId"] = attempt_id
+    return output
+
+
+def focused_repair_prompt_text(manifest: dict[str, Any]) -> str:
+    repository_root = Path(manifest["repositoryRoot"])
+    predecessor_dir = ensure_within(
+        repository_root / manifest["predecessorRun"], repository_root, "Focused predecessor run"
+    )
+    predecessor_manifest = read_json(predecessor_dir / "review-input.json")
+    predecessor_result = finalized_review_result(predecessor_dir, predecessor_manifest)
+    finding_ids = canonical_predecessor_finding_ids(predecessor_dir, predecessor_result)
+    return (
+        "# Focused Repair Verification\n\n"
+        "Verify the exact predecessor findings against the repair closure, current diff, "
+        "direct consumers, targeted tests, and controlled validation receipts. This is one "
+        "independent repair-verifier role, not discovery and not gate verification.\n\n"
+        f"Required finding IDs: {json.dumps(finding_ids)}\n\n"
+        "Return one decision for every ID. Report new P0/P1 findings and any authority graph "
+        "or high-risk boundary change in the typed escalation object. Do not grant acceptance, "
+        "commit, release, or handoff authority.\n"
+    )
+
+
+def validate_focused_repair_output(
+    output: Any, manifest: dict[str, Any], repository_root: Path, run_dir: Path,
+    *, require_completed: bool = True,
+) -> None:
+    errors = schema_validation_errors(
+        "bootstrap-focused-repair-verifier-output.v1.schema.json", output
+    )
+    if not isinstance(output, dict):
+        raise BootstrapError("Focused repair verifier output is not an object")
+    expected = {
+        "reviewId": manifest["reviewId"],
+        "inputHash": manifest["inputHash"],
+        "policyRevision": manifest["policyRevision"],
+        "authorityRevision": manifest["authorityRevision"],
+        "role": FOCUSED_REPAIR_ROLE,
+        "repairClosureHash": manifest["repairClosure"]["sha256"],
+        "repairCompletenessHash": manifest["acceptanceRepairCompleteness"]["sha256"],
+        "authorizes": [],
+    }
+    errors.extend(
+        f"{key} binding mismatch" for key, expected_value in expected.items()
+        if output.get(key) != expected_value
+    )
+    if require_completed and output.get("status") != "completed":
+        errors.append("focused repair verifier did not complete")
+    expected_artifacts = list(reviewable_artifact_map(manifest))
+    coverage = output.get("coverage")
+    if not isinstance(coverage, dict) or (
+        coverage.get("requiredArtifacts") != expected_artifacts
+        or coverage.get("readArtifacts") != expected_artifacts
+        or coverage.get("missingArtifacts") != []
+    ):
+        errors.append("focused repair verifier coverage is incomplete")
+    predecessor_dir = ensure_within(
+        repository_root / manifest["predecessorRun"], repository_root, "Focused predecessor run"
+    )
+    predecessor_manifest = read_json(predecessor_dir / "review-input.json")
+    predecessor_result = finalized_review_result(predecessor_dir, predecessor_manifest)
+    expected_ids = canonical_predecessor_finding_ids(predecessor_dir, predecessor_result)
+    decisions = output.get("decisions")
+    decision_ids = [item.get("findingId") for item in decisions if isinstance(item, dict)] if isinstance(decisions, list) else []
+    if sorted(decision_ids) != expected_ids or len(decision_ids) != len(set(decision_ids)):
+        errors.append("focused decisions must cover the exact predecessor finding set")
+    closure = read_json(repository_root / manifest["repairClosure"]["path"])
+    closure_items = {
+        item.get("findingId"): item
+        for item in closure.get("items", [])
+        if isinstance(item, dict) and isinstance(item.get("findingId"), str)
+    }
+    closure_evidence = {
+        item.get("findingId"): {
+            evidence.get("path") for evidence in item.get("evidence", [])
+            if isinstance(evidence, dict) and isinstance(evidence.get("path"), str)
+        }
+        for item in closure.get("items", []) if isinstance(item, dict)
+    }
+    completeness = read_json(
+        repository_root / manifest["acceptanceRepairCompleteness"]["path"]
+    )
+    completeness_evidence = {
+        item.get("path")
+        for field in ("directConsumers", "targetedTests", "validationRefs")
+        for item in completeness.get(field, [])
+        if isinstance(item, dict) and isinstance(item.get("path"), str)
+    }
+    for check in completeness.get("compositionChecks", []):
+        if not isinstance(check, dict):
+            continue
+        for field in ("commandRegistry", "receipt"):
+            binding = check.get(field)
+            if isinstance(binding, dict) and isinstance(binding.get("path"), str):
+                completeness_evidence.add(binding["path"])
+    artifact_set = set(expected_artifacts)
+    for decision in decisions if isinstance(decisions, list) else []:
+        if not isinstance(decision, dict):
+            continue
+        checked = set(decision.get("evidenceChecked", []))
+        closure_item = closure_items.get(decision.get("findingId"), {})
+        if (
+            decision.get("status") == "verified_fixed"
+            and closure_item.get("disposition") not in {"fixed", "refuted"}
+        ):
+            errors.append(
+                f"focused decision cannot verify a non-closed disposition: {decision.get('findingId')}"
+            )
+        if not closure_evidence.get(decision.get("findingId"), set()).issubset(checked):
+            errors.append(f"focused decision omits repair evidence: {decision.get('findingId')}")
+        if decision.get("status") == "verified_fixed" and not completeness_evidence.issubset(checked):
+            errors.append(
+                f"focused decision omits deterministic completeness evidence: {decision.get('findingId')}"
+            )
+        if not checked.issubset(artifact_set):
+            errors.append(f"focused decision cites evidence outside scope: {decision.get('findingId')}")
+    escalation = output.get("escalation") if isinstance(output.get("escalation"), dict) else {}
+    novel = escalation.get("novelP0P1FindingIds", [])
+    blocker_ids = [item.get("findingId") for item in output.get("newBlockers", []) if isinstance(item, dict)]
+    if sorted(novel) != sorted(blocker_ids) or len(blocker_ids) != len(set(blocker_ids)):
+        errors.append("focused escalation finding IDs must match new blockers exactly")
+    for flag, paths_field in (
+        ("authorityGraphChanged", "authorityGraphArtifacts"),
+        ("highRiskBoundaryChanged", "highRiskBoundaryArtifacts"),
+    ):
+        paths = escalation.get(paths_field)
+        if escalation.get(flag) != bool(paths) or not set(paths or []).issubset(artifact_set):
+            errors.append(f"focused escalation artifacts are invalid: {flag}")
+    for blocker in output.get("newBlockers", []):
+        if not isinstance(blocker, dict):
+            continue
+        artifact = blocker.get("artifact")
+        if artifact not in artifact_set:
+            errors.append(f"focused blocker cites an artifact outside scope: {artifact}")
+            continue
+        path = repository_root / artifact
+        if path.is_file():
+            lines = path.read_text(encoding="utf-8").splitlines()
+            start, end = blocker.get("startLine"), blocker.get("endLine")
+            if not isinstance(start, int) or not isinstance(end, int) or end < start or end > len(lines):
+                errors.append(f"focused blocker line range is invalid: {blocker.get('findingId')}")
+            elif "\n".join(lines[start - 1:end]) != blocker.get("exactEvidence"):
+                errors.append(f"focused blocker evidence does not match current bytes: {blocker.get('findingId')}")
+    if errors:
+        raise BootstrapError("Focused repair verifier output is invalid: " + "; ".join(errors))
+
+
+def project_focused_repair_gate(
+    output: dict[str, Any], manifest: dict[str, Any], repository_root: Path, run_dir: Path,
+) -> dict[str, Any]:
+    validate_focused_repair_output(output, manifest, repository_root, run_dir)
+    escalation = output["escalation"]
+    escalated = bool(
+        escalation["novelP0P1FindingIds"]
+        or escalation["authorityGraphChanged"]
+        or escalation["highRiskBoundaryChanged"]
+    )
+    blocking_ids = sorted(
+        item["findingId"] for item in output["decisions"] if item["status"] == "blocking"
+    )
+    if escalated:
+        status, next_action = "escalation_required", "full-implementation-conformance"
+    elif blocking_ids:
+        status, next_action = "blocking", "repair-required"
+    else:
+        status, next_action = "passed", "deterministic-closure"
+    gate = {
+        "schemaVersion": "bootstrap-focused-repair-gate-result.v1",
+        "reviewId": manifest["reviewId"],
+        "inputHash": manifest["inputHash"],
+        "policyRevision": manifest["policyRevision"],
+        "authorityRevision": manifest["authorityRevision"],
+        "status": status,
+        "nextAction": next_action,
+        "outputHash": file_hash(run_dir / "reviewer-outputs" / f"{FOCUSED_REPAIR_ROLE}.json"),
+        "blockingFindingIds": blocking_ids,
+        "escalation": escalation,
+        "authorizes": [],
+    }
+    schema_errors = schema_validation_errors(
+        "bootstrap-focused-repair-gate-result.v1.schema.json", gate
+    )
+    if schema_errors:
+        raise BootstrapError("Focused repair gate result is invalid: " + "; ".join(schema_errors))
+    return gate
+
+
+def focused_repair_validation_envelope(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    repository_root: Path,
+    *,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    output_path = run_dir / "reviewer-outputs" / f"{FOCUSED_REPAIR_ROLE}.json"
+    gate_path = run_dir / "review-gate-result.json"
+    output = read_json(output_path)
+    validate_focused_repair_output(output, manifest, repository_root, run_dir)
+    gate = read_json(gate_path)
+    projected = project_focused_repair_gate(output, manifest, repository_root, run_dir)
+    if gate != projected or read_json(run_dir / "review-gate-state.json") != projected:
+        raise BootstrapError("Focused repair gate does not reproduce verifier output")
+    envelope = {
+        "schemaVersion": "bootstrap-focused-repair-validation-envelope.v1",
+        "reviewId": manifest["reviewId"],
+        "lineageFamilyId": manifest["lineageFamilyId"],
+        "fullReviewRound": manifest["fullReviewRound"],
+        "predecessorRun": manifest["predecessorRun"],
+        "inputHash": manifest["inputHash"],
+        "policyRevision": manifest["policyRevision"],
+        "authorityRevision": manifest["authorityRevision"],
+        "acceptanceRepairRouteHash": manifest["acceptanceRepairRoute"]["sha256"],
+        "repairClosureHash": manifest["repairClosure"]["sha256"],
+        "repairCompletenessHash": manifest["acceptanceRepairCompleteness"]["sha256"],
+        "status": gate["status"],
+        "nextAction": gate["nextAction"],
+        "outputHash": file_hash(output_path),
+        "gateHash": file_hash(gate_path),
+        "generatedAt": generated_at or utc_now(),
+        "authorizes": [],
+        "doesNotAuthorize": FINALIZED_DOES_NOT_AUTHORIZE,
+    }
+    errors = schema_validation_errors(
+        "bootstrap-focused-repair-validation-envelope.v1.schema.json", envelope
+    )
+    if errors:
+        raise BootstrapError(
+            "Focused repair validation envelope is invalid: " + "; ".join(errors)
+        )
+    return envelope
+
+
 def artifact_view_read_receipt(manifest: dict[str, Any]) -> dict[str, Any]:
     return {
         "schemaVersion": ARTIFACT_VIEW_READ_RECEIPT_SCHEMA,
@@ -2818,6 +3098,38 @@ def validate_repair_closure(
     return closure
 
 
+def replay_acceptance_repair_completeness(
+    repository_root: Path, request: dict[str, Any]
+) -> dict[str, Any]:
+    acceptance_scripts = (
+        repository_root
+        / ".agents/skills/run-refactor-implementation-acceptance/scripts"
+    )
+    module_path = acceptance_scripts / "repair_completeness.py"
+    module_name = "bootstrap_acceptance_repair_completeness_" + hashlib.sha256(
+        str(module_path).encode("utf-8")
+    ).hexdigest()
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    if spec is None or spec.loader is None:
+        raise BootstrapError("Cannot load Acceptance repair completeness producer")
+    module = importlib.util.module_from_spec(spec)
+    previous_path = list(sys.path)
+    try:
+        sys.path.insert(0, str(acceptance_scripts))
+        spec.loader.exec_module(module)
+        replayed = module.audit_repair_completeness(request)
+    except (OSError, UnicodeError, ValueError) as exc:
+        raise BootstrapError(
+            "Acceptance repair completeness producer replay failed"
+        ) from exc
+    finally:
+        sys.path[:] = previous_path
+        sys.modules.pop(module_name, None)
+    if not isinstance(replayed, dict):
+        raise BootstrapError("Acceptance repair completeness producer returned invalid output")
+    return replayed
+
+
 def validate_acceptance_repair_route(
     route_path: Path,
     completeness_path: Path,
@@ -2825,18 +3137,36 @@ def validate_acceptance_repair_route(
     lineage_family_id: str,
     review_round: int,
     round_entry_reason: str | None,
+    profile_name: str = "bootstrap-implementation-conformance",
 ) -> dict[str, dict[str, str]]:
     route = read_json(route_path)
     completeness = read_json(completeness_path)
-    expected_kind = "focused_repair_review" if review_round == 2 else "full_implementation_conformance"
+    if not isinstance(route, dict):
+        raise BootstrapError("Acceptance repair route is not an object")
+    expected_kind = (
+        "focused_repair_verification"
+        if profile_name == "bootstrap-focused-repair-verification"
+        else "full_implementation_conformance"
+    )
+    expected_route_reason = route.get("roundEntryReason")
+    if profile_name == "bootstrap-focused-repair-verification":
+        if review_round != 2 or expected_route_reason is not None:
+            raise BootstrapError(
+                "Focused repair verification is valid only for non-escalated Round 1 repair"
+            )
+    elif review_round == 2:
+        if route.get("routeKind") == "focused_repair_review" and expected_route_reason is None:
+            expected_kind = "focused_repair_review"
+        elif expected_route_reason not in ROUND_THREE_ENTRY_REASONS:
+            raise BootstrapError("Round 2 full review requires a typed repair escalation reason")
+    elif expected_route_reason != round_entry_reason:
+        raise BootstrapError("Acceptance repair route entry reason does not match Bootstrap input")
     if (
-        not isinstance(route, dict)
-        or route.get("schemaVersion") != "implementation-acceptance-bootstrap-route.v1"
+        route.get("schemaVersion") != "implementation-acceptance-bootstrap-route.v1"
         or route.get("routeKind") != expected_kind
         or route.get("lineageFamilyId") != lineage_family_id
         or route.get("semanticRoundsConsumed") != review_round - 1
         or route.get("nextFullReviewRound") != review_round
-        or route.get("roundEntryReason") != round_entry_reason
         or route.get("authorizes") != []
         or not isinstance(completeness, dict)
         or completeness.get("schemaVersion") != "acceptance-repair-completeness.v1"
@@ -2849,6 +3179,39 @@ def validate_acceptance_repair_route(
         raise BootstrapError(
             "Implementation-conformance repair review requires a matching Acceptance route and completeness projection"
         )
+    if profile_name == "bootstrap-focused-repair-verification":
+        acceptance_schema_path = (
+            repository_root
+            / ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-repair-completeness.v1.schema.json"
+        )
+        if not acceptance_schema_path.is_file():
+            raise BootstrapError("Acceptance repair completeness schema is missing")
+        acceptance_schema = read_json(acceptance_schema_path)
+        schema_errors = load_schema_runtime().schema_errors(
+            acceptance_schema,
+            completeness,
+            {acceptance_schema_path.name: acceptance_schema},
+        )
+        if schema_errors:
+            raise BootstrapError(
+                "Acceptance repair completeness is schema-invalid: "
+                + "; ".join(schema_errors)
+            )
+    repair_request = route.get("repairCompletenessRequest")
+    repair_request_hash = route.get("repairCompletenessRequestHash")
+    if profile_name == "bootstrap-focused-repair-verification" and (
+        not isinstance(repair_request, dict)
+        or repair_request_hash != value_hash(repair_request)
+    ):
+        raise BootstrapError("Focused repair route lacks a bound producer request")
+    if isinstance(repair_request, dict):
+        replayed = replay_acceptance_repair_completeness(
+            repository_root, repair_request
+        )
+        if replayed != completeness:
+            raise BootstrapError(
+                "Acceptance repair completeness does not match producer replay"
+            )
     return {
         "acceptanceRepairRoute": {
             "path": repository_relative_path(route_path, repository_root),
@@ -3067,7 +3430,10 @@ def command_prepare(args: argparse.Namespace) -> int:
             "path": closure_path.relative_to(repository_root).as_posix(),
             "sha256": file_hash(closure_path),
         }
-        if args.profile == "bootstrap-implementation-conformance":
+        if args.profile in {
+            "bootstrap-implementation-conformance",
+            "bootstrap-focused-repair-verification",
+        }:
             if not args.acceptance_repair_route or not args.acceptance_repair_completeness:
                 raise BootstrapError(
                     "Implementation-conformance repair rounds require Acceptance route bindings"
@@ -3092,11 +3458,12 @@ def command_prepare(args: argparse.Namespace) -> int:
                     args.lineage_family_id,
                     args.review_round,
                     args.round_entry_reason,
+                    args.profile,
                 )
             )
         elif args.acceptance_repair_route or args.acceptance_repair_completeness:
             raise BootstrapError(
-                "Acceptance repair route bindings are only valid for implementation-conformance"
+                "Acceptance repair route bindings are only valid for implementation repair profiles"
             )
     elif args.repair_closure:
         raise BootstrapError("Round 1 must not declare --repair-closure")
@@ -3132,11 +3499,17 @@ def command_prepare(args: argparse.Namespace) -> int:
         },
     )
     write_text(out_dir / "process-events.jsonl", "")
-    for layer in LAYERS:
-        write_text(out_dir / "reviewer-prompts" / f"{layer}.md", prompt_text(layer, manifest, out_dir))
+    for layer in manifest["requiredLayers"]:
+        if layer == FOCUSED_REPAIR_ROLE:
+            prompt = focused_repair_prompt_text(manifest)
+            output = focused_repair_output_template(manifest)
+        else:
+            prompt = prompt_text(layer, manifest, out_dir)
+            output = reviewer_template(layer, manifest)
+        write_text(out_dir / "reviewer-prompts" / f"{layer}.md", prompt)
         write_json(
             out_dir / "reviewer-outputs" / f"{layer}.json",
-            reviewer_template(layer, manifest),
+            output,
             grant_modify=True,
         )
     _register_review_artifact(repository_root, run_dir=out_dir)
@@ -3428,7 +3801,10 @@ def load_run(
             manifest["executionReadSet"],
             manifest["dependencyClosure"],
         )
-        if manifest.get("profileName") == "bootstrap-implementation-conformance":
+        if manifest.get("profileName") in {
+            "bootstrap-implementation-conformance",
+            "bootstrap-focused-repair-verification",
+        }:
             route_binding = manifest.get("acceptanceRepairRoute")
             completeness_binding = manifest.get("acceptanceRepairCompleteness")
             if not isinstance(route_binding, dict) or not isinstance(completeness_binding, dict):
@@ -3459,6 +3835,7 @@ def load_run(
                 manifest.get("reviewEntryDecision", {}).get("reason")
                 if isinstance(manifest.get("reviewEntryDecision"), dict)
                 else None,
+                manifest.get("profileName", "bootstrap-implementation-conformance"),
             )
             if any(manifest.get(key) != value for key, value in expected_bindings.items()):
                 raise BootstrapError("Acceptance repair route manifest binding is stale")
@@ -3605,7 +3982,7 @@ def command_authorize_launch(args: argparse.Namespace) -> int:
     started_reviewers = [
         item["operationId"]
         for item in leases["leases"]
-        if item.get("role") in LAYERS and item.get("state") in {"acquired", "completed"}
+        if item.get("role") in REVIEWER_ROLES and item.get("state") in {"acquired", "completed"}
     ]
     if started_reviewers:
         raise BootstrapError(
@@ -3699,7 +4076,7 @@ def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manife
         process_identity = process_creation_identity(args.pid)
         if not pid_is_alive(args.pid) or process_identity is None:
             raise BootstrapError("process-lease acquire requires a currently live --pid with a readable identity")
-        if args.role in {*LAYERS, "independent_verifier"}:
+        if args.role in {*REVIEWER_ROLES, "independent_verifier"}:
             validate_launch_authorization(run_dir, manifest)
         active = [
             item
@@ -3892,7 +4269,7 @@ def access_proof_route(
     if proof_role == "discovery":
         return (
             run_dir / policy["discoverySidecar"],
-            discovery_execution_route(manifest, "blind_hunter"),
+            discovery_execution_route(manifest, manifest["requiredLayers"][0]),
             None,
         )
     if proof_role != "independent_verifier":
@@ -4259,7 +4636,7 @@ def formal_output_is_completed(formal_path: Path, role: str) -> bool:
     if not formal_path.is_file():
         return False
     formal = read_json(formal_path)
-    if role in LAYERS:
+    if role in REVIEWER_ROLES:
         return formal.get("status") == "completed"
     decisions = formal.get("decisions")
     return isinstance(decisions, list) and bool(decisions)
@@ -4450,10 +4827,17 @@ def reserve_codex_attempt(
                     != controller.get("processIdentity")
                 ):
                     dead_reconcilable.append(event)
-            if role in {*LAYERS, "independent_verifier"} and dead_reconcilable:
+            if role in {*REVIEWER_ROLES, "independent_verifier"} and dead_reconcilable:
                 formal = read_json(formal_path)
                 if role == "independent_verifier":
                     validate_verifier(formal, manifest, load_gate_blockers(run_dir, manifest))
+                elif role == FOCUSED_REPAIR_ROLE:
+                    validate_focused_repair_output(
+                        formal,
+                        manifest,
+                        Path(manifest["repositoryRoot"]),
+                        run_dir,
+                    )
                 else:
                     validate_reviewer_output(
                         formal,
@@ -4488,7 +4872,7 @@ def reserve_codex_attempt(
             rejected_hash = recovery["latestRecord"]["rejectedOutput"]["sha256"]
             if not formal_path.is_file() or file_hash(formal_path) != rejected_hash:
                 raise BootstrapError("Rejected verifier output changed after recovery was opened")
-        if role in LAYERS and any(
+        if role in REVIEWER_ROLES and any(
             (run_dir / name).is_file()
             for name in ("review-gate-state.json", "review-gate-result.json")
         ):
@@ -4638,6 +5022,21 @@ def runner_prompt(
         "py", "-3", str(helper_path),
         "--request", str(handshake_request_path), "--out", str(handshake_path),
     ]
+    if role == FOCUSED_REPAIR_ROLE:
+        payload_contract = (
+            "For the focused repair verifier, payload contains status, decisions, newBlockers, "
+            "escalation, failureReason when failed, and artifactViewReadReceipt when completed. "
+            "Do not return discovery candidates or formal coverage arrays; the parent owns coverage. "
+        )
+    else:
+        payload_contract = (
+            "For a reviewer, payload contains status, candidates, and failureReason when failed. A "
+            "completed reviewer payload must contain artifactViewReadReceipt with "
+            f"schemaVersion={ARTIFACT_VIEW_READ_RECEIPT_SCHEMA}, "
+            f"artifactViewManifestHash={manifest['artifactView']['manifestHash']}, "
+            f"artifactCount={len(reviewable_artifact_map(manifest))}, and complete=true. Do not return coverage arrays; "
+            "the parent owns formal coverage. "
+        )
     return (
         prompt_path.read_text(encoding="utf-8")
         + "\n\n# Codex Exec Runtime Contract\n\n"
@@ -4656,12 +5055,7 @@ def runner_prompt(
         "If the command fails, stop and return no candidates.\n"
         f"Return raw JSON only with schemaVersion=bootstrap-layer-candidate.v1, attemptId={attempt_id}, "
         f"role={role}, inputHash={manifest['inputHash']}, accessHandshakeHash, and payload. "
-        "For a reviewer, payload contains status, candidates, and failureReason when failed. A "
-        "completed reviewer payload must contain artifactViewReadReceipt with "
-        f"schemaVersion={ARTIFACT_VIEW_READ_RECEIPT_SCHEMA}, "
-        f"artifactViewManifestHash={manifest['artifactView']['manifestHash']}, "
-        f"artifactCount={len(reviewable_artifact_map(manifest))}, and complete=true. Do not return coverage arrays; "
-        "the parent owns formal coverage. "
+        + payload_contract
         + inventory_attestation_contract
         + "For the verifier, payload contains decisions."
         + verifier_requirements
@@ -4895,10 +5289,44 @@ def validate_reviewer_candidate_payload(
     validate_artifact_view_read_receipt(payload.get("artifactViewReadReceipt"), manifest)
 
 
+def validate_focused_repair_candidate_payload(
+    payload: dict[str, Any], manifest: dict[str, Any]
+) -> None:
+    allowed = {
+        "status", "decisions", "newBlockers", "escalation", "failureReason",
+        "artifactViewReadReceipt",
+    }
+    if set(payload) - allowed:
+        raise TransportAttemptError("Focused repair payload contains unexpected fields")
+    status = payload.get("status")
+    if status == "failed":
+        if (
+            not isinstance(payload.get("failureReason"), str)
+            or not payload["failureReason"].strip()
+            or payload.get("decisions") != []
+            or payload.get("newBlockers") != []
+        ):
+            raise TransportAttemptError("Focused repair failed payload is invalid")
+        raise TransportAttemptError(
+            "Focused repair verifier reported failure: " + payload["failureReason"].strip()
+        )
+    if (
+        status != "completed"
+        or not isinstance(payload.get("decisions"), list)
+        or not isinstance(payload.get("newBlockers"), list)
+        or not isinstance(payload.get("escalation"), dict)
+        or "failureReason" in payload
+    ):
+        raise TransportAttemptError("Focused repair completed payload is invalid")
+    validate_artifact_view_read_receipt(payload.get("artifactViewReadReceipt"), manifest)
+
+
 def command_run_layer(args: argparse.Namespace) -> int:
     run_dir, manifest, repository_root = load_run(args.run_dir)
     if manifest["executionMode"] != "codex-exec":
         raise BootstrapError("run-layer v1 only supports codex-exec runs")
+    if args.role != "independent_verifier" and args.role not in manifest["requiredLayers"]:
+        raise BootstrapError("run-layer role is not required by this review profile")
     validate_launch_authorization(run_dir, manifest)
     proof_role = "independent_verifier" if args.role == "independent_verifier" else "discovery"
     proof_path, route, _gate_hash = access_proof_route(run_dir, manifest, proof_role)
@@ -4941,6 +5369,21 @@ def command_run_layer(args: argparse.Namespace) -> int:
             # ADR-0045: revalidate frozen authority before publishing verifier evidence.
             validate_launch_authorization(run_dir, manifest)
             write_json(run_dir / "verifier-output.json", formal)
+        elif args.role == FOCUSED_REPAIR_ROLE:
+            validate_focused_repair_candidate_payload(payload, manifest)
+            formal = focused_repair_output_template(
+                manifest, attempt_id=attempt_dir.name
+            )
+            formal["status"] = "completed"
+            formal["coverage"] = completed_reviewer_coverage(manifest)
+            formal["decisions"] = payload["decisions"]
+            formal["newBlockers"] = payload["newBlockers"]
+            formal["escalation"] = payload["escalation"]
+            validate_focused_repair_output(
+                formal, manifest, repository_root, run_dir
+            )
+            validate_launch_authorization(run_dir, manifest)
+            write_json(run_dir / "reviewer-outputs" / f"{args.role}.json", formal)
         else:
             validate_reviewer_candidate_payload(payload, manifest, args.role)
             formal = reviewer_template(args.role, manifest, attempt_id=attempt_dir.name)
@@ -5064,9 +5507,12 @@ def command_validate_layer(args: argparse.Namespace) -> int:
     if layer not in manifest["requiredLayers"]:
         raise BootstrapError(f"Reviewer layer is not required by this review: {layer}")
     output = read_json(run_dir / "reviewer-outputs" / f"{layer}.json")
-    validate_reviewer_output(
-        output, manifest, layer, repository_root, run_dir, require_completed=True
-    )
+    if layer == FOCUSED_REPAIR_ROLE:
+        validate_focused_repair_output(output, manifest, repository_root, run_dir)
+    else:
+        validate_reviewer_output(
+            output, manifest, layer, repository_root, run_dir, require_completed=True
+        )
     print(f"Validated reviewer output: {layer}")
     return 0
 
@@ -5507,16 +5953,37 @@ def evaluate_reviewer_outputs(
 def command_gate(args: argparse.Namespace) -> int:
     run_dir, manifest, repository_root = load_run(args.run_dir)
     validate_launch_authorization(run_dir, manifest)
-    validate_required_process_leases(
-        run_dir,
-        manifest,
-        {(f"reviewer:{layer}", layer) for layer in LAYERS},
-    )
     result_path = run_dir / "review-gate-result.json"
     if result_path.exists():
         existing_result = read_json(result_path)
-        if isinstance(existing_result, dict) and existing_result.get("schemaVersion") == "review-result.v1":
-            raise BootstrapError("Refusing to gate an already finalized review; create a new review run instead")
+        if isinstance(existing_result, dict) and existing_result.get("schemaVersion") in {
+            "review-result.v1",
+            "bootstrap-focused-repair-gate-result.v1",
+        }:
+            raise BootstrapError(
+                "Refusing to gate an already finalized review; create a new review run instead"
+            )
+    if manifest["profileName"] == "bootstrap-focused-repair-verification":
+        validate_required_process_leases(
+            run_dir,
+            manifest,
+            {(f"reviewer:{FOCUSED_REPAIR_ROLE}", FOCUSED_REPAIR_ROLE)},
+        )
+        output = read_json(
+            run_dir / "reviewer-outputs" / f"{FOCUSED_REPAIR_ROLE}.json"
+        )
+        gate = project_focused_repair_gate(
+            output, manifest, repository_root, run_dir
+        )
+        write_json(run_dir / "review-gate-state.json", gate)
+        write_json(run_dir / "review-gate-result.json", gate)
+        print(f"Gated focused repair verification: {gate['status']}")
+        return 0
+    validate_required_process_leases(
+        run_dir,
+        manifest,
+        {(f"reviewer:{layer}", layer) for layer in manifest["requiredLayers"]},
+    )
     verifier_path = run_dir / "verifier-output.json"
     if verifier_path.exists():
         existing_verifier = read_json(verifier_path)
@@ -5896,18 +6363,162 @@ def validate_successor_policy_authorization(
     return event
 
 
+def validate_p2_closure_v2(
+    value: dict[str, Any],
+    manifest: dict[str, Any],
+    p2_findings: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    p2_ids = sorted(item["findingId"] for item in p2_findings)
+    trusted_risk = {
+        item["findingId"]: "high" if item.get("dimension") == "security" else "normal"
+        for item in p2_findings
+    }
+    errors = schema_validation_errors("bootstrap-p2-closure.v2.schema.json", value)
+    expected = {
+        "reviewId": manifest["reviewId"],
+        "inputHash": manifest["inputHash"],
+        "candidateHash": manifest["authorityContextHash"],
+        "policyRevision": manifest["policyRevision"],
+        "authorityRevision": manifest["authorityRevision"],
+        "findingIds": p2_ids,
+        "authorizes": [],
+        "doesNotAuthorize": FINALIZED_DOES_NOT_AUTHORIZE,
+    }
+    errors.extend(
+        f"{key} does not match current findings"
+        for key, expected_value in expected.items()
+        if value.get(key) != expected_value
+    )
+    repository_root = Path(manifest["repositoryRoot"])
+    mapped: dict[str, dict[str, Any]] = {}
+
+    def validate_evidence(reference: Any, label: str) -> None:
+        if not isinstance(reference, dict):
+            errors.append(f"{label} is not an object")
+            return
+        try:
+            evidence_path = ensure_within(
+                repository_root / str(reference.get("path", "")),
+                repository_root,
+                label,
+            )
+        except BootstrapError as exc:
+            errors.append(str(exc))
+            return
+        if not evidence_path.is_file() or file_hash(evidence_path) != reference.get("sha256"):
+            errors.append(f"{label} is missing or stale")
+            return
+        try:
+            document = read_json(evidence_path)
+        except (BootstrapError, OSError, UnicodeError, ValueError):
+            errors.append(f"{label} is not readable JSON")
+            return
+        if (
+            not isinstance(document, dict)
+            or document.get("schemaVersion") != reference.get("schemaVersion")
+            or document.get(reference.get("successField")) != reference.get("successValue")
+        ):
+            errors.append(f"{label} does not reproduce its declared successful result")
+        expected_binding = {
+            "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"],
+            "candidateHash": manifest["authorityContextHash"],
+            "authorityRevision": manifest["authorityRevision"],
+        }
+        if any(reference.get(key) != expected for key, expected in expected_binding.items()) or any(
+            document.get(key) != expected for key, expected in expected_binding.items()
+        ):
+            errors.append(f"{label} is not bound to the current review candidate")
+        try:
+            produced = datetime.fromisoformat(
+                str(reference.get("producedAt", "")).replace("Z", "+00:00")
+            )
+        except ValueError:
+            errors.append(f"{label} has an invalid producedAt")
+        else:
+            if produced.tzinfo is None or produced > datetime.now(timezone.utc):
+                errors.append(f"{label} producedAt is invalid")
+        controlled_success = {
+            ("status", "passed"),
+            ("ok", True),
+            ("success", True),
+            ("exitCode", 0),
+        }
+        if (reference.get("successField"), reference.get("successValue")) not in controlled_success:
+            errors.append(f"{label} does not use a controlled success predicate")
+
+    closures = value.get("closures")
+    if isinstance(closures, list):
+        for item in closures:
+            if not isinstance(item, dict):
+                continue
+            finding_id = item.get("findingId")
+            if finding_id in mapped:
+                errors.append(f"duplicate P2 closure: {finding_id}")
+                continue
+            mapped[finding_id] = item
+            if item.get("risk") != trusted_risk.get(finding_id):
+                errors.append(f"P2 closure risk does not match frozen finding: {finding_id}")
+            if trusted_risk.get(finding_id) == "high":
+                errors.append(
+                    f"high-risk P2 requires the v1 controlled closure path: {finding_id}"
+                )
+            for index, evidence in enumerate(item.get("evidence", [])):
+                validate_evidence(evidence, f"P2 closure evidence {finding_id}[{index}]")
+            if item.get("status") == "deferred":
+                try:
+                    expiry = datetime.fromisoformat(
+                        str(item.get("expiry", "")).replace("Z", "+00:00")
+                    )
+                except ValueError:
+                    errors.append(f"deferred P2 has invalid expiry: {finding_id}")
+                else:
+                    if expiry.tzinfo is None or expiry <= datetime.now(timezone.utc):
+                        errors.append(f"deferred P2 has expired and is blocking: {finding_id}")
+                for field in ("nonImpactEvidence", "recheckEvidence"):
+                    for index, evidence in enumerate(item.get(field, [])):
+                        validate_evidence(
+                            evidence, f"P2 {field} {finding_id}[{index}]"
+                        )
+    if sorted(mapped) != p2_ids:
+        errors.append("P2 closure must cover the exact accepted P2 set")
+    if errors:
+        raise BootstrapError("P2 closure v2 evidence is invalid: " + "; ".join(errors))
+    return mapped
+
+
+def p2_closure_path(run_dir: Path) -> Path:
+    candidates = [
+        path for path in (run_dir / "p2-dispositions.json", run_dir / "p2-closure.v2.json")
+        if path.is_file()
+    ]
+    metrics_path = run_dir / "review-metrics.json"
+    if metrics_path.is_file():
+        metrics = read_json(metrics_path)
+        frozen_hash = metrics.get("p2DispositionHash") if isinstance(metrics, dict) else None
+        matches = [path for path in candidates if file_hash(path) == frozen_hash]
+        if len(matches) != 1:
+            raise BootstrapError("Frozen P2 closure format is missing, ambiguous, or stale")
+        return matches[0]
+    v2_path = run_dir / "p2-closure.v2.json"
+    return v2_path if v2_path.is_file() else run_dir / "p2-dispositions.json"
+
+
 def validate_p2_dispositions(
     run_dir: Path,
     manifest: dict[str, Any],
     findings: list[dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
-    p2_ids = sorted(
-        item["findingId"] for item in findings if item.get("proposedSeverity") == "P2"
-    )
+    p2_findings = [
+        item for item in findings if item.get("proposedSeverity") == "P2"
+    ]
+    p2_ids = sorted(item["findingId"] for item in p2_findings)
     if not p2_ids:
         return {}
-    path = run_dir / "p2-dispositions.json"
+    path = p2_closure_path(run_dir)
     value = read_json(path)
+    if isinstance(value, dict) and value.get("schemaVersion") == "bootstrap-p2-closure.v2":
+        return validate_p2_closure_v2(value, manifest, p2_findings)
     errors = schema_validation_errors("bootstrap-p2-dispositions.v1.schema.json", value)
     candidate_hash = manifest["authorityContextHash"]
     expected = {
@@ -6409,7 +7020,7 @@ def validate_finalized_run_evidence(
         raise BootstrapError("Final result violates finalized evidence: " + "; ".join(result_errors))
 
     rejection_count = len(rejections_doc.get("rejections", [])) if isinstance(rejections_doc, dict) else 0
-    p2_hash = file_hash(run_dir / "p2-dispositions.json") if p2_dispositions else None
+    p2_hash = file_hash(p2_closure_path(run_dir)) if p2_dispositions else None
     expected_metrics = {
         "schemaVersion": "bootstrap-review-metrics.v1",
         **bootstrap_sidecar_binding(manifest),
@@ -6492,6 +7103,25 @@ def validate_finalized_run_evidence(
 
 def command_validate_finalized_run(args: argparse.Namespace) -> int:
     run_dir, manifest, repository_root = load_run(args.run_dir)
+    if manifest["profileName"] == "bootstrap-focused-repair-verification":
+        saved_path = run_dir / "focused-repair-validation-envelope.json"
+        saved = read_json(saved_path)
+        if not isinstance(saved, dict) or not isinstance(saved.get("generatedAt"), str):
+            raise BootstrapError("Focused repair validation envelope is missing or invalid")
+        envelope = focused_repair_validation_envelope(
+            run_dir,
+            manifest,
+            repository_root,
+            generated_at=saved["generatedAt"],
+        )
+        if saved != envelope:
+            raise BootstrapError("Focused repair validation envelope is stale")
+        output_path = ensure_within(
+            Path(args.output).resolve(), repository_root, "Finalized-run validation output"
+        )
+        write_json(output_path, envelope)
+        print(f"Validated focused repair verification: {envelope['status']}")
+        return 0
     envelope = validate_finalized_run_evidence(run_dir, manifest, repository_root)
     errors = schema_validation_errors(
         "bootstrap-finalized-run-validation.v3.schema.json", envelope
@@ -6508,6 +7138,30 @@ def command_validate_finalized_run(args: argparse.Namespace) -> int:
 
 def command_finalize(args: argparse.Namespace) -> int:
     run_dir, manifest, repository_root = load_run(args.run_dir, require_fresh_artifacts=False)
+    if manifest["profileName"] == "bootstrap-focused-repair-verification":
+        run_dir, manifest, repository_root = load_run(args.run_dir)
+        validate_launch_authorization(run_dir, manifest)
+        envelope_path = run_dir / "focused-repair-validation-envelope.json"
+        if envelope_path.is_file():
+            saved = read_json(envelope_path)
+            if not isinstance(saved, dict) or not isinstance(saved.get("generatedAt"), str):
+                raise BootstrapError("Focused repair validation envelope is invalid")
+            expected = focused_repair_validation_envelope(
+                run_dir,
+                manifest,
+                repository_root,
+                generated_at=saved["generatedAt"],
+            )
+            if saved != expected:
+                raise BootstrapError("Focused repair validation envelope is stale")
+            print(f"Focused repair verification is already finalized: {saved['status']}")
+            return 0
+        envelope = focused_repair_validation_envelope(
+            run_dir, manifest, repository_root
+        )
+        write_json(envelope_path, envelope)
+        print(f"Finalized focused repair verification: {envelope['status']}")
+        return 0
     stale_after_repair = False
     try:
         load_run(args.run_dir)
@@ -6679,7 +7333,7 @@ def command_finalize(args: argparse.Namespace) -> int:
         "advisoryCount": sum(item["status"] == "advisory" for item in visible),
         "unverifiedCount": sum(item["status"] == "unverified" for item in visible),
         "refutedCount": sum(item["status"] == "refuted" for item in dispositions),
-        "p2DispositionHash": file_hash(run_dir / "p2-dispositions.json") if p2_dispositions else None,
+        "p2DispositionHash": file_hash(p2_closure_path(run_dir)) if p2_dispositions else None,
     }
     write_json(run_dir / "review-metrics.json", metrics)
     report_lines = [
@@ -7020,7 +7674,7 @@ def structured_run_cost_evidence(
                         candidate_doc.get("findings", [])
                         if isinstance(candidate_doc, dict) else []
                     )
-                    if role in LAYERS:
+                    if role in REVIEWER_ROLES:
                         route_candidates = [discovery_execution_route(manifest, role)]
                     elif role == "independent_verifier":
                         route_candidates = [verifier_execution_route(manifest, blocker_values)]
@@ -7096,7 +7750,7 @@ def structured_run_cost_evidence(
             )
         expected_operation = (
             "verifier" if role == "independent_verifier"
-            else (f"reviewer:{role}" if role in LAYERS else None)
+            else (f"reviewer:{role}" if role in REVIEWER_ROLES else None)
         )
         operation_ids = {
             event.get("operationId") for _index, event in lifecycle
@@ -7854,7 +8508,10 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
         ]
     if isinstance(seal, dict) and seal.get("state") == "abandoned":
         execution_state = "abandoned"
-    elif isinstance(gate, dict) and gate.get("schemaVersion") == "review-result.v1":
+    elif isinstance(gate, dict) and gate.get("schemaVersion") in {
+        "review-result.v1",
+        "bootstrap-focused-repair-gate-result.v1",
+    }:
         execution_state = "finalized"
     elif isinstance(gate, dict) and gate.get("status") == "awaiting_verification":
         execution_state = "awaiting-verification"
@@ -7876,13 +8533,24 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
     review_round = manifest.get("fullReviewRound", 1)
     final_status = gate.get("status") if isinstance(gate, dict) else None
     expired_p2 = False
-    p2_path = run_dir / "p2-dispositions.json"
-    if p2_path.is_file():
+    has_p2 = any(
+        (run_dir / name).is_file()
+        for name in ("p2-dispositions.json", "p2-closure.v2.json")
+    )
+    if has_p2:
         try:
+            p2_path = p2_closure_path(run_dir)
             p2_value = read_json(p2_path)
         except BootstrapError:
             p2_value = {}
-        for item in p2_value.get("dispositions", []):
+            expired_p2 = True
+        entries = p2_value.get(
+            "closures"
+            if p2_value.get("schemaVersion") == "bootstrap-p2-closure.v2"
+            else "dispositions",
+            [],
+        )
+        for item in entries:
             if not isinstance(item, dict) or item.get("status") != "deferred":
                 continue
             try:
@@ -7895,11 +8563,11 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
         cycle_state = "closed"
     elif expired_p2:
         cycle_state = "repair-required"
-    elif execution_state == "finalized" and final_status in {"clean", "advisory"}:
+    elif execution_state == "finalized" and final_status in {"clean", "advisory", "passed"}:
         cycle_state = "accepted"
     elif execution_state == "finalized" and review_round >= REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]:
         cycle_state = "manual-pause"
-    elif execution_state == "finalized" and final_status == "blocked":
+    elif execution_state == "finalized" and final_status in {"blocked", "blocking"}:
         cycle_state = "repair-required"
     elif execution_state in {"awaiting-verification", "layers-running", "authorized"}:
         cycle_state = "review-required"
@@ -8366,14 +9034,14 @@ def build_parser() -> argparse.ArgumentParser:
         "access-handshake", help="Read and hash every Artifact View item inside a Codex session"
     )
     handshake.add_argument("--run-dir", required=True)
-    handshake.add_argument("--role", required=True, choices=[*LAYERS, "independent_verifier", "model_probe"])
+    handshake.add_argument("--role", required=True, choices=[*REVIEWER_ROLES, "independent_verifier", "model_probe"])
     handshake.add_argument("--out", required=True)
     handshake.set_defaults(handler=command_access_handshake)
     run_layer = subparsers.add_parser(
         "run-layer", help="Run one explicit Codex reviewer or verifier attempt"
     )
     run_layer.add_argument("--run-dir", required=True)
-    run_layer.add_argument("--role", required=True, choices=[*LAYERS, "independent_verifier"])
+    run_layer.add_argument("--role", required=True, choices=[*REVIEWER_ROLES, "independent_verifier"])
     run_layer.add_argument("--codex-command", required=True)
     run_layer.add_argument("--model")
     run_layer.set_defaults(handler=command_run_layer)
@@ -8405,7 +9073,7 @@ def build_parser() -> argparse.ArgumentParser:
         "validate-layer", help="Validate one reviewer output without writing gate sidecars"
     )
     validate_layer.add_argument("--run-dir", required=True)
-    validate_layer.add_argument("--layer", required=True, choices=LAYERS)
+    validate_layer.add_argument("--layer", required=True, choices=REVIEWER_ROLES)
     validate_layer.set_defaults(handler=command_validate_layer)
     gate = subparsers.add_parser("gate", help="Validate and deduplicate manually saved reviewer outputs")
     gate.add_argument("--run-dir", required=True)

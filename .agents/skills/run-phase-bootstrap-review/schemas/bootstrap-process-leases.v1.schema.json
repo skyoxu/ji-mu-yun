@@ -22,6 +22,7 @@
               "blind_hunter",
               "edge_case_hunter",
               "acceptance_auditor",
+              "focused_repair_verifier",
               "independent_verifier",
               "preflight",
               "model_probe"

@@ -227,7 +227,7 @@ def schema_errors(
     if isinstance(instance, str):
         if len(instance) < schema.get("minLength", 0):
             result.append(f"{path}: string shorter than minLength")
-        if "pattern" in schema and re.fullmatch(schema["pattern"], instance) is None:
+        if "pattern" in schema and re.search(schema["pattern"], instance) is None:
             result.append(f"{path}: pattern mismatch")
     if isinstance(instance, (int, float)) and not isinstance(instance, bool):
         if "minimum" in schema and instance < schema["minimum"]:
@@ -620,7 +620,7 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             {"blind_hunter": "medium", "edge_case_hunter": "high", "acceptance_auditor": "medium", "independent_verifier": "high"},
         ),
     }
-    if set(profiles) != set(expected_profiles):
+    if set(profiles) != set(expected_profiles) | {"bootstrap-focused-repair-verification"}:
         fail(errors, "bootstrap review object profile set is invalid")
         return
     required_layers = ["blind_hunter", "edge_case_hunter", "acceptance_auditor"]
@@ -668,6 +668,53 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
     }
     round_model_overrides = {"3": "gpt-5.6-sol"}
     round_reasoning_overrides = {"3": {layer: "high" for layer in required_layers}}
+    focused_profile = profiles["bootstrap-focused-repair-verification"]
+    expected_focused_keys = set(profiles["bootstrap-implementation-conformance"]) - {"companionCapabilities"}
+    focused_instruction = focused_profile.get("reviewerInstructionPolicy")
+    focused_rubrics = focused_instruction.get("roleRubrics") if isinstance(focused_instruction, dict) else None
+    focused_codex = focused_profile.get("codexExecPolicy")
+    focused_revision_payload = {
+        key: value for key, value in focused_profile.items() if key != "policyRevision"
+    }
+    focused_canonical = json.dumps(
+        focused_revision_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    focused_expected_revision = "sha256:" + hashlib.sha256(focused_canonical).hexdigest()
+    if (
+        set(focused_profile) != expected_focused_keys
+        or focused_profile.get("reviewProfile") != "review-policy://bootstrap-focused-repair-verification/v1"
+        or focused_profile.get("routeVersion") != "bootstrap-review-route.v2"
+        or focused_profile.get("controlPlaneRevision") != "bootstrap-control-plane.v2"
+        or focused_profile.get("reviewObjectType") != "focused-repair-verification"
+        or focused_profile.get("reviewDepth") != "predecessor-finding-to-repair-closure"
+        or focused_profile.get("requiredLayers") != ["focused_repair_verifier"]
+        or focused_profile.get("readOnly") is not True
+        or focused_profile.get("automaticInvocation") is not False
+        or focused_profile.get("completenessPolicy") != completeness_policy
+        or focused_profile.get("reviewCyclePolicy") != review_cycle_policy
+        or not isinstance(focused_instruction, dict)
+        or focused_instruction.get("contentTrustPolicy") != content_trust_policy
+        or not isinstance(focused_rubrics, dict)
+        or set(focused_rubrics) != {"focused_repair_verifier"}
+        or not focused_rubrics["focused_repair_verifier"]
+        or not isinstance(focused_instruction.get("falsePositiveRules"), list)
+        or not focused_instruction["falsePositiveRules"]
+        or not isinstance(focused_codex, dict)
+        or focused_codex.get("preferredModel") != "gpt-5.6-sol"
+        or focused_codex.get("fallbackModels") != []
+        or focused_codex.get("forbiddenModels") != []
+        or focused_codex.get("toolProbeRequired") is not True
+        or focused_codex.get("roundModelOverrides") != {}
+        or focused_codex.get("roundReasoningEffortOverrides") != {}
+        or focused_codex.get("reasoningEffortByRole") != {
+            "focused_repair_verifier": "high", "independent_verifier": "high"
+        }
+        or focused_profile.get("verifierPolicy") != verifier_policy
+        or focused_profile.get("accessProbePolicy") != access_probe_policy
+        or focused_profile.get("policyRevision") != focused_expected_revision
+    ):
+        fail(errors, "bootstrap focused repair materialized profile is invalid")
+        return
     for name, (uri, object_type, depth, contexts, preferred_model, reasoning) in expected_profiles.items():
         profile = profiles[name]
         if profile.get("requiredLayers") != required_layers:

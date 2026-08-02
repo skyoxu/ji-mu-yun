@@ -7,6 +7,12 @@ description: Resume one explicit Repository Maintenance execution-plan directory
 
 Use this Skill only with an explicit plan file or plan directory containing a valid `implementation-contract.v1.json`. It is a plan-directory execution loop; it is not a review authority, commit authority, or release authority.
 
+The parent Quick Dev input router owns lane selection. This strict adapter must
+reject standalone requirements, compact VDD inputs, missing contracts, and
+schema-invalid contracts. It must never infer a compact lane or synthesize a
+contract. All lanes reuse the same four-class model classification, but only a
+`strict_tdd_plan` may enter this adapter.
+
 ## Target Plan Report Lifecycle
 
 Complete this lifecycle before `prepare` or any implementation identity freeze:

@@ -30,6 +30,7 @@ The 2026-07-12 CLI is a revision-bound compatibility adapter only. Do not add du
 - Keep Blind Hunter, Edge Case Hunter, and Acceptance Auditor isolated. Do not share candidates or suspected findings before gate.
 - Require complete artifact and context coverage. Sampling is prohibited and zero findings are valid.
 - Use an independent verifier for every accepted P0/P1.
+- Use exactly one `focused_repair_verifier` for a new non-escalated Round 1 repair. It is distinct from all discovery roles and from `independent_verifier`.
 - Use one stable `lineageFamilyId` for the same acceptance target. Its default budget is two semantic rounds and its hard limit is three; changing `reviewId`, `changeId`, or successor directory never resets it.
 - Do not mutate reviewed files while a review run is active.
 - Never edit reviewer, verifier, gate, process-event, or final evidence to make a run pass.
@@ -251,12 +252,12 @@ Do not rerun gate over saved verifier decisions or reopen a finalized run.
 
 ## Dispose P2 And Finalize
 
-Before finalizing accepted P2 findings, provide `p2-dispositions.json` covering the exact P2 set.
+Before finalizing accepted P2 findings, provide closure covering the exact P2 set. New runs may provide `p2-closure.v2.json`; stored runs continue to read `p2-dispositions.json` v1.
 
 - Every P2 is `fixed`, `refuted`, or `deferred`.
-- High-risk P2 cannot be deferred.
-- Deferral requires a schema-valid authorized owner reference chained to the profile-bound authority-root registry, future expiry, non-impact evidence, a root-authorized command descriptor, current recheck evidence, and a recheck trigger. Successful closure-process evidence is required only when the disposition becomes fixed or refuted.
-- Execute registered P2 commands only through `run-p2-command`. It uses argument arrays with `shell=False`, a contained working directory, and the environment allowlist; it appends a hash-chained process event and binds actual stdout/stderr bytes. Each process result anchors its own `eventHash` in the shared append-only log, so later valid appends do not stale earlier results; legacy whole-log hash references remain read-only compatible. A handwritten `exitCode: 0` result is invalid.
+- High-risk P2 cannot use the lightweight v2 bundle; use the v1 controlled closure path, where deferral remains prohibited.
+- A v2 normal-risk deferral requires owner, future expiry, bounded non-impact evidence, current passed recheck evidence, and a recheck trigger inside the hash-bound bundle. A stored v1 deferral retains its profile-root authority and registered-process requirements. Successful current validation is required for v2 fixed/refuted closure.
+- For stored v1 chains, execute registered P2 commands only through `run-p2-command`; its process-event and byte-binding rules remain unchanged. A v2 bundle instead references current structured JSON results by path/hash, exact schema version, current review/input/candidate/authority bindings, production time, and a controlled successful field/value. Handwritten prose, failed-state equality, or an unbound `exitCode: 0` is not v2 evidence.
 - An expired deferral blocks automatically.
 
 Finalize only after independent P0/P1 decisions and complete P2 dispositions. A final result cannot contain an open accepted P0/P1.

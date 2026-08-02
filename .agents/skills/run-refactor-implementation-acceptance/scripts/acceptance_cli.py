@@ -53,6 +53,7 @@ from bootstrap_integration import (
     validate_mapping_approval,
     project_bootstrap_execution_state,
     project_bounded_review_route,
+    replay_finalized_bootstrap_run,
 )
 
 
@@ -588,6 +589,7 @@ def prepare_bootstrap_command(request_path: str, output_path: str) -> dict:
     next_actions = {
         "deterministic_only": "deterministic-only-evaluation",
         "focused_repair_review": "run-phase-bootstrap-review",
+        "focused_repair_verification": "run-phase-bootstrap-review",
         "full_implementation_conformance": "run-phase-bootstrap-review",
         "manual_pause": "manual-pause",
     }
@@ -599,7 +601,100 @@ def prepare_bootstrap_command(request_path: str, output_path: str) -> dict:
         "nextAction": next_actions[review_route["routeKind"]],
         "authorizes": [],
     }
+    if request.get("repair_completeness") is not None:
+        route["repairCompletenessRequest"] = request["repair_completeness_request"]
+        route["repairCompletenessRequestHash"] = canonical_hash(
+            request["repair_completeness_request"]
+        )
     return _publish_new_json(output_path, route)
+
+
+def import_focused_repair_command(request_path: str, output_path: str) -> dict:
+    request = _read_json(request_path)
+    required = {"repositoryRoot", "focusedRun", "acceptanceRepairRoute", "repairCompleteness"}
+    if not isinstance(request, dict) or set(request) != required:
+        raise InputError("focused repair import request fields are invalid")
+    if not isinstance(request["repositoryRoot"], str) or not request["repositoryRoot"].strip():
+        raise InputError("focused repair repository root is invalid")
+    root = Path(request["repositoryRoot"]).resolve()
+    run_relative = request["focusedRun"]
+    if not isinstance(run_relative, str) or not run_relative.strip():
+        raise InputError("focusedRun must be a repository-relative run directory")
+    run_dir = (root / run_relative).resolve()
+    try:
+        run_dir.relative_to(root)
+    except ValueError as exc:
+        raise InputError("focusedRun escapes repository root") from exc
+    try:
+        envelope = replay_finalized_bootstrap_run(root, run_relative)
+    except BootstrapBindingError as exc:
+        raise InputError(str(exc)) from exc
+    envelope_path = run_dir / "focused-repair-validation-envelope.json"
+    if not envelope_path.is_file() or _read_json(str(envelope_path)) != envelope:
+        raise InputError("focused repair envelope does not match canonical replay")
+
+    def load_ref(name: str) -> tuple[dict, Path]:
+        reference = request[name]
+        if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+            raise InputError(f"{name} must be an exact path/hash reference")
+        path = (root / str(reference["path"])).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as exc:
+            raise InputError(f"{name} escapes repository root") from exc
+        if not path.is_file() or _file_hash(path) != reference["sha256"]:
+            raise InputError(f"{name} is missing or stale")
+        value = _read_json(str(path))
+        if not isinstance(value, dict):
+            raise InputError(f"{name} must reference a JSON object")
+        return value, path
+
+    route, route_path = load_ref("acceptanceRepairRoute")
+    completeness, completeness_path = load_ref("repairCompleteness")
+    exclusions = {"implementation-acceptance", "protected-handoff", "release", "commit", "done"}
+    if (
+        envelope.get("schemaVersion") != "bootstrap-focused-repair-validation-envelope.v1"
+        or envelope.get("status") != "passed"
+        or envelope.get("nextAction") != "deterministic-closure"
+        or envelope.get("fullReviewRound") != 2
+        or envelope.get("authorizes") != []
+        or not exclusions.issubset(set(envelope.get("doesNotAuthorize", [])))
+    ):
+        raise InputError("focused repair envelope is not a passed non-authorizing result")
+    if (
+        route.get("schemaVersion") != "implementation-acceptance-bootstrap-route.v1"
+        or route.get("routeKind") != "focused_repair_verification"
+        or route.get("lineageFamilyId") != envelope.get("lineageFamilyId")
+        or route.get("semanticRoundsConsumed") != 1
+        or route.get("nextFullReviewRound") != 2
+        or route.get("roundEntryReason") is not None
+        or route.get("authorizes") != []
+        or _file_hash(route_path) != envelope.get("acceptanceRepairRouteHash")
+    ):
+        raise InputError("focused repair route does not match the validation envelope")
+    if (
+        completeness.get("schemaVersion") != "acceptance-repair-completeness.v1"
+        or completeness.get("status") != "passed"
+        or completeness.get("lineageFamilyId") != envelope.get("lineageFamilyId")
+        or completeness.get("semanticRoundsConsumed") != 1
+        or completeness.get("authorizes") != []
+        or _file_hash(completeness_path) != envelope.get("repairCompletenessHash")
+        or canonical_hash(completeness) != route.get("repairCompletenessHash")
+    ):
+        raise InputError("repair completeness does not match the focused route and envelope")
+    result = {
+        "schemaVersion": "implementation-acceptance-focused-repair-import.v1",
+        "lineageFamilyId": envelope["lineageFamilyId"],
+        "reviewId": envelope["reviewId"],
+        "fullReviewRound": 2,
+        "status": "ready_for_deterministic_evaluation",
+        "focusedEnvelopeHash": _file_hash(envelope_path),
+        "acceptanceRepairRouteHash": _file_hash(route_path),
+        "repairCompletenessHash": _file_hash(completeness_path),
+        "authorizes": [],
+        "doesNotAuthorize": sorted(exclusions),
+    }
+    return _publish_new_json(output_path, result)
 
 
 def import_bootstrap_launch_authorization_command(request_path: str, output_path: str) -> dict:
@@ -740,7 +835,7 @@ def main() -> int:
     render = subcommands.add_parser("render")
     render.add_argument("--input", required=True)
     render.add_argument("--out", required=True)
-    for name in ("collect-evidence", "decide-bootstrap", "import-bootstrap-launch-authorization", "import-bootstrap", "map-findings", "import-mapping-approval"):
+    for name in ("collect-evidence", "decide-bootstrap", "import-bootstrap-launch-authorization", "import-bootstrap", "import-focused-repair", "map-findings", "import-mapping-approval"):
         action = subcommands.add_parser(name)
         action.add_argument("--request", required=True)
         action.add_argument("--out", required=True)
@@ -867,6 +962,9 @@ def main() -> int:
         return 0
     if args.command == "import-bootstrap":
         print(json.dumps(import_bootstrap_command(args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "import-focused-repair":
+        print(json.dumps(import_focused_repair_command(args.request, args.out), sort_keys=True))
         return 0
     if args.command == "map-findings":
         print(json.dumps(map_findings_command(args.request, args.out), sort_keys=True))

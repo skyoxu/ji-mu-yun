@@ -95,7 +95,7 @@
     },
     "roles": {
       "type": "array", "uniqueItems": true,
-      "items": {"enum": ["blind_hunter", "edge_case_hunter", "acceptance_auditor", "independent_verifier", "model_probe"]}
+      "items": {"enum": ["blind_hunter", "edge_case_hunter", "acceptance_auditor", "focused_repair_verifier", "independent_verifier", "model_probe"]}
     },
     "exclusions": {"type": "array", "minItems": 6, "uniqueItems": true, "items": {"enum": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
   }

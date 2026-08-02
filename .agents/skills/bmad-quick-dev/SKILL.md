@@ -42,6 +42,31 @@ A specification should target a **single user-facing goal** within **900–1600 
 
 ## On Activation
 
+Before choosing an implementation backend, classify the explicit input through
+the repository Quick Dev input router. It selects exactly one lane:
+
+- `standalone_requirement` for one readable Markdown requirement outside a
+  strict execution-plan contract;
+- `strict_tdd_plan` only when a schema-valid `implementation-contract.v1.json`
+  exists;
+- `verified_compact_vdd` only when the VDD state and compact bindings validate;
+- `invalid` for corrupt, ambiguous, escaping, or incomplete input.
+
+Absence of an implementation contract never proves compact VDD. Do not invent
+contract or TDD evidence. Every executable lane passes the same typed facts to
+the existing four-class Quick Dev classifier before model routing.
+
+For an explicit file or directory input, run:
+
+```powershell
+py -3 {skill-root}/scripts/quick_dev_input_router.py --repository-root {project-root} --input <path> --facts <typed-facts.json> --output <route.json>
+```
+
+The route is non-authorizing. `observe_only` records the model decision but
+does not launch a child or replace the current Codex session. A conversational
+intent with no filesystem input remains in ordinary Quick Dev; derive its
+typed model facts during planning instead of inventing a plan contract.
+
 ### Step 1: Resolve the Workflow Block
 
 Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`

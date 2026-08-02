@@ -2755,11 +2755,48 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.write_synthetic_blocked_result("BSR-ACCEPTANCE-FIRST")
         predecessor = self.run_dir
         self.target.write_text("# Plan\n\nRepair.\n", encoding="utf-8", newline="\n")
+        target_relative = self.target.relative_to(self.repo).as_posix()
         completeness = {
             "schemaVersion": "acceptance-repair-completeness.v1",
             "status": "passed",
+            "acceptanceTarget": "execution-plans/example",
             "lineageFamilyId": family_id,
             "semanticRoundsConsumed": 1,
+            "predecessorRun": predecessor.relative_to(self.repo).as_posix(),
+            "baselineManifest": {"path": target_relative, "sha256": bootstrap.file_hash(self.target)},
+            "candidateManifest": {"path": target_relative, "sha256": bootstrap.file_hash(self.target)},
+            "changedPaths": [target_relative],
+            "changedPathBindings": [{
+                "path": target_relative, "state": "present", "sha256": bootstrap.file_hash(self.target),
+            }],
+            "directConsumers": [{"path": target_relative, "sha256": bootstrap.file_hash(self.target)}],
+            "targetedTests": [{"path": target_relative, "sha256": bootstrap.file_hash(self.target)}],
+            "validationRefs": [{"path": target_relative, "sha256": bootstrap.file_hash(self.target)}],
+            "rootCauseInventories": [{
+                "inventoryId": "focused-plan-callsites",
+                "searchTerm": "Repair",
+                "searchRoots": ["."],
+                "matches": [{
+                    "path": target_relative, "sha256": bootstrap.file_hash(self.target), "lineNumbers": [3],
+                }],
+                "addressedPaths": [target_relative],
+                "exclusions": [],
+            }],
+            "compositionChecks": [{
+                "checkId": "focused-plan-composition",
+                "bindings": [
+                    {"role": "producer", "path": target_relative, "sha256": bootstrap.file_hash(self.target)},
+                    {"role": "consumer", "path": target_relative, "sha256": bootstrap.file_hash(self.target)},
+                ],
+                "commandRegistry": {"path": target_relative, "sha256": bootstrap.file_hash(self.target)},
+                "receipt": {"path": target_relative, "sha256": bootstrap.file_hash(self.target)},
+            }],
+            "novelP0P1FindingIds": [],
+            "authorityGraphChanged": False,
+            "authorityGraphArtifacts": [],
+            "highRiskBoundaryChanged": False,
+            "highRiskBoundaryArtifacts": [],
+            "requestHash": "sha256:" + "a" * 64,
             "authorizes": [],
         }
         route = {
@@ -2801,6 +2838,281 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(
             "acceptance-route.json", manifest["acceptanceRepairRoute"]["path"]
         )
+
+    def test_focused_repair_profile_projects_single_verifier_and_escalation(self) -> None:
+        acceptance_schema = (
+            self.repo
+            / ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-repair-completeness.v1.schema.json"
+        )
+        acceptance_schema.parent.mkdir(parents=True, exist_ok=True)
+        acceptance_schema.write_bytes(
+            (
+                REPOSITORY_ROOT
+                / ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-repair-completeness.v1.schema.json"
+            ).read_bytes()
+        )
+        family_id = "focused-repair-family"
+        finding_id = "BSR-FOCUSED-FIRST"
+        self.prepare(
+            profile="bootstrap-implementation-conformance",
+            lineage_family_id=family_id,
+        )
+        self.write_synthetic_blocked_result(finding_id)
+        predecessor = self.run_dir
+        self.target.write_text("# Plan\n\nRepair.\n", encoding="utf-8", newline="\n")
+        target_relative = self.target.relative_to(self.repo).as_posix()
+        completeness = {
+            "schemaVersion": "acceptance-repair-completeness.v1",
+            "status": "passed",
+            "acceptanceTarget": "execution-plans/example",
+            "lineageFamilyId": family_id,
+            "semanticRoundsConsumed": 1,
+            "predecessorRun": predecessor.relative_to(self.repo).as_posix(),
+            "baselineManifest": {"path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
+            "candidateManifest": {"path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
+            "changedPaths": ["plan.md"],
+            "changedPathBindings": [{
+                "path": "plan.md", "state": "present", "sha256": bootstrap.file_hash(self.target),
+            }],
+            "directConsumers": [{"path": "plan.md", "sha256": bootstrap.file_hash(self.target)}],
+            "targetedTests": [{"path": "plan.md", "sha256": bootstrap.file_hash(self.target)}],
+            "validationRefs": [{"path": "plan.md", "sha256": bootstrap.file_hash(self.target)}],
+            "rootCauseInventories": [{
+                "inventoryId": "focused-plan-callsites",
+                "searchTerm": "Repair",
+                "searchRoots": ["."],
+                "matches": [{
+                    "path": "plan.md", "sha256": bootstrap.file_hash(self.target), "lineNumbers": [3],
+                }],
+                "addressedPaths": ["plan.md"],
+                "exclusions": [],
+            }],
+            "compositionChecks": [{
+                "checkId": "focused-plan-composition",
+                "bindings": [
+                    {"role": "producer", "path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
+                    {"role": "consumer", "path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
+                ],
+                "commandRegistry": {"path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
+                "receipt": {"path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
+            }],
+            "novelP0P1FindingIds": [],
+            "authorityGraphChanged": False,
+            "authorityGraphArtifacts": [],
+            "highRiskBoundaryChanged": False,
+            "highRiskBoundaryArtifacts": [],
+            "requestHash": "sha256:" + "a" * 64,
+            "authorizes": [],
+        }
+        for field in ("baselineManifest", "candidateManifest"):
+            completeness[field]["path"] = target_relative
+        completeness["changedPaths"] = [target_relative]
+        for field in ("changedPathBindings", "directConsumers", "targetedTests", "validationRefs"):
+            completeness[field][0]["path"] = target_relative
+        completeness["rootCauseInventories"][0]["matches"][0]["path"] = target_relative
+        completeness["rootCauseInventories"][0]["addressedPaths"] = [target_relative]
+        for binding in completeness["compositionChecks"][0]["bindings"]:
+            binding["path"] = target_relative
+        completeness["compositionChecks"][0]["commandRegistry"]["path"] = target_relative
+        completeness["compositionChecks"][0]["receipt"]["path"] = target_relative
+        repair_request = {"producer": "focused-test"}
+        route = {
+            "schemaVersion": "implementation-acceptance-bootstrap-route.v1",
+            "routeKind": "focused_repair_verification",
+            "lineageFamilyId": family_id,
+            "semanticRoundsConsumed": 1,
+            "nextFullReviewRound": 2,
+            "roundEntryReason": None,
+            "repairCompletenessHash": bootstrap.value_hash(completeness),
+            "repairCompletenessRequest": repair_request,
+            "repairCompletenessRequestHash": bootstrap.value_hash(repair_request),
+            "authorizes": [],
+        }
+        route_path = self.repo / "focused-route.json"
+        completeness_path = self.repo / "focused-completeness.json"
+        route_path.write_text(json.dumps(route), encoding="utf-8", newline="\n")
+        completeness_path.write_text(
+            json.dumps(completeness), encoding="utf-8", newline="\n"
+        )
+        self.run_dir = self.repo / "bootstrap-focused-round-2"
+        replay_patch = mock.patch.object(
+            bootstrap,
+            "replay_acceptance_repair_completeness",
+            return_value=completeness,
+        )
+        replay_patch.start()
+        self.addCleanup(replay_patch.stop)
+        self.prepare(
+            profile="bootstrap-focused-repair-verification",
+            review_id="focused-round-two",
+            lineage_family_id=family_id,
+            review_round=2,
+            predecessor_run=predecessor,
+            acceptance_route=route_path,
+            acceptance_completeness=completeness_path,
+        )
+        manifest = self.read_json("review-input.json")
+        self.assertEqual([bootstrap.FOCUSED_REPAIR_ROLE], manifest["requiredLayers"])
+        output = bootstrap.focused_repair_output_template(manifest)
+        output["status"] = "completed"
+        output["coverage"] = bootstrap.completed_reviewer_coverage(manifest)
+        output["decisions"] = [{
+            "findingId": finding_id,
+            "status": "verified_fixed",
+            "evidenceChecked": [self.target.relative_to(self.repo).as_posix()],
+        }]
+        self.write_json(
+            f"reviewer-outputs/{bootstrap.FOCUSED_REPAIR_ROLE}.json", output
+        )
+        escalated_output = copy.deepcopy(output)
+        escalated_output["newBlockers"] = [{
+            "findingId": "BSR-FOCUSED-NOVEL",
+            "severity": "P1",
+            "dimension": "code",
+            "artifact": self.target.relative_to(self.repo).as_posix(),
+            "startLine": 3,
+            "endLine": 3,
+            "exactEvidence": "Repair.",
+        }]
+        escalated_output["escalation"]["novelP0P1FindingIds"] = ["BSR-FOCUSED-NOVEL"]
+        escalated = bootstrap.project_focused_repair_gate(
+            escalated_output, manifest, self.repo, self.run_dir
+        )
+        self.assertEqual("escalation_required", escalated["status"])
+        self.assertEqual("full-implementation-conformance", escalated["nextAction"])
+
+        self.complete_preflight()
+        self.authorize_launch()
+        self.complete_process_lease(
+            f"reviewer:{bootstrap.FOCUSED_REPAIR_ROLE}", bootstrap.FOCUSED_REPAIR_ROLE
+        )
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        gate = self.read_json("review-gate-result.json")
+        self.assertEqual("passed", gate["status"])
+        self.assertEqual("deterministic-closure", gate["nextAction"])
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        envelope = self.read_json("focused-repair-validation-envelope.json")
+        self.assertEqual("passed", envelope["status"])
+        self.assertEqual([], envelope["authorizes"])
+        validation_path = self.repo / "focused-validation.json"
+        self.assertEqual(0, bootstrap.main([
+            "validate-finalized-run", "--run-dir", str(self.run_dir),
+            "--output", str(validation_path),
+        ]))
+        self.assertEqual(envelope, json.loads(validation_path.read_text(encoding="utf-8")))
+        self.assertEqual(1, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        classified = bootstrap.classify_run(self.run_dir, manifest)
+        self.assertEqual("finalized", classified["runExecutionState"])
+        self.assertEqual("accepted", classified["changeCycleState"])
+
+    def test_focused_repair_profile_is_revision_pinned_from_base_profile(self) -> None:
+        expected = bootstrap.load_profile("bootstrap-focused-repair-verification")
+        registry = bootstrap.read_json(bootstrap.PROFILE_PATH)
+        registry["profiles"]["bootstrap-implementation-conformance"]["reviewDepth"] = (
+            "future-base-profile-depth"
+        )
+        mutated_registry = self.repo / "mutated-review-profiles.json"
+        mutated_registry.write_text(
+            json.dumps(registry, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+
+        with mock.patch.object(bootstrap, "PROFILE_PATH", mutated_registry):
+            actual = bootstrap.load_profile("bootstrap-focused-repair-verification")
+
+        self.assertEqual(expected, actual)
+        self.assertEqual(
+            "sha256:c45b0fb892993d2474d6571eaf17be093313d94a0f1c1f367e78773086836c63",
+            actual["policyRevision"],
+        )
+
+    def test_p2_closure_v2_is_compact_fail_closed_and_high_risk_safe(self) -> None:
+        self.run_dir.mkdir()
+        evidence = self.repo / "targeted-result.json"
+        manifest = {
+            "reviewId": "p2-v2-review",
+            "inputHash": "sha256:" + "1" * 64,
+            "authorityContextHash": "sha256:" + "2" * 64,
+            "policyRevision": "sha256:" + "3" * 64,
+            "authorityRevision": "test-revision",
+            "repositoryRoot": str(self.repo),
+        }
+        evidence_binding = {
+            "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"],
+            "candidateHash": manifest["authorityContextHash"],
+            "authorityRevision": manifest["authorityRevision"],
+        }
+        evidence.write_text(
+            json.dumps({
+                "schemaVersion": "targeted-check.v1",
+                **evidence_binding,
+                "status": "passed",
+            }),
+            encoding="utf-8",
+            newline="\n",
+        )
+        evidence_ref = {
+            "path": evidence.relative_to(self.repo).as_posix(),
+            "sha256": bootstrap.file_hash(evidence),
+            "schemaVersion": "targeted-check.v1",
+            **evidence_binding,
+            "producedAt": "2026-08-01T00:00:00Z",
+            "successField": "status",
+            "successValue": "passed",
+        }
+        closure = {
+            "schemaVersion": "bootstrap-p2-closure.v2",
+            "reviewId": manifest["reviewId"],
+            "inputHash": manifest["inputHash"],
+            "candidateHash": manifest["authorityContextHash"],
+            "policyRevision": manifest["policyRevision"],
+            "authorityRevision": manifest["authorityRevision"],
+            "findingIds": ["BSR-P2-V2"],
+            "closures": [{
+                "findingId": "BSR-P2-V2",
+                "status": "fixed",
+                "risk": "normal",
+                "reason": "Targeted validation closes the advisory finding.",
+                "evidence": [evidence_ref],
+            }],
+            "authorizes": [],
+            "doesNotAuthorize": bootstrap.FINALIZED_DOES_NOT_AUTHORIZE,
+        }
+        self.write_json("p2-closure.v2.json", closure)
+        findings = [{
+            "findingId": "BSR-P2-V2",
+            "proposedSeverity": "P2",
+            "dimension": "code",
+        }]
+        mapped = bootstrap.validate_p2_dispositions(self.run_dir, manifest, findings)
+        self.assertEqual("fixed", mapped["BSR-P2-V2"]["status"])
+
+        closure["closures"][0].update({
+            "status": "deferred",
+            "risk": "high",
+            "owner": "maintainer",
+            "expiry": "2099-01-01T00:00:00Z",
+            "recheckTrigger": "next protocol change",
+            "nonImpactEvidence": [evidence_ref],
+            "recheckEvidence": [evidence_ref],
+        })
+        findings[0]["dimension"] = "security"
+        self.write_json("p2-closure.v2.json", closure)
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "high-risk P2 requires"):
+            bootstrap.validate_p2_dispositions(self.run_dir, manifest, findings)
+
+        findings[0]["dimension"] = "code"
+        closure["closures"][0]["risk"] = "normal"
+        closure["closures"][0]["status"] = "fixed"
+        closure["closures"][0].pop("owner")
+        closure["closures"][0].pop("expiry")
+        closure["closures"][0].pop("recheckTrigger")
+        closure["closures"][0].pop("nonImpactEvidence")
+        closure["closures"][0].pop("recheckEvidence")
+        closure["closures"][0]["evidence"][0]["sha256"] = "sha256:" + "0" * 64
+        self.write_json("p2-closure.v2.json", closure)
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "missing or stale"):
+            bootstrap.validate_p2_dispositions(self.run_dir, manifest, findings)
 
     def test_review_registry_reconciles_repository_history_and_revalidates_bytes(self) -> None:
         self.prepare()

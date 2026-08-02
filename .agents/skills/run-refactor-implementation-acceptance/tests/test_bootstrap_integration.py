@@ -66,6 +66,45 @@ class BootstrapIntegrationTests(unittest.TestCase):
             historical_replay=True,
         )
 
+    def test_finalized_replay_uses_focused_envelope_projection(self) -> None:
+        import bootstrap_integration
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            run_relative = "logs/ci/focused-review"
+            run_dir = root / run_relative
+            run_dir.mkdir(parents=True)
+            manifest = {
+                "reviewId": "focused-review-1",
+                "profileName": "bootstrap-focused-repair-verification",
+            }
+            envelope = {
+                "schemaVersion": "bootstrap-focused-repair-validation-envelope.v1",
+                "status": "passed",
+                "generatedAt": "2026-08-02T00:00:00Z",
+            }
+            (run_dir / "focused-repair-validation-envelope.json").write_text(
+                json.dumps(envelope), encoding="utf-8", newline="\n"
+            )
+            module = mock.Mock()
+            module.load_run.return_value = (run_dir, manifest, root)
+            module.focused_repair_validation_envelope.return_value = envelope
+            with mock.patch.object(
+                bootstrap_integration, "_load_bootstrap_module", return_value=module
+            ):
+                result = bootstrap_integration.replay_finalized_bootstrap_run(
+                    root, run_relative
+                )
+
+        self.assertEqual(envelope, result)
+        module.focused_repair_validation_envelope.assert_called_once_with(
+            run_dir,
+            manifest,
+            root,
+            generated_at="2026-08-02T00:00:00Z",
+        )
+        module.validate_finalized_run_evidence.assert_not_called()
+
     def finalized_envelope(
         self,
         *,
@@ -331,6 +370,169 @@ class BootstrapIntegrationTests(unittest.TestCase):
             "requestHash": "sha256:" + "a" * 64,
             "authorizes": [],
         }
+
+    def focused_repair_import_fixture(self, root: Path) -> tuple[Path, Path, dict]:
+        import acceptance_cli
+
+        family_id = self.review_scope()["lineageFamilyId"]
+        completeness = self.repair_completeness(family_id, 1)
+        route = {
+            "schemaVersion": "implementation-acceptance-bootstrap-route.v1",
+            "routeKind": "focused_repair_verification",
+            "lineageFamilyId": family_id,
+            "semanticRoundsConsumed": 1,
+            "nextFullReviewRound": 2,
+            "roundEntryReason": None,
+            "repairCompletenessHash": acceptance_cli.canonical_hash(completeness),
+            "authorizes": [],
+        }
+        fixture_dir = root / "logs" / "focused-import"
+        fixture_dir.mkdir(parents=True)
+        run_dir = fixture_dir / "run"
+        run_dir.mkdir()
+        route_path = fixture_dir / "acceptance-route.json"
+        completeness_path = fixture_dir / "repair-completeness.json"
+        route_path.write_text(json.dumps(route), encoding="utf-8")
+        completeness_path.write_text(json.dumps(completeness), encoding="utf-8")
+        envelope = {
+            "schemaVersion": "bootstrap-focused-repair-validation-envelope.v1",
+            "status": "passed",
+            "nextAction": "deterministic-closure",
+            "lineageFamilyId": family_id,
+            "reviewId": "focused-review-1",
+            "fullReviewRound": 2,
+            "acceptanceRepairRouteHash": acceptance_cli._file_hash(route_path),
+            "repairCompletenessHash": acceptance_cli._file_hash(completeness_path),
+            "authorizes": [],
+            "doesNotAuthorize": [
+                "implementation-acceptance",
+                "protected-handoff",
+                "release",
+                "commit",
+                "done",
+            ],
+        }
+        envelope_path = run_dir / "focused-repair-validation-envelope.json"
+        envelope_path.write_text(json.dumps(envelope), encoding="utf-8")
+
+        def reference(path: Path) -> dict:
+            return {
+                "path": path.relative_to(root).as_posix(),
+                "sha256": acceptance_cli._file_hash(path),
+            }
+
+        request = {
+            "repositoryRoot": str(root),
+            "focusedRun": run_dir.relative_to(root).as_posix(),
+            "acceptanceRepairRoute": reference(route_path),
+            "repairCompleteness": reference(completeness_path),
+        }
+        request_path = fixture_dir / "request.json"
+        request_path.write_text(json.dumps(request), encoding="utf-8")
+        return request_path, fixture_dir / "result.json", request
+
+    def test_focused_repair_import_accepts_only_current_passed_bindings(self) -> None:
+        import acceptance_cli
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            request_path, output_path, _ = self.focused_repair_import_fixture(root)
+            envelope = json.loads(
+                (request_path.parent / "run/focused-repair-validation-envelope.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            with mock.patch.object(
+                acceptance_cli, "replay_finalized_bootstrap_run", return_value=envelope
+            ):
+                result = acceptance_cli.import_focused_repair_command(
+                    str(request_path), str(output_path)
+                )
+
+        self.assertEqual("ready_for_deterministic_evaluation", result["status"])
+        self.assertEqual(2, result["fullReviewRound"])
+        self.assertEqual([], result["authorizes"])
+        self.assertEqual(
+            {
+                "commit",
+                "done",
+                "implementation-acceptance",
+                "protected-handoff",
+                "release",
+            },
+            set(result["doesNotAuthorize"]),
+        )
+
+    def test_focused_repair_import_rejects_stale_references(self) -> None:
+        import acceptance_cli
+
+        for reference_name in (
+            "acceptanceRepairRoute",
+            "repairCompleteness",
+        ):
+            with self.subTest(reference=reference_name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                request_path, output_path, request = self.focused_repair_import_fixture(root)
+                request[reference_name]["sha256"] = "sha256:" + "f" * 64
+                request_path.write_text(json.dumps(request), encoding="utf-8")
+                envelope = json.loads(
+                    (request_path.parent / "run/focused-repair-validation-envelope.json").read_text(
+                        encoding="utf-8"
+                    )
+                )
+                with mock.patch.object(
+                    acceptance_cli, "replay_finalized_bootstrap_run", return_value=envelope
+                ):
+                    with self.assertRaisesRegex(acceptance_cli.InputError, "missing or stale"):
+                        acceptance_cli.import_focused_repair_command(
+                            str(request_path), str(output_path)
+                        )
+
+    def test_focused_repair_import_rejects_binding_drift_and_escalation(self) -> None:
+        import acceptance_cli
+
+        mutations = (
+            ("acceptanceRepairRoute", "lineageFamilyId", "wrong-family", "route does not match"),
+            ("repairCompleteness", "status", "failed", "completeness does not match"),
+        )
+        for reference_name, field, value, message in mutations:
+            with self.subTest(reference=reference_name, field=field), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                request_path, output_path, request = self.focused_repair_import_fixture(root)
+                document_path = root / request[reference_name]["path"]
+                document = json.loads(document_path.read_text(encoding="utf-8"))
+                document[field] = value
+                document_path.write_text(json.dumps(document), encoding="utf-8")
+                request[reference_name]["sha256"] = acceptance_cli._file_hash(document_path)
+                request_path.write_text(json.dumps(request), encoding="utf-8")
+                envelope = json.loads(
+                    (request_path.parent / "run/focused-repair-validation-envelope.json").read_text(
+                        encoding="utf-8"
+                    )
+                )
+                with mock.patch.object(
+                    acceptance_cli, "replay_finalized_bootstrap_run", return_value=envelope
+                ):
+                    with self.assertRaisesRegex(acceptance_cli.InputError, message):
+                        acceptance_cli.import_focused_repair_command(
+                            str(request_path), str(output_path)
+                        )
+
+    def test_focused_repair_import_rejects_noncanonical_run(self) -> None:
+        import acceptance_cli
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            request_path, output_path, _ = self.focused_repair_import_fixture(root)
+            with mock.patch.object(
+                acceptance_cli,
+                "replay_finalized_bootstrap_run",
+                side_effect=acceptance_cli.BootstrapBindingError("canonical replay failed"),
+            ):
+                with self.assertRaisesRegex(acceptance_cli.InputError, "canonical replay failed"):
+                    acceptance_cli.import_focused_repair_command(
+                        str(request_path), str(output_path)
+                    )
 
     def test_required_decision_binds_profile_companion_identity(self) -> None:
         import bootstrap_integration
@@ -1162,7 +1364,7 @@ class BootstrapIntegrationTests(unittest.TestCase):
             self.lineage_state(family, 1),
             self.repair_completeness(family, 1),
         )
-        self.assertEqual("focused_repair_review", round_two["routeKind"])
+        self.assertEqual("focused_repair_verification", round_two["routeKind"])
         round_two_with_changed_context = bootstrap_integration.project_bounded_review_route(
             decision,
             scope,
@@ -1172,7 +1374,11 @@ class BootstrapIntegrationTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            "focused_repair_review", round_two_with_changed_context["routeKind"]
+            "full_implementation_conformance", round_two_with_changed_context["routeKind"]
+        )
+        self.assertEqual(
+            "authority_context_graph_changed",
+            round_two_with_changed_context["roundEntryReason"],
         )
         deterministic = bootstrap_integration.project_bounded_review_route(
             decision,

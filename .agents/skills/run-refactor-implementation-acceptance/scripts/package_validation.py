@@ -33,6 +33,7 @@ REQUIRED = (
     "schemas/bootstrap-import-envelope.v2.schema.json",
     "schemas/bootstrap-import-envelope.v3.schema.json",
     "schemas/acceptance-repair-completeness.v1.schema.json",
+    "schemas/focused-repair-import.v1.schema.json",
     "schemas/acceptance-manual-pause-closure-request.v1.schema.json",
     "schemas/acceptance-manual-pause-closure-challenge.v1.schema.json",
     "schemas/acceptance-manual-pause-closure.v1.schema.json",
