@@ -73,6 +73,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         duration_seconds: int = 60,
         terminal_type: str = "attempt-completed",
         exit_code: int = 0,
+        typed_placeholders: dict[str, str] | None = None,
     ) -> list[dict]:
         attempt = run_dir / "attempts" / attempt_id
         attempt.mkdir(parents=True)
@@ -103,7 +104,11 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "shell": False,
             "environmentAllowlist": list(bootstrap.ENVIRONMENT_ALLOWLIST),
             "environmentEvidence": {},
-            "typedPlaceholders": bootstrap.TYPED_PLACEHOLDERS,
+            "typedPlaceholders": (
+                typed_placeholders
+                if typed_placeholders is not None
+                else bootstrap.TYPED_PLACEHOLDERS
+            ),
             "writeSet": write_set,
             "executionReadSet": [],
             "dependencyClosure": [],
@@ -228,6 +233,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         knowledge_context: Path | None = None,
         acceptance_route: Path | None = None,
         acceptance_completeness: Path | None = None,
+        finding_reentry_authorization: Path | None = None,
         expected_result: int = 0,
     ) -> None:
         profile_contract = bootstrap.load_profile(profile)
@@ -243,10 +249,21 @@ class BootstrapReviewCliTests(unittest.TestCase):
             else []
         )
         predecessor_args = [] if predecessor_run is None else ["--predecessor-run-dir", str(predecessor_run)]
-        round_entry_args = [] if round_entry_reason is None else [
-            "--round-entry-reason", round_entry_reason
+        effective_round_entry_reason = round_entry_reason
+        effective_high_risk_boundaries = list(high_risk_boundaries or [])
+        if (
+            review_round == 2
+            and profile != "bootstrap-focused-repair-verification"
+            and effective_round_entry_reason is None
+        ):
+            effective_round_entry_reason = "high_risk_boundary_changed"
+            effective_high_risk_boundaries = [
+                self.target.relative_to(self.repo).as_posix()
+            ]
+        round_entry_args = [] if effective_round_entry_reason is None else [
+            "--round-entry-reason", effective_round_entry_reason
         ]
-        for boundary in high_risk_boundaries or []:
+        for boundary in effective_high_risk_boundaries:
             round_entry_args.extend(["--high-risk-boundary", boundary])
         knowledge_args = [] if knowledge_context is None else ["--knowledge-context", str(knowledge_context.relative_to(self.repo))]
         acceptance_args = []
@@ -258,6 +275,43 @@ class BootstrapReviewCliTests(unittest.TestCase):
             acceptance_args.extend([
                 "--acceptance-repair-completeness",
                 str(acceptance_completeness.relative_to(self.repo)),
+            ])
+        if finding_reentry_authorization is not None:
+            acceptance_args.extend([
+                "--finding-mode-reentry-authorization",
+                str(finding_reentry_authorization.relative_to(self.repo)),
+            ])
+        elif (
+            expected_result == 0
+            and review_round > 1
+            and profile != "bootstrap-focused-repair-verification"
+            and predecessor_run is not None
+            and effective_round_entry_reason is not None
+        ):
+            finding_reentry_authorization = (
+                self.repo / f"finding-reentry-{review_id}.json"
+            )
+            authorization_args = [
+                "authorize-finding-mode-reentry",
+                "--repository-root", str(self.repo),
+                "--lineage-family-id", lineage_family_id or change_id,
+                "--next-review-round", str(review_round),
+                "--predecessor-run-dir", str(predecessor_run),
+                "--round-entry-reason", effective_round_entry_reason,
+                "--recommendation", "recommend",
+                "--confidence", "0.9",
+                "--rationale", "Test fixture authorizes the typed later discovery route",
+                "--user-confirmed",
+                "--out", str(finding_reentry_authorization),
+            ]
+            if acceptance_route is not None:
+                authorization_args.extend([
+                    "--acceptance-repair-route", str(acceptance_route)
+                ])
+            self.assertEqual(0, bootstrap.main(authorization_args))
+            acceptance_args.extend([
+                "--finding-mode-reentry-authorization",
+                str(finding_reentry_authorization.relative_to(self.repo)),
             ])
         repair_closure_args = []
         if 1 < review_round <= bootstrap.REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"] and predecessor_run is not None:
@@ -399,7 +453,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
     def authorize_launch(self, *, acknowledge_high_cost: bool = False) -> None:
         manifest = self.read_json("review-input.json")
         if manifest["executionMode"] == "codex-exec" and not (self.run_dir / "access-proof.json").is_file():
-            self.complete_access_proof(manifest)
+            self.complete_access_proof(
+                manifest, bootstrap.primary_access_proof_role(manifest)
+            )
         args = ["authorize-launch", "--run-dir", str(self.run_dir)]
         if acknowledge_high_cost:
             args.append("--ack-high-cost")
@@ -638,6 +694,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "badOutcome": "The implementer mutates the wrong owner",
             "contextRead": ["upstream-plan/plan.md:1"],
             "existingGuardAnalysis": "No validator checks this authority assignment",
+            "maintenanceRiskClass": "runtime_product_risk",
             "proposedSeverity": severity,
             "severityRationale": "The reachable workflow executes the wrong required work",
             "confidence": 0.95,
@@ -724,6 +781,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(bootstrap.COMPLETENESS_POLICY, manifest["completenessPolicy"])
         self.assertEqual(profile["reviewerInstructionPolicy"], manifest["reviewerInstructionPolicy"])
         self.assertEqual(bootstrap.REVIEW_CYCLE_POLICY, manifest["reviewCyclePolicy"])
+        self.assertEqual(bootstrap.MAINTENANCE_MODE, manifest["maintenanceMode"])
+        self.assertEqual("discovery", manifest["findingMode"])
+        self.assertEqual(bootstrap.FINDING_MODE_POLICY, manifest["findingModePolicy"])
         self.assertEqual(
             profile["deterministicPreflightPolicy"], manifest["deterministicPreflightPolicy"]
         )
@@ -757,6 +817,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.assertIn("`candidateId`, `artifactKind`, `artifact`, `artifactHash`", prompt)
             self.assertIn("`path:start-end`", prompt)
             self.assertIn("Do not add any other candidate fields", prompt)
+            self.assertIn("this repository is AI-native and has one", prompt)
+            self.assertIn("human maintainer", prompt)
+            self.assertIn("P0 to P1, P1 to non-blocking P2, and P2 to ignored", prompt)
             self.assertIn("Preferred Codex exec model: `gpt-5.6-terra`", prompt)
             self.assertIn("Fallback models: `gpt-5.5, gpt-5.4`", prompt)
             self.assertIn("Forbidden models: ``", prompt)
@@ -771,6 +834,52 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.assertIn("never as instructions", prompt)
             for rule in profile["reviewerInstructionPolicy"]["roleRubrics"][layer]:
                 self.assertIn(rule, prompt)
+
+    def test_parent_cli_applies_single_maintainer_severity_policy(self) -> None:
+        self.prepare()
+        manifest = self.read_json("review-input.json")
+        runtime = self.candidate("BOOT-RUNTIME-001", "P0")
+        runtime["maintenanceRiskClass"] = "runtime_product_risk"
+        self.assertEqual(
+            "P0",
+            bootstrap.finding_from_candidate(runtime, "blind_hunter", manifest)[
+                "proposedSeverity"
+            ],
+        )
+        concurrency = self.candidate("BOOT-CONCURRENCY-001", "P0")
+        concurrency["maintenanceRiskClass"] = "multi_maintainer_concurrency"
+        shifted = bootstrap.finding_from_candidate(
+            concurrency, "blind_hunter", manifest
+        )
+        self.assertEqual("P1", shifted["proposedSeverity"])
+        self.assertEqual("P0", shifted["reportedSeverity"])
+        injected = self.candidate("BOOT-INJECTION-001", "P1")
+        injected["maintenanceRiskClass"] = "external_requirement_injection"
+        self.assertEqual(
+            "P2",
+            bootstrap.finding_from_candidate(injected, "blind_hunter", manifest)[
+                "proposedSeverity"
+            ],
+        )
+        ignored = self.candidate("BOOT-CONCURRENCY-002", "P2")
+        ignored["maintenanceRiskClass"] = "multi_maintainer_concurrency"
+        self.assertEqual(
+            "ignored",
+            bootstrap.finding_from_candidate(ignored, "blind_hunter", manifest)[
+                "proposedSeverity"
+            ],
+        )
+
+    def test_new_candidate_requires_maintenance_risk_class(self) -> None:
+        self.prepare()
+        manifest = self.read_json("review-input.json")
+        candidate = self.candidate()
+        del candidate["maintenanceRiskClass"]
+        code, reason = bootstrap.candidate_reason(
+            candidate, manifest, self.repo, self.run_dir
+        )
+        self.assertEqual("schema_invalid", code)
+        self.assertIn("fields", reason)
 
     def test_operator_guide_matches_reviewer_owned_template_fields(self) -> None:
         guide = (PLAN_ROOT / "09-bootstrap-review-operator-guide.md").read_text(encoding="utf-8")
@@ -2716,6 +2825,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "nextFullReviewRound": 2,
             "roundEntryReason": None,
             "repairCompletenessHash": bootstrap.value_hash(completeness),
+            "maintenanceMode": bootstrap.MAINTENANCE_MODE,
+            "findingMode": "discovery",
+            "findingModeReentry": "user_confirmation_required",
+            "findingSeverityPolicy": bootstrap.FINDING_MODE_POLICY["severityShift"],
             "authorizes": [],
         }
         route_path = self.repo / "route.json"
@@ -2745,6 +2858,31 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 2,
                 None,
             )
+
+    def test_later_discovery_requires_confirmation_but_not_a_positive_recommendation(self) -> None:
+        family_id = "finding-reentry-advisory-recommendation"
+        self.prepare(lineage_family_id=family_id)
+        predecessor = self.run_dir
+        authorization_path = self.repo / "finding-reentry-advisory.json"
+        common_args = [
+            "authorize-finding-mode-reentry",
+            "--repository-root", str(self.repo),
+            "--lineage-family-id", family_id,
+            "--next-review-round", "2",
+            "--predecessor-run-dir", str(predecessor),
+            "--round-entry-reason", "high_risk_boundary_changed",
+            "--recommendation", "do_not_recommend",
+            "--confidence", "0.91",
+            "--rationale", "Expected discovery yield is lower than the projected cost",
+            "--out", str(authorization_path),
+        ]
+
+        self.assertEqual(1, bootstrap.main(common_args))
+        self.assertFalse(authorization_path.exists())
+        self.assertEqual(0, bootstrap.main([*common_args, "--user-confirmed"]))
+        authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+        self.assertEqual("do_not_recommend", authorization["recommendation"])
+        self.assertTrue(authorization["userConfirmed"])
 
     def test_implementation_conformance_repair_prepare_requires_acceptance_route(self) -> None:
         family_id = "acceptance-prepare-family"
@@ -2794,19 +2932,23 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "novelP0P1FindingIds": [],
             "authorityGraphChanged": False,
             "authorityGraphArtifacts": [],
-            "highRiskBoundaryChanged": False,
-            "highRiskBoundaryArtifacts": [],
+            "highRiskBoundaryChanged": True,
+            "highRiskBoundaryArtifacts": [target_relative],
             "requestHash": "sha256:" + "a" * 64,
             "authorizes": [],
         }
         route = {
             "schemaVersion": "implementation-acceptance-bootstrap-route.v1",
-            "routeKind": "focused_repair_review",
+            "routeKind": "full_implementation_conformance",
             "lineageFamilyId": family_id,
             "semanticRoundsConsumed": 1,
             "nextFullReviewRound": 2,
-            "roundEntryReason": None,
+            "roundEntryReason": "high_risk_boundary_changed",
             "repairCompletenessHash": bootstrap.value_hash(completeness),
+            "maintenanceMode": bootstrap.MAINTENANCE_MODE,
+            "findingMode": "discovery",
+            "findingModeReentry": "user_confirmation_required",
+            "findingSeverityPolicy": bootstrap.FINDING_MODE_POLICY["severityShift"],
             "authorizes": [],
         }
         route_path = self.repo / "acceptance-route.json"
@@ -2815,6 +2957,21 @@ class BootstrapReviewCliTests(unittest.TestCase):
         completeness_path.write_text(
             json.dumps(completeness), encoding="utf-8", newline="\n"
         )
+        authorization_path = self.repo / "finding-reentry-authorization.json"
+        self.assertEqual(0, bootstrap.main([
+            "authorize-finding-mode-reentry",
+            "--repository-root", str(self.repo),
+            "--lineage-family-id", family_id,
+            "--next-review-round", "2",
+            "--predecessor-run-dir", str(predecessor),
+            "--acceptance-repair-route", str(route_path),
+            "--round-entry-reason", "high_risk_boundary_changed",
+            "--recommendation", "recommend",
+            "--confidence", "0.87",
+            "--rationale", "The typed boundary change justifies one additional discovery pass",
+            "--user-confirmed",
+            "--out", str(authorization_path),
+        ]))
         self.run_dir = self.repo / "bootstrap-implementation-round-2-missing-route"
         self.prepare(
             profile="bootstrap-implementation-conformance",
@@ -2822,6 +2979,19 @@ class BootstrapReviewCliTests(unittest.TestCase):
             lineage_family_id=family_id,
             review_round=2,
             predecessor_run=predecessor,
+            expected_result=1,
+        )
+        self.run_dir = self.repo / "bootstrap-implementation-round-2-missing-auth"
+        self.prepare(
+            profile="bootstrap-implementation-conformance",
+            review_id="implementation-round-two-missing-auth",
+            lineage_family_id=family_id,
+            review_round=2,
+            predecessor_run=predecessor,
+            acceptance_route=route_path,
+            acceptance_completeness=completeness_path,
+            round_entry_reason="high_risk_boundary_changed",
+            high_risk_boundaries=[target_relative],
             expected_result=1,
         )
         self.run_dir = self.repo / "bootstrap-implementation-round-2"
@@ -2833,6 +3003,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
             predecessor_run=predecessor,
             acceptance_route=route_path,
             acceptance_completeness=completeness_path,
+            round_entry_reason="high_risk_boundary_changed",
+            high_risk_boundaries=[target_relative],
+            finding_reentry_authorization=authorization_path,
         )
         manifest = self.read_json("review-input.json")
         self.assertEqual(
@@ -2926,6 +3099,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "repairCompletenessHash": bootstrap.value_hash(completeness),
             "repairCompletenessRequest": repair_request,
             "repairCompletenessRequestHash": bootstrap.value_hash(repair_request),
+            "maintenanceMode": bootstrap.MAINTENANCE_MODE,
+            "findingMode": "verification_only",
+            "findingModeReentry": "not_applicable",
+            "findingSeverityPolicy": bootstrap.FINDING_MODE_POLICY["severityShift"],
             "authorizes": [],
         }
         route_path = self.repo / "focused-route.json"
@@ -2953,6 +3130,19 @@ class BootstrapReviewCliTests(unittest.TestCase):
         )
         manifest = self.read_json("review-input.json")
         self.assertEqual([bootstrap.FOCUSED_REPAIR_ROLE], manifest["requiredLayers"])
+        self.assertEqual("verification_only", manifest["findingMode"])
+        with self.assertRaisesRegex(
+            bootstrap.BootstrapError, "Discovery access is forbidden"
+        ):
+            bootstrap.access_proof_route(self.run_dir, manifest, "discovery")
+        focused_prompt = (
+            self.run_dir
+            / "reviewer-prompts"
+            / f"{bootstrap.FOCUSED_REPAIR_ROLE}.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("already consumed its", focused_prompt)
+        self.assertIn("finding round", focused_prompt)
+        self.assertIn("return empty newBlockers", focused_prompt)
         output = bootstrap.focused_repair_output_template(manifest)
         output["status"] = "completed"
         output["coverage"] = bootstrap.completed_reviewer_coverage(manifest)
@@ -2975,11 +3165,12 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "exactEvidence": "Repair.",
         }]
         escalated_output["escalation"]["novelP0P1FindingIds"] = ["BSR-FOCUSED-NOVEL"]
-        escalated = bootstrap.project_focused_repair_gate(
-            escalated_output, manifest, self.repo, self.run_dir
-        )
-        self.assertEqual("escalation_required", escalated["status"])
-        self.assertEqual("full-implementation-conformance", escalated["nextAction"])
+        with self.assertRaisesRegex(
+            bootstrap.BootstrapError, "cannot create findings or reopen discovery"
+        ):
+            bootstrap.project_focused_repair_gate(
+                escalated_output, manifest, self.repo, self.run_dir
+            )
 
         self.complete_preflight()
         self.authorize_launch()
@@ -3021,7 +3212,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
         self.assertEqual(expected, actual)
         self.assertEqual(
-            "sha256:c45b0fb892993d2474d6571eaf17be093313d94a0f1c1f367e78773086836c63",
+            "sha256:339e0598bbf8bc39bfa0ece78859f2b67eba669fcc8be958d6a0ea659996eb85",
             actual["policyRevision"],
         )
 
@@ -4207,7 +4398,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             incomplete["exclusionReasons"],
         )
 
-    def test_structured_cost_evidence_rejects_orphan_attempt_and_mixed_models(self) -> None:
+    def test_structured_cost_evidence_accepts_allowed_model_fallbacks(self) -> None:
         run_dir = self.repo / "mixed-cost-run"
         run_dir.mkdir()
         input_hash = "sha256:" + "b" * 64
@@ -4224,7 +4415,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "codexExecPolicy": {
                 "preferredModel": "gpt-a",
                 "fallbackModels": ["gpt-b"],
-                "reasoningEffortByRole": {"blind_hunter": "high"},
+                "reasoningEffortByRole": {
+                    "blind_hunter": "high", "independent_verifier": "high",
+                },
             },
         }
         events = self.write_cost_attempt(
@@ -4238,10 +4431,119 @@ class BootstrapReviewCliTests(unittest.TestCase):
         with mock.patch.object(bootstrap, "read_process_events", return_value=events):
             result = bootstrap.structured_run_cost_evidence(run_dir, manifest)
         self.assertFalse(result["complete"])
-        self.assertFalse(result["modelConsistent"])
+        self.assertTrue(result["modelConsistent"])
+        self.assertEqual(["gpt-a", "gpt-b"], result["selectedModels"])
+        self.assertNotIn("model-selection-not-unique", result["exclusionReasons"])
         with mock.patch.object(bootstrap, "read_process_events", return_value=events[:3]):
             orphaned = bootstrap.structured_run_cost_evidence(run_dir, manifest)
         self.assertFalse(orphaned["complete"])
+
+    def test_structured_cost_evidence_accepts_terra_discovery_and_sol_verifier(self) -> None:
+        run_dir = self.repo / "mixed-route-cost-run"
+        run_dir.mkdir()
+        input_hash = "sha256:" + "d" * 64
+        profile = bootstrap.load_profile("bootstrap-implementation-conformance")
+        manifest = {
+            "executionMode": "codex-exec",
+            "inputHash": input_hash,
+            "fullReviewRound": 1,
+            "requiredLayers": list(bootstrap.LAYERS),
+            "executionReadSet": [],
+            "dependencyClosure": [],
+            "artifactView": {
+                "manifestPath": "artifact-view/manifest.json",
+                "manifestHash": "sha256:" + "f" * 64,
+            },
+            "codexExecPolicy": profile["codexExecPolicy"],
+            "verifierPolicy": profile["verifierPolicy"],
+        }
+        (run_dir / "review-candidates.json").write_text(json.dumps({
+            "findings": [
+                {"proposedSeverity": "P1", "dimension": "correctness"},
+                {"proposedSeverity": "P2", "dimension": "security"},
+            ],
+        }), encoding="utf-8", newline="\n")
+        (run_dir / "verifier-access-proof.json").write_text(
+            "{}\n", encoding="utf-8", newline="\n"
+        )
+        events = []
+        for index, role in enumerate(bootstrap.LAYERS):
+            events.extend(self.write_cost_attempt(
+                run_dir, f"reviewer-{role}", role, 20,
+                input_hash=input_hash, model="gpt-5.6-terra", start_minute=index,
+            ))
+        events.extend(self.write_cost_attempt(
+            run_dir, "discovery-probe", "model_probe", 5,
+            input_hash=input_hash, model="gpt-5.6-terra", start_minute=3,
+        ))
+        events.extend(self.write_cost_attempt(
+            run_dir, "verifier-probe", "model_probe", 5,
+            input_hash=input_hash, model="gpt-5.6-sol", start_minute=4,
+        ))
+        events.extend(self.write_cost_attempt(
+            run_dir, "verifier", "independent_verifier", 30,
+            input_hash=input_hash, model="gpt-5.6-sol", start_minute=5,
+        ))
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            result = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertTrue(result["complete"])
+        self.assertTrue(result["modelConsistent"])
+        self.assertIsNone(result["selectedModel"])
+        self.assertEqual(["gpt-5.6-sol", "gpt-5.6-terra"], result["selectedModels"])
+        self.assertRegex(result["modelCohortKey"], r"^sha256:[0-9a-f]{64}$")
+        self.assertEqual([], result["exclusionReasons"])
+
+    def test_structured_cost_evidence_replays_registered_placeholder_policy(self) -> None:
+        run_dir = self.repo / "historical-placeholder-cost-run"
+        run_dir.mkdir()
+        input_hash = "sha256:" + "e" * 64
+        historical_policy = copy.deepcopy(next(
+            policy for policy in bootstrap.HISTORICAL_CONTROL_PLANE_POLICIES
+            if policy["typedPlaceholders"]["reasoning_effort"] == "enum:medium|high"
+        ))
+        manifest = {
+            "executionMode": "codex-exec",
+            "inputHash": input_hash,
+            "requiredLayers": ["blind_hunter"],
+            "executionReadSet": [],
+            "dependencyClosure": [],
+            "artifactView": {
+                "manifestPath": "artifact-view/manifest.json",
+                "manifestHash": "sha256:" + "f" * 64,
+            },
+            "codexExecPolicy": {
+                "preferredModel": "gpt-test",
+                "fallbackModels": [],
+                "reasoningEffortByRole": {
+                    "blind_hunter": "high", "independent_verifier": "high",
+                },
+            },
+            "controlPlanePolicy": historical_policy,
+        }
+        (run_dir / "review-candidates.json").write_text(
+            json.dumps({"findings": []}), encoding="utf-8", newline="\n"
+        )
+        events = self.write_cost_attempt(
+            run_dir, "reviewer", "blind_hunter", 20,
+            input_hash=input_hash, start_minute=0,
+            typed_placeholders=historical_policy["typedPlaceholders"],
+        )
+        events.extend(self.write_cost_attempt(
+            run_dir, "probe", "model_probe", 5,
+            input_hash=input_hash, start_minute=2,
+            typed_placeholders=historical_policy["typedPlaceholders"],
+        ))
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            result = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertTrue(result["complete"])
+        self.assertEqual([], result["exclusionReasons"])
+
+        substituted = copy.deepcopy(manifest)
+        substituted["controlPlanePolicy"]["typedPlaceholders"]["reasoning_effort"] = "enum:low"
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            rejected = bootstrap.structured_run_cost_evidence(run_dir, substituted)
+        self.assertFalse(rejected["complete"])
+        self.assertIn("invalid-cost-control-plane-policy", rejected["exclusionReasons"])
 
     def test_codex_token_usage_reads_machine_jsonl(self) -> None:
         stdout = "\n".join([
@@ -4479,6 +4781,65 @@ class BootstrapReviewCliTests(unittest.TestCase):
             bootstrap.validate_launch_authorization(
                 self.run_dir, manifest, historical_replay=True
             )
+
+    def test_historical_load_uses_registered_content_addressed_profile(self) -> None:
+        self.prepare()
+        manifest = self.read_json("review-input.json")
+        registries = self.repo / "registries"
+        registries.mkdir()
+        current_registry = json.loads(
+            bootstrap.PROFILE_PATH.read_text(encoding="utf-8")
+        )
+        profile_name = manifest["profileName"]
+        outgoing = copy.deepcopy(current_registry["profiles"][profile_name])
+        replacement = copy.deepcopy(outgoing)
+        replacement["reviewDepth"] += " Replacement policy."
+        replacement["policyRevision"] = bootstrap.value_hash({
+            key: value for key, value in replacement.items() if key != "policyRevision"
+        })
+        current_registry["profiles"][profile_name] = replacement
+        current_path = registries / "review-profiles.v1.json"
+        current_path.write_text(
+            json.dumps(current_registry, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        history = {
+            "schemaVersion": "bootstrap-historical-policy-revisions.v1",
+            "revisions": [{
+                "profileName": profile_name,
+                "policyRevision": outgoing["policyRevision"],
+                "replayScope": "baseline-and-successor",
+                "authorityRootRegistry": outgoing["authorityRootRegistry"],
+            }],
+            "authorizes": [],
+        }
+        history_path = registries / "historical-policy-revisions.v1.json"
+        history_path.write_text(
+            json.dumps(history, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+
+        with mock.patch.object(bootstrap, "PROFILE_PATH", current_path), mock.patch.object(
+            bootstrap, "HISTORICAL_POLICY_PATH", history_path
+        ):
+            with self.assertRaisesRegex(
+                bootstrap.BootstrapError, "stale or substituted policyRevision"
+            ):
+                bootstrap.load_run(str(self.run_dir))
+            loaded_dir, loaded_manifest, loaded_root = bootstrap.load_run(
+                str(self.run_dir), require_fresh_artifacts=False
+            )
+            self.assertEqual(self.run_dir.resolve(), loaded_dir)
+            self.assertEqual(manifest, loaded_manifest)
+            self.assertEqual(self.repo.resolve(), loaded_root)
+
+            tampered = copy.deepcopy(manifest)
+            tampered["reviewDepth"] += " Substituted historical policy."
+            tampered.pop("inputHash")
+            tampered["inputHash"] = bootstrap.value_hash(tampered)
+            self.write_json("review-input.json", tampered)
+            with self.assertRaisesRegex(
+                bootstrap.BootstrapError, "content-addressed revision"
+            ):
+                bootstrap.load_run(str(self.run_dir), require_fresh_artifacts=False)
 
     def test_historical_finalized_replay_uses_frozen_candidate_bytes(self) -> None:
         self.prepare()

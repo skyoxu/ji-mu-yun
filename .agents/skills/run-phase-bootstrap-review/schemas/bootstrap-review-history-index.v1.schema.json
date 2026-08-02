@@ -48,7 +48,7 @@
           "costEvidence": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["complete", "reviewerTokens", "verifierTokens", "probeTokens", "transportRetryTokens", "totalTokens", "wallSeconds", "wallTimeMethod", "attemptCount", "requiredRoles", "completedRoles", "selectedModel", "modelConsistent", "exclusionReasons"],
+            "required": ["complete", "reviewerTokens", "verifierTokens", "probeTokens", "transportRetryTokens", "totalTokens", "wallSeconds", "wallTimeMethod", "attemptCount", "requiredRoles", "completedRoles", "selectedModel", "selectedModels", "modelCohortKey", "modelConsistent", "exclusionReasons"],
             "properties": {
               "complete": {"type": "boolean"},
               "reviewerTokens": {"type": "integer", "minimum": 0},
@@ -62,6 +62,11 @@
               "requiredRoles": {"$ref": "#/$defs/roles"},
               "completedRoles": {"$ref": "#/$defs/roles"},
               "selectedModel": {"type": ["string", "null"], "minLength": 1},
+              "selectedModels": {
+                "type": "array", "uniqueItems": true,
+                "items": {"type": "string", "minLength": 1}
+              },
+              "modelCohortKey": {"type": ["string", "null"], "minLength": 1},
               "modelConsistent": {"type": "boolean"},
               "exclusionReasons": {
                 "type": "array", "uniqueItems": true,

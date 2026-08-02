@@ -13,9 +13,10 @@ Read these before operating the workflow:
 
 1. `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`.
 2. `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`.
-3. `docs/standards/bootstrap-review-control-plane.md`.
-4. `references/review-profiles.v1.json`.
-5. `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md` for migration examples.
+3. `docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md`.
+4. `docs/standards/bootstrap-review-control-plane.md`.
+5. `references/review-profiles.v1.json`.
+6. `execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md` for migration examples.
 
 The repository entrypoint is:
 
@@ -31,6 +32,10 @@ The 2026-07-12 CLI is a revision-bound compatibility adapter only. Do not add du
 - Require complete artifact and context coverage. Sampling is prohibited and zero findings are valid.
 - Use an independent verifier for every accepted P0/P1.
 - Use exactly one `focused_repair_verifier` for a new non-escalated Round 1 repair. It is distinct from all discovery roles and from `independent_verifier`.
+- Treat `ai-native-single-maintainer` as first-class review context. Candidates based on multi-maintainer concurrency or external requirement injection are parent-adjusted P0 to P1, P1 to non-blocking P2, and P2 to ignored; runtime product risks are unchanged.
+- Allow finding discovery automatically only for Round 1. A later complete discovery requires a typed Acceptance trigger, the orchestrator's explicit recommendation and confidence, explicit user confirmation, and a CLI-produced hash-bound re-entry authorization. Prompt text alone never authorizes finding mode.
+- Treat the recommendation as advisory, not a veto. After the user sees the trigger, expected benefit/cost, recommendation, and confidence, explicit confirmation may authorize re-entry even when the recommendation is `do_not_recommend`.
+- A `focused_repair_verifier` verifies only predecessor findings. It must return no new blockers and cannot reopen discovery.
 - Use one stable `lineageFamilyId` for the same acceptance target. Its default budget is two semantic rounds and its hard limit is three; changing `reviewId`, `changeId`, or successor directory never resets it.
 - Do not mutate reviewed files while a review run is active.
 - Never edit reviewer, verifier, gate, process-event, or final evidence to make a run pass.
@@ -76,10 +81,13 @@ that pass full evidence replay enter semantic statistics, and only those with
 complete structured attempt token and process-event evidence enter cost
 cohorts. Token counts come from the same Codex JSONL execution, every counted
 attempt directory must match a started and terminal process-event lifecycle,
-and a run that selected more than one model remains operational-only rather
-than being attributed to one model cohort. The history index and calibration
-candidate publish as one staged directory. A finalized run that fails replay
-fails the complete build. Generated
+and each selected model must match the role-specific route frozen by the run.
+A single-model route keeps the model name as its cohort identity. A legitimate
+mixed route, such as Terra discovery plus Sol verification, uses a canonical
+hash of the complete configured role route and is never attributed to either
+single-model cohort. The history index and calibration candidate publish as
+one staged directory. A finalized run that fails replay fails the complete
+build. Generated
 calibration is a candidate and never updates the promoted reference
 automatically. Baselines and calibration always carry `authorizes=[]`.
 
@@ -95,7 +103,11 @@ the repository repeatedly.
 When canonical profile content changes, add the outgoing revision and its
 authority-root binding to `references/historical-policy-revisions.v1.json` in
 the same change. The archive exists only to replay historical typed decisions;
-it cannot prepare a new run.
+it cannot prepare a new run. Historical replay reconstructs the content-addressed
+profile from the frozen manifest plus registered extensions and rejects any
+hash mismatch. Use `baseline-only` for revisions that lack successor authority;
+only `baseline-and-successor` entries with a registered authority root may
+authorize successor-policy resolution.
 
 When pre-family history must count toward a target-derived family, use
 `adopt-lineage` once with explicit historical run directories and a hash-bound
@@ -121,14 +133,33 @@ rules, referenced standards, and current acceptance evidence. If a directory
 is genuinely the minimal complete closure, prepare requires
 `--directory-scope-attestation directory-is-minimal-complete-closure`.
 
-Round 2 and Round 3 also require `--predecessor-run-dir` and a hash-bound `--repair-closure`. The closure must cover the exact finalized predecessor finding set, including confirmed, advisory, and refuted dispositions. Round 2 defaults to the computed repair delta and its reachable support artifacts. Round 3 additionally requires `--round-entry-reason` with `novel_p0_p1`, `authority_context_graph_changed`, or `high_risk_boundary_changed`; the last reason also requires explicit changed `--high-risk-boundary` artifacts.
+Round 2 and Round 3 also require `--predecessor-run-dir` and a hash-bound `--repair-closure`. The closure must cover the exact finalized predecessor finding set, including confirmed, advisory, and refuted dispositions. A later complete discovery also requires `--round-entry-reason` with `novel_p0_p1`, `authority_context_graph_changed`, or `high_risk_boundary_changed`; the last reason also requires explicit changed `--high-risk-boundary` artifacts.
 
 For `bootstrap-implementation-conformance`, repair rounds also require
 `--acceptance-repair-route <route.json>` and
 `--acceptance-repair-completeness <projection.json>`. Use the exact output of
 Acceptance `prepare-bootstrap` and its replayed completeness projection. The
 controller binds both files, family, consumed round, next round, and typed
-Round 3 reason before preparing reviewer material.
+entry reason before preparing reviewer material.
+
+When that route selects complete discovery after Round 1, show the user the
+typed trigger, expected benefit/cost, your `recommend` or `do_not_recommend`
+judgement, and a confidence in `[0,1]`. Only after explicit confirmation run:
+
+```text
+py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py authorize-finding-mode-reentry \
+  --repository-root <repo> --lineage-family-id <family> --next-review-round <round> \
+  --predecessor-run-dir <run> [--acceptance-repair-route <route.json>] \
+  --round-entry-reason <typed-trigger> --recommendation <recommend|do_not_recommend> \
+  --confidence <0..1> --rationale <reason> --user-confirmed --out <authorization.json>
+```
+
+Implementation-conformance re-entry requires the Acceptance route argument;
+standalone plan/Skill review instead relies on Bootstrap's deterministic typed
+entry validation. Pass the append-only result to `prepare --finding-mode-reentry-authorization
+<authorization.json>`. The CLI revalidates its lineage, predecessor, round,
+typed trigger, Acceptance route hash, recommendation, confidence, and user
+confirmation. Without it, later discovery fails before prompts or processes.
 
 The current scope lists live repair and support files. A truly deleted
 predecessor artifact is inferred from the frozen predecessor manifest and its
@@ -166,13 +197,13 @@ Stop before semantic reviewers when a required check fails or evidence is stale.
 
 ## Prove Codex Access
 
-For `codex-exec`, run the discovery identity-equivalent access probe after preflight and before authorization:
+For `codex-exec`, run the identity-equivalent access probe after preflight and before authorization. Use `--role discovery` for complete discovery and `--role focused_repair_verifier` for focused verification:
 
 ```text
 py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prove-access \
   --run-dir <run> \
   --codex-command <codex executable> \
-  --role discovery \
+  --role <discovery|focused_repair_verifier> \
   --model <profile-allowed model> \
   [--ack-high-cost]
 ```
@@ -189,7 +220,7 @@ If `reviewCostEstimate.highCost=true`, show the P50/P90 token and wall-time band
 
 ## Run Layers
 
-Run each discovery role only after explicit user authorization:
+Run each discovery role only when `review-input.json.findingMode=discovery` and after launch authorization. The CLI rejects discovery roles in `verification_only` mode:
 
 ```text
 py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py run-layer \
@@ -284,7 +315,10 @@ finalized run's complete finding closure and aggregate semantic yield. A run
 enters a cost cohort only when every required reviewer, required verifier, and
 access probe has a unique ordered lifecycle, a bound process result, and token
 usage rederived from the same Codex JSONL stdout. Wall time is the union of
-active attempt intervals, excluding idle gaps between attempts.
+active attempt intervals, excluding idle gaps between attempts. Cohorts bind
+the configured role-to-model route: a legitimate mixed-model run is eligible
+under its route hash when every actual attempt follows that route, while a
+substituted or incomplete route remains operational-only.
 
 Cost estimates use the schema-validated promoted calibration reference at
 `references/review-cost-calibration.v1.json` with an implementation-bound file
@@ -311,8 +345,10 @@ reimplement the consumer audit.
 
 A clean or P2-only finalized predecessor does not authorize a new complete
 semantic round. Dispose P2 in the current run and use the registered targeted
-closure or recheck path. Round 2 and Round 3 are reserved for a predecessor
-with P0/P1 repair work, subject to the existing hard-limit rules.
+closure or recheck path. A later complete discovery is exceptional: Acceptance
+must produce a typed trigger, then the user must confirm the orchestrator's
+recommendation and confidence through the CLI authorization above. A focused
+verifier cannot create the trigger itself.
 
 Round 2/3 repair closure is checked twice:
 

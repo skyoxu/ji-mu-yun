@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-07-30
+- Amended: 2026-08-02
 
 ## Context
 
@@ -27,7 +28,11 @@ cross-run LLM cache.
   event-backed, and each counted start event binds the exact attempt request and
   selected model. Explicit run directories pass the same complete historical
   run validation before becoming operational rows. Zero-token, legacy
-  unbound-request, and mixed-model samples stay out of single-model cohorts.
+  unbound-request, substituted-route, and incomplete-route samples stay out of
+  calibration cohorts. A configured single-model route uses the model name as
+  its cohort identity. A legitimate mixed route uses a canonical hash of the
+  complete role-to-model route and is not attributed to either single-model
+  cohort.
   The history index and calibration candidate publish atomically as one
   append-only directory.
 - Generated history and calibration candidates carry `authorizes=[]`. They do

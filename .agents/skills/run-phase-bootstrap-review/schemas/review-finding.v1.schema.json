@@ -61,7 +61,18 @@
       "items": { "type": "string", "minLength": 1 }
     },
     "existingGuardAnalysis": { "type": "string", "minLength": 1 },
+    "maintenanceRiskClass": {
+      "enum": [
+        "runtime_product_risk",
+        "multi_maintainer_concurrency",
+        "external_requirement_injection"
+      ]
+    },
     "proposedSeverity": { "enum": ["P0", "P1", "P2"] },
+    "reportedSeverity": { "enum": ["P0", "P1", "P2"] },
+    "severityAdjustment": {
+      "enum": ["unchanged", "P0_to_P1", "P1_to_P2"]
+    },
     "severityRationale": { "type": "string", "minLength": 1 },
     "confidence": { "type": "number", "minimum": 0.8, "maximum": 1 },
     "dimension": { "enum": ["code", "document", "plan", "security", "acceptance", "edge-case"] },

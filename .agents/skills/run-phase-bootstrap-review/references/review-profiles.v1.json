@@ -702,7 +702,7 @@
     },
     "bootstrap-focused-repair-verification": {
       "reviewProfile": "review-policy://bootstrap-focused-repair-verification/v1",
-      "policyRevision": "sha256:c45b0fb892993d2474d6571eaf17be093313d94a0f1c1f367e78773086836c63",
+      "policyRevision": "sha256:339e0598bbf8bc39bfa0ece78859f2b67eba669fcc8be958d6a0ea659996eb85",
       "authorityRootRegistry": {
         "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
         "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
@@ -779,7 +779,7 @@
           "focused_repair_verifier": [
             "Verify every predecessor finding against its exact repair mapping and current validation evidence.",
             "Read the repair diff, direct consumers, targeted tests, and controlled receipts before deciding closure.",
-            "Report any novel P0/P1, authority graph change, or high-risk boundary change as an escalation trigger."
+            "Report only whether a predecessor finding remains blocking; do not create findings or escalation triggers."
           ]
         },
         "falsePositiveRules": [

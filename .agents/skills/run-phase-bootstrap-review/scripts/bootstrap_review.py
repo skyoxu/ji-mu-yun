@@ -217,6 +217,28 @@ REVIEW_CYCLE_POLICY = {
     ],
     "repairReviewScope": "repair_delta_closure",
 }
+MAINTENANCE_MODE = "ai-native-single-maintainer"
+FINDING_MODE_POLICY = {
+    "schemaVersion": "bootstrap-finding-mode-policy.v1",
+    "automaticDiscoveryRoundsPerLineage": 1,
+    "reentryRequiresTypedTrigger": True,
+    "reentryRequiresUserConfirmation": True,
+    "reentryRequiresRecommendationAndConfidence": True,
+    "maintenanceMode": MAINTENANCE_MODE,
+    "severityShift": {
+        "multi_maintainer_concurrency": {"P0": "P1", "P1": "P2", "P2": "ignored"},
+        "external_requirement_injection": {"P0": "P1", "P1": "P2", "P2": "ignored"},
+    },
+    "downgradedP2Blocking": False,
+    "focusedVerifierMayCreateFindings": False,
+    "authorizes": [],
+}
+DISCOVERY_ROLES = set(LAYERS)
+MAINTENANCE_RISK_CLASSES = {
+    "runtime_product_risk",
+    "multi_maintainer_concurrency",
+    "external_requirement_injection",
+}
 ROUND_THREE_ENTRY_REASONS = set(REVIEW_CYCLE_POLICY["roundThreeEntryReasons"])
 REPAIR_DELTA_SCHEMA = "bootstrap-repair-review-delta.v1"
 ARTIFACT_VIEW_READ_RECEIPT_SCHEMA = "bootstrap-artifact-view-read-receipt.v1"
@@ -275,7 +297,22 @@ HISTORICAL_CONTROL_PLANE_POLICIES = (
             "reasoning_effort": "enum:medium|high",
         },
     },
+    {
+        **CONTROL_PLANE_POLICY,
+        "typedPlaceholders": {
+            key: value for key, value in TYPED_PLACEHOLDERS.items()
+            if key != "workspace_root"
+        } | {"reasoning_effort": "enum:medium|high"},
+    },
 )
+HISTORICAL_PROFILE_MANIFEST_FIELDS = {
+    "reviewProfile", "routeVersion", "controlPlaneRevision", "requiredLayers",
+    "codexExecPolicy", "verifierPolicy", "accessProbePolicy", "reviewObjectType",
+    "reviewDepth", "reviewerInstructionPolicy", "reviewCyclePolicy",
+    "semanticReviewPolicy", "authorityFreezePolicy", "processLeasePolicy",
+    "reviewCostPolicy", "planBoundCheckPolicy", "requiredContextClasses",
+    "completenessPolicy", "authorityRootRegistry",
+}
 P2_DISPOSITION_POLICY = {
     "allAcceptedP2RequireDisposition": True,
     "highRiskDeferralAllowed": False,
@@ -536,6 +573,22 @@ def profile_for_policy_revision(policy_revision: str) -> dict[str, Any]:
         return profile
     if len(matches) > 1:
         raise BootstrapError("Successor policy revision resolves to multiple trusted Bootstrap profiles")
+    entry = historical_policy_entry(policy_revision)
+    if (
+        entry.get("replayScope") != "baseline-and-successor"
+        or not isinstance(entry.get("authorityRootRegistry"), dict)
+    ):
+        raise BootstrapError("Successor policy revision does not resolve to one trusted Bootstrap profile")
+    return {
+        "profileName": entry["profileName"],
+        "policyRevision": entry["policyRevision"],
+        "authorityRootRegistry": entry["authorityRootRegistry"],
+    }
+
+
+def historical_policy_entry(
+    policy_revision: str, profile_name: str | None = None,
+) -> dict[str, Any]:
     history = read_json(HISTORICAL_POLICY_PATH)
     history_errors = schema_validation_errors(
         "bootstrap-historical-policy-revisions.v1.schema.json", history
@@ -543,7 +596,9 @@ def profile_for_policy_revision(policy_revision: str) -> dict[str, Any]:
     entries = history.get("revisions") if isinstance(history, dict) else None
     historical = [
         item for item in entries or []
-        if isinstance(item, dict) and item.get("policyRevision") == policy_revision
+        if isinstance(item, dict)
+        and item.get("policyRevision") == policy_revision
+        and (profile_name is None or item.get("profileName") == profile_name)
     ]
     if (
         history_errors
@@ -552,11 +607,62 @@ def profile_for_policy_revision(policy_revision: str) -> dict[str, Any]:
         or history.get("authorizes") != []
         or len(historical) != 1
     ):
-        raise BootstrapError("Successor policy revision does not resolve to one trusted Bootstrap profile")
-    entry = historical[0]
-    if set(entry) != {"profileName", "policyRevision", "authorityRootRegistry"}:
-        raise BootstrapError("Historical Bootstrap policy revision has an invalid shape")
-    return entry
+        raise BootstrapError("Historical Bootstrap policy revision is not uniquely registered")
+    return historical[0]
+
+
+def historical_profile_from_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
+    profile_name = manifest.get("profileName")
+    policy_revision = manifest.get("policyRevision")
+    if not isinstance(profile_name, str) or not isinstance(policy_revision, str):
+        raise BootstrapError("Historical review-input.json lacks a profile identity")
+    entry = historical_policy_entry(policy_revision, profile_name)
+    profile: dict[str, Any] = {"automaticInvocation": False, "readOnly": True}
+    profile.update({
+        field: manifest[field]
+        for field in HISTORICAL_PROFILE_MANIFEST_FIELDS
+        if field in manifest
+    })
+    preflight = manifest.get("deterministicPreflightPolicy")
+    plan_checks = manifest.get("planBoundRequiredChecks")
+    if not isinstance(preflight, dict) or not isinstance(preflight.get("requiredChecks"), list):
+        raise BootstrapError("Historical review-input.json lacks a deterministic preflight policy")
+    if not isinstance(plan_checks, list) or any(
+        not isinstance(item, dict) or not isinstance(item.get("checkId"), str)
+        for item in plan_checks
+    ):
+        raise BootstrapError("Historical review-input.json has invalid plan-bound checks")
+    plan_check_ids = [item["checkId"] for item in plan_checks]
+    required_checks = preflight["requiredChecks"]
+    if plan_check_ids and required_checks[-len(plan_check_ids):] != plan_check_ids:
+        raise BootstrapError("Historical preflight policy does not preserve plan-bound check order")
+    base_preflight = dict(preflight)
+    base_preflight["requiredChecks"] = (
+        required_checks[:-len(plan_check_ids)] if plan_check_ids else list(required_checks)
+    )
+    profile["deterministicPreflightPolicy"] = base_preflight
+    extensions = entry.get("profileExtensions", {})
+    if not isinstance(extensions, dict) or set(extensions) & set(profile):
+        raise BootstrapError("Historical Bootstrap profile extensions overlap frozen manifest fields")
+    profile.update(extensions)
+    profile["policyRevision"] = policy_revision
+    revision_payload = {key: value for key, value in profile.items() if key != "policyRevision"}
+    if value_hash(revision_payload) != policy_revision:
+        raise BootstrapError("Historical Bootstrap profile does not match its content-addressed revision")
+    if profile.get("authorityRootRegistry") != entry.get("authorityRootRegistry"):
+        raise BootstrapError("Historical Bootstrap profile has a substituted authority root")
+    return profile
+
+
+def frozen_profile_for_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
+    registry = read_json(PROFILE_PATH)
+    current = (
+        registry.get("profiles", {}).get(manifest.get("profileName"))
+        if isinstance(registry, dict) else None
+    )
+    if isinstance(current, dict) and current.get("policyRevision") == manifest.get("policyRevision"):
+        return load_profile(manifest["profileName"])
+    return historical_profile_from_manifest(manifest)
 
 
 def validate_leaf_root_binding(
@@ -789,7 +895,7 @@ def required_companion_capability(
 
 def requires_acceptance_inventory_attestation(manifest: dict[str, Any]) -> bool:
     """Return whether this frozen profile declares the S0 companion capability."""
-    profile = load_profile(manifest["profileName"])
+    profile = frozen_profile_for_manifest(manifest)
     return any(
         isinstance(item, dict)
         and item.get("capabilityId") == "acceptance-inventory-attestation"
@@ -845,7 +951,7 @@ def build_acceptance_auditor_role_bundle(
         raise BootstrapError("Acceptance Auditor inventory attestation is incomplete")
     if inventory_attestation.get("capabilityId") != "acceptance-inventory-attestation" or inventory_attestation.get("capabilityVersion") != "1.0" or inventory_attestation.get("producerRole") != "acceptance_auditor":
         raise BootstrapError("Acceptance Auditor bundle capability identity is invalid")
-    profile = load_profile(manifest["profileName"])
+    profile = frozen_profile_for_manifest(manifest)
     required_companion_capability(
         profile, "acceptance-inventory-attestation", "1.0", "acceptance_auditor"
     )
@@ -2115,8 +2221,31 @@ def validate_review_cycle(
                 round_entry_reason,
                 high_risk_boundaries or [],
             )
+    elif review_round == 2:
+        if round_entry_reason is not None and round_entry_reason not in ROUND_THREE_ENTRY_REASONS:
+            raise BootstrapError("Round 2 finding-mode re-entry reason is invalid")
+        if (
+            round_entry_reason == "authority_context_graph_changed"
+            and predecessor_manifest.get("authorityContextHash") == current_authority_context_hash
+        ):
+            raise BootstrapError(
+                "Round 2 authority_context_graph_changed requires an actual authority/context hash change"
+            )
+        if high_risk_boundaries and round_entry_reason != "high_risk_boundary_changed":
+            raise BootstrapError(
+                "High-risk boundary evidence requires high_risk_boundary_changed"
+            )
+        if round_entry_reason == "high_risk_boundary_changed":
+            impacted = set(repair_delta["addedArtifacts"]) | set(
+                repair_delta["changedArtifacts"]
+            ) | set(repair_delta["removedArtifacts"])
+            boundaries = set(high_risk_boundaries or [])
+            if not boundaries or not boundaries.issubset(impacted):
+                raise BootstrapError(
+                    "Round 2 high_risk_boundary_changed requires changed high-risk boundary artifacts"
+                )
     elif round_entry_reason is not None or high_risk_boundaries:
-        raise BootstrapError("Round 3 entry evidence is only valid for Round 3")
+        raise BootstrapError("Typed finding-mode re-entry evidence is invalid for this round")
     return repair_delta, entry_decision
 
 
@@ -2242,7 +2371,9 @@ def validate_launch_authorization(
                     file_hash(access_proof_path) if access_proof_path.is_file() else None
                 )
             else:
-                access_proof_hash = validate_access_proof(run_dir, manifest)
+                access_proof_hash = validate_access_proof(
+                    run_dir, manifest, primary_access_proof_role(manifest)
+                )
         except BootstrapError as exc:
             errors.append(str(exc))
         else:
@@ -2443,6 +2574,14 @@ Context class artifact bindings:
 Completeness: all artifacts and context closure are mandatory; sampling is forbidden.
 {repair_guidance}
 
+First-class maintenance context (controller-enforced): this repository is AI-native and has one
+human maintainer. Classify each candidate as `runtime_product_risk`,
+`multi_maintainer_concurrency`, or `external_requirement_injection` in `maintenanceRiskClass`.
+Findings whose failure depends on concurrent human maintainers or external requirement injection
+are automatically shifted by the parent CLI: P0 to P1, P1 to non-blocking P2, and P2 to ignored.
+Do not relabel those assumptions as runtime product risk to evade this policy. Internal service
+calls are trusted unless the reviewed product boundary supplies concrete contrary evidence.
+
 Role mission:
 {role_lines}
 
@@ -2476,7 +2615,7 @@ Placeholder-equivalent tuple values such as TBD, TODO, N/A, unknown, or placehol
 `existingGuardAnalysis` must also be concrete; the same placeholder-equivalent values are invalid.
 Each candidate object must contain exactly these fields:
 `candidateId`, `artifactKind`, `artifact`, `artifactHash`, `startLine`, `endLine`, `exactEvidence`,
-`triggerInput`, `requiredState`, `badOutcome`, `contextRead`, `existingGuardAnalysis`,
+`triggerInput`, `requiredState`, `badOutcome`, `contextRead`, `existingGuardAnalysis`, `maintenanceRiskClass`,
 `proposedSeverity`, `severityRationale`, `confidence`, `dimension`, `authorityOwner`, `consumer`,
 and `validatorRef`.
 
@@ -2485,7 +2624,8 @@ of `code|document|plan|schema|fixture`; `proposedSeverity` must be `P0|P1|P2`; a
 be one of `code|document|plan|security|acceptance|edge-case`. Set `startLine` and `endLine` to
 inclusive positive integers and copy those lines verbatim into `exactEvidence`. Set `contextRead`
 to a non-empty array of manifest artifact references using `path`, `path:line`, or
-`path:start-end`. Do not add any other candidate fields.
+`path:start-end`. `maintenanceRiskClass` must be one of `runtime_product_risk`,
+`multi_maintainer_concurrency`, or `external_requirement_injection`. Do not add any other candidate fields.
 Do not write verifier decisions or gateway-owned dispositions.
 """
 
@@ -2563,9 +2703,14 @@ def focused_repair_prompt_text(manifest: dict[str, Any]) -> str:
         "direct consumers, targeted tests, and controlled validation receipts. This is one "
         "independent repair-verifier role, not discovery and not gate verification.\n\n"
         f"Required finding IDs: {json.dumps(finding_ids)}\n\n"
-        "Return one decision for every ID. Report new P0/P1 findings and any authority graph "
-        "or high-risk boundary change in the typed escalation object. Do not grant acceptance, "
-        "commit, release, or handoff authority.\n"
+        "Return one decision for every ID. This verification path has already consumed its "
+        "finding round: do not discover or report new findings, and return empty newBlockers and an "
+        "all-false escalation object. If the repair cannot be mapped to the predecessor finding "
+        "set, return a blocking decision for the affected predecessor finding; an incompatible "
+        "authority or high-risk scope requires a separate superseding acceptance target, not a "
+        "new finding in this lineage. The repository is AI-native with one human maintainer; "
+        "multi-maintainer concurrency and external requirement-injection assumptions are outside "
+        "this verification role. Do not grant acceptance, commit, release, or handoff authority.\n"
     )
 
 
@@ -2663,6 +2808,17 @@ def validate_focused_repair_output(
         if not checked.issubset(artifact_set):
             errors.append(f"focused decision cites evidence outside scope: {decision.get('findingId')}")
     escalation = output.get("escalation") if isinstance(output.get("escalation"), dict) else {}
+    if manifest.get("findingMode") == "verification_only" and (
+        output.get("newBlockers") != []
+        or escalation != {
+            "novelP0P1FindingIds": [],
+            "authorityGraphChanged": False,
+            "authorityGraphArtifacts": [],
+            "highRiskBoundaryChanged": False,
+            "highRiskBoundaryArtifacts": [],
+        }
+    ):
+        errors.append("focused verification cannot create findings or reopen discovery")
     novel = escalation.get("novelP0P1FindingIds", [])
     blocker_ids = [item.get("findingId") for item in output.get("newBlockers", []) if isinstance(item, dict)]
     if sorted(novel) != sorted(blocker_ids) or len(blocker_ids) != len(set(blocker_ids)):
@@ -3175,6 +3331,18 @@ def validate_acceptance_repair_route(
         or completeness.get("status") != "passed"
         or completeness.get("authorizes") != []
         or route.get("repairCompletenessHash") != value_hash(completeness)
+        or route.get("maintenanceMode") != MAINTENANCE_MODE
+        or route.get("findingMode") != (
+            "verification_only"
+            if profile_name == "bootstrap-focused-repair-verification"
+            else "discovery"
+        )
+        or route.get("findingModeReentry") != (
+            "not_applicable"
+            if profile_name == "bootstrap-focused-repair-verification"
+            else "user_confirmation_required"
+        )
+        or route.get("findingSeverityPolicy") != FINDING_MODE_POLICY["severityShift"]
     ):
         raise BootstrapError(
             "Implementation-conformance repair review requires a matching Acceptance route and completeness projection"
@@ -3212,6 +3380,16 @@ def validate_acceptance_repair_route(
             raise BootstrapError(
                 "Acceptance repair completeness does not match producer replay"
             )
+    if profile_name == "bootstrap-implementation-conformance":
+        trigger_checks = {
+            "novel_p0_p1": bool(completeness.get("novelP0P1FindingIds")),
+            "authority_context_graph_changed": completeness.get("authorityGraphChanged") is True,
+            "high_risk_boundary_changed": completeness.get("highRiskBoundaryChanged") is True,
+        }
+        if round_entry_reason is not None and not trigger_checks.get(round_entry_reason, False):
+            raise BootstrapError(
+                "Acceptance repair completeness does not prove the typed finding-mode trigger"
+            )
     return {
         "acceptanceRepairRoute": {
             "path": repository_relative_path(route_path, repository_root),
@@ -3222,6 +3400,154 @@ def validate_acceptance_repair_route(
             "sha256": file_hash(completeness_path),
         },
     }
+
+
+def validate_finding_mode_reentry_authorization(
+    path: Path,
+    repository_root: Path,
+    lineage_family_id: str,
+    review_round: int,
+    predecessor_run: str,
+    round_entry_reason: str | None,
+    acceptance_route_path: Path | None,
+) -> dict[str, str]:
+    authorization = read_json(path)
+    predecessor_dir = ensure_within(
+        repository_root / predecessor_run, repository_root, "Finding-mode predecessor run"
+    )
+    predecessor_manifest = read_json(predecessor_dir / "review-input.json")
+    expected_fields = {
+        "schemaVersion", "lineageFamilyId", "nextReviewRound", "predecessorRun",
+        "predecessorInputHash", "roundEntryReason", "acceptanceRoute", "recommendation",
+        "confidence", "rationale", "userConfirmed", "confirmedAt", "authorizes",
+    }
+    route_binding = authorization.get("acceptanceRoute") if isinstance(authorization, dict) else None
+    errors: list[str] = []
+    if not isinstance(authorization, dict) or set(authorization) != expected_fields:
+        errors.append("authorization fields are invalid")
+    if acceptance_route_path is None:
+        if route_binding is not None:
+            errors.append("standalone review authorization cannot substitute an Acceptance route")
+    elif (
+        not isinstance(route_binding, dict)
+        or set(route_binding) != {"path", "sha256"}
+        or route_binding.get("path") != repository_relative_path(acceptance_route_path, repository_root)
+        or route_binding.get("sha256") != file_hash(acceptance_route_path)
+    ):
+        errors.append("acceptance route binding is stale")
+    expected = {
+        "schemaVersion": "bootstrap-finding-mode-reentry-authorization.v1",
+        "lineageFamilyId": lineage_family_id,
+        "nextReviewRound": review_round,
+        "predecessorRun": predecessor_run,
+        "predecessorInputHash": predecessor_manifest.get("inputHash"),
+        "roundEntryReason": round_entry_reason,
+        "userConfirmed": True,
+        "authorizes": ["finding-mode-reentry"],
+    }
+    if isinstance(authorization, dict):
+        errors.extend(
+            f"{key} does not match finding-mode re-entry authority"
+            for key, value in expected.items() if authorization.get(key) != value
+        )
+        if authorization.get("recommendation") not in {"recommend", "do_not_recommend"}:
+            errors.append("recommendation is invalid")
+        confidence = authorization.get("confidence")
+        if (
+            not isinstance(confidence, (int, float))
+            or isinstance(confidence, bool)
+            or not math.isfinite(confidence)
+            or confidence < 0
+            or confidence > 1
+        ):
+            errors.append("confidence must be between 0 and 1")
+        if not isinstance(authorization.get("rationale"), str) or not authorization["rationale"].strip():
+            errors.append("recommendation rationale is required")
+        if not isinstance(authorization.get("confirmedAt"), str) or not authorization["confirmedAt"].strip():
+            errors.append("confirmation timestamp is required")
+    if errors:
+        raise BootstrapError("Finding-mode re-entry authorization is invalid: " + "; ".join(errors))
+    return {
+        "path": repository_relative_path(path, repository_root),
+        "sha256": file_hash(path),
+    }
+
+
+def command_authorize_finding_mode_reentry(args: argparse.Namespace) -> int:
+    repository_root = Path(args.repository_root).resolve()
+    predecessor_candidate = Path(args.predecessor_run_dir)
+    if not predecessor_candidate.is_absolute():
+        predecessor_candidate = repository_root / predecessor_candidate
+    predecessor_dir = ensure_within(
+        predecessor_candidate, repository_root, "Finding-mode predecessor run"
+    )
+    predecessor_manifest = read_json(predecessor_dir / "review-input.json")
+    acceptance_route_path = None
+    route = None
+    if args.acceptance_repair_route:
+        acceptance_route_candidate = Path(args.acceptance_repair_route)
+        if not acceptance_route_candidate.is_absolute():
+            acceptance_route_candidate = repository_root / acceptance_route_candidate
+        acceptance_route_path = ensure_within(
+            acceptance_route_candidate, repository_root, "Acceptance repair route"
+        )
+        route = read_json(acceptance_route_path)
+    predecessor_run = repository_relative_path(predecessor_dir, repository_root)
+    if (
+        args.next_review_round < 2
+        or args.next_review_round > REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+        or predecessor_manifest.get("lineageFamilyId") != args.lineage_family_id
+        or predecessor_manifest.get("fullReviewRound") != args.next_review_round - 1
+    ):
+        raise BootstrapError("Predecessor does not match the requested finding-mode re-entry")
+    if route is not None and (
+        route.get("routeKind") != "full_implementation_conformance"
+        or route.get("lineageFamilyId") != args.lineage_family_id
+        or route.get("semanticRoundsConsumed") != args.next_review_round - 1
+        or route.get("nextFullReviewRound") != args.next_review_round
+        or route.get("roundEntryReason") != args.round_entry_reason
+        or route.get("findingMode") != "discovery"
+        or route.get("findingModeReentry") != "user_confirmation_required"
+    ):
+        raise BootstrapError("Acceptance route does not authorize the requested finding-mode re-entry")
+    if not args.user_confirmed:
+        raise BootstrapError("Finding-mode re-entry requires explicit user confirmation")
+    if not math.isfinite(args.confidence) or args.confidence < 0 or args.confidence > 1:
+        raise BootstrapError("Finding-mode re-entry confidence must be between 0 and 1")
+    if not args.rationale.strip():
+        raise BootstrapError("Finding-mode re-entry recommendation rationale is required")
+    output = Path(args.out)
+    if not output.is_absolute():
+        output = repository_root / output
+    output = ensure_within(output, repository_root, "Finding-mode re-entry authorization output")
+    if output.exists():
+        raise BootstrapError("Finding-mode re-entry authorization output is append-only")
+    authorization = {
+        "schemaVersion": "bootstrap-finding-mode-reentry-authorization.v1",
+        "lineageFamilyId": args.lineage_family_id,
+        "nextReviewRound": args.next_review_round,
+        "predecessorRun": predecessor_run,
+        "predecessorInputHash": predecessor_manifest["inputHash"],
+        "roundEntryReason": args.round_entry_reason,
+        "acceptanceRoute": (
+            {
+                "path": repository_relative_path(acceptance_route_path, repository_root),
+                "sha256": file_hash(acceptance_route_path),
+            }
+            if acceptance_route_path is not None
+            else None
+        ),
+        "recommendation": args.recommendation,
+        "confidence": args.confidence,
+        "rationale": args.rationale.strip(),
+        "userConfirmed": True,
+        "confirmedAt": utc_now(),
+        "authorizes": ["finding-mode-reentry"],
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    write_json(output, authorization)
+    print(f"Authorized finding-mode re-entry at {output}")
+    return 0
 
 
 def command_prepare(args: argparse.Namespace) -> int:
@@ -3375,6 +3701,13 @@ def command_prepare(args: argparse.Namespace) -> int:
         "reviewDepth": profile["reviewDepth"],
         "reviewerInstructionPolicy": profile["reviewerInstructionPolicy"],
         "reviewCyclePolicy": profile["reviewCyclePolicy"],
+        "maintenanceMode": MAINTENANCE_MODE,
+        "findingMode": (
+            "verification_only"
+            if args.profile == "bootstrap-focused-repair-verification"
+            else "discovery"
+        ),
+        "findingModePolicy": FINDING_MODE_POLICY,
         "semanticReviewPolicy": profile["semanticReviewPolicy"],
         "semanticReviewExclusivityAttestation": args.semantic_review_exclusivity,
         "authorityFreezePolicy": profile["authorityFreezePolicy"],
@@ -3406,6 +3739,7 @@ def command_prepare(args: argparse.Namespace) -> int:
         "authorityClass": AUTHORITY_CLASS,
         "artifacts": artifacts,
     }
+    validated_acceptance_route_path: Path | None = None
     if args.review_round > 1:
         if not args.repair_closure:
             raise BootstrapError("Review rounds after round 1 require --repair-closure")
@@ -3443,6 +3777,7 @@ def command_prepare(args: argparse.Namespace) -> int:
                 repository_root,
                 "Acceptance repair route",
             )
+            validated_acceptance_route_path = route_path
             completeness_path = ensure_within(
                 repository_root / args.acceptance_repair_completeness,
                 repository_root,
@@ -3469,6 +3804,42 @@ def command_prepare(args: argparse.Namespace) -> int:
         raise BootstrapError("Round 1 must not declare --repair-closure")
     elif args.acceptance_repair_route or args.acceptance_repair_completeness:
         raise BootstrapError("Round 1 cannot declare Acceptance repair route bindings")
+    if args.review_round > 1 and manifest["findingMode"] == "discovery":
+        if args.round_entry_reason is None:
+            raise BootstrapError("Discovery after Round 1 requires a typed --round-entry-reason")
+        if not args.finding_mode_reentry_authorization:
+            raise BootstrapError(
+                "Discovery after Round 1 requires --finding-mode-reentry-authorization"
+            )
+        if (
+            args.review_round == 2
+            and args.round_entry_reason == "novel_p0_p1"
+            and validated_acceptance_route_path is None
+        ):
+            raise BootstrapError(
+                "Standalone later discovery cannot prove novel_p0_p1 without an Acceptance route"
+            )
+        authorization_path = Path(args.finding_mode_reentry_authorization)
+        if not authorization_path.is_absolute():
+            authorization_path = repository_root / authorization_path
+        authorization_path = ensure_within(
+            authorization_path, repository_root, "Finding-mode re-entry authorization"
+        )
+        manifest["findingModeReentryAuthorization"] = (
+            validate_finding_mode_reentry_authorization(
+                authorization_path,
+                repository_root,
+                args.lineage_family_id,
+                args.review_round,
+                predecessor_run,
+                args.round_entry_reason,
+                validated_acceptance_route_path,
+            )
+        )
+    elif args.finding_mode_reentry_authorization:
+        raise BootstrapError(
+            "Finding-mode re-entry authorization is valid only for later discovery rounds"
+        )
     try:
         view = create_artifact_view(
             repository_root,
@@ -3568,13 +3939,47 @@ def validate_manifest_controls(
     if manifest.get("executionMode") not in EXECUTION_MODES:
         raise BootstrapError("review-input.json has an invalid executionMode")
     control_plane_policy = manifest.get("controlPlanePolicy")
-    if control_plane_policy != CONTROL_PLANE_POLICY and (
-        not historical_replay
-        or control_plane_policy not in HISTORICAL_CONTROL_PLANE_POLICIES
+    if control_plane_policy != CONTROL_PLANE_POLICY and not (
+        historical_replay
+        and (
+            control_plane_policy is None
+            or control_plane_policy in HISTORICAL_CONTROL_PLANE_POLICIES
+        )
     ):
         raise BootstrapError("review-input.json has a stale or substituted controlPlanePolicy")
-    if manifest.get("p2DispositionPolicy") != P2_DISPOSITION_POLICY:
+    if manifest.get("p2DispositionPolicy") != P2_DISPOSITION_POLICY and not (
+        historical_replay and manifest.get("p2DispositionPolicy") is None
+    ):
         raise BootstrapError("review-input.json has a stale or substituted p2DispositionPolicy")
+    finding_contract_present = any(
+        key in manifest for key in ("maintenanceMode", "findingMode", "findingModePolicy")
+    )
+    if finding_contract_present:
+        expected_mode = (
+            "verification_only"
+            if manifest.get("profileName") == "bootstrap-focused-repair-verification"
+            else "discovery"
+        )
+        if (
+            manifest.get("maintenanceMode") != MAINTENANCE_MODE
+            or manifest.get("findingMode") != expected_mode
+            or manifest.get("findingModePolicy") != FINDING_MODE_POLICY
+        ):
+            raise BootstrapError("review-input.json has a stale or substituted finding-mode policy")
+        reentry = manifest.get("findingModeReentryAuthorization")
+        if manifest.get("findingMode") == "discovery" and review_round > 1:
+            if not isinstance(reentry, dict) or set(reentry) != {"path", "sha256"}:
+                raise BootstrapError("later discovery is missing finding-mode re-entry authorization")
+            repository_root = Path(str(manifest.get("repositoryRoot", ""))).resolve()
+            authorization_path = ensure_within(
+                repository_root / str(reentry.get("path", "")),
+                repository_root,
+                "Finding-mode re-entry authorization",
+            )
+            if not authorization_path.is_file() or file_hash(authorization_path) != reentry.get("sha256"):
+                raise BootstrapError("finding-mode re-entry authorization is missing or stale")
+        elif reentry is not None:
+            raise BootstrapError("finding-mode re-entry authorization is invalid for this run")
     scope_policy = manifest.get("reviewScopePolicy")
     if scope_policy is not None:
         required_scope_policy_fields = {
@@ -3681,7 +4086,11 @@ def load_run(
     unhashed.pop("inputHash", None)
     if expected_hash != value_hash(unhashed):
         raise BootstrapError("review-input.json inputHash does not match its content")
-    profile = load_profile(manifest.get("profileName", ""))
+    profile = (
+        load_profile(manifest.get("profileName", ""))
+        if require_fresh_artifacts
+        else frozen_profile_for_manifest(manifest)
+    )
     for field in (
         "reviewProfile", "policyRevision", "routeVersion", "controlPlaneRevision", "requiredLayers", "codexExecPolicy",
         "verifierPolicy", "accessProbePolicy",
@@ -3977,7 +4386,9 @@ def command_authorize_launch(args: argparse.Namespace) -> int:
         print(f"Review launch is already authorized: {authorization_path}")
         return 0
     preflight_hash = validate_preflight_result(run_dir, manifest)
-    access_proof_hash = validate_access_proof(run_dir, manifest)
+    access_proof_hash = validate_access_proof(
+        run_dir, manifest, primary_access_proof_role(manifest)
+    )
     leases = load_process_leases(run_dir, manifest)
     started_reviewers = [
         item["operationId"]
@@ -4266,7 +4677,11 @@ def access_proof_route(
     run_dir: Path, manifest: dict[str, Any], proof_role: str,
 ) -> tuple[Path, dict[str, Any], str | None]:
     policy = manifest["accessProbePolicy"]
-    if proof_role == "discovery":
+    if proof_role in {"discovery", FOCUSED_REPAIR_ROLE}:
+        if proof_role == "discovery" and manifest.get("findingMode") == "verification_only":
+            raise BootstrapError("Discovery access is forbidden after the lineage finding round")
+        if proof_role == FOCUSED_REPAIR_ROLE and manifest.get("findingMode") != "verification_only":
+            raise BootstrapError("Focused verification access requires verification_only finding mode")
         return (
             run_dir / policy["discoverySidecar"],
             discovery_execution_route(manifest, manifest["requiredLayers"][0]),
@@ -4348,11 +4763,22 @@ def validate_access_proof(
     return file_hash(path)
 
 
+def primary_access_proof_role(manifest: dict[str, Any]) -> str:
+    if manifest.get("findingMode") == "verification_only":
+        return FOCUSED_REPAIR_ROLE
+    return "discovery"
+
+
 def command_prove_access(args: argparse.Namespace) -> int:
     run_dir, manifest, _repository_root = load_run(args.run_dir)
     if manifest["executionMode"] != "codex-exec":
         raise BootstrapError("prove-access is only valid for codex-exec runs")
     proof_role = args.role
+    expected_role = primary_access_proof_role(manifest)
+    if proof_role not in {expected_role, "independent_verifier"}:
+        raise BootstrapError(
+            f"Access proof role {proof_role} is forbidden by finding mode {manifest.get('findingMode')}"
+        )
     if proof_role == "discovery":
         validate_preflight_result(run_dir, manifest)
     else:
@@ -5318,6 +5744,16 @@ def validate_focused_repair_candidate_payload(
         or "failureReason" in payload
     ):
         raise TransportAttemptError("Focused repair completed payload is invalid")
+    if payload.get("newBlockers") != [] or payload.get("escalation") != {
+        "novelP0P1FindingIds": [],
+        "authorityGraphChanged": False,
+        "authorityGraphArtifacts": [],
+        "highRiskBoundaryChanged": False,
+        "highRiskBoundaryArtifacts": [],
+    }:
+        raise TransportAttemptError(
+            "Focused repair verification cannot create findings or reopen discovery"
+        )
     validate_artifact_view_read_receipt(payload.get("artifactViewReadReceipt"), manifest)
 
 
@@ -5327,8 +5763,16 @@ def command_run_layer(args: argparse.Namespace) -> int:
         raise BootstrapError("run-layer v1 only supports codex-exec runs")
     if args.role != "independent_verifier" and args.role not in manifest["requiredLayers"]:
         raise BootstrapError("run-layer role is not required by this review profile")
+    if args.role in DISCOVERY_ROLES and manifest.get("findingMode") != "discovery":
+        raise BootstrapError("Discovery reviewer is forbidden after the lineage finding round")
+    if args.role == FOCUSED_REPAIR_ROLE and manifest.get("findingMode") != "verification_only":
+        raise BootstrapError("Focused repair verifier requires verification_only finding mode")
     validate_launch_authorization(run_dir, manifest)
-    proof_role = "independent_verifier" if args.role == "independent_verifier" else "discovery"
+    proof_role = (
+        "independent_verifier"
+        if args.role == "independent_verifier"
+        else primary_access_proof_role(manifest)
+    )
     proof_path, route, _gate_hash = access_proof_route(run_dir, manifest, proof_role)
     validate_access_proof(run_dir, manifest, proof_role)
     selected_model = args.model or route["model"]
@@ -5604,6 +6048,8 @@ def candidate_reason(
         "triggerInput", "requiredState", "badOutcome", "contextRead", "existingGuardAnalysis", "proposedSeverity",
         "severityRationale", "confidence", "dimension", "authorityOwner", "consumer", "validatorRef",
     }
+    if "findingModePolicy" in manifest:
+        required.add("maintenanceRiskClass")
     if set(candidate) != required:
         return "schema_invalid", "Candidate fields do not match bootstrap-reviewer-output.v1"
     candidate_id = candidate.get("candidateId")
@@ -5688,8 +6134,13 @@ def candidate_reason(
     enums = {
         "artifactKind": {"code", "document", "plan", "schema", "fixture"},
         "dimension": {"code", "document", "plan", "security", "acceptance", "edge-case"},
+        "maintenanceRiskClass": MAINTENANCE_RISK_CLASSES,
     }
-    if any(candidate.get(key) not in values for key, values in enums.items()):
+    if any(
+        candidate.get(key) not in values
+        for key, values in enums.items()
+        if key in candidate or key != "maintenanceRiskClass"
+    ):
         return "schema_invalid", "Candidate enum value is invalid"
     for key in ("severityRationale", "authorityOwner", "consumer", "validatorRef"):
         if not isinstance(candidate.get(key), str) or not candidate[key].strip():
@@ -5735,7 +6186,19 @@ def finding_from_candidate(candidate: dict[str, Any], layer: str, manifest: dict
             evidence_hash, *failure_identity, candidate["dimension"], manifest["authorityRevision"],
         ]
     )
+    reported_severity = candidate["proposedSeverity"]
+    risk_class = candidate.get("maintenanceRiskClass", "runtime_product_risk")
+    severity_shift = manifest.get("findingModePolicy", {}).get("severityShift", {}).get(risk_class, {})
+    effective_severity = severity_shift.get(reported_severity, reported_severity)
     finding = {key: value for key, value in candidate.items() if key not in {"candidateId", "artifactHash"}}
+    if "findingModePolicy" in manifest:
+        finding["reportedSeverity"] = reported_severity
+        finding["severityAdjustment"] = (
+            "unchanged"
+            if effective_severity == reported_severity
+            else f"{reported_severity}_to_{effective_severity}"
+        )
+    finding["proposedSeverity"] = effective_severity
     finding.update(
         {
             "schemaVersion": "review-finding.v1",
@@ -5877,6 +6340,17 @@ def evaluate_reviewer_outputs(
                 rejections.append(rejection(candidate, layer, manifest, code, reason))
                 continue
             finding = finding_from_candidate(candidate, layer, manifest)
+            if finding["proposedSeverity"] == "ignored":
+                rejections.append(
+                    rejection(
+                        candidate,
+                        layer,
+                        manifest,
+                        "maintenance_risk_suppressed",
+                        "P2 finding based on multi-maintainer concurrency or external requirement injection is ignored",
+                    )
+                )
+                continue
             fingerprint = finding["evidenceFingerprint"]
             candidates_by_fingerprint.setdefault(fingerprint, []).append((candidate, layer, finding))
     severity_rank = {"P0": 3, "P1": 2, "P2": 1}
@@ -5885,7 +6359,7 @@ def evaluate_reviewer_outputs(
         ranked = sorted(
             group,
             key=lambda item: (
-                -severity_rank[item[0]["proposedSeverity"]],
+                -severity_rank[item[2]["proposedSeverity"]],
                 item[0]["candidateId"],
                 item[1],
             ),
@@ -5901,7 +6375,7 @@ def evaluate_reviewer_outputs(
                     manifest,
                     "duplicate",
                     f"Merged into {selected_finding['findingId']} at retained severity "
-                    f"{selected_candidate['proposedSeverity']}",
+                    f"{selected_finding['proposedSeverity']}",
                 )
             )
     findings.sort(key=lambda item: item["findingId"])
@@ -6531,7 +7005,7 @@ def validate_p2_dispositions(
         "findingIds": p2_ids,
     }
     repository_root = Path(manifest["repositoryRoot"])
-    profile = load_profile(manifest["profileName"])
+    profile = frozen_profile_for_manifest(manifest)
     root_registry = load_authority_root_registry(
         repository_root, profile["authorityRootRegistry"]
     )
@@ -7040,7 +7514,7 @@ def validate_finalized_run_evidence(
     if read_json(metrics_path) != expected_metrics:
         raise BootstrapError("review-metrics.json does not reproduce finalized evidence")
 
-    profile = load_profile(manifest["profileName"])
+    profile = frozen_profile_for_manifest(manifest)
     closure = {
         "candidateCount": len(findings),
         "visibleFindingCount": len(visible),
@@ -7373,7 +7847,7 @@ def command_run_p2_command(args: argparse.Namespace) -> int:
     )
     if schema_errors:
         raise BootstrapError("P2 command registry is invalid: " + "; ".join(schema_errors))
-    profile = load_profile(manifest["profileName"])
+    profile = frozen_profile_for_manifest(manifest)
     root_registry = load_authority_root_registry(
         repository_root, profile["authorityRootRegistry"]
     )
@@ -7538,11 +8012,63 @@ def _parse_event_timestamp(value: Any) -> datetime | None:
     return parsed if parsed.tzinfo is not None else None
 
 
+def cost_model_route_policy(manifest: dict[str, Any]) -> dict[str, Any]:
+    layers = manifest.get("requiredLayers")
+    if not isinstance(layers, list) or any(role not in REVIEWER_ROLES for role in layers):
+        raise BootstrapError("Cost model route requires an exact reviewer role set")
+    reviewer_models = {
+        role: discovery_execution_route(manifest, role)["model"]
+        for role in layers
+    }
+    verifier_model = verifier_execution_route(manifest, [])["model"]
+    return {
+        "reviewers": reviewer_models,
+        "independentVerifier": verifier_model,
+    }
+
+
+def cost_model_cohort_key(manifest: dict[str, Any]) -> str:
+    route = cost_model_route_policy(manifest)
+    models = {*route["reviewers"].values(), route["independentVerifier"]}
+    return next(iter(models)) if len(models) == 1 else value_hash(route)
+
+
+def cost_reasoning_profile(manifest: dict[str, Any]) -> str:
+    layers = manifest.get("requiredLayers")
+    if not isinstance(layers, list) or any(role not in REVIEWER_ROLES for role in layers):
+        raise BootstrapError("Cost reasoning profile requires an exact reviewer role set")
+    return value_hash({
+        "reviewers": {
+            role: discovery_execution_route(manifest, role)["reasoningEffort"]
+            for role in layers
+        },
+        "verifierPolicy": manifest.get("verifierPolicy") or {
+            "defaultReasoningEffort": manifest.get("codexExecPolicy", {})
+            .get("reasoningEffortByRole", {}).get("independent_verifier")
+        },
+    })
+
+
+def cost_typed_placeholders(manifest: dict[str, Any]) -> dict[str, str]:
+    policy = manifest.get("controlPlanePolicy")
+    if policy is None:
+        return TYPED_PLACEHOLDERS
+    if policy != CONTROL_PLANE_POLICY and policy not in HISTORICAL_CONTROL_PLANE_POLICIES:
+        raise BootstrapError("Cost evidence has an unregistered control-plane policy")
+    placeholders = policy.get("typedPlaceholders") if isinstance(policy, dict) else None
+    if not isinstance(placeholders, dict) or any(
+        not isinstance(key, str) or not isinstance(value, str)
+        for key, value in placeholders.items()
+    ):
+        raise BootstrapError("Cost evidence has an invalid typed-placeholder policy")
+    return placeholders
+
+
 def structured_run_cost_evidence(
     run_dir: Path, manifest: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     events = read_process_events(run_dir)
-    semantic_roles = {*LAYERS, "independent_verifier"}
+    semantic_roles = {*REVIEWER_ROLES, "independent_verifier"}
     cost_roles = {*semantic_roles, "model_probe"}
     terminal_types = {"attempt-completed", "attempt-failed", "attempt-rejected", "attempt-stale"}
     reasons: set[str] = set()
@@ -7551,6 +8077,12 @@ def structured_run_cost_evidence(
         manifest = read_json(manifest_path) if manifest_path.is_file() else None
     if not isinstance(manifest, dict):
         reasons.add("missing-or-invalid-manifest")
+    expected_typed_placeholders: dict[str, str] | None = None
+    if isinstance(manifest, dict):
+        try:
+            expected_typed_placeholders = cost_typed_placeholders(manifest)
+        except BootstrapError:
+            reasons.add("invalid-cost-control-plane-policy")
 
     event_attempts: dict[str, list[tuple[int, dict[str, Any]]]] = {}
     for index, event in enumerate(events):
@@ -7566,6 +8098,7 @@ def structured_run_cost_evidence(
     attempt_count = 0
     directory_attempts: set[str] = set()
     selected_models: set[str] = set()
+    model_route_valid = True
     completed_role_counts = {role: 0 for role in cost_roles}
     intervals: list[tuple[datetime, datetime]] = []
     attempts_root = run_dir / "attempts"
@@ -7625,7 +8158,8 @@ def structured_run_cost_evidence(
             or request.get("environmentAllowlist") != list(ENVIRONMENT_ALLOWLIST)
             or not isinstance(environment_evidence, dict)
             or set(environment_evidence) - set(ENVIRONMENT_ALLOWLIST)
-            or request.get("typedPlaceholders") != TYPED_PLACEHOLDERS
+            or expected_typed_placeholders is None
+            or request.get("typedPlaceholders") != expected_typed_placeholders
             or not isinstance(request_write_set, list)
             or any(not isinstance(item, str) or not item for item in request_write_set)
             or request.get("executionReadSet") != manifest_execution_read_set
@@ -7669,21 +8203,27 @@ def structured_run_cost_evidence(
             route_candidates: list[dict[str, Any]] = []
             if isinstance(manifest, dict):
                 try:
-                    candidate_doc = read_json(run_dir / "review-candidates.json")
-                    blocker_values = (
-                        candidate_doc.get("findings", [])
-                        if isinstance(candidate_doc, dict) else []
-                    )
                     if role in REVIEWER_ROLES:
                         route_candidates = [discovery_execution_route(manifest, role)]
-                    elif role == "independent_verifier":
-                        route_candidates = [verifier_execution_route(manifest, blocker_values)]
-                    elif role == "model_probe":
-                        route_candidates = [discovery_execution_route(manifest, "blind_hunter")]
-                        if isinstance(manifest.get("verifierPolicy"), dict):
-                            route_candidates.append(
-                                verifier_execution_route(manifest, blocker_values)
-                            )
+                    else:
+                        candidate_doc = read_json(run_dir / "review-candidates.json")
+                        findings = (
+                            candidate_doc.get("findings", [])
+                            if isinstance(candidate_doc, dict) else []
+                        )
+                        blocker_values = [
+                            item for item in findings
+                            if isinstance(item, dict)
+                            and item.get("proposedSeverity") in {"P0", "P1"}
+                        ]
+                        if role == "independent_verifier":
+                            route_candidates = [verifier_execution_route(manifest, blocker_values)]
+                        elif role == "model_probe":
+                            route_candidates = [discovery_execution_route(manifest, "blind_hunter")]
+                            if isinstance(manifest.get("verifierPolicy"), dict):
+                                route_candidates.append(
+                                    verifier_execution_route(manifest, blocker_values)
+                                )
                 except (BootstrapError, KeyError, TypeError, ValueError):
                     route_candidates = []
             forbidden_models = policy.get("forbiddenModels", [])
@@ -7937,6 +8477,12 @@ def structured_run_cost_evidence(
                 totals["retry"] += tokens
         if not attempt_reasons and terminal_event.get("eventType") == "attempt-completed":
             completed_role_counts[role] += 1
+        if any(reason.startswith((
+            "invalid-model-binding:",
+            "invalid-execution-policy-binding:",
+            "invalid-lifecycle-request-binding:",
+        )) for reason in attempt_reasons):
+            model_route_valid = False
         reasons.update(attempt_reasons)
 
     for attempt_id in sorted(set(event_attempts) - directory_attempts):
@@ -7948,7 +8494,7 @@ def structured_run_cost_evidence(
     required_role_counts: dict[str, int] = {}
     if isinstance(manifest, dict) and manifest.get("executionMode") == "codex-exec":
         layers = manifest.get("requiredLayers")
-        if not isinstance(layers, list) or any(role not in LAYERS for role in layers):
+        if not isinstance(layers, list) or any(role not in REVIEWER_ROLES for role in layers):
             reasons.add("invalid-required-role-set")
         else:
             required_roles.update(layers)
@@ -7984,9 +8530,14 @@ def structured_run_cost_evidence(
         wall_seconds = sum((end - start).total_seconds() for start, end in merged)
     else:
         reasons.add("missing-valid-attempt-interval")
-    model_consistent = len(selected_models) == 1
-    if not model_consistent:
-        reasons.add("model-selection-not-unique")
+    model_consistent = bool(selected_models) and model_route_valid
+    model_cohort_key = None
+    if isinstance(manifest, dict):
+        try:
+            model_cohort_key = cost_model_cohort_key(manifest)
+        except (BootstrapError, KeyError, TypeError, ValueError):
+            model_consistent = False
+            reasons.add("invalid-model-route-policy")
     completed_roles = sorted(role for role, count in completed_role_counts.items() if count >= 1)
     return {
         "complete": not reasons,
@@ -8000,7 +8551,9 @@ def structured_run_cost_evidence(
         "attemptCount": attempt_count,
         "requiredRoles": sorted(required_roles),
         "completedRoles": completed_roles,
-        "selectedModel": next(iter(selected_models)) if model_consistent else None,
+        "selectedModel": next(iter(selected_models)) if len(selected_models) == 1 else None,
+        "selectedModels": sorted(selected_models),
+        "modelCohortKey": model_cohort_key,
         "modelConsistent": model_consistent,
         "exclusionReasons": sorted(reasons),
     }
@@ -8227,26 +8780,21 @@ def validate_baseline_formal_sidecars(run_dir: Path, manifest: dict[str, Any]) -
 
 
 def _cost_cohort_identity(manifest: dict[str, Any]) -> dict[str, Any]:
-    # Callers inject the actual selected model after locating the run. The
-    # preferred model remains the deterministic fallback for manual history.
     try:
-        routes = {role: discovery_execution_route(manifest, role) for role in LAYERS}
+        model_key = cost_model_cohort_key(manifest)
+        reasoning_profile = cost_reasoning_profile(manifest)
     except (BootstrapError, KeyError, TypeError, ValueError):
-        routes = {}
-    models = {route["model"] for route in routes.values()}
+        model_key = manifest.get("codexExecPolicy", {}).get("preferredModel")
+        reasoning_profile = value_hash(
+            manifest.get("codexExecPolicy", {}).get("reasoningEffortByRole", {})
+        )
     return {
         "reviewProfile": manifest.get("reviewProfile"),
         "policyRevision": manifest.get("policyRevision"),
         "routeVersion": manifest.get("routeVersion"),
         "controlPlaneRevision": manifest.get("controlPlaneRevision"),
-        "model": (
-            next(iter(models)) if len(models) == 1
-            else manifest.get("codexExecPolicy", {}).get("preferredModel")
-        ),
-        "reasoningProfile": value_hash(
-            {role: routes[role]["reasoningEffort"] for role in LAYERS}
-            if routes else manifest.get("codexExecPolicy", {}).get("reasoningEffortByRole", {})
-        ),
+        "model": model_key,
+        "reasoningProfile": reasoning_profile,
         "fullReviewRound": manifest.get("fullReviewRound"),
         "workloadBucket": manifest.get("reviewCostEstimate", {}).get("workloadBucket") or review_workload_bucket(
             len(manifest.get("artifacts", [])),
@@ -8319,7 +8867,8 @@ def build_review_baseline(
         if not cost_eligible:
             continue
         identity = _cost_cohort_identity(manifest)
-        identity["model"] = cost["selectedModel"]
+        if identity["model"] != cost["modelCohortKey"]:
+            raise BootstrapError("Eligible cost evidence has a substituted model route cohort")
         cohort_key = value_hash(identity)
         sample = cohort_samples.setdefault(cohort_key, {"match": identity, "runs": []})
         estimate = manifest.get("reviewCostEstimate", {})
@@ -8951,6 +9500,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Acceptance-owned repair completeness projection bound by the re-entry route",
     )
     prepare.add_argument(
+        "--finding-mode-reentry-authorization",
+        help="User-confirmed recommendation/confidence sidecar required for discovery after Round 1",
+    )
+    prepare.add_argument(
         "--round-entry-reason",
         choices=sorted(ROUND_THREE_ENTRY_REASONS),
         help="Typed Round 3 entry reason; invalid outside Round 3",
@@ -9005,6 +9558,26 @@ def build_parser() -> argparse.ArgumentParser:
     )
     prepare.add_argument("--out-dir", required=True)
     prepare.set_defaults(handler=command_prepare)
+    finding_reentry = subparsers.add_parser(
+        "authorize-finding-mode-reentry",
+        help="Record explicit user confirmation for a typed later discovery round",
+    )
+    finding_reentry.add_argument("--repository-root", required=True)
+    finding_reentry.add_argument("--lineage-family-id", required=True)
+    finding_reentry.add_argument("--next-review-round", required=True, type=int)
+    finding_reentry.add_argument("--predecessor-run-dir", required=True)
+    finding_reentry.add_argument("--acceptance-repair-route")
+    finding_reentry.add_argument(
+        "--round-entry-reason", required=True, choices=sorted(ROUND_THREE_ENTRY_REASONS)
+    )
+    finding_reentry.add_argument(
+        "--recommendation", required=True, choices=["recommend", "do_not_recommend"]
+    )
+    finding_reentry.add_argument("--confidence", required=True, type=float)
+    finding_reentry.add_argument("--rationale", required=True)
+    finding_reentry.add_argument("--user-confirmed", action="store_true")
+    finding_reentry.add_argument("--out", required=True)
+    finding_reentry.set_defaults(handler=command_authorize_finding_mode_reentry)
     authorize = subparsers.add_parser(
         "authorize-launch",
         help="Freeze preflight, authority, cost and cycle state before reviewers start",
@@ -9026,7 +9599,7 @@ def build_parser() -> argparse.ArgumentParser:
     prove_access.add_argument("--codex-command", required=True)
     prove_access.add_argument("--model")
     prove_access.add_argument(
-        "--role", choices=["discovery", "independent_verifier"], default="discovery"
+        "--role", choices=["discovery", FOCUSED_REPAIR_ROLE, "independent_verifier"], default="discovery"
     )
     prove_access.add_argument("--ack-high-cost", action="store_true")
     prove_access.set_defaults(handler=command_prove_access)

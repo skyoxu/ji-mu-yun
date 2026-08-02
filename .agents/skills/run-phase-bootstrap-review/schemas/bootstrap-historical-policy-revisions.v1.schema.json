@@ -14,20 +14,27 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["profileName", "policyRevision", "authorityRootRegistry"],
+        "required": ["profileName", "policyRevision", "replayScope", "authorityRootRegistry"],
         "properties": {
           "profileName": {"type": "string", "minLength": 1},
           "policyRevision": {"$ref": "#/$defs/hash"},
+          "replayScope": {"enum": ["baseline-only", "baseline-and-successor"]},
           "authorityRootRegistry": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["path", "sha256", "registryId"],
-            "properties": {
-              "path": {"type": "string", "minLength": 1},
-              "sha256": {"$ref": "#/$defs/hash"},
-              "registryId": {"const": "bootstrap-authority-roots.v1"}
-            }
-          }
+            "oneOf": [
+              {"type": "null"},
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "sha256", "registryId"],
+                "properties": {
+                  "path": {"type": "string", "minLength": 1},
+                  "sha256": {"$ref": "#/$defs/hash"},
+                  "registryId": {"const": "bootstrap-authority-roots.v1"}
+                }
+              }
+            ]
+          },
+          "profileExtensions": {"type": "object"}
         }
       }
     },

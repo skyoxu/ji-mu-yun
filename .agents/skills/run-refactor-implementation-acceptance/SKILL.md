@@ -106,6 +106,12 @@ py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_c
 8. Follow the route's typed `nextAction`. Invoke `run-phase-bootstrap-review`
    for `full_implementation_conformance` or `focused_repair_verification`, but stop
    for its explicit high-cost acknowledgement before any model process starts.
+    If the route publishes `findingModeReentry=user_confirmation_required`, first
+    show the typed trigger, expected benefit/cost, your recommendation, and a
+    confidence in `[0,1]`; obtain explicit user confirmation and create the
+    Bootstrap CLI re-entry authorization before prepare. The recommendation is
+    advisory: explicit confirmation may proceed after either `recommend` or
+    `do_not_recommend`.
 9. Import the finalized Bootstrap result, then continue finding mapping,
    impact projection, evaluation, finalization, and package validation.
 
@@ -122,6 +128,13 @@ Quick Dev handoff and `audit-repair-completeness` before routing the next
 bounded action. A complete Round 1 repair without an escalation trigger routes
 to exactly one independent focused repair verifier. Never open a complete
 review without its typed trigger and never create Round 4.
+
+Treat the Acceptance route's maintenance and finding fields as first-class
+control data: `maintenanceMode=ai-native-single-maintainer`; multi-maintainer
+concurrency and external requirement-injection findings shift P0 to P1, P1 to
+non-blocking P2, and P2 to ignored. Round 1 discovery is automatic. Later
+discovery is only a proposal until the Bootstrap CLI validates the typed route,
+recommendation, confidence, and explicit user confirmation.
 
 When the current lineage has consumed three rounds and routes to
 `manual_pause`, do not treat the pause as acceptance or create a successor to
@@ -270,9 +283,10 @@ root. In-place repairs and successor history for that target retain it; a new
 conformance. After the first P0/P1 repair, the default route is a single
 focused repair verification only when no new P0/P1, authority/context graph
 change, or high-risk boundary change exists. Any such trigger selects complete
-three-layer review. A clean focused result closes the ordinary repair; a
-focused blocker or newly reported trigger routes to repair or complete review
-respectively. After two consumed complete rounds, a complete repair with no
+three-layer review as a non-authorizing proposal requiring recommendation,
+confidence, and explicit user confirmation. A clean focused result closes the
+ordinary repair; a focused blocker routes back to repair, and the focused
+verifier cannot report a new trigger. After two consumed complete rounds, a complete repair with no
 typed trigger routes to deterministic closure. Three consumed rounds route to
 `manual_pause`.
 

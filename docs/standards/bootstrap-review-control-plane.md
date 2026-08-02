@@ -2,7 +2,7 @@
 
 Status: Accepted
 Language: English
-Authorities: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`, `docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`, `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`, `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`, `docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md`, and `docs/adr/ADR-0055-focused-repair-verification-and-lightweight-closure.md`
+Authorities: `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`, `docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md`, `docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md`, `docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md`, `docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md`, `docs/adr/ADR-0055-focused-repair-verification-and-lightweight-closure.md`, and `docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md`
 
 ## Purpose
 
@@ -12,6 +12,9 @@ This standard defines the durable protocol for evidence-gated Bootstrap Review. 
 
 - A complete review uses three isolated discovery roles: Blind Hunter, Edge Case Hunter, and Acceptance Auditor.
 - A focused repair verification uses exactly one independent `focused_repair_verifier`. It is neither a discovery role nor the gate-after-discovery `independent_verifier`.
+- New runs freeze `maintenanceMode=ai-native-single-maintainer`. The parent CLI shifts candidates based on multi-maintainer concurrency or external requirement injection from P0 to P1, P1 to non-blocking P2, and P2 to ignored. Runtime product risk retains reported severity.
+- Round 1 discovery is automatically eligible. Later complete discovery requires a typed Acceptance trigger plus a hash-bound Bootstrap authorization containing the orchestrator recommendation, confidence, and explicit user confirmation. The recommendation is advisory and may be `recommend` or `do_not_recommend`; explicit user confirmation may authorize either. Prompts and free-form operator claims cannot substitute for that authorization.
+- Focused repair verification is verification-only: it covers the exact predecessor finding set and cannot emit new findings or escalation triggers.
 - Discovery roles do not share sessions, candidates, suspected findings, or a minimum finding quota.
 - Required artifacts and context are read completely. Sampling is prohibited.
 - P0/P1 candidates require an independent verifier that is not a discovery reviewer.
@@ -115,12 +118,13 @@ P2 command results reference both their immutable event sidecar and the shared a
   no escalation trigger routes to one focused repair verifier. The verifier
   covers the exact predecessor finding set, finding-to-repair mappings, repair
   diff, direct consumers, targeted tests, and controlled receipts. It may
-  report a still-blocking repair or an escalation trigger, but grants no
-  lifecycle authority.
+  report a still-blocking predecessor repair, but cannot create findings or
+  escalation triggers and grants no lifecycle authority.
 - Novel P0/P1, authority/context graph change, or high-risk boundary change
-  routes directly to complete three-layer review. Unknown trigger state blocks
-  routing. The same facts reported by a focused verifier select complete review
-  as the next action.
+  routes to a complete three-layer review proposal. Unknown trigger state
+  blocks routing. After Round 1, Bootstrap rejects prepare unless the proposal
+  is bound to the orchestrator recommendation/confidence and explicit user
+  confirmation through `authorize-finding-mode-reentry`.
 - Round 3 requires one schema-valid entry reason: `novel_p0_p1`,
   `authority_context_graph_changed`, or `high_risk_boundary_changed`.
 - Round 3 discovery always resolves to Sol/high for all three roles, regardless
@@ -232,6 +236,13 @@ bounded review route in force.
   a nonterminal operational row; a hash-self-consistent partial manifest is not
   a formal run. The builder does not recursively infer authority from arbitrary
   `logs/**` content.
+- Historical replay resolves the current canonical profile only when its
+  `policyRevision` still matches. Otherwise it reconstructs the profile from
+  frozen manifest policy fields plus registered extensions and requires the
+  reconstructed canonical hash to equal the frozen revision. Registry entries
+  marked `baseline-only` cannot authorize a successor. A
+  `baseline-and-successor` entry must retain its exact authority-root binding.
+  Neither form may prepare a new run or rewrite historical evidence.
 - Its append-only history index includes all lifecycle states. Finalized rows
   must pass complete evidence replay and retain their exact finding closure;
   the index aggregates candidate, visible, confirmed, refuted, unverified, and
@@ -241,8 +252,11 @@ bounded review route in force.
   selected model, a matching process result, and token usage rederived from the
   same Codex JSONL stdout. Probe, reviewer, verifier, and transport-retry costs
   remain distinguishable. Wall time is the union of active attempt intervals,
-  so idle gaps are excluded. Zero-token, mixed-model, or legacy unbound-request
-  samples do not enter a cohort.
+  so idle gaps are excluded. A single-model route uses that model as its cohort
+  identity. A legitimate mixed route uses a canonical hash of the complete
+  configured role-to-model route and is never attributed to either single-model
+  cohort. Zero-token, substituted-route, incomplete-route, and legacy
+  unbound-request samples do not enter a cohort.
 - Baseline output directories must be append-only descendants of `logs/`.
 - The history index and calibration candidate are validated before publication
   and published together by one staged-directory rename. A failed build cannot

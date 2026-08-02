@@ -1358,6 +1358,9 @@ class BootstrapIntegrationTests(unittest.TestCase):
             decision, scope, self.lineage_state(family, 0), None
         )
         self.assertEqual("full_implementation_conformance", initial["routeKind"])
+        self.assertEqual("ai-native-single-maintainer", initial["maintenanceMode"])
+        self.assertEqual("discovery", initial["findingMode"])
+        self.assertEqual("not_required", initial["findingModeReentry"])
         round_two = bootstrap_integration.project_bounded_review_route(
             decision,
             scope,
@@ -1365,6 +1368,8 @@ class BootstrapIntegrationTests(unittest.TestCase):
             self.repair_completeness(family, 1),
         )
         self.assertEqual("focused_repair_verification", round_two["routeKind"])
+        self.assertEqual("verification_only", round_two["findingMode"])
+        self.assertEqual("not_applicable", round_two["findingModeReentry"])
         round_two_with_changed_context = bootstrap_integration.project_bounded_review_route(
             decision,
             scope,
@@ -1375,6 +1380,11 @@ class BootstrapIntegrationTests(unittest.TestCase):
         )
         self.assertEqual(
             "full_implementation_conformance", round_two_with_changed_context["routeKind"]
+        )
+        self.assertEqual("discovery", round_two_with_changed_context["findingMode"])
+        self.assertEqual(
+            "user_confirmation_required",
+            round_two_with_changed_context["findingModeReentry"],
         )
         self.assertEqual(
             "authority_context_graph_changed",

@@ -28,6 +28,11 @@ _LINEAGE_ID = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}$")
 _EXACT_REUSE_PROFILE = "bootstrap-implementation-conformance"
 _EXACT_REUSE_REVIEW_PROFILE = "review-policy://bootstrap-implementation-conformance/v1"
 _FOCUSED_REPAIR_PROFILE = "bootstrap-focused-repair-verification"
+_MAINTENANCE_MODE = "ai-native-single-maintainer"
+_FINDING_SEVERITY_POLICY = {
+    "multi_maintainer_concurrency": {"P0": "P1", "P1": "P2", "P2": "ignored"},
+    "external_requirement_injection": {"P0": "P1", "P1": "P2", "P2": "ignored"},
+}
 _FINALIZED_EXCLUSIONS = {
     "plan-acceptance", "implementation-acceptance", "protected-handoff",
     "release", "commit", "done",
@@ -398,6 +403,10 @@ def project_bounded_review_route(
             "roundEntryReason": None,
             "lineageStateHash": None,
             "repairCompletenessHash": None,
+            "maintenanceMode": _MAINTENANCE_MODE,
+            "findingMode": "disabled",
+            "findingModeReentry": "not_applicable",
+            "findingSeverityPolicy": _FINDING_SEVERITY_POLICY,
         }
     if not isinstance(scope, dict):
         raise BootstrapBindingError("required Bootstrap route needs a review scope")
@@ -454,6 +463,13 @@ def project_bounded_review_route(
         else:
             route_kind = "deterministic_only"
             entry_reason = None
+    finding_mode = (
+        "discovery"
+        if route_kind == "full_implementation_conformance"
+        else "verification_only"
+        if route_kind == "focused_repair_verification"
+        else "disabled"
+    )
     return {
         "routeKind": route_kind,
         "lineageAnchor": anchor,
@@ -467,6 +483,16 @@ def project_bounded_review_route(
         "roundEntryReason": entry_reason,
         "lineageStateHash": lineage_state.get("lineageStateHash"),
         "repairCompletenessHash": repair_hash,
+        "maintenanceMode": _MAINTENANCE_MODE,
+        "findingMode": finding_mode,
+        "findingModeReentry": (
+            "user_confirmation_required"
+            if finding_mode == "discovery" and rounds > 0
+            else "not_required"
+            if finding_mode == "discovery"
+            else "not_applicable"
+        ),
+        "findingSeverityPolicy": _FINDING_SEVERITY_POLICY,
     }
 
 
@@ -881,7 +907,8 @@ def _validate_bootstrap_route_binding(value: Any) -> None:
         "schemaVersion", "bootstrapExecutionState", "reviewScope", "routeKind",
         "lineageAnchor", "lineageFamilyId", "semanticRoundsConsumed",
         "nextFullReviewRound", "roundEntryReason", "lineageStateHash",
-        "repairCompletenessHash", "nextAction", "authorizes",
+        "repairCompletenessHash", "maintenanceMode", "findingMode",
+        "findingModeReentry", "findingSeverityPolicy", "nextAction", "authorizes",
     }
     allowed_fields = required | {
         "repairCompletenessRequest", "repairCompletenessRequestHash",
@@ -896,6 +923,12 @@ def _validate_bootstrap_route_binding(value: Any) -> None:
             "focused_repair_verification",
         }
         or route.get("nextAction") != "run-phase-bootstrap-review"
+        or route.get("maintenanceMode") != _MAINTENANCE_MODE
+        or route.get("findingMode") not in {"discovery", "verification_only"}
+        or route.get("findingModeReentry") not in {
+            "not_required", "user_confirmation_required", "not_applicable"
+        }
+        or route.get("findingSeverityPolicy") != _FINDING_SEVERITY_POLICY
         or route.get("authorizes") != []
     ):
         raise BootstrapBindingError("Bootstrap route is not eligible for exact reuse")
