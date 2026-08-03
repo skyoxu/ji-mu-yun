@@ -1,0 +1,408 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:691e662370b58ead554da351b2abb296a74d8537d4f80aac5d0425279158db3e"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:e87eafcdf125a4972a5805c064d37f0f23ff3d5b85be4f63092f7f13dabc3cd9"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:1c7c9906fb2087e7d859d24ef9eb857506a84756a27666906ad2b43e61816cf9"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:d9e12eec445f970355eae243c64c625fdf61b8eb71a419b741765f2f63308244"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:539615d97a87e36715c2865c1857b1b0679aad51840132de6148ef6fffb37fb3"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:edff73efa19f3db585e2df86a918d4274c1ec9ce185b27faf50bde9807f6d812"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:716647ae7fa9dd055b068b29bcdd99f4607284b81b426624ca9d5b8cdfbccf3d"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Data/HostedContextManifestIssuer.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:af57ce453ef8d576186f2b95da355d318811684d64dc418094aab7e673cc5d9e"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Data/HostedContextManifestRecord.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:eb4b71de38b1f2c855b0c136e2db193a179ad3daecc5416ee434e716ca4edf1b"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c311db670bf06355f05a75fd9c2ac31aa879e65673d068f2a82f9ae8178a5369"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Data/HostedContextManifestValidator.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:e3f4e7ac06da65352f653655a1e7d76efbe9d8bf071a70d4acb71c13ef689054"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:4d61aa453bb03e91d8c5b7c1c2b6cf8969fb95bf36941368f27f275acf98e0f9"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c0166aa03b47dc72ab24c48f36101b1559d766fe2b02102e5f98485500c5c5b0"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Llm/ChatService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:b7e722e5142eda810fa708895dcf7043a1170a6c6b856e402a99020d8b66d72a"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Llm/HostedContextGate.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:a9baea3470239b4b8a9828bb7c705d791e4b8fd253e1be4ea669be6713239368"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Program.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:8e3d2cd88b8f3f3e769f3b5746959f2d40e0f55fc744362246dad097eab92678"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f24b9e89d09fb0c21af44cbeca2df365def213e866b0ecc5934b69e1f601e408"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:1f66b5d815189d08658d7eb5acbd127d774e7ffc0dd5c4a43acee9d8b95e0ad5"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c4a5c8e75b5d56b0bb06b7f32695e99ece76739c2bad053d781318c918632821"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:8928854f0b73a5c0f4ed1bf170e0b7bb62c992c0b46869922e32ace581db8a1b"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5ae746a2e10ac9d87343c18b53780f61c3b20813bee071386bb6fe86d7916a55"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:47ee6e01da7d191983e520f85f339433ebf5923e8a65dabdade54303291cebb7"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f28225d20f69c7d1451bd506e16d5a2124567835287f670dd91ce5b45fec1e01"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:66131883bab889504f54cd79cd09fe18e332adc4396239c86926fa079e76e424"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:333a58bc82184e8fafc6312a433e7bd4696c7a3b7b9b014371368b86603fbafa"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:6107e9006a86b1b2a2e68e64e7bc749b0a9dfa330f189627c11e7496624b6188"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:870d1cd9b9ff470fa34cf7aded47cf501994e29d6dfc8ff6f82f80967fba133b"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f0ceda1090febe843331a797cc6ced5cc2898d7f02ebf1513368716f20bfb53a"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:4bb044b7d53c589aa9a52ce401d587c61f650ad6e5ce441b4d534c9f58cf5b74"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:65a101327638557a589a5a6ea058250a5b86f7a08aa1d964725842b195c534b0"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:17dfdbc2a050ba0995956d464c909a24f29fa7513b2dbaf6649cc2c95815fe29"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:551aa983a6b293d84a51c2fe291316cd41353198978b6125a20778e85757f675"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:df02e31ce903c51b2ce508989cd684961db345207ddad1ef798df270182a0195"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "PhaseA.Platform/Skills/SkillActionService.cs",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7f0a8b10417ce3519e86f67bfade8c8a78ce8b5c6ae9beaf14ab0692884d4915"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+      "roles": [
+        "authority"
+      ],
+      "sha256": "sha256:f00a514bc41e1881f3a3f6a25226b9d757600b19412ab5233b9b6d819d2742fe"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:00ca215703ce2746929c5dc6efa72daaae5a64abceb216a75d98576a13f207c9"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/codex-hosted-callers.v1.json",
+      "roles": [
+        "evidence"
+      ],
+      "sha256": "sha256:00c5f8fe86ec976126fbd02796571ea6f1cab4f77a8a13ad7f944110e3c5704a"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/direct-llm-invocation-violations.v1.json",
+      "roles": [
+        "evidence"
+      ],
+      "sha256": "sha256:a66b86aceb32a4ac138b7e3540fef72032dec8985c0a2276e2056fb5ca9e35ea"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/hosted-callsite-migration-ledger.v1.json",
+      "roles": [
+        "evidence"
+      ],
+      "sha256": "sha256:69ffc8a1bcc324fc8f721c3bbf28023041bc28c093512421fd41b1b6d068e7b6"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/llm-route-engine-callers.v1.json",
+      "roles": [
+        "evidence"
+      ],
+      "sha256": "sha256:513fcae2209b03213764ee81450520f35ddf39d7d3034b747be9fe130cd8d08d"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/python-llm-backend-callers.v1.json",
+      "roles": [
+        "evidence"
+      ],
+      "sha256": "sha256:f2e00144f08ed5bc097adba70a4beaef22a6d0ec71e4f1c6cd497318a356f7e6"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/source-snapshot.v1.json",
+      "roles": [
+        "evidence"
+      ],
+      "sha256": "sha256:5f45112611e948cadce49f8f652026e3166c08129a033253fc97cf3d5553af5d"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/hosted-context-manifest.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:adef304a9ec32cea1956d3f78c5e1bae0399b3f31140a23c641c5e195c9e47bf"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/source-provenance.v1.json",
+      "roles": [
+        "evidence"
+      ],
+      "sha256": "sha256:4b6210a465053fa07ef1cdeb0b7600dcbc737fa567dca5a687e364b469b0ab04"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_reference_vector.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:20af615d1013195f15a7f2405402d073625dad87e29f85f8ae57728974db86da"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "execution-plans/95-implementation-report-index.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:feaaabf9a0768e8a54ed8f38413a814799d2775129cc01e5d08d0c5a45ca51c8"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "scripts/sc/_llm_backend.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:98158454dcc102cfc4de97b5f67858595830f3be0653c7aad10aa8e966c119d3"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "scripts/sc/_llm_review_engine.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d9f9113f0acc6d3efeb50201de8e533c0e971a4ffa28095a7225e181a9b1bb6a"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "scripts/sc/tests/test_llm_backend.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:962b5237da89f58cf334cffa534e34d4ae2ea41efa762c3c6e87a316e3106e2d"
+    },
+    {
+      "inclusion_reason": "Round 1 P1 repair baseline",
+      "path": "scripts/sc/tests/test_llm_review_runtime_budget.py",
+      "roles": [
+        "test"
+      ],
+      "sha256": "sha256:9c50e85a7dbeabf879e928be91e6aac878507cd405524058e33282598ae895d1"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

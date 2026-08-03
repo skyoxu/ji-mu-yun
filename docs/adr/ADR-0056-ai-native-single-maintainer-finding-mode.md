@@ -28,6 +28,13 @@ did not provide a deterministic enforcement boundary.
   predecessor, round, trigger, and Acceptance route hash. The recommendation is
   advisory: a user may explicitly confirm re-entry even when the orchestrator
   records `do_not_recommend`.
+- The maintainer may instead explicitly decline a Round 2 discovery proposal.
+  Refactor Acceptance may then close deterministically only when the current
+  repair-completeness producer replays successfully, no novel P0/P1 exists,
+  exactly one round was consumed, and the proposal was caused only by a
+  repair-derived authority/context or high-risk-boundary change. The closure
+  records residual-risk acceptance, publishes `acceptance-passed`, and does
+  not authorize commit, release, or archive.
 - `prepare`, access proof, and layer launch fail closed when finding mode or its
   re-entry authorization is absent, stale, or substituted.
 - Focused repair verification covers only predecessor findings. It cannot emit
@@ -45,6 +52,8 @@ three-round hard limit or independent verification of accepted P0/P1 findings.
   not through reviewer discretion alone.
 - A second discovery pass is possible but visible, justified, and explicitly
   user-approved.
+- A declined second discovery pass has a narrow, hash-bound deterministic exit
+  instead of becoming an acceptance dead end.
 - Ordinary precise repair stays on the single focused verifier path.
 
 ## References

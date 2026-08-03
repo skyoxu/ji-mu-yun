@@ -112,6 +112,14 @@ py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_c
     Bootstrap CLI re-entry authorization before prepare. The recommendation is
     advisory: explicit confirmation may proceed after either `recommend` or
     `do_not_recommend`.
+    When the user explicitly declines that later discovery proposal, do not
+    launch Bootstrap. If repair completeness passed, no novel P0/P1 exists,
+    the consumed-round count is exactly one, and the only typed trigger is a
+    repair-caused authority/context or high-risk-boundary change, run
+    `decline-review-reentry`. The append-only result records maintainer risk
+    acceptance and may publish `acceptance-passed`; it never authorizes commit,
+    release, or archive. Any novel P0/P1, missing replay, stale binding, or
+    different round fails closed.
 9. Import the finalized Bootstrap result, then continue finding mapping,
    impact projection, evaluation, finalization, and package validation.
 

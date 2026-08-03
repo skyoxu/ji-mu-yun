@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "bootstrap-lineage-adoption.v1",
+  "targetLineageFamilyId": "ria-3c88651b4c73919d139dceb408800834",
+  "legacyChangeId": "four-domain-knowledge-context-engineering-b823ab2",
+  "historicalRuns": [
+    {
+      "runDirectory": "logs/acceptance-7-25/bootstrap-round1-b4-evidence-mirror",
+      "reviewInputHash": "sha256:be35ab8317ed53dc91264267dbda41ac22f91aae2f26238a3d1ed37ae23336a8",
+      "manifestFileHash": "sha256:bce1e8b2ff5ccca6c7850a75be21052bd5092b0684913c8b6ecdfa67ab851434"
+    }
+  ],
+  "policyAuthority": {
+    "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+    "sha256": "sha256:e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc",
+    "status": "Accepted"
+  },
+  "reason": "Recover the completed 7-25 implementation-conformance Round 1 without repeating reviewer discovery",
+  "authorizes": [],
+  "adoptionHash": "sha256:815e935dc72d2217351287143c2562fb6d92b857fb375b12bb72e585346a370a"
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/acceptance-review-reentry-decline-closure.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "status", "acceptanceTarget", "lineageFamilyId",
+    "semanticRoundsConsumed", "roundEntryReason", "acceptanceRepairRouteHash",
+    "repairCompletenessHash", "repairCompletenessDocumentHash",
+    "maintainerAcknowledgement", "closureBindingHash", "skippedAction",
+    "residualRiskAccepted", "lifecycleTransition", "authorizes", "doesNotAuthorize"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "acceptance-review-reentry-decline-closure.v1"},
+    "status": {"const": "passed"},
+    "acceptanceTarget": {"type": "string", "pattern": "^execution-plans/[^/].+"},
+    "lineageFamilyId": {"type": "string", "pattern": "^ria-[0-9a-f]{32}$"},
+    "semanticRoundsConsumed": {"const": 1},
+    "roundEntryReason": {"enum": ["authority_context_graph_changed", "high_risk_boundary_changed"]},
+    "acceptanceRepairRouteHash": {"$ref": "#/$defs/hash"},
+    "repairCompletenessHash": {"$ref": "#/$defs/hash"},
+    "repairCompletenessDocumentHash": {"$ref": "#/$defs/hash"},
+    "maintainerAcknowledgement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "decision", "userConfirmed", "authorityRole", "rationale", "recordedAt", "authorizes"],
+      "properties": {
+        "schemaVersion": {"const": "acceptance-review-reentry-maintainer-ack.v1"},
+        "decision": {"const": "decline-finding-mode-reentry"},
+        "userConfirmed": {"const": true},
+        "authorityRole": {"const": "maintainer"},
+        "rationale": {"type": "string", "minLength": 1},
+        "recordedAt": {"type": "string", "minLength": 1},
+        "authorizes": {"const": ["review-reentry-decline-closure"]}
+      }
+    },
+    "closureBindingHash": {"$ref": "#/$defs/hash"},
+    "skippedAction": {"const": "round-2-finding-discovery"},
+    "residualRiskAccepted": {"const": true},
+    "lifecycleTransition": {"const": "acceptance-passed"},
+    "authorizes": {"const": ["acceptance-passed"]},
+    "doesNotAuthorize": {"const": ["commit", "release", "archived"]}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

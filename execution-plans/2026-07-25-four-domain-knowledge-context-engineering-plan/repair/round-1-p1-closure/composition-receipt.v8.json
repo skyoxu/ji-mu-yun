@@ -1,0 +1,303 @@
+{
+  "authorizes": [],
+  "commandId": "7-25-round1-p1-repair-composition-v8",
+  "commandRegistryHash": "sha256:dd100931d653bbdb2555d4be34dc51b327370447c762bf30ad1f17135061f99c",
+  "environmentIdentity": {
+    "hash": "sha256:6675c6ea3d76464419ef543f2508b2d82e9d0a49cf08516ab4d0f81a3dbb6856",
+    "names": [
+      "ComSpec",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "PATHEXT",
+      "Path",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "windir"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
+      "sha256": "sha256:f6494ab206fc55f866b6ec0b0cf3e5039291755b1b90c35aa73995196129e486"
+    },
+    {
+      "path": ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+      "sha256": "sha256:a8ed1a555a8853738e638fc9872bcc2fe1d7a0e7b6f70ec0d117396c64ef4ec8"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs",
+      "sha256": "sha256:55c8afed0a273caa9814799942c96d75f1e33484bc26da444a999c3900b929b6"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs",
+      "sha256": "sha256:cf4ee05a6ae752b06e20e987e9d8c3e68682e291dc87a7a27f2213d86405ef0a"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs",
+      "sha256": "sha256:2df522d1aa441fa5879fa9431b941c07d2fd5d12ebdcd2b6ffafe6613fdaab95"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+      "sha256": "sha256:15826140fc263c5f05c821c656c25f05266341fd6d88589c692aef8a45dee6cf"
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+      "sha256": "sha256:8b3ef2bf582e87f365e0783cfc94830c9dec46b8b44504024275807649770d63"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextManifestIssuer.cs",
+      "sha256": "sha256:7b71a9b21542a18cbbc15b9d017e0b10af3b2cd39f2f6972b8b3bb658706b329"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextManifestRecord.cs",
+      "sha256": "sha256:1ef2e577780006186fad78c9d165f428a69493e11e0709b8043d6351113447ca"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs",
+      "sha256": "sha256:4881d36b55e3d849e7617490e3f6228f179703232eea1cfe47c845043f8f0462"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextManifestValidator.cs",
+      "sha256": "sha256:b19e7694ca975cc16f0eea3d73161c4929642cdc00a551db4e679c3aa79c6fb3"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextRouteContractPolicy.cs",
+      "sha256": "sha256:378fe96d8ee7ab040d535333e58924b57374c47f0747f2d84069012294f2bb8c"
+    },
+    {
+      "path": "PhaseA.Platform/Data/HostedContextSignedPayloadV1.cs",
+      "sha256": "sha256:9ef63939a991043f1369123207da685736405f734adb2ae58456b546a682b2c9"
+    },
+    {
+      "path": "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "sha256": "sha256:8eae283f747174ff87a2fab0e23d50d0edacf730ed07f1fdf90d1380565ba0f3"
+    },
+    {
+      "path": "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+      "sha256": "sha256:dd812e61e009e7064e1a89e0e48a08731dccc454ae04735e8e81a7172626cd3b"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ChatService.cs",
+      "sha256": "sha256:3d041aff35bdb1b7f68a5daa560c79f17bc48fbe8abfe4f084445e0ef94ad06b"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/HostedContextGate.cs",
+      "sha256": "sha256:fbdbe91cd124643ffdf0869b0415486b3cd63797d113aaa0ffad496e0d6b837e"
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+      "sha256": "sha256:3ce7d7a220fcb35404dd3c0995e6e16026be2c257e3b990fb9a5bff99b02e1cd"
+    },
+    {
+      "path": "PhaseA.Platform/Program.cs",
+      "sha256": "sha256:bda047c916281fd94fc1156c7ec37acca7a3d5e9495705b5aa5c55bf19d248cc"
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+      "sha256": "sha256:38941aa359f29e02ccfbf52acb96253635f8f697e4e0f4042909380bc2b0f7e4"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+      "sha256": "sha256:7e9159a2950cd9a780101a1472fb031ac803b82ad4be383cb15029efca11b1fe"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+      "sha256": "sha256:5f00f0405ac81b669377d7199f9f24466fa7be3fb1bc971300cf812535025ba3"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "sha256": "sha256:d15c301dbfd1dae508e24a3fc021c206400175195b198c35dafd19b7470f17d7"
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "sha256": "sha256:9be842725c07d3b6fb57aef8b239c769f117faf45383d165d157f7fdc5ca4d8e"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs",
+      "sha256": "sha256:3268425fdd6209efc92842ceacf53aa22a8d05eaee81cf0afad4b3b135798669"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "sha256": "sha256:362f2e3e74f657ae5b8fcb04d07a5a24389b1af4cbfad01c543ef3c4644c5bc2"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+      "sha256": "sha256:898ce90c41d7cd51eda29c224757f137636b1d1245b868fcc1c882188976b3b6"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+      "sha256": "sha256:48f3f00d2467fb2262de003cd862addd25dd55064b986891e87616e5363581a6"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+      "sha256": "sha256:d6340e75261e08a88058fe4ef9504b0e29bbafe4a7b10dd67c55dd79c6a264be"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+      "sha256": "sha256:11212811310ab9cace48a79129e8fcc8e0365edb64ae45aab59a217dccb9fed9"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+      "sha256": "sha256:e8520ff8bcea2ea2dcea2b9f10b4aad2bfe61fe2f44638ff7cbd1f8ed5ad0cde"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "sha256": "sha256:b04b64a3ca48a5c9c21b497824c49ee50f21a386ec53627b3b9b8d68ce0f14c3"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "sha256": "sha256:3c0b9fb0f08cf3e9972a9612a34799ca15167c97fd7754a57206392bc9a139df"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "sha256": "sha256:f4d9b600bd77261c190282b373a3bf2e63f884bb25886cff3cd25b5bf560f6b3"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+      "sha256": "sha256:a7eb03a0f1dd43481c1c798d17898a8e06dfd0bdc74700302af6605438470799"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "sha256": "sha256:1def0193ceb8be9c23d8b2eae223cc396c494da3e172b1816b414e99f264050c"
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "sha256": "sha256:f58c6e52a102f77060f51227d654413adf3d05698d2a60d95758365125c0a63b"
+    },
+    {
+      "path": "PhaseA.Platform/Skills/SkillActionService.cs",
+      "sha256": "sha256:f1c3b93049d0b959a897af92c120e8f7a859414e58b6957b46dcb50800d15491"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/deferred-work.md",
+      "sha256": "sha256:6abe3406e9a52a5d90dca4d48de5f5b9e175d1bc92c737bb1d4f8c4a626b036c"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/spec-7-25-round1-p1-closure.md",
+      "sha256": "sha256:b0ec7ba058b525b17090f22b0893db3805f130b3662a258139d3e242745a2b0c"
+    },
+    {
+      "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+      "sha256": "sha256:2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json",
+      "sha256": "sha256:32ae2748a51499dc475bece345de2323bfdcca30b04a6c5f5803ec7d5e6bb061"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/codex-hosted-callers.v1.json",
+      "sha256": "sha256:3ecd8b28316728b6695f7edc99a33c5afdf8a7dd1d99e5a42a04ffddb5c516ca"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/direct-llm-invocation-violations.v1.json",
+      "sha256": "sha256:465717e2f09e7ece67ca76f7350b46286fba8133a8654b37546f890cb13123a4"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/hosted-callsite-migration-ledger.v1.json",
+      "sha256": "sha256:2032bf2940b704ea28c74521c9023fe7765bc8391312f2d5e0484943e72a141d"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/llm-route-engine-callers.v1.json",
+      "sha256": "sha256:4a00237a3ca255b62042c855605db886fe456c049a36926808cab2bab3d318f6"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/python-llm-backend-callers.v1.json",
+      "sha256": "sha256:b01d16c7834875be0c6dd7f131e7d2539ac50fba2479e186e80c3cc03252a280"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/source-snapshot.v1.json",
+      "sha256": "sha256:81f54ef1906e31142e675af68921136acb5c4c020165e991807dd19e388c68fb"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/hosted-context-manifest.v1.schema.json",
+      "sha256": "sha256:d29697a0e35851fb30a15977116843b931cd7dd8c472a166673780ac85cc171d"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/source-provenance.v1.json",
+      "sha256": "sha256:b6c3aab9305722a5f484d6066747bedfd963746a5da0280aa98a1dfec4c1fb8e"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_reference_vector.py",
+      "sha256": "sha256:a8a2197754c7589f9cfbf68530519c9d26028fb4c81e0a4e5163cf6e192d7130"
+    },
+    {
+      "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests/test_plan_validator.py",
+      "sha256": "sha256:2bc1ce33d491a473cd204bfb686ac88bc7fbf2284a3d45a9e822e443ca9be408"
+    },
+    {
+      "path": "execution-plans/95-implementation-report-index.v1.json",
+      "sha256": "sha256:1dae00f92297183eda03f9f9ca5093e013d7bfe18885153b29bb9da54e344542"
+    },
+    {
+      "path": "scripts/sc/_llm_backend.py",
+      "sha256": "sha256:1261e7bde204045605b29f41e19bab9bf5979cada9e6b7bd4fe2105ebd2f20b0"
+    },
+    {
+      "path": "scripts/sc/_llm_review_engine.py",
+      "sha256": "sha256:9992113bb6fd7118234daf4ddaba24ddb065cf9c5f2c26a107b570ed5bf56cde"
+    },
+    {
+      "path": "scripts/sc/tests/test_llm_backend.py",
+      "sha256": "sha256:fdcd51b0692f8f25e6bb204014d376399a407b2bbd403d3e4c718b549d04e344"
+    },
+    {
+      "path": "scripts/sc/tests/test_llm_review_runtime_budget.py",
+      "sha256": "sha256:66d80975d4e540a911d98610c67f15b0f2f2fab328df40901143113cc97adca6"
+    }
+  ],
+  "inputBindingsHash": "sha256:abd367cfa867f4ca5f0c409519249e5aa9fd2f455e642608ac501167a8b5dbcc",
+  "invocation": {
+    "argv": [
+      "-3",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/verify_round1_p1_closure.v4.py",
+      "--bound-test",
+      ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+      "--bound-test",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests/test_plan_validator.py",
+      "--bound-test",
+      "scripts/sc/tests/test_llm_backend.py",
+      "--bound-test",
+      "scripts/sc/tests/test_llm_review_runtime_budget.py"
+    ],
+    "commandId": "7-25-round1-p1-repair-composition-v8",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "ComSpec",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "PATHEXT",
+      "Path",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "windir"
+    ],
+    "executable": "C:\\Windows\\py.exe",
+    "shell": false,
+    "timeoutSeconds": 900
+  },
+  "invocationHash": "sha256:f3fd96174ede02da0324b940180c54c7709051e427a8a4a0272ee867887b3809",
+  "processResult": {
+    "commandId": "7-25-round1-p1-repair-composition-v8",
+    "exitCode": 0,
+    "stderr": "........\r\n----------------------------------------------------------------------\r\nRan 8 tests in 0.023s\r\n\r\nOK\r\n.......\r\n----------------------------------------------------------------------\r\nRan 7 tests in 0.750s\r\n\r\nOK\r\n...............\r\n----------------------------------------------------------------------\r\nRan 15 tests in 3.687s\r\n\r\nOK\r\n",
+    "stderrSha256": "sha256:8554c3a0e61becb5c90dc9b5cc5a5e43deabe7f8a4947c08b824e97a4f50cbb4",
+    "stdout": "COMMAND C:\\Program Files\\Python312\\python.exe .agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py\r\nMAINTAIN_KNOWLEDGE_TEST PASS\r\nCOMMAND C:\\Program Files\\Python312\\python.exe scripts/sc/tests/test_llm_backend.py\r\nCOMMAND C:\\Program Files\\Python312\\python.exe scripts/sc/tests/test_llm_review_runtime_budget.py\r\nSC_LLM_REVIEW status=ok out=tmp5etc25em/logs/ci/sc-llm-review\r\nSC_LLM_REVIEW status=ok out=tmpluigzuw2/logs/ci/sc-llm-review\r\nSC_LLM_REVIEW status=warn out=tmpntv3i_dr/logs/ci/sc-llm-review\r\nSC_LLM_REVIEW status=warn out=tmphrfthjag/logs/ci/sc-llm-review\r\nSC_LLM_REVIEW status=warn out=tmp2ram9h81/logs/ci/sc-llm-review\r\nCOMMAND C:\\Program Files\\Python312\\python.exe execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests/test_plan_validator.py\r\n7-25 ROUND 1 P1 REPAIR COMPOSITION PASS\r\n",
+    "stdoutSha256": "sha256:2cd86a65436380bbfc1a6fe8ccbe94189bcae74ec0f66b533960c261447f399b"
+  },
+  "processResultHash": "sha256:f2a180c5c346bf7af6d16c0346d475ccb362c32a701e2e949a39794b51e3bb09",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

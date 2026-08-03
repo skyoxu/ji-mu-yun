@@ -1,0 +1,847 @@
+{
+  "authorizes": [],
+  "bootstrapExecutionState": {
+    "actionStates": {
+      "bind-bootstrap-capabilities": "ready",
+      "finalize": "waiting-external",
+      "import-bootstrap-result": "waiting-external",
+      "import-mapping-approval": "waiting-external",
+      "map-findings": "waiting-external",
+      "prepare-attestation": "waiting-external",
+      "prepare-bootstrap": "waiting-external",
+      "project-impact": "waiting-external"
+    },
+    "authorizes": [],
+    "schemaVersion": "bootstrap-execution-state.v1",
+    "state": "awaiting_authorization"
+  },
+  "findingMode": "discovery",
+  "findingModeReentry": "user_confirmation_required",
+  "findingSeverityPolicy": {
+    "external_requirement_injection": {
+      "P0": "P1",
+      "P1": "P2",
+      "P2": "ignored"
+    },
+    "multi_maintainer_concurrency": {
+      "P0": "P1",
+      "P1": "P2",
+      "P2": "ignored"
+    }
+  },
+  "lineageAnchor": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan",
+  "lineageFamilyId": "ria-3c88651b4c73919d139dceb408800834",
+  "lineageStateHash": "sha256:6de2cadb07f873f92e2c2998f3eaf5d4aa85858374efc8e3f9410883ab2a8c44",
+  "maintenanceMode": "ai-native-single-maintainer",
+  "nextAction": "run-phase-bootstrap-review",
+  "nextFullReviewRound": 2,
+  "repairCompletenessHash": "sha256:a2a716c3a07bbd023ca133b5461b2a33588b3281374b453a030ce8d5cdc57f2a",
+  "repairCompletenessRequest": {
+    "acceptanceTarget": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan",
+    "authorityGraphChanged": true,
+    "authorizes": [],
+    "baselineManifestHash": "sha256:5a100c387686b29b7370844a0ca56997ff643785d86dd6201c37d9497b564187",
+    "baselineManifestPath": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/baseline-content-manifest.v1.json",
+    "candidateManifestHash": "sha256:a65b2ffc1173b8c37661aef0a49cfac12ae2c3c3f24f715157458f72fc6c30d3",
+    "candidateManifestPath": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/candidate-content-manifest.v1.json",
+    "changedPaths": [
+      ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
+      ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+      "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs",
+      "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs",
+      "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs",
+      "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+      "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+      "PhaseA.Platform/Data/HostedContextManifestIssuer.cs",
+      "PhaseA.Platform/Data/HostedContextManifestRecord.cs",
+      "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs",
+      "PhaseA.Platform/Data/HostedContextManifestValidator.cs",
+      "PhaseA.Platform/Data/HostedContextRouteContractPolicy.cs",
+      "PhaseA.Platform/Data/HostedContextSignedPayloadV1.cs",
+      "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+      "PhaseA.Platform/Llm/ChatService.cs",
+      "PhaseA.Platform/Llm/HostedContextGate.cs",
+      "PhaseA.Platform/Program.cs",
+      "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+      "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+      "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+      "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+      "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+      "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+      "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+      "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+      "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+      "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "PhaseA.Platform/Skills/SkillActionService.cs",
+      "_bmad-output/implementation-artifacts/deferred-work.md",
+      "_bmad-output/implementation-artifacts/spec-7-25-round1-p1-closure.md",
+      "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/codex-hosted-callers.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/direct-llm-invocation-violations.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/hosted-callsite-migration-ledger.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/llm-route-engine-callers.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/python-llm-backend-callers.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/source-snapshot.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/hosted-context-manifest.v1.schema.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/source-provenance.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_reference_vector.py",
+      "execution-plans/95-implementation-report-index.v1.json",
+      "scripts/sc/_llm_backend.py",
+      "scripts/sc/_llm_review_engine.py",
+      "scripts/sc/tests/test_llm_backend.py",
+      "scripts/sc/tests/test_llm_review_runtime_budget.py"
+    ],
+    "compositionChecks": [
+      {
+        "checkId": "7-25-round1-p1-repair-composition-v9",
+        "commandRegistryPath": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/composition-command-registry.v9.json",
+        "consumerPaths": [
+          "PhaseA.Platform/Llm/HostedContextGate.cs",
+          "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+          "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs"
+        ],
+        "producerPaths": [
+          ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
+          ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+          "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs",
+          "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs",
+          "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs",
+          "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+          "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+          "PhaseA.Platform/Data/HostedContextManifestIssuer.cs",
+          "PhaseA.Platform/Data/HostedContextManifestRecord.cs",
+          "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs",
+          "PhaseA.Platform/Data/HostedContextManifestValidator.cs",
+          "PhaseA.Platform/Data/HostedContextRouteContractPolicy.cs",
+          "PhaseA.Platform/Data/HostedContextSignedPayloadV1.cs",
+          "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+          "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+          "PhaseA.Platform/Llm/ChatService.cs",
+          "PhaseA.Platform/Program.cs",
+          "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+          "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+          "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+          "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+          "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+          "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+          "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+          "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+          "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+          "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+          "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+          "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+          "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+          "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+          "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+          "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+          "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+          "PhaseA.Platform/Skills/SkillActionService.cs",
+          "_bmad-output/implementation-artifacts/deferred-work.md",
+          "_bmad-output/implementation-artifacts/spec-7-25-round1-p1-closure.md",
+          "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/codex-hosted-callers.v1.json",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/direct-llm-invocation-violations.v1.json",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/hosted-callsite-migration-ledger.v1.json",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/llm-route-engine-callers.v1.json",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/python-llm-backend-callers.v1.json",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/source-snapshot.v1.json",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/hosted-context-manifest.v1.schema.json",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/source-provenance.v1.json",
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_reference_vector.py",
+          "execution-plans/95-implementation-report-index.v1.json",
+          "scripts/sc/_llm_backend.py",
+          "scripts/sc/_llm_review_engine.py",
+          "scripts/sc/tests/test_llm_backend.py",
+          "scripts/sc/tests/test_llm_review_runtime_budget.py"
+        ],
+        "receiptPath": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/composition-receipt.v9.json"
+      }
+    ],
+    "directConsumers": [
+      "PhaseA.Platform/Llm/HostedContextGate.cs",
+      "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+      "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs"
+    ],
+    "highRiskBoundaryChanged": true,
+    "lineageFamilyId": "ria-3c88651b4c73919d139dceb408800834",
+    "novelP0P1FindingIds": [],
+    "predecessorRun": "logs/acceptance-7-25/bootstrap-round1-b4-evidence-mirror",
+    "repositoryRoot": "C:\\jimuyun\\c",
+    "rootCauseInventories": [
+      {
+        "addressedPaths": [
+          ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-001",
+        "searchRoots": [
+          ".agents/skills/maintain-knowledge-base/scripts"
+        ],
+        "searchTerm": "\"\"\"Deterministic, main-pinned derived knowledge maintenance.\"\"\""
+      },
+      {
+        "addressedPaths": [
+          ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-002",
+        "searchRoots": [
+          ".agents/skills/maintain-knowledge-base/scripts"
+        ],
+        "searchTerm": "\"\"\"Focused executable tests for maintain_knowledge.py.\"\"\""
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-003",
+        "searchRoots": [
+          "PhaseA.Platform.Tests/Data"
+        ],
+        "searchTerm": "public sealed class HostedContextManifestIssuerTests"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-004",
+        "searchRoots": [
+          "PhaseA.Platform.Tests/Data"
+        ],
+        "searchTerm": "public sealed class HostedContextManifestSignatureServiceTests"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-005",
+        "searchRoots": [
+          "PhaseA.Platform.Tests/Data"
+        ],
+        "searchTerm": "public sealed class HostedContextManifestStoreTests"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-006",
+        "searchRoots": [
+          "PhaseA.Platform.Tests/Llm"
+        ],
+        "searchTerm": "public sealed class LlmRouteEngineTests"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-007",
+        "searchRoots": [
+          "PhaseA.Platform.Tests/Runs"
+        ],
+        "searchTerm": "public sealed class CodexHostedProcessCommandFactoryTests"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Data/HostedContextManifestIssuer.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-008",
+        "searchRoots": [
+          "PhaseA.Platform/Data"
+        ],
+        "searchTerm": "public sealed record HostedContextManifestIssue("
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Data/HostedContextManifestRecord.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-009",
+        "searchRoots": [
+          "PhaseA.Platform/Data"
+        ],
+        "searchTerm": "public sealed record HostedContextManifestRecord("
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-010",
+        "searchRoots": [
+          "PhaseA.Platform/Data"
+        ],
+        "searchTerm": "public sealed class HostedContextManifestSignatureService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Data/HostedContextManifestValidator.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-011",
+        "searchRoots": [
+          "PhaseA.Platform/Data"
+        ],
+        "searchTerm": "public sealed class HostedContextManifestValidator : IHostedContextManifestValidator"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Data/HostedContextRouteContractPolicy.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-012",
+        "searchRoots": [
+          "PhaseA.Platform/Data"
+        ],
+        "searchTerm": "public static class HostedContextRouteContractPolicy"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Data/HostedContextSignedPayloadV1.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-013",
+        "searchRoots": [
+          "PhaseA.Platform/Data"
+        ],
+        "searchTerm": "public sealed class HostedContextSignedPayloadV1"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Data/PhaseAMetadataStore.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-014",
+        "searchRoots": [
+          "PhaseA.Platform/Data"
+        ],
+        "searchTerm": "using PhaseA.Platform.Configuration;"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Data/SqliteMetadataSchema.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-015",
+        "searchRoots": [
+          "PhaseA.Platform/Data"
+        ],
+        "searchTerm": "public static class SqliteMetadataSchema"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Llm/ChatService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-016",
+        "searchRoots": [
+          "PhaseA.Platform/Llm"
+        ],
+        "searchTerm": "using System.Security.Cryptography;"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Llm/HostedContextGate.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-017",
+        "searchRoots": [
+          "PhaseA.Platform/Llm"
+        ],
+        "searchTerm": "public enum HostedContextGateMode"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Program.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-018",
+        "searchRoots": [
+          "PhaseA.Platform"
+        ],
+        "searchTerm": "using PhaseA.Platform.Browser;"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Projects/ProjectDraftImportService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-019",
+        "searchRoots": [
+          "PhaseA.Platform/Projects"
+        ],
+        "searchTerm": "using System.Security.Cryptography;"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-020",
+        "searchRoots": [
+          "PhaseA.Platform/Readback"
+        ],
+        "searchTerm": "public sealed partial class ProjectAssetInventoryService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-021",
+        "searchRoots": [
+          "PhaseA.Platform/Readback"
+        ],
+        "searchTerm": "public sealed class ProjectAssetLibraryService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-022",
+        "searchRoots": [
+          "PhaseA.Platform/Readback"
+        ],
+        "searchTerm": "public sealed class ProjectWebPreviewDedicatedAdapterService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-023",
+        "searchRoots": [
+          "PhaseA.Platform/Readback"
+        ],
+        "searchTerm": "public sealed class ProjectWebPreviewSemanticAdapterService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/GameDesignDocumentService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-024",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed class GameDesignDocumentService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-025",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed class GameDesignQuestionFormService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-026",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed class GameDesignRequirementMapService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-027",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed class GameDesignSceneRouteService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/GddMilestoneStepService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-028",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed class GddMilestoneStepService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-029",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "using PhaseA.Platform.Readback;"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-030",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed class PrototypeIterationGoalService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-031",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed class PrototypeIterationPlanService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/PrototypeQuickFixService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-032",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed partial class PrototypeQuickFixService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-033",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed class PrototypeRepairPlanService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-034",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "public sealed class PrototypeUiOptimizationService"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Runs/PrototypeWorkflowService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-035",
+        "searchRoots": [
+          "PhaseA.Platform/Runs"
+        ],
+        "searchTerm": "using Microsoft.Extensions.DependencyInjection;"
+      },
+      {
+        "addressedPaths": [
+          "PhaseA.Platform/Skills/SkillActionService.cs"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-036",
+        "searchRoots": [
+          "PhaseA.Platform/Skills"
+        ],
+        "searchTerm": "using System.Security.Cryptography;"
+      },
+      {
+        "addressedPaths": [
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_reference_vector.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-037",
+        "searchRoots": [
+          "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools"
+        ],
+        "searchTerm": "\"\"\"Build the deterministic plan-local Context Envelope JCS/HMAC reference vector.\"\"\""
+      },
+      {
+        "addressedPaths": [
+          "scripts/sc/_llm_backend.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-038",
+        "searchRoots": [
+          "scripts/sc"
+        ],
+        "searchTerm": "Internal LLM backend seam for sc scripts."
+      },
+      {
+        "addressedPaths": [
+          "scripts/sc/_llm_review_engine.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-039",
+        "searchRoots": [
+          "scripts/sc"
+        ],
+        "searchTerm": "from _acceptance_artifacts import build_acceptance_evidence"
+      },
+      {
+        "addressedPaths": [
+          "scripts/sc/tests/test_llm_backend.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-040",
+        "searchRoots": [
+          "scripts/sc/tests"
+        ],
+        "searchTerm": "llm_backend = _load_module(\"sc_llm_backend_module\", \"scripts/sc/_llm_backend.py\")"
+      },
+      {
+        "addressedPaths": [
+          "scripts/sc/tests/test_llm_review_runtime_budget.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "7-25-p1-source-041",
+        "searchRoots": [
+          "scripts/sc/tests"
+        ],
+        "searchTerm": "review_engine = _load_module(\"sc_llm_review_engine_budget_module\", \"scripts/sc/_llm_review_engine.py\")"
+      }
+    ],
+    "schemaVersion": "acceptance-repair-completeness-request.v1",
+    "semanticRoundsConsumed": 1,
+    "targetedTests": [
+      ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests/test_plan_validator.py",
+      "scripts/sc/tests/test_llm_backend.py",
+      "scripts/sc/tests/test_llm_review_runtime_budget.py"
+    ],
+    "validationRefs": [
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/composition-receipt.v9.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/dotnet-targeted-validation.v1.json",
+      "logs/acceptance-7-25/round1-p1-closure-validation-2026-08-02.md",
+      "logs/acceptance/2026-08-02/7-25-round1-repair/quick-dev-facts.v1.json"
+    ]
+  },
+  "repairCompletenessRequestHash": "sha256:a4d75d7472cb217293d236f325447a7dcd6837ee331e4e7df42cd0f54eb15f5f",
+  "reviewScope": {
+    "authorizes": [],
+    "contextClasses": {
+      "affected-consumers": [
+        "PhaseA.Platform/Llm/HostedContextGate.cs",
+        "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+        "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs"
+      ],
+      "changed-production-code": [
+        ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
+        ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+        "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs",
+        "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs",
+        "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs",
+        "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+        "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+        "PhaseA.Platform/Data/HostedContextManifestIssuer.cs",
+        "PhaseA.Platform/Data/HostedContextManifestRecord.cs",
+        "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs",
+        "PhaseA.Platform/Data/HostedContextManifestValidator.cs",
+        "PhaseA.Platform/Data/HostedContextRouteContractPolicy.cs",
+        "PhaseA.Platform/Data/HostedContextSignedPayloadV1.cs",
+        "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+        "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+        "PhaseA.Platform/Llm/ChatService.cs",
+        "PhaseA.Platform/Llm/HostedContextGate.cs",
+        "PhaseA.Platform/Program.cs",
+        "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+        "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+        "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+        "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+        "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+        "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+        "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+        "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+        "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+        "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+        "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+        "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+        "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+        "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+        "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+        "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+        "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+        "PhaseA.Platform/Skills/SkillActionService.cs",
+        "_bmad-output/implementation-artifacts/deferred-work.md",
+        "_bmad-output/implementation-artifacts/spec-7-25-round1-p1-closure.md",
+        "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/codex-hosted-callers.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/direct-llm-invocation-violations.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/hosted-callsite-migration-ledger.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/llm-route-engine-callers.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/python-llm-backend-callers.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/source-snapshot.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/hosted-context-manifest.v1.schema.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/source-provenance.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_reference_vector.py",
+        "execution-plans/95-implementation-report-index.v1.json",
+        "scripts/sc/_llm_backend.py",
+        "scripts/sc/_llm_review_engine.py",
+        "scripts/sc/tests/test_llm_backend.py",
+        "scripts/sc/tests/test_llm_review_runtime_budget.py"
+      ],
+      "implementation-plan": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/00-index.md",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/08-bootstrap-review-entry.md",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/95-implementation-evolution-and-completion-report.md",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/implementation-contract.v1.json"
+      ],
+      "referenced-standards": [
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+        ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+        "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+        "docs/standards/bootstrap-review-control-plane.md",
+        "docs/standards/phase-service.md"
+      ],
+      "repository-rules": [
+        "AGENTS.md",
+        "README.md"
+      ],
+      "runtime-evidence": [
+        "_bmad-output/implementation-artifacts/spec-7-25-round1-p1-closure.md",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/acceptance-repair-completeness-request.v2.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/baseline-content-manifest.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/candidate-content-manifest.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/composition-command-registry.v9.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/composition-receipt.v9.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/dotnet-targeted-validation.v1.json",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/repair-completeness.v2.json",
+        "logs/acceptance-7-25/round1-p1-closure-validation-2026-08-02.md",
+        "logs/acceptance/2026-08-02/7-25-round1-repair/quick-dev-facts.v1.json"
+      ],
+      "tests-and-acceptance": [
+        ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests/test_plan_validator.py",
+        "scripts/sc/tests/test_llm_backend.py",
+        "scripts/sc/tests/test_llm_review_runtime_budget.py"
+      ]
+    },
+    "directoryScopeAttestation": null,
+    "lineageAnchor": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan",
+    "lineageFamilyId": "ria-3c88651b4c73919d139dceb408800834",
+    "profile": "bootstrap-implementation-conformance",
+    "schemaVersion": "implementation-acceptance-bootstrap-scope.v1",
+    "scope": [
+      ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
+      ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+      ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "AGENTS.md",
+      "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs",
+      "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs",
+      "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs",
+      "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+      "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+      "PhaseA.Platform/Data/HostedContextManifestIssuer.cs",
+      "PhaseA.Platform/Data/HostedContextManifestRecord.cs",
+      "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs",
+      "PhaseA.Platform/Data/HostedContextManifestValidator.cs",
+      "PhaseA.Platform/Data/HostedContextRouteContractPolicy.cs",
+      "PhaseA.Platform/Data/HostedContextSignedPayloadV1.cs",
+      "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+      "PhaseA.Platform/Llm/ChatService.cs",
+      "PhaseA.Platform/Llm/HostedContextGate.cs",
+      "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+      "PhaseA.Platform/Program.cs",
+      "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+      "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+      "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+      "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs",
+      "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+      "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+      "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+      "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+      "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+      "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+      "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "PhaseA.Platform/Skills/SkillActionService.cs",
+      "README.md",
+      "_bmad-output/implementation-artifacts/deferred-work.md",
+      "_bmad-output/implementation-artifacts/spec-7-25-round1-p1-closure.md",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+      "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "docs/standards/bootstrap-review-control-plane.md",
+      "docs/standards/phase-service.md",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/00-index.md",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/08-bootstrap-review-entry.md",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/95-implementation-evolution-and-completion-report.md",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/implementation-contract.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/codex-hosted-callers.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/direct-llm-invocation-violations.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/hosted-callsite-migration-ledger.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/llm-route-engine-callers.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/python-llm-backend-callers.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/source-snapshot.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/acceptance-repair-completeness-request.v2.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/baseline-content-manifest.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/candidate-content-manifest.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/composition-command-registry.v9.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/composition-receipt.v9.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/dotnet-targeted-validation.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/repair-completeness.v2.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/hosted-context-manifest.v1.schema.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/source-provenance.v1.json",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_reference_vector.py",
+      "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests/test_plan_validator.py",
+      "execution-plans/95-implementation-report-index.v1.json",
+      "logs/acceptance-7-25/round1-p1-closure-validation-2026-08-02.md",
+      "logs/acceptance/2026-08-02/7-25-round1-repair/quick-dev-facts.v1.json",
+      "scripts/sc/_llm_backend.py",
+      "scripts/sc/_llm_review_engine.py",
+      "scripts/sc/tests/test_llm_backend.py",
+      "scripts/sc/tests/test_llm_review_runtime_budget.py"
+    ],
+    "scopeHash": "sha256:75fbe14cb7e96d1a055cea65a5bba8c132f74d6b5abce645a39a9551004c5ab2",
+    "strategy": "minimal-complete-closure"
+  },
+  "roundEntryReason": "authority_context_graph_changed",
+  "routeKind": "full_implementation_conformance",
+  "schemaVersion": "implementation-acceptance-bootstrap-route.v1",
+  "semanticRoundsConsumed": 1
+}

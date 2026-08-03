@@ -30,6 +30,7 @@ class PackageTests(unittest.TestCase):
         expected = {
             "prepare", "resolve-code-review-policy", "inventory", "audit-task-checklist",
             "audit-repair-completeness",
+            "decline-review-reentry",
             "prepare-manual-pause-closure", "finalize-manual-pause-closure",
             "collect-evidence", "run-command", "run-static-analysis", "run-security-scan",
             "analyze-diff-coverage", "evaluate", "render", "decide-bootstrap",

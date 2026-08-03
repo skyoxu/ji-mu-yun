@@ -1,0 +1,53 @@
+{
+  "commands": [
+    {
+      "allowed_write_roots": [],
+      "argv": [
+        "-3",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/verify_round1_p1_closure.v2.py",
+        "--bound-test",
+        ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+        "--bound-test",
+        "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs",
+        "--bound-test",
+        "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs",
+        "--bound-test",
+        "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs",
+        "--bound-test",
+        "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+        "--bound-test",
+        "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+        "--bound-test",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests/test_plan_validator.py",
+        "--bound-test",
+        "scripts/sc/tests/test_llm_backend.py",
+        "--bound-test",
+        "scripts/sc/tests/test_llm_review_runtime_budget.py"
+      ],
+      "cwd": ".",
+      "environment_allowlist": [
+        "ComSpec",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "PATHEXT",
+        "Path",
+        "SystemRoot",
+        "TEMP",
+        "TMP",
+        "USERNAME",
+        "USERPROFILE",
+        "windir"
+      ],
+      "executable": "C:\\Windows\\py.exe",
+      "forbidden_write_roots": [],
+      "id": "7-25-round1-p1-repair-composition-v3",
+      "placeholder_values": {},
+      "registry_hash": "sha256:53fd1908070e8db109aae3ef729225b25cf14c5df43248c0c60e0f86b9855199",
+      "shell": false,
+      "timeout_seconds": 900,
+      "typed_placeholders": {}
+    }
+  ],
+  "registryHash": "sha256:53fd1908070e8db109aae3ef729225b25cf14c5df43248c0c60e0f86b9855199",
+  "schemaVersion": "acceptance-command-registry.v1"
+}

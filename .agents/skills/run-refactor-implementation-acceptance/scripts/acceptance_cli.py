@@ -42,6 +42,7 @@ from manual_pause_closure import (
     finalize_manual_pause_closure,
     prepare_manual_pause_closure,
 )
+from review_reentry_decline import close_declined_review_reentry
 from bootstrap_integration import (
     BootstrapBindingError,
     bind_capabilities,
@@ -384,6 +385,13 @@ def audit_repair_completeness_command(request_path: str, output_path: str) -> di
     return _publish_new_json(
         output_path,
         audit_repair_completeness(_read_json(request_path)),
+    )
+
+
+def decline_review_reentry_command(request_path: str, output_path: str) -> dict:
+    return _publish_new_json(
+        output_path,
+        close_declined_review_reentry(_read_json(request_path)),
     )
 
 
@@ -818,6 +826,9 @@ def main() -> int:
     repair_completeness = subcommands.add_parser("audit-repair-completeness")
     repair_completeness.add_argument("--request", required=True)
     repair_completeness.add_argument("--out", required=True)
+    decline_reentry = subcommands.add_parser("decline-review-reentry")
+    decline_reentry.add_argument("--request", required=True)
+    decline_reentry.add_argument("--out", required=True)
     for name in ("prepare-manual-pause-closure", "finalize-manual-pause-closure"):
         manual_pause = subcommands.add_parser(name)
         manual_pause.add_argument("--request", required=True)
@@ -918,6 +929,9 @@ def main() -> int:
         return 0
     if args.command == "audit-repair-completeness":
         print(json.dumps(audit_repair_completeness_command(args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "decline-review-reentry":
+        print(json.dumps(decline_review_reentry_command(args.request, args.out), sort_keys=True))
         return 0
     if args.command == "prepare-manual-pause-closure":
         print(json.dumps(prepare_manual_pause_closure_command(args.request, args.out), sort_keys=True))

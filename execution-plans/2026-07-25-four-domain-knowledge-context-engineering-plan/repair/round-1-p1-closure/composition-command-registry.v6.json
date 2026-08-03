@@ -1,0 +1,43 @@
+{
+  "commands": [
+    {
+      "allowed_write_roots": [],
+      "argv": [
+        "-3",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/repair/round-1-p1-closure/verify_round1_p1_closure.v3.py",
+        "--bound-test",
+        ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+        "--bound-test",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests/test_plan_validator.py",
+        "--bound-test",
+        "scripts/sc/tests/test_llm_backend.py",
+        "--bound-test",
+        "scripts/sc/tests/test_llm_review_runtime_budget.py"
+      ],
+      "cwd": ".",
+      "environment_allowlist": [
+        "ComSpec",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "PATHEXT",
+        "Path",
+        "SystemRoot",
+        "TEMP",
+        "TMP",
+        "USERNAME",
+        "USERPROFILE",
+        "windir"
+      ],
+      "executable": "C:\\Windows\\py.exe",
+      "forbidden_write_roots": [],
+      "id": "7-25-round1-p1-repair-composition-v6",
+      "placeholder_values": {},
+      "registry_hash": "sha256:ae92797c11383c08399c2719afde34f762fb75524588b92bd1140b7ea18a7323",
+      "shell": false,
+      "timeout_seconds": 900,
+      "typed_placeholders": {}
+    }
+  ],
+  "registryHash": "sha256:ae92797c11383c08399c2719afde34f762fb75524588b92bd1140b7ea18a7323",
+  "schemaVersion": "acceptance-command-registry.v1"
+}
