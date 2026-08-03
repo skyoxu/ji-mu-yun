@@ -317,6 +317,15 @@ Round 2/3 的 `repair-closure.json` 是当前计划的 implementation-contract �
 
 用户可以显式要求新的 Review，但普通授权不能绕过 family 的三轮硬上限。successor policy 不能重置同一验收目标；只有正式 supersede 或 incompatible-scope 决策形成真正不同的验收目标后，才能派生新的 family。
 
+如果被审对象是 manual-pause closure 协议本身，且其 Round 3 已 finalized
+为 blocked，在精确修复全部 finding 后可使用一次同轮 focused recovery。
+先执行 `authorize-hard-limit-focused-recovery` 绑定 blocked envelope、当前
+deterministic repair closure、建议/置信度和用户确认，再用
+`bootstrap-focused-repair-verification --review-round 3` 配合
+`--hard-limit-repair-recovery` prepare。该路径只启动一名
+`focused_repair_verifier`，不计 Round 4，不允许 discovery、新 finding 或
+escalation；通过后仅产生 `manual-pause-protocol-review` composite authority。
+
 ## 8. 验收与排错
 
 ```powershell

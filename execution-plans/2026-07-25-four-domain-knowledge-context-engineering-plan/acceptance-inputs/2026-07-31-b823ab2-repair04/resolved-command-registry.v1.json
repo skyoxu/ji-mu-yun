@@ -1,0 +1,122 @@
+{
+  "schema_version": "ria.command-registry.v1",
+  "commands": [
+    {
+      "id": "plan-validator",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/validate_whole_directory.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
+    },
+    {
+      "id": "plan-validator-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
+    },
+    {
+      "id": "report-index-validator",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "scripts/python/validate_execution_plan_report_index.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "quick-dev-adapter-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests",
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 900,
+      "shell": false
+    },
+    {
+      "id": "bootstrap-review-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "phase-platform-tests",
+      "executable": "dotnet",
+      "argv": [
+        "test",
+        "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+        "--nologo"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 2400,
+      "shell": false
+    },
+    {
+      "id": "e2-readiness",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/check_e2_readiness.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    }
+  ]
+}

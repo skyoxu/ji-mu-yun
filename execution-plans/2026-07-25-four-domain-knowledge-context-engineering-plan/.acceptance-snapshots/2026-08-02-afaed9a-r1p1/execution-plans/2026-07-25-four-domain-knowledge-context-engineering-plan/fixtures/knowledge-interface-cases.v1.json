@@ -1,0 +1,141 @@
+{
+  "cases": [
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-locator-llm-intent",
+      "kind": "positive",
+      "operation": "locator",
+      "path": "fixtures/knowledge-interface/positive/valid-locator-llm-intent.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-locator-consumer-ref",
+      "kind": "positive",
+      "operation": "locator",
+      "path": "fixtures/knowledge-interface/positive/valid-locator-consumer-ref.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-locator-insufficient-match",
+      "kind": "positive",
+      "operation": "locator",
+      "path": "fixtures/knowledge-interface/positive/valid-locator-insufficient-match.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-maintenance-existing-only",
+      "kind": "positive",
+      "operation": "maintenance",
+      "path": "fixtures/knowledge-interface/positive/valid-maintenance-existing-only.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-maintenance-targeted-provisional",
+      "kind": "positive",
+      "operation": "maintenance",
+      "path": "fixtures/knowledge-interface/positive/valid-maintenance-targeted-provisional.json"
+    },
+    {
+      "expected_failure_code": "llm_controls_trusted_envelope",
+      "expected_result": "fail",
+      "fixture_id": "locator-llm-controls-trusted-envelope",
+      "kind": "negative",
+      "operation": "locator",
+      "path": "fixtures/knowledge-interface/negative/locator-llm-controls-trusted-envelope.json"
+    },
+    {
+      "expected_failure_code": "schema_extra_property",
+      "expected_result": "fail",
+      "fixture_id": "locator-result-claims-generated-answer",
+      "kind": "negative",
+      "operation": "locator",
+      "path": "fixtures/knowledge-interface/negative/locator-result-claims-generated-answer.json"
+    },
+    {
+      "expected_failure_code": "locator_source_identity_mismatch",
+      "expected_result": "fail",
+      "fixture_id": "locator-source-identity-mismatch",
+      "kind": "negative",
+      "operation": "locator",
+      "path": "fixtures/knowledge-interface/negative/locator-source-identity-mismatch.json"
+    },
+    {
+      "expected_failure_code": "schema_enum_mismatch",
+      "expected_result": "fail",
+      "fixture_id": "locator-matched-low-confidence",
+      "kind": "negative",
+      "operation": "locator",
+      "path": "fixtures/knowledge-interface/negative/locator-matched-low-confidence.json"
+    },
+    {
+      "expected_failure_code": "locator_path_outside_policy",
+      "expected_result": "fail",
+      "fixture_id": "locator-path-outside-policy",
+      "kind": "negative",
+      "operation": "locator",
+      "path": "fixtures/knowledge-interface/negative/locator-path-outside-policy.json"
+    },
+    {
+      "expected_failure_code": "existing_only_discovery",
+      "expected_result": "fail",
+      "fixture_id": "maintenance-existing-only-discovers-new-entry",
+      "kind": "negative",
+      "operation": "maintenance",
+      "path": "fixtures/knowledge-interface/negative/maintenance-existing-only-discovers-new-entry.json"
+    },
+    {
+      "expected_failure_code": "worktree_fact_promotion",
+      "expected_result": "fail",
+      "fixture_id": "maintenance-worktree-fact-promotion",
+      "kind": "negative",
+      "operation": "maintenance",
+      "path": "fixtures/knowledge-interface/negative/maintenance-worktree-fact-promotion.json"
+    },
+    {
+      "expected_failure_code": "maintenance_source_mutation",
+      "expected_result": "fail",
+      "fixture_id": "maintenance-mutates-consumer-source",
+      "kind": "negative",
+      "operation": "maintenance",
+      "path": "fixtures/knowledge-interface/negative/maintenance-mutates-consumer-source.json"
+    },
+    {
+      "expected_failure_code": "maintenance_dirty_worktree_authority",
+      "expected_result": "fail",
+      "fixture_id": "maintenance-dirty-worktree-authority",
+      "kind": "negative",
+      "operation": "maintenance",
+      "path": "fixtures/knowledge-interface/negative/maintenance-dirty-worktree-authority.json"
+    },
+    {
+      "expected_failure_code": "maintenance_implicit_fetch",
+      "expected_result": "fail",
+      "fixture_id": "maintenance-implicit-fetch",
+      "kind": "negative",
+      "operation": "maintenance",
+      "path": "fixtures/knowledge-interface/negative/maintenance-implicit-fetch.json"
+    },
+    {
+      "expected_failure_code": "maintenance_log_not_append_only",
+      "expected_result": "fail",
+      "fixture_id": "maintenance-log-not-append-only",
+      "kind": "negative",
+      "operation": "maintenance",
+      "path": "fixtures/knowledge-interface/negative/maintenance-log-not-append-only.json"
+    },
+    {
+      "expected_failure_code": "maintenance_before_snapshot_mismatch",
+      "expected_result": "fail",
+      "fixture_id": "maintenance-before-snapshot-mismatch",
+      "kind": "negative",
+      "operation": "maintenance",
+      "path": "fixtures/knowledge-interface/negative/maintenance-before-snapshot-mismatch.json"
+    }
+  ],
+  "schema_version": "jimuyun.knowledge-interface-fixture-index.v1"
+}

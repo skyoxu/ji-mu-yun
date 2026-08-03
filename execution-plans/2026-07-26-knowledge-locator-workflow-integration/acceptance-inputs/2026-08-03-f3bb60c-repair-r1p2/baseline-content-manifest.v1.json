@@ -1,0 +1,72 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:cb581421d31d61bc14d33bffb189347dd242f180a03f92a8aaa993731e2f4d23"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:774da7b048a54d04b362406a781c0925ba3520b04838390e5906ec66975689d1"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/indexes/current.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5fa78f74e1f20ad619eecb7fc0bbfcff29ccd961d56ee58f7d5d1096d5574db9"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/indexes/last-known-good.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5fa78f74e1f20ad619eecb7fc0bbfcff29ccd961d56ee58f7d5d1096d5574db9"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/projections/consumer-projections.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7cc86732afaf6855d88784bf9f7bcc36751daea54e93ffb4f735b2181a580603"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:525b6cfc4de41ea919454855697caffcba9c8d9ed575c08977e5361b66a00af9"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08490ebe9aeedcbd5503c0f8b5e4529335d6ca6a4a2b9ed9ba53d3cb7763ebaa"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c92f9e819652a985f0026f3bbfecc8a38c327006e76623a1b8d1d00a4d50741b"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

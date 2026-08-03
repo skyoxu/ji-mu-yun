@@ -516,25 +516,49 @@ def build_write_manifest(root: Path) -> dict[str, str]:
     return manifest
 
 
-def _repository_status_manifest(root: Path) -> dict[str, str]:
-    """Capture tracked and untracked repository state for read-only commands."""
-    completed = subprocess.run(
-        ["git", "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"],
-        shell=False, capture_output=True, check=False, encoding="utf-8", errors="replace", timeout=30,
-    )
-    if completed.returncode != 0:
-        raise ControlError("repository status manifest is unavailable")
-    result: dict[str, str] = {}
-    for line in completed.stdout.splitlines():
-        if len(line) < 4:
-            raise ControlError("repository status manifest is malformed")
-        result[line[3:]] = line[:2]
-    return result
+def _repository_content_manifest(root: Path) -> dict[str, str]:
+    """Hash reviewable worktree bytes and ignored evidence for read-only commands."""
+    def git_paths(*arguments: str) -> set[str]:
+        completed = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "-z", *arguments],
+            shell=False, capture_output=True, check=False, timeout=30,
+        )
+        if completed.returncode != 0:
+            raise ControlError("repository content manifest is unavailable")
+        try:
+            return {item.decode("utf-8") for item in completed.stdout.split(b"\0") if item}
+        except UnicodeDecodeError as exc:
+            raise ControlError("repository content manifest contains a non-UTF-8 path") from exc
+
+    tracked = git_paths("--cached")
+    untracked = git_paths("--others", "--exclude-standard")
+    evidence_root = root / "logs"
+    evidence = {
+        path.relative_to(root).as_posix()
+        for path in evidence_root.rglob("*")
+        if path.is_file()
+    } if evidence_root.is_dir() else set()
+    manifest: dict[str, str] = {}
+    for relative in sorted(tracked | untracked | evidence):
+        path = (root / relative).resolve()
+        try:
+            normalized = path.relative_to(root).as_posix()
+        except ValueError as exc:
+            raise ControlError("repository content manifest path escapes root") from exc
+        if normalized != relative:
+            raise ControlError("repository content manifest path is stale")
+        if path.is_file():
+            manifest[relative] = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+        elif relative in tracked and not path.exists():
+            manifest[relative] = "tracked-tombstone"
+        else:
+            raise ControlError("repository content manifest path is stale")
+    return manifest
 
 
 def _validate_read_only_status_delta(before: dict[str, str], after: dict[str, str]) -> dict[str, list[str]]:
     if before != after:
-        raise ControlError("read-only command changed repository status")
+        raise ControlError("read-only command changed repository bytes")
     return {"added": [], "deleted": [], "modified": [], "changedPaths": []}
 
 
@@ -635,7 +659,7 @@ def run_controlled_command(
         descriptor["argv"], descriptor["typed_placeholders"], descriptor["placeholder_values"], root, allowed_write_roots
     )
     read_only = not allowed_write_roots and (root / ".git").exists()
-    before_manifest = _repository_status_manifest(root) if read_only else build_write_manifest(root)
+    before_manifest = _repository_content_manifest(root) if read_only else build_write_manifest(root)
     invocation = {
         "commandId": descriptor["id"],
         "executable": descriptor["executable"],
@@ -666,6 +690,7 @@ def run_controlled_command(
             "stdoutSha256": "sha256:" + hashlib.sha256(stdout).hexdigest(),
             "stderrSha256": "sha256:" + hashlib.sha256(stderr).hexdigest(),
             "stdout": stdout.decode("utf-8", errors="replace"),
+            "stderr": stderr.decode("utf-8", errors="replace"),
         }
     except subprocess.TimeoutExpired as exc:
         terminated = False
@@ -706,7 +731,7 @@ def run_controlled_command(
             raise ControlError("controlled command inputs changed during execution")
         receipt["inputBindings"] = input_bindings
         receipt["inputBindingsHash"] = _canonical_hash(input_bindings)
-    after_manifest = _repository_status_manifest(root) if read_only else build_write_manifest(root)
+    after_manifest = _repository_content_manifest(root) if read_only else build_write_manifest(root)
     delta = (
         _validate_read_only_status_delta(before_manifest, after_manifest)
         if read_only

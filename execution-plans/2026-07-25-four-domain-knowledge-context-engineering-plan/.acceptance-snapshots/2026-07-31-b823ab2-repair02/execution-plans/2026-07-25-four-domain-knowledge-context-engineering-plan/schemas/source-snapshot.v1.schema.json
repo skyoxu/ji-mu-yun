@@ -1,0 +1,64 @@
+{
+  "$id": "jimuyun.knowledge-source-snapshot.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "exclusion_policy_revision": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "files": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "size_bytes": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "path",
+          "sha256",
+          "size_bytes"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "scanner_revision": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "jimuyun.knowledge-source-snapshot.v1"
+    },
+    "snapshot_mode": {
+      "enum": [
+        "clean-commit",
+        "working-tree"
+      ]
+    },
+    "source_snapshot_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "snapshot_mode",
+    "scanner_revision",
+    "exclusion_policy_revision",
+    "files",
+    "source_snapshot_id"
+  ],
+  "type": "object"
+}

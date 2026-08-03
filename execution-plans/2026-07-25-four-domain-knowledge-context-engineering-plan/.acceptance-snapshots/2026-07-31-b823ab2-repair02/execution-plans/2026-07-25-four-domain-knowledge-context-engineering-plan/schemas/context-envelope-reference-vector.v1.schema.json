@@ -1,0 +1,38 @@
+{
+  "$id": "jimuyun.context-envelope-reference-vector.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "expected_hmac_base64": {
+      "pattern": "^[A-Za-z0-9+/]{43}=$",
+      "type": "string"
+    },
+    "expected_signed_payload_canonical_utf8_base64": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "expected_signed_payload_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "manifest": {
+      "type": "object"
+    },
+    "schema_version": {
+      "const": "jimuyun.context-envelope-reference-vector.v1"
+    },
+    "test_key_base64": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "test_key_base64",
+    "manifest",
+    "expected_signed_payload_canonical_utf8_base64",
+    "expected_signed_payload_sha256",
+    "expected_hmac_base64"
+  ],
+  "type": "object"
+}

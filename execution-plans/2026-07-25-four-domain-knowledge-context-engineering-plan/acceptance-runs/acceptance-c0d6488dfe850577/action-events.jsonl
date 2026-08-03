@@ -1,0 +1,5 @@
+{"actionId": "plan-validator", "authorizes": [], "commandId": "plan-validator", "recordedUtc": "2026-07-31T12:17:47.679312Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 1, "status": "completed"}
+{"actionId": "plan-validator-tests", "authorizes": [], "commandId": "plan-validator-tests", "recordedUtc": "2026-07-31T12:18:03.195031Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 2, "status": "completed"}
+{"actionId": "report-index-validator", "authorizes": [], "commandId": "report-index-validator", "recordedUtc": "2026-07-31T12:18:03.601103Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 3, "status": "completed"}
+{"actionId": "quick-dev-adapter-tests", "authorizes": [], "commandId": "quick-dev-adapter-tests", "recordedUtc": "2026-07-31T12:18:05.117775Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 4, "status": "completed"}
+{"actionId": "bootstrap-review-tests", "authorizes": [], "commandId": "bootstrap-review-tests", "recordedUtc": "2026-07-31T12:19:31.804623Z", "schemaVersion": "acceptance-action-event.v1", "sequence": 5, "status": "completed"}

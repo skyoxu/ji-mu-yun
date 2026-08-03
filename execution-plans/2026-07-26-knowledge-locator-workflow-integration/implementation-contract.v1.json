@@ -239,13 +239,13 @@
       "depends_on": ["RMAP-S6"],
       "allowed_changes": {
         "production": ["scripts/python/validate_knowledge_workflow_integration.py"],
-        "tests": ["scripts/python/tests/test_knowledge_workflow_terminal.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_plan.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_all.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/tests/**"],
+        "tests": ["scripts/python/tests/test_knowledge_workflow_terminal.py", "scripts/python/tests/test_publish_knowledge_catalog.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_plan.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_all.py", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/tests/**"],
         "documentation": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/95-implementation-evolution-and-completion-report.md", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/plan-state.v1.json", "execution-plans/2026-07-26-knowledge-locator-workflow-integration/resume-state.v1.json"]
       },
-      "execution_snapshot_paths": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_plan.py"],
+      "execution_snapshot_paths": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_plan.py", "scripts/python/tests/test_publish_knowledge_catalog.py"],
       "forbidden_changes": ["logs/phase-a-innernet/**", "runtime/phase-a/**", "PhaseA.Platform/**", "PhaseA.Platform.Tests/**", "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/**"],
       "execution_read_set": ["knowledge/**", "scripts/python/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-phase-bootstrap-review/**", ".agents/skills/maintain-knowledge-base/**"],
-      "dependency_closure": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/**", "knowledge/**", "scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py", "scripts/python/build_knowledge_index.py", "scripts/python/validate_knowledge_workflow_integration.py", "scripts/python/tests/test_knowledge_workflow_terminal.py"],
+      "dependency_closure": ["execution-plans/2026-07-26-knowledge-locator-workflow-integration/**", "knowledge/**", "scripts/python/knowledge_locator.py", "scripts/python/_knowledge_locator_core.py", "scripts/python/build_knowledge_index.py", "scripts/python/validate_knowledge_workflow_integration.py", "scripts/python/tests/test_knowledge_workflow_terminal.py", "scripts/python/tests/test_publish_knowledge_catalog.py"],
       "tdd": {
         "red": {"command_id": "terminal-integration-test", "test_selector": "test_terminal_requires_all_consumers", "mode": "legacy-regression", "expected_exit": "zero", "expected_failure_family": "terminal_consumer_incomplete", "expected_failure_ids": ["KWI-TERMINAL-CONSUMER"]},
         "green": {"command_id": "knowledge-workflow-terminal", "expected_exit": "zero"},

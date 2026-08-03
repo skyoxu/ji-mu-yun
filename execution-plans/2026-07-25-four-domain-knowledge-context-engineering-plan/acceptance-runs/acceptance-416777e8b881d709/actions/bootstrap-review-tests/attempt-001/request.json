@@ -1,0 +1,20 @@
+{
+  "actionId": "bootstrap-review-tests",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "bootstrap-review-tests",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:fe67714a48e075d9eb55a7a36a6c5f2c5379c7d2df589becf93d63e25f9611bb",
+    "knowledgeContextHash": "sha256:919b6c2df6a6887c32203c2c3baf1653ae7d55a9e556af0553e11c5247745c2f",
+    "runInputHash": "sha256:0091591f635e55391e62d9e91343c6ad8fd771fdf01420c6099c0fb86d0dcdd4"
+  },
+  "ownerToken": "owner-acceptance-416777e8b881d709",
+  "processId": 9112,
+  "recordedUtc": "2026-07-31T12:29:51.151197Z",
+  "runId": "acceptance-416777e8b881d709",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 13
+}

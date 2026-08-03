@@ -1,0 +1,104 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/95-implementation-evolution-and-completion-report.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:4331b86329a2b880de92debe6bf20e23976fb4cb81712ede9f1e92d301034d09"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/authority-manifest.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c9ed402adcb6f72d56c7e66a68a20474207f025c37dcf530ce9cbf280011aa16"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/implementation-contract.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d6fab3c0f3b77bde2ab2c0f3a4d5d337bf8789fa619ad01fa757a6916b64ff40"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/knowledge-context.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:65843ad769cc708d619403cf74b8fc8bebc38719ccc46b8e0dfafac872d0a9c1"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:cb581421d31d61bc14d33bffb189347dd242f180a03f92a8aaa993731e2f4d23"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:774da7b048a54d04b362406a781c0925ba3520b04838390e5906ec66975689d1"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/indexes/current.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5fa78f74e1f20ad619eecb7fc0bbfcff29ccd961d56ee58f7d5d1096d5574db9"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/indexes/last-known-good.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5fa78f74e1f20ad619eecb7fc0bbfcff29ccd961d56ee58f7d5d1096d5574db9"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/projections/consumer-projections.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7cc86732afaf6855d88784bf9f7bcc36751daea54e93ffb4f735b2181a580603"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:525b6cfc4de41ea919454855697caffcba9c8d9ed575c08977e5361b66a00af9"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:08490ebe9aeedcbd5503c0f8b5e4529335d6ca6a4a2b9ed9ba53d3cb7763ebaa"
+    },
+    {
+      "inclusion_reason": "explicit 7-26 repair baseline",
+      "path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c92f9e819652a985f0026f3bbfecc8a38c327006e76623a1b8d1d00a4d50741b"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

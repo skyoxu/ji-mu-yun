@@ -1,0 +1,224 @@
+{
+  "schema_version": "kwi.acceptance-prerequisite-repair-closure.v1",
+  "round": 1,
+  "status": "closed",
+  "target_plan": "execution-plans/2026-07-26-knowledge-locator-workflow-integration",
+  "predecessor_review": "logs/ci/2026-07-27/review-gateway-bootstrap-knowledge-locator-workflow-plan-r3b-20260727",
+  "findings": [
+    {
+      "finding_id": "BSR-4F8A9341CD3CDFBC",
+      "status": "repaired_pending_deterministic_manual_pause_closure",
+      "evidence": [
+        ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+        "scripts/python/tests/test_knowledge_context_validation.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py"
+      ]
+    },
+    {
+      "finding_id": "BSR-59092136A5D5D414",
+      "status": "repaired_pending_deterministic_manual_pause_closure",
+      "evidence": [
+        "scripts/python/knowledge_context_validation.py",
+        "scripts/python/tests/test_knowledge_context_validation.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py"
+      ]
+    },
+    {
+      "finding_id": "BSR-ABDD6277892B502F",
+      "status": "repaired_pending_deterministic_manual_pause_closure",
+      "evidence": [
+        "scripts/python/knowledge_context_validation.py",
+        "scripts/python/tests/test_knowledge_context_validation.py"
+      ]
+    },
+    {
+      "finding_id": "BSR-F0AF746EDA67B150",
+      "status": "repaired_pending_deterministic_manual_pause_closure",
+      "evidence": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ]
+    }
+  ],
+  "binding": {
+    "source_head": "f3bb60c59dc5a8fd3e4c3ac2575c549ba1177db9",
+    "git_baseline": "b823ab2af4253bfc4dfdfefb627ddde831ca067c",
+    "predecessor_review": {
+      "path": "logs/ci/2026-07-27/review-gateway-bootstrap-knowledge-locator-workflow-plan-r3b-20260727/finalized-run-validation.v3.json",
+      "sha256": "sha256:8bc6aa69d5259ef6e4d0cc65adc5e8b352581fd92a6a65c79ced6ad97080199d"
+    },
+    "repair_plan": {
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-plan.md",
+      "sha256": "sha256:d40a229b47be04e86aaf306c7bf93b3d929ab5d21384f23c44d118cb7eb0ccc9"
+    },
+    "authority_manifest": {
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/authority-manifest.v1.json",
+      "sha256": "sha256:c1f57077a43c6ea90a8c065f71baaf7f63a9b33eac82545326b1801e159c5304"
+    },
+    "implementation_contract": {
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/implementation-contract.v1.json",
+      "sha256": "sha256:84ea438a308e16ba70b33ed3b9156d1818633b7bcb2b9a6c61e625b1d3ac8ec7"
+    },
+    "knowledge_context": {
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/knowledge-context.v1.json",
+      "sha256": "sha256:df648695f16f495385a96b3299b6731b1ffd14b244c204758b16ba07278fe9d7"
+    },
+    "knowledge_context_freeze": {
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/knowledge-context.freeze.v1.json",
+      "sha256": "sha256:872b813a489d02b56c80f003d9b9a76537026b3be8bf6c284aa1505c561731db"
+    },
+    "knowledge_publication": {
+      "generation_id": "1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf",
+      "main_commit": "f3bb60c59dc5a8fd3e4c3ac2575c549ba1177db9",
+      "manifest": {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/manifest.json",
+        "sha256": "sha256:32cbc2620ee597ab481992434e02edaf6e8bcb106e55f9fc940764b82e37f4cd"
+      },
+      "current_pointer": {
+        "path": "knowledge/indexes/current.json",
+        "sha256": "sha256:5fd54f53ff82af1765563c3acdec0500ba1d007fbce1d721c74f3a44eb9d3050"
+      },
+      "last_known_good_pointer": {
+        "path": "knowledge/indexes/last-known-good.json",
+        "sha256": "sha256:5fd54f53ff82af1765563c3acdec0500ba1d007fbce1d721c74f3a44eb9d3050"
+      }
+    },
+    "slice_results": {
+      "RMAP-S0": {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S0/RUN-20260803T040842-938684Z/slice-ready-result.json",
+        "sha256": "sha256:943b1f8d0e11cc579fe071158cd2ea696fe8598fe594dffa9ea26741285b3a76"
+      },
+      "RMAP-S1": {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S1/RUN-20260803T041017-961690Z/slice-ready-result.json",
+        "sha256": "sha256:d6639544c54cb50c2bc2c2db07325a3a5451095cebcbe8319722141c79157696"
+      },
+      "RMAP-S2": {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S2/RUN-20260803T041059-126442Z/slice-ready-result.json",
+        "sha256": "sha256:38b6ed296b10e1e04d25299c46518b87bbdb50e8a33db6476b8dd41b40a02252"
+      },
+      "RMAP-S3": {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S3/RUN-20260803T041140-511590Z/slice-ready-result.json",
+        "sha256": "sha256:d543d54f64bd51473c70540ef646903b991e41812bbda5589e9aaf3a38bbdb69"
+      },
+      "RMAP-S4": {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S4/RUN-20260803T041231-471822Z/slice-ready-result.json",
+        "sha256": "sha256:5bac33c0368cd9c2beaf7c0b5ca9dfd10e5fd1b010c1b632d21326e5a3c15a0f"
+      },
+      "RMAP-S5": {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S5/RUN-20260803T041258-643707Z/slice-ready-result.json",
+        "sha256": "sha256:c4b024323c6b1673cc8a07ba735bc231c8588f2d0ba6a8e56b6888f7734979e8"
+      },
+      "RMAP-S6": {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S6/RUN-20260803T041910-565537Z/implementation-candidate-result.json",
+        "sha256": "sha256:3481c6826e11b891490e3faa301219d0c2fc1ca8fce9b30bc9dec9538f2ddea4"
+      },
+      "RMAP-S7": {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S7/RUN-20260803T044719-632990Z/implementation-complete-result.json",
+        "sha256": "sha256:78ff8dfe76239d53586ca9a5e1738e6a7713490fcc888ac0a96b3321b529d0ad"
+      }
+    },
+    "terminal_observations": [
+      {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S7/RUN-20260803T044719-632990Z/observations/green-observed.json",
+        "sha256": "sha256:1ea8426e452e75b207078eb362afd6937de75fd5dff78658b176c2506ac0c92c"
+      },
+      {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S7/RUN-20260803T044719-632990Z/observations/refactor-observed.json",
+        "sha256": "sha256:e3a5785d14150087c0db330f5e5405bf09e3827f94e8b4ed9e2a2b8e7e1baa8a"
+      }
+    ],
+    "repaired_files": [
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        "sha256": "sha256:0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b"
+      },
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+        "sha256": "sha256:9b968472086453fba4a20447e5b594f4d572c5fe8fd9eadb3d0a1bf51a742b20"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+        "sha256": "sha256:ec27ce244db1f55d3eab0e8331422f5888bb4cef668e9ee6e37dedab45b7a023"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+        "sha256": "sha256:3cd7c81b09dc3e3e163302a9e26db77406b44dd8e5e027a202098a2d2d3d2c43"
+      },
+      {
+        "path": "scripts/python/knowledge_context_validation.py",
+        "sha256": "sha256:984e052c35120cc0b69a948379f26848ca6c4576ce0bde7508536d791b3c392b"
+      },
+      {
+        "path": "scripts/python/tests/test_knowledge_context_validation.py",
+        "sha256": "sha256:0ac004f895b36448ca34dd512200b6cf35424905b11a6c1771fde6a00c30de17"
+      },
+      {
+        "path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+        "sha256": "sha256:2a256dfa5c9e7cfbfab469ebbf2a58f5483e9b0cb38e431944b0aacaad54a10f"
+      },
+      {
+        "path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+        "sha256": "sha256:dc84738fbbc316fec8cd8f2e01a10673de9c9e34365a3555d8991272a3f210a4"
+      }
+    ],
+    "round3_composition_receipt": {
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json",
+      "sha256": "sha256:c6170fa8932fef4d6d8d5ca0b09072a3d926d5e2014e9fbf1ac055ed86dc0789"
+    }
+  },
+  "binding_sha256": "sha256:eb817f7162be8ba1570f7df668a2b87d1c663f0250202bcf5b492f6b6e87ccf4",
+  "validation": [
+    {
+      "command": "py -3 -B execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/validate_plan.py",
+      "result": "pass"
+    },
+    {
+      "command": "py -3 -B -m unittest discover -s execution-plans/2026-07-26-knowledge-locator-workflow-integration/tools/tests -p test_*.py",
+      "result": "pass",
+      "tests": 25
+    },
+    {
+      "command": "py -3 -B -m unittest scripts.python.tests.test_publish_knowledge_catalog",
+      "result": "pass",
+      "tests": 16
+    },
+    {
+      "command": "py -3 -B scripts/python/validate_knowledge_workflow_integration.py",
+      "result": "pass",
+      "checks": 13
+    },
+    {
+      "command": "RMAP-S7 complete-legacy-regression",
+      "result": "pass",
+      "run_id": "RUN-20260803T044719-632990Z"
+    },
+    {
+      "command": "py -3 -B -m unittest scripts.python.tests.test_knowledge_context_validation",
+      "result": "pass",
+      "tests": 16
+    },
+    {
+      "command": "py -3 -B .agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+      "result": "pass",
+      "tests": 8
+    },
+    {
+      "command": "py -3 -B .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "result": "pass",
+      "tests": 11
+    },
+    {
+      "command": "kwi-round3-repair-composition",
+      "result": "pass",
+      "receipt": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json"
+    }
+  ],
+  "authorizes": [],
+  "does_not_authorize": [
+    "acceptance-passed",
+    "bootstrap-clean",
+    "commit",
+    "release",
+    "archived"
+  ]
+}

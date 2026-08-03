@@ -1,0 +1,39 @@
+{
+  "after_snapshot_id": "toolchain-main-7584f295c1b4",
+  "before_snapshot_id": "toolchain-main-7584f295c1b4",
+  "entries": [
+    {
+      "after_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd",
+      "authority_status": "main-backed",
+      "before_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "toolchain.agent-routing",
+      "source_path": "AGENTS.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "e38c75e4c4b4644b2ed735cdc335526c800ddfe989ecb59a4e019fb68c8c1779",
+      "authority_status": "main-backed",
+      "before_sha256": "e38c75e4c4b4644b2ed735cdc335526c800ddfe989ecb59a4e019fb68c8c1779",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "toolchain.product-overview",
+      "source_path": "README.md",
+      "source_snapshot_kind": "main"
+    }
+  ],
+  "lkg_disposition": "preserved",
+  "log": {
+    "append_only": true,
+    "failure_code": null,
+    "log_ref": "logs/knowledge-context/2026-07-26/toolchain-initial-main-7584f295c1b4/result-110232376863.v1.json",
+    "main_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923"
+  },
+  "main_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+  "mode": "existing-only",
+  "request_id": "toolchain-initial-main-7584f295c1b4",
+  "schema_version": "jimuyun.knowledge-maintenance-result.v1",
+  "source_mutation_count": 0,
+  "status": "unchanged"
+}

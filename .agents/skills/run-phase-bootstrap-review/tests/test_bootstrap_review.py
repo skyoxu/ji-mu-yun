@@ -234,6 +234,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         acceptance_route: Path | None = None,
         acceptance_completeness: Path | None = None,
         finding_reentry_authorization: Path | None = None,
+        hard_limit_recovery: Path | None = None,
         expected_result: int = 0,
     ) -> None:
         profile_contract = bootstrap.load_profile(profile)
@@ -281,6 +282,11 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 "--finding-mode-reentry-authorization",
                 str(finding_reentry_authorization.relative_to(self.repo)),
             ])
+        if hard_limit_recovery is not None:
+            acceptance_args.extend([
+                "--hard-limit-repair-recovery",
+                str(hard_limit_recovery.relative_to(self.repo)),
+            ])
         elif (
             expected_result == 0
             and review_round > 1
@@ -314,7 +320,11 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 str(finding_reentry_authorization.relative_to(self.repo)),
             ])
         repair_closure_args = []
-        if 1 < review_round <= bootstrap.REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"] and predecessor_run is not None:
+        if (
+            1 < review_round <= bootstrap.REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+            and predecessor_run is not None
+            and hard_limit_recovery is None
+        ):
             repository_root = self.repo.resolve()
             _, artifacts = bootstrap.collect_scope(
                 repository_root, ["upstream-plan"], self.run_dir
@@ -1813,6 +1823,56 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "bootstrap-finalized-run-validation.v3.schema.json", replayed_legacy_v3
         ))
 
+    def test_validate_finalized_run_replays_registered_historical_profile(self) -> None:
+        self.prepare()
+        self.complete_layers()
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        manifest = self.read_json("review-input.json")
+        registries = self.repo / "historical-validation-registries"
+        registries.mkdir()
+        current_registry = json.loads(bootstrap.PROFILE_PATH.read_text(encoding="utf-8"))
+        profile_name = manifest["profileName"]
+        outgoing = copy.deepcopy(current_registry["profiles"][profile_name])
+        replacement = copy.deepcopy(outgoing)
+        replacement["reviewDepth"] += " Replacement policy."
+        replacement["policyRevision"] = bootstrap.value_hash({
+            key: value for key, value in replacement.items() if key != "policyRevision"
+        })
+        current_registry["profiles"][profile_name] = replacement
+        current_path = registries / "review-profiles.v1.json"
+        current_path.write_text(
+            json.dumps(current_registry, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        history = {
+            "schemaVersion": "bootstrap-historical-policy-revisions.v1",
+            "revisions": [{
+                "profileName": profile_name,
+                "policyRevision": outgoing["policyRevision"],
+                "replayScope": "baseline-and-successor",
+                "authorityRootRegistry": outgoing["authorityRootRegistry"],
+            }],
+            "authorizes": [],
+        }
+        history_path = registries / "historical-policy-revisions.v1.json"
+        history_path.write_text(
+            json.dumps(history, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        output = self.repo / "historical-finalized-validation.json"
+
+        with mock.patch.object(bootstrap, "PROFILE_PATH", current_path), mock.patch.object(
+            bootstrap, "HISTORICAL_POLICY_PATH", history_path
+        ):
+            self.assertEqual(0, bootstrap.main([
+                "validate-finalized-run", "--run-dir", str(self.run_dir),
+                "--output", str(output),
+            ]))
+
+        self.assertEqual(
+            outgoing["policyRevision"],
+            json.loads(output.read_text(encoding="utf-8"))["policyRevision"],
+        )
+
     def test_validate_finalized_run_rejects_stale_verifier_output(self) -> None:
         self.prepare()
         self.complete_layers()
@@ -3066,8 +3126,23 @@ class BootstrapReviewCliTests(unittest.TestCase):
                     {"role": "producer", "path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
                     {"role": "consumer", "path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
                 ],
+                "targetedTests": ["plan.md"],
                 "commandRegistry": {"path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
                 "receipt": {"path": "plan.md", "sha256": bootstrap.file_hash(self.target)},
+                "controlledReplay": {
+                    "schemaVersion": "acceptance-composition-controlled-replay.v1",
+                    "authorizes": [],
+                    "commandId": "focused-plan-composition",
+                    "commandRegistryHash": "sha256:" + "1" * 64,
+                    "environmentIdentity": {"names": [], "hash": "sha256:" + "2" * 64},
+                    "invocation": {},
+                    "invocationHash": "sha256:" + "3" * 64,
+                    "exitCode": 0,
+                    "writeManifestDelta": {},
+                    "writeManifestDeltaHash": "sha256:" + "4" * 64,
+                    "inputBindings": [],
+                    "inputBindingsHash": "sha256:" + "5" * 64,
+                },
             }],
             "novelP0P1FindingIds": [],
             "authorityGraphChanged": False,
@@ -3195,6 +3270,213 @@ class BootstrapReviewCliTests(unittest.TestCase):
         classified = bootstrap.classify_run(self.run_dir, manifest)
         self.assertEqual("finalized", classified["runExecutionState"])
         self.assertEqual("accepted", classified["changeCycleState"])
+
+    def test_hard_limit_focused_recovery_is_same_round_verification_only(self) -> None:
+        family_id = "hard-limit-recovery-family"
+        finding_id = "BSR-HARD-LIMIT-ONE"
+        predecessor = self.repo / "blocked-round-three"
+        predecessor.mkdir()
+        target_relative = self.target.relative_to(self.repo).as_posix()
+        skill_profile = bootstrap.load_profile("bootstrap-skill-route")
+        predecessor_manifest = {
+            "reviewId": "blocked-round-three-review",
+            "changeId": "blocked-round-three-change",
+            "lineageFamilyId": family_id,
+            "fullReviewRound": 3,
+            "profileName": "bootstrap-skill-route",
+            "routeVersion": skill_profile["routeVersion"],
+            "reviewProfile": skill_profile["reviewProfile"],
+            "policyRevision": skill_profile["policyRevision"],
+            "authorityRevision": bootstrap.git_revision(self.repo),
+            "inputHash": "sha256:" + "1" * 64,
+            "artifacts": [{"artifact": target_relative, "sha256": bootstrap.file_hash(self.target)}],
+            "executionMode": "manual",
+            "processLeasePolicy": {"sidecar": "process-leases.json"},
+        }
+        (predecessor / "review-input.json").write_text(
+            json.dumps(predecessor_manifest), encoding="utf-8", newline="\n"
+        )
+        self.run_dir = predecessor
+        self.write_synthetic_blocked_result(finding_id)
+        envelope_path = predecessor / "finalized-run-validation.v3.json"
+        envelope_path.write_text(
+            json.dumps({
+                "schemaVersion": "bootstrap-finalized-run-validation.v3",
+                "validationStatus": "passed",
+                "reviewId": predecessor_manifest["reviewId"],
+                "inputHash": predecessor_manifest["inputHash"],
+                "fullReviewRound": 3,
+                "profileName": "bootstrap-skill-route",
+                "finalStatus": "blocked",
+                "findingClosure": {"unverifiedCount": 0},
+                "authorizes": [],
+            }),
+            encoding="utf-8",
+            newline="\n",
+        )
+        self.target.write_text("# Plan\n\nRepaired.\n", encoding="utf-8", newline="\n")
+        repair_path = self.repo / "round-three-deterministic-repair.json"
+        repair_path.write_text(
+            json.dumps({
+                "schemaVersion": "bootstrap-round3-deterministic-repair-closure.v1",
+                "lineageFamilyId": family_id,
+                "predecessorRun": predecessor.relative_to(self.repo).as_posix(),
+                "predecessorEnvelope": {
+                    "path": envelope_path.relative_to(self.repo).as_posix(),
+                    "sha256": bootstrap.file_hash(envelope_path),
+                    "finalStatus": "blocked",
+                },
+                "findingIds": [finding_id],
+                "repairs": [{
+                    "findingIds": [finding_id],
+                    "result": "fixed",
+                    "reason": "Current protocol bytes close the predecessor finding",
+                    "evidence": [{"path": target_relative, "sha256": bootstrap.file_hash(self.target)}],
+                }],
+                "validation": [{"command": "targeted-test", "status": "passed"}],
+                "authorizes": [],
+                "doesNotAuthorize": ["acceptance-passed"],
+            }),
+            encoding="utf-8",
+            newline="\n",
+        )
+        authorization_path = self.repo / "hard-limit-recovery.json"
+        predecessor_manifest["fullReviewRound"] = 2
+        (predecessor / "review-input.json").write_text(
+            json.dumps(predecessor_manifest), encoding="utf-8", newline="\n"
+        )
+        self.assertEqual(1, bootstrap.main([
+            "authorize-hard-limit-focused-recovery",
+            "--repository-root", str(self.repo),
+            "--lineage-family-id", family_id,
+            "--predecessor-run-dir", str(predecessor),
+            "--deterministic-repair-closure", str(repair_path),
+            "--recommendation", "recommend", "--confidence", "0.92",
+            "--rationale", "invalid round fixture", "--user-confirmed",
+            "--out", str(authorization_path),
+        ]))
+        predecessor_manifest["fullReviewRound"] = 3
+        (predecessor / "review-input.json").write_text(
+            json.dumps(predecessor_manifest), encoding="utf-8", newline="\n"
+        )
+        result_path = predecessor / "review-gate-result.json"
+        metrics_path = predecessor / "review-metrics.json"
+        blocked_result = json.loads(result_path.read_text(encoding="utf-8"))
+        blocked_metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+        clean_result = {**blocked_result, "status": "clean"}
+        clean_metrics = {**blocked_metrics, "status": "clean"}
+        result_path.write_text(json.dumps(clean_result), encoding="utf-8", newline="\n")
+        metrics_path.write_text(json.dumps(clean_metrics), encoding="utf-8", newline="\n")
+        self.assertEqual(1, bootstrap.main([
+            "authorize-hard-limit-focused-recovery",
+            "--repository-root", str(self.repo),
+            "--lineage-family-id", family_id,
+            "--predecessor-run-dir", str(predecessor),
+            "--deterministic-repair-closure", str(repair_path),
+            "--recommendation", "recommend", "--confidence", "0.92",
+            "--rationale", "clean predecessor fixture", "--user-confirmed",
+            "--out", str(authorization_path),
+        ]))
+        result_path.write_text(json.dumps(blocked_result), encoding="utf-8", newline="\n")
+        metrics_path.write_text(json.dumps(blocked_metrics), encoding="utf-8", newline="\n")
+        self.assertEqual(1, bootstrap.main([
+            "authorize-hard-limit-focused-recovery",
+            "--repository-root", str(self.repo),
+            "--lineage-family-id", "different-family",
+            "--predecessor-run-dir", str(predecessor),
+            "--deterministic-repair-closure", str(repair_path),
+            "--recommendation", "recommend", "--confidence", "0.92",
+            "--rationale", "different family fixture", "--user-confirmed",
+            "--out", str(authorization_path),
+        ]))
+        self.assertEqual(0, bootstrap.main([
+            "authorize-hard-limit-focused-recovery",
+            "--repository-root", str(self.repo),
+            "--lineage-family-id", family_id,
+            "--predecessor-run-dir", str(predecessor),
+            "--deterministic-repair-closure", str(repair_path),
+            "--recommendation", "recommend",
+            "--confidence", "0.92",
+            "--rationale", "One exact verifier is cheaper than another discovery round",
+            "--user-confirmed",
+            "--out", str(authorization_path),
+        ]))
+        authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+        self.assertEqual([], authorization["authorizes"])
+        self.run_dir = self.repo / "hard-limit-focused-run"
+        self.prepare(
+            profile="bootstrap-focused-repair-verification",
+            review_id="hard-limit-focused-review",
+            change_id="hard-limit-focused-change",
+            lineage_family_id=family_id,
+            review_round=3,
+            predecessor_run=predecessor,
+            hard_limit_recovery=authorization_path,
+        )
+        manifest = self.read_json("review-input.json")
+        self.assertEqual("verification_only", manifest["findingMode"])
+        self.assertFalse(bootstrap.run_consumes_semantic_round(self.run_dir, manifest))
+        codex_manifest = copy.deepcopy(manifest)
+        codex_manifest["executionMode"] = "codex-exec"
+        with mock.patch.object(
+            bootstrap, "load_run", return_value=(self.run_dir, codex_manifest, self.repo)
+        ), mock.patch.object(
+            bootstrap, "validate_preflight_result", return_value="sha256:" + "a" * 64
+        ) as preflight_validation, mock.patch.object(
+            bootstrap, "validate_launch_authorization"
+        ) as launch_validation, mock.patch.object(
+            bootstrap, "access_proof_route",
+            side_effect=bootstrap.BootstrapError("stop-before-process"),
+        ):
+            self.assertEqual(1, bootstrap.main([
+                "prove-access", "--run-dir", str(self.run_dir),
+                "--codex-command", "codex", "--role", bootstrap.FOCUSED_REPAIR_ROLE,
+                "--model", "gpt-5.6-sol", "--ack-high-cost",
+            ]))
+            preflight_validation.assert_called_once()
+            launch_validation.assert_not_called()
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "Discovery access is forbidden"):
+            bootstrap.access_proof_route(self.run_dir, manifest, "discovery")
+        output = bootstrap.focused_repair_output_template(manifest)
+        output["status"] = "completed"
+        output["coverage"] = bootstrap.completed_reviewer_coverage(manifest)
+        output["decisions"] = [{
+            "findingId": finding_id,
+            "status": "verified_fixed",
+            "evidenceChecked": [target_relative],
+        }]
+        self.write_json(f"reviewer-outputs/{bootstrap.FOCUSED_REPAIR_ROLE}.json", output)
+        invalid = copy.deepcopy(output)
+        invalid["newBlockers"] = [{
+            "findingId": "BSR-NEW",
+            "severity": "P1",
+            "dimension": "code",
+            "artifact": target_relative,
+            "startLine": 3,
+            "endLine": 3,
+            "exactEvidence": "Repaired.",
+        }]
+        invalid["escalation"]["novelP0P1FindingIds"] = ["BSR-NEW"]
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "cannot create findings"):
+            bootstrap.validate_focused_repair_output(
+                invalid, manifest, self.repo, self.run_dir
+            )
+        self.complete_preflight()
+        self.authorize_launch()
+        self.complete_process_lease(
+            f"reviewer:{bootstrap.FOCUSED_REPAIR_ROLE}", bootstrap.FOCUSED_REPAIR_ROLE
+        )
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        self.assertEqual(0, bootstrap.main(["finalize", "--run-dir", str(self.run_dir)]))
+        authority = self.read_json("hard-limit-protocol-repair-authority.json")
+        self.assertEqual(["manual-pause-protocol-review"], authority["authorizes"])
+        self.assertNotIn("acceptance-passed", authority["authorizes"])
+        repair_path.write_text(repair_path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+        self.assertEqual(1, bootstrap.main([
+            "validate-finalized-run",
+            "--run-dir", str(self.run_dir),
+            "--output", str(self.repo / "stale-hard-limit-validation.json"),
+        ]))
 
     def test_focused_repair_profile_is_revision_pinned_from_base_profile(self) -> None:
         expected = bootstrap.load_profile("bootstrap-focused-repair-verification")

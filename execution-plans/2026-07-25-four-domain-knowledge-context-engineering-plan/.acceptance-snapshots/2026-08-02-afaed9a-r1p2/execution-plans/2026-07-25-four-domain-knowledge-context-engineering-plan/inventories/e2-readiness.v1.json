@@ -1,0 +1,15 @@
+{
+  "blockers": [
+    "e2_release_evidence_not_current"
+  ],
+  "evidence": {
+    "direct_invocation_violation_count": 0,
+    "not_enforced_callsite_ids": [],
+    "reachable_hosted_callsite_count": 25,
+    "release_evidence_path": "e2-release-evidence.v1.json",
+    "unknown_reachability_count": 0
+  },
+  "ready": false,
+  "schema_version": "jimuyun.e2-readiness-result.v1",
+  "source_snapshot_id": "85a76dbcff1943623a2f016e4d8b75651dda05b83ebd8d8fc4ea672935fa3ff3"
+}

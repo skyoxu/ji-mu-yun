@@ -240,6 +240,8 @@ MAINTENANCE_RISK_CLASSES = {
     "external_requirement_injection",
 }
 ROUND_THREE_ENTRY_REASONS = set(REVIEW_CYCLE_POLICY["roundThreeEntryReasons"])
+HARD_LIMIT_RECOVERY_SCHEMA = "bootstrap-hard-limit-focused-recovery.v1"
+HARD_LIMIT_AUTHORITY_SCHEMA = "bootstrap-hard-limit-protocol-repair-authority.v1"
 REPAIR_DELTA_SCHEMA = "bootstrap-repair-review-delta.v1"
 ARTIFACT_VIEW_READ_RECEIPT_SCHEMA = "bootstrap-artifact-view-read-receipt.v1"
 BOUNDED_SCOPE_PROFILES = {
@@ -2119,6 +2121,7 @@ def validate_review_cycle(
     round_entry_reason: str | None = None,
     high_risk_boundaries: list[str] | None = None,
     historical_replay: bool = False,
+    hard_limit_recovery: bool = False,
 ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     legacy_lineage = lineage_family_id is None
     family_id = lineage_family_id or change_id
@@ -2139,7 +2142,7 @@ def validate_review_cycle(
     ]
     if any(item.get("reviewId") == review_id for _path, item in existing):
         raise BootstrapError(f"Review ID already exists in another run: {review_id}")
-    if any(item.get("fullReviewRound") == review_round for _path, item in counted_family):
+    if any(item.get("fullReviewRound") == review_round for _path, item in counted_family) and not hard_limit_recovery:
         raise BootstrapError(
             f"Lineage family {family_id} already has full review round {review_round}"
         )
@@ -2160,13 +2163,20 @@ def validate_review_cycle(
         and predecessor_run not in adopted_paths
     ):
         raise BootstrapError("Predecessor run belongs to a different lineage family")
-    if predecessor_manifest.get("fullReviewRound") != review_round - 1:
+    expected_predecessor_round = review_round if hard_limit_recovery else review_round - 1
+    if predecessor_manifest.get("fullReviewRound") != expected_predecessor_round:
         raise BootstrapError("Predecessor run must be the immediately previous full review round")
     predecessor_profile = predecessor_manifest.get("profileName")
     compatible_predecessor = (
         profile_name == "bootstrap-focused-repair-verification"
-        and review_round == 2
-        and predecessor_profile == "bootstrap-implementation-conformance"
+        and (
+            (review_round == 2 and predecessor_profile == "bootstrap-implementation-conformance")
+            or (
+                hard_limit_recovery
+                and review_round == REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+                and predecessor_profile == "bootstrap-skill-route"
+            )
+        )
     )
     if predecessor_profile != profile_name and not compatible_predecessor:
         raise BootstrapError("Predecessor run uses a different review profile")
@@ -2180,6 +2190,17 @@ def validate_review_cycle(
     predecessor_is_p2_only = bool(predecessor_findings) and all(
         item.get("proposedSeverity") == "P2" for item in predecessor_findings
     )
+    if hard_limit_recovery:
+        if (
+            profile_name != "bootstrap-focused-repair-verification"
+            or review_round != REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+            or predecessor_result.get("status") != "blocked"
+            or round_entry_reason is not None
+            or high_risk_boundaries
+        ):
+            raise BootstrapError(
+                "Hard-limit focused recovery requires a blocked Round 3 Skill-route predecessor"
+            )
     if predecessor_is_p2_only:
         raise BootstrapError(
             "A P2-only predecessor does not trigger another full semantic review; "
@@ -2199,7 +2220,9 @@ def validate_review_cycle(
     if delta_errors:
         raise BootstrapError("Repair review delta is invalid: " + "; ".join(delta_errors))
     entry_decision = None
-    if review_round == REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]:
+    if hard_limit_recovery:
+        entry_decision = None
+    elif review_round == REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]:
         if legacy_lineage and round_entry_reason is None:
             context_changed = (
                 predecessor_manifest.get("authorityContextHash") != current_authority_context_hash
@@ -2654,10 +2677,18 @@ def reviewer_template(
     return output
 
 
+def focused_repair_evidence_hashes(manifest: dict[str, Any]) -> tuple[str, str]:
+    repair_hash = manifest["repairClosure"]["sha256"]
+    if isinstance(manifest.get("hardLimitRepairRecovery"), dict):
+        return repair_hash, repair_hash
+    return repair_hash, manifest["acceptanceRepairCompleteness"]["sha256"]
+
+
 def focused_repair_output_template(
     manifest: dict[str, Any], *, attempt_id: str | None = None,
 ) -> dict[str, Any]:
     required_artifacts = list(reviewable_artifact_map(manifest))
+    repair_hash, completeness_hash = focused_repair_evidence_hashes(manifest)
     output = {
         "schemaVersion": "bootstrap-focused-repair-verifier-output.v1",
         "reviewId": manifest["reviewId"],
@@ -2665,8 +2696,8 @@ def focused_repair_output_template(
         "policyRevision": manifest["policyRevision"],
         "authorityRevision": manifest["authorityRevision"],
         "role": FOCUSED_REPAIR_ROLE,
-        "repairClosureHash": manifest["repairClosure"]["sha256"],
-        "repairCompletenessHash": manifest["acceptanceRepairCompleteness"]["sha256"],
+        "repairClosureHash": repair_hash,
+        "repairCompletenessHash": completeness_hash,
         "status": "pending",
         "coverage": {
             "requiredArtifacts": required_artifacts,
@@ -2697,12 +2728,19 @@ def focused_repair_prompt_text(manifest: dict[str, Any]) -> str:
     predecessor_manifest = read_json(predecessor_dir / "review-input.json")
     predecessor_result = finalized_review_result(predecessor_dir, predecessor_manifest)
     finding_ids = canonical_predecessor_finding_ids(predecessor_dir, predecessor_result)
+    hard_limit_note = (
+        "This is the single hard-limit protocol-repair verifier after a blocked Round 3. "
+        "It does not consume Round 4 and may only produce protocol-repair authority. "
+        if isinstance(manifest.get("hardLimitRepairRecovery"), dict)
+        else ""
+    )
     return (
         "# Focused Repair Verification\n\n"
         "Verify the exact predecessor findings against the repair closure, current diff, "
         "direct consumers, targeted tests, and controlled validation receipts. This is one "
         "independent repair-verifier role, not discovery and not gate verification.\n\n"
         f"Required finding IDs: {json.dumps(finding_ids)}\n\n"
+        f"{hard_limit_note}"
         "Return one decision for every ID. This verification path has already consumed its "
         "finding round: do not discover or report new findings, and return empty newBlockers and an "
         "all-false escalation object. If the repair cannot be mapped to the predecessor finding "
@@ -2723,14 +2761,15 @@ def validate_focused_repair_output(
     )
     if not isinstance(output, dict):
         raise BootstrapError("Focused repair verifier output is not an object")
+    repair_hash, completeness_hash = focused_repair_evidence_hashes(manifest)
     expected = {
         "reviewId": manifest["reviewId"],
         "inputHash": manifest["inputHash"],
         "policyRevision": manifest["policyRevision"],
         "authorityRevision": manifest["authorityRevision"],
         "role": FOCUSED_REPAIR_ROLE,
-        "repairClosureHash": manifest["repairClosure"]["sha256"],
-        "repairCompletenessHash": manifest["acceptanceRepairCompleteness"]["sha256"],
+        "repairClosureHash": repair_hash,
+        "repairCompletenessHash": completeness_hash,
         "authorizes": [],
     }
     errors.extend(
@@ -2758,34 +2797,53 @@ def validate_focused_repair_output(
     if sorted(decision_ids) != expected_ids or len(decision_ids) != len(set(decision_ids)):
         errors.append("focused decisions must cover the exact predecessor finding set")
     closure = read_json(repository_root / manifest["repairClosure"]["path"])
-    closure_items = {
-        item.get("findingId"): item
-        for item in closure.get("items", [])
-        if isinstance(item, dict) and isinstance(item.get("findingId"), str)
-    }
-    closure_evidence = {
-        item.get("findingId"): {
-            evidence.get("path") for evidence in item.get("evidence", [])
-            if isinstance(evidence, dict) and isinstance(evidence.get("path"), str)
+    if isinstance(manifest.get("hardLimitRepairRecovery"), dict):
+        closure_items = {}
+        closure_evidence: dict[str, set[str]] = {}
+        for repair in closure.get("repairs", []):
+            if not isinstance(repair, dict):
+                continue
+            evidence = {
+                item.get("path") for item in repair.get("evidence", [])
+                if isinstance(item, dict) and isinstance(item.get("path"), str)
+            }
+            for finding_id in repair.get("findingIds", []):
+                closure_items[finding_id] = {
+                    "disposition": repair.get("result"),
+                }
+                closure_evidence[finding_id] = evidence
+        completeness_evidence = {
+            path for values in closure_evidence.values() for path in values
         }
-        for item in closure.get("items", []) if isinstance(item, dict)
-    }
-    completeness = read_json(
-        repository_root / manifest["acceptanceRepairCompleteness"]["path"]
-    )
-    completeness_evidence = {
-        item.get("path")
-        for field in ("directConsumers", "targetedTests", "validationRefs")
-        for item in completeness.get(field, [])
-        if isinstance(item, dict) and isinstance(item.get("path"), str)
-    }
-    for check in completeness.get("compositionChecks", []):
-        if not isinstance(check, dict):
-            continue
-        for field in ("commandRegistry", "receipt"):
-            binding = check.get(field)
-            if isinstance(binding, dict) and isinstance(binding.get("path"), str):
-                completeness_evidence.add(binding["path"])
+    else:
+        closure_items = {
+            item.get("findingId"): item
+            for item in closure.get("items", [])
+            if isinstance(item, dict) and isinstance(item.get("findingId"), str)
+        }
+        closure_evidence = {
+            item.get("findingId"): {
+                evidence.get("path") for evidence in item.get("evidence", [])
+                if isinstance(evidence, dict) and isinstance(evidence.get("path"), str)
+            }
+            for item in closure.get("items", []) if isinstance(item, dict)
+        }
+        completeness = read_json(
+            repository_root / manifest["acceptanceRepairCompleteness"]["path"]
+        )
+        completeness_evidence = {
+            item.get("path")
+            for field in ("directConsumers", "targetedTests", "validationRefs")
+            for item in completeness.get(field, [])
+            if isinstance(item, dict) and isinstance(item.get("path"), str)
+        }
+        for check in completeness.get("compositionChecks", []):
+            if not isinstance(check, dict):
+                continue
+            for field in ("commandRegistry", "receipt"):
+                binding = check.get(field)
+                if isinstance(binding, dict) and isinstance(binding.get("path"), str):
+                    completeness_evidence.add(binding["path"])
     artifact_set = set(expected_artifacts)
     for decision in decisions if isinstance(decisions, list) else []:
         if not isinstance(decision, dict):
@@ -2904,6 +2962,45 @@ def focused_repair_validation_envelope(
     projected = project_focused_repair_gate(output, manifest, repository_root, run_dir)
     if gate != projected or read_json(run_dir / "review-gate-state.json") != projected:
         raise BootstrapError("Focused repair gate does not reproduce verifier output")
+    if isinstance(manifest.get("hardLimitRepairRecovery"), dict):
+        recovery_path = ensure_within(
+            repository_root / manifest["hardLimitRepairRecovery"]["path"],
+            repository_root,
+            "Hard-limit focused recovery authorization",
+        )
+        recovery = read_json(recovery_path)
+        envelope = {
+            "schemaVersion": "bootstrap-hard-limit-focused-repair-validation-envelope.v1",
+            "reviewId": manifest["reviewId"],
+            "lineageFamilyId": manifest["lineageFamilyId"],
+            "fullReviewRound": manifest["fullReviewRound"],
+            "predecessorRun": manifest["predecessorRun"],
+            "predecessorInputHash": recovery["predecessorInputHash"],
+            "inputHash": manifest["inputHash"],
+            "policyRevision": manifest["policyRevision"],
+            "authorityRevision": manifest["authorityRevision"],
+            "hardLimitRecoveryHash": manifest["hardLimitRepairRecovery"]["sha256"],
+            "deterministicRepairClosureHash": manifest["repairClosure"]["sha256"],
+            "blockedPredecessorEnvelopeHash": recovery["predecessorEnvelope"]["sha256"],
+            "findingIds": recovery["findingIds"],
+            "status": gate["status"],
+            "nextAction": gate["nextAction"],
+            "outputHash": file_hash(output_path),
+            "gateHash": file_hash(gate_path),
+            "generatedAt": generated_at or utc_now(),
+            "authorizes": [],
+            "doesNotAuthorize": FINALIZED_DOES_NOT_AUTHORIZE,
+        }
+        errors = schema_validation_errors(
+            "bootstrap-hard-limit-focused-repair-validation-envelope.v1.schema.json",
+            envelope,
+        )
+        if errors:
+            raise BootstrapError(
+                "Hard-limit focused repair validation envelope is invalid: "
+                + "; ".join(errors)
+            )
+        return envelope
     envelope = {
         "schemaVersion": "bootstrap-focused-repair-validation-envelope.v1",
         "reviewId": manifest["reviewId"],
@@ -2932,6 +3029,59 @@ def focused_repair_validation_envelope(
             "Focused repair validation envelope is invalid: " + "; ".join(errors)
         )
     return envelope
+
+
+def hard_limit_protocol_repair_authority(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    repository_root: Path,
+    envelope: dict[str, Any],
+    *,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    if not isinstance(manifest.get("hardLimitRepairRecovery"), dict):
+        raise BootstrapError("Focused run is not a hard-limit protocol recovery")
+    if envelope.get("status") != "passed" or envelope.get("nextAction") != "deterministic-closure":
+        raise BootstrapError("Hard-limit focused verification did not pass")
+    recovery_path = ensure_within(
+        repository_root / manifest["hardLimitRepairRecovery"]["path"],
+        repository_root,
+        "Hard-limit focused recovery authorization",
+    )
+    recovery = read_json(recovery_path)
+    envelope_path = run_dir / "focused-repair-validation-envelope.json"
+    authority = {
+        "schemaVersion": HARD_LIMIT_AUTHORITY_SCHEMA,
+        "status": "passed",
+        "maintenanceMode": MAINTENANCE_MODE,
+        "lineageFamilyId": manifest["lineageFamilyId"],
+        "fullReviewRound": manifest["fullReviewRound"],
+        "predecessorRun": manifest["predecessorRun"],
+        "predecessorInputHash": recovery["predecessorInputHash"],
+        "blockedPredecessorEnvelope": recovery["predecessorEnvelope"],
+        "focusedRun": repository_relative_path(run_dir, repository_root),
+        "focusedInputHash": manifest["inputHash"],
+        "hardLimitRecoveryHash": manifest["hardLimitRepairRecovery"]["sha256"],
+        "deterministicRepairClosureHash": manifest["repairClosure"]["sha256"],
+        "findingIds": recovery["findingIds"],
+        "focusedValidationEnvelope": {
+            "path": repository_relative_path(envelope_path, repository_root),
+            "sha256": file_hash(envelope_path),
+        },
+        "verifierOutputHash": envelope["outputHash"],
+        "gateHash": envelope["gateHash"],
+        "generatedAt": generated_at or utc_now(),
+        "authorizes": ["manual-pause-protocol-review"],
+        "doesNotAuthorize": ["acceptance-passed", "round-4", "finding-discovery", "commit", "release"],
+    }
+    errors = schema_validation_errors(
+        "bootstrap-hard-limit-protocol-repair-authority.v1.schema.json", authority
+    )
+    if errors:
+        raise BootstrapError(
+            "Hard-limit protocol repair authority is invalid: " + "; ".join(errors)
+        )
+    return authority
 
 
 def artifact_view_read_receipt(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -3550,6 +3700,225 @@ def command_authorize_finding_mode_reentry(args: argparse.Namespace) -> int:
     return 0
 
 
+def validate_round3_deterministic_repair_closure(
+    path: Path,
+    repository_root: Path,
+    predecessor_dir: Path,
+    predecessor_manifest: dict[str, Any],
+) -> tuple[dict[str, Any], list[str]]:
+    closure = read_json(path)
+    predecessor_result = finalized_review_result(predecessor_dir, predecessor_manifest)
+    expected_ids = canonical_predecessor_finding_ids(predecessor_dir, predecessor_result)
+    repairs = closure.get("repairs") if isinstance(closure, dict) else None
+    covered: list[str] = []
+    errors: list[str] = []
+    expected_envelope = closure.get("predecessorEnvelope") if isinstance(closure, dict) else None
+    envelope_path = (
+        ensure_within(
+            repository_root / str(expected_envelope.get("path", "")),
+            repository_root,
+            "Blocked predecessor envelope",
+        )
+        if isinstance(expected_envelope, dict)
+        else repository_root
+    )
+    if (
+        not isinstance(closure, dict)
+        or closure.get("schemaVersion") != "bootstrap-round3-deterministic-repair-closure.v1"
+        or closure.get("lineageFamilyId") != effective_lineage_family(predecessor_manifest)
+        or closure.get("predecessorRun")
+        != repository_relative_path(predecessor_dir, repository_root)
+        or predecessor_result.get("status") != "blocked"
+        or closure.get("findingIds") != expected_ids
+        or closure.get("authorizes") != []
+        or not isinstance(repairs, list)
+        or not repairs
+    ):
+        errors.append("deterministic repair closure identity is invalid")
+    if (
+        not isinstance(expected_envelope, dict)
+        or set(expected_envelope) != {"path", "sha256", "finalStatus"}
+        or expected_envelope.get("finalStatus") != "blocked"
+        or not envelope_path.is_file()
+        or file_hash(envelope_path) != expected_envelope.get("sha256")
+    ):
+        errors.append("blocked predecessor envelope binding is stale")
+    else:
+        saved_envelope = read_json(envelope_path)
+        if (
+            saved_envelope.get("schemaVersion") != "bootstrap-finalized-run-validation.v3"
+            or saved_envelope.get("validationStatus") != "passed"
+            or saved_envelope.get("reviewId") != predecessor_manifest.get("reviewId")
+            or saved_envelope.get("inputHash") != predecessor_manifest.get("inputHash")
+            or saved_envelope.get("fullReviewRound") != REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+            or saved_envelope.get("profileName") != "bootstrap-skill-route"
+            or saved_envelope.get("finalStatus") != "blocked"
+            or saved_envelope.get("findingClosure", {}).get("unverifiedCount") != 0
+            or saved_envelope.get("authorizes") != []
+        ):
+            errors.append("blocked predecessor envelope is not eligible for focused recovery")
+    for repair in repairs if isinstance(repairs, list) else []:
+        finding_ids = repair.get("findingIds") if isinstance(repair, dict) else None
+        evidence = repair.get("evidence") if isinstance(repair, dict) else None
+        if (
+            not isinstance(finding_ids, list)
+            or not finding_ids
+            or finding_ids != sorted(set(finding_ids))
+            or repair.get("result") not in {"fixed", "refuted"}
+            or not isinstance(repair.get("reason"), str)
+            or not repair["reason"].strip()
+            or not isinstance(evidence, list)
+            or not evidence
+        ):
+            errors.append("deterministic repair mapping is invalid")
+            continue
+        covered.extend(finding_ids)
+        for binding in evidence:
+            if not isinstance(binding, dict) or set(binding) != {"path", "sha256"}:
+                errors.append("deterministic repair evidence binding is invalid")
+                continue
+            evidence_path = ensure_within(
+                repository_root / str(binding.get("path", "")),
+                repository_root,
+                "Deterministic repair evidence",
+            )
+            if not evidence_path.is_file() or file_hash(evidence_path) != binding.get("sha256"):
+                errors.append("deterministic repair evidence is missing or stale")
+    if sorted(covered) != expected_ids or len(covered) != len(set(covered)):
+        errors.append("deterministic repair mappings do not cover the exact predecessor finding set")
+    validation = closure.get("validation") if isinstance(closure, dict) else None
+    if (
+        not isinstance(validation, list)
+        or not validation
+        or any(not isinstance(item, dict) or item.get("status") != "passed" for item in validation)
+    ):
+        errors.append("deterministic repair validation is incomplete")
+    if errors:
+        raise BootstrapError("Hard-limit deterministic repair closure is invalid: " + "; ".join(errors))
+    return closure, expected_ids
+
+
+def validate_hard_limit_recovery_authorization(
+    path: Path,
+    repository_root: Path,
+    lineage_family_id: str,
+    predecessor_run: str,
+) -> tuple[dict[str, str], dict[str, str]]:
+    authorization = read_json(path)
+    errors = schema_validation_errors(
+        "bootstrap-hard-limit-focused-recovery.v1.schema.json", authorization
+    )
+    predecessor_dir = ensure_within(
+        repository_root / predecessor_run, repository_root, "Hard-limit predecessor run"
+    )
+    predecessor_manifest = read_json(predecessor_dir / "review-input.json")
+    repair_binding = authorization.get("deterministicRepairClosure") if isinstance(authorization, dict) else None
+    repair_path = ensure_within(
+        repository_root / str(repair_binding.get("path", "")),
+        repository_root,
+        "Hard-limit deterministic repair closure",
+    ) if isinstance(repair_binding, dict) else repository_root
+    if (
+        not isinstance(authorization, dict)
+        or authorization.get("lineageFamilyId") != lineage_family_id
+        or authorization.get("predecessorRun") != predecessor_run
+        or authorization.get("predecessorInputHash") != predecessor_manifest.get("inputHash")
+        or authorization.get("maintenanceMode") != MAINTENANCE_MODE
+        or authorization.get("userConfirmed") is not True
+        or authorization.get("authorizes") != []
+        or predecessor_manifest.get("fullReviewRound")
+        != REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+        or predecessor_manifest.get("profileName") != "bootstrap-skill-route"
+        or not isinstance(repair_binding, dict)
+        or set(repair_binding) != {"path", "sha256"}
+        or not repair_path.is_file()
+        or file_hash(repair_path) != repair_binding.get("sha256")
+    ):
+        errors.append("hard-limit recovery binding does not match the blocked Round 3 predecessor")
+    else:
+        _closure, expected_ids = validate_round3_deterministic_repair_closure(
+            repair_path, repository_root, predecessor_dir, predecessor_manifest
+        )
+        if authorization.get("findingIds") != expected_ids:
+            errors.append("hard-limit recovery does not bind the exact predecessor finding set")
+    if errors:
+        raise BootstrapError("Hard-limit focused recovery authorization is invalid: " + "; ".join(errors))
+    return (
+        {"path": repository_relative_path(path, repository_root), "sha256": file_hash(path)},
+        {"path": repository_relative_path(repair_path, repository_root), "sha256": file_hash(repair_path)},
+    )
+
+
+def command_authorize_hard_limit_focused_recovery(args: argparse.Namespace) -> int:
+    repository_root = Path(args.repository_root).resolve()
+    predecessor_candidate = Path(args.predecessor_run_dir)
+    if not predecessor_candidate.is_absolute():
+        predecessor_candidate = repository_root / predecessor_candidate
+    predecessor_dir = ensure_within(
+        predecessor_candidate, repository_root, "Hard-limit predecessor run"
+    )
+    predecessor_manifest = read_json(predecessor_dir / "review-input.json")
+    predecessor_run = repository_relative_path(predecessor_dir, repository_root)
+    repair_candidate = Path(args.deterministic_repair_closure)
+    if not repair_candidate.is_absolute():
+        repair_candidate = repository_root / repair_candidate
+    repair_path = ensure_within(
+        repair_candidate, repository_root, "Hard-limit deterministic repair closure"
+    )
+    _closure, finding_ids = validate_round3_deterministic_repair_closure(
+        repair_path, repository_root, predecessor_dir, predecessor_manifest
+    )
+    if (
+        effective_lineage_family(predecessor_manifest) != args.lineage_family_id
+        or predecessor_manifest.get("fullReviewRound")
+        != REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+        or predecessor_manifest.get("profileName") != "bootstrap-skill-route"
+    ):
+        raise BootstrapError("Hard-limit recovery requires the exact blocked Round 3 Skill-route predecessor")
+    if not args.user_confirmed:
+        raise BootstrapError("Hard-limit focused recovery requires explicit user confirmation")
+    if not math.isfinite(args.confidence) or not 0 <= args.confidence <= 1:
+        raise BootstrapError("Hard-limit recovery confidence must be between 0 and 1")
+    if not args.rationale.strip():
+        raise BootstrapError("Hard-limit recovery recommendation rationale is required")
+    output = Path(args.out)
+    if not output.is_absolute():
+        output = repository_root / output
+    output = ensure_within(output, repository_root, "Hard-limit recovery authorization output")
+    if output.exists():
+        raise BootstrapError("Hard-limit recovery authorization output is append-only")
+    closure = read_json(repair_path)
+    authorization = {
+        "schemaVersion": HARD_LIMIT_RECOVERY_SCHEMA,
+        "maintenanceMode": MAINTENANCE_MODE,
+        "lineageFamilyId": args.lineage_family_id,
+        "predecessorRun": predecessor_run,
+        "predecessorInputHash": predecessor_manifest["inputHash"],
+        "predecessorEnvelope": closure["predecessorEnvelope"],
+        "findingIds": finding_ids,
+        "deterministicRepairClosure": {
+            "path": repository_relative_path(repair_path, repository_root),
+            "sha256": file_hash(repair_path),
+        },
+        "recommendation": args.recommendation,
+        "confidence": args.confidence,
+        "rationale": args.rationale.strip(),
+        "userConfirmed": True,
+        "confirmedAt": utc_now(),
+        "authorizes": [],
+        "doesNotAuthorize": ["round-4", "finding-discovery", "acceptance-passed", "commit", "release"],
+    }
+    errors = schema_validation_errors(
+        "bootstrap-hard-limit-focused-recovery.v1.schema.json", authorization
+    )
+    if errors:
+        raise BootstrapError("Hard-limit focused recovery authorization is invalid: " + "; ".join(errors))
+    output.parent.mkdir(parents=True, exist_ok=True)
+    write_json(output, authorization)
+    print(f"Authorized hard-limit focused recovery at {output}")
+    return 0
+
+
 def command_prepare(args: argparse.Namespace) -> int:
     repository_root = Path(args.repository_root).resolve()
     if not repository_root.is_dir():
@@ -3582,6 +3951,35 @@ def command_prepare(args: argparse.Namespace) -> int:
         predecessor_path = ensure_within(predecessor_candidate, repository_root, "Predecessor run")
         predecessor_run = predecessor_path.relative_to(repository_root).as_posix()
     profile = load_profile(args.profile)
+    hard_limit_recovery_binding: dict[str, str] | None = None
+    hard_limit_repair_binding: dict[str, str] | None = None
+    if args.hard_limit_repair_recovery:
+        if (
+            args.profile != "bootstrap-focused-repair-verification"
+            or args.review_round != REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+            or predecessor_run is None
+            or args.round_entry_reason is not None
+            or args.finding_mode_reentry_authorization
+            or args.acceptance_repair_route
+            or args.acceptance_repair_completeness
+        ):
+            raise BootstrapError(
+                "Hard-limit recovery is valid only for verification-only focused recovery at Round 3"
+            )
+        recovery_path = Path(args.hard_limit_repair_recovery)
+        if not recovery_path.is_absolute():
+            recovery_path = repository_root / recovery_path
+        recovery_path = ensure_within(
+            recovery_path, repository_root, "Hard-limit focused recovery authorization"
+        )
+        hard_limit_recovery_binding, hard_limit_repair_binding = (
+            validate_hard_limit_recovery_authorization(
+                recovery_path,
+                repository_root,
+                args.lineage_family_id,
+                predecessor_run,
+            )
+        )
     scope_inputs = list(args.scope)
     if args.knowledge_context:
         # Reviewers receive the bound request/result/decision document itself,
@@ -3654,6 +4052,7 @@ def command_prepare(args: argparse.Namespace) -> int:
         dependency_closure,
         args.round_entry_reason,
         high_risk_boundaries,
+        hard_limit_recovery=hard_limit_recovery_binding is not None,
     )
     removed_snapshot_sources: list[dict[str, Any]] = []
     if isinstance(repair_review_delta, dict):
@@ -3739,35 +4138,44 @@ def command_prepare(args: argparse.Namespace) -> int:
         "authorityClass": AUTHORITY_CLASS,
         "artifacts": artifacts,
     }
+    if hard_limit_recovery_binding is not None:
+        manifest["hardLimitRepairRecovery"] = hard_limit_recovery_binding
     validated_acceptance_route_path: Path | None = None
     if args.review_round > 1:
-        if not args.repair_closure:
+        if not args.repair_closure and hard_limit_repair_binding is None:
             raise BootstrapError("Review rounds after round 1 require --repair-closure")
         predecessor_dir = ensure_within(repository_root / predecessor_run, repository_root, "Predecessor run")
         predecessor_manifest = read_json(predecessor_dir / "review-input.json")
-        closure_path = Path(args.repair_closure)
-        if not closure_path.is_absolute():
-            closure_path = repository_root / closure_path
-        closure_path = ensure_within(closure_path, repository_root, "Repair closure")
-        validate_repair_closure(
-            closure_path,
-            repository_root,
-            predecessor_dir,
-            predecessor_manifest,
-            repair_binding_hashes(artifacts, context_class_artifacts, plan_bound_checks),
-            current_git_index_hash,
-            write_set,
-            execution_read_set,
-            dependency_closure,
-        )
-        manifest["repairClosure"] = {
-            "path": closure_path.relative_to(repository_root).as_posix(),
-            "sha256": file_hash(closure_path),
-        }
+        if hard_limit_repair_binding is not None:
+            if args.repair_closure:
+                raise BootstrapError(
+                    "Hard-limit focused recovery derives repair closure from its authorization"
+                )
+            manifest["repairClosure"] = hard_limit_repair_binding
+        else:
+            closure_path = Path(args.repair_closure)
+            if not closure_path.is_absolute():
+                closure_path = repository_root / closure_path
+            closure_path = ensure_within(closure_path, repository_root, "Repair closure")
+            validate_repair_closure(
+                closure_path,
+                repository_root,
+                predecessor_dir,
+                predecessor_manifest,
+                repair_binding_hashes(artifacts, context_class_artifacts, plan_bound_checks),
+                current_git_index_hash,
+                write_set,
+                execution_read_set,
+                dependency_closure,
+            )
+            manifest["repairClosure"] = {
+                "path": closure_path.relative_to(repository_root).as_posix(),
+                "sha256": file_hash(closure_path),
+            }
         if args.profile in {
             "bootstrap-implementation-conformance",
             "bootstrap-focused-repair-verification",
-        }:
+        } and hard_limit_recovery_binding is None:
             if not args.acceptance_repair_route or not args.acceptance_repair_completeness:
                 raise BootstrapError(
                     "Implementation-conformance repair rounds require Acceptance route bindings"
@@ -3931,11 +4339,20 @@ def validate_manifest_controls(
             or manifest.get("reviewEntryDecision") is not None
         ):
             raise BootstrapError("Round 2 requires repair delta and no Round 3 entry decision")
-        if review_round == 3 and (
-            not isinstance(manifest.get("repairReviewDelta"), dict)
-            or not isinstance(manifest.get("reviewEntryDecision"), dict)
-        ):
-            raise BootstrapError("Round 3 requires repair delta and typed entry decision")
+        if review_round == 3:
+            hard_limit_recovery = manifest.get("hardLimitRepairRecovery")
+            if isinstance(hard_limit_recovery, dict):
+                if (
+                    manifest.get("profileName") != "bootstrap-focused-repair-verification"
+                    or not isinstance(manifest.get("repairReviewDelta"), dict)
+                    or manifest.get("reviewEntryDecision") is not None
+                ):
+                    raise BootstrapError("Hard-limit focused recovery lineage evidence is invalid")
+            elif (
+                not isinstance(manifest.get("repairReviewDelta"), dict)
+                or not isinstance(manifest.get("reviewEntryDecision"), dict)
+            ):
+                raise BootstrapError("Round 3 requires repair delta and typed entry decision")
     if manifest.get("executionMode") not in EXECUTION_MODES:
         raise BootstrapError("review-input.json has an invalid executionMode")
     control_plane_policy = manifest.get("controlPlanePolicy")
@@ -4132,6 +4549,7 @@ def load_run(
         entry.get("reason") if isinstance(entry, dict) else None,
         entry.get("highRiskBoundaryArtifacts", []) if isinstance(entry, dict) else [],
         historical_replay=not require_fresh_artifacts,
+        hard_limit_recovery=isinstance(manifest.get("hardLimitRepairRecovery"), dict),
     )
     if isinstance(repair_delta, dict) and repair_delta.get("removedArtifacts"):
         predecessor_dir = ensure_within(
@@ -4197,23 +4615,39 @@ def load_run(
             raise BootstrapError("Repair closure is missing or stale")
         predecessor_dir = repository_root / manifest["predecessorRun"]
         predecessor_manifest = read_json(predecessor_dir / "review-input.json")
-        validate_repair_closure(
-            closure_path,
-            repository_root,
-            predecessor_dir,
-            predecessor_manifest,
-            repair_binding_hashes(
-                manifest["artifacts"], manifest["contextClassArtifacts"], manifest["planBoundRequiredChecks"]
-            ),
-            manifest["gitIndexHash"],
-            manifest["writeSet"],
-            manifest["executionReadSet"],
-            manifest["dependencyClosure"],
-        )
+        hard_limit_binding = manifest.get("hardLimitRepairRecovery")
+        if isinstance(hard_limit_binding, dict):
+            recovery_path = ensure_within(
+                repository_root / str(hard_limit_binding.get("path", "")),
+                repository_root,
+                "Hard-limit focused recovery authorization",
+            )
+            expected_recovery, expected_closure = validate_hard_limit_recovery_authorization(
+                recovery_path,
+                repository_root,
+                effective_lineage_family(manifest),
+                manifest["predecessorRun"],
+            )
+            if hard_limit_binding != expected_recovery or closure_binding != expected_closure:
+                raise BootstrapError("Hard-limit recovery manifest binding is stale")
+        else:
+            validate_repair_closure(
+                closure_path,
+                repository_root,
+                predecessor_dir,
+                predecessor_manifest,
+                repair_binding_hashes(
+                    manifest["artifacts"], manifest["contextClassArtifacts"], manifest["planBoundRequiredChecks"]
+                ),
+                manifest["gitIndexHash"],
+                manifest["writeSet"],
+                manifest["executionReadSet"],
+                manifest["dependencyClosure"],
+            )
         if manifest.get("profileName") in {
             "bootstrap-implementation-conformance",
             "bootstrap-focused-repair-verification",
-        }:
+        } and not isinstance(hard_limit_binding, dict):
             route_binding = manifest.get("acceptanceRepairRoute")
             completeness_binding = manifest.get("acceptanceRepairCompleteness")
             if not isinstance(route_binding, dict) or not isinstance(completeness_binding, dict):
@@ -4779,7 +5213,7 @@ def command_prove_access(args: argparse.Namespace) -> int:
         raise BootstrapError(
             f"Access proof role {proof_role} is forbidden by finding mode {manifest.get('findingMode')}"
         )
-    if proof_role == "discovery":
+    if proof_role in {"discovery", FOCUSED_REPAIR_ROLE}:
         validate_preflight_result(run_dir, manifest)
     else:
         validate_launch_authorization(run_dir, manifest)
@@ -7576,7 +8010,9 @@ def validate_finalized_run_evidence(
 
 
 def command_validate_finalized_run(args: argparse.Namespace) -> int:
-    run_dir, manifest, repository_root = load_run(args.run_dir)
+    run_dir, manifest, repository_root = load_run(
+        args.run_dir, require_fresh_artifacts=False
+    )
     if manifest["profileName"] == "bootstrap-focused-repair-verification":
         saved_path = run_dir / "focused-repair-validation-envelope.json"
         saved = read_json(saved_path)
@@ -7590,13 +8026,29 @@ def command_validate_finalized_run(args: argparse.Namespace) -> int:
         )
         if saved != envelope:
             raise BootstrapError("Focused repair validation envelope is stale")
+        if isinstance(manifest.get("hardLimitRepairRecovery"), dict):
+            authority_path = run_dir / "hard-limit-protocol-repair-authority.json"
+            authority = read_json(authority_path)
+            if not isinstance(authority, dict) or not isinstance(authority.get("generatedAt"), str):
+                raise BootstrapError("Hard-limit protocol repair authority is missing or invalid")
+            expected_authority = hard_limit_protocol_repair_authority(
+                run_dir,
+                manifest,
+                repository_root,
+                envelope,
+                generated_at=authority["generatedAt"],
+            )
+            if authority != expected_authority:
+                raise BootstrapError("Hard-limit protocol repair authority is stale")
         output_path = ensure_within(
             Path(args.output).resolve(), repository_root, "Finalized-run validation output"
         )
         write_json(output_path, envelope)
         print(f"Validated focused repair verification: {envelope['status']}")
         return 0
-    envelope = validate_finalized_run_evidence(run_dir, manifest, repository_root)
+    envelope = validate_finalized_run_evidence(
+        run_dir, manifest, repository_root, historical_replay=True
+    )
     errors = schema_validation_errors(
         "bootstrap-finalized-run-validation.v3.schema.json", envelope
     )
@@ -7628,12 +8080,32 @@ def command_finalize(args: argparse.Namespace) -> int:
             )
             if saved != expected:
                 raise BootstrapError("Focused repair validation envelope is stale")
+            if isinstance(manifest.get("hardLimitRepairRecovery"), dict):
+                authority_path = run_dir / "hard-limit-protocol-repair-authority.json"
+                authority = read_json(authority_path)
+                if not isinstance(authority, dict) or not isinstance(authority.get("generatedAt"), str):
+                    raise BootstrapError("Hard-limit protocol repair authority is missing or invalid")
+                if authority != hard_limit_protocol_repair_authority(
+                    run_dir,
+                    manifest,
+                    repository_root,
+                    saved,
+                    generated_at=authority["generatedAt"],
+                ):
+                    raise BootstrapError("Hard-limit protocol repair authority is stale")
             print(f"Focused repair verification is already finalized: {saved['status']}")
             return 0
         envelope = focused_repair_validation_envelope(
             run_dir, manifest, repository_root
         )
         write_json(envelope_path, envelope)
+        if isinstance(manifest.get("hardLimitRepairRecovery"), dict):
+            write_json(
+                run_dir / "hard-limit-protocol-repair-authority.json",
+                hard_limit_protocol_repair_authority(
+                    run_dir, manifest, repository_root, envelope
+                ),
+            )
         print(f"Finalized focused repair verification: {envelope['status']}")
         return 0
     stale_after_repair = False
@@ -9504,6 +9976,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="User-confirmed recommendation/confidence sidecar required for discovery after Round 1",
     )
     prepare.add_argument(
+        "--hard-limit-repair-recovery",
+        help="Typed Round 3 verification-only recovery authorization; does not create Round 4",
+    )
+    prepare.add_argument(
         "--round-entry-reason",
         choices=sorted(ROUND_THREE_ENTRY_REASONS),
         help="Typed Round 3 entry reason; invalid outside Round 3",
@@ -9578,6 +10054,22 @@ def build_parser() -> argparse.ArgumentParser:
     finding_reentry.add_argument("--user-confirmed", action="store_true")
     finding_reentry.add_argument("--out", required=True)
     finding_reentry.set_defaults(handler=command_authorize_finding_mode_reentry)
+    hard_limit_recovery = subparsers.add_parser(
+        "authorize-hard-limit-focused-recovery",
+        help="Bind explicit user confirmation for one verification-only repair check after blocked Round 3",
+    )
+    hard_limit_recovery.add_argument("--repository-root", required=True)
+    hard_limit_recovery.add_argument("--lineage-family-id", required=True)
+    hard_limit_recovery.add_argument("--predecessor-run-dir", required=True)
+    hard_limit_recovery.add_argument("--deterministic-repair-closure", required=True)
+    hard_limit_recovery.add_argument(
+        "--recommendation", required=True, choices=["recommend", "do_not_recommend"]
+    )
+    hard_limit_recovery.add_argument("--confidence", required=True, type=float)
+    hard_limit_recovery.add_argument("--rationale", required=True)
+    hard_limit_recovery.add_argument("--user-confirmed", action="store_true")
+    hard_limit_recovery.add_argument("--out", required=True)
+    hard_limit_recovery.set_defaults(handler=command_authorize_hard_limit_focused_recovery)
     authorize = subparsers.add_parser(
         "authorize-launch",
         help="Freeze preflight, authority, cost and cycle state before reviewers start",

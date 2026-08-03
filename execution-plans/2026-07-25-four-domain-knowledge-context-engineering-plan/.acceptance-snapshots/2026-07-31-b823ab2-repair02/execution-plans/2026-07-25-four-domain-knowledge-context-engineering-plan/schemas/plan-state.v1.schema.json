@@ -1,0 +1,105 @@
+{
+  "$id": "jimuyun.knowledge-plan-state.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authorizes": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "git_head": {
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$",
+      "type": "string"
+    },
+    "plan_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "profile": {
+      "const": "resumable"
+    },
+    "schema_version": {
+      "const": "jimuyun.knowledge-plan-state.v1"
+    },
+    "source_requirements": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "plan-ready",
+        "implementation-authorized",
+        "implementation-complete",
+        "acceptance-passed",
+        "archived"
+      ]
+    },
+    "status_history": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "plan-ready",
+              "implementation-authorized",
+              "implementation-complete",
+              "acceptance-passed",
+              "archived"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "reason",
+          "evidence"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "plan_id",
+    "status",
+    "profile",
+    "git_head",
+    "source_requirements",
+    "authorizes",
+    "status_history"
+  ],
+  "type": "object"
+}

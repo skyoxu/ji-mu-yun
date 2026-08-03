@@ -1,0 +1,755 @@
+{
+  "decision": {
+    "schemaVersion": "implementation-acceptance-bootstrap-requirement.v1",
+    "requirement": "required",
+    "requirementSources": [
+      ".agents/skills/run-refactor-implementation-acceptance/SKILL.md#Bootstrap-Routing",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md"
+    ],
+    "requiredCompanionCapabilityExpectations": [
+      {
+        "capabilityId": "acceptance-inventory-attestation",
+        "capabilityVersion": "1.0",
+        "producerRole": "acceptance_auditor"
+      }
+    ],
+    "authorizes": []
+  },
+  "binding": null,
+  "launch_authorization": null,
+  "repository_root": "C:/jimuyun",
+  "scope_inputs": {
+    "implementation_plan": [
+      "execution-plans/2026-07-26-knowledge-locator-workflow-integration/00-index.md",
+      "execution-plans/2026-07-26-knowledge-locator-workflow-integration/01-requirements-and-acceptance.md",
+      "execution-plans/2026-07-26-knowledge-locator-workflow-integration/implementation-contract.v1.json"
+    ],
+    "changed_production_code": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+      "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "knowledge/indexes/current.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/evaluation/query-report.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/consumer-policies.v2.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/repository-knowledge-query-suite.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/source-exclusions.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/consumer-projections.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v2.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-source-snapshot.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/manifest.json",
+      "knowledge/indexes/last-known-good.json",
+      "knowledge/projections/consumer-projections.v1.json",
+      "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "scripts/python/knowledge_context_validation.py",
+      "scripts/python/tests/test_knowledge_context_validation.py",
+      "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "scripts/python/tests/test_publish_knowledge_catalog.py"
+    ],
+    "affected_consumers": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+      "scripts/python/publish_knowledge_catalog.py",
+      "scripts/python/validate_knowledge_workflow_integration.py"
+    ],
+    "tests_and_acceptance": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+      "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-command-registry.p2.v1.json",
+      "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json",
+      "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-closure.json",
+      "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S7/RUN-20260803T044719-632990Z/implementation-complete-result.json",
+      "scripts/python/tests/test_knowledge_context_validation.py",
+      "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "scripts/python/tests/test_publish_knowledge_catalog.py"
+    ],
+    "runtime_evidence": [
+      "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-completeness.p4.v1.json",
+      "logs/ci/2026-07-27/review-gateway-bootstrap-knowledge-locator-workflow-plan-r3b-20260727/finalized-run-validation.v3.json"
+    ],
+    "repository_rules": [
+      "AGENTS.md"
+    ],
+    "referenced_standards": [
+      "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
+      "docs/standards/bootstrap-review-control-plane.md"
+    ]
+  },
+  "lineage_state": {
+    "schemaVersion": "bootstrap-review-lineage-state.v1",
+    "lineageFamilyId": "ria-66a252608cb9c06dafa0db2a93005299",
+    "semanticRoundsConsumed": 3,
+    "consumedRoundNumbers": [
+      1,
+      2,
+      3
+    ],
+    "defaultFullReviewRoundLimit": 2,
+    "hardFullReviewRoundLimit": 3,
+    "nextFullReviewRound": null,
+    "state": "manual_pause",
+    "runs": [
+      {
+        "runDirectory": "logs/ci/2026-07-26/review-gateway-bootstrap-knowledge-locator-workflow-plan-r1-20260726",
+        "reviewId": "knowledge-locator-workflow-plan-r1-20260726",
+        "changeId": "knowledge-locator-workflow-plan-v1",
+        "fullReviewRound": 1,
+        "inputHash": "sha256:e7a3f42beef7b34935ac01ce1a4d6a6efb4b743e36622a223009cdb21225f4d2"
+      },
+      {
+        "runDirectory": "logs/ci/2026-07-26/review-gateway-bootstrap-knowledge-locator-workflow-plan-r2-20260726",
+        "reviewId": "knowledge-locator-workflow-plan-r2-20260726",
+        "changeId": "knowledge-locator-workflow-plan-v1",
+        "fullReviewRound": 2,
+        "inputHash": "sha256:0ff0e0777e614ac857486fb51cc14a9e4ba26b52996557879648913df03280fb"
+      },
+      {
+        "runDirectory": "logs/ci/2026-07-27/review-gateway-bootstrap-knowledge-locator-workflow-plan-r3b-20260727",
+        "reviewId": "knowledge-locator-workflow-plan-r3b-20260727",
+        "changeId": "knowledge-locator-workflow-plan-v1",
+        "fullReviewRound": 3,
+        "inputHash": "sha256:9288ab9c8a066d224f512533339d9ed7b9df868ad66e2cfb6a4841ef156f0f68"
+      }
+    ],
+    "authorizes": [],
+    "lineageStateHash": "sha256:007bb0171d51389bee0b1cfd28a7484709ec67e0fee3f93e3f16c7cf5e02a11c"
+  },
+  "repair_completeness": {
+    "acceptanceTarget": "execution-plans/2026-07-26-knowledge-locator-workflow-integration",
+    "authorityGraphArtifacts": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py"
+    ],
+    "authorityGraphChanged": true,
+    "authorizes": [],
+    "baselineManifest": {
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/acceptance-inputs/2026-08-03-f3bb60c-repair-r1p3/baseline-content-manifest.v1.json",
+      "sha256": "sha256:30133fc03e24bce00db4ab5b65e8411f7ef990e481ed118e91ebb68c277a931d"
+    },
+    "candidateManifest": {
+      "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/acceptance-inputs/2026-08-03-f3bb60c-repair-r1p3/candidate-content-manifest.v1.json",
+      "sha256": "sha256:00b6d25bdbba0a3fd64c1385c281ef448ca35613fbe0ff4ea42debc1bca92452"
+    },
+    "changedPathBindings": [
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        "sha256": "sha256:0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b",
+        "state": "present"
+      },
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+        "sha256": "sha256:9b968472086453fba4a20447e5b594f4d572c5fe8fd9eadb3d0a1bf51a742b20",
+        "state": "present"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+        "sha256": "sha256:ec27ce244db1f55d3eab0e8331422f5888bb4cef668e9ee6e37dedab45b7a023",
+        "state": "present"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+        "sha256": "sha256:3cd7c81b09dc3e3e163302a9e26db77406b44dd8e5e027a202098a2d2d3d2c43",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+        "sha256": "sha256:8c4b73849255e1b4ab3db4de6aacd2d0557810d4491099b15f13ce106988eb71",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+        "sha256": "sha256:23f7990d05840072b9f57f47143197157bf732834adc3670cd3c6e9a3cdd988b",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/current.json",
+        "sha256": "sha256:5fd54f53ff82af1765563c3acdec0500ba1d007fbce1d721c74f3a44eb9d3050",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/evaluation/query-report.v1.json",
+        "sha256": "sha256:534775023ff93a51419e5c1bf306ce865f2c572eed75babf70ec01d2d63bd16b",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/consumer-policies.v2.json",
+        "sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/repository-knowledge-query-suite.v1.json",
+        "sha256": "sha256:758ad3841098a3b5c0ecc330c01583f88c8901e4145662237ffce4f17385dcf8",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/source-exclusions.v1.json",
+        "sha256": "sha256:c12514d500252b84c93041ccb2b564419a6d72bc77546af20dfde1e378287f2d",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/consumer-projections.v1.json",
+        "sha256": "sha256:eb7bf70e26d0004a9a1819b65e07ec75ca3e20f8a9327254697739d41c3ba90f",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v1.json",
+        "sha256": "sha256:8c4b73849255e1b4ab3db4de6aacd2d0557810d4491099b15f13ce106988eb71",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v2.json",
+        "sha256": "sha256:23f7990d05840072b9f57f47143197157bf732834adc3670cd3c6e9a3cdd988b",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-source-snapshot.v1.json",
+        "sha256": "sha256:9a98489f56e8472dd98bdce907862e50c02f6ab3e7736605f91fb8244c87913a",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/manifest.json",
+        "sha256": "sha256:32cbc2620ee597ab481992434e02edaf6e8bcb106e55f9fc940764b82e37f4cd",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/indexes/last-known-good.json",
+        "sha256": "sha256:5fd54f53ff82af1765563c3acdec0500ba1d007fbce1d721c74f3a44eb9d3050",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/projections/consumer-projections.v1.json",
+        "sha256": "sha256:eb7bf70e26d0004a9a1819b65e07ec75ca3e20f8a9327254697739d41c3ba90f",
+        "state": "present"
+      },
+      {
+        "path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+        "sha256": "sha256:9a98489f56e8472dd98bdce907862e50c02f6ab3e7736605f91fb8244c87913a",
+        "state": "present"
+      },
+      {
+        "path": "scripts/python/knowledge_context_validation.py",
+        "sha256": "sha256:984e052c35120cc0b69a948379f26848ca6c4576ce0bde7508536d791b3c392b",
+        "state": "present"
+      },
+      {
+        "path": "scripts/python/tests/test_knowledge_context_validation.py",
+        "sha256": "sha256:0ac004f895b36448ca34dd512200b6cf35424905b11a6c1771fde6a00c30de17",
+        "state": "present"
+      },
+      {
+        "path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+        "sha256": "sha256:2a256dfa5c9e7cfbfab469ebbf2a58f5483e9b0cb38e431944b0aacaad54a10f",
+        "state": "present"
+      },
+      {
+        "path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+        "sha256": "sha256:dc84738fbbc316fec8cd8f2e01a10673de9c9e34365a3555d8991272a3f210a4",
+        "state": "present"
+      }
+    ],
+    "changedPaths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+      "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "knowledge/indexes/current.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/evaluation/query-report.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/consumer-policies.v2.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/repository-knowledge-query-suite.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/source-exclusions.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/consumer-projections.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v2.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-source-snapshot.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/manifest.json",
+      "knowledge/indexes/last-known-good.json",
+      "knowledge/projections/consumer-projections.v1.json",
+      "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "scripts/python/knowledge_context_validation.py",
+      "scripts/python/tests/test_knowledge_context_validation.py",
+      "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "scripts/python/tests/test_publish_knowledge_catalog.py"
+    ],
+    "compositionChecks": [
+      {
+        "bindings": [
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+            "role": "producer",
+            "sha256": "sha256:0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+            "role": "producer",
+            "sha256": "sha256:9b968472086453fba4a20447e5b594f4d572c5fe8fd9eadb3d0a1bf51a742b20"
+          },
+          {
+            "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+            "role": "producer",
+            "sha256": "sha256:ec27ce244db1f55d3eab0e8331422f5888bb4cef668e9ee6e37dedab45b7a023"
+          },
+          {
+            "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+            "role": "producer",
+            "sha256": "sha256:3cd7c81b09dc3e3e163302a9e26db77406b44dd8e5e027a202098a2d2d3d2c43"
+          },
+          {
+            "path": "scripts/python/knowledge_context_validation.py",
+            "role": "producer",
+            "sha256": "sha256:984e052c35120cc0b69a948379f26848ca6c4576ce0bde7508536d791b3c392b"
+          },
+          {
+            "path": "scripts/python/tests/test_knowledge_context_validation.py",
+            "role": "producer",
+            "sha256": "sha256:0ac004f895b36448ca34dd512200b6cf35424905b11a6c1771fde6a00c30de17"
+          },
+          {
+            "path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+            "role": "producer",
+            "sha256": "sha256:2a256dfa5c9e7cfbfab469ebbf2a58f5483e9b0cb38e431944b0aacaad54a10f"
+          },
+          {
+            "path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+            "role": "producer",
+            "sha256": "sha256:dc84738fbbc316fec8cd8f2e01a10673de9c9e34365a3555d8991272a3f210a4"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+            "role": "consumer",
+            "sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88"
+          },
+          {
+            "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+            "role": "consumer",
+            "sha256": "sha256:59eefc772528f560d246f913f43c43e26de1b35c94f47ccbc3952dd9158c60d6"
+          },
+          {
+            "path": ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+            "role": "consumer",
+            "sha256": "sha256:28aed230c26b6520b375726571e9bf280f7b90dd304b5ed4a712f31799ae5c7e"
+          },
+          {
+            "path": "scripts/python/publish_knowledge_catalog.py",
+            "role": "consumer",
+            "sha256": "sha256:5faec98277e3d4200fe9c7c525d85c9b317c0f986a8450e316c72faeb7895da2"
+          },
+          {
+            "path": "scripts/python/validate_knowledge_workflow_integration.py",
+            "role": "consumer",
+            "sha256": "sha256:245aa1ac1d3529f94665bcb88c1b92a594fbec5396f830cd19a92671d89f9e3d"
+          }
+        ],
+        "checkId": "kwi-round3-repair-composition",
+        "commandRegistry": {
+          "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-command-registry.p2.v1.json",
+          "sha256": "sha256:57d7adf6884d58b7cd2ee1dfc8b955be8c52d9f70153681c0cdc0ecaca182544"
+        },
+        "receipt": {
+          "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json",
+          "sha256": "sha256:c6170fa8932fef4d6d8d5ca0b09072a3d926d5e2014e9fbf1ac055ed86dc0789"
+        }
+      }
+    ],
+    "directConsumers": [
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+        "sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88"
+      },
+      {
+        "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        "sha256": "sha256:59eefc772528f560d246f913f43c43e26de1b35c94f47ccbc3952dd9158c60d6"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+        "sha256": "sha256:28aed230c26b6520b375726571e9bf280f7b90dd304b5ed4a712f31799ae5c7e"
+      },
+      {
+        "path": "scripts/python/publish_knowledge_catalog.py",
+        "sha256": "sha256:5faec98277e3d4200fe9c7c525d85c9b317c0f986a8450e316c72faeb7895da2"
+      },
+      {
+        "path": "scripts/python/validate_knowledge_workflow_integration.py",
+        "sha256": "sha256:245aa1ac1d3529f94665bcb88c1b92a594fbec5396f830cd19a92671d89f9e3d"
+      }
+    ],
+    "highRiskBoundaryArtifacts": [],
+    "highRiskBoundaryChanged": false,
+    "lineageFamilyId": "ria-66a252608cb9c06dafa0db2a93005299",
+    "novelP0P1FindingIds": [
+      "BSR-4F8A9341CD3CDFBC",
+      "BSR-59092136A5D5D414",
+      "BSR-ABDD6277892B502F",
+      "BSR-F0AF746EDA67B150"
+    ],
+    "predecessorRun": "logs/ci/2026-07-27/review-gateway-bootstrap-knowledge-locator-workflow-plan-r3b-20260727",
+    "requestHash": "sha256:5edafdd04d37bc643ede74df71b18b6e46b09a220f78bdc8f11b0af83b031b45",
+    "rootCauseInventories": [
+      {
+        "addressedPaths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "current-slice-evidence-router",
+        "matches": [
+          {
+            "lineNumbers": [
+              117
+            ],
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+            "sha256": "sha256:0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b"
+          }
+        ],
+        "searchRoots": [
+          ".agents/skills/quick-dev-tdd-adapter/tools"
+        ],
+        "searchTerm": "result.get(\"predicate\") == exit_predicate"
+      },
+      {
+        "addressedPaths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "targeted-validation-regression",
+        "matches": [
+          {
+            "lineNumbers": [
+              76
+            ],
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+            "sha256": "sha256:9b968472086453fba4a20447e5b594f4d572c5fe8fd9eadb3d0a1bf51a742b20"
+          }
+        ],
+        "searchRoots": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+        ],
+        "searchTerm": "test_router_accepts_current_slice_evidence_with_targeted_validation"
+      },
+      {
+        "addressedPaths": [
+          ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "bounded-rejection-reason",
+        "matches": [
+          {
+            "lineNumbers": [
+              101
+            ],
+            "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+            "sha256": "sha256:ec27ce244db1f55d3eab0e8331422f5888bb4cef668e9ee6e37dedab45b7a023"
+          }
+        ],
+        "searchRoots": [
+          ".agents/skills/vdd-execution-plan/scripts"
+        ],
+        "searchTerm": "insufficient_specificity"
+      },
+      {
+        "addressedPaths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "required-module-preflight-regression",
+        "matches": [
+          {
+            "lineNumbers": [
+              197
+            ],
+            "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+            "sha256": "sha256:3cd7c81b09dc3e3e163302a9e26db77406b44dd8e5e027a202098a2d2d3d2c43"
+          }
+        ],
+        "searchRoots": [
+          ".agents/skills/vdd-execution-plan/scripts"
+        ],
+        "searchTerm": "required_modules_unsatisfied"
+      },
+      {
+        "addressedPaths": [
+          "scripts/python/knowledge_context_validation.py",
+          "scripts/python/tests/test_knowledge_context_validation.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "context-owner-validation",
+        "matches": [
+          {
+            "lineNumbers": [
+              275
+            ],
+            "path": "scripts/python/knowledge_context_validation.py",
+            "sha256": "sha256:984e052c35120cc0b69a948379f26848ca6c4576ce0bde7508536d791b3c392b"
+          },
+          {
+            "lineNumbers": [
+              113
+            ],
+            "path": "scripts/python/tests/test_knowledge_context_validation.py",
+            "sha256": "sha256:0ac004f895b36448ca34dd512200b6cf35424905b11a6c1771fde6a00c30de17"
+          }
+        ],
+        "searchRoots": [
+          "scripts/python"
+        ],
+        "searchTerm": "consumption_decision_owner_invalid"
+      },
+      {
+        "addressedPaths": [
+          "scripts/python/tests/test_knowledge_workflow_terminal.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "terminal-consumer-contract",
+        "matches": [
+          {
+            "lineNumbers": [
+              22
+            ],
+            "path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+            "sha256": "sha256:2a256dfa5c9e7cfbfab469ebbf2a58f5483e9b0cb38e431944b0aacaad54a10f"
+          }
+        ],
+        "searchRoots": [
+          "scripts/python/tests"
+        ],
+        "searchTerm": "module.CONSUMERS"
+      },
+      {
+        "addressedPaths": [
+          "scripts/python/tests/test_publish_knowledge_catalog.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "windows-long-path-checkout",
+        "matches": [
+          {
+            "lineNumbers": [
+              407
+            ],
+            "path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+            "sha256": "sha256:dc84738fbbc316fec8cd8f2e01a10673de9c9e34365a3555d8991272a3f210a4"
+          }
+        ],
+        "searchRoots": [
+          "scripts/python/tests"
+        ],
+        "searchTerm": "core.sparseCheckout"
+      }
+    ],
+    "schemaVersion": "acceptance-repair-completeness.v1",
+    "semanticRoundsConsumed": 3,
+    "status": "passed",
+    "targetedTests": [
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+        "sha256": "sha256:9b968472086453fba4a20447e5b594f4d572c5fe8fd9eadb3d0a1bf51a742b20"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+        "sha256": "sha256:3cd7c81b09dc3e3e163302a9e26db77406b44dd8e5e027a202098a2d2d3d2c43"
+      },
+      {
+        "path": "scripts/python/tests/test_knowledge_context_validation.py",
+        "sha256": "sha256:0ac004f895b36448ca34dd512200b6cf35424905b11a6c1771fde6a00c30de17"
+      },
+      {
+        "path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+        "sha256": "sha256:2a256dfa5c9e7cfbfab469ebbf2a58f5483e9b0cb38e431944b0aacaad54a10f"
+      },
+      {
+        "path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+        "sha256": "sha256:dc84738fbbc316fec8cd8f2e01a10673de9c9e34365a3555d8991272a3f210a4"
+      }
+    ],
+    "validationRefs": [
+      {
+        "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json",
+        "sha256": "sha256:c6170fa8932fef4d6d8d5ca0b09072a3d926d5e2014e9fbf1ac055ed86dc0789"
+      },
+      {
+        "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-closure.json",
+        "sha256": "sha256:a64364c15c9d774c35b4576b17aeab35a55caea6593c37c87afbf6a242f47580"
+      },
+      {
+        "path": "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S7/RUN-20260803T044719-632990Z/implementation-complete-result.json",
+        "sha256": "sha256:78ff8dfe76239d53586ca9a5e1738e6a7713490fcc888ac0a96b3321b529d0ad"
+      }
+    ]
+  },
+  "repair_completeness_request": {
+    "acceptanceTarget": "execution-plans/2026-07-26-knowledge-locator-workflow-integration",
+    "authorityGraphChanged": true,
+    "authorizes": [],
+    "baselineManifestHash": "sha256:30133fc03e24bce00db4ab5b65e8411f7ef990e481ed118e91ebb68c277a931d",
+    "baselineManifestPath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/acceptance-inputs/2026-08-03-f3bb60c-repair-r1p3/baseline-content-manifest.v1.json",
+    "candidateManifestHash": "sha256:00b6d25bdbba0a3fd64c1385c281ef448ca35613fbe0ff4ea42debc1bca92452",
+    "candidateManifestPath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/acceptance-inputs/2026-08-03-f3bb60c-repair-r1p3/candidate-content-manifest.v1.json",
+    "changedPaths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+      "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "knowledge/indexes/current.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/evaluation/query-report.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/consumer-policies.v2.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/repository-knowledge-query-suite.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/source-exclusions.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/consumer-projections.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v2.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-source-snapshot.v1.json",
+      "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/manifest.json",
+      "knowledge/indexes/last-known-good.json",
+      "knowledge/projections/consumer-projections.v1.json",
+      "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "scripts/python/knowledge_context_validation.py",
+      "scripts/python/tests/test_knowledge_context_validation.py",
+      "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "scripts/python/tests/test_publish_knowledge_catalog.py"
+    ],
+    "compositionChecks": [
+      {
+        "checkId": "kwi-round3-repair-composition",
+        "commandRegistryPath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-command-registry.p2.v1.json",
+        "consumerPaths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+          "scripts/python/publish_knowledge_catalog.py",
+          "scripts/python/validate_knowledge_workflow_integration.py"
+        ],
+        "producerPaths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+          ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+          "scripts/python/knowledge_context_validation.py",
+          "scripts/python/tests/test_knowledge_context_validation.py",
+          "scripts/python/tests/test_knowledge_workflow_terminal.py",
+          "scripts/python/tests/test_publish_knowledge_catalog.py"
+        ],
+        "receiptPath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json"
+      }
+    ],
+    "directConsumers": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+      "scripts/python/publish_knowledge_catalog.py",
+      "scripts/python/validate_knowledge_workflow_integration.py"
+    ],
+    "highRiskBoundaryChanged": false,
+    "lineageFamilyId": "ria-66a252608cb9c06dafa0db2a93005299",
+    "novelP0P1FindingIds": [
+      "BSR-4F8A9341CD3CDFBC",
+      "BSR-59092136A5D5D414",
+      "BSR-ABDD6277892B502F",
+      "BSR-F0AF746EDA67B150"
+    ],
+    "predecessorRun": "logs/ci/2026-07-27/review-gateway-bootstrap-knowledge-locator-workflow-plan-r3b-20260727",
+    "repositoryRoot": "C:\\jimuyun",
+    "rootCauseInventories": [
+      {
+        "addressedPaths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "current-slice-evidence-router",
+        "searchRoots": [
+          ".agents/skills/quick-dev-tdd-adapter/tools"
+        ],
+        "searchTerm": "result.get(\"predicate\") == exit_predicate"
+      },
+      {
+        "addressedPaths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "targeted-validation-regression",
+        "searchRoots": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+        ],
+        "searchTerm": "test_router_accepts_current_slice_evidence_with_targeted_validation"
+      },
+      {
+        "addressedPaths": [
+          ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "bounded-rejection-reason",
+        "searchRoots": [
+          ".agents/skills/vdd-execution-plan/scripts"
+        ],
+        "searchTerm": "insufficient_specificity"
+      },
+      {
+        "addressedPaths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "required-module-preflight-regression",
+        "searchRoots": [
+          ".agents/skills/vdd-execution-plan/scripts"
+        ],
+        "searchTerm": "required_modules_unsatisfied"
+      },
+      {
+        "addressedPaths": [
+          "scripts/python/knowledge_context_validation.py",
+          "scripts/python/tests/test_knowledge_context_validation.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "context-owner-validation",
+        "searchRoots": [
+          "scripts/python"
+        ],
+        "searchTerm": "consumption_decision_owner_invalid"
+      },
+      {
+        "addressedPaths": [
+          "scripts/python/tests/test_knowledge_workflow_terminal.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "terminal-consumer-contract",
+        "searchRoots": [
+          "scripts/python/tests"
+        ],
+        "searchTerm": "module.CONSUMERS"
+      },
+      {
+        "addressedPaths": [
+          "scripts/python/tests/test_publish_knowledge_catalog.py"
+        ],
+        "exclusions": [],
+        "inventoryId": "windows-long-path-checkout",
+        "searchRoots": [
+          "scripts/python/tests"
+        ],
+        "searchTerm": "core.sparseCheckout"
+      }
+    ],
+    "schemaVersion": "acceptance-repair-completeness-request.v1",
+    "semanticRoundsConsumed": 3,
+    "targetedTests": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+      "scripts/python/tests/test_knowledge_context_validation.py",
+      "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "scripts/python/tests/test_publish_knowledge_catalog.py"
+    ],
+    "validationRefs": [
+      "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json",
+      "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-closure.json",
+      "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S7/RUN-20260803T044719-632990Z/implementation-complete-result.json"
+    ]
+  }
+}

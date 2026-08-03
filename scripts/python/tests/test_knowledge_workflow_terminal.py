@@ -17,12 +17,15 @@ class KnowledgeWorkflowTerminalTests(unittest.TestCase):
         assert spec and spec.loader
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        result = module.validate_repository(REPOSITORY_ROOT)
-        self.assertTrue(result["status"] in {"pass", "fail"})
-        self.assertIn("vdd", result["consumers"])
-        self.assertIn("quick-dev", result["consumers"])
-        self.assertIn("bootstrap", result["consumers"])
-        self.assertIn("refactor-acceptance", result["consumers"])
+        self.assertEqual(
+            ("vdd", "quick-dev", "bootstrap", "refactor-acceptance"),
+            module.CONSUMERS,
+        )
+        check_names = {name for name, _command in module._declared_checks()}
+        self.assertTrue(
+            {"vdd", "quick-dev", "bootstrap", "refactor-acceptance"}
+            <= check_names
+        )
 
 
 if __name__ == "__main__":

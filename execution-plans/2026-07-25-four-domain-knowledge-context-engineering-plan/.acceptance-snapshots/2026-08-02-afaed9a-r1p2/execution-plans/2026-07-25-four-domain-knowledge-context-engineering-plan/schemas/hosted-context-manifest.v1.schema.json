@@ -1,0 +1,866 @@
+{
+  "$id": "jimuyun.hosted-context-manifest.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "signature": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "const": "HMAC-SHA-256"
+        },
+        "canonicalization": {
+          "const": "RFC8785-JCS"
+        },
+        "canonicalization_revision": {
+          "const": "jimuyun-jcs.v1"
+        },
+        "hmac_base64": {
+          "pattern": "^[A-Za-z0-9+/]{43}=$",
+          "type": "string"
+        },
+        "key_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "signed_payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "canonicalization",
+        "canonicalization_revision",
+        "key_id",
+        "signed_payload_sha256",
+        "hmac_base64"
+      ],
+      "type": "object"
+    },
+    "signed_payload": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "enforcement_level": {
+                  "const": "E1"
+                }
+              }
+            },
+            {
+              "properties": {
+                "enforcement_level": {
+                  "const": "E2"
+                },
+                "gate_mode": {
+                  "const": "enforce"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "oneOf": [
+        {
+          "properties": {
+            "account_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "identity_mode": {
+              "const": "project-bound"
+            },
+            "project_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "project_snapshot_id": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "service_principal_id": {
+              "type": "null"
+            },
+            "workspace_generation": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "workspace_id": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        },
+        {
+          "properties": {
+            "account_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "identity_mode": {
+              "const": "account-bound"
+            },
+            "project_id": {
+              "type": "null"
+            },
+            "project_snapshot_id": {
+              "type": "null"
+            },
+            "service_principal_id": {
+              "type": "null"
+            },
+            "workspace_generation": {
+              "type": "null"
+            },
+            "workspace_id": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "account_id": {
+              "type": "null"
+            },
+            "identity_mode": {
+              "const": "platform-bound"
+            },
+            "project_id": {
+              "type": "null"
+            },
+            "project_snapshot_id": {
+              "type": "null"
+            },
+            "service_principal_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "workspace_generation": {
+              "type": "null"
+            },
+            "workspace_id": {
+              "type": "null"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "account_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "account_policy_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "allowed_dependency_domains": {
+          "items": {
+            "enum": [
+              "toolchain",
+              "phase",
+              "workspace",
+              "marketplace"
+            ]
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "allowed_read_artifact_manifest_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "allowed_read_artifact_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "allowed_read_artifacts": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "artifact_ref": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "sha256": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "artifact_ref",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "minItems": 2,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "allowed_write_paths": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "attempt_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "context_assembly_result_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "context_assembly_result_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "context_assembly": {
+          "additionalProperties": false,
+          "properties": {
+            "execution_prompt_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "input_manifest_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "project_snapshot_id": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "execution_prompt_sha256",
+            "input_manifest_sha256",
+            "project_snapshot_id"
+          ],
+          "type": "object"
+        },
+        "context_budget_profile_revision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "dispatch_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "effective_capabilities": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "enforcement_level": {
+          "enum": [
+            "E1",
+            "E2"
+          ]
+        },
+        "execution_prompt_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expires_at_utc": {
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+          "type": "string"
+        },
+        "gate_mode": {
+          "enum": [
+            "legacy",
+            "observe",
+            "enforce"
+          ]
+        },
+        "global_policy_revision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "hosted_route_contracts": {
+          "additionalProperties": false,
+          "properties": {
+            "applicability_policy_revision": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "aggregate_ref": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "aggregate_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "database_binding": {
+              "additionalProperties": false,
+              "properties": {
+                "binding_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "binding_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "binding_id",
+                "binding_sha256"
+              ],
+              "type": "object"
+            },
+            "forbidden_source_scan": {
+              "additionalProperties": false,
+              "properties": {
+                "contract_id": {
+                  "const": "hosted-route-forbidden-source-scan.v1"
+                },
+                "evidence_ref": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "evidence_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "status": {
+                  "const": "clean"
+                }
+              },
+              "required": [
+                "contract_id",
+                "evidence_ref",
+                "evidence_sha256",
+                "status"
+              ],
+              "type": "object"
+            },
+            "live_acceptance": {
+              "additionalProperties": false,
+              "properties": {
+                "blocker_ref": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "blocker_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "observed_at_utc": {
+                  "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "blocker_ref",
+                "blocker_sha256",
+                "observed_at_utc"
+              ],
+              "type": "object"
+            },
+            "mode": {
+              "enum": [
+                "required",
+                "not_applicable"
+              ]
+            },
+            "reason_code": {
+              "const": "no_pre_dispatch_hosted_route_aggregate"
+            },
+            "recovery_order": {
+              "additionalProperties": false,
+              "properties": {
+                "contract_id": {
+                  "const": "hosted-route-recovery-order.v1"
+                },
+                "evidence_ref": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "evidence_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "contract_id",
+                "evidence_ref",
+                "evidence_sha256"
+              ],
+              "type": "object"
+            },
+            "source_boundary_disposition": {
+              "additionalProperties": false,
+              "properties": {
+                "evidence_ref": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "evidence_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "mode": {
+                  "enum": [
+                    "required",
+                    "not_applicable"
+                  ]
+                }
+              },
+              "required": [
+                "mode",
+                "evidence_ref",
+                "evidence_sha256"
+              ],
+              "type": "object"
+            },
+            "succeeded_run_binding": {
+              "additionalProperties": false,
+              "properties": {
+                "binding_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "run_id": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run_id",
+                "binding_sha256"
+              ],
+              "type": "object"
+            }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "mode": {
+                  "const": "required"
+                }
+              },
+              "required": [
+                "mode",
+                "applicability_policy_revision",
+                "aggregate_ref",
+                "aggregate_sha256",
+                "recovery_order",
+                "forbidden_source_scan",
+                "database_binding",
+                "succeeded_run_binding",
+                "live_acceptance",
+                "source_boundary_disposition"
+              ]
+            },
+            {
+              "not": {
+                "anyOf": [
+                  { "required": ["aggregate_ref"] },
+                  { "required": ["aggregate_sha256"] },
+                  { "required": ["recovery_order"] },
+                  { "required": ["forbidden_source_scan"] },
+                  { "required": ["database_binding"] },
+                  { "required": ["succeeded_run_binding"] },
+                  { "required": ["live_acceptance"] },
+                  { "required": ["source_boundary_disposition"] }
+                ]
+              },
+              "properties": {
+                "mode": {
+                  "const": "not_applicable"
+                }
+              },
+              "required": [
+                "mode",
+                "applicability_policy_revision",
+                "reason_code"
+              ]
+            }
+          ],
+          "required": [
+            "mode",
+            "applicability_policy_revision"
+          ],
+          "type": "object"
+        },
+        "identity_mode": {
+          "enum": [
+            "project-bound",
+            "account-bound",
+            "platform-bound"
+          ]
+        },
+        "issued_at_utc": {
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+          "type": "string"
+        },
+        "lifecycle": {
+          "const": "run-artifact-view"
+        },
+        "manifest_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "max_uses": {
+          "const": 1
+        },
+        "network_policy": {
+          "additionalProperties": false,
+          "properties": {
+            "allowlist_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "mode": {
+              "enum": [
+                "disabled",
+                "provider-only",
+                "allowlisted"
+              ]
+            },
+            "revision": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "revision",
+            "mode",
+            "allowlist_sha256"
+          ],
+          "type": "object"
+        },
+        "nonce": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "not_before_utc": {
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+          "type": "string"
+        },
+        "operation": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "output_targets": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "persisted_prompt_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "primary_domain": {
+          "enum": [
+            "toolchain",
+            "phase",
+            "workspace",
+            "marketplace"
+          ]
+        },
+        "project_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project_restrictions_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project_snapshot_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repository_snapshot_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "route_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "route_policy_revision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sandbox_policy": {
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "enum": [
+                "read-only",
+                "workspace-write"
+              ]
+            },
+            "revision": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "revision",
+            "mode"
+          ],
+          "type": "object"
+        },
+        "schema_version": {
+          "const": "jimuyun.hosted-context-manifest.v1"
+        },
+        "scope_profile_revision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "service_principal_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skill_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skill_policy_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "template_snapshot_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool_execution_policy": {
+          "additionalProperties": false,
+          "properties": {
+            "allowed_tools": {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "command_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "revision": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "revision",
+            "allowed_tools",
+            "command_policy_sha256"
+          ],
+          "type": "object"
+        },
+        "visibility": {
+          "additionalProperties": false,
+          "properties": {
+            "marketplace": {
+              "enum": [
+                "active",
+                "dependency",
+                "conditional",
+                "historical",
+                "excluded"
+              ]
+            },
+            "phase": {
+              "enum": [
+                "active",
+                "dependency",
+                "conditional",
+                "historical",
+                "excluded"
+              ]
+            },
+            "toolchain": {
+              "enum": [
+                "active",
+                "dependency",
+                "conditional",
+                "historical",
+                "excluded"
+              ]
+            },
+            "workspace": {
+              "enum": [
+                "active",
+                "dependency",
+                "conditional",
+                "historical",
+                "excluded"
+              ]
+            }
+          },
+          "required": [
+            "toolchain",
+            "phase",
+            "workspace",
+            "marketplace"
+          ],
+          "type": "object"
+        },
+        "visibility_policy_revision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "workspace_generation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workspace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "manifest_id",
+        "identity_mode",
+        "service_principal_id",
+        "primary_domain",
+        "allowed_dependency_domains",
+        "visibility",
+        "visibility_policy_revision",
+        "lifecycle",
+        "enforcement_level",
+        "gate_mode",
+        "route_id",
+        "skill_id",
+        "operation",
+        "account_id",
+        "project_id",
+        "workspace_id",
+        "workspace_generation",
+        "run_id",
+        "attempt_id",
+        "dispatch_id",
+        "global_policy_revision",
+        "route_policy_revision",
+        "skill_policy_revision",
+        "account_policy_revision",
+        "project_restrictions_sha256",
+        "scope_profile_revision",
+        "effective_capabilities",
+        "repository_snapshot_id",
+        "template_snapshot_id",
+        "project_snapshot_id",
+        "allowed_read_artifact_manifest_ref",
+        "allowed_read_artifact_manifest_sha256",
+        "allowed_read_artifacts",
+        "allowed_write_paths",
+        "output_targets",
+        "context_assembly_result_ref",
+        "context_assembly_result_sha256",
+        "context_assembly",
+        "context_budget_profile_revision",
+        "sandbox_policy",
+        "network_policy",
+        "tool_execution_policy",
+        "hosted_route_contracts",
+        "execution_prompt_hash",
+        "persisted_prompt_hash",
+        "issued_at_utc",
+        "not_before_utc",
+        "expires_at_utc",
+        "nonce",
+        "max_uses"
+      ],
+      "type": "object"
+    },
+    "validation_state": {
+      "additionalProperties": false,
+      "properties": {
+        "gate_result_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "nonce_status": {
+          "enum": [
+            "unused",
+            "consumed"
+          ]
+        },
+        "revocation_status": {
+          "enum": [
+            "active",
+            "revoked",
+            "expired",
+            "consumed",
+            "superseded"
+          ]
+        },
+        "validated_at_utc": {
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "revocation_status",
+        "nonce_status",
+        "validated_at_utc",
+        "gate_result_id"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "signed_payload",
+    "signature",
+    "validation_state"
+  ],
+  "type": "object"
+}

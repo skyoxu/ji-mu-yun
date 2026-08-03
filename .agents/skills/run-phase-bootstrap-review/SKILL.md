@@ -340,6 +340,11 @@ For implementation acceptance, require the Acceptance-owned repair completeness
 audit before re-entry. Its Quick Dev handoff identifies changed files, direct
 consumers, targeted tests, validation references, generated sibling-callsite
 inventories, and successful controlled producer/consumer composition receipts.
+Producer and consumer path sets must be disjoint; a self-composition is not
+consumer evidence. Read-only controlled commands are checked against repository
+file-content hashes, including ignored `logs/` evidence, rather than Git status
+labels alone. Missing tracked paths are represented as stable tombstones so a
+legitimate deletion repair remains replayable.
 Bootstrap consumes the resulting bounded route but does not authorize it or
 reimplement the consumer audit.
 
@@ -356,6 +361,19 @@ Round 2/3 repair closure is checked twice:
 2. Authorize checks current evidence hashes, source/validator bindings, Git index, write set, execution read set, dependency closure, and context freshness.
 
 At the third-round hard limit, unresolved blockers produce manual pause. Do not create Round 4 by changing the review ID.
+
+When a blocked Round 3 reviewed the closure protocol itself and every exact
+finding is repaired, one CLI-authorized hard-limit focused recovery may use
+`bootstrap-focused-repair-verification` at `fullReviewRound=3`. Run
+`authorize-hard-limit-focused-recovery` with the blocked envelope, current
+deterministic repair closure, recommendation/confidence, and explicit user
+confirmation, then pass its result through
+`prepare --hard-limit-repair-recovery`. This verification-only run uses one
+`focused_repair_verifier`, cannot discover or escalate, does not consume a
+semantic round, and cannot authorize Acceptance. A passed run emits a
+composite `manual-pause-protocol-review` authority for the Acceptance closure
+consumer; stale repair bytes, a different family/finding set, non-blocked
+predecessor, or any new blocker fail closed.
 
 ## Seal Without Rewriting History
 

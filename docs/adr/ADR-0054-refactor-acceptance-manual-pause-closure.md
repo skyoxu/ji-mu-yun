@@ -29,6 +29,16 @@ Refactor Acceptance owns a two-stage deterministic manual-pause closure lane.
   complete route, derives the lineage family from the route review scope, the exact
   blocked Round 3 finalized v3 envelope, and every hash-bound final Bootstrap
   artifact referenced by that envelope. Bootstrap history remains immutable.
+- The blocked Round 3 envelope may come from
+  `bootstrap-implementation-conformance` or an adopted
+  `bootstrap-upstream-plan` lineage for the same Acceptance target. Other
+  profiles remain ineligible. The Bootstrap finalized-run validator must use
+  the registered historical profile when replaying an immutable old run.
+- For an ADR-0051 adoption, the immutable envelope may retain the legacy
+  `changeId` as its effective family. The closure accepts that identity only
+  when the current lineage head binds the same run directory, review ID,
+  change ID, round, and input hash; the challenge still publishes the current
+  target-derived family.
 - It reloads the repository-owned Bootstrap producer and performs a complete
   historical replay of the finalized run. The saved envelope must have the
   same field set and match every replayed run-fact field. Only `generatedAt`
@@ -37,6 +47,11 @@ Refactor Acceptance owns a two-stage deterministic manual-pause closure lane.
   canonical replay. The producer is loaded from the request repository's own
   Bootstrap Skill rather than the Acceptance caller's adjacent installation.
   Repository-root spellings are compared by resolved path identity.
+- The reviewed protocol set includes the repository Bootstrap Skill and
+  producer, the public Acceptance CLI, the review-cycle policy, the direct
+  replay consumers, and every closure schema. Absolute request paths are
+  normalized against the request repository root, including same-share UNC
+  paths, before repository-relative authority validation.
 - The exact confirmed finding set is derived from the frozen candidates and
   verifier decisions. The caller cannot omit, add, refute, or renumber a
   finding.
@@ -45,11 +60,24 @@ Refactor Acceptance owns a two-stage deterministic manual-pause closure lane.
   maintainer acknowledgement cannot resolve independent-verifier uncertainty.
 - Every confirmed finding maps to current changed paths, targeted tests, and
   validation references in one reproducible Round 3 repair-completeness
-  projection. Composition receipts bind every producer, consumer, and targeted
-  test byte, and the resolved command argv explicitly names each targeted test.
+  projection. A selected composition receipt must bind producer or consumer
+  paths covering that finding's mapped changed paths and explicitly name its
+  mapped targeted tests. Producer and consumer path sets must be disjoint so a
+  self-composition cannot satisfy this boundary. Global-set membership cannot
+  prove finding-specific repair closure.
+- Composition receipts include byte-verifiable stdout and stderr. Repair
+  completeness reruns each registered command through the controlled runner,
+  requires a current successful result, and compares stable invocation, input,
+  environment, write-delta, and stdout evidence. A caller-authored self-hash is
+  not execution evidence. A read-only controlled command compares repository
+  file-content hashes before and after execution; unchanged Git porcelain state
+  is not sufficient because an already-dirty file can be rewritten in place.
+  Missing tracked files are represented as stable tombstones so legitimate
+  deletion repairs remain replayable.
 - `prepare-manual-pause-closure` publishes an append-only challenge with
   `status=awaiting-maintainer-ack` and `authorizes=[]`. It cannot publish a
-  lifecycle transition.
+  lifecycle transition. Finding-to-repair arrays are canonicalized by finding
+  ID; array order has no authority meaning.
 - `finalize-manual-pause-closure` reads one immutable challenge byte snapshot,
   hashes those same validated bytes, and recomputes the challenge from
   current repository bytes. It requires an explicit maintainer acknowledgement
@@ -62,8 +90,30 @@ Refactor Acceptance owns a two-stage deterministic manual-pause closure lane.
   reviewer and verifier decisions.
 - A change to this closure protocol must pass deterministic Skill validation
   and an independent `bootstrap-skill-route` review before its first use on a
-  real exhausted target. A closure protocol cannot approve the unreviewed
-  revision that introduced itself.
+  real exhausted target. A protocol repair that changes its Skill, ADR, schema,
+  or other authority graph re-enters the same Skill-review lineage under the
+  typed authority-context trigger and cannot use an implementation-focused
+  verifier as a substitute. The closure request binds the finalized clean or
+  advisory `bootstrap-skill-route` envelope, canonical
+  replay, and frozen hashes of the current protocol implementation, schemas,
+  Skill, ADR, and standard. A closure protocol cannot approve the unreviewed
+  revision that introduced itself. The reviewed artifact set includes the
+  repository-owned Bootstrap producer, Acceptance lineage and replay consumers,
+  and the final closure schema. Finalization verifies the fixed reviewed schema
+  revision before it can emit lifecycle authority.
+- If that protocol-review lineage has already finalized blocked at Round 3,
+  the current revision may use one same-round hard-limit focused recovery.
+  Bootstrap CLI authority must bind explicit maintainer confirmation,
+  recommendation/confidence, the exact blocked envelope and finding set, and
+  the current deterministic repair closure. The run uses only
+  `focused_repair_verifier`, stays verification-only, does not consume a
+  semantic round, and cannot emit findings, escalation, Round 4, or Acceptance
+  authority. Only its passed envelope plus composite
+  `manual-pause-protocol-review` authority can satisfy this protocol-review
+  input. The focused envelope and composite authority replay from current
+  bytes. The authority-bound blocked predecessor remains a frozen eligible
+  envelope and is not rejected because its historical repair closure predates
+  the current protocol bytes already covered by the focused verifier.
 
 ## Consequences
 

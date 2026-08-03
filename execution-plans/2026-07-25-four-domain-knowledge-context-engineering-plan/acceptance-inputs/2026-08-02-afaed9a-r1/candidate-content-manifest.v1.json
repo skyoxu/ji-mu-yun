@@ -1,0 +1,2043 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+      "candidate_sha256": "sha256:4861b20c1033fac1fbb4ee639b915408a9dd3c6d2e6d21895cfcd77e0c443e3f",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/maintain-knowledge-base/agents/openai.yaml",
+      "candidate_sha256": "sha256:4037697b41cd875cdbb7319c8a965b58f7cc9cec4c92a049a35a9c54a7285f2a",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
+      "candidate_sha256": "sha256:f6494ab206fc55f866b6ec0b0cf3e5039291755b1b90c35aa73995196129e486",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py",
+      "candidate_sha256": "sha256:a8ed1a555a8853738e638fc9872bcc2fe1d7a0e7b6f70ec0d117396c64ef4ec8",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "baseline_sha256": "sha256:dd955df3343309a1f510ea2e75f8669b92f06296d22183e0b5ce5d1f8aac9bb3",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "candidate_sha256": "sha256:1fca1001522b6a157024129ed15cf2d927ccf2025cece26d3e34f4f86fc68c9a",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "baseline_sha256": "sha256:7e86fbfd1acf231f1dfd6a07f909da3c6a2d9ed1f7e351fa10da90124a9d6f69",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "candidate_sha256": "sha256:6a95f0d2cf4ca30e10db18beca7bfc561decfdc4662bdf5c7ffc840f8a7d5877",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+      "baseline_sha256": "sha256:03b9f7dc3169b490408c579eae19da7eb91c663ea5e77271a962d1be97dd7785",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+      "candidate_sha256": "sha256:0ea76af452ea9e07d3e4dc8ff5b4d1d8bad5b1421d1447b5ca86ebb34b633405",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-recovery.v1.schema.json",
+      "candidate_sha256": "sha256:d36d50cfa059b631fe878227c8a94ad219c8800f0e74a83ed40fe6ac4418a6a3",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "baseline_sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "candidate_sha256": "sha256:4f1b006b5d8b0363443bba4252378e7efcf160410e4b43435b763eab1280b81a",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "consumer"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "baseline_sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "candidate_sha256": "sha256:7034e3fd7cb37f9308980dead84303c4df0410f8c34ae08a7bf59a905ce4b632",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
+      "candidate_sha256": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Configuration/PhaseAPlatformOptionsLoaderTests.cs",
+      "baseline_sha256": "sha256:7431c3bac096e638d3e1f997fedc609fbdd2a3f4b0ecc74e0feebcae1f0ebf3f",
+      "candidate_path": "PhaseA.Platform.Tests/Configuration/PhaseAPlatformOptionsLoaderTests.cs",
+      "candidate_sha256": "sha256:1a44eca4ed4753cb5a5c51a14c71ec43100471248cdd291404da8fea02e2ab05",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform.Tests/Data/HostedContextManifestIssuerTests.cs",
+      "candidate_sha256": "sha256:55c8afed0a273caa9814799942c96d75f1e33484bc26da444a999c3900b929b6",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform.Tests/Data/HostedContextManifestSignatureServiceTests.cs",
+      "candidate_sha256": "sha256:cf4ee05a6ae752b06e20e987e9d8c3e68682e291dc87a7a27f2213d86405ef0a",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform.Tests/Data/HostedContextManifestStoreTests.cs",
+      "candidate_sha256": "sha256:2df522d1aa441fa5879fa9431b941c07d2fd5d12ebdcd2b6ffafe6613fdaab95",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+      "baseline_sha256": "sha256:73d26174c772ec0c5c8838e92bb8a8e14251819bbddbe525c582dfcfc6f61a82",
+      "candidate_path": "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+      "candidate_sha256": "sha256:15826140fc263c5f05c821c656c25f05266341fd6d88589c692aef8a45dee6cf",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Projects/ProjectDraftImportServiceTests.cs",
+      "baseline_sha256": "sha256:4d22e36a650622bf7e2a535e2710b626fde95d9d2c78cd88bce203d98f6ac9be",
+      "candidate_path": "PhaseA.Platform.Tests/Projects/ProjectDraftImportServiceTests.cs",
+      "candidate_sha256": "sha256:356a3479f46b6e0acd51afa820faae7735afc6b38534ed6f63989ceae3cb0612",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Readback/ArtifactReadbackServiceTests.cs",
+      "baseline_sha256": "sha256:415ab8e004691264fa7e2d4fcb35e3b6a7ff7b35f6c53f59bc1a251f24e5f71e",
+      "candidate_path": "PhaseA.Platform.Tests/Readback/ArtifactReadbackServiceTests.cs",
+      "candidate_sha256": "sha256:ab0814073698ad41e04b1118d23b1630f1de6f152ac9161aa50c7bafb9603ec3",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+      "baseline_sha256": "sha256:4cfeff5b182efc337464d7a18ebf7ca64a41799bd4182a2dd46d6f18988dca2d",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+      "candidate_sha256": "sha256:8b3ef2bf582e87f365e0783cfc94830c9dec46b8b44504024275807649770d63",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/GameDesignQuestionFormServiceTests.cs",
+      "baseline_sha256": "sha256:8f3ec67aff757ff27e887ce0f4fc91ae9b2b635506d9dedbfad39cd809f4612b",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/GameDesignQuestionFormServiceTests.cs",
+      "candidate_sha256": "sha256:cde0b9b069d924a0a48195932f7889a0fe9eb533c6de74068ff87a63693a2756",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/GameDesignSceneRouteServiceTests.cs",
+      "baseline_sha256": "sha256:b66187accd84848ce4e2f96d2e2434b24f0aad0af31ab3272d9cf0d66d026f4b",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/GameDesignSceneRouteServiceTests.cs",
+      "candidate_sha256": "sha256:5bbe2fa7cf4a83e5e72e905ed69730b47696d5c6a554491ff63bb2ce7fb8a590",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/GddMilestoneStepServiceTests.cs",
+      "baseline_sha256": "sha256:dfc2bf0ffd4e01d0e66064f5fb5105c15dfdc86a2f84d1cad1a6d193e5518d18",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/GddMilestoneStepServiceTests.cs",
+      "candidate_sha256": "sha256:7c1b64c610dd530d053679099264e3611f50d619186ae87201e9416037f2ba34",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+      "baseline_sha256": "sha256:9ed4397c9dd9c4aeeff7cae8476cb63df07b05b037522b6a18dc8807b1e573db",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+      "candidate_sha256": "sha256:823e0cc18f1187341bf3817434294e4f30ce447f22661b4688197567117d6d89",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/ProjectWorkflowRouteServiceTests.cs",
+      "baseline_sha256": "sha256:6b9f6c7ce4d66f037170eac521d1c32fb89349468a9a6baee5d75e5b9bba63e7",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/ProjectWorkflowRouteServiceTests.cs",
+      "candidate_sha256": "sha256:ee544ce9f2c9b5f7ccdf2440c00423257da692f7545a5cad98d90003de66fcfc",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/PrototypeIterationGoalServiceTests.cs",
+      "baseline_sha256": "sha256:253a4a904e1e19e5111c6b39d759af65636602fe2a07ce034f78aadaefb2f0fd",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/PrototypeIterationGoalServiceTests.cs",
+      "candidate_sha256": "sha256:9748d2a3b11e28bf15327a6265ece637259b8029043bb206d9b6d77561260068",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/PrototypeIterationPlanServiceTests.cs",
+      "baseline_sha256": "sha256:6754a12829e88e48712b5b59980d7cc79ebba99ed3c6c136f76f29246697f224",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/PrototypeIterationPlanServiceTests.cs",
+      "candidate_sha256": "sha256:c8c6387a4c66e0f69ee4eb8b2a08c7827783c45eed8284f86fae2549d10fb8da",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "baseline_sha256": "sha256:f58dad097771bf43e044d99ed0ef7dfac081b026bf026a31be4ea6df27e93e86",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "candidate_sha256": "sha256:b5c43f1f310d3822d54feb352089f5f2723b6564a0f4654518a00ab8d9b92dab",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/PrototypeUiOptimizationServiceTests.cs",
+      "baseline_sha256": "sha256:7ce6f18ded9a54caad364b38e0cdc63978b0d9f10ccef4caa619bd5a4a4a8880",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/PrototypeUiOptimizationServiceTests.cs",
+      "candidate_sha256": "sha256:f1c15035e03c1539e515808d4f8f91af3df092d0575bb6d09d0a650b6bd40261",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform.Tests/Runs/PrototypeWorkflowTests.cs",
+      "baseline_sha256": "sha256:b3a05f64fb5760fbad726d92ecfc34279d656a59dd5bef5b45679fc5301a6718",
+      "candidate_path": "PhaseA.Platform.Tests/Runs/PrototypeWorkflowTests.cs",
+      "candidate_sha256": "sha256:86c61e286dd5f221c4e08737473bec6f8e910b8355428d8ef66a309d3b45124f",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Configuration/PhaseAPlatformOptions.cs",
+      "baseline_sha256": "sha256:6f7016d827f6b2a2fed664c30aa2b01f7019e3c2c701c4acd47c09dcde05a45a",
+      "candidate_path": "PhaseA.Platform/Configuration/PhaseAPlatformOptions.cs",
+      "candidate_sha256": "sha256:0f3f06ed12c352d78025f0850e0028364049a599e521be616bc9a76a27cb78fc",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Configuration/PhaseAPlatformOptionsLoader.cs",
+      "baseline_sha256": "sha256:d3b9351922eb0a0ba02a797675eaef7e5b69b0b34c9c79036bcfc881725fbe46",
+      "candidate_path": "PhaseA.Platform/Configuration/PhaseAPlatformOptionsLoader.cs",
+      "candidate_sha256": "sha256:ff636e4cda5c6ad27224d6d52027ea4f635910f4ec895001ba51223c67421805",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform/Data/HostedContextManifestIssuer.cs",
+      "candidate_sha256": "sha256:7b71a9b21542a18cbbc15b9d017e0b10af3b2cd39f2f6972b8b3bb658706b329",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform/Data/HostedContextManifestRecord.cs",
+      "candidate_sha256": "sha256:1ef2e577780006186fad78c9d165f428a69493e11e0709b8043d6351113447ca",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform/Data/HostedContextManifestSignatureService.cs",
+      "candidate_sha256": "sha256:4881d36b55e3d849e7617490e3f6228f179703232eea1cfe47c845043f8f0462",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform/Data/HostedContextManifestValidator.cs",
+      "candidate_sha256": "sha256:b19e7694ca975cc16f0eea3d73161c4929642cdc00a551db4e679c3aa79c6fb3",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform/Data/HostedContextRouteContractPolicy.cs",
+      "candidate_sha256": "sha256:378fe96d8ee7ab040d535333e58924b57374c47f0747f2d84069012294f2bb8c",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform/Data/HostedContextSignedPayloadV1.cs",
+      "candidate_sha256": "sha256:9ef63939a991043f1369123207da685736405f734adb2ae58456b546a682b2c9",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "baseline_sha256": "sha256:887025b4a7c3f2d0ce497ed60cb0b093ff2c2760439584d68ab5a777b495f8a9",
+      "candidate_path": "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "candidate_sha256": "sha256:8eae283f747174ff87a2fab0e23d50d0edacf730ed07f1fdf90d1380565ba0f3",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+      "baseline_sha256": "sha256:56fae57e338cefe7b746cc1727c5d78e00bcc5af96743630fb24c493193dc673",
+      "candidate_path": "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+      "candidate_sha256": "sha256:dd812e61e009e7064e1a89e0e48a08731dccc454ae04735e8e81a7172626cd3b",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Llm/ChatService.cs",
+      "baseline_sha256": "sha256:07bb502d7260e2fed90f7ddf8184fc4ffb60fd6fabf689447fb03e8aaecf503b",
+      "candidate_path": "PhaseA.Platform/Llm/ChatService.cs",
+      "candidate_sha256": "sha256:3d041aff35bdb1b7f68a5daa560c79f17bc48fbe8abfe4f084445e0ef94ad06b",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "PhaseA.Platform/Llm/HostedContextGate.cs",
+      "candidate_sha256": "sha256:fbdbe91cd124643ffdf0869b0415486b3cd63797d113aaa0ffad496e0d6b837e",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+      "baseline_sha256": "sha256:50930ac8b2da5e5671a6b0a0139f70ce22ef1ff6576c2db5c08ea84dc85ab754",
+      "candidate_path": "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+      "candidate_sha256": "sha256:3ce7d7a220fcb35404dd3c0995e6e16026be2c257e3b990fb9a5bff99b02e1cd",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Program.cs",
+      "baseline_sha256": "sha256:31b26a47d69deec8691d15812e1f894eb2dbf9acedbb616cf00e00ef301397af",
+      "candidate_path": "PhaseA.Platform/Program.cs",
+      "candidate_sha256": "sha256:bda047c916281fd94fc1156c7ec37acca7a3d5e9495705b5aa5c55bf19d248cc",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+      "baseline_sha256": "sha256:6f98382408d72d63f0b80ed269aed5e5899aa6e0dda3d01dfe66f96663592f19",
+      "candidate_path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+      "candidate_sha256": "sha256:38941aa359f29e02ccfbf52acb96253635f8f697e4e0f4042909380bc2b0f7e4",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+      "baseline_sha256": "sha256:2afdf21cbb53891ee3b01fa3aac989006edc2fd2d4dc921419ad8b3cc3daa797",
+      "candidate_path": "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+      "candidate_sha256": "sha256:7e9159a2950cd9a780101a1472fb031ac803b82ad4be383cb15029efca11b1fe",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+      "baseline_sha256": "sha256:26156a495d1df671dfe71d26b0af78d2fcd22a9883fa2b59d755631d5b55eae1",
+      "candidate_path": "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+      "candidate_sha256": "sha256:5f00f0405ac81b669377d7199f9f24466fa7be3fb1bc971300cf812535025ba3",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "baseline_sha256": "sha256:970fe9f83909e95a8ee70ba7c3643232181f1255f1ba1febcf596cb5a9eaf368",
+      "candidate_path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "candidate_sha256": "sha256:d15c301dbfd1dae508e24a3fc021c206400175195b198c35dafd19b7470f17d7",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "baseline_sha256": "sha256:2d1e2defec1c2c7fdd1965faae98d406527dbe93cfe32d229113789f9ef6e9c9",
+      "candidate_path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "candidate_sha256": "sha256:9be842725c07d3b6fb57aef8b239c769f117faf45383d165d157f7fdc5ca4d8e",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs",
+      "baseline_sha256": "sha256:bc0a86e54d75cdc1655ac6bf7601579fdd8cd2052b4a91c7e24733261179b892",
+      "candidate_path": "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs",
+      "candidate_sha256": "sha256:3268425fdd6209efc92842ceacf53aa22a8d05eaee81cf0afad4b3b135798669",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "baseline_sha256": "sha256:8114941f15a09680f54989c9fbdee6c87ad8acbfb63f430830412b3a5a0660dc",
+      "candidate_path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "candidate_sha256": "sha256:362f2e3e74f657ae5b8fcb04d07a5a24389b1af4cbfad01c543ef3c4644c5bc2",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+      "baseline_sha256": "sha256:7d1cf10a58d51b091fa29b56146e6da62687dbb565440dc02d5244adf7ac7c42",
+      "candidate_path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+      "candidate_sha256": "sha256:898ce90c41d7cd51eda29c224757f137636b1d1245b868fcc1c882188976b3b6",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+      "baseline_sha256": "sha256:2ef1266e44c318b6f98028263e281e26089c6077b0f872974beb33b2273c9b33",
+      "candidate_path": "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+      "candidate_sha256": "sha256:48f3f00d2467fb2262de003cd862addd25dd55064b986891e87616e5363581a6",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+      "baseline_sha256": "sha256:1ac96e2e11ae427c4c650fac9c94925165aa1f2c7f67fe3f8e0e4022f1d82033",
+      "candidate_path": "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+      "candidate_sha256": "sha256:d6340e75261e08a88058fe4ef9504b0e29bbafe4a7b10dd67c55dd79c6a264be",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+      "baseline_sha256": "sha256:25b2064fb0a709fdd445f70e390654bc519b7b7dcd69e7b4ed9dbbf74c4a79c8",
+      "candidate_path": "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+      "candidate_sha256": "sha256:11212811310ab9cace48a79129e8fcc8e0365edb64ae45aab59a217dccb9fed9",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+      "baseline_sha256": "sha256:00784df263f82fe1eff9ccec5161f520af324bd55145ac5e4e1e594116078add",
+      "candidate_path": "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+      "candidate_sha256": "sha256:e8520ff8bcea2ea2dcea2b9f10b4aad2bfe61fe2f44638ff7cbd1f8ed5ad0cde",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "baseline_sha256": "sha256:587852d457559f8a4225123a55d192f98e166e09d0ad6e22f81162b37fd45aae",
+      "candidate_path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "candidate_sha256": "sha256:b04b64a3ca48a5c9c21b497824c49ee50f21a386ec53627b3b9b8d68ce0f14c3",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "baseline_sha256": "sha256:582fc13a7ef099f8a4d0c6bb87c417d0143a1fc6b8f72f949270b575595d14e7",
+      "candidate_path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "candidate_sha256": "sha256:3c0b9fb0f08cf3e9972a9612a34799ca15167c97fd7754a57206392bc9a139df",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "baseline_sha256": "sha256:f0a2dc41578e3d2d81a81cdb317dfcb4fb7233d44fcdb6730e2974b37467aa1d",
+      "candidate_path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "candidate_sha256": "sha256:f4d9b600bd77261c190282b373a3bf2e63f884bb25886cff3cd25b5bf560f6b3",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+      "baseline_sha256": "sha256:068ac080c31fb88a95a982d5b3f8a9443a3e7f43fdb28b2df207bd53dd30ad74",
+      "candidate_path": "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+      "candidate_sha256": "sha256:a7eb03a0f1dd43481c1c798d17898a8e06dfd0bdc74700302af6605438470799",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "baseline_sha256": "sha256:c409b23c8cf9e1cb6ac9e8780549de67ececa5d5f1c09bbdfaa8951de6b970fa",
+      "candidate_path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "candidate_sha256": "sha256:1def0193ceb8be9c23d8b2eae223cc396c494da3e172b1816b414e99f264050c",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "baseline_sha256": "sha256:39ad45ff70963409d783ce1aa78e89f9158a857ab5723025082ec7b943b95144",
+      "candidate_path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "candidate_sha256": "sha256:f58c6e52a102f77060f51227d654413adf3d05698d2a60d95758365125c0a63b",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "PhaseA.Platform/Skills/SkillActionService.cs",
+      "baseline_sha256": "sha256:a25525b44b3e74a3e8c6aac4dfbf41b1a1a1f86c7a882211e895c56722875c56",
+      "candidate_path": "PhaseA.Platform/Skills/SkillActionService.cs",
+      "candidate_sha256": "sha256:f1c3b93049d0b959a897af92c120e8f7a859414e58b6957b46dcb50800d15491",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+      "candidate_sha256": "sha256:2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md",
+      "candidate_sha256": "sha256:0a50fdf6827847d74be23b5da1407e9602b37c855d1943d25c8f4e2f315d6293",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/adr/ADR-0046-knowledge-context-protected-integration-merge.md",
+      "candidate_sha256": "sha256:2e0f176dc155be2b5784650e99408e7d98984aea09571b473bf1d21212bdbb9b",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/adr/ADR-0047-e2-hosted-context-readiness-declaration.md",
+      "candidate_sha256": "sha256:63ee0204e41eb093abb562ac95c56813e5d566d7f6226eb9080020a0ff915371",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "docs/architecture/ADR_INDEX_PHASE.md",
+      "baseline_sha256": "sha256:e40079626e9285574fd14da29df2b9b0dd06c004e7befd15bf350623ea6429f3",
+      "candidate_path": "docs/architecture/ADR_INDEX_PHASE.md",
+      "candidate_sha256": "sha256:6c30be206ddc9c7aab5f7a154654742de43f64a1068de083680ab2731f850201",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/know1.txt",
+      "candidate_sha256": "sha256:2a14f629a426e1aaf456aaf9e61120034f08eddbc331122626b151e617a98d0d",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "source"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/know2.txt",
+      "candidate_sha256": "sha256:ac0c651123f658fc531ec48dab44d9951280390b8230a56382d6a1f861478fc4",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "source"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/know3.txt",
+      "candidate_sha256": "sha256:015810a74c5f9dc60a466286574034d713c9063de287440ab6981c0eb9478043",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "source"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/know4.txt",
+      "candidate_sha256": "sha256:e086b259e012383292b8355fcd72420fbb596d183e3dcb8ee6dcd9ed1cae4b2c",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "source"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/know5.txt",
+      "candidate_sha256": "sha256:2d8b391725f23321b8c5006970ed1875fbf3fcc616b51290a125626bd2232754",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "source"
+      ]
+    },
+    {
+      "baseline_path": "docs/standards/bootstrap-review-control-plane.md",
+      "baseline_sha256": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e",
+      "candidate_path": "docs/standards/bootstrap-review-control-plane.md",
+      "candidate_sha256": "sha256:4c434d8ae552930862fe9b8addd676638a76e3ad3dee116caadba2995fe3c4d5",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "baseline_sha256": "sha256:e3f0f05ef426aada395843dace58410b3ddfbcb39326e96ae562cad9eb7cfc35",
+      "candidate_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "candidate_sha256": "sha256:86014719cc6e1a7f1d0e438f3bc2ad3937fe9a7949c21c5a29b3e8d65aa699eb",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+      "baseline_sha256": "sha256:0bca3489c3ed2c3175c0c09589caef16259f81317892743f69f528e229ed4210",
+      "candidate_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+      "candidate_sha256": "sha256:a0fed2fb438b54afcc77b146930eb024d7aaecd69f32368123f069e0a629aa06",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan.md",
+      "candidate_sha256": "sha256:2aa794d6b7703e525b142e7c588496b651cdf8f336a5005c7a99fd931e5f600e",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "source"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/00-index.md",
+      "candidate_sha256": "sha256:9955f4f205bc92a11c7bf93ebfd04d6e8eb5fd2f94a6d24e7ac4dd661771cdda",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/01-scope-authority-and-non-goals.md",
+      "candidate_sha256": "sha256:90676daa4693842adf6322781a5ed863b8af4fe37c275b5ba3fdb7c1551aea36",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/02-executable-contracts-and-invariants.md",
+      "candidate_sha256": "sha256:483b245328a8b293f3604c09ca9d87838ff4d9f4786d6aa1f7fab52b398aebbf",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/03-validators-fixtures-and-control-gates.md",
+      "candidate_sha256": "sha256:31f91cf63307cb270f1558ddbcc72f336e840d50a4ba445a2f4f7d630a2f3b46",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/04-behavior-slices-and-implementation-order.md",
+      "candidate_sha256": "sha256:1ae62b00c15ed74a0507bb78a0b02fc11634d441d253176dc0a5308ef354b759",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/05-testing-observability-and-evidence.md",
+      "candidate_sha256": "sha256:d71ab8c2f654511912bc6ba6929f78b222bc09db4d1dfa33fece3ed0101fd5fb",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/06-risks-dod-and-glossary.md",
+      "candidate_sha256": "sha256:3bccac5d203e230ff48924f9cfda48d0ed4feb826febf407c669a0b562c98211",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/07-implementation-phases.md",
+      "candidate_sha256": "sha256:3c00d8865dfe13b0bef08521ef1e052b51d59f6019fbc88af58c8fa5619c66c1",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/08-bootstrap-review-entry.md",
+      "candidate_sha256": "sha256:3f4afed2617bf5a2fb668062a4c5aabf12a1ec8136f211d110ebb979612c5494",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/09-plan-local-artifact-conventions.md",
+      "candidate_sha256": "sha256:795279af564569b345945c2e1c40e0c5f6fb0321e68778b602dc71cb195c688e",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/10-k12-protected-write-set.md",
+      "candidate_sha256": "sha256:4a3e7dd5509b0f9326023ac06a7ec994bf01d0d2f87b0b96b7436db92e1a1021",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/11-k13-protected-write-set.md",
+      "candidate_sha256": "sha256:5bedb95a03d8f6d0508bbcfe51b59a4d183cc9e4975c6904d861502e8637b7bb",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/12-k13-requirement-map-write-set.md",
+      "candidate_sha256": "sha256:6563ff9a6fae20d0a719ed4a84b08df719bdb7d5469a272df83b544cf62ab6ce",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:cf26edc12f7400f64b1f5553761a3782d4c6a84f37026b140de7ee1182b69380",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/96-global-review-and-validation.md",
+      "candidate_sha256": "sha256:7303a71fac5c6cabd3b46019c9c6160df0488262bb80f1baaa156f1dfe3837d1",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/97-requirements-ledger.md",
+      "candidate_sha256": "sha256:f3d87cab5c0dc1ba0933ab75c031acab6e6ee489985ee7188d42a096fa741e53",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/98-original-to-split-audit.md",
+      "candidate_sha256": "sha256:72fe5119c30a6ad5f31213e7d1fac588bd8e008590da039224ffed0ee7ed7e47",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/99-source-coverage.md",
+      "candidate_sha256": "sha256:a5c7acdcafdea5006ab154c3d45ef9b1ce5127ac6e6fcb1325cd69095a537b86",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/command-registry.v1.json",
+      "candidate_sha256": "sha256:4e9da2cef8d1a10ead76ea22d233a2b43f4a836e568f209e8fd65cef1f604223",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/e2-release-evidence.v1.json",
+      "candidate_sha256": "sha256:fbea77b58966f97da88f070adbe91444deaa2b5d6db76b358486030566397442",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/fixture-cases.v1.json",
+      "candidate_sha256": "sha256:645183eab401090e5a191acab0996ca0b0a73116f10433eb50702d0ad560af86",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface-cases.v1.json",
+      "candidate_sha256": "sha256:c513907dfea212a3d11b15031f3f21686c33af82a888b78caedb717125d671b2",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/locator-llm-controls-trusted-envelope.json",
+      "candidate_sha256": "sha256:689c0be0da92c9475baa6c3fc7542f9a00e567a5c7deb9d4825a16981fee8f99",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/locator-matched-low-confidence.json",
+      "candidate_sha256": "sha256:294b42ed37452f3afa1d01d1e7149749c4ff7e5230d08ea5d427ff1de91bb7a9",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/locator-path-outside-policy.json",
+      "candidate_sha256": "sha256:7a3cdc5111549f9cf2d0b22ab38bfbd0348af1bbb078ca31ce009057b2c3d774",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/locator-result-claims-generated-answer.json",
+      "candidate_sha256": "sha256:247eb531fffec39b1096a8a064a6454d8572fbfed1e714624ebd79a8dc5bb558",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/locator-source-identity-mismatch.json",
+      "candidate_sha256": "sha256:5eb45e60240ccef5bb045e0004a5b7985306cc0ba701c4cc17dc13e2fad8e7bb",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/maintenance-before-snapshot-mismatch.json",
+      "candidate_sha256": "sha256:2377aad8ddb1e133b4c9004c8c9c08d269adfb946ab34a3e55e926b9bd86c81d",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/maintenance-dirty-worktree-authority.json",
+      "candidate_sha256": "sha256:357cd166d1f0f6525f07366c03f30490d27f68711865b60b3541ce6797de826d",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/maintenance-existing-only-discovers-new-entry.json",
+      "candidate_sha256": "sha256:eea0c7ede1b89c5aea5a5ccb54f18107684310798b64d5b5cf572f961b36390b",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/maintenance-implicit-fetch.json",
+      "candidate_sha256": "sha256:454887019030d44b8ed62a73e69803e75ae08f1fb6ea8787f1eff1ad7a50ccc9",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/maintenance-log-not-append-only.json",
+      "candidate_sha256": "sha256:4fc24f685d3d8c1a2c7fe17f2a4c0dd0e237036ca98989647417527a187d25fe",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/maintenance-mutates-consumer-source.json",
+      "candidate_sha256": "sha256:2f8c8e573f9ac6cc8c2d9a04109cdd71de8c2d147d6c31d9544ea8e148ac4296",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/negative/maintenance-worktree-fact-promotion.json",
+      "candidate_sha256": "sha256:1a8febb4c21716c0505502ea68d903ccce8337e753aa4828c6bb7cf36cca2e10",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/positive/valid-locator-consumer-ref.json",
+      "candidate_sha256": "sha256:d328b7db812d32920bae99bf2bca5359c9f4a3539040dc70385956367aa03ca0",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/positive/valid-locator-insufficient-match.json",
+      "candidate_sha256": "sha256:89ac0d902e6c2fa702a5e2e8a3b510b0abad76b74655f3127c1746c96c4b0387",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/positive/valid-locator-llm-intent.json",
+      "candidate_sha256": "sha256:2d98e5592f0f54483cd35ea6702c4ced90f96170b89889e55be330273a34ab45",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/positive/valid-maintenance-existing-only.json",
+      "candidate_sha256": "sha256:ad495d176a5cb70d851840ec39997c31f072c8b0cd580d41542fc46cb16cba71",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface/positive/valid-maintenance-targeted-provisional.json",
+      "candidate_sha256": "sha256:74b8796b5cfb5317cfaaf43e888c1fa8162cdd0ed134ebc09129b69ca38efc5a",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/cache-root-under-workspace.json",
+      "candidate_sha256": "sha256:9d5d839204f950750027fb8c344d5eaa39cbb7d470e38b6c04ef7e0eab3260b3",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/cross-project-source.json",
+      "candidate_sha256": "sha256:4493bf62306e2711edcfe75270a14204451ffbe163c38e403d9bc2146c974ffc",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/e2-observe-gate.json",
+      "candidate_sha256": "sha256:d646060494d312ea73d9a6dab80e4e5591d094f9cfc16522e9fde1a94e8d12ab",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/e2-readiness-evidence-incomplete.json",
+      "candidate_sha256": "sha256:f0c9ac4f824d66b31de29a4c31f36579bfcab451f2159b932b081ca713df35e7",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/inventory-source-drift.json",
+      "candidate_sha256": "sha256:7c099226531080744444bea8b8dceb1f088477bfd6188f25cd6eb88b890865b7",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/modified-signed-payload.json",
+      "candidate_sha256": "sha256:2cb88a56b41e009d8ad9312e5d66015bdcc757957212f1041d38fd9841a45f16",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/project-profile-expands-permission.json",
+      "candidate_sha256": "sha256:3e5857c9454f3c66af2014edc6e2cb8fcd27dd957edc5927a7e9ef301b88b14e",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/recovery-order-mismatch.json",
+      "candidate_sha256": "sha256:800e5e64bac4ab84321c69edba551995640a386fcf2a5c47eb1a6c1c9329e600",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/replayed-nonce.json",
+      "candidate_sha256": "sha256:f4a9c39514e5642a0e8a5ce325641e281c15064ef266bca8e1b202acb72ef0cb",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/required-budget-omission.json",
+      "candidate_sha256": "sha256:c2446c5076fb7550a0fc599998359ed15ecf60d484a5fdf642e2e5ebde35742b",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/source-boundary-exemption-omitted.json",
+      "candidate_sha256": "sha256:d913f602ceed1b958cc899d24a15f1a854254a640296e4034ce864469bef1b71",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/stale-project-snapshot.json",
+      "candidate_sha256": "sha256:7d35eed11a021d6cc239b2a61fa259dec380f9a3ed954400c1aec899b03de6f6",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/unknown-capability.json",
+      "candidate_sha256": "sha256:05705b0b1f4f86b43c1d2015ed729f779a0f98cc28027cb9f76c8cdc0467ce81",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/unknown-policy-revision.json",
+      "candidate_sha256": "sha256:4baf080f941b2239870cd5f10b192c71de0759119011543c2dda76de53792992",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/positive/valid-account-bound-envelope.json",
+      "candidate_sha256": "sha256:50db8fcf57a58ebc7213062cdb7464c0cf7858fb7d927f6b087730fd1553f2bc",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/positive/valid-enforce-gate.json",
+      "candidate_sha256": "sha256:b3a1e8d5783a9a0646eb2396b8e82f999502126f64d18be21b8f54b10bf3f976",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/positive/valid-inventory-snapshot.json",
+      "candidate_sha256": "sha256:8b3dbdb0b6772a0e4585eca5d597455be22c5f82bfebbe878961e23a33b9e57f",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/positive/valid-non-prompt-boundary.json",
+      "candidate_sha256": "sha256:bb8ca558a00f3f7120671e018ee655c8eb2d54889bb445b7648be3846fc39d05",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/positive/valid-observe-e1-gate.json",
+      "candidate_sha256": "sha256:b214beb4cd42589ae9faff2e04145ba660b4df35f7fd70846f8fa519353ebba7",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/positive/valid-optional-omission.json",
+      "candidate_sha256": "sha256:97113c3ef55104d92a5d927d0749e112d7b275942574e977eaa138cc82bfaa9b",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/positive/valid-project-bound-envelope.json",
+      "candidate_sha256": "sha256:ede1c1c0b7fca9e3496282f2e8054f511f87cc41460026ccee32d84444aaa1eb",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json",
+      "candidate_sha256": "sha256:32ae2748a51499dc475bece345de2323bfdcca30b04a6c5f5803ec7d5e6bb061",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:fe67714a48e075d9eb55a7a36a6c5f2c5379c7d2df589becf93d63e25f9611bb",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/codex-hosted-callers.v1.json",
+      "candidate_sha256": "sha256:3ecd8b28316728b6695f7edc99a33c5afdf8a7dd1d99e5a42a04ffddb5c516ca",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/direct-llm-invocation-violations.v1.json",
+      "candidate_sha256": "sha256:465717e2f09e7ece67ca76f7350b46286fba8133a8654b37546f890cb13123a4",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/e2-readiness.v1.json",
+      "candidate_sha256": "sha256:55e1e39c1c19ce999629d09db28a6c439faf0e5088003b00c89dbc209889c72c",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/hosted-callsite-migration-ledger.v1.json",
+      "candidate_sha256": "sha256:2032bf2940b704ea28c74521c9023fe7765bc8391312f2d5e0484943e72a141d",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/llm-route-engine-callers.v1.json",
+      "candidate_sha256": "sha256:4a00237a3ca255b62042c855605db886fe456c049a36926808cab2bab3d318f6",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/python-llm-backend-callers.v1.json",
+      "candidate_sha256": "sha256:b01d16c7834875be0c6dd7f131e7d2539ac50fba2479e186e80c3cc03252a280",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/source-snapshot.v1.json",
+      "candidate_sha256": "sha256:81f54ef1906e31142e675af68921136acb5c4c020165e991807dd19e388c68fb",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/plan-state.v1.json",
+      "candidate_sha256": "sha256:a9012340b11275d5116b2bc18582d8e899178d5c703a495b3ac3be312c502e1e",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/projections/marketplace.catalog.v1.json",
+      "candidate_sha256": "sha256:3200deabc1e8ff45fb4f8cb9e1b1b7be0044e4cbdfefa9f2fc3e956dd1991b9a",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/projections/toolchain.catalog.v1.json",
+      "candidate_sha256": "sha256:d6a1c6f7108d8f651e017c2b870b452891f9912e20b9cb142af894e5e15fa2b6",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/projections/toolchain.maintenance-request.v1.json",
+      "candidate_sha256": "sha256:d3dea4e86a8ec926b2e2f4472e12b2cac5ccfa4dd91bab129ff501ee493e5b2a",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/projections/toolchain.maintenance-result.v1.json",
+      "candidate_sha256": "sha256:82503057c6b5613c2bd5415961b2f43f07cecb6d0db1759d7e57abe4773dc46b",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/projections/workspace-shared.catalog.v1.json",
+      "candidate_sha256": "sha256:55aa115895dd86cb5eff47fbc0aa0e2c6e07747579ac2455ad32e58aded58fc5",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/requirements-ledger.v1.json",
+      "candidate_sha256": "sha256:363c9e1bc5c4de8104873286a184ec6ccc02bfd652187e04a24fcd05dc6a2036",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/resume-state.v1.json",
+      "candidate_sha256": "sha256:06e8d4892ca65ca87e588628855af0a21b8ae815fc3a9d07774b8d0fda535339",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/context-assembly.v1.schema.json",
+      "candidate_sha256": "sha256:1b038321f3fa336078663fce5217b090f197bb6eacc8402b05176d06725c5ea2",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/context-envelope-reference-vector.v1.schema.json",
+      "candidate_sha256": "sha256:c1bda9ee33b381a4db088f0edf9c74630173aa3ef8d348744e509cebedb75916",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/direct-llm-invocation-violations.v1.schema.json",
+      "candidate_sha256": "sha256:314375f365e1bad9982e26f228fb5bf85e3c497f6633bf76ce21f878684f154f",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/fixture-case.v1.schema.json",
+      "candidate_sha256": "sha256:ac778ce8e2e52780e0446b6aa65f7b9903e90d535d8a8342653e4caea6ada446",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/hosted-callsite-migration-ledger.v1.schema.json",
+      "candidate_sha256": "sha256:895d8ba4d61108a01fcc446f2b8f12dc94665f51ac6a45fabc2c5adb48fb043c",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/hosted-context-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:d29697a0e35851fb30a15977116843b931cd7dd8c472a166673780ac85cc171d",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/inventory.v1.schema.json",
+      "candidate_sha256": "sha256:d517fa4ab3f8264b2787a47a9f8efce33bbe03ae1cab316e00ba2c2edad412b9",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-contract.v1.schema.json",
+      "candidate_sha256": "sha256:afe36bbaad96f5e654aa2d579fc3c8527f25f6778e6d5d3167823745ee8baf3e",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-locator-request.v1.schema.json",
+      "candidate_sha256": "sha256:c2e3c1d75f835c47df534bc4bf1028f97d98ed3405c1fb299c806be4328718f3",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-locator-result.v1.schema.json",
+      "candidate_sha256": "sha256:781c0634066df9909da140667397b9df1a01aa40f0269fc4247e9c47cb062c48",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-maintenance-request.v1.schema.json",
+      "candidate_sha256": "sha256:bbf8bed9d6032bcce6d5843feb6ffc5ca3a232fa41d2ac9372d001e3dd6777b6",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/knowledge-maintenance-result.v1.schema.json",
+      "candidate_sha256": "sha256:40897cd60951b98fc464e762cd16622bed4b648d845806c8a7eb2ecdc8003068",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/plan-state.v1.schema.json",
+      "candidate_sha256": "sha256:5dffb374f480e6b18317731d5a4a364ad89dbc4ef7bc7e99ab33ef5b8a029d15",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/requirements.v1.schema.json",
+      "candidate_sha256": "sha256:fac1ad6c8f5b5a738369de0971ca9284e4f638767bf73553cf8e9bbbbf23dc79",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/scope-gate-result.v1.schema.json",
+      "candidate_sha256": "sha256:dc697ec6e29e2fdeff0f5f50a0aeb883767f314b9d96e6cb1e68252d1e2c84a0",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/source-snapshot.v1.schema.json",
+      "candidate_sha256": "sha256:bb857517dd8bbb634b8c9bdc17a8ca09659ff74bbf8ce0dba6576c9a974f8d83",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/source-provenance.v1.json",
+      "candidate_sha256": "sha256:b6c3aab9305722a5f484d6066747bedfd963746a5da0280aa98a1dfec4c1fb8e",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "authority"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_hosted_inventory.py",
+      "candidate_sha256": "sha256:2539adfa5de71e912b667edb61ac312fe87fd9a1161e5827e3205cb2b43a1ca5",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_hosted_migration_ledger.py",
+      "candidate_sha256": "sha256:c833c9505c028e12ba310bd795655eb8be0da39a8aefb0145c969bb374b13cfc",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/build_reference_vector.py",
+      "candidate_sha256": "sha256:a8a2197754c7589f9cfbf68530519c9d26028fb4c81e0a4e5163cf6e192d7130",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/check_e2_readiness.py",
+      "candidate_sha256": "sha256:bf9dd71e6dfd665002e8c2028640ee4ac643fcf460c1c3bd15feddde9b5fc99e",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/context_crypto.py",
+      "candidate_sha256": "sha256:6473633e94e06222cb5b4dcd7ce595aaaa32d9ea1756a132d2058cccfb310e1e",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/publish_implementation_complete.py",
+      "candidate_sha256": "sha256:f1b069d6adc88a66749a1ba9819f616a44786f50bc5b20fb39b5687b239bd88f",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/run_tdd_adapter_bridge.py",
+      "candidate_sha256": "sha256:8b87ca5aa35cd5aa1f29ee89f80b901296ad2148ec4159125568966de1c73384",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/tests/test_plan_validator.py",
+      "candidate_sha256": "sha256:2bc1ce33d491a473cd204bfb686ac88bc7fbf2284a3d45a9e822e443ca9be408",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/validate_whole_directory.py",
+      "candidate_sha256": "sha256:6cd522ab90f3b357f43b461da66d7113159000e7c638ff8e46686399a6c3763c",
+      "change_type": "added",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "execution-plans/95-implementation-report-index.v1.json",
+      "baseline_sha256": "sha256:e49b27c5ec9de13f56c25698e928e638bdc498f295364bf3bd772b9ecbcc09fc",
+      "candidate_path": "execution-plans/95-implementation-report-index.v1.json",
+      "candidate_sha256": "sha256:1dae00f92297183eda03f9f9ca5093e013d7bfe18885153b29bb9da54e344542",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "evidence"
+      ]
+    },
+    {
+      "baseline_path": "runtime/phase-a/start-phasea.ps1",
+      "baseline_sha256": "sha256:109590bab4148ad35fe3f25cdf0c98180b7a6649d2e37698769fb439e82d4a34",
+      "candidate_path": "runtime/phase-a/start-phasea.ps1",
+      "candidate_sha256": "sha256:b25cffbc6d35c9f41139460db0ab9bd9adc921a348e65a7b62824508c1fa5a54",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/sc/_llm_backend.py",
+      "baseline_sha256": "sha256:fc2bb1a13b0d89c9ae60975ef65c4f96012cb5ee3c2c99ba902a186545c3eeb0",
+      "candidate_path": "scripts/sc/_llm_backend.py",
+      "candidate_sha256": "sha256:1261e7bde204045605b29f41e19bab9bf5979cada9e6b7bd4fe2105ebd2f20b0",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/sc/_llm_review_engine.py",
+      "baseline_sha256": "sha256:d8272a2e3ac585e79059cd9de4d93a2098bfd1ea81815b3b93f8ed302a03aeb6",
+      "candidate_path": "scripts/sc/_llm_review_engine.py",
+      "candidate_sha256": "sha256:9992113bb6fd7118234daf4ddaba24ddb065cf9c5f2c26a107b570ed5bf56cde",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/sc/tests/test_llm_backend.py",
+      "baseline_sha256": "sha256:131c9ebc82b4811d9cbda17a79a7d4d92aa141e1a7f716962aa6224e933ea868",
+      "candidate_path": "scripts/sc/tests/test_llm_backend.py",
+      "candidate_sha256": "sha256:fdcd51b0692f8f25e6bb204014d376399a407b2bbd403d3e4c718b549d04e344",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    },
+    {
+      "baseline_path": "scripts/sc/tests/test_llm_review_runtime_budget.py",
+      "baseline_sha256": "sha256:46f5f0571eaa975976fadea47199e98499e7f3093f6019df14569015a8472a8c",
+      "candidate_path": "scripts/sc/tests/test_llm_review_runtime_budget.py",
+      "candidate_sha256": "sha256:66d80975d4e540a911d98610c67f15b0f2f2fab328df40901143113cc97adca6",
+      "change_type": "modified",
+      "inclusion_reason": "Explicit 7-25 implementation candidate",
+      "roles": [
+        "test"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

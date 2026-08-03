@@ -1,0 +1,764 @@
+完整实施路线
+
+这项改造应被定义为一个 Toolchain Scope 的仓库级工程：
+
+构建 Knowledge Compiler，将现有代码、文档、ADR、计划、契约和日志编译成 Toolchain、Phase、Workspace、Marketplace 四套机器检索投影；不迁移、不删除原文件，也不建立需要人工维护的第二套事实来源。
+
+当前仓库已明确：workflow.md、Taskmaster、Chapter 3–7 属于仓库本地正式交付内核，不是 Phase 浏览器/API 默认产品路径。 Phase A 的原始架构也明确排除了 Chapter 3–7，只允许 Chapter 2、prototype workflow、prototype TDD 等有限入口。
+
+因此完整实施分为十五个行为切片。
+
+一、最终目标架构
+现有仓库文件
+  ├─ 代码
+  ├─ AGENTS / README
+  ├─ workflow.md
+  ├─ ADR / architecture / standards
+  ├─ execution-plans / decision-logs
+  ├─ schemas / tests
+  └─ logs / sidecars
+          │
+          ▼
+   Knowledge Compiler
+          │
+          ├─ 文件发现
+          ├─ Scope 分类
+          ├─ 引用关系提取
+          ├─ 符号/API/契约/测试抽取
+          ├─ 模块聚合
+          ├─ 检索词生成
+          ├─ SHA 与语义基线
+          └─ 投影验证
+          │
+          ▼
+ knowledge/projections/
+  ├─ toolchain/
+  ├─ phase/
+  ├─ workspace/
+  └─ marketplace/
+          │
+          ▼
+   Skill / CLI / rg / RAG
+
+核心约束：
+
+原文件继续原位保留。
+knowledge/projections/** 全部机器生成。
+默认 Scope 为 phase。
+Phase 查询不得自动进入 workflow.md、Taskmaster、Chapter 3–7。
+Toolchain 查询可以完整读取这些内容。
+RAG 只负责候选召回，最终定位仍由路径、符号、契约和 rg 完成。
+每条生成知识必须携带源文件、源 SHA 和分类理由。
+二、最终目录结构
+knowledge/
+  README.md
+
+  config/
+    scopes.v1.json
+    visibility-policy.v1.json
+    module-rules.v1.json
+    query-profiles.v1.json
+    classification-exceptions.v1.json
+
+  schemas/
+    source-entry.v1.schema.json
+    source-catalog.v1.schema.json
+    relation-graph.v1.schema.json
+    module-index.v1.schema.json
+    projection-manifest.v1.schema.json
+    baseline.v1.schema.json
+    query-result.v1.schema.json
+    evaluation-case.v1.schema.json
+
+  generated/
+    catalog/
+      sources.v1.json
+      relations.v1.json
+      symbols.v1.json
+      routes.v1.json
+      contracts.v1.json
+      tests.v1.json
+      vocabulary.v1.json
+
+    projections/
+      toolchain/
+      phase/
+      workspace/
+      marketplace/
+
+    reports/
+      classification-conflicts.json
+      scope-leaks.json
+      stale-sources.json
+      unresolved-sources.json
+
+  evals/
+    scope-routing/
+    retrieval/
+    bad-cases/
+
+scripts/python/knowledge/
+  cli.py
+  discover.py
+  classify.py
+  relations.py
+  modules.py
+  project.py
+  query.py
+  baseline.py
+  validate.py
+  evaluate.py
+  extractors/
+
+缓存与 embedding 不提交 Git：
+
+.cache/knowledge/
+  ast/
+  embeddings/
+  sqlite/
+
+提交 Git 的是紧凑投影、配置、schema、基线和评估用例。
+
+三、R0–R4 与 L1–L4 的最终关系
+
+保留你的两套概念，但避免形成五乘四的目录爆炸。
+
+R0–R4：知识语义分类
+类别	内容
+R0	Scope 概述、使命、边界、路由、核心流程
+R1	术语、领域对象、状态、权限、业务规则
+R2	项目结构、技术栈、模块、服务、前后端实现
+R3	API、DTO、事件、Schema、CLI、配置契约
+R4	ADR、execution plan、decision log、bad case、变更历史
+L1–L4：检索深度
+层级	生成物
+L1	小于 5KB 的 Scope/模块索引
+L2	自动生成的 <module>.md 和 <module>.json
+L3	UI、权限、恢复、事件、CLI 等专项语义桥
+L4	SHA、语义指纹、审阅基线、漂移报告
+
+每个模块文件内部用 knowledge_categories 声明它涉及的 R0–R4，而不是为每个 R 建一套 L1–L4。
+
+四、完整实施切片
+KB-S0：冻结当前事实基线
+动作
+记录当前 Git HEAD。
+扫描根 README、AGENTS、workflow、ADR 索引、architecture 索引和 standards 索引。
+生成当前文件总表和引用关系快照。
+不修改任何现有行为。
+产物
+knowledge/generated/catalog/repository-baseline.v1.json
+knowledge/generated/reports/current-entrypoints.md
+退出条件
+所有被 Git 跟踪的文本文件均有路径、SHA、类型和初步角色。
+能识别当前所有索引文件。
+重复运行无差异。
+KB-S1：定义四个 Scope 和可见性模型
+动作
+
+建立四个 Scope：
+
+toolchain
+phase
+workspace
+marketplace
+
+定义五种可见性：
+
+active
+dependency
+conditional
+historical
+excluded
+
+建立初始硬边界：
+
+来源	Toolchain	Phase	Workspace	Marketplace
+workflow.md	active	excluded	conditional	excluded
+.agents/skills/**	active	conditional	conditional	conditional
+scripts/sc/**	active	conditional	excluded	excluded
+PhaseA.Platform/**	dependency	active	excluded	dependency
+runtime/phase-a/**	dependency	active	excluded	excluded
+architecture/phase-service/**	dependency	active	excluded	dependency
+architecture/base/**	conditional	dependency	active	excluded
+architecture/overlays/**	conditional	historical	conditional	excluded
+Taskmaster/Chapter 3–7	active	excluded	conditional	excluded
+
+architecture/base/** 当前明确是 Base-Clean、占位符驱动的 Godot 跨切面骨干，不是 Phase 服务的默认架构入口。
+
+退出条件
+任意文件都可以解释其在四个 Scope 中的可见性。
+分类冲突必须 fail closed，不得同时默认为多个 Scope 的 active。
+KB-S2：改造根 AGENTS.md 和 README.md
+AGENTS.md
+
+根 AGENTS 只保留：
+
+仓库身份；
+默认 Scope；
+Scope 选择规则；
+全局不可违反规则；
+四个 Scope 路由；
+权威优先级；
+高风险路径。
+
+删除或下沉根 AGENTS 中对以下内容的默认路由：
+
+Taskmaster；
+Chapter 3–7；
+Chapter 6 recovery；
+overlay generation；
+business repo template workflow；
+BMAD 规划过程。
+
+不是删除相关文件，而是不再让 Phase 默认上下文加载它们。
+
+建议增加：
+
+Default scope: phase
+
+Do not consume workflow.md, Taskmaster, Chapter 3-7,
+overlay generation or BMAD planning instructions for ordinary
+Phase service work.
+
+Select toolchain scope explicitly before maintaining those systems.
+README.md
+
+README 只保留：
+
+Phase 平台产品身份；
+四 Scope 地图；
+Phase 启动入口；
+Toolchain 的显式入口；
+Workspace 与未来 Marketplace 说明。
+
+workflow.md 只能出现在“内部工具链维护”章节。
+
+退出条件
+新会话只读根 AGENTS 和 README 时，会默认进入 Phase。
+不会把 workflow.md 识别为 Phase 产品工作流。
+KB-S3：建立机器 Schema
+
+必须先有 Schema，再编写扫描器。
+
+核心 source-entry
+{
+  "path": "workflow.md",
+  "sha": "git-blob-sha",
+  "kind": "workflow",
+  "primary_scope": "toolchain",
+  "visibility": {
+    "toolchain": "active",
+    "phase": "excluded",
+    "workspace": "conditional",
+    "marketplace": "excluded"
+  },
+  "classification_reasons": [],
+  "references": [],
+  "symbols": [],
+  "generated_at_commit": ""
+}
+核心 module-index
+{
+  "module_id": "phase.prototype-routes",
+  "scope": "phase",
+  "description": "",
+  "source_paths": [],
+  "entrypoints": [],
+  "contracts": [],
+  "tests": [],
+  "decisions": [],
+  "search_terms": [],
+  "dependencies": [],
+  "baseline": {}
+}
+退出条件
+所有 generated JSON 均能通过 Schema 校验。
+Schema 有版本号和兼容策略。
+KB-S4：实现文件发现和关系扫描器
+扫描内容
+Git 跟踪文件；
+文件类型；
+namespace、class、method；
+ASP.NET route；
+C# DTO/interface/event；
+JSON Schema；
+Python CLI 参数；
+PowerShell 稳定入口；
+Markdown heading/link/front matter；
+test target；
+ADR 引用；
+execution-plan 引用；
+skill 引用；
+import/project reference。
+关系类型
+imports
+implements
+tests
+documents
+decides
+supersedes
+calls
+produces
+consumes
+routes-to
+depends-on
+退出条件
+文件删除、增加、重命名均能被发现。
+可从 ADR 索引递归得到 ADR 引用闭包。
+可从 Phase 模块定位到对应测试和文档。
+
+目前 Phase 和 Godot 已有独立 ADR 索引，适合作为两个投影的种子，而不需要移动 ADR 文件。
+
+KB-S5：实现 Scope 分类器
+
+分类优先级：
+
+显式安全策略
+→ 路径种子
+→ 索引引用
+→ 代码依赖
+→ 文档语义
+→ LLM 歧义分类
+规则
+LLM 只处理无法由确定性规则判断的文件。
+LLM 结果必须绑定文件 SHA、模型、提示词版本和置信度。
+文件内容变化后，旧 LLM 分类自动失效。
+安全、权限、运行时和契约文件不能仅靠 LLM 决定 Scope。
+低置信度文件进入 conditional 或 unresolved，不得自动进入 active。
+特殊处理 docs/workflows/**
+
+不能整体划入 Toolchain，因为其中同时包含 Phase 文档和旧本地流程。
+
+自动按以下信号分类：
+
+phase-a-*、phase-b-*、phase-c-*：Phase。
+cloud-platform-*、cloud-user-*：Phase。
+chapter*、task-*、overlay-*：Toolchain。
+prototype-*：Phase + Workspace。
+run-protocol.md：Toolchain active，Phase conditional dependency。
+无法判断的文件进入歧义分类。
+退出条件
+已知 Phase forbidden 文件泄漏率为零。
+无法分类的文件有明确报告。
+每项分类都能执行 knowledge explain <path> 查看原因。
+KB-S6：实现模块识别与自动 module.md
+
+不需要人工维护任何 module.md。
+
+模块来源
+
+优先使用：
+
+C# namespace 和目录；
+Minimal API route group；
+service/interface 边界；
+test namespace；
+architecture heading；
+ADR 和标准引用；
+文件名与调用图；
+LLM 只用于合并候选模块和生成补充检索词。
+每个模块生成
+<module>.json
+<module>.md
+
+Markdown 内包含：
+
+模块一句话职责；
+路径登记表；
+公共符号；
+route/API；
+contract；
+tests；
+ADR；
+dependency；
+搜索词；
+SHA 基线。
+
+描述必须带来源：
+
+description_source:
+  xml-doc | architecture | route-name | test-name | llm-derived
+退出条件
+仓库新增文件能自动进入模块或 unresolved。
+删除文件会自动从模块移除。
+模块文档不得出现无法回溯源文件的规则。
+KB-S7：生成 Phase 投影
+
+这是第一个上线的生产投影。
+
+Phase 默认包含
+PhaseA.Platform/**
+PhaseA.Platform.Tests/**
+runtime/phase-a/**
+Phase-facing Python scripts
+architecture/phase-service/**
+ADR_INDEX_PHASE.md 及引用闭包
+Phase standards
+Phase A/B/C workflows
+prototype routes
+GDD-to-module
+Caddy/runtime/recovery
+accounts/auth/audit
+LLM/Codex entrypoints
+必要的 Godot kernel dependency
+
+当前 architecture/phase-service/** 已经是 Phase A/B 服务的轻量技术入口，并明确不覆盖 ADR 和正式决策。
+
+Phase 默认排除
+workflow.md
+Taskmaster triplet
+Chapter 3–7
+overlay generation SOP
+business repo upgrade
+template bootstrap
+BMAD 输出
+SuperClaude
+旧游戏仓任务路由
+Phase 投影生成物
+knowledge/generated/projections/phase/
+  index.md
+  manifest.v1.json
+  modules/
+  R0-overview.md
+  R1-domain.json
+  R2-technical.json
+  R3-contracts.json
+  R4-evolution.json
+  search-files.txt
+  search-terms.json
+  baseline.v1.json
+退出条件
+
+建立固定测试查询：
+
+Phase 账号 token 轮换
+Caddy 恢复顺序
+prototype repair ledger
+GDD module review
+
+结果必须命中 Phase 文档和代码，不能命中 Chapter 3–7。
+
+KB-S8：生成 Toolchain 投影
+包含
+workflow.md
+VDD
+Quick Dev
+Repository Maintenance
+Bootstrap Review
+BMAD 适配
+Taskmaster
+Chapter 3–7
+overlay generator
+review pipeline
+scripts/sc
+工具链 ADR、standards、execution plans
+工具链 evidence 与 bad cases
+边界
+
+Toolchain 可以维护 Phase，但不能把 Toolchain 的默认流程投射为 Phase 产品能力。
+
+退出条件
+查询 Chapter 6 recovery 能完整命中原本工具链内容。
+查询 Phase token auth 只把 Phase 内容作为 dependency，而不是把 Toolchain 变成主语境。
+KB-S9：生成 Workspace 投影
+
+Workspace 分为两种来源：
+
+根仓中的共享游戏执行内核；
+每个用户沙箱中的项目局部知识。
+根仓 Workspace 投影
+Game.Core/**
+Game.Godot/**
+测试目录
+architecture/base/**
+ADR_INDEX_GODOT.md
+Godot standards
+game-type guides
+prototype type kits
+Workspace 恢复契约
+用户沙箱局部投影
+AGENTS.md
+README.md
+project.md
+meta/
+ledger/
+sessions/
+assets/
+routes/
+evidence/
+
+其中：
+
+project.md 只描述项目独特身份和约束。
+动态进度不能写入 project.md。
+Session、run、ledger 和 evidence 分开生成。
+退出条件
+Workspace Agent 默认看不到 Phase 管理员内部实现。
+可以读取 Phase 明确公开的 route/API contract。
+可以读取允许的 Godot 工具和 Skill。
+KB-S10：建立 Marketplace 空投影和契约
+
+即使没有市场实现，也应建立空 Scope，避免未来破坏前三层结构。
+
+先定义
+package manifest；
+publisher；
+version；
+license；
+capability；
+sandbox permission；
+required tools；
+compatibility；
+evaluation；
+bad case；
+provenance；
+signature/hash；
+quarantine status。
+退出条件
+Marketplace projection 可以为空。
+Schema 和安全边界必须存在。
+未审核包不能进入 Workspace 的 active 集合。
+KB-S11：实现 Knowledge CLI
+
+建议统一入口：
+
+py -3 scripts/python/knowledge/cli.py <command>
+子命令
+discover
+classify
+build
+build --scope phase
+build --changed-since <sha>
+validate
+query
+explain
+diff
+baseline
+evaluate
+doctor
+
+示例：
+
+py -3 scripts/python/knowledge/cli.py build --scope phase
+py -3 scripts/python/knowledge/cli.py query --scope phase --text "prototype repair acceptance"
+py -3 scripts/python/knowledge/cli.py explain --scope phase --path workflow.md
+py -3 scripts/python/knowledge/cli.py diff --base HEAD~1 --head HEAD
+查询顺序
+Scope L1 索引
+→ 候选模块
+→ module.json
+→ 精确路径集合
+→ rg / 符号索引
+→ dependency 扩展
+→ conditional 扩展
+
+禁止 Skill 默认执行：
+
+rg <query> .
+退出条件
+查询输出包含来源路径、SHA、Scope 和匹配理由。
+查询不会无记录地跨 Scope 扩张。
+KB-S12：接入 Skill 和 Agent
+
+每个 Skill 生成一个机器配置：
+
+.agents/skills/<skill>/knowledge-profile.v1.json
+
+示例：
+
+{
+  "primary_scope": "toolchain",
+  "allowed_dependency_scopes": ["phase", "workspace"],
+  "query_profile": "repository-maintenance",
+  "forbidden_sources": [
+    "logs/phase-a-innernet/data/**"
+  ]
+}
+初始映射
+Skill	Scope
+VDD	Toolchain
+Quick Dev	Toolchain
+Repository Maintenance	Toolchain
+Bootstrap Review	Toolchain
+Phase API/GDD/runtime Skills	Phase
+Godot prototype Skills	Workspace + Phase dependency
+未来市场审核 Skill	Marketplace + Phase dependency
+执行规则
+Skill 开始时加载 profile。
+所有知识查询经过 Knowledge CLI。
+Profile 未声明的 Scope 不允许访问。
+高风险路径仍走原有授权规则。
+退出条件
+现有关键 Skills 均有 profile。
+Skill 不再在 prompt 中硬编码大量检索路径。
+Scope 违规可以机械失败。
+KB-S13：建立 SHA 与语义基线
+
+每个文件至少记录：
+
+git blob SHA
+path
+scope
+module
+last indexed commit
+
+代码和契约额外记录：
+
+public symbol fingerprint
+route fingerprint
+DTO/schema fingerprint
+CLI signature fingerprint
+event fingerprint
+test-anchor fingerprint
+漂移分类
+new-unregistered
+deleted-registered
+content-changed
+public-api-changed
+contract-changed
+route-changed
+permission-changed
+test-anchor-removed
+scope-changed
+处理策略
+漂移	行为
+私有实现 SHA 变化	重建模块缓存
+新文件未归属	warning 或 unresolved
+公共签名变化	重建 R2/R3
+API/schema 变化	blocking
+权限扩大	security blocking
+Scope 从 excluded 变 active	blocking
+test anchor 消失	quality blocking
+退出条件
+同一 commit 两次完整构建结果完全一致。
+只修改私有实现时，不产生虚假的 API 漂移。
+route 或 schema 变化必然触发 R3 更新。
+KB-S14：评估、Bad Case 和回归体系
+评估类别
+Scope routing
+Module selection
+Retrieval recall
+Retrieval precision
+Cross-scope leakage
+Stale projection
+Wrong authority selection
+Query latency
+Incremental rebuild correctness
+Bad Case 格式
+{
+  "case_id": "phase-workflow-leak-001",
+  "scope": "phase",
+  "query": "如何执行正式任务",
+  "expected_modules": [],
+  "forbidden_sources": [
+    "workflow.md",
+    ".taskmaster/**"
+  ],
+  "failure_family": "scope_leak"
+}
+基线门槛
+
+至少要求：
+
+已知 forbidden source 泄漏为零；
+generated source provenance 覆盖率 100%；
+同 commit 重建无 diff；
+删除文件不会继续出现在模块索引；
+Phase 核心查询能找到代码、契约和测试；
+Toolchain 查询仍能访问完整 legacy workflow。
+退出条件
+每次修复检索错误都增加 bad case。
+bad case 能自动重放。
+Phase bad case 可以反哺 Phase 模块、工具和 Skill 演进。
+KB-S15：切换默认入口并收敛旧索引
+
+完成前面所有切片后才切换。
+
+切换动作
+根 AGENTS 默认指向 Phase projection。
+README 指向四 Scope。
+Phase Skills 只消费 Phase projection。
+Toolchain Skills 显式进入 Toolchain。
+旧索引继续保留，但从默认读取顺序中移除。
+PROJECT_DOCUMENTATION_INDEX.md 等旧入口标记为 legacy navigation 或 generated compatibility source。
+不删除任何旧文件。
+兼容期规则
+
+当新投影和旧入口冲突时：
+
+源码 / Schema / Accepted ADR
+→ 当前 Scope Projection
+→ 当前 architecture/standards
+→ legacy index
+→ 对话摘要
+
+现有 harness 已经坚持 producer 状态、append-only events 和 reviewer sidecar 分离；知识系统应沿用这一权威分层，而不能用生成摘要覆盖原始事实。
+
+最终退出条件
+Phase 默认上下文不再读取 workflow.md。
+Toolchain 能完整维护 legacy workflow。
+Workspace 有自己的项目局部投影。
+Marketplace 有空但有效的 Schema 和 Scope。
+所有投影均可完全重建。
+原仓库文件零迁移、零删除。
+五、持续维护循环
+
+完成首次建设后，每次仓库变化执行：
+
+git diff
+→ 识别变更文件
+→ 更新物理 SHA
+→ 提取语义指纹
+→ 重新分类受影响文件
+→ 重建受影响模块
+→ 更新 Scope L1
+→ 更新 baseline
+→ 运行 scope leakage
+→ 运行 retrieval bad cases
+→ 输出报告
+
+完整扫描只用于：
+
+Schema 升级；
+分类规则升级；
+大范围目录变更；
+全局一致性检查；
+基线损坏恢复。
+
+平时使用增量构建。
+
+六、建议的 execution-plan 结构
+
+这项改造本身属于 Toolchain，因此可以使用现有 VDD，而不属于要从 Phase 上下文中屏蔽的普通产品工作。
+
+建议建立：
+
+execution-plans/2026-07-four-scope-knowledge-compiler/
+  00-index.md
+  01-authority-and-scope.md
+  02-schemas-and-invariants.md
+  03-scanner-and-classification.md
+  04-projection-model.md
+  05-query-and-consumption.md
+  06-baseline-evaluation-and-recovery.md
+  07-implementation-phases.md
+  97-requirement-ledger.md
+  98-source-audit.md
+  99-coverage-map.md
+  implementation-contract.v1.json
+
+行为切片按以下顺序执行：
+
+KB-S0 → S1 → S2 → S3 → S4 → S5
+→ S6 Phase
+→ S7 Toolchain
+→ S8 Workspace
+→ S9 Marketplace
+→ S10 CLI
+→ S11 Skill
+→ S12 Baseline
+→ S13 Evaluation
+→ S14 Cutover
+
+其中 KB-S6 Phase 投影完成并通过隔离评估 是第一个真正可投入使用的里程碑；后续三个 Scope 和 Skill 接入都建立在它之上。

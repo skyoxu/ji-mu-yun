@@ -1,0 +1,424 @@
+{
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "sha256": "sha256:dd955df3343309a1f510ea2e75f8669b92f06296d22183e0b5ce5d1f8aac9bb3",
+      "roles": [
+        "consumer"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "sha256": "sha256:7e86fbfd1acf231f1dfd6a07f909da3c6a2d9ed1f7e351fa10da90124a9d6f69",
+      "roles": [
+        "consumer"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+      "sha256": "sha256:03b9f7dc3169b490408c579eae19da7eb91c663ea5e77271a962d1be97dd7785",
+      "roles": [
+        "consumer"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
+      "roles": [
+        "consumer"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Configuration/PhaseAPlatformOptionsLoaderTests.cs",
+      "sha256": "sha256:7431c3bac096e638d3e1f997fedc609fbdd2a3f4b0ecc74e0feebcae1f0ebf3f",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs",
+      "sha256": "sha256:73d26174c772ec0c5c8838e92bb8a8e14251819bbddbe525c582dfcfc6f61a82",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Projects/ProjectDraftImportServiceTests.cs",
+      "sha256": "sha256:4d22e36a650622bf7e2a535e2710b626fde95d9d2c78cd88bce203d98f6ac9be",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Readback/ArtifactReadbackServiceTests.cs",
+      "sha256": "sha256:415ab8e004691264fa7e2d4fcb35e3b6a7ff7b35f6c53f59bc1a251f24e5f71e",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs",
+      "sha256": "sha256:4cfeff5b182efc337464d7a18ebf7ca64a41799bd4182a2dd46d6f18988dca2d",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GameDesignQuestionFormServiceTests.cs",
+      "sha256": "sha256:8f3ec67aff757ff27e887ce0f4fc91ae9b2b635506d9dedbfad39cd809f4612b",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GameDesignSceneRouteServiceTests.cs",
+      "sha256": "sha256:b66187accd84848ce4e2f96d2e2434b24f0aad0af31ab3272d9cf0d66d026f4b",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GddMilestoneStepServiceTests.cs",
+      "sha256": "sha256:dfc2bf0ffd4e01d0e66064f5fb5105c15dfdc86a2f84d1cad1a6d193e5518d18",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+      "sha256": "sha256:9ed4397c9dd9c4aeeff7cae8476cb63df07b05b037522b6a18dc8807b1e573db",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/ProjectWorkflowRouteServiceTests.cs",
+      "sha256": "sha256:6b9f6c7ce4d66f037170eac521d1c32fb89349468a9a6baee5d75e5b9bba63e7",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeIterationGoalServiceTests.cs",
+      "sha256": "sha256:253a4a904e1e19e5111c6b39d759af65636602fe2a07ce034f78aadaefb2f0fd",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeIterationPlanServiceTests.cs",
+      "sha256": "sha256:6754a12829e88e48712b5b59980d7cc79ebba99ed3c6c136f76f29246697f224",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "sha256": "sha256:f58dad097771bf43e044d99ed0ef7dfac081b026bf026a31be4ea6df27e93e86",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeUiOptimizationServiceTests.cs",
+      "sha256": "sha256:7ce6f18ded9a54caad364b38e0cdc63978b0d9f10ccef4caa619bd5a4a4a8880",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/PrototypeWorkflowTests.cs",
+      "sha256": "sha256:b3a05f64fb5760fbad726d92ecfc34279d656a59dd5bef5b45679fc5301a6718",
+      "roles": [
+        "test"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Configuration/PhaseAPlatformOptions.cs",
+      "sha256": "sha256:6f7016d827f6b2a2fed664c30aa2b01f7019e3c2c701c4acd47c09dcde05a45a",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Configuration/PhaseAPlatformOptionsLoader.cs",
+      "sha256": "sha256:d3b9351922eb0a0ba02a797675eaef7e5b69b0b34c9c79036bcfc881725fbe46",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "sha256": "sha256:887025b4a7c3f2d0ce497ed60cb0b093ff2c2760439584d68ab5a777b495f8a9",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+      "sha256": "sha256:56fae57e338cefe7b746cc1727c5d78e00bcc5af96743630fb24c493193dc673",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ChatService.cs",
+      "sha256": "sha256:07bb502d7260e2fed90f7ddf8184fc4ffb60fd6fabf689447fb03e8aaecf503b",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+      "sha256": "sha256:50930ac8b2da5e5671a6b0a0139f70ce22ef1ff6576c2db5c08ea84dc85ab754",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Program.cs",
+      "sha256": "sha256:31b26a47d69deec8691d15812e1f894eb2dbf9acedbb616cf00e00ef301397af",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+      "sha256": "sha256:6f98382408d72d63f0b80ed269aed5e5899aa6e0dda3d01dfe66f96663592f19",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+      "sha256": "sha256:2afdf21cbb53891ee3b01fa3aac989006edc2fd2d4dc921419ad8b3cc3daa797",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+      "sha256": "sha256:26156a495d1df671dfe71d26b0af78d2fcd22a9883fa2b59d755631d5b55eae1",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "sha256": "sha256:970fe9f83909e95a8ee70ba7c3643232181f1255f1ba1febcf596cb5a9eaf368",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "sha256": "sha256:2d1e2defec1c2c7fdd1965faae98d406527dbe93cfe32d229113789f9ef6e9c9",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs",
+      "sha256": "sha256:bc0a86e54d75cdc1655ac6bf7601579fdd8cd2052b4a91c7e24733261179b892",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "sha256": "sha256:8114941f15a09680f54989c9fbdee6c87ad8acbfb63f430830412b3a5a0660dc",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+      "sha256": "sha256:7d1cf10a58d51b091fa29b56146e6da62687dbb565440dc02d5244adf7ac7c42",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+      "sha256": "sha256:2ef1266e44c318b6f98028263e281e26089c6077b0f872974beb33b2273c9b33",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+      "sha256": "sha256:1ac96e2e11ae427c4c650fac9c94925165aa1f2c7f67fe3f8e0e4022f1d82033",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+      "sha256": "sha256:25b2064fb0a709fdd445f70e390654bc519b7b7dcd69e7b4ed9dbbf74c4a79c8",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+      "sha256": "sha256:00784df263f82fe1eff9ccec5161f520af324bd55145ac5e4e1e594116078add",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "sha256": "sha256:587852d457559f8a4225123a55d192f98e166e09d0ad6e22f81162b37fd45aae",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "sha256": "sha256:582fc13a7ef099f8a4d0c6bb87c417d0143a1fc6b8f72f949270b575595d14e7",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "sha256": "sha256:f0a2dc41578e3d2d81a81cdb317dfcb4fb7233d44fcdb6730e2974b37467aa1d",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+      "sha256": "sha256:068ac080c31fb88a95a982d5b3f8a9443a3e7f43fdb28b2df207bd53dd30ad74",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "sha256": "sha256:c409b23c8cf9e1cb6ac9e8780549de67ececa5d5f1c09bbdfaa8951de6b970fa",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "sha256": "sha256:39ad45ff70963409d783ce1aa78e89f9158a857ab5723025082ec7b943b95144",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "PhaseA.Platform/Skills/SkillActionService.cs",
+      "sha256": "sha256:a25525b44b3e74a3e8c6aac4dfbf41b1a1a1f86c7a882211e895c56722875c56",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "docs/architecture/ADR_INDEX_PHASE.md",
+      "sha256": "sha256:e40079626e9285574fd14da29df2b9b0dd06c004e7befd15bf350623ea6429f3",
+      "roles": [
+        "authority"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "sha256": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e",
+      "roles": [
+        "authority"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "sha256": "sha256:e3f0f05ef426aada395843dace58410b3ddfbcb39326e96ae562cad9eb7cfc35",
+      "roles": [
+        "evidence"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+      "sha256": "sha256:0bca3489c3ed2c3175c0c09589caef16259f81317892743f69f528e229ed4210",
+      "roles": [
+        "evidence"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "execution-plans/95-implementation-report-index.v1.json",
+      "sha256": "sha256:e49b27c5ec9de13f56c25698e928e638bdc498f295364bf3bd772b9ecbcc09fc",
+      "roles": [
+        "evidence"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    },
+    {
+      "path": "runtime/phase-a/start-phasea.ps1",
+      "sha256": "sha256:109590bab4148ad35fe3f25cdf0c98180b7a6649d2e37698769fb439e82d4a34",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "Exact immutable pre-implementation path from the declared Git diff."
+    }
+  ]
+}

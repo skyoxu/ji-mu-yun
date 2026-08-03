@@ -1,0 +1,107 @@
+{
+  "expected_failure_code": null,
+  "expected_result": "pass",
+  "fixture_id": "valid-locator-llm-intent",
+  "kind": "positive",
+  "operation": "locator",
+  "request": {
+    "caller": {
+      "caller_id": "skill.synthetic.consumer",
+      "caller_type": "skill",
+      "intent_source": "llm"
+    },
+    "intent": {
+      "consumer_ref": null,
+      "keywords": [
+        "llm",
+        "evidence-binding"
+      ],
+      "preferred_modules": [],
+      "primary_domain_hint": "phase",
+      "query": "Locate the current Phase LLM entrypoint and evidence binding contracts."
+    },
+    "request_id": "locator-request-001",
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "trusted_envelope": {
+      "allowed_domains": [
+        "phase"
+      ],
+      "authority_ref": "refs/heads/main",
+      "dirty_worktree_authority": false,
+      "implicit_fetch": false,
+      "max_results": 8,
+      "max_source_bytes": 65536,
+      "owner": "adapter",
+      "path_policy": {
+        "allowed_path_prefixes": [
+          "docs/architecture/phase-service",
+          "execution-plans/synthetic-plan"
+        ],
+        "policy_id": "locator-read-policy-synthetic",
+        "policy_revision": "locator-read-policy.synthetic.v1",
+        "policy_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "permission_source": "local-policy",
+      "source_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+      "source_snapshot_id": "source-snapshot-main-001",
+      "trace_id": "trace-locator-001"
+    }
+  },
+  "result": {
+    "confidence": {
+      "level": "high",
+      "score": 0.96
+    },
+    "next_action": "read-and-verify",
+    "normalized_keywords": [
+      "llm",
+      "evidence-binding",
+      "phase"
+    ],
+    "path_policy_identity": {
+      "policy_id": "locator-read-policy-synthetic",
+      "policy_revision": "locator-read-policy.synthetic.v1",
+      "policy_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "recommended_reads": [
+      {
+        "anchor": "Shared execution entrypoints",
+        "anchor_kind": "heading",
+        "line_end": 90,
+        "line_start": 40,
+        "matched_by": [
+          "exact-identifier",
+          "rg-lexical",
+          "token-bm25"
+        ],
+        "module_id": "phase.llm-codex-execution",
+        "path": "docs/architecture/phase-service/llm-codex-execution.md",
+        "provenance_refs": [
+          "catalog://phase/llm-codex-execution"
+        ],
+        "rank": 1,
+        "ranking_breakdown": {
+          "bm25": 0.88,
+          "exact": 1.0,
+          "lexical": 0.91,
+          "relation": 0.25
+        },
+        "score": 0.96,
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "visibility_reason": "phase active source"
+      }
+    ],
+    "request_id": "locator-request-001",
+    "result_kind": "location-recommendation",
+    "revalidation_required": true,
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "selected_domain": "phase",
+    "source_identity": {
+      "authority_ref": "refs/heads/main",
+      "source_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+      "source_snapshot_id": "source-snapshot-main-001"
+    },
+    "status": "matched"
+  },
+  "schema_version": "jimuyun.knowledge-interface-fixture.v1"
+}

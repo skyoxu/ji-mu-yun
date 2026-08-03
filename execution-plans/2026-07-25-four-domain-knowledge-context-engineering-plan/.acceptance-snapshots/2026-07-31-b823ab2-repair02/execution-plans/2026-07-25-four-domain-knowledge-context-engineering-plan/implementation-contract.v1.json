@@ -1,0 +1,613 @@
+{
+  "accepted_adr": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+  "formal_merge_decision": "docs/adr/ADR-0046-knowledge-context-protected-integration-merge.md",
+  "adapter_bridge": {
+    "runner": "tools/run_tdd_adapter_bridge.py"
+  },
+  "k5_llm_ambiguity_backend": "scripts/sc/_llm_backend.py::run_llm_exec",
+  "knowledge_locator": {
+    "caller_llm_allowed_fields": [
+      "intent.query",
+      "intent.keywords",
+      "intent.preferred_modules",
+      "intent.primary_domain_hint"
+    ],
+    "canonical_core_count": 1,
+    "default_llm_enabled": false,
+    "first_adapter": "cli",
+    "low_confidence_status": "insufficient_match",
+    "matched_confidence_levels": [
+      "high",
+      "medium"
+    ],
+    "output_kind": "location-recommendation",
+    "request_transport": "json-stdin",
+    "requires_source_hash_revalidation": true,
+    "response_transport": "json-stdout",
+    "result_path_policy_binding": "required",
+    "retrieval_order": [
+      "exact-path-identifier-symbol",
+      "rg-lexical",
+      "tokenizer-bm25",
+      "relation-graph",
+      "deterministic-tie-break"
+    ],
+    "trusted_field_owners": [
+      "adapter",
+      "server-registry"
+    ],
+    "trusted_path_policy_required": true
+  },
+  "knowledge_maintenance": {
+    "authority_ref": "refs/heads/main",
+    "before_snapshot_binding": "request.knowledge_snapshot_id",
+    "dirty_worktree_is_fact_authority": false,
+    "implicit_fetch": false,
+    "log_policy": "append-only",
+    "modes": [
+      "existing-only",
+      "targeted"
+    ],
+    "source_mutation_allowed": false,
+    "skill_id": "maintain-knowledge-base",
+    "skill_path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+    "write_classes": [
+      "projection",
+      "index",
+      "validated-lkg-pointer",
+      "maintenance-log"
+    ]
+  },
+  "lifecycle_states": [
+    "draft",
+    "plan-ready",
+    "implementation-authorized",
+    "implementation-complete",
+    "acceptance-passed",
+    "archived"
+  ],
+  "live_state_policy": {
+    "live_hosted_workspace": "forbidden",
+    "live_metadata_db": "forbidden",
+    "real_account_content": "forbidden",
+    "real_provider_secret": "forbidden"
+  },
+  "plan_id": "jimuyun-four-domain-knowledge-context.v1",
+  "production_code_policy": {
+    "before_plan_ready": "forbidden",
+    "k0_k10": "forbidden",
+    "k11_k13": "blocked_until_bh_handoff_or_formal_merge_supersede_and_explicit_user_authorization",
+    "k14": "separate_downstream_authorization"
+  },
+  "profile": "resumable",
+  "protected_gate": {
+    "client_selectable": false,
+    "e2_manifest_gate_mode": "enforce",
+    "required_any": [
+      "BH-HANDOFF",
+      "formal_merge_decision",
+      "formal_supersede_decision"
+    ],
+    "requires_explicit_user_write_authorization": true
+  },
+  "required_artifacts": [
+    "00-index.md",
+    "01-scope-authority-and-non-goals.md",
+    "02-executable-contracts-and-invariants.md",
+    "03-validators-fixtures-and-control-gates.md",
+    "04-behavior-slices-and-implementation-order.md",
+    "05-testing-observability-and-evidence.md",
+    "06-risks-dod-and-glossary.md",
+    "07-implementation-phases.md",
+    "08-bootstrap-review-entry.md",
+    "09-plan-local-artifact-conventions.md",
+    "10-k12-protected-write-set.md",
+    "95-implementation-evolution-and-completion-report.md",
+    "96-global-review-and-validation.md",
+    "97-requirements-ledger.md",
+    "98-original-to-split-audit.md",
+    "99-source-coverage.md",
+    "implementation-contract.v1.json",
+    "requirements-ledger.v1.json",
+    "source-provenance.v1.json",
+    "command-registry.v1.json",
+    "resume-state.v1.json",
+    "schemas/plan-state.v1.schema.json",
+    "schemas/requirements.v1.schema.json",
+    "schemas/knowledge-contract.v1.schema.json",
+    "schemas/source-snapshot.v1.schema.json",
+    "schemas/context-assembly.v1.schema.json",
+    "schemas/hosted-context-manifest.v1.schema.json",
+    "schemas/context-envelope-reference-vector.v1.schema.json",
+    "schemas/inventory.v1.schema.json",
+    "schemas/hosted-callsite-migration-ledger.v1.schema.json",
+    "schemas/direct-llm-invocation-violations.v1.schema.json",
+    "schemas/fixture-case.v1.schema.json",
+    "schemas/knowledge-locator-request.v1.schema.json",
+    "schemas/knowledge-locator-result.v1.schema.json",
+    "schemas/knowledge-maintenance-request.v1.schema.json",
+    "schemas/knowledge-maintenance-result.v1.schema.json",
+    "schemas/scope-gate-result.v1.schema.json",
+    "fixtures/fixture-cases.v1.json",
+    "fixtures/knowledge-interface-cases.v1.json",
+    "fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json",
+    "inventories/source-snapshot.v1.json",
+    "inventories/codex-hosted-callers.v1.json",
+    "inventories/llm-route-engine-callers.v1.json",
+    "inventories/python-llm-backend-callers.v1.json",
+    "inventories/direct-llm-invocation-violations.v1.json",
+    "inventories/hosted-callsite-migration-ledger.v1.json",
+    "tools/context_crypto.py",
+    "tools/build_reference_vector.py",
+    "tools/build_hosted_inventory.py",
+    "tools/build_hosted_migration_ledger.py",
+    "tools/publish_implementation_complete.py",
+    "tools/validate_whole_directory.py",
+    "tools/tests/test_plan_validator.py"
+  ],
+  "schema_version": "jimuyun.knowledge-implementation-contract.v1",
+  "slices": [
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [],
+      "downstream_dependents": [
+        "K1",
+        "K2",
+        "K3",
+        "K4",
+        "K5",
+        "K6",
+        "K7",
+        "K8",
+        "K9",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "plan-local",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/tools/run_tdd_adapter_bridge.py"
+      ],
+      "slice_id": "K0",
+      "title": "Synthetic baseline"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K0"
+      ],
+      "downstream_dependents": [
+        "K2",
+        "K3",
+        "K4",
+        "K5",
+        "K6",
+        "K7",
+        "K8",
+        "K9",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "plan-local",
+      "production_write_policy": "plan-docs-only",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md"
+      ],
+      "slice_id": "K1",
+      "title": "ADR and authority contract"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K1"
+      ],
+      "downstream_dependents": [
+        "K3",
+        "K4",
+        "K5",
+        "K6",
+        "K7",
+        "K8",
+        "K9",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "plan-local",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/schemas/plan-state.v1.schema.json"
+      ],
+      "slice_id": "K2",
+      "title": "Schemas and fixtures"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K2"
+      ],
+      "downstream_dependents": [
+        "K4",
+        "K5",
+        "K6",
+        "K7",
+        "K8",
+        "K9",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "plan-local",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/source-snapshot.v1.json"
+      ],
+      "slice_id": "K3",
+      "title": "Snapshot and build foundation"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K3"
+      ],
+      "downstream_dependents": [
+        "K5",
+        "K6",
+        "K7",
+        "K8",
+        "K9",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "plan-local",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/source-snapshot.v1.json"
+      ],
+      "slice_id": "K4",
+      "title": "Repository catalog"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K4"
+      ],
+      "downstream_dependents": [
+        "K6",
+        "K7",
+        "K8",
+        "K9",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "plan-local",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "knowledge-interface negative fixture must reject LLM-owned authority, generated answers, source or path-policy drift, out-of-policy paths, or matched low confidence with its targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/knowledge-interface-cases.v1.json"
+      ],
+      "slice_id": "K5",
+      "title": "Deterministic Knowledge Locator, tokenizer, ranking and evaluation"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K5"
+      ],
+      "downstream_dependents": [
+        "K7",
+        "K8",
+        "K9",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "plan-local",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/positive/valid-observe-e1-gate.json"
+      ],
+      "slice_id": "K6",
+      "title": "Experimental E1 projection"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K6"
+      ],
+      "downstream_dependents": [
+        "K8",
+        "K9",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "plan-local",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "PhaseA.Platform/Workspaces/ProjectWorkspaceSeeder.cs"
+      ],
+      "slice_id": "K7",
+      "title": "Template projection"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K7"
+      ],
+      "downstream_dependents": [
+        "K9",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "synthetic-only",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/cross-project-source.json"
+      ],
+      "slice_id": "K8",
+      "title": "Project projection"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K8"
+      ],
+      "downstream_dependents": [
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "synthetic-only",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/negative/recovery-order-mismatch.json"
+      ],
+      "slice_id": "K9",
+      "title": "Recovery projection"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K9"
+      ],
+      "downstream_dependents": [
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "plan-local",
+      "production_write_policy": "forbidden",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json"
+      ],
+      "slice_id": "K10",
+      "title": "Context assembler observe-only"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K10"
+      ],
+      "downstream_dependents": [
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "read-only-source",
+      "production_write_policy": "blocked_until_bh_handoff_or_merge",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/inventories/hosted-callsite-migration-ledger.v1.json"
+      ],
+      "slice_id": "K11",
+      "title": "Caller inventory"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": true
+      },
+      "depends_on": [
+        "K11"
+      ],
+      "downstream_dependents": [
+        "K13",
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "protected-integration",
+      "production_write_policy": "authorized_by_ADR-0046_and_explicit_user_authorization",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "PhaseA.Platform/Llm/HostedContextGate.cs"
+      ],
+      "slice_id": "K12",
+      "title": "Gate migration"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K12"
+      ],
+      "downstream_dependents": [
+        "K14"
+      ],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "protected-integration",
+      "production_write_policy": "blocked_until_bh_handoff_or_merge",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "plan-local fixture or source guard must fail with a targeted code",
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/e2-release-evidence.v1.json"
+      ],
+      "slice_id": "K13",
+      "title": "E2 release"
+    },
+    {
+      "allowed_changes": {
+        "live_hosted_workspace": false,
+        "live_metadata_db": false,
+        "plan_local": true,
+        "production_code": false
+      },
+      "depends_on": [
+        "K13"
+      ],
+      "downstream_dependents": [],
+      "green_command": "py -3 tools/validate_whole_directory.py",
+      "phase": "downstream",
+      "production_write_policy": "separate_authorization",
+      "recovery": "Preserve failure evidence, invalidate this slice and declared dependents, then replay the terminal validator.",
+      "red_command": "maintenance negative fixture must reject request/before-snapshot drift, unscoped discovery, worktree fact promotion, source mutation, implicit fetch, dirty authority, or non-append logging",
+      "execution_snapshot_paths": [
+        ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py"
+      ],
+      "slice_id": "K14",
+      "title": "Other domains and maintain-knowledge-base Skill"
+    }
+  ],
+  "source_requirements": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan.md",
+  "terminal_validation": {
+    "authorizes": [
+      "plan-ready"
+    ],
+    "command": "py -3 tools/validate_whole_directory.py --publish-plan-ready",
+    "command_id": "plan-ready-publish",
+    "does_not_authorize": [
+      "implementation-authorized",
+      "implementation-complete",
+      "acceptance-passed",
+      "archived",
+      "release"
+    ]
+  }
+}

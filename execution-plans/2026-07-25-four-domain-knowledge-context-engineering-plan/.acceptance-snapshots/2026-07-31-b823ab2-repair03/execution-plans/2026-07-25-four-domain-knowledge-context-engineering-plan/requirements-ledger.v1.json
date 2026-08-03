@@ -1,0 +1,592 @@
+{
+  "plan_id": "jimuyun-four-domain-knowledge-context.v1",
+  "requirements": [
+    {
+      "acceptance_ref": "acceptance://KC-001/authority-chain",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "The standalone Markdown remains original-requirements input and the directory is the VDD plan authority after plan-ready.",
+      "requirement_id": "KC-001",
+      "source_refs": [
+        "01-scope-authority-and-non-goals.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-002/adr-relationship",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "ADR-0044 is Accepted and explicitly extends ADR-0037, complements ADR-0038, and supersedes neither.",
+      "requirement_id": "KC-002",
+      "source_refs": [
+        "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-003/four-dimensions",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "Every contract carries Domain, per-domain Visibility, Lifecycle Instance, and Enforcement Level.",
+      "requirement_id": "KC-003",
+      "source_refs": [
+        "schemas/knowledge-contract.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-004/domain-closure",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "The four domains and explicit dependency closure are versioned and fail closed on unknown values.",
+      "requirement_id": "KC-004",
+      "source_refs": [
+        "02-executable-contracts-and-invariants.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-005/projection-authority",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "Projection is derived_cache and never instruction authority.",
+      "requirement_id": "KC-005",
+      "source_refs": [
+        "schemas/knowledge-contract.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-006/e1-boundary",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "E1 is retrieval-scoped and cannot claim Hosted enforcement.",
+      "requirement_id": "KC-006",
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-007/e2-e3-boundary",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "E2 is context-bound and E3 remains a separate Phase C scope.",
+      "requirement_id": "KC-007",
+      "source_refs": [
+        "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-008/permission-intersection",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "Server registries are the permission trust root and project data can only narrow permissions.",
+      "requirement_id": "KC-008",
+      "source_refs": [
+        "schemas/hosted-context-manifest.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-009/lifecycle-isolation",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "Repository, template, project and run lifecycles have independent cache identity.",
+      "requirement_id": "KC-009",
+      "source_refs": [
+        "02-executable-contracts-and-invariants.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-010/synthetic-only",
+      "owner_slice": "K0",
+      "production_write_policy": "forbidden",
+      "requirement": "K0 uses only temporary synthetic roots, disposable DBs, fake accounts and canaries.",
+      "requirement_id": "KC-010",
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-011/no-live-path",
+      "owner_slice": "K0",
+      "production_write_policy": "forbidden",
+      "requirement": "K0 never accesses live metadata, live workspace, real secret or real account content.",
+      "requirement_id": "KC-011",
+      "source_refs": [
+        "03-validators-fixtures-and-control-gates.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-012/schema-inventory",
+      "owner_slice": "K2",
+      "production_write_policy": "forbidden",
+      "requirement": "All plan-local schemas have stable identities and closed root shapes.",
+      "requirement_id": "KC-012",
+      "source_refs": [
+        "schemas/"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-013/fixture-parity",
+      "owner_slice": "K2",
+      "production_write_policy": "forbidden",
+      "requirement": "Positive and negative fixtures exercise the same composition semantics.",
+      "requirement_id": "KC-013",
+      "source_refs": [
+        "fixtures/fixture-cases.v1.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-014/fail-closed-order",
+      "owner_slice": "K2",
+      "production_write_policy": "forbidden",
+      "requirement": "Composition validation fails closed with targeted failure codes.",
+      "requirement_id": "KC-014",
+      "source_refs": [
+        "tools/validate_whole_directory.py"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-015/snapshot-replay",
+      "owner_slice": "K3",
+      "production_write_policy": "forbidden",
+      "requirement": "The source snapshot is deterministic for the same eligible bytes and policy revisions.",
+      "requirement_id": "KC-015",
+      "source_refs": [
+        "schemas/source-snapshot.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-016/path-containment",
+      "owner_slice": "K3",
+      "production_write_policy": "forbidden",
+      "requirement": "Windows path normalization rejects case collision, reparse escape and cache roots under protected roots.",
+      "requirement_id": "KC-016",
+      "source_refs": [
+        "fixtures/negative/cache-root-under-workspace.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-017/lkg-recovery",
+      "owner_slice": "K3",
+      "production_write_policy": "forbidden",
+      "requirement": "Atomic build pointers, lock ownership and LKG recovery preserve failed evidence.",
+      "requirement_id": "KC-017",
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-018/catalog-exclusion",
+      "owner_slice": "K4",
+      "production_write_policy": "forbidden",
+      "requirement": "Repository catalog excludes logs, live DB, workspace, raw prompt, dynamic cache and meta/knowledge.",
+      "requirement_id": "KC-018",
+      "source_refs": [
+        "99-source-coverage.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-019/tokenizer-vectors",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "Tokenizer and normalization revisions are fixed and include Chinese and code identifier rules.",
+      "requirement_id": "KC-019",
+      "source_refs": [
+        "03-validators-fixtures-and-control-gates.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-020/ranking-vectors",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "Ranking parameters, tie-breaks and score mapping are fixed before deterministic claims.",
+      "requirement_id": "KC-020",
+      "source_refs": [
+        "03-validators-fixtures-and-control-gates.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-021/llm-delegation",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "K5 ambiguity classification delegates only through scripts/sc/_llm_backend.py::run_llm_exec.",
+      "requirement_id": "KC-021",
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-022/evaluation-set",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "Evaluation expands required and relevant source sets on a fixed snapshot with explicit glob semantics.",
+      "requirement_id": "KC-022",
+      "source_refs": [
+        "schemas/requirements.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-023/e1-readiness",
+      "owner_slice": "K6",
+      "production_write_policy": "forbidden",
+      "requirement": "E1 Phase Projection is experimental, derived, provenance-bound and threshold-gated.",
+      "requirement_id": "KC-023",
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-024/seeder-projection",
+      "owner_slice": "K7",
+      "production_write_policy": "forbidden",
+      "requirement": "Template Projection derives managed paths from actual ProjectWorkspaceSeeder behavior.",
+      "requirement_id": "KC-024",
+      "source_refs": [
+        "PhaseA.Platform/Workspaces/ProjectWorkspaceSeeder.cs"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-025/project-isolation",
+      "owner_slice": "K8",
+      "production_write_policy": "forbidden",
+      "requirement": "Project Projection is isolated by account, project and workspace generation.",
+      "requirement_id": "KC-025",
+      "source_refs": [
+        "schemas/knowledge-contract.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-026/recovery-redaction",
+      "owner_slice": "K9",
+      "production_write_policy": "forbidden",
+      "requirement": "Recovery Projection is redacted and excludes raw prompt, token, secret, host path and other account data.",
+      "requirement_id": "KC-026",
+      "source_refs": [
+        "docs/adr/ADR-0038-phase-evidence-sidecars-readback.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-027/budget-omission",
+      "owner_slice": "K10",
+      "production_write_policy": "forbidden",
+      "requirement": "Context budgets are finite and required omissions block dispatch with evidence.",
+      "requirement_id": "KC-027",
+      "source_refs": [
+        "schemas/context-assembly.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-028/signed-payload",
+      "owner_slice": "K10",
+      "production_write_policy": "forbidden",
+      "requirement": "The signed payload covers identity, policies, snapshots, read/write/output, assembly, budget, execution policy, hashes, nonce and time.",
+      "requirement_id": "KC-028",
+      "source_refs": [
+        "schemas/hosted-context-manifest.v1.schema.json",
+        "schemas/context-envelope-reference-vector.v1.schema.json",
+        "fixtures/reference-vectors/jcs-hmac-reference-vector.v1.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-029/contract-composition",
+      "owner_slice": "K10",
+      "production_write_policy": "forbidden",
+      "requirement": "The envelope aggregates existing recovery, prompt scan, DB binding, source hash, live blocker and explicit exemption contracts.",
+      "requirement_id": "KC-029",
+      "source_refs": [
+        "02-executable-contracts-and-invariants.md",
+        "schemas/hosted-context-manifest.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-030/inventory-generation",
+      "owner_slice": "K11",
+      "production_write_policy": "blocked_until_gate",
+      "requirement": "Three caller inventories and a direct invocation inventory are generated from current source.",
+      "requirement_id": "KC-030",
+      "source_refs": [
+        "tools/build_hosted_inventory.py"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-031/inventory-derived-status",
+      "owner_slice": "K11",
+      "production_write_policy": "blocked_until_gate",
+      "requirement": "Inventory membership, reachability, status and source identity are not hand-counted or manually marked migrated.",
+      "requirement_id": "KC-031",
+      "source_refs": [
+        "schemas/inventory.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-032/protected-gate",
+      "owner_slice": "K11",
+      "production_write_policy": "blocked_until_gate",
+      "requirement": "K11-K13 production write is blocked until BH-HANDOFF or formal merge/supersede and explicit authorization.",
+      "requirement_id": "KC-032",
+      "source_refs": [
+        "implementation-contract.v1.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-033/gate-mode",
+      "owner_slice": "K12",
+      "production_write_policy": "blocked_until_gate",
+      "requirement": "Gate mode is server-controlled; an E2 manifest is valid only in enforce, legacy or observe cannot declare E2, and rollback revokes E2 readiness.",
+      "requirement_id": "KC-033",
+      "source_refs": [
+        "schemas/scope-gate-result.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-034/compatibility-errors",
+      "owner_slice": "K12",
+      "production_write_policy": "blocked_until_gate",
+      "requirement": "Migration keeps backward-compatible browser/API behavior and stable browser-safe error codes.",
+      "requirement_id": "KC-034",
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-035/e2-predicate",
+      "owner_slice": "K13",
+      "production_write_policy": "blocked_until_gate",
+      "requirement": "E2 readiness is mechanically computed from current evidence and never hand-declared.",
+      "requirement_id": "KC-035",
+      "source_refs": [
+        "implementation-contract.v1.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-036/maintenance",
+      "owner_slice": "K14",
+      "production_write_policy": "separate_authorization",
+      "requirement": "K14 maintains other projections, incremental rebuilds, bad cases, LKG and compatibility navigation.",
+      "requirement_id": "KC-036",
+      "source_refs": [
+        "07-implementation-phases.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-037/preimplementation-boundary",
+      "owner_slice": "K0",
+      "production_write_policy": "forbidden",
+      "requirement": "No production code, live DB or live workspace is modified before plan-ready and later authorization.",
+      "requirement_id": "KC-037",
+      "source_refs": [
+        "00-index.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-038/source-lineage",
+      "owner_slice": "K0",
+      "production_write_policy": "forbidden",
+      "requirement": "Original requirements and know1-know5 lineage hashes are preserved.",
+      "requirement_id": "KC-038",
+      "source_refs": [
+        "source-provenance.v1.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-039/adr-nonreplacement",
+      "owner_slice": "K1",
+      "production_write_policy": "forbidden",
+      "requirement": "ADR-0037 and ADR-0038 are not rewritten to carry the new Context Envelope decision.",
+      "requirement_id": "KC-039",
+      "source_refs": [
+        "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-040/bootstrap-entry",
+      "owner_slice": "K13",
+      "production_write_policy": "blocked_until_gate",
+      "requirement": "Bootstrap Review is gated on actual executable artifacts, deterministic preflight and explicit authorization.",
+      "requirement_id": "KC-040",
+      "source_refs": [
+        "08-bootstrap-review-entry.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-041/locator-request-result-schema",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "The Knowledge Locator has one versioned request contract and one versioned location-result contract shared by every adapter.",
+      "requirement_id": "KC-041",
+      "source_refs": [
+        "schemas/knowledge-locator-request.v1.schema.json",
+        "schemas/knowledge-locator-result.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-042/trusted-input-ownership",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "A caller LLM may provide semantic intent and hints, while an adapter or server Registry owns authority, permission, snapshot, Domain ceiling, path policy and budget fields; results bind the trusted path-policy identity.",
+      "requirement_id": "KC-042",
+      "source_refs": [
+        "02-executable-contracts-and-invariants.md",
+        "schemas/knowledge-locator-request.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-043/deterministic-locator-order",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "Locator v1 uses exact matching, scoped rg, tokenizer/BM25, relation expansion and deterministic tie-breaks without default LLM generation or embeddings.",
+      "requirement_id": "KC-043",
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md",
+        "implementation-contract.v1.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-044/location-only-result",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "Locator output is a ranked source-location recommendation with path, anchor, line range, source hash, provenance and ranking evidence, never a generated fact answer.",
+      "requirement_id": "KC-044",
+      "source_refs": [
+        "schemas/knowledge-locator-result.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-045/insufficient-match",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "Matched retrieval permits only high or medium confidence; low-confidence retrieval returns insufficient_match with bounded candidates or an empty read set and does not infer a fact.",
+      "requirement_id": "KC-045",
+      "source_refs": [
+        "fixtures/knowledge-interface-cases.v1.json",
+        "schemas/knowledge-locator-result.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-046/consumer-ref-and-revalidation",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "A caller passes an available consumer_ref instead of an LLM summary, and rereads each recommended source after verifying its snapshot and hash.",
+      "requirement_id": "KC-046",
+      "source_refs": [
+        "schemas/knowledge-locator-request.v1.schema.json",
+        "schemas/knowledge-locator-result.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-047/maintenance-skill-package",
+      "owner_slice": "K14",
+      "production_write_policy": "separate_authorization",
+      "requirement": "K14 creates a repository-local maintain-knowledge-base Skill as a thin adapter over deterministic snapshot, catalog, projection, validation and logging tools.",
+      "requirement_id": "KC-047",
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md",
+        "07-implementation-phases.md"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-048/existing-only-closed-world",
+      "owner_slice": "K14",
+      "production_write_policy": "separate_authorization",
+      "requirement": "Without a target, maintenance is closed-world over registered source entries, starts from the requested knowledge snapshot, and cannot discover or add absent repository content.",
+      "requirement_id": "KC-048",
+      "source_refs": [
+        "schemas/knowledge-maintenance-request.v1.schema.json",
+        "fixtures/knowledge-interface-cases.v1.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-049/targeted-maintenance",
+      "owner_slice": "K14",
+      "production_write_policy": "separate_authorization",
+      "requirement": "Targeted maintenance limits discovery to one explicit consumer boundary; only main-backed content becomes repository fact and target-only worktree content remains provisional.",
+      "requirement_id": "KC-049",
+      "source_refs": [
+        "schemas/knowledge-maintenance-request.v1.schema.json",
+        "schemas/knowledge-maintenance-result.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-050/local-main-authority",
+      "owner_slice": "K14",
+      "production_write_policy": "separate_authorization",
+      "requirement": "Each maintenance run pins local refs/heads/main, performs no implicit fetch or branch mutation, and never treats dirty worktree bytes as repository fact authority.",
+      "requirement_id": "KC-050",
+      "source_refs": [
+        "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+        "schemas/knowledge-maintenance-request.v1.schema.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-051/maintenance-write-boundary",
+      "owner_slice": "K14",
+      "production_write_policy": "separate_authorization",
+      "requirement": "Maintenance updates only derived knowledge artifacts, validated LKG pointers and append-only logs, and never modifies the inspected source or consumer object.",
+      "requirement_id": "KC-051",
+      "source_refs": [
+        "schemas/knowledge-maintenance-result.v1.schema.json",
+        "fixtures/knowledge-interface-cases.v1.json"
+      ],
+      "status": "active"
+    },
+    {
+      "acceptance_ref": "acceptance://KC-052/centralized-ambiguity-fallback",
+      "owner_slice": "K5",
+      "production_write_policy": "forbidden",
+      "requirement": "Only unresolved deterministic ambiguity may invoke the centralized K5 classifier through scripts/sc/_llm_backend.py::run_llm_exec, and its result cannot widen the trusted envelope.",
+      "requirement_id": "KC-052",
+      "source_refs": [
+        "implementation-contract.v1.json",
+        "02-executable-contracts-and-invariants.md"
+      ],
+      "status": "active"
+    }
+  ],
+  "schema_version": "jimuyun.knowledge-requirements.v1"
+}

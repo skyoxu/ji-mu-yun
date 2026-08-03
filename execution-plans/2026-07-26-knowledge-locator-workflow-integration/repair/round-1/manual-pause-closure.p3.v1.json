@@ -1,0 +1,43 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-26-knowledge-locator-workflow-integration",
+  "authorizes": [
+    "acceptance-passed"
+  ],
+  "challengeHash": "sha256:bc488be0a4584f5803b5ebf76f64a276c23280118f35e2358cc204cce6ca894b",
+  "challengePath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/manual-pause-closure.challenge.p3.v1.json",
+  "closureBindingHash": "sha256:e2b30423e4a925e14841d5ba9b6789a09ece9ec029e5d62c5428abc4e79d4518",
+  "confirmedFindingIds": [
+    "BSR-4F8A9341CD3CDFBC",
+    "BSR-59092136A5D5D414",
+    "BSR-ABDD6277892B502F",
+    "BSR-F0AF746EDA67B150"
+  ],
+  "doesNotAuthorize": [
+    "commit",
+    "release",
+    "archived"
+  ],
+  "lifecycleTransition": "acceptance-passed",
+  "lineageFamilyId": "ria-66a252608cb9c06dafa0db2a93005299",
+  "maintainerAcknowledgement": {
+    "acknowledgedFindingIds": [
+      "BSR-4F8A9341CD3CDFBC",
+      "BSR-59092136A5D5D414",
+      "BSR-ABDD6277892B502F",
+      "BSR-F0AF746EDA67B150"
+    ],
+    "authorityRole": "maintainer",
+    "authorizes": [
+      "manual-pause-closure"
+    ],
+    "closureBindingHash": "sha256:e2b30423e4a925e14841d5ba9b6789a09ece9ec029e5d62c5428abc4e79d4518",
+    "decision": "accept-repaired-target",
+    "rationale": "Maintainer explicitly accepted the exact challenge hash, closure binding, and repaired finding set.",
+    "recordedAt": "2026-08-03T13:52:52.9905446Z",
+    "schemaVersion": "acceptance-manual-pause-maintainer-ack.v1"
+  },
+  "repairCompletenessHash": "sha256:3265d0518293b92a4e1a20375a00e928e37a66600885edfcfd8f2256c222b5b0",
+  "schemaVersion": "acceptance-manual-pause-closure.v1",
+  "semanticRoundsConsumed": 3,
+  "status": "passed"
+}

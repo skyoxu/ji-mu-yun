@@ -1,0 +1,4 @@
+interface:
+  display_name: "Knowledge Base Maintenance"
+  short_description: "Refresh derived knowledge against pinned main"
+  default_prompt: "Use $maintain-knowledge-base to refresh the current knowledge base from pinned main."

@@ -1,0 +1,31 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "-c",
+        "import subprocess,sys; commands=[[sys.executable,'-B','-m','unittest','scripts.python.tests.test_knowledge_context_validation'],[sys.executable,'-B','.agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py'],[sys.executable,'-B','.agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py'],[sys.executable,'-B','-m','unittest','scripts.python.tests.test_knowledge_workflow_terminal.KnowledgeWorkflowTerminalTests.test_terminal_requires_all_consumers'],[sys.executable,'-B','-m','unittest','scripts.python.tests.test_publish_knowledge_catalog']]; raise SystemExit(max(subprocess.run(command,capture_output=True).returncode for command in commands))",
+        ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+        ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+        "scripts/python/knowledge_context_validation.py",
+        "scripts/python/publish_knowledge_catalog.py",
+        "scripts/python/tests/test_knowledge_context_validation.py",
+        "scripts/python/tests/test_knowledge_workflow_terminal.py",
+        "scripts/python/tests/test_publish_knowledge_catalog.py",
+        "scripts/python/validate_knowledge_workflow_integration.py"
+      ],
+      "cwd": ".",
+      "executable": "py",
+      "id": "kwi-round3-repair-composition",
+      "shell": false,
+      "timeout_seconds": 300
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}

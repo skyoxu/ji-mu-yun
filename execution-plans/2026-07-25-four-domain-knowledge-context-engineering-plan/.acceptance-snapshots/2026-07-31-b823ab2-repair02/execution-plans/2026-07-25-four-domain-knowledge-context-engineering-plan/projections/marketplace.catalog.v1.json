@@ -1,0 +1,9 @@
+{
+  "schema_version": "jimuyun.derived-knowledge-catalog.v1",
+  "domain": "marketplace",
+  "authority_ref": "refs/heads/main",
+  "main_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+  "entries": [],
+  "lkg_snapshot_id": "marketplace-empty-main-7584f295c1b4",
+  "status": "empty-no-external-discovery"
+}

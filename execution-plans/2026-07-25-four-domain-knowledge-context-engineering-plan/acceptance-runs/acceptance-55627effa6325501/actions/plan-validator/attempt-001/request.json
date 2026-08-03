@@ -1,0 +1,20 @@
+{
+  "actionId": "plan-validator",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "plan-validator",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:fe67714a48e075d9eb55a7a36a6c5f2c5379c7d2df589becf93d63e25f9611bb",
+    "knowledgeContextHash": "sha256:919b6c2df6a6887c32203c2c3baf1653ae7d55a9e556af0553e11c5247745c2f",
+    "runInputHash": "sha256:f4d79a6ceb59559ad46d80c8ff661eab6aef3ea33d382b05b212382415c11567"
+  },
+  "ownerToken": "owner-acceptance-55627effa6325501",
+  "processId": 13188,
+  "recordedUtc": "2026-07-31T10:41:03.254312Z",
+  "runId": "acceptance-55627effa6325501",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 1
+}

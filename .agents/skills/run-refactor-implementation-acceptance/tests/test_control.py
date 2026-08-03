@@ -376,6 +376,54 @@ class ExecutionControlTests(unittest.TestCase):
             with self.assertRaisesRegex(execution_control.ControlError, "write set violates"):
                 execution_control.run_controlled_command(root, descriptor)
 
+    def test_read_only_command_detects_same_status_dirty_file_rewrite(self) -> None:
+        import subprocess
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            dirty = root / "dirty.py"
+            dirty.write_text("before\n", encoding="utf-8", newline="\n")
+            subprocess.run(["git", "add", "dirty.py"], cwd=root, check=True)
+            dirty.write_text("already dirty\n", encoding="utf-8", newline="\n")
+            descriptor = {
+                "id": "rewrite-dirty", "executable": sys.executable,
+                "argv": ["-c", "from pathlib import Path; Path('dirty.py').write_text('after\\n', encoding='utf-8')"],
+                "cwd": ".", "timeout_seconds": 10, "shell": False,
+                "allowed_write_roots": [], "forbidden_write_roots": [],
+                "registry_hash": "sha256:" + "a" * 64, "environment_allowlist": [],
+                "typed_placeholders": {}, "placeholder_values": {},
+            }
+            with self.assertRaisesRegex(execution_control.ControlError, "changed repository bytes"):
+                execution_control.run_controlled_command(root, descriptor)
+
+    def test_read_only_command_accepts_existing_tracked_tombstone(self) -> None:
+        import subprocess
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            deleted = root / "deleted.py"
+            deleted.write_text("before\n", encoding="utf-8", newline="\n")
+            subprocess.run(["git", "add", "deleted.py"], cwd=root, check=True)
+            deleted.unlink()
+            descriptor = {
+                "id": "validate-tombstone", "executable": sys.executable,
+                "argv": ["-c", "print('ok')"], "cwd": ".", "timeout_seconds": 10,
+                "shell": False, "allowed_write_roots": [], "forbidden_write_roots": [],
+                "registry_hash": "sha256:" + "a" * 64, "environment_allowlist": [],
+                "typed_placeholders": {}, "placeholder_values": {},
+            }
+
+            receipt = execution_control.run_controlled_command(root, descriptor)
+
+            self.assertEqual(0, receipt["processResult"]["exitCode"])
+            self.assertEqual([], receipt["writeManifestDelta"]["changedPaths"])
+
     def test_lifecycle_event_creates_immutable_attempt_evidence(self) -> None:
         import tempfile
         import execution_control

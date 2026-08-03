@@ -1,0 +1,103 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-26-knowledge-locator-workflow-integration",
+  "authorizes": [],
+  "closureBindingHash": "sha256:2d4a60bfb9fcd0970616d30a24c6fce7d3d507174968c8dac221db4a9de1904a",
+  "confirmedFindingIds": [
+    "BSR-4F8A9341CD3CDFBC",
+    "BSR-59092136A5D5D414",
+    "BSR-ABDD6277892B502F",
+    "BSR-F0AF746EDA67B150"
+  ],
+  "finalizedEnvelopeCoreHash": "sha256:9d817ecf86d25c90cbec7fe7d259e7371ce2cf74a8c6502a591c504a34be3cdc",
+  "finalizedRun": {
+    "envelopePath": "logs/ci/2026-07-27/review-gateway-bootstrap-knowledge-locator-workflow-plan-r3b-20260727/finalized-run-validation.v3.json",
+    "envelopeSha256": "sha256:8bc6aa69d5259ef6e4d0cc65adc5e8b352581fd92a6a65c79ced6ad97080199d",
+    "runDirectory": "logs/ci/2026-07-27/review-gateway-bootstrap-knowledge-locator-workflow-plan-r3b-20260727"
+  },
+  "findingRepairs": [
+    {
+      "changedPaths": [
+        ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py"
+      ],
+      "findingId": "BSR-4F8A9341CD3CDFBC",
+      "targetedTests": [
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+        "scripts/python/tests/test_knowledge_context_validation.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json",
+        "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-closure.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        "scripts/python/knowledge_context_validation.py"
+      ],
+      "findingId": "BSR-59092136A5D5D414",
+      "targetedTests": [
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+        "scripts/python/tests/test_knowledge_context_validation.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json",
+        "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-closure.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        "scripts/python/knowledge_context_validation.py"
+      ],
+      "findingId": "BSR-ABDD6277892B502F",
+      "targetedTests": [
+        "scripts/python/tests/test_knowledge_context_validation.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json",
+        "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-closure.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+      ],
+      "findingId": "BSR-F0AF746EDA67B150",
+      "targetedTests": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.p2.v1.json",
+        "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-closure.json"
+      ]
+    }
+  ],
+  "lineageFamilyId": "ria-66a252608cb9c06dafa0db2a93005299",
+  "lineageStateHash": "sha256:007bb0171d51389bee0b1cfd28a7484709ec67e0fee3f93e3f16c7cf5e02a11c",
+  "manualPauseRoute": {
+    "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/manual-pause-route.v1.json",
+    "sha256": "sha256:8d8b526b373bda35b1aab9e14007c24f87856e1c742d92ee0821154ac42cdaf2"
+  },
+  "manualPauseRouteRequest": {
+    "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/manual-pause-route.request.v1.json",
+    "sha256": "sha256:cd808b25287668012d5c8ff18813cd258b7295155f6e1b9d52ddc36bd408fd6c"
+  },
+  "protocolAuthorities": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "sha256": "sha256:3a263e935acb543af791e4bd2c079cf4e144fdcb9209d7a75d03cac8943aac0d"
+    },
+    {
+      "path": "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
+      "sha256": "sha256:89f097a6cf08487a321719dd1fc564a0869e16a33dfeae211dd048e6f4d91f5a"
+    },
+    {
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "sha256": "sha256:91f67e0867f4d42f77948713b6fd97c87093416fbf8f62c3efe7707ae304b674"
+    }
+  ],
+  "repairCompletenessHash": "sha256:00acc9ca4f8e0ff0c219b42ad8f161e5ed9c2ed2fc6f13b1249dad9801dbe8d4",
+  "schemaVersion": "acceptance-manual-pause-closure-challenge.v1",
+  "semanticRoundsConsumed": 3,
+  "sourceRequestHash": "sha256:15d677820d9e4c229cd5f7499a4269a3fde6d30eabd1f6309862a8939b05d811",
+  "sourceRequestPath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/manual-pause-closure.request.v1.json",
+  "status": "awaiting-maintainer-ack"
+}

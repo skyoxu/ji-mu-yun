@@ -1,0 +1,355 @@
+using System.Globalization;
+using System.Text.Json;
+
+namespace PhaseA.Platform.Configuration;
+
+public static class PhaseAPlatformOptionsLoader
+{
+    public const int DefaultHostedProjectLimit = 2;
+
+    public static PhaseAPlatformOptions FromEnvironment()
+    {
+        return Load(Environment.GetEnvironmentVariable);
+    }
+
+    public static PhaseAPlatformOptions FromDictionary(IReadOnlyDictionary<string, string?> values)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        return Load(name => values.TryGetValue(name, out var value) ? value : null);
+    }
+
+    private static PhaseAPlatformOptions Load(Func<string, string?> get)
+    {
+        var workspaceRoot = NormalizeWorkspaceRoot(GetString(get, "HOSTED_WORKSPACE_ROOT", @"C:\workspaces"));
+        var projectLimit = GetPositiveInt(get, "HOSTED_PROJECT_LIMIT", DefaultHostedProjectLimit);
+        var httpsTermination = GetString(get, "HTTPS_TERMINATION", "caddy");
+        var appBindUrl = ValidateAbsoluteUrl(GetString(get, "APP_BIND_URL", "http://127.0.0.1:8080"), "APP_BIND_URL");
+        ValidateCaddyLocalBinding(httpsTermination, appBindUrl);
+        var publicBaseUrl = ValidateHttpsUrl(GetString(get, "PUBLIC_BASE_URL", "https://localhost"), "PUBLIC_BASE_URL");
+        var llmGatewayProvider = GetString(get, "LLM_GATEWAY_PROVIDER", "new-api");
+        var llmGatewayBaseUrl = ValidateHttpsUrl(GetString(get, "LLM_GATEWAY_BASE_URL", "https://localhost/v1"), "LLM_GATEWAY_BASE_URL");
+        var tokenMode = GetString(get, "LLM_GATEWAY_TOKEN_MODE", "per-account");
+        var bindingMode = GetString(get, "LLM_GATEWAY_BINDING_MODE", "manual-admin");
+        var perRunStopLoss = GetPositiveDecimal(get, "LLM_COST_STOP_LOSS_PER_RUN_CNY", 2.00m);
+        var dailyStopLoss = GetPositiveDecimal(get, "LLM_COST_STOP_LOSS_DAILY_ACCOUNT_CNY", 20.00m);
+        var metadataDatabasePath = NormalizeDatabasePath(GetString(get, "PHASEA_METADATA_DB_PATH", Path.Combine(AppContext.BaseDirectory, "phase-a-platform.sqlite3")));
+        var repositoryRoot = NormalizeDirectoryPath(GetString(get, "PHASEA_REPOSITORY_ROOT", AppContext.BaseDirectory), "PHASEA_REPOSITORY_ROOT");
+        var pythonCommand = GetString(get, "PHASEA_PYTHON_COMMAND", "py");
+        var godotBin = GetOptionalString(get, "GODOT_BIN");
+        var deliveryProfile = GetString(get, "DELIVERY_PROFILE", "fast-ship");
+        var adminUsername = GetString(get, "PHASEA_ADMIN_USERNAME", "admin");
+        var adminPasswordHash = GetOptionalString(get, "PHASEA_ADMIN_PASSWORD_HASH");
+        var adminTokenHash = GetOptionalString(get, "PHASEA_ADMIN_TOKEN_HASH");
+        var ticketSigningSecret = GetOptionalString(get, "PHASEA_TICKET_SIGNING_SECRET");
+        var webPreviewSigningSecret = GetOptionalString(get, "PHASEA_WEB_PREVIEW_SIGNING_SECRET");
+        var hostedContextSigningKeyRing = ParseHostedContextSigningKeyRing(get);
+        var maxConcurrentChats = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS", 8);
+        var maxConcurrentChatsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", 1);
+        var maxConcurrentQuestionForms = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS", 4);
+        var maxConcurrentQuestionFormsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS_PER_ACCOUNT", 1);
+        var maxConcurrentProjectCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", 3);
+        var maxConcurrentProjectCreationsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT", 1);
+        var maxConcurrentOtherRuns = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_OTHER_RUNS", 3);
+        var maxConcurrentPrototypeCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS", 2);
+        var maxConcurrentAssetGenerations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS", 2);
+        var maxConcurrentWebPreviews = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_WEB_PREVIEWS", 3);
+        var maxConcurrentWebPreviewsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT", 1);
+        var godot3WebPreviewExportTimeoutSeconds = GetPositiveInt(get, "PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS", 180);
+        var godot3WebPreviewExportInactivityTimeoutSeconds = GetPositiveInt(get, "PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS", 45);
+        var maxConcurrentAssetGenerationsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT", 1);
+        var aiCodeMirrorBillingEnabled = GetBool(get, "AICODEMIRROR_BILLING_ENABLED", false);
+        var aiCodeMirrorBaseUrl = ValidateHttpsUrl(GetString(get, "AICODEMIRROR_BASE_URL", "https://www.aicodemirror.com"), "AICODEMIRROR_BASE_URL");
+        var aiCodeMirrorCookie = GetOptionalString(get, "AICODEMIRROR_COOKIE");
+        var aiCodeMirrorApiKeyName = GetOptionalString(get, "AICODEMIRROR_API_KEY_NAME");
+        var aiCodeMirrorCodexHomeRoot = NormalizeDirectoryPath(
+            GetString(
+                get,
+                "AICODEMIRROR_CODEX_HOME_ROOT",
+                Path.Combine(Path.GetDirectoryName(metadataDatabasePath) ?? AppContext.BaseDirectory, "aicodemirror-codex-homes")),
+            "AICODEMIRROR_CODEX_HOME_ROOT");
+        var assetAllowedUrlPrefixes = ParseHttpsUrlPrefixes(get, "PHASEA_ASSET_ALLOWED_URLS");
+
+        return new PhaseAPlatformOptions(
+            workspaceRoot,
+            projectLimit,
+            httpsTermination,
+            appBindUrl,
+            publicBaseUrl,
+            llmGatewayProvider,
+            llmGatewayBaseUrl,
+            tokenMode,
+            bindingMode,
+            perRunStopLoss,
+            dailyStopLoss,
+            metadataDatabasePath,
+            repositoryRoot,
+            pythonCommand,
+            godotBin,
+            deliveryProfile,
+            adminUsername,
+            adminPasswordHash,
+            adminTokenHash,
+            ticketSigningSecret,
+            webPreviewSigningSecret,
+            hostedContextSigningKeyRing,
+            maxConcurrentChats,
+            maxConcurrentChatsPerAccount,
+            maxConcurrentQuestionForms,
+            maxConcurrentQuestionFormsPerAccount,
+            maxConcurrentProjectCreations,
+            maxConcurrentProjectCreationsPerAccount,
+            maxConcurrentOtherRuns,
+            maxConcurrentPrototypeCreations,
+            maxConcurrentAssetGenerations,
+            maxConcurrentWebPreviews,
+            maxConcurrentWebPreviewsPerAccount,
+            godot3WebPreviewExportTimeoutSeconds,
+            godot3WebPreviewExportInactivityTimeoutSeconds,
+            maxConcurrentAssetGenerationsPerAccount,
+            aiCodeMirrorBillingEnabled,
+            aiCodeMirrorBaseUrl,
+            aiCodeMirrorCookie,
+            aiCodeMirrorApiKeyName,
+            aiCodeMirrorCodexHomeRoot,
+            assetAllowedUrlPrefixes);
+    }
+
+    private static string GetString(Func<string, string?> get, string name, string defaultValue)
+    {
+        var value = get(name);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        return value.Trim();
+    }
+
+    private static string? GetOptionalString(Func<string, string?> get, string name)
+    {
+        var value = get(name);
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static HostedContextSigningKeyRing? ParseHostedContextSigningKeyRing(Func<string, string?> get)
+    {
+        var activeKeyId = GetOptionalString(get, "PHASEA_HOSTED_CONTEXT_SIGNING_ACTIVE_KEY_ID");
+        var rawKeys = GetOptionalString(get, "PHASEA_HOSTED_CONTEXT_SIGNING_KEYS_JSON");
+        if (activeKeyId is null && rawKeys is null)
+        {
+            return null;
+        }
+        if (activeKeyId is null || rawKeys is null)
+        {
+            throw new PhaseAPlatformConfigException("Hosted Context signing key ring requires both active key id and keys JSON.");
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(rawKeys);
+            if (document.RootElement.ValueKind != JsonValueKind.Array || document.RootElement.GetArrayLength() == 0)
+            {
+                throw new PhaseAPlatformConfigException("Hosted Context signing keys JSON must be a non-empty array.");
+            }
+
+            var keys = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var item in document.RootElement.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object ||
+                    item.EnumerateObject().Any(property => property.Name is not "key_id" and not "secret") ||
+                    !item.TryGetProperty("key_id", out var keyIdElement) ||
+                    !item.TryGetProperty("secret", out var secretElement) ||
+                    keyIdElement.ValueKind != JsonValueKind.String ||
+                    secretElement.ValueKind != JsonValueKind.String)
+                {
+                    throw new PhaseAPlatformConfigException("Hosted Context signing keys JSON contains an invalid key entry.");
+                }
+
+                var keyId = keyIdElement.GetString()?.Trim();
+                var secret = secretElement.GetString();
+                if (string.IsNullOrWhiteSpace(keyId) || string.IsNullOrWhiteSpace(secret) || !keys.TryAdd(keyId, secret))
+                {
+                    throw new PhaseAPlatformConfigException("Hosted Context signing keys JSON contains an empty or duplicate key entry.");
+                }
+            }
+
+            if (!keys.ContainsKey(activeKeyId))
+            {
+                throw new PhaseAPlatformConfigException("Hosted Context active signing key is not present in the key ring.");
+            }
+
+            return new HostedContextSigningKeyRing(activeKeyId, keys);
+        }
+        catch (JsonException)
+        {
+            throw new PhaseAPlatformConfigException("Hosted Context signing keys JSON is invalid.");
+        }
+    }
+
+    private static int GetPositiveInt(Func<string, string?> get, string name, int defaultValue)
+    {
+        var value = get(name);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var parsed) || parsed < 1)
+        {
+            throw new PhaseAPlatformConfigException($"{name} must be a positive integer.");
+        }
+
+        return parsed;
+    }
+
+    private static decimal GetPositiveDecimal(Func<string, string?> get, string name, decimal defaultValue)
+    {
+        var value = get(name);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        if (!decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed) || parsed <= 0m)
+        {
+            throw new PhaseAPlatformConfigException($"{name} must be a positive decimal.");
+        }
+
+        return parsed;
+    }
+
+    private static bool GetBool(Func<string, string?> get, string name, bool defaultValue)
+    {
+        var value = get(name);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        if (bool.TryParse(value.Trim(), out var parsed))
+        {
+            return parsed;
+        }
+
+        throw new PhaseAPlatformConfigException($"{name} must be true or false.");
+    }
+
+    private static string ValidateAbsoluteUrl(string value, string name)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+        {
+            throw new PhaseAPlatformConfigException($"{name} must be an absolute URL.");
+        }
+
+        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new PhaseAPlatformConfigException($"{name} must use HTTP or HTTPS.");
+        }
+
+        return uri.ToString().TrimEnd('/');
+    }
+
+    private static void ValidateCaddyLocalBinding(string httpsTermination, string appBindUrl)
+    {
+        if (!string.Equals(httpsTermination, "caddy", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var uri = new Uri(appBindUrl);
+        var host = uri.Host;
+        if (uri.Scheme != Uri.UriSchemeHttp)
+        {
+            throw new PhaseAPlatformConfigException("APP_BIND_URL must use HTTP when HTTPS_TERMINATION=caddy.");
+        }
+
+        if (!string.Equals(host, "127.0.0.1", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new PhaseAPlatformConfigException("APP_BIND_URL must bind to localhost when HTTPS_TERMINATION=caddy.");
+        }
+    }
+
+    private static string ValidateHttpsUrl(string value, string name)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new PhaseAPlatformConfigException($"{name} must be an absolute HTTPS URL.");
+        }
+
+        return uri.ToString().TrimEnd('/');
+    }
+
+    private static IReadOnlyList<string> ParseHttpsUrlPrefixes(Func<string, string?> get, string name)
+    {
+        var raw = get(name);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return [];
+        }
+
+        var prefixes = raw
+            .Split([';', ',', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(value => ValidateHttpsUrl(value, name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        return prefixes;
+    }
+
+    private static string NormalizeWorkspaceRoot(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new PhaseAPlatformConfigException("HOSTED_WORKSPACE_ROOT must not be empty.");
+        }
+
+        if (value.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+        {
+            throw new PhaseAPlatformConfigException("HOSTED_WORKSPACE_ROOT contains invalid path characters.");
+        }
+
+        if (!Path.IsPathRooted(value))
+        {
+            throw new PhaseAPlatformConfigException("HOSTED_WORKSPACE_ROOT must be an absolute path.");
+        }
+
+        var fullPath = Path.GetFullPath(value);
+        var root = Path.GetPathRoot(fullPath);
+        if (string.Equals(fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), root?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new PhaseAPlatformConfigException("HOSTED_WORKSPACE_ROOT must not be a drive root.");
+        }
+
+        return fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    }
+
+    private static string NormalizeDatabasePath(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new PhaseAPlatformConfigException("PHASEA_METADATA_DB_PATH must not be empty.");
+        }
+
+        if (!Path.IsPathRooted(value))
+        {
+            throw new PhaseAPlatformConfigException("PHASEA_METADATA_DB_PATH must be an absolute path.");
+        }
+
+        return Path.GetFullPath(value);
+    }
+
+    private static string NormalizeDirectoryPath(string value, string name)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new PhaseAPlatformConfigException($"{name} must not be empty.");
+        }
+
+        if (!Path.IsPathRooted(value))
+        {
+            throw new PhaseAPlatformConfigException($"{name} must be an absolute path.");
+        }
+
+        return Path.GetFullPath(value).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    }
+}

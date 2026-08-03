@@ -17,7 +17,12 @@ from acceptance_core import (
     canonical_hash,
     validate_candidate_manifest,
 )
-from execution_control import ControlError, resolve_registered_command, resolve_typed_argv
+from execution_control import (
+    ControlError,
+    resolve_registered_command,
+    resolve_typed_argv,
+    run_controlled_command,
+)
 from review_cycle_policy import HARD_FULL_REVIEW_ROUND_LIMIT, NOVEL_FINDING_COMPARISON_ROUND
 
 
@@ -173,9 +178,16 @@ def _derive_review_escalation(
             root / predecessor_run, root, "Repair predecessor run"
         )
         manifest = module.read_json(predecessor_dir / "review-input.json")
+        lineage_runs = lineage.get("runs")
+        lineage_head = lineage_runs[-1] if isinstance(lineage_runs, list) and lineage_runs else None
         if (
             lineage.get("semanticRoundsConsumed") != rounds
-            or module.effective_lineage_family(manifest) != family
+            or not isinstance(lineage_head, dict)
+            or lineage_head.get("runDirectory") != predecessor_run
+            or lineage_head.get("reviewId") != manifest.get("reviewId")
+            or lineage_head.get("inputHash") != manifest.get("inputHash")
+            or lineage_head.get("changeId") != manifest.get("changeId")
+            or lineage_head.get("fullReviewRound") != manifest.get("fullReviewRound")
             or manifest.get("fullReviewRound") != rounds
         ):
             raise InputError("repair predecessor does not match current lineage state")
@@ -296,7 +308,7 @@ def _validate_receipt(
     registry_relative: str,
     expected_input_paths: list[str],
     required_command_paths: list[str],
-) -> tuple[dict[str, str], dict[str, str]]:
+) -> tuple[dict[str, str], dict[str, str], dict[str, Any]]:
     registry_path = _resolve(root, registry_relative, "composition command registry")
     try:
         registry = json.loads(registry_path.read_text(encoding="utf-8"))
@@ -381,12 +393,17 @@ def _validate_receipt(
         or environment_identity.get("hash") != canonical_hash(environment_names)
         or not isinstance(process_result, dict)
         or set(process_result)
-        != {"commandId", "exitCode", "stdoutSha256", "stderrSha256", "stdout"}
+        != {"commandId", "exitCode", "stdoutSha256", "stderrSha256", "stdout", "stderr"}
         or process_result.get("commandId") != command_id
         or process_result.get("exitCode") != 0
         or _HASH.fullmatch(str(process_result.get("stdoutSha256"))) is None
         or _HASH.fullmatch(str(process_result.get("stderrSha256"))) is None
         or not isinstance(process_result.get("stdout"), str)
+        or not isinstance(process_result.get("stderr"), str)
+        or process_result.get("stdoutSha256")
+        != "sha256:" + hashlib.sha256(process_result["stdout"].encode("utf-8")).hexdigest()
+        or process_result.get("stderrSha256")
+        != "sha256:" + hashlib.sha256(process_result["stderr"].encode("utf-8")).hexdigest()
         or receipt.get("processResultHash") != canonical_hash(process_result)
         or not valid_write_delta
         or receipt.get("writeManifestDeltaHash") != canonical_hash(write_delta)
@@ -395,9 +412,31 @@ def _validate_receipt(
         or not command_paths_bound
     ):
         raise InputError("composition receipt is invalid or failed")
+    try:
+        replay = run_controlled_command(root, descriptor, input_paths=expected_input_paths)
+    except ControlError as exc:
+        raise InputError("composition receipt controlled replay failed") from exc
+    stable_fields = {
+        "commandId", "commandRegistryHash", "environmentIdentity", "invocation",
+        "invocationHash", "exitCode", "authorizes", "writeManifestDelta",
+        "writeManifestDeltaHash", "inputBindings", "inputBindingsHash",
+    }
+    if (
+        replay.get("exitCode") != 0
+        or any(replay.get(field) != receipt.get(field) for field in stable_fields)
+        or replay.get("processResult", {}).get("stdoutSha256")
+        != process_result.get("stdoutSha256")
+    ):
+        raise InputError("composition receipt does not match controlled replay")
+    replay_evidence = {
+        "schemaVersion": "acceptance-composition-controlled-replay.v1",
+        **{field: replay[field] for field in sorted(stable_fields)},
+        "authorizes": [],
+    }
     return (
         {"path": relative, "sha256": _file_hash(path)},
         {"path": registry_relative, "sha256": _file_hash(registry_path)},
+        replay_evidence,
     )
 
 
@@ -579,7 +618,8 @@ def validate_repair_completeness_projection(value: Any) -> None:
     check_ids: set[str] = set()
     for check in checks:
         if not isinstance(check, dict) or set(check) != {
-            "checkId", "bindings", "commandRegistry", "receipt"
+            "checkId", "bindings", "targetedTests", "commandRegistry", "receipt",
+            "controlledReplay",
         }:
             raise InputError("repair completeness composition check fields are invalid")
         check_id = check.get("checkId")
@@ -609,16 +649,40 @@ def validate_repair_completeness_projection(value: Any) -> None:
             role_paths[binding["role"]].add(path)
         if roles != {"producer", "consumer"}:
             raise InputError("repair completeness composition roles are incomplete")
+        if role_paths["producer"] & role_paths["consumer"]:
+            raise InputError("repair completeness composition roles must be distinct")
         if not (role_paths["producer"] | role_paths["consumer"]) & set(changed):
             raise InputError("repair completeness composition does not cover a changed path")
         if not role_paths["consumer"].issubset(set(bound_file_paths["directConsumers"])):
             raise InputError("repair completeness composition consumers are not declared direct consumers")
+        check_tests = _validate_projection_path_list(
+            check.get("targetedTests"), "composition targeted tests", required=True
+        )
+        if not set(check_tests).issubset(set(bound_file_paths["targetedTests"])):
+            raise InputError("repair completeness composition tests are not declared targeted tests")
         _validate_projection_file_binding(check.get("commandRegistry"), "command registry")
         receipt_path = _validate_projection_file_binding(
             check.get("receipt"), "composition receipt"
         )
         if receipt_path not in bound_file_paths["validationRefs"]:
             raise InputError("repair completeness composition receipt is not a validation reference")
+        controlled_replay = check.get("controlledReplay")
+        replay_fields = {
+            "schemaVersion", "authorizes", "commandId", "commandRegistryHash",
+            "environmentIdentity", "invocation", "invocationHash", "exitCode",
+            "writeManifestDelta", "writeManifestDeltaHash", "inputBindings",
+            "inputBindingsHash",
+        }
+        if (
+            not isinstance(controlled_replay, dict)
+            or set(controlled_replay) != replay_fields
+            or controlled_replay.get("schemaVersion")
+            != "acceptance-composition-controlled-replay.v1"
+            or controlled_replay.get("commandId") != check_id
+            or controlled_replay.get("exitCode") != 0
+            or controlled_replay.get("authorizes") != []
+        ):
+            raise InputError("repair completeness controlled replay is invalid")
 
     novel = value.get("novelP0P1FindingIds")
     if (
@@ -800,6 +864,8 @@ def audit_repair_completeness(request: Any) -> dict[str, Any]:
         consumers = sorted({_relative_path(path, "consumer path") for path in check.get("consumerPaths", [])})
         if not producers or not consumers:
             raise InputError("composition check requires producers and consumers")
+        if set(producers) & set(consumers):
+            raise InputError("composition producers and consumers must be distinct")
         if not (set(producers) | set(consumers)) & set(changed):
             raise InputError("composition check does not cover a changed path")
         if not set(consumers).issubset(direct_consumer_paths):
@@ -817,7 +883,7 @@ def audit_repair_completeness(request: Any) -> dict[str, Any]:
         registry_path = _relative_path(
             check.get("commandRegistryPath"), "composition command registry"
         )
-        receipt_binding, registry_binding = _validate_receipt(
+        receipt_binding, registry_binding, controlled_replay = _validate_receipt(
             root,
             receipt_path,
             check_id,
@@ -829,8 +895,10 @@ def audit_repair_completeness(request: Any) -> dict[str, Any]:
             {
                 "checkId": check_id,
                 "bindings": bindings,
+                "targetedTests": sorted(targeted_test_paths),
                 "commandRegistry": registry_binding,
                 "receipt": receipt_binding,
+                "controlledReplay": controlled_replay,
             }
         )
     result = {

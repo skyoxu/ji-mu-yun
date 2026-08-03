@@ -147,11 +147,26 @@ closure lane:
    `semanticRoundsConsumed=3` and the Round 3 run as predecessor.
 2. Run `prepare-manual-pause-closure` with the current manual-pause route and
    the hash-bound `prepare-bootstrap` request that produced it, the
-   blocked finalized v3 envelope, exact finding-to-repair mappings, and the
-   current protocol authorities. It must canonically replay the complete
+   blocked finalized v3 envelope from the current implementation-conformance
+   or adopted upstream-plan lineage, exact finding-to-repair mappings, and the
+   current protocol authorities and a finalized clean/advisory protocol-review
+   envelope. The review must use `bootstrap-skill-route`, and its frozen
+   artifact set must byte-bind the current protocol implementation, schemas,
+   Bootstrap Skill and producer, public Acceptance CLI, review-cycle policy,
+   Skill, ADR, and standard. It must canonically replay the complete
    finalized run and reject every remaining `unverified` verifier decision;
    selected envelope fields and maintainer judgement cannot replace either
-   check. The challenge carries `authorizes=[]`.
+   check. If that protocol review itself exhausted a blocked Round 3, the
+   consumer may instead accept the exact composite authority emitted by one
+   CLI-authorized `bootstrap-focused-repair-verification` at the same Round 3.
+   That lane binds the blocked envelope, exact finding set, current
+   deterministic repair closure, explicit user confirmation, and a passed
+   verification-only focused envelope; it cannot create Round 4, findings,
+   escalation, or `acceptance-passed`. The challenge carries `authorizes=[]`.
+   This composite replays the focused envelope and authority from current bytes,
+   but validates the authority-bound blocked predecessor as a frozen eligible
+   envelope; it must not revalidate that predecessor's old repair closure
+   against the newer protocol bytes that the focused verifier already covered.
    Replay the Bootstrap producer from the request repository's own Skill path;
    a caller-adjacent producer or a missing repository-owned producer fails closed.
 3. Stop for an explicit maintainer acknowledgement bound to the challenge hash
@@ -160,7 +175,18 @@ closure lane:
    snapshot that it validates and recomputes every binding;
    only its final closure result may publish `acceptance-passed`.
 
-This lane never launches a model, reopens Bootstrap, creates Round 4, changes a
+Each finding mapping must select a composition receipt whose bound producer or
+consumer paths cover that finding's changed paths and whose registered command
+names its mapped targeted tests. Repair completeness reruns every registered
+composition command through the controlled runner and rejects saved stdout or
+stable execution fields that do not match the current replay. Producer and
+consumer path sets are disjoint, and a read-only controlled command must leave
+the repository byte manifest unchanged even when a touched file was already
+dirty before execution. Tracked deletions use stable tombstones. Closure
+request paths are repository-relative after resolved-root normalization, and
+finding-repair mappings are canonicalized by finding ID.
+
+This lane never launches a model, reopens the target Bootstrap lineage, creates Round 4, changes a
 verifier decision, or authorizes commit, release, or archive. Independently
 validate and review a new closure-protocol revision before using that revision
 to close a real target; the protocol cannot approve itself.

@@ -1,0 +1,29 @@
+{
+  "schema_version": "jimuyun.knowledge-maintenance-request.v1",
+  "request_id": "toolchain-initial-main-7584f295c1b4",
+  "skill_id": "maintain-knowledge-base",
+  "mode": "existing-only",
+  "authority": {
+    "authority_ref": "refs/heads/main",
+    "main_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+    "implicit_fetch": false,
+    "dirty_worktree_authority": false
+  },
+  "knowledge_snapshot_id": "toolchain-main-7584f295c1b4",
+  "target": {
+    "kind": "none",
+    "repo_relative_path": null,
+    "snapshot_kind": "none",
+    "content_sha256": null
+  },
+  "discovery_policy": "existing-entries-only",
+  "source_write_policy": "forbidden",
+  "knowledge_write_classes": [
+    "projection",
+    "index",
+    "lkg-pointer",
+    "maintenance-log"
+  ],
+  "append_only_log": true,
+  "log_root": "logs/knowledge-context"
+}

@@ -1,0 +1,102 @@
+{
+  "$id": "jimuyun.knowledge-contract.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authority_class": {
+      "const": "derived_cache"
+    },
+    "enforcement_level": {
+      "enum": [
+        "E0",
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    "instruction_authority": {
+      "const": false
+    },
+    "lifecycle": {
+      "enum": [
+        "repository-source",
+        "repository-template",
+        "project-instance",
+        "run-artifact-view"
+      ]
+    },
+    "may_override_source": {
+      "const": false
+    },
+    "primary_domain": {
+      "enum": [
+        "toolchain",
+        "phase",
+        "workspace",
+        "marketplace"
+      ]
+    },
+    "schema_version": {
+      "const": "jimuyun.knowledge-contract.v1"
+    },
+    "visibility": {
+      "additionalProperties": false,
+      "properties": {
+        "marketplace": {
+          "enum": [
+            "active",
+            "dependency",
+            "conditional",
+            "historical",
+            "excluded"
+          ]
+        },
+        "phase": {
+          "enum": [
+            "active",
+            "dependency",
+            "conditional",
+            "historical",
+            "excluded"
+          ]
+        },
+        "toolchain": {
+          "enum": [
+            "active",
+            "dependency",
+            "conditional",
+            "historical",
+            "excluded"
+          ]
+        },
+        "workspace": {
+          "enum": [
+            "active",
+            "dependency",
+            "conditional",
+            "historical",
+            "excluded"
+          ]
+        }
+      },
+      "required": [
+        "toolchain",
+        "phase",
+        "workspace",
+        "marketplace"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "primary_domain",
+    "visibility",
+    "lifecycle",
+    "enforcement_level",
+    "authority_class",
+    "instruction_authority",
+    "may_override_source"
+  ],
+  "type": "object"
+}

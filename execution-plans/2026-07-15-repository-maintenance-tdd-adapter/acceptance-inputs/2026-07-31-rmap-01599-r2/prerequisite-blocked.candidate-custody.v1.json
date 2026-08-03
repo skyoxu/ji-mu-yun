@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "acceptance-prerequisite-blocked.v1",
+  "status": "prerequisite_blocked",
+  "recordedUtc": "2026-07-31T10:46:29.403467Z",
+  "targetPlan": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter",
+  "reasonCode": "candidate-custody-not-replayable",
+  "reason": "The Quick Dev handoff binds a dirty worktree identity, but no complete frozen dirty-worktree or proposed-commit-set snapshot is available. Commit 01599e7 does not contain those bytes, and later commit f2694e9 does not reproduce the frozen identity.",
+  "sourceEvidence": {
+    "quickDevCandidateEvidence": {
+      "path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S6/RUN-20260724T074955-360859Z/candidate-evidence.json",
+      "sha256": "sha256:1a809cd737402f80407ef04bec8320c22a2e4aca4e0a546f4b5b59f9f9b8b9c5"
+    },
+    "quickDevAcceptanceHandoff": {
+      "path": "logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S7/RUN-20260724T075410-174337Z/acceptance-handoff.json",
+      "sha256": "sha256:78ea22e6093c901ee111d2350d06193f79868bdb42089d388af1d40a9eb3941e"
+    }
+  },
+  "expectedCandidateIdentity": {
+    "head": "01599e7b7743f918214861e5f1a4d5b9421bee38",
+    "indexTree": "ade4e1f8858e3c1f2607eb8cd5167cd5733d0578",
+    "trackedDiffHash": "sha256:552b477b7f81a75f55aedeb3e4d65d8de7732e6def81f4740e9f57f657bfc4f0",
+    "untrackedManifestHash": "sha256:52a61885a5bc8441ecb5da3d287e88261273c0ad58dd7cf3dd82c3d38621babb",
+    "validatorHash": "sha256:f740b818b4809e5be306c421f12482b9abcde6eabf521b52ee561c8fc45138bb",
+    "authorityManifestHash": "sha256:82ea8ddfdc01875e2a14d846c1259ce25b5ca412991375af9fb98765bd67648b",
+    "candidateWorktreeHash": "sha256:dc5329eddf3ef1747bec42735e734e6a3ddbba7638b4ee561a48b706b8385479"
+  },
+  "recoveryProbe": {
+    "baseCommit": "01599e7b7743f918214861e5f1a4d5b9421bee38",
+    "projectedCommit": "f2694e9cd154831633cb4e3d088d75b031a550c1",
+    "relationship": "direct-child",
+    "worktree": "logs/agent-worktrees/rmap-reconstruct-s6",
+    "observedCandidateIdentity": {
+      "head": "01599e7b7743f918214861e5f1a4d5b9421bee38",
+      "indexTree": "ade4e1f8858e3c1f2607eb8cd5167cd5733d0578",
+      "trackedDiffHash": "sha256:1fc63031920eae32ec1c877cd055998ddd9a5e3aa3b845f1cb29473d23299445",
+      "untrackedManifestHash": "sha256:8b5bb6ff9de51ce856b5ed8e2fc1c5d084adfa42d459eac0e5578ef8da296516",
+      "validatorHash": "sha256:c97c6327d8982ebb3ba8ab13fe784a436fd05869bbd12388bbe1a94c0d3ede68",
+      "authorityManifestHash": "sha256:25d22d2f4350de1f56874a02090e9aa2d3ee2b35237214f30030c97454844ccb",
+      "candidateWorktreeHash": "sha256:77aa6ea8aa204e73b5c88a48a85e976d97f15577a40777b529c23ee213f69f12"
+    },
+    "exactMatch": false
+  },
+  "invalidCommitAttempt": {
+    "candidateCommit": "01599e7b7743f918214861e5f1a4d5b9421bee38",
+    "runDirectory": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-8762f5b2a0fc5099",
+    "lifecycleEventsSha256": "sha256:939ac46ec17e75a229eae14e3d16d839a284d123bdbeb4e5c3e18ae4c8df355d",
+    "firstAction": "plan-repair-validate",
+    "firstAttempt": "attempt-001",
+    "result": "action-failed",
+    "doesNotRepresentQuickDevCandidate": true
+  },
+  "missingArtifacts": [
+    "A complete frozen snapshot containing every tracked and untracked byte bound by candidateWorktreeHash sha256:dc5329eddf3ef1747bec42735e734e6a3ddbba7638b4ee561a48b706b8385479",
+    "An exact tracked-path manifest with content bytes for trackedDiffHash sha256:552b477b7f81a75f55aedeb3e4d65d8de7732e6def81f4740e9f57f657bfc4f0",
+    "An exact untracked-path manifest with content bytes for untrackedManifestHash sha256:52a61885a5bc8441ecb5da3d287e88261273c0ad58dd7cf3dd82c3d38621babb",
+    "A new Quick Dev handoff that binds the recovered snapshot or one immutable replacement candidate commit"
+  ],
+  "nextAction": "Obtain a new Quick Dev implementation-complete handoff bound to a complete frozen snapshot or explicit immutable commit, then create a successor Acceptance run with new input, contract, and knowledge-context hashes.",
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "deterministic-acceptance-pass",
+    "bootstrap-route",
+    "semantic-review-launch",
+    "acceptance-passed",
+    "protected-handoff",
+    "release-ready"
+  ]
+}

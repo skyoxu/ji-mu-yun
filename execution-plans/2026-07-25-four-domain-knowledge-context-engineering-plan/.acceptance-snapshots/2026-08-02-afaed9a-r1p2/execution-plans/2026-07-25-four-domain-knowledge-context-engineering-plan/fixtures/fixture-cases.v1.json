@@ -1,0 +1,152 @@
+{
+  "cases": [
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-project-bound-envelope",
+      "kind": "positive",
+      "path": "fixtures/positive/valid-project-bound-envelope.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-account-bound-envelope",
+      "kind": "positive",
+      "path": "fixtures/positive/valid-account-bound-envelope.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-non-prompt-boundary",
+      "kind": "positive",
+      "path": "fixtures/positive/valid-non-prompt-boundary.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-optional-omission",
+      "kind": "positive",
+      "path": "fixtures/positive/valid-optional-omission.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-enforce-gate",
+      "kind": "positive",
+      "path": "fixtures/positive/valid-enforce-gate.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-observe-e1-gate",
+      "kind": "positive",
+      "path": "fixtures/positive/valid-observe-e1-gate.json"
+    },
+    {
+      "expected_failure_code": null,
+      "expected_result": "pass",
+      "fixture_id": "valid-inventory-snapshot",
+      "kind": "positive",
+      "path": "fixtures/positive/valid-inventory-snapshot.json"
+    },
+    {
+      "expected_failure_code": "e2_requires_enforce_gate",
+      "expected_result": "fail",
+      "fixture_id": "e2-observe-gate",
+      "kind": "negative",
+      "path": "fixtures/negative/e2-observe-gate.json"
+    },
+    {
+      "expected_failure_code": "e2_readiness_evidence_incomplete",
+      "expected_result": "fail",
+      "fixture_id": "e2-readiness-evidence-incomplete",
+      "kind": "negative",
+      "path": "fixtures/negative/e2-readiness-evidence-incomplete.json"
+    },
+    {
+      "expected_failure_code": "project_profile_expands_permission",
+      "expected_result": "fail",
+      "fixture_id": "project-profile-expands-permission",
+      "kind": "negative",
+      "path": "fixtures/negative/project-profile-expands-permission.json"
+    },
+    {
+      "expected_failure_code": "cross_project_source",
+      "expected_result": "fail",
+      "fixture_id": "cross-project-source",
+      "kind": "negative",
+      "path": "fixtures/negative/cross-project-source.json"
+    },
+    {
+      "expected_failure_code": "stale_project_snapshot",
+      "expected_result": "fail",
+      "fixture_id": "stale-project-snapshot",
+      "kind": "negative",
+      "path": "fixtures/negative/stale-project-snapshot.json"
+    },
+    {
+      "expected_failure_code": "unknown_policy_revision",
+      "expected_result": "fail",
+      "fixture_id": "unknown-policy-revision",
+      "kind": "negative",
+      "path": "fixtures/negative/unknown-policy-revision.json"
+    },
+    {
+      "expected_failure_code": "modified_signed_payload",
+      "expected_result": "fail",
+      "fixture_id": "modified-signed-payload",
+      "kind": "negative",
+      "path": "fixtures/negative/modified-signed-payload.json"
+    },
+    {
+      "expected_failure_code": "replayed_nonce",
+      "expected_result": "fail",
+      "fixture_id": "replayed-nonce",
+      "kind": "negative",
+      "path": "fixtures/negative/replayed-nonce.json"
+    },
+    {
+      "expected_failure_code": "required_artifact_omitted",
+      "expected_result": "fail",
+      "fixture_id": "required-budget-omission",
+      "kind": "negative",
+      "path": "fixtures/negative/required-budget-omission.json"
+    },
+    {
+      "expected_failure_code": "recovery_order_mismatch",
+      "expected_result": "fail",
+      "fixture_id": "recovery-order-mismatch",
+      "kind": "negative",
+      "path": "fixtures/negative/recovery-order-mismatch.json"
+    },
+    {
+      "expected_failure_code": "source_boundary_disposition_missing",
+      "expected_result": "fail",
+      "fixture_id": "source-boundary-exemption-omitted",
+      "kind": "negative",
+      "path": "fixtures/negative/source-boundary-exemption-omitted.json"
+    },
+    {
+      "expected_failure_code": "cache_root_escape",
+      "expected_result": "fail",
+      "fixture_id": "cache-root-under-workspace",
+      "kind": "negative",
+      "path": "fixtures/negative/cache-root-under-workspace.json"
+    },
+    {
+      "expected_failure_code": "inventory_source_drift",
+      "expected_result": "fail",
+      "fixture_id": "inventory-source-drift",
+      "kind": "negative",
+      "path": "fixtures/negative/inventory-source-drift.json"
+    },
+    {
+      "expected_failure_code": "unknown_capability",
+      "expected_result": "fail",
+      "fixture_id": "unknown-capability",
+      "kind": "negative",
+      "path": "fixtures/negative/unknown-capability.json"
+    }
+  ],
+  "schema_version": "jimuyun.knowledge-fixture-index.v1"
+}

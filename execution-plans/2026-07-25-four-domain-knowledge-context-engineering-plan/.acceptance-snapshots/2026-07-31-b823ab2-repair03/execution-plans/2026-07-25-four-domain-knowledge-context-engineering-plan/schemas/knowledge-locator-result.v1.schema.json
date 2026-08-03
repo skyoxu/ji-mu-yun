@@ -1,0 +1,264 @@
+{
+  "$id": "jimuyun.knowledge-locator-result.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "confidence": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "enum": [
+            "high",
+            "medium",
+            "insufficient",
+            "blocked"
+          ]
+        },
+        "score": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "level",
+        "score"
+      ],
+      "type": "object"
+    },
+    "next_action": {
+      "enum": [
+        "read-and-verify",
+        "refine-query",
+        "denied"
+      ]
+    },
+    "normalized_keywords": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "path_policy_identity": {
+      "additionalProperties": false,
+      "properties": {
+        "policy_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "policy_revision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "policy_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_id",
+        "policy_revision",
+        "policy_sha256"
+      ],
+      "type": "object"
+    },
+    "recommended_reads": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "anchor_kind": {
+            "enum": [
+              "heading",
+              "symbol",
+              "path",
+              "line"
+            ]
+          },
+          "line_end": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "line_start": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "matched_by": {
+            "items": {
+              "enum": [
+                "exact-path",
+                "exact-identifier",
+                "exact-symbol",
+                "rg-lexical",
+                "token-bm25",
+                "relation-graph"
+              ]
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "module_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "path": {
+            "minLength": 1,
+            "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$",
+            "type": "string"
+          },
+          "provenance_refs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "rank": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "ranking_breakdown": {
+            "additionalProperties": false,
+            "properties": {
+              "bm25": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "exact": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "lexical": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "relation": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "exact",
+              "lexical",
+              "bm25",
+              "relation"
+            ],
+            "type": "object"
+          },
+          "score": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "visibility_reason": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "rank",
+          "module_id",
+          "path",
+          "anchor_kind",
+          "anchor",
+          "line_start",
+          "line_end",
+          "source_sha256",
+          "score",
+          "ranking_breakdown",
+          "matched_by",
+          "visibility_reason",
+          "provenance_refs"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "request_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "result_kind": {
+      "const": "location-recommendation"
+    },
+    "revalidation_required": {
+      "const": true
+    },
+    "schema_version": {
+      "const": "jimuyun.knowledge-locator-result.v1"
+    },
+    "selected_domain": {
+      "enum": [
+        "toolchain",
+        "phase",
+        "workspace",
+        "marketplace",
+        null
+      ],
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_identity": {
+      "additionalProperties": false,
+      "properties": {
+        "authority_ref": {
+          "const": "refs/heads/main"
+        },
+        "source_commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "source_snapshot_id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "authority_ref",
+        "source_commit",
+        "source_snapshot_id"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "enum": [
+        "matched",
+        "insufficient_match",
+        "blocked"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "result_kind",
+    "status",
+    "source_identity",
+    "selected_domain",
+    "normalized_keywords",
+    "path_policy_identity",
+    "confidence",
+    "recommended_reads",
+    "next_action",
+    "revalidation_required"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,750 @@
+知识库不再是“需要维护的文档体系”，而是对现有仓库进行编译后生成的机器检索投影。
+
+原始代码、ADR、architecture、workflow、execution-plan、日志等继续保留原位；知识库只负责分类、过滤、压缩、建立索引和生成检索词，不成为新的人工事实来源。
+
+一、先确认你当前最重要的改造目标
+
+第一阶段不是重新设计全部文档，而是：
+
+让默认进入 Phase 服务上下文的 Agent，看不到与 Phase 无关的本地正式工作流内容；但这些内容仍完整保留，供工具链维护任务显式调用。
+
+仓库实际上已经有这个边界，只是目前停留在文字说明，没有落实成检索层面的强制隔离。
+
+根 AGENTS.md 已经规定：
+
+workflow.md 是仓库本地正式交付工作流；
+它不是 Phase 浏览器/API 默认路径；
+普通 Phase 工作不应进入 Taskmaster、Chapter 3–7、overlay generator、Chapter 6 review recovery 等内部工具链。
+
+Phase A Cloud Runner overlay 也明确规定：
+
+Phase 产品包含 Chapter 2 bootstrap 和 prototype lane；
+Chapter 3–7 正式交付编排不属于 Phase 产品范围；
+Phase 可调用 prototype workflow、prototype TDD、prototype scene；
+Task triplet、overlay baseline、Chapter 5–7 均被排除。
+
+但 workflow.md 自己仍宣称是“本仓库的日常可执行工作流”，并将 Taskmaster、Chapter 3–7 和 review pipeline 作为默认路径。
+
+所以问题不是缺少边界规则，而是：
+
+Phase-first 边界没有被编译成 Agent 的默认检索范围。
+
+二、四层知识库应改成“四个机器检索 Scope”
+
+可以继续使用你的四层名称，但实现上不要把它们当目录依赖层，而应当作为四个上下文配置文件：
+
+toolchain
+phase
+workspace
+marketplace
+
+每次 Agent 或 Skill 工作前，必须先选择且只能选择一个主 Scope。
+
+必要时可以加载该 Scope 明确声明的依赖模块，但不得直接搜索整个仓库。
+
+推荐默认关系
+Scope	默认内容	可条件加载	默认屏蔽
+toolchain	VDD、Quick Dev、Bootstrap Review、BMAD、workflow、仓库维护脚本	Phase 或 Godot 代码，用于维护工具链适配	用户运行数据、市场内容
+phase	PhaseA.Platform、Caddy、Phase API、账号、GDD、运行、集群、Phase ADR	prototype、Godot kernel、指定工具链入口	workflow.md、Taskmaster、Chapter 3–7、BMAD 规划内容
+workspace	项目 AGENTS、README、project.md、项目状态、素材、允许的 Skills、Godot 实现	Phase 提供的 API/route contract、共享 Godot 标准	根仓正式 workflow、平台内部实现、管理员规则
+marketplace	package、Skill、素材、发布、评估、安全审核	Phase capability 和沙箱契约	内部工具链、平台密钥、用户项目私有状态
+三、当前 architecture 和 ADR 的正确归属
+1. workflow.md：工具链 Scope
+
+workflow.md 的主体并不是 Phase 服务工作流，而是原本模板/游戏业务仓的正式交付流程。
+
+它包含：
+
+Task triplet 初始化；
+PRD/GDD 到任务生成；
+overlay 生成；
+contracts baseline；
+Chapter 5 semantic stabilization；
+Chapter 6 正式任务交付；
+Chapter 7 UI wiring。
+
+例如 Chapter 3 明确围绕 .taskmaster/tasks/、需求覆盖矩阵和 task triplet 构建。
+
+因此应标记为：
+
+scope: toolchain
+visibility:
+  toolchain: active
+  phase: excluded
+  workspace: conditional
+  marketplace: excluded
+
+这里的 workspace: conditional 是为了保留未来某个独立游戏仓显式启用正式本地交付工作流的能力；Phase 创建的普通用户项目不默认加载。
+
+2. docs/architecture/base/**：游戏工作区模板/共享 Godot Kernel
+
+Base 目录本身声明：
+
+它是 Base-Clean；
+使用 ${DOMAIN_*}、${PRODUCT_*} 占位符；
+不允许具体 PRD；
+主要对齐 Godot runtime、安全、性能、契约等 ADR。
+
+所以它并不是 Phase 服务的基础架构文档。
+
+更准确的归属是：
+
+scope: workspace
+module: shared-godot-kernel
+visibility:
+  workspace: active
+  phase: dependency
+  toolchain: conditional
+
+Phase 只有在修改托管 Godot 执行内核、游戏运行语义、Godot UI 或质量门禁时才加载它。
+
+普通 Phase API、账号、数据库、Caddy 或管理后台任务不应读取 base/**。
+
+3. docs/architecture/phase-service/**：Phase 技术知识主入口
+
+这个目录已经明确说明其 Scope 是：
+
+Phase A/B 平台服务；
+浏览器消费的 prototype routes；
+Phase C 演进约束。
+
+它已经有合理的模块拆分：
+
+system overview
+auth/accounts
+metadata DB
+workspace/artifacts
+prototype routes/recovery
+LLM/Codex
+Caddy/runtime
+audit/evidence
+roadmap
+
+因此它应成为 Phase Scope 的 R2 主投影，而不是再复制一套 Phase 技术文档。
+
+知识编译器只需要扫描这些文件并生成更小的模块索引。
+
+4. docs/architecture/overlays/**：默认屏蔽，按引用条件加载
+
+你的判断基本正确：当前 overlay 体系主要来自原本的 PRD 功能纵切工作流。
+
+唯一明显的 Phase overlay 是：
+
+docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/
+
+但该文件目前仍标记为：
+
+Status: Draft
+Updated: 2026-05-10
+
+而新的 Phase Service Architecture Index 已在 2026-06-28 对 Phase 实现重新扫描，并明确将该 overlay 称为“original Phase A overlay”，即原始设计来源，而不是当前唯一入口。
+
+因此建议：
+
+docs/architecture/overlays/**:
+  default_visibility: excluded
+
+docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/**:
+  phase_visibility: historical_dependency
+
+只有以下任务加载它：
+
+追溯某个 Phase A 原始决策；
+检查现状是否偏离原始设计；
+修改被该 overlay 引用、但尚未被新 ADR 替代的约束。
+
+不能让普通 Phase 任务同时读取 phase-service/** 和完整 overlay，否则会增加重复上下文和旧事实冲突。
+
+5. ADR 保持原目录，通过逻辑投影隔离
+
+你不需要移动 docs/adr/**。
+
+现在已经有两套合理的逻辑索引：
+
+ADR_INDEX_PHASE.md：Phase 0032–0040。
+ADR_INDEX_GODOT.md：Godot 和游戏 Kernel 0015–0031。
+
+知识编译器直接把它们当作不同 Scope 的种子：
+
+Phase ADR projection
+  <- ADR_INDEX_PHASE.md
+  <- 递归解析这些 ADR 引用的共享 ADR
+
+Workspace/Godot ADR projection
+  <- ADR_INDEX_GODOT.md
+
+Toolchain ADR projection
+  <- Bootstrap Review、VDD、Repository Maintenance 等 ADR
+  <- 通过 standards 和 execution plans 自动发现
+
+Phase 有时确实依赖 Godot ADR，例如 Phase Cloud Runner 引用了 ADR-0015、0018、0019、0025、0031。
+
+因此不要使用“按编号范围完全隔离”，而要使用：
+
+主 Scope ADR + 引用闭包。
+
+四、不能直接屏蔽整个 docs/workflows/
+
+这是一个重要纠正。
+
+docs/workflows/ 当前是一个混合目录，其中同时存在：
+
+工具链内容
+Taskmaster
+Chapter 6
+Chapter 7
+overlay generation
+business repo upgrade
+template upgrade
+SuperClaude
+formal acceptance workflow
+Phase 内容
+cloud platform evolution
+Phase B account/AGF absorption
+Phase C hardening
+Phase GDD-to-module
+telemetry/feedback
+prototype route
+
+当前 workflows 索引可以看到这两类文档混在同一张表中。
+
+所以第一版不能采用：
+
+phase excludes docs/workflows/**
+
+必须由编译器逐文件分类。
+
+推荐初始规则：
+
+Phase active:
+  docs/workflows/phase-a-*.md
+  docs/workflows/phase-b-*.md
+  docs/workflows/phase-c-*.md
+  docs/workflows/cloud-platform-*.md
+  docs/workflows/cloud-user-*.md
+  docs/workflows/prototype-*.md
+  docs/workflows/game-type-route-*.md
+  docs/workflows/run-protocol.md（仅相关模块依赖）
+
+Toolchain active:
+  docs/workflows/chapter*.md
+  docs/workflows/task-*.md
+  docs/workflows/overlay-*.md
+  docs/workflows/business-repo-*.md
+  docs/workflows/template-*.md
+  docs/workflows/*superclaude*.md
+  docs/workflows/gate-bundle.md
+
+但这些规则只能作为首次 bootstrap seed。最终分类必须写入统一 catalog，而不是让每个 Skill 自己维护 glob。
+
+五、没有人工维护时，知识库应成为一个 Knowledge Compiler
+
+推荐的核心组件不是 knowledge-maintainer skill，而是：
+
+knowledge-compiler
+
+它的职责是把现有仓库编译为四份可搜索投影。
+
+现有仓库文件
+    ↓
+文件发现
+    ↓
+Scope 分类
+    ↓
+模块识别
+    ↓
+符号、路由、契约、测试和检索词抽取
+    ↓
+四份知识投影
+    ↓
+rg / RAG / Agent 消费
+推荐目录
+knowledge/
+  schemas/
+    source-catalog.v1.schema.json
+    scope-profile.v1.schema.json
+    module-index.v1.schema.json
+    baseline.v1.schema.json
+
+  config/
+    bootstrap-scope-seed.v1.json
+
+  catalog/
+    sources.v1.json
+    relations.v1.json
+    modules.v1.json
+
+  projections/
+    toolchain/
+      R0/
+      R1/
+      R2/
+      R3/
+      R4/
+      modules/
+      index.md
+      baseline.v1.json
+
+    phase/
+      R0/
+      R1/
+      R2/
+      R3/
+      R4/
+      modules/
+      index.md
+      baseline.v1.json
+
+    workspace/
+      ...
+
+    marketplace/
+      ...
+
+这里所有 projections/** 文件都标记：
+
+GENERATED — DO NOT EDIT
+
+原始事实仍在原目录。
+
+六、module.md 可以保留，但应当百分之百生成
+
+既然没有人维护，就不用担心人工文档漂移。
+
+不过应当明确：
+
+module.md 是检索加速缓存，不是行为权威。
+
+推荐每个模块同时生成两种表现：
+
+<module>.json   机器执行、枚举、过滤
+<module>.md     RAG、rg、Agent 阅读
+生成的模块 Markdown
+---
+schema: jimuyun.knowledge-module.v1
+scope: phase
+module_id: prototype-routes
+description: Hosted prototype creation, iteration, repair and recovery routes
+authority: derived
+generated_from_commit: 7584f29
+source_count: 47
+contract_count: 8
+test_count: 21
+confidence: 0.96
+---
+
+正文只放机器能验证的内容：
+
+# Prototype Routes
+
+## Entry Points
+
+| Path | Kind | Symbols / Routes | SHA |
+| --- | --- | --- | --- |
+
+## Contracts
+
+| Contract | Producer | Consumers | Version |
+| --- | --- | --- | --- |
+
+## Tests
+
+| Test | Target | Acceptance family |
+| --- | --- | --- |
+
+## Related Decisions
+
+| ADR | Relevance |
+| --- | --- |
+
+## Search Vocabulary
+
+prototype
+route
+repair
+iteration
+latest state
+repair ledger
+acceptance blocker
+...
+不要让 LLM自由撰写职责说明
+
+描述来源优先级：
+
+XML documentation；
+C# public symbol；
+HTTP route；
+test name；
+5.现有 architecture heading；
+ADR title；
+7.文件名分词；
+8.最后才允许 LLM 生成补充描述。
+
+任何 LLM 生成内容必须带：
+
+{
+  "derived_by": "llm",
+  "source_refs": [...],
+  "confidence": 0.82
+}
+
+它只能影响检索词和摘要，不能形成新业务规则。
+
+七、R0–R4 可以保留，但全部是生成视图
+R0：Scope Router
+
+生成：
+
+Scope 描述；
+默认包含模块；
+条件依赖；
+排除项；
+核心入口；
+权威优先级。
+R1：Domain Projection
+
+从以下来源生成：
+
+glossary；
+DTO/entity names；
+API names；
+permission rules；
+workflow states；
+game type registry；
+config registry；
+test vocabulary。
+
+不需要人工写 domain model。
+
+R2：Technical Projection
+
+从代码和技术文档生成：
+
+项目结构；
+modules；
+services；
+controllers/endpoints；
+frontend views；
+runtime；
+database；
+tests；
+dependencies。
+R3：Contract Projection
+
+从以下事实生成：
+
+Minimal API routes；
+request/response DTO；
+JSON Schema；
+event constants；
+CLI arguments；
+config/environment variables；
+capability manifests。
+
+R3 应尽量来自代码 AST 和 schema，不从 Markdown 猜。
+
+R4：Evolution Projection
+
+从以下目录按 Scope 分类生成：
+
+execution-plans/
+decision-logs/
+docs/adr/
+logs 中的稳定 evidence manifest
+bad case / finding ledger
+Git history
+
+一人维护不需要 Issue 协作模型。GitHub Issues 可以完全不是第一阶段的一部分。
+
+八、需要引入“可见性”而不是简单 include/exclude
+
+每个源文件在不同 Scope 下应有以下状态之一：
+
+active
+dependency
+conditional
+historical
+excluded
+
+含义：
+
+状态	行为
+active	默认进入该 Scope 的 RAG corpus 和索引
+dependency	被 active 模块引用时自动进入
+conditional	只有特定任务类型触发
+historical	只用于追溯和冲突解释
+excluded	普通查询永不进入
+
+例如：
+
+文件	Toolchain	Phase	Workspace
+workflow.md	active	excluded	conditional
+docs/architecture/base/**	conditional	dependency	active
+docs/architecture/phase-service/**	dependency	active	excluded
+ADR_INDEX_PHASE.md	dependency	active	excluded
+ADR_INDEX_GODOT.md	dependency	conditional	active
+PHASE-A-CLOUD-RUNNER overlay	conditional	historical	excluded
+Chapter 3–7 docs	active	excluded	conditional
+prototype docs	dependency	active	active
+Phase account/Caddy docs	conditional	active	excluded
+九、根 AGENTS.md 应怎样屏蔽 workflow
+
+当前 AGENTS.md 已经有边界，但不够强，因为它仍然把大量工具链文档列为仓库恢复入口。
+
+建议增加一个非常靠前的 Scope 规则：
+
+## Default Knowledge Scope
+
+This repository defaults to the Phase service scope.
+
+Do not read or apply `workflow.md`, Taskmaster triplets, Chapter 3-7
+or overlay-generation procedures for ordinary Phase service work.
+
+Load the toolchain scope only when the task explicitly changes:
+- VDD or Quick Dev skills
+- Bootstrap Review
+- repository-maintenance workflows
+- BMAD integration
+- Chapter 3-7 formal delivery tooling
+
+Phase routes may consume only the toolchain entrypoints explicitly
+enumerated by the Phase knowledge profile.
+
+然后把当前根 AGENTS 中的：
+
+Chapter 6 恢复；
+Taskmaster；
+formal delivery；
+template workflow；
+project Game metadata；
+
+从默认阅读路径移除，改为：
+
+Toolchain scope route:
+knowledge/projections/toolchain/index.md
+
+根 AGENTS 不需要删除原有规则。可以先把原有长内容保留在文件后部，但在最前面加上：
+
+Unless the selected scope is toolchain, sections marked TOOLCHAIN-ONLY
+must not be loaded as operational instructions.
+
+不过更稳的做法是知识编译器直接生成一个 Phase 版 Agent 投影：
+
+knowledge/projections/phase/R0/agents-context.md
+
+Phase Agent 读取这个投影，而不是读取完整根 AGENTS。
+
+十、根 README 应只提供产品地图，不再路由到 workflow
+
+当前 README 已经以 Phase A/B 平台作为产品身份，这是正确的。
+
+README 应补充一张机器和人都能理解的 Scope 表：
+
+| 任务 | 默认入口 |
+| Phase 服务开发 | knowledge/projections/phase/index.md |
+| 工具链维护 | knowledge/projections/toolchain/index.md |
+| 用户项目开发 | 项目沙箱内的 knowledge/index.md |
+| 市场能力 | knowledge/projections/marketplace/index.md |
+
+并明确：
+
+workflow.md is retained as the repository-local formal toolchain workflow.
+It is not the Phase service product workflow and is not a default reading
+source for Phase or hosted user projects.
+
+README 中可以继续提到 workflow.md，但只能放在“内部工具链维护”部分，不能出现在默认启动顺序。
+
+十一、rg 和 RAG 的消费流程
+
+知识编译器应为每个 Scope 生成一个确定性的搜索清单：
+
+knowledge/projections/phase/search-files.v1.json
+knowledge/projections/phase/search-terms.v1.json
+knowledge/projections/phase/modules.v1.json
+
+Skill 不再执行：
+
+rg "keyword" .
+
+而是执行：
+
+knowledge-query --scope phase --query "prototype repair acceptance"
+
+内部流程：
+
+1. 从 phase/modules.v1.json 选模块
+2. 从模块读取候选路径和 search vocabulary
+3. 对候选路径运行 rg
+4. 命中 public symbol、route、contract 或 test
+5. 必要时扩大到 dependency
+6. 不命中时才进入 conditional
+7. 永不自动进入 excluded
+
+RAG 也应建立四个独立 corpus，而不是先把全仓 embedding 后依靠 prompt 过滤：
+
+rag-toolchain
+rag-phase
+rag-workspace-template
+rag-marketplace
+
+这会比在查询阶段用自然语言告诉模型“忽略 workflow.md”可靠得多。
+
+十二、单人 + AI Agent 可以删除哪些复杂度
+
+由于没有多人并行开发，可以不做：
+
+module owner；
+reviewer ownership；
+-团队权限映射；
+-跨 PR 文档锁；
+-模块认领；
+-复杂 merge conflict 处理；
+-多人审批链；
+-GitHub Issue 与知识条目双向同步。
+
+但仍应保留：
+
+Scope 边界；
+-单一事实来源；
+-生成文件不可手改；
+-append-only evidence；
+-SHA 和语义指纹；
+-恢复 checkpoint；
+-高风险路径的明确授权；
+-当前状态和历史状态分离。
+
+这些不是为了团队协作，而是为了防止同一个 AI Agent 在不同会话中互相冲突。
+
+十三、推荐的第一批实施动作
+第一步：建立 Scope Seed
+
+新增唯一的初始人工/Agent 配置：
+
+knowledge/config/bootstrap-scope-seed.v1.json
+
+它只声明稳定根边界：
+
+{
+  "toolchain": {
+    "roots": [
+      ".agents/",
+      "scripts/sc/",
+      "workflow.md"
+    ]
+  },
+  "phase": {
+    "roots": [
+      "PhaseA.Platform/",
+      "PhaseA.Platform.Tests/",
+      "runtime/phase-a/",
+      "docs/architecture/phase-service/"
+    ]
+  },
+  "workspace": {
+    "roots": [
+      "Game.Core/",
+      "Game.Godot/",
+      "Game.Core.Tests/",
+      "Tests.Godot/",
+      "docs/architecture/base/"
+    ]
+  },
+  "marketplace": {
+    "roots": []
+  }
+}
+
+这不是散落硬编码，而是唯一 bootstrap registry。
+
+第二步：生成 Source Catalog
+
+扫描全部文件并输出：
+
+knowledge/catalog/sources.v1.json
+
+每个文件包含：
+
+{
+  "path": "workflow.md",
+  "primary_scope": "toolchain",
+  "role": "workflow",
+  "visibility": {
+    "toolchain": "active",
+    "phase": "excluded",
+    "workspace": "conditional",
+    "marketplace": "excluded"
+  },
+  "sha": "...",
+  "references": [],
+  "classification_reasons": [
+    "contains Taskmaster formal workflow",
+    "contains Chapter 3-7 orchestration",
+    "explicitly excluded from Phase product route"
+  ]
+}
+第三步：修改根 AGENTS 和 README 路由
+
+只增加 Scope 选择和默认 Phase 屏蔽，不删除旧内容。
+
+第四步：只生成 Phase 知识投影
+
+第一轮不要同时建设四个完整投影。
+
+先生成：
+
+knowledge/projections/phase/
+
+并验证 Phase 查询不会召回：
+
+workflow.md
+Chapter 3–7
+Taskmaster
+overlay generation SOP
+business repo upgrade
+BMAD planning artifacts
+
+但仍能召回：
+
+Phase architecture
+Phase ADR
+account/auth
+GDD-to-module
+prototype routes
+Godot 共享依赖
+Caddy/runtime
+LLM route engine
+第五步：生成 Toolchain 投影
+
+将此前被 Phase 屏蔽的内容全部收纳到：
+
+knowledge/projections/toolchain/
+
+确保屏蔽只是上下文隔离，不是知识丢失。
+
+最终建议
+
+你的场景不需要“人工维护的知识库”，而需要：
+
+一个根据仓库事实自动生成四套 Context Projection 的知识编译器。
+
+最先实施的边界应当是：
+
+默认 Scope = Phase
+
+workflow.md、Taskmaster、Chapter 3-7、overlay generation、BMAD
+仅属于 Toolchain Scope
+
+Phase 只通过显式 dependency 使用 prototype、Godot kernel
+和少数经过枚举的工具链入口
+
+现有文件全部保留原位：
+
+workflow.md 不删；
+architecture/base 不迁；
+architecture/overlays 不删；
+ADR 不分目录；
+docs/workflows 不物理拆分。
+
+只在生成的 catalog 和四份投影里改变它们的可见性。
+
+这样第一阶段的改造成本最小，同时能立刻解决现在最核心的问题：Phase Agent 被旧模板工作流、Taskmaster 和 Chapter 3–7 内容污染上下文。

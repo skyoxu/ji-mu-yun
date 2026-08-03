@@ -1,0 +1,30 @@
+{
+  "$id": "jimuyun.hosted-callsite-migration-ledger.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "entries": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "callsite_id": { "minLength": 1, "type": "string" },
+          "entrypoint_family": { "enum": ["codex-hosted", "llm-route-engine", "python-backend"] },
+          "initial_gate_mode": { "enum": ["enforce", "legacy", "not-applicable", "unknown"] },
+          "migration_status": { "enum": ["blocked", "enforced", "excluded", "pending"] },
+          "path": { "minLength": 1, "type": "string" },
+          "reachability": { "enum": ["hosted-route", "toolchain", "unreachable", "unknown"] },
+          "reachability_evidence": { "minLength": 1, "type": "string" },
+          "routes": { "items": { "minLength": 1, "type": "string" }, "type": "array" }
+        },
+        "required": ["callsite_id", "entrypoint_family", "path", "reachability", "reachability_evidence", "routes", "initial_gate_mode", "migration_status"],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "generated_by": { "minLength": 1, "type": "string" },
+    "schema_version": { "const": "jimuyun.hosted-callsite-migration-ledger.v1" },
+    "source_snapshot_id": { "pattern": "^[0-9a-f]{64}$", "type": "string" }
+  },
+  "required": ["schema_version", "generated_by", "source_snapshot_id", "entries"],
+  "type": "object"
+}

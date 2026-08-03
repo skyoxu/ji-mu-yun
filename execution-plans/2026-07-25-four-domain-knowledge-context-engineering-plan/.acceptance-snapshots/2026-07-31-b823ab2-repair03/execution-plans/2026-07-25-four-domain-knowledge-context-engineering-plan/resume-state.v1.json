@@ -1,0 +1,32 @@
+{
+  "bootstrap_review_last_run": "logs/ci/2026-07-25/kc-plan-r1e",
+  "bootstrap_review_last_status": "blocked",
+  "bootstrap_review_repair_status": "deterministic-repair-validated",
+  "bootstrap_review_started": true,
+  "completed_slices": [
+    "K0",
+    "K1",
+    "K2",
+    "K3",
+    "K4",
+    "K5",
+    "K6",
+    "K7",
+    "K8",
+    "K9",
+    "K10",
+    "K11",
+    "K12",
+    "K13",
+    "K14"
+  ],
+  "current_slice": null,
+  "invalidated_slices": [],
+  "live_workspace_allowed": false,
+  "next_action": "All K0-K14 implementation slices have current local evidence and the Quick Dev completion predicate published implementation-complete. K13 readiness is true for source snapshot 03c54fc67253d67a4a9264c3c4bf795cc78e0a67e1cf60c8f0bb999ce1061410 under ADR-0047's non-operational declaration scope. K14's domain catalogs and maintain-knowledge-base Skill pass isolated main-pinned, closed-world, provisional, incremental/LKG, retention, and compatibility tests. The next lifecycle action is a separate acceptance decision; no live deployment is authorized by this state.",
+  "plan_id": "jimuyun-four-domain-knowledge-context.v1",
+  "production_code_allowed": false,
+  "profile": "resumable",
+  "safe_reentry": "Re-read 00-index.md, plan-state.v1.json, implementation-contract.v1.json, then run validate_whole_directory.py.",
+  "schema_version": "jimuyun.knowledge-plan-resume.v1"
+}

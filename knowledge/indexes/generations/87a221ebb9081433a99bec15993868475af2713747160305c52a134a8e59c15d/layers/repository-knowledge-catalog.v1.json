@@ -1,0 +1,1717 @@
+{
+  "authority_ref": "refs/heads/main",
+  "entries": [
+    {
+      "anchor": "ADR 索引 — Godot 迁移（Accepted + Addenda）",
+      "content": "ADR 索引 — Godot 迁移（Accepted + Addenda） ADR 索引 — Godot 迁移（Accepted + Addenda） 已采纳（Accepted） 附录（Addenda） Security Baseline Bundle Phase Service ADRs",
+      "entry_id": "adr-index.godot",
+      "source_path": "docs/architecture/ADR_INDEX_GODOT.md",
+      "source_sha256": "48d5f494482de5043559c7b9c4908a2f64f7efc70b189e9a7dc285294b18e109"
+    },
+    {
+      "anchor": "ADR Index - Phase Service",
+      "content": "ADR Index - Phase Service ADR Index - Phase Service Accepted Proposed Related Architecture Change Policy",
+      "entry_id": "adr-index.phase",
+      "source_path": "docs/architecture/ADR_INDEX_PHASE.md",
+      "source_sha256": "ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415"
+    },
+    {
+      "anchor": "ADR-0001: 技术栈与版本策略",
+      "content": "ADR-0001: 技术栈与版本策略 ADR-0001: 技术栈与版本策略 Context and Problem Statement Decision Drivers Considered Options Decision Outcome 核心技术栈与版本策略 版本联动与兼容性矩阵 Positive Consequences Negative Consequences Verification 升级验证矩阵 Operational Playbook 升级步骤 回滚步骤 迁移指南 References",
+      "entry_id": "adr.ADR-0001",
+      "source_path": "docs/adr/ADR-0001-tech-stack.md",
+      "source_sha256": "9fa559c5ffc798fbbad1e8ba907337183ba03e7d80448ac46ceb3dace4990d55"
+    },
+    {
+      "anchor": "ADR-0002: LegacyDesktopShell 安全基线",
+      "content": "ADR-0002: LegacyDesktopShell 安全基线 ADR-0002: LegacyDesktopShell 安全基线 Context and Problem Statement Decision Drivers Considered Options Decision Outcome 核心安全配置 Positive Consequences Negative Consequences Verification 5大验证类别体系 Operational Playbook 升级步骤 回滚步骤 迁移指南 安全事件响应流程 Phase 9: 依赖安全审计自动化 概述 自动化工具 验收标准 监控指标 相关文件 References",
+      "entry_id": "adr.ADR-0002",
+      "source_path": "docs/adr/ADR-0002-legacy-desktop-shell-security-baseline.md",
+      "source_sha256": "928f4dc4e41129116561b682c7517984503e6350cb548ccd3f52619bdc0db423"
+    },
+    {
+      "anchor": "ADR-0003: 可观测性与 Release Health（Sentry）",
+      "content": "ADR-0003: 可观测性与 Release Health（Sentry） ADR-0003: 可观测性与 Release Health（Sentry） Context Decision 1) Sentry Secrets 检测（软门禁） 2) Release Health 口径（引用） 3) 本地结构化日志（取证） Consequences",
+      "entry_id": "adr.ADR-0003",
+      "source_path": "docs/adr/ADR-0003-observability-release-health.md",
+      "source_sha256": "7daaeff4894e6b1656ca53353eca83b723c8bfa74753d1323e3a1caab929f9d1"
+    },
+    {
+      "anchor": "ADR-0004: 事件总线与契约（CloudEvents 风格）",
+      "content": "ADR-0004: 事件总线与契约（CloudEvents 风格） ADR-0004: 事件总线与契约（CloudEvents 风格） Context Decision 1) 契约结构（Contracts） 2) 命名规则（Event Type） 3) 总线接口与实现 Consequences",
+      "entry_id": "adr.ADR-0004",
+      "source_path": "docs/adr/ADR-0004-event-bus-and-contracts.md",
+      "source_sha256": "15ea9d92271178373e1e15ddce60d75bc06652aac4643918d13deb98ad4c5322"
+    },
+    {
+      "anchor": "ADR-0005: 质量门禁（Godot + C#）",
+      "content": "ADR-0005: 质量门禁（Godot + C#） ADR-0005: 质量门禁（Godot + C#） Context Decision 1) 单入口优先 2) 最小硬门禁集合（默认） 3) 可选硬门禁（按需启用） 4) 软门禁（不阻断，但必须产出工件） 5) Security Profile 驱动门禁强度 6) 工件（统一落盘） Verification Consequences Addendum (2026-02 Security profile + 5 scripts)",
+      "entry_id": "adr.ADR-0005",
+      "source_path": "docs/adr/ADR-0005-quality-gates.md",
+      "source_sha256": "d4e19c9a06585fac45d63fb4169d109eedbaf2c96dbec23b4adb9d25f9932395"
+    },
+    {
+      "anchor": "ADR-0006: Godot 数据存储与持久化（SQLite + ConfigFile）",
+      "content": "ADR-0006: Godot 数据存储与持久化（SQLite + ConfigFile） ADR-0006: Godot 数据存储与持久化（SQLite + ConfigFile） Context Decision Consequences Verification References",
+      "entry_id": "adr.ADR-0006",
+      "source_path": "docs/adr/ADR-0006-data-storage.md",
+      "source_sha256": "46989ec9a1b75d54596382b9de515c13ca2ad84146757b72910230becc0338ca"
+    },
+    {
+      "anchor": "ADR-0007: 端口与适配器（Ports & Adapters）",
+      "content": "ADR-0007: 端口与适配器（Ports & Adapters） ADR-0007: 端口与适配器（Ports & Adapters） Context Decision 1) 三层分离（落地目录） 2) 依赖方向（不可回退） Consequences",
+      "entry_id": "adr.ADR-0007",
+      "source_path": "docs/adr/ADR-0007-ports-adapters.md",
+      "source_sha256": "6c04048443ec2a54d3bdb67bc9f10341d1c04a7fda62464d56d4c8a516abf1bb"
+    },
+    {
+      "anchor": "ADR-0008: 部署与发布策略（Windows-only）",
+      "content": "ADR-0008: 部署与发布策略（Windows-only） ADR-0008: 部署与发布策略（Windows-only） Context Decision 1) 发布触发方式 2) 产物与工件 3) Release Health（软门禁取证） Consequences",
+      "entry_id": "adr.ADR-0008",
+      "source_path": "docs/adr/ADR-0008-deployment-release.md",
+      "source_sha256": "9207388b3fb7f34594fec1205a8fe25185cafbaa0d06513b76f5eca9c1179a1f"
+    },
+    {
+      "anchor": "ADR-0009: 跨平台适配策略（已被 Windows-only 平台策略替代）",
+      "content": "ADR-0009: 跨平台适配策略（已被 Windows-only 平台策略替代） ADR-0009: 跨平台适配策略（已被 Windows-only 平台策略替代） Context and Problem Statement Decision Drivers Considered Options Decision Outcome 平台检测与抽象层 平台特定适配器 快捷键适配 UI主题适配 窗口管理适配 系统集成适配 平台适配工厂 React跨平台UI组件 性能优化配置 Positive Consequences Negative Consequences Verification 跨平台验证清单 Operational Playbook 升级步骤 回滚步骤 迁移指南 References",
+      "entry_id": "adr.ADR-0009",
+      "source_path": "docs/adr/ADR-0009-cross-platform.md",
+      "source_sha256": "c6423317f8f041a67fb2173fa4579e7a5a48c1d6b02a6e81f562b1ded7a6ec22"
+    },
+    {
+      "anchor": "ADR-0010: 国际化策略（Godot）",
+      "content": "ADR-0010: 国际化策略（Godot） ADR-0010: 国际化策略（Godot） Context Decision 1) 翻译资源（Translation Resources） 2) 语言选择与持久化（SSoT） 3) 验收与门禁 Consequences",
+      "entry_id": "adr.ADR-0010",
+      "source_path": "docs/adr/ADR-0010-internationalization.md",
+      "source_sha256": "e7f281a46894331cac02b44c7819e43c8c866cf94990b44971c6aaf5cd51dc50"
+    },
+    {
+      "anchor": "ADR-0011: 平台与 CI 策略（Windows-only）",
+      "content": "ADR-0011: 平台与 CI 策略（Windows-only） ADR-0011: 平台与 CI 策略（Windows-only） Context Decision Consequences Alternatives Compliance Checklist Addendum (2026-02 Security profile observability)",
+      "entry_id": "adr.ADR-0011",
+      "source_path": "docs/adr/ADR-0011-windows-only-platform-and-ci.md",
+      "source_sha256": "fdcc4a9295232f62ea91deb727a2270898f78fc72cbbdbfbe227393dbf658dde"
+    },
+    {
+      "anchor": "ADR-0012: PR 模板（静态）与审查信息最小集",
+      "content": "ADR-0012: PR 模板（静态）与审查信息最小集 ADR-0012: PR 模板（静态）与审查信息最小集 Context Decision Consequences",
+      "entry_id": "adr.ADR-0012",
+      "source_path": "docs/adr/ADR-0012-pr-template-conditional-rendering.md",
+      "source_sha256": "db95293540adf4c3f58e602b3a4960041df330b8d50379e911fb5083e5a8c713"
+    },
+    {
+      "anchor": "ADR-0015: 性能预算与门禁（Godot 4.5 + C#）",
+      "content": "ADR-0015: 性能预算与门禁（Godot 4.5 + C#） ADR-0015: 性能预算与门禁（Godot 4.5 + C#） Context Decision 1) 预算（初始值） 2) 采样与工件（最小 SSoT） 3) 门禁（最小可执行） 4) 约束（防漂移） Consequences Alternatives References",
+      "entry_id": "adr.ADR-0015",
+      "source_path": "docs/adr/ADR-0015-performance-budgets-and-gates.md",
+      "source_sha256": "00c3625daf1400b8f0e2b65a4ca3f642da0c1e82e19aecdc8343f6ed90fe4a20"
+    },
+    {
+      "anchor": "ADR-0016：API 契约与 OpenAPI 基线",
+      "content": "ADR-0016：API 契约与 OpenAPI 基线 ADR-0016：API 契约与 OpenAPI 基线",
+      "entry_id": "adr.ADR-0016",
+      "source_path": "docs/adr/ADR-0016-api-contracts-openapi.md",
+      "source_sha256": "4a70ec7489f11c1968c09f5a24e926dacc2cc2dccfd9acb40b9e9c006579aabc"
+    },
+    {
+      "anchor": "ADR-0017: Quality Intelligence Dashboard and Governance",
+      "content": "ADR-0017: Quality Intelligence Dashboard and Governance ADR-0017: Quality Intelligence Dashboard and Governance",
+      "entry_id": "adr.ADR-0017",
+      "source_path": "docs/adr/ADR-0017-quality-intelligence-dashboard-and-governance.md",
+      "source_sha256": "a2a9ce2e1a0446b5a66ee3a9408d82dfdc8926cbb6ccf4c2469d6ce34427c511"
+    },
+    {
+      "anchor": "ADR-0018: Godot Runtime and Distribution",
+      "content": "ADR-0018: Godot Runtime and Distribution ADR-0018: Godot Runtime and Distribution",
+      "entry_id": "adr.ADR-0018",
+      "source_path": "docs/adr/ADR-0018-godot-runtime-and-distribution.md",
+      "source_sha256": "e73954aecacc7b3b694d0e3ea3cdeb9fcd03fffef65bab40bec2ddb8339f4d94"
+    },
+    {
+      "anchor": "ADR-0019: Godot 4.5 安全基线（Windows Only）",
+      "content": "ADR-0019: Godot 4.5 安全基线（Windows Only） ADR-0019: Godot 4.5 安全基线（Windows Only） Addendum (2026-02 Profile-aware gate mapping)",
+      "entry_id": "adr.ADR-0019",
+      "source_path": "docs/adr/ADR-0019-godot-security-baseline.md",
+      "source_sha256": "28bb155badcf83bb8a05bd9a85af252fcaea3b0017cd26f929f80e59a561b110"
+    },
+    {
+      "anchor": "ADR-0020: Contracts 存放位置标准化（SSoT = `Game.Core/Contracts/**`）",
+      "content": "ADR-0020: Contracts 存放位置标准化（SSoT = `Game.Core/Contracts/**`） ADR-0020: Contracts 存放位置标准化（SSoT = `Game.Core/Contracts/**`） Context Decision 1) 单一事实来源（SSoT） 2) 禁止位置（Forbidden） Verification（可执行校验） Consequences",
+      "entry_id": "adr.ADR-0020",
+      "source_path": "docs/adr/ADR-0020-contract-location-standardization.md",
+      "source_sha256": "176ef6f28b61cbb0bbe2eda9300f5abc8a27b0ab80c4c693adb0a60b622d99c8"
+    },
+    {
+      "anchor": "ADR-0021: C# Domain Layer Architecture",
+      "content": "ADR-0021: C# Domain Layer Architecture ADR-0021: C# Domain Layer Architecture",
+      "entry_id": "adr.ADR-0021",
+      "source_path": "docs/adr/ADR-0021-csharp-domain-layer-architecture.md",
+      "source_sha256": "ff4fe2d399c0c26f83825423be5fa0231423b9440f15da5992076bf0bf373c0b"
+    },
+    {
+      "anchor": "ADR-0022: Godot Signal System and Contracts",
+      "content": "ADR-0022: Godot Signal System and Contracts ADR-0022: Godot Signal System and Contracts",
+      "entry_id": "adr.ADR-0022",
+      "source_path": "docs/adr/ADR-0022-godot-signal-system-and-contracts.md",
+      "source_sha256": "875304af0817ff039c9db1a12e16adbecf92cd726e2676e1e49fb15987537290"
+    },
+    {
+      "anchor": "ADR-0023: Settings SSoT = ConfigFile (user://)",
+      "content": "ADR-0023: Settings SSoT = ConfigFile (user://) ADR-0023: Settings SSoT = ConfigFile (user://) Test-Refs",
+      "entry_id": "adr.ADR-0023",
+      "source_path": "docs/adr/ADR-0023-settings-ssot-configfile.md",
+      "source_sha256": "279788d6f4c15a479e049726de1fa13d35744981305d3ce4944a7ca1f77e0a09"
+    },
+    {
+      "anchor": "ADR-0024: 模板谱系与命名口径（Template Lineage & Naming）",
+      "content": "ADR-0024: 模板谱系与命名口径（Template Lineage & Naming） ADR-0024: 模板谱系与命名口径（Template Lineage & Naming）",
+      "entry_id": "adr.ADR-0024",
+      "source_path": "docs/adr/ADR-0024-template-lineage-and-naming.md",
+      "source_sha256": "2b44e7789732f790d638522a1346042a5d290f0186bd9f31db4a2fe2daed4d87"
+    },
+    {
+      "anchor": "ADR-0025: Godot 测试策略（xUnit + GdUnit4）",
+      "content": "ADR-0025: Godot 测试策略（xUnit + GdUnit4） ADR-0025: Godot 测试策略（xUnit + GdUnit4）",
+      "entry_id": "adr.ADR-0025",
+      "source_path": "docs/adr/ADR-0025-godot-test-strategy.md",
+      "source_sha256": "67e11300f164a11fd00c5c7694464483e7735dc239fd9263bb0a6a8368538628"
+    },
+    {
+      "anchor": "ADR-0026: 事件发布失败策略（PublishAsync Failure Semantics）",
+      "content": "ADR-0026: 事件发布失败策略（PublishAsync Failure Semantics） ADR-0026: 事件发布失败策略（PublishAsync Failure Semantics）",
+      "entry_id": "adr.ADR-0026",
+      "source_path": "docs/adr/ADR-0026-event-publish-failure-strategy.md",
+      "source_sha256": "70557c9c91c923bc0e6922bcf1eedcfca176d2a0183842ce2925761c28074edf"
+    },
+    {
+      "anchor": "ADR-0027: 所有权唯一写入口（Ownership Write Entry）",
+      "content": "ADR-0027: 所有权唯一写入口（Ownership Write Entry） ADR-0027: 所有权唯一写入口（Ownership Write Entry）",
+      "entry_id": "adr.ADR-0027",
+      "source_path": "docs/adr/ADR-0027-ownership-write-entry.md",
+      "source_sha256": "e8c1c6fd440af2251e3b300e6649440bc11336db218d743b24e9fca6e78577fa"
+    },
+    {
+      "anchor": "ADR-0028: 事件用途分级（Gameplay vs UI vs Audit/Observability）",
+      "content": "ADR-0028: 事件用途分级（Gameplay vs UI vs Audit/Observability） ADR-0028: 事件用途分级（Gameplay vs UI vs Audit/Observability） Decision 1) 三类事件（必须选其一） 2) 发布语义与失败边界 Consequences References",
+      "entry_id": "adr.ADR-0028",
+      "source_path": "docs/adr/ADR-0028-event-usage-tiering.md",
+      "source_sha256": "e462adc5482889bfae390fda501dfbbda09d0f68b12c5520a3cc315b59c6ea8f"
+    },
+    {
+      "anchor": "ADR-0029: 错误处理口径（Exceptions vs Try*/Result vs Fail-Fast）",
+      "content": "ADR-0029: 错误处理口径（Exceptions vs Try*/Result vs Fail-Fast） ADR-0029: 错误处理口径（Exceptions vs Try*/Result vs Fail-Fast） Decision 1) Core（Game.Core）错误分类与推荐处理 2) Adapters / Scenes（Godot 运行时）处理口径 3) 测试与验收要求（最小集） Consequences References",
+      "entry_id": "adr.ADR-0029",
+      "source_path": "docs/adr/ADR-0029-error-handling-policy.md",
+      "source_sha256": "9c5b7baa0bcad1f8c5128dd417394d1773b6941d79c34be6523f7528fbcf455f"
+    },
+    {
+      "anchor": "ADR-0030: Core 线程模型（Single-Thread Core + 明确跨线程边界）",
+      "content": "ADR-0030: Core 线程模型（Single-Thread Core + 明确跨线程边界） ADR-0030: Core 线程模型（Single-Thread Core + 明确跨线程边界） Decision 1) Core 领域对象默认线程封闭（Thread-Confined） 2) 事件处理器不得修改 Core 领域状态 3) AI 策略必须确定性且线程安全 4) 允许后台线程的范围与回到主线程的规则 Consequences References",
+      "entry_id": "adr.ADR-0030",
+      "source_path": "docs/adr/ADR-0030-core-threading-model.md",
+      "source_sha256": "07810be470cf2f5e4b76170f87743cf246a3a51ac8abf60414850dbac7b894c8"
+    },
+    {
+      "anchor": "ADR-0031: Security Profile（host-safe 默认，strict 可选）",
+      "content": "ADR-0031: Security Profile（host-safe 默认，strict 可选） ADR-0031: Security Profile（host-safe 默认，strict 可选） Addendum (2026-02 Script-level mapping)",
+      "entry_id": "adr.ADR-0031",
+      "source_path": "docs/adr/ADR-0031-security-profile-host-safe-default.md",
+      "source_sha256": "9c65cfec677cdf070e682efd26225646a87a3d10110c99ac9e6e049a82b4fee6"
+    },
+    {
+      "anchor": "ADR-0032: Phase Service Hosted Shell Over Repository Workflow Kernel",
+      "content": "ADR-0032: Phase Service Hosted Shell Over Repository Workflow Kernel ADR-0032: Phase Service Hosted Shell Over Repository Workflow Kernel Context Decision Consequences References",
+      "entry_id": "adr.ADR-0032",
+      "source_path": "docs/adr/ADR-0032-phase-service-hosted-shell.md",
+      "source_sha256": "a80dc4b43243926622a7e402ddbac5b355cc90b12bd614a202ec52004371c0f4"
+    },
+    {
+      "anchor": "ADR-0033: SQLite Metadata And Local Disk Workspaces For Phase A/B",
+      "content": "ADR-0033: SQLite Metadata And Local Disk Workspaces For Phase A/B ADR-0033: SQLite Metadata And Local Disk Workspaces For Phase A/B Context Decision Rejected Alternatives Migration Triggers Consequences References",
+      "entry_id": "adr.ADR-0033",
+      "source_path": "docs/adr/ADR-0033-phase-metadata-sqlite-local-disk.md",
+      "source_sha256": "3efa3264e37fb6c25406ed7538b057467210102dffcabcdfc8ec098c17c8d1b2"
+    },
+    {
+      "anchor": "ADR-0034: Account-Scoped Token Auth For Phase B Prototype Hardening",
+      "content": "ADR-0034: Account-Scoped Token Auth For Phase B Prototype Hardening ADR-0034: Account-Scoped Token Auth For Phase B Prototype Hardening Context Decision Consequences References",
+      "entry_id": "adr.ADR-0034",
+      "source_path": "docs/adr/ADR-0034-phase-account-scoped-token-auth.md",
+      "source_sha256": "6b30258c5181269c1a151cc12b87109bbe6d32ea07abdc4f29d5d95458341b7d"
+    },
+    {
+      "anchor": "ADR-0035: Controlled Runner And Workspace-Bound Execution",
+      "content": "ADR-0035: Controlled Runner And Workspace-Bound Execution ADR-0035: Controlled Runner And Workspace-Bound Execution Context Decision Consequences References",
+      "entry_id": "adr.ADR-0035",
+      "source_path": "docs/adr/ADR-0035-phase-controlled-runner-workspace-execution.md",
+      "source_sha256": "f6124fd958177263f649bed46b0ecdc29181c90d9e2069915093c1fa9823ede0"
+    },
+    {
+      "anchor": "ADR-0036: Prototype Route Recovery Authority And Machine-Closed Acceptance",
+      "content": "ADR-0036: Prototype Route Recovery Authority And Machine-Closed Acceptance ADR-0036: Prototype Route Recovery Authority And Machine-Closed Acceptance Context Decision Consequences References",
+      "entry_id": "adr.ADR-0036",
+      "source_path": "docs/adr/ADR-0036-phase-prototype-route-recovery-authority.md",
+      "source_sha256": "796b0d686b136a00418e8616aeab8438d0171da811d3c951ec17154de74d0346"
+    },
+    {
+      "anchor": "ADR-0037: Shared LLM And Codex Execution Entrypoints",
+      "content": "ADR-0037: Shared LLM And Codex Execution Entrypoints ADR-0037: Shared LLM And Codex Execution Entrypoints Context Decision Consequences References",
+      "entry_id": "adr.ADR-0037",
+      "source_path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+      "source_sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111"
+    },
+    {
+      "anchor": "ADR-0038: Evidence Sidecars And Account-Scoped Readback",
+      "content": "ADR-0038: Evidence Sidecars And Account-Scoped Readback ADR-0038: Evidence Sidecars And Account-Scoped Readback Context Decision Consequences References",
+      "entry_id": "adr.ADR-0038",
+      "source_path": "docs/adr/ADR-0038-phase-evidence-sidecars-readback.md",
+      "source_sha256": "8f9c8750480d8f9389ceb3d9b5a693f2b542353cd09940db66f04b186ffb6ae1"
+    },
+    {
+      "anchor": "ADR-0039: Phase Runtime, Caddy, And Recovery Order",
+      "content": "ADR-0039: Phase Runtime, Caddy, And Recovery Order ADR-0039: Phase Runtime, Caddy, And Recovery Order Context Decision Consequences References",
+      "entry_id": "adr.ADR-0039",
+      "source_path": "docs/adr/ADR-0039-phase-runtime-caddy-recovery.md",
+      "source_sha256": "43ea02b03e4f109fcfda706d4a57d64a98da3df9e9dfb77a8ff2b441c939d831"
+    },
+    {
+      "anchor": "ADR-0040: Phase C Hardening Before Scale-Out",
+      "content": "ADR-0040: Phase C Hardening Before Scale-Out ADR-0040: Phase C Hardening Before Scale-Out Context Decision Consequences References",
+      "entry_id": "adr.ADR-0040",
+      "source_path": "docs/adr/ADR-0040-phase-c-hardening-before-scaleout.md",
+      "source_sha256": "07d9b698fb7d0ec7c7d6b6ce8b77e0f4c80c0236e70fbfce5e842c759b397603"
+    },
+    {
+      "anchor": "ADR-0041: Bootstrap Review Execution Control Plane Ownership",
+      "content": "ADR-0041: Bootstrap Review Execution Control Plane Ownership ADR-0041: Bootstrap Review Execution Control Plane Ownership Context Decision Consequences References",
+      "entry_id": "adr.ADR-0041",
+      "source_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "source_sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
+    },
+    {
+      "anchor": "ADR-0042: Artifact-Proof Trust-Root Rotation Boundary",
+      "content": "ADR-0042: Artifact-Proof Trust-Root Rotation Boundary ADR-0042: Artifact-Proof Trust-Root Rotation Boundary Context Decision Consequences References",
+      "entry_id": "adr.ADR-0042",
+      "source_path": "docs/adr/ADR-0042-artifact-proof-trust-root-rotation-boundary.md",
+      "source_sha256": "98351e2eadf7fbb38cc543c84110fcaefb0291e66cb563d8ce6cd178ccd1108e"
+    },
+    {
+      "anchor": "ADR-0043: VDD Solo-Maintainer Clarification Recovery",
+      "content": "ADR-0043: VDD Solo-Maintainer Clarification Recovery ADR-0043: VDD Solo-Maintainer Clarification Recovery Context Decision Consequences References",
+      "entry_id": "adr.ADR-0043",
+      "source_path": "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md",
+      "source_sha256": "3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43"
+    },
+    {
+      "anchor": "ADR-0044: Knowledge Projection Authority And E2 Hosted Context Envelope",
+      "content": "ADR-0044: Knowledge Projection Authority And E2 Hosted Context Envelope ADR-0044: Knowledge Projection Authority And E2 Hosted Context Envelope Context Decision 1. Knowledge authority 2. E1 and E2 boundary 3. E2 Hosted Context Envelope 4. Relationship to existing ADRs 5. Lifecycle and storage boundary 6. Knowledge maintenance and consumption boundary Consequences Non-goals References",
+      "entry_id": "adr.ADR-0044",
+      "source_path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+      "source_sha256": "f00a514bc41e1881f3a3f6a25226b9d757600b19412ab5233b9b6d819d2742fe"
+    },
+    {
+      "anchor": "ADR-0045: Bootstrap Verifier Semantic Commit And Recovery",
+      "content": "ADR-0045: Bootstrap Verifier Semantic Commit And Recovery ADR-0045: Bootstrap Verifier Semantic Commit And Recovery Context Decision Consequences References",
+      "entry_id": "adr.ADR-0045",
+      "source_path": "docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md",
+      "source_sha256": "0a50fdf6827847d74be23b5da1407e9602b37c855d1943d25c8f4e2f315d6293"
+    },
+    {
+      "anchor": "ADR-0046: Knowledge Context Protected Integration Merge Decision",
+      "content": "ADR-0046: Knowledge Context Protected Integration Merge Decision ADR-0046: Knowledge Context Protected Integration Merge Decision Context Decision Relationships Consequences",
+      "entry_id": "adr.ADR-0046",
+      "source_path": "docs/adr/ADR-0046-knowledge-context-protected-integration-merge.md",
+      "source_sha256": "2e0f176dc155be2b5784650e99408e7d98984aea09571b473bf1d21212bdbb9b"
+    },
+    {
+      "anchor": "ADR-0047: E2 Hosted Context Readiness Declaration",
+      "content": "ADR-0047: E2 Hosted Context Readiness Declaration ADR-0047: E2 Hosted Context Readiness Declaration Context Decision Relationships Consequences",
+      "entry_id": "adr.ADR-0047",
+      "source_path": "docs/adr/ADR-0047-e2-hosted-context-readiness-declaration.md",
+      "source_sha256": "63ee0204e41eb093abb562ac95c56813e5d566d7f6226eb9080020a0ff915371"
+    },
+    {
+      "anchor": "ADR-0048: Repository Knowledge Locator Workflow Consumption",
+      "content": "ADR-0048: Repository Knowledge Locator Workflow Consumption ADR-0048: Repository Knowledge Locator Workflow Consumption Context Decision Relationships Consequences References",
+      "entry_id": "adr.ADR-0048",
+      "source_path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+    },
+    {
+      "anchor": "ADR-0049: Bootstrap Controller-Owned Coverage And Attempt Retry",
+      "content": "ADR-0049: Bootstrap Controller-Owned Coverage And Attempt Retry ADR-0049: Bootstrap Controller-Owned Coverage And Attempt Retry Context Decision Consequences References",
+      "entry_id": "adr.ADR-0049",
+      "source_path": "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md",
+      "source_sha256": "4aae9bdbb0512e6441c9ee80c4a54612a238a4fc114c521fa44dcafc2d39d41d"
+    },
+    {
+      "anchor": "ADR-0050: Knowledge Publication LKG Recovery And Generation Retention",
+      "content": "ADR-0050: Knowledge Publication LKG Recovery And Generation Retention ADR-0050: Knowledge Publication LKG Recovery And Generation Retention Context Decision Relationships Consequences References",
+      "entry_id": "adr.ADR-0050",
+      "source_path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+      "source_sha256": "6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
+    },
+    {
+      "anchor": "ADR-0051: Bootstrap Lineage Family And Bounded Repair Re-entry",
+      "content": "ADR-0051: Bootstrap Lineage Family And Bounded Repair Re-entry ADR-0051: Bootstrap Lineage Family And Bounded Repair Re-entry Context Decision Consequences References",
+      "entry_id": "adr.ADR-0051",
+      "source_path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "source_sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc"
+    },
+    {
+      "anchor": "ADR-0052: Bootstrap Review Calibration And Exact Envelope Reuse",
+      "content": "ADR-0052: Bootstrap Review Calibration And Exact Envelope Reuse ADR-0052: Bootstrap Review Calibration And Exact Envelope Reuse Context Decision Consequences References",
+      "entry_id": "adr.ADR-0052",
+      "source_path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+      "source_sha256": "dfcd328ea3a74841cb81271653392c7fdebf5390e2d9173f0184bbfa6a83445e"
+    },
+    {
+      "anchor": "01 约束与目标（Godot 4.5 + C# 模板口径）",
+      "content": "01 约束与目标（Godot 4.5 + C# 模板口径） 01 约束与目标（Godot 4.5 + C# 模板口径） 1.1 背景与范围 1.2 关键约束（Hard Constraints） 1.3 质量目标（Quality Goals） 1.4 系统上下文（C4 Context，最小） 1.5 容器/分层视图（C4 Container，三层分离） 1.6 可追溯骨架（PRD → ADR → 测试） 1.7 文档验收清单（Base）",
+      "entry_id": "architecture.base.01-introduction-and-goals-v2",
+      "source_path": "docs/architecture/base/01-introduction-and-goals-v2.md",
+      "source_sha256": "3f2a5eed758a7402cad21d5c7f27f3ef7e056a0ca49805223430937c4a284b53"
+    },
+    {
+      "anchor": "02 安全基线（Godot 4.5 + C#，Windows-only）",
+      "content": "02 安全基线（Godot 4.5 + C#，Windows-only） 02 安全基线（Godot 4.5 + C#，Windows-only） 0. 章节定位（与 arc42 §2 对齐） 1) 文件系统与资源（res:// / user://） 规则 审计（必须） 2) 外链与网络（HTTPS + 主机白名单） 规则 3) OS.execute 与权限（默认禁用） 规则 4) 代码与插件（禁止动态加载） 5) 遥测与隐私（最小合规） 6) 安全烟测（CI 最小集） 必须覆盖的三态 推荐执行入口（Windows） 0.1 Security Profile Execution",
+      "entry_id": "architecture.base.02-security-baseline-godot-v2",
+      "source_path": "docs/architecture/base/02-security-baseline-godot-v2.md",
+      "source_sha256": "7e02285d99299995247a286ba9938ddae492291878f5cd0babeeb8aa4f91c592"
+    },
+    {
+      "anchor": "03 可观测性与发布健康（Sentry + 结构化日志）",
+      "content": "03 可观测性与发布健康（Sentry + 结构化日志） 03 可观测性与发布健康（Sentry + 结构化日志） 0. 章节定位（与 arc42 §3 对齐） 1) 上下文视图（C4 Context，最小） 2) 日志策略（结构化 + 可归档） 3) Sentry（Secrets 软门禁 + Step Summary） 4) Release Health（口径引用） 5) 最小验收（就地取证）",
+      "entry_id": "architecture.base.03-observability-sentry-logging-v2",
+      "source_path": "docs/architecture/base/03-observability-sentry-logging-v2.md",
+      "source_sha256": "aae684894f2a65211528ea93d3b9b42eea067aa48d368228fa2f7b643a702a79"
+    },
+    {
+      "anchor": "04 系统上下文、容器与事件流（Godot + Contracts）",
+      "content": "04 系统上下文、容器与事件流（Godot + Contracts） 04 系统上下文、容器与事件流（Godot + Contracts） 1) System Context（最小） 2) Container（最小：Scenes/Adapters/Core） 3) 契约（Contracts）与事件命名 3.1 DomainEvent（CloudEvents 风格，最小字段） 3.2 事件命名（Base 规则） 4) 关键事件流（示例：按钮点击 → 领域事件 → Signal） 5) 就地验收（占位接口）",
+      "entry_id": "architecture.base.04-system-context-c4-event-flows-v2",
+      "source_path": "docs/architecture/base/04-system-context-c4-event-flows-v2.md",
+      "source_sha256": "a204e2382b1813bdce11ac5fdc9d57146f2fec324ced402aed26b77eec578946"
+    },
+    {
+      "anchor": "05 data models and storage ports v2 (Godot + C#)",
+      "content": "05 data models and storage ports v2 (Godot + C#) C4：数据模型与存储端口（Godot 变体） 1) 存储端口契约（Game.Core） 2) 数据模型与聚合（示例） 3) SQLite 适配层（Game.Godot/Adapters/Db） 4) Settings：ConfigFile 作为 SSoT 5) Test-Refs（端口与存储）",
+      "entry_id": "architecture.base.05-data-models-and-storage-ports-v2",
+      "source_path": "docs/architecture/base/05-data-models-and-storage-ports-v2.md",
+      "source_sha256": "8bed1f14c0262306b613083007146959ebc23d620181dd96348afabc7afd9399"
+    },
+    {
+      "anchor": "06 runtime view loops state machines error paths v2 (Godot + C#)",
+      "content": "06 runtime view loops state machines error paths v2 (Godot + C#) 6.0 运行时总览（C4 容器级） 6.1 主循环与场景切换 6.2 事件总线与错误路径（Godot 变体） 6.3 状态机与跨重启持久化 6.4 Settings 运行时视图（ConfigFile 路径） 6.5 Test-Refs（运行时与错误路径）",
+      "entry_id": "architecture.base.06-runtime-view-loops-state-machines-error-paths-v2",
+      "source_path": "docs/architecture/base/06-runtime-view-loops-state-machines-error-paths-v2.md",
+      "source_sha256": "65567712381288b0e0fe946e10e9031420f2a7c3d81bd4655b1710a1589db2a3"
+    },
+    {
+      "anchor": "07 开发、构建与质量门禁（Windows-only）",
+      "content": "07 开发、构建与质量门禁（Windows-only） 07 开发、构建与质量门禁（Windows-only） 1) 开发者日常循环（Local Loop） 2) 门禁矩阵（最小可执行） 3) 推荐的一键入口 3.1 PowerShell（最贴近 CI） 3.2 Python（适合本地编排/扩展） 4) CI 工作流映射（仓库内） 5) 工件与排障（统一入口） 3.3 Task-scoped acceptance (recommended)",
+      "entry_id": "architecture.base.07-dev-build-and-gates-v2",
+      "source_path": "docs/architecture/base/07-dev-build-and-gates-v2.md",
+      "source_sha256": "cf47db256b4bef579891c2f4751cfb1c6b020cecf2e07901cb7fccaf16343d35"
+    },
+    {
+      "anchor": "08 跨切面规则与功能纵切（Base 模板）",
+      "content": "08 跨切面规则与功能纵切（Base 模板） 08 跨切面规则与功能纵切（Base 模板） 08.1 原则（Base vs Overlay） 08.2 契约（Contracts）规则（SSoT） 存放位置 事件命名 08.3 C4 图表模板（Overlay 必填） 08.3.1 System Context（模板） 08.3.2 Container（模板：Scenes/Adapters/Core） 08.4 Overlay 08 的最小验收清单",
+      "entry_id": "architecture.base.08-crosscutting-and-feature-slices.base",
+      "source_path": "docs/architecture/base/08-crosscutting-and-feature-slices.base.md",
+      "source_sha256": "582aefedf1dde6564987036cbb610c262ef6a5eb5c9c4b322a6102c2b572eb48"
+    },
+    {
+      "anchor": "09 性能与容量（Godot 运行时口径）",
+      "content": "09 性能与容量（Godot 运行时口径） 09 性能与容量（Godot 运行时口径） 1) 指标与预算（引用 ADR-0015） 2) 采样与工件（运行时 → CI） 3) 最小可执行门禁（P95） 4) 排障建议（最小）",
+      "entry_id": "architecture.base.09-performance-and-capacity-v2",
+      "source_path": "docs/architecture/base/09-performance-and-capacity-v2.md",
+      "source_sha256": "e491a7f54a6cd4b6c9b8e698ee88e74f35a739791f1c6fdf7dffa34c911545b3"
+    },
+    {
+      "anchor": "10 i18n 与发布运维（Windows-only，Godot）",
+      "content": "10 i18n 与发布运维（Windows-only，Godot） 10 i18n 与发布运维（Windows-only，Godot） 1) i18n（最小流程） 2) 发布（Windows Desktop） 3) CI/Release 工作流（仓库内） 4) Release Health（Sentry，软门禁）",
+      "entry_id": "architecture.base.10-i18n-ops-release-v2",
+      "source_path": "docs/architecture/base/10-i18n-ops-release-v2.md",
+      "source_sha256": "20d876b2d2c6c6febec9c5fd14ea5bedc81b199f1a035a0fc9e152cf56eeaa91"
+    },
+    {
+      "anchor": "11 风险与技术债（Base）",
+      "content": "11 风险与技术债（Base） 11 风险与技术债（Base） 1) 风险登记（Risk Register） 2) 技术债约定（Debt Contract） 2.1 允许的技术债形式 2.2 技术债必须包含 3) 验收清单（合并前）",
+      "entry_id": "architecture.base.11-risks-and-technical-debt-v2",
+      "source_path": "docs/architecture/base/11-risks-and-technical-debt-v2.md",
+      "source_sha256": "ccbc9bb7aaaf57875376f832189e119cc8ab5b7cae193a858fa510094621fbd6"
+    },
+    {
+      "anchor": "12 glossary v2",
+      "content": "12 glossary v2 C4 架构图表 结构化 SSOT + 高级TypeScript 工程化校验脚本",
+      "entry_id": "architecture.base.12-glossary-v2",
+      "source_path": "docs/architecture/base/12-glossary-v2.md",
+      "source_sha256": "39877a0ac9abad1205d0e64568daf154601f8d020888aefc462729615377a55c"
+    },
+    {
+      "anchor": "Base-Clean 概览与索引（人工导航页）",
+      "content": "Base-Clean 概览与索引（人工导航页） Base-Clean 概览与索引（人工导航页） 使用方式 章节导航（Base 12 章） 与 ADR 的对齐（当前口径） 本地校验（Windows）",
+      "entry_id": "architecture.base.index",
+      "source_path": "docs/architecture/base/00-README.md",
+      "source_sha256": "f7fb25e4d032b1ef1727f2b7581ccd0167552ee743d04b4e80d9c9cf3e12dbc1"
+    },
+    {
+      "anchor": "Phase A Cloud Runner Architecture",
+      "content": "Phase A Cloud Runner Architecture Phase A Cloud Runner Architecture 1. Architecture Intent 2. Governing Decisions And References 3. Context View 4. Container View 4.1 Web Service 4.2 Workspace Manager 4.3 Runner 4.4 Artifact Indexer 4.5 SQLite Metadata Store 4.6 Browser UI 5. Deployment View 6. Workspace Layout 7. Data Ownership 7.1 Project, Workspace, Runner, And Task Relationship 8. Runtime Flows 8.1 Chapter 2 Project Bootstrap Flow 8.2 Prototype Intake And Routing Flow 8.3 Prototype TDD Execution 8.4 Project Health Flow 8.5 Approval Sync Flow 9. API Architecture 10. Metadata Schema 11. Hosted Entrypoint Architecture 12. Security Architecture 12.1 LLM Gateway Integration 13. Reliability And Recovery 14. Observability 15. Testing Strategy 16. Capacity And Performance 17. Key Trade-offs 18. Implementation Slices 19. Open Architecture Questions 20. Architecture Exit Criteria 21. One-Sentence Architecture Rule",
+      "entry_id": "architecture.overlay.phase-a-cloud-runner.08-phase-a-cloud-runner-architecture",
+      "source_path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md",
+      "source_sha256": "83a1207b37179a19f5527a5b22fb031ec3b32a0bd78df377aad6247d542e0010"
+    },
+    {
+      "anchor": "Phase A Cloud Runner Architecture Index",
+      "content": "Phase A Cloud Runner Architecture Index Phase A Cloud Runner Architecture Index",
+      "entry_id": "architecture.overlay.phase-a-cloud-runner.index",
+      "source_path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/_index.md",
+      "source_sha256": "1d405a6ccc708921ec66c1dcefae9bc1680b042fa1c90aff90283d12097e5c4e"
+    },
+    {
+      "anchor": "CloudEvent 契约更新（事件封装与字段）",
+      "content": "CloudEvent 契约更新（事件封装与字段） CloudEvent 契约更新（事件封装与字段）",
+      "entry_id": "architecture.overlay.prd-guild-manager.08-contracts-cloudevent",
+      "source_path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-CloudEvent.md",
+      "source_sha256": "47b4b19cb122f0c77702c149f4bdfd79a4225ff1639b392fb04be8170cbe76f8"
+    },
+    {
+      "anchor": "CloudEvents Core 契约更新",
+      "content": "CloudEvents Core 契约更新 CloudEvents Core 契约更新",
+      "entry_id": "architecture.overlay.prd-guild-manager.08-contracts-cloudevents-core",
+      "source_path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-CloudEvents-Core.md",
+      "source_sha256": "eb7857a0191d4f0ef981967adaacf81848736a97424e5f427b9565cbb67783a5"
+    },
+    {
+      "anchor": "公会管理事件（Guild Manager Events）契约更新",
+      "content": "公会管理事件（Guild Manager Events）契约更新 公会管理事件（Guild Manager Events）契约更新",
+      "entry_id": "architecture.overlay.prd-guild-manager.08-contracts-guild-manager-events",
+      "source_path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-Guild-Manager-Events.md",
+      "source_sha256": "ec8f17e2cbd94d4e024f85fb204d5d52018a3c58e7775475e4c03de93746d4e3"
+    },
+    {
+      "anchor": "预加载白名单（Preload Whitelist）契约调整",
+      "content": "预加载白名单（Preload Whitelist）契约调整 预加载白名单（Preload Whitelist）契约调整",
+      "entry_id": "architecture.overlay.prd-guild-manager.08-contracts-preload-whitelist",
+      "source_path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-Preload-Whitelist.md",
+      "source_sha256": "7dba252bd6cf65c13f9151f56c883784b517478910b545be282fa6d9fbe8ca3e"
+    },
+    {
+      "anchor": "质量指标（Quality Metrics）契约更新",
+      "content": "质量指标（Quality Metrics）契约更新 质量指标（Quality Metrics）契约更新",
+      "entry_id": "architecture.overlay.prd-guild-manager.08-contracts-quality-metrics",
+      "source_path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-Quality-Metrics.md",
+      "source_sha256": "d462f8e3c7c7031772d58fe00562da1dc1b587e7fec204b1c8d65a8f1a5ee296"
+    },
+    {
+      "anchor": "安全事件与策略契约更新（Security Contracts）",
+      "content": "安全事件与策略契约更新（Security Contracts） 安全事件与策略契约更新（Security Contracts）",
+      "entry_id": "architecture.overlay.prd-guild-manager.08-contracts-security",
+      "source_path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-Security.md",
+      "source_sha256": "66b4bd187bfea03d3e67688d87056e1b3dd69f42781fbd0e304490fa6fe360e2"
+    },
+    {
+      "anchor": "功能纵切 — 公会管理器",
+      "content": "功能纵切 — 公会管理器 约束边界 契约落点 运行时接线 验收与测试 变更要求",
+      "entry_id": "architecture.overlay.prd-guild-manager.08-feature-slice-guild-manager",
+      "source_path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Feature-Slice-Guild-Manager.md",
+      "source_sha256": "b3888668d5e0c1791210138321e5fc6ddb1f782e6d3ff90c2267b6b602f4ee09"
+    },
+    {
+      "anchor": "08 章功能纵切索引（契约与测试对齐）",
+      "content": "08 章功能纵切索引（契约与测试对齐） 08 章功能纵切索引（契约与测试对齐）",
+      "entry_id": "architecture.overlay.prd-guild-manager.index",
+      "source_path": "docs/architecture/overlays/PRD-Guild-Manager/08/_index.md",
+      "source_sha256": "3d69b6c66dad15cb4ef21bc253f087d61110ebb0c325626eb24857b0db93f7a7"
+    },
+    {
+      "anchor": "Audit, Evidence, And Logs Architecture",
+      "content": "Audit, Evidence, And Logs Architecture Audit, Evidence, And Logs Architecture Intent Boundary Key Decisions Invariants Change Rules Related Code And Docs",
+      "entry_id": "architecture.phase-service.audit-evidence-and-logs",
+      "source_path": "docs/architecture/phase-service/audit-evidence-and-logs.md",
+      "source_sha256": "aa21a725498e1c9762c5dbc191c16d6fec1db51ea6f522e3c300cdbdf122542f"
+    },
+    {
+      "anchor": "Auth And Accounts Architecture",
+      "content": "Auth And Accounts Architecture Auth And Accounts Architecture Intent Boundary Key Decisions Invariants Change Rules Related Code Related Tests And Evidence",
+      "entry_id": "architecture.phase-service.auth-and-accounts",
+      "source_path": "docs/architecture/phase-service/auth-and-accounts.md",
+      "source_sha256": "943f7bdc95df1e08290277e6b649abd519e2187047b524a1a324196e1ce91a10"
+    },
+    {
+      "anchor": "Hosted Workspaces And Artifacts Architecture",
+      "content": "Hosted Workspaces And Artifacts Architecture Hosted Workspaces And Artifacts Architecture Intent Boundary Key Decisions Invariants Change Rules Related Code Related Tests Related Decisions",
+      "entry_id": "architecture.phase-service.hosted-workspaces-and-artifacts",
+      "source_path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
+      "source_sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0"
+    },
+    {
+      "anchor": "Phase Service Architecture Index",
+      "content": "Phase Service Architecture Index Phase Service Architecture Index Purpose Source Baseline Reading Order One-Sentence Architecture Rule",
+      "entry_id": "architecture.phase-service.index",
+      "source_path": "docs/architecture/phase-service/_index.md",
+      "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474"
+    },
+    {
+      "anchor": "LLM And Codex Execution Architecture",
+      "content": "LLM And Codex Execution Architecture LLM And Codex Execution Architecture Intent Boundary Key Decisions Invariants Change Rules Related Code Related Tests",
+      "entry_id": "architecture.phase-service.llm-codex-execution",
+      "source_path": "docs/architecture/phase-service/llm-codex-execution.md",
+      "source_sha256": "83fec51044d4287038ade1a0f8462a905af792885322975c4dbce54e5f525aba"
+    },
+    {
+      "anchor": "Metadata DB Architecture",
+      "content": "Metadata DB Architecture Metadata DB Architecture Intent Boundary Key Decisions Invariants Change Rules Related Code Related Roadmap",
+      "entry_id": "architecture.phase-service.metadata-db",
+      "source_path": "docs/architecture/phase-service/metadata-db.md",
+      "source_sha256": "d86c087987187917d59a2b85b72cf3b01e951ab6e65ac34785741697560032a3"
+    },
+    {
+      "anchor": "Prototype Routes And Recovery Architecture",
+      "content": "Prototype Routes And Recovery Architecture Prototype Routes And Recovery Architecture Intent Boundary Key Decisions Recovery Authority Order Invariants Change Rules Related Code Related Tests And Docs",
+      "entry_id": "architecture.phase-service.prototype-routes-and-recovery",
+      "source_path": "docs/architecture/phase-service/prototype-routes-and-recovery.md",
+      "source_sha256": "a7815d65933cec85148dd1363db45dcb0726ba2f0d573a47037f8385194346b1"
+    },
+    {
+      "anchor": "Roadmap And Hardening Architecture",
+      "content": "Roadmap And Hardening Architecture Roadmap And Hardening Architecture Intent Current Phase A/B State Deferred Inputs To Phase C Phase C Architecture Direction Dependency Gates Invariants Change Rules Source Roadmap Documents",
+      "entry_id": "architecture.phase-service.roadmap-and-hardening",
+      "source_path": "docs/architecture/phase-service/roadmap-and-hardening.md",
+      "source_sha256": "5b3563aa5ff7ca093cf6009477556a5101f266c2f4df74e2a90f30f0ee697247"
+    },
+    {
+      "anchor": "Runtime, Caddy, And Recovery Architecture",
+      "content": "Runtime, Caddy, And Recovery Architecture Runtime, Caddy, And Recovery Architecture Intent Boundary Key Decisions Recovery Order Invariants Change Rules Related Code And Scripts",
+      "entry_id": "architecture.phase-service.runtime-caddy-and-recovery",
+      "source_path": "docs/architecture/phase-service/runtime-caddy-and-recovery.md",
+      "source_sha256": "8038312358d6805e7068334f6caded6239d50eb2a3a182ae924fc02d928f3a74"
+    },
+    {
+      "anchor": "Phase Service System Overview",
+      "content": "Phase Service System Overview Phase Service System Overview Intent Boundary Key Decisions Current Implemented Shape Invariants Change Rules Related Tests",
+      "entry_id": "architecture.phase-service.system-overview",
+      "source_path": "docs/architecture/phase-service/system-overview.md",
+      "source_sha256": "e1ac21ddd5f79d91c92f39148547a60d11e01b50f3108ba3571e535dcf9adfea"
+    },
+    {
+      "anchor": "Run Phase Bootstrap Review",
+      "content": "Run Phase Bootstrap Review Run Phase Bootstrap Review Authority Order Hard Boundaries Select One Profile Inspect Before Starting Prepare Complete Deterministic Preflight Prove Codex Access Authorize Launch Run Layers Gate And Verify Dispose P2 And Finalize Repair Rounds Seal Without Rewriting History Validate Skill Changes .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py .agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py .agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "entry_id": "governance.bootstrap-review",
+      "source_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "source_sha256": "0292f716721b0b196ccf6c9d873faab7b75dba8160d141644155482185028170"
+    },
+    {
+      "anchor": "knowledge_locator.py",
+      "content": "knowledge_locator.py knowledge_locator.py scripts/python/build_knowledge_catalog.py scripts/python/_knowledge_catalog_builder.py knowledge/contracts/knowledge-consumer-context.v1.schema.json knowledge/contracts/knowledge-consumer-projections.v1.schema.json knowledge/contracts/knowledge-generation-retention-policy.v1.schema.json knowledge/contracts/knowledge-index-pointer.v2.schema.json knowledge/contracts/knowledge-locator-request.v1.schema.json knowledge/contracts/knowledge-locator-result.v1.schema.json knowledge/contracts/knowledge-publication-generation.v1.schema.json knowledge/contracts/knowledge-publication-report.v1.schema.json knowledge/contracts/repository-knowledge-catalog.v2.schema.json knowledge/contracts/repository-source-snapshot.v1.schema.json scripts/python/_knowledge_locator_core.py knowledge/evaluation/repository-knowledge-query-suite.v1.json scripts/python/prune_knowledge_generations.py scripts/python/build_knowledge_index.py knowledge/policies/consumer-policies.v1.json knowledge/policies/consumer-policies.v2.json knowledge/policies/generation-retention.v1.json knowledge/policies/source-exclusions.v1.json scripts/python/publish_knowledge_catalog.py scripts/python/evaluate_knowledge_queries.py",
+      "entry_id": "governance.knowledge-locator",
+      "source_path": "scripts/python/knowledge_locator.py",
+      "source_sha256": "63c85df34a4e4d0c602cc9b4a427078de002a9249c0cc35f1ef2dd5682b1c813"
+    },
+    {
+      "anchor": "Maintain Knowledge Base",
+      "content": "Maintain Knowledge Base Maintain Knowledge Base Workflow Command Publication Gate scripts/python/build_knowledge_catalog.py .agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py scripts/python/prune_knowledge_generations.py scripts/python/publish_knowledge_catalog.py knowledge/policies/generation-retention.v1.json",
+      "entry_id": "governance.knowledge-maintenance",
+      "source_path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+      "source_sha256": "4861b20c1033fac1fbb4ee639b915408a9dd3c6d2e6d21895cfcd77e0c443e3f"
+    },
+    {
+      "anchor": "Repository Maintenance TDD Adapter",
+      "content": "Repository Maintenance TDD Adapter Repository Maintenance TDD Adapter Target Plan Report Lifecycle Required Order Knowledge Consumption Version Currency Commit Gate Boundaries .agents/skills/quick-dev-tdd-adapter/tools/adapter.py .agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md .agents/skills/quick-dev-tdd-adapter/references/knowledge-consumption.md .agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py .agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "entry_id": "governance.quick-dev-tdd-adapter",
+      "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "source_sha256": "08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06"
+    },
+    {
+      "anchor": "Refactor Implementation Acceptance",
+      "content": "Refactor Implementation Acceptance Refactor Implementation Acceptance Default Orchestration Modes Bootstrap Routing Current Core .agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py .agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py .agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py .agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json .agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "entry_id": "governance.refactor-implementation-acceptance",
+      "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "source_sha256": "14708433db121d1ef0bd726081727a786642432146da08d70e71e0941db44b4d"
+    },
+    {
+      "anchor": "VDD Execution Plan",
+      "content": "VDD Execution Plan VDD Execution Plan Route Input Before Profile Choose The Profile First Clarify Only Material Boundaries Lifecycle And Implementation In-Place Repair Rounds Knowledge Preflight Candidate, Review, And Reports Completion .agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py .agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py .agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+      "entry_id": "governance.vdd-execution-plan",
+      "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72"
+    },
+    {
+      "anchor": "Phase A Frontend GDD-To-Module Workflow Hardening Split Index",
+      "content": "Phase A Frontend GDD-To-Module Workflow Hardening Split Index Phase A Frontend GDD-To-Module Workflow Hardening Split Index Authority And Global Constraints Commit And Source-History Guard Phase Service Execution Mapping Task Order Structural Refactor Principles execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/implementation-contract.v1.json execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/97-split-added-requirements-ledger.md",
+      "entry_id": "plan.2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening",
+      "source_path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md",
+      "source_sha256": "26c6caa75b7637eafb97b3c72ed2ae3995cf4386df473d3dab56188034e07e31"
+    },
+    {
+      "anchor": "Phase Platform Boundary Hardening Split Index",
+      "content": "Phase Platform Boundary Hardening Split Index Phase Platform Boundary Hardening Split Index Authority Reading Order Machine Contracts And Plan Validation Change Rules execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/implementation-contract.v1.json execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/97-post-split-requirements-ledger.md",
+      "entry_id": "plan.2026-07-11-phase-frontend-boundary-hardening-execution-plan",
+      "source_path": "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/00-index.md",
+      "source_sha256": "e8fbcfde1ea0adbfbe2999517f7c7dbef05c600980a11669b1d6a9194f43e5b4"
+    },
+    {
+      "anchor": "LLM 审查事实门禁与降噪实施计划索引",
+      "content": "LLM 审查事实门禁与降噪实施计划索引 LLM 审查事实门禁与降噪实施计划索引 目标 权威边界 与现有两个重构目录的关系 分册顺序 全局实施顺序 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json execution-plans/2026-07-12-llm-review-evidence-gate-hardening/97-plan-added-requirements-ledger.md",
+      "entry_id": "plan.2026-07-12-llm-review-evidence-gate-hardening",
+      "source_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/00-index.md",
+      "source_sha256": "05787bfb5f4ece9da609121b1296186c572b0b2b0d878d8eda8adb85a45f63b3"
+    },
+    {
+      "anchor": "Repository Maintenance TDD Adapter VDD Plan",
+      "content": "Repository Maintenance TDD Adapter VDD Plan Repository Maintenance TDD Adapter VDD Plan Outcome Current-State Truth Authority Order Reading Order Machine Owners Validation Commands Phase Order execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json execution-plans/2026-07-15-repository-maintenance-tdd-adapter/97-requirements-ledger.md",
+      "entry_id": "plan.2026-07-15-repository-maintenance-tdd-adapter",
+      "source_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md",
+      "source_sha256": "495bd5176c006c870b6799cf26b176bf45e9ed2a4d0aa4707e274f2059c08529"
+    },
+    {
+      "anchor": "Four-Domain Knowledge Context Engineering Execution Plan",
+      "content": "Four-Domain Knowledge Context Engineering Execution Plan Four-Domain Knowledge Context Engineering Execution Plan Authority and lifecycle Directory map Safety declaration execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/command-registry.v1.json execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/implementation-contract.v1.json execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/plan-state.v1.json execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/requirements-ledger.v1.json",
+      "entry_id": "plan.2026-07-25-four-domain-knowledge-context-engineering-plan",
+      "source_path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/00-index.md",
+      "source_sha256": "9955f4f205bc92a11c7bf93ebfd04d6e8eb5fd2f94a6d24e7ac4dd661771cdda"
+    },
+    {
+      "anchor": "Knowledge Locator Workflow Integration Execution Plan",
+      "content": "Knowledge Locator Workflow Integration Execution Plan Knowledge Locator Workflow Integration Execution Plan Authority Lifecycle Machine Owners Implementation Order Safety execution-plans/2026-07-26-knowledge-locator-workflow-integration/authority-manifest.v1.json execution-plans/2026-07-26-knowledge-locator-workflow-integration/command-registry.v1.json execution-plans/2026-07-26-knowledge-locator-workflow-integration/implementation-contract.v1.json execution-plans/2026-07-26-knowledge-locator-workflow-integration/plan-state.v1.json execution-plans/2026-07-26-knowledge-locator-workflow-integration/01-requirements-and-acceptance.md",
+      "entry_id": "plan.2026-07-26-knowledge-locator-workflow-integration",
+      "source_path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/00-index.md",
+      "source_sha256": "f81c15e6f0e61aac2c4af6738969e89b5f5e5f879d3e6720f0dddf8abaee6255"
+    },
+    {
+      "anchor": "Refactor Implementation Acceptance Skill Execution Plan",
+      "content": "Refactor Implementation Acceptance Skill Execution Plan Refactor Implementation Acceptance Skill Execution Plan Scope Lifecycle Knowledge Gate Slices execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json execution-plans/2026-07-27-refactor-implementation-acceptance-skill/plan-state.v1.json execution-plans/2026-07-27-refactor-implementation-acceptance-skill/requirements-ledger.v1.json",
+      "entry_id": "plan.2026-07-27-refactor-implementation-acceptance-skill",
+      "source_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+      "source_sha256": "3296b59705ca13780032eb2a907c34b5101487dc5fef846ae98be83800c81c5d"
+    },
+    {
+      "anchor": "Repository Guide",
+      "content": "Repository Guide Repository Guide Purpose Context And Documentation Layers Phase Service Scope Planned Frontend Boundary Hardening Start Here Change Routing Repository Workflow Kernel Boundary Highest Encoding Rule Core Rules Phase Service Change Contract Change Matrix Protected Phase Paths Definition of Done Database and API Compatibility Prototype Route Recovery LLM Engine And Invocation Protocol Phase Runtime Recovery Order Host Runtime Boundary Repo Map Main Phase Commands Evidence Locations Docs Index Change Policy",
+      "entry_id": "repository-rules",
+      "source_path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+    },
+    {
+      "anchor": "Ji Mu Yun（积木云）Phase A/B Cloud Prototype Platform",
+      "content": "Ji Mu Yun（积木云）Phase A/B Cloud Prototype Platform Ji Mu Yun（积木云）Phase A/B Cloud Prototype Platform 一眼看懂 文档与运行上下文分层 当前阶段结论 前台边界加固计划状态 系统分层 1. 托管原型执行内核 2. Phase A 云端平台层 Phase 服务与仓库执行内核边界 3. Phase B 账号和运营层 运行入口 托管项目路由恢复规则 AI/LLM 调用协议 关键文档 云端平台 仓库和 Agent 导航 贡献者编码规则 Highest Encoding Rule",
+      "entry_id": "repository.overview",
+      "source_path": "README.md",
+      "source_sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6"
+    },
+    {
+      "anchor": "start-phasea.ps1",
+      "content": "start-phasea.ps1 start-phasea.ps1",
+      "entry_id": "runtime.phase-a.startup",
+      "source_path": "runtime/phase-a/start-phasea.ps1",
+      "source_sha256": "b25cffbc6d35c9f41139460db0ab9bd9adc921a348e65a7b62824508c1fa5a54"
+    },
+    {
+      "anchor": "Bootstrap Review Control Plane Standard",
+      "content": "Bootstrap Review Control Plane Standard Bootstrap Review Control Plane Standard Purpose Semantic Invariants Ownership Execution Boundary Artifact View And Access Proof Review Scope Closure Concurrency And Freshness Attempts And Lifecycle Lineage Family And Bounded Re-entry Repair Closure Finalized-Run Validation Envelope Historical Baseline And Cost Calibration Acceptance Inventory Attestation Companion Migration Validation",
+      "entry_id": "standard.bootstrap-review-control-plane",
+      "source_path": "docs/standards/bootstrap-review-control-plane.md",
+      "source_sha256": "8b3ac7c233bdf63cf040270f34aa21427bad062e0bcd625241ec8e9ee262becc"
+    },
+    {
+      "anchor": "Godot Diagnostics And Quality Gates",
+      "content": "Godot Diagnostics And Quality Gates Godot Diagnostics And Quality Gates Authority Capability Package IDs Diagnostic Spool Contract Retention And Cleanup Prebuild And Preview Quality Gate Interaction Region Gate Resource Lifecycle Gate Failure Family Taxonomy And Symptom Remediation Review Requirements",
+      "entry_id": "standard.godot-diagnostics-quality-gates",
+      "source_path": "docs/standards/godot-diagnostics-quality-gates.md",
+      "source_sha256": "1514983de60713493397477d656676b24b713e056b17e952fad06239a2f7d693"
+    },
+    {
+      "anchor": "Godot Engine Semantics Standard",
+      "content": "Godot Engine Semantics Standard Godot Engine Semantics Standard Purpose Trigger And Skip Rules Machine-Readable Baseline Required Semantic Families Viewport And Resolution Modes Feature-Family Reading Gate Official Godot Reference Examples Example Copy Manifest Rule Route Integration Validation",
+      "entry_id": "standard.godot-engine-semantics",
+      "source_path": "docs/standards/godot-engine-semantics.md",
+      "source_sha256": "b12535d8e39ef6fd64af56c0df9a189929ed28e7010d01fc9309f1216b4e3502"
+    },
+    {
+      "anchor": "Godot UI Capability Contract",
+      "content": "Godot UI Capability Contract Godot UI Capability Contract Purpose Machine-Readable Contract Technology Boundary Capability Domains Profiles Workflow Injection Points UI Closure Readback Fields Governance Rules Validation",
+      "entry_id": "standard.godot-ui-capability-contract",
+      "source_path": "docs/standards/godot-ui-capability-contract.md",
+      "source_sha256": "be4185b47b6622fbb453ba3d374b8fc5d4f497b6d45c6b6d2bfa7a133c6c2a38"
+    },
+    {
+      "anchor": "Godot UI Style Closure Standard",
+      "content": "Godot UI Style Closure Standard Godot UI Style Closure Standard Purpose Machine-Readable Contract Style Gap Rows Repair Prompt Inputs Final Readiness Validation",
+      "entry_id": "standard.godot-ui-style-closure",
+      "source_path": "docs/standards/godot-ui-style-closure.md",
+      "source_sha256": "032c5c33653d289db73436f64b308fb700ce628b43b5e70a548cefe64d55292b"
+    },
+    {
+      "anchor": "Godot UI Style Contract",
+      "content": "Godot UI Style Contract Godot UI Style Contract Purpose Machine-Readable Catalog Technology Boundary Style Capabilities Built-In Style Catalog Component Tiers Style Snapshot Schema Profile Style Selection And Snapshot Rules Drift Taxonomy Validation",
+      "entry_id": "standard.godot-ui-style-contract",
+      "source_path": "docs/standards/godot-ui-style-contract.md",
+      "source_sha256": "88b78f10571a3ed6e5d0ae2ccba04ac16f58109a5db5dcbedb0c7bfe14813545"
+    },
+    {
+      "anchor": "Godot UI Style Schema Acceptance Standard",
+      "content": "Godot UI Style Schema Acceptance Standard Godot UI Style Schema Acceptance Standard Purpose Machine-Readable Acceptance Acceptance Rules Validation",
+      "entry_id": "standard.godot-ui-style-schema-acceptance",
+      "source_path": "docs/standards/godot-ui-style-schema-acceptance.md",
+      "source_sha256": "334a42b981fd5006f4ba4f43644527c7b8bd19d872940db4385e78e1a5209003"
+    },
+    {
+      "anchor": "Phase Service Standards",
+      "content": "Phase Service Standards Phase Service Standards Purpose Authority Order API Naming And Compatibility Auth Transport Route Shape Action Routes Compatibility Rules Admin Review Queue API Response Shape Database Naming And Migrations Naming Schema Change Rules Persistence Coverage Error Handling HTTP Status Mapping Structured Error Envelope Logging, Evidence, And Audit Evidence Location Event Fields Correlation Ownership Source-Boundary Evidence Redaction Security Standards Testing And Smoke Evidence Status Enums And Readback State Documentation Update Rules",
+      "entry_id": "standard.phase-service",
+      "source_path": "docs/standards/phase-service.md",
+      "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc"
+    },
+    {
+      "anchor": "Repository Maintenance Agent Protocol",
+      "content": "Repository Maintenance Agent Protocol Repository Maintenance Agent Protocol Purpose Three-Layer Ownership Authority Boundaries TDD Lifecycle Phase Boundary References",
+      "entry_id": "standard.repository-maintenance-agent-protocol",
+      "source_path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "source_sha256": "94cffef015f48d32e6370fabb14f75367399d8cc3b55f15e083f2a3ad1900574"
+    },
+    {
+      "anchor": "Standards Index",
+      "content": "Standards Index Standards Index Reading Order Current Standards Maintenance Rules",
+      "entry_id": "standards.index",
+      "source_path": "docs/standards/_index.md",
+      "source_sha256": "899501ea899747811c655d926a5f55cdf373275d5ee377cf80994195e42d31e0"
+    }
+  ],
+  "schema_version": "jimuyun.repository-knowledge-catalog.v1",
+  "source_snapshot": {
+    "commit": "dbe2a731c9465946d3dc21ac3888491e33340c28",
+    "exclusion_policy_revision": "knowledge-source-exclusions.v1",
+    "ref": "refs/heads/main",
+    "schema_version": "jimuyun.repository-source-snapshot.v1",
+    "snapshot_id": "sha256:1668b5e2a4a3fec1a33a390fe95171908d658452ea2b1e997959c0477855b6c0",
+    "sources": [
+      {
+        "path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+        "sha256": "4861b20c1033fac1fbb4ee639b915408a9dd3c6d2e6d21895cfcd77e0c443e3f",
+        "source_role": "skill-entrypoint"
+      },
+      {
+        "path": ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
+        "sha256": "691e662370b58ead554da351b2abb296a74d8537d4f80aac5d0425279158db3e",
+        "source_role": "cli"
+      },
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+        "sha256": "08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06",
+        "source_role": "skill-entrypoint"
+      },
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
+        "sha256": "c610abf803a7c514d1220d6842a541be00daed0455d1d26fe1e5d0a809c8d347",
+        "source_role": "implementation-contract"
+      },
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/references/knowledge-consumption.md",
+        "sha256": "17361fbcf86d93f0d72619589fdf22b40f64709a82c856946d990ed9af741416",
+        "source_role": "knowledge-contract"
+      },
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+        "sha256": "09c1fe3167f76e9051932898faf1cf3f1bc0bc2d80cad36c468c683713358ebb",
+        "source_role": "cli"
+      },
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+        "sha256": "73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88",
+        "source_role": "validator"
+      },
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        "sha256": "0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b",
+        "source_role": "orchestrator"
+      },
+      {
+        "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "sha256": "0292f716721b0b196ccf6c9d873faab7b75dba8160d141644155482185028170",
+        "source_role": "skill-entrypoint"
+      },
+      {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+        "sha256": "03751ff39c6253c34dabe137253acabe0e81963789698b852690cf0b10d79f00",
+        "source_role": "route-registry"
+      },
+      {
+        "path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        "sha256": "50e8a2b32531b80ccd2683620eb4fccd98501040ccace45e321d3968b3c6c705",
+        "source_role": "orchestrator"
+      },
+      {
+        "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        "sha256": "f1a41063d5234e42a409d6d99d74fd693f02a819591535a48df8ca42b3b9a18d",
+        "source_role": "cli"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+        "sha256": "14708433db121d1ef0bd726081727a786642432146da08d70e71e0941db44b4d",
+        "source_role": "skill-entrypoint"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+        "sha256": "e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+        "source_role": "route-registry"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
+        "sha256": "775c6b865e93f62c610149a536d360437493b5439605b10fb85eb88852c08b68",
+        "source_role": "acceptance-matrix-contract"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
+        "sha256": "9f88fc03dda0c90bd96fb09f2441e06f1d849ad76ac64d99674af5fd9c2f212b",
+        "source_role": "phase-graph-contract"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "sha256": "5aa8669abf7413cf6d9bb523cda879841c5cb3ca142027e02660b37bce6bfaf4",
+        "source_role": "cli"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+        "sha256": "cb1af1cb3d3817e20b90d3ae12c78372f299497121f02046947c7313d8b9e43d",
+        "source_role": "orchestrator"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+        "sha256": "58f0a10076ee65bff09eee4945708aed7aab48e21b8dde75c17e94407ba99ce8",
+        "source_role": "knowledge-validator"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+        "sha256": "3076fac55c5c66fdfda70c4cc5d96a5b967332463a51d69e2c9cfa1841aae2de",
+        "source_role": "knowledge-adapter"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+        "sha256": "7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72",
+        "source_role": "skill-entrypoint"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+        "sha256": "ec27ce244db1f55d3eab0e8331422f5888bb4cef668e9ee6e37dedab45b7a023",
+        "source_role": "orchestrator"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+        "sha256": "efceb70237f8df7d9e56dca1d143a3c51f59932cfb076ce0eb82dddddebc7b3a",
+        "source_role": "route-registry"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+        "sha256": "28aed230c26b6520b375726571e9bf280f7b90dd304b5ed4a712f31799ae5c7e",
+        "source_role": "cli"
+      },
+      {
+        "path": "AGENTS.md",
+        "sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+        "source_role": "repository-authority"
+      },
+      {
+        "path": "README.md",
+        "sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6",
+        "source_role": "repository-overview"
+      },
+      {
+        "path": "docs/adr/ADR-0001-tech-stack.md",
+        "sha256": "9fa559c5ffc798fbbad1e8ba907337183ba03e7d80448ac46ceb3dace4990d55",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0002-legacy-desktop-shell-security-baseline.md",
+        "sha256": "928f4dc4e41129116561b682c7517984503e6350cb548ccd3f52619bdc0db423",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0003-observability-release-health.md",
+        "sha256": "7daaeff4894e6b1656ca53353eca83b723c8bfa74753d1323e3a1caab929f9d1",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0004-event-bus-and-contracts.md",
+        "sha256": "15ea9d92271178373e1e15ddce60d75bc06652aac4643918d13deb98ad4c5322",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0005-quality-gates.md",
+        "sha256": "d4e19c9a06585fac45d63fb4169d109eedbaf2c96dbec23b4adb9d25f9932395",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0006-data-storage.md",
+        "sha256": "46989ec9a1b75d54596382b9de515c13ca2ad84146757b72910230becc0338ca",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0007-ports-adapters.md",
+        "sha256": "6c04048443ec2a54d3bdb67bc9f10341d1c04a7fda62464d56d4c8a516abf1bb",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0008-deployment-release.md",
+        "sha256": "9207388b3fb7f34594fec1205a8fe25185cafbaa0d06513b76f5eca9c1179a1f",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0009-cross-platform.md",
+        "sha256": "c6423317f8f041a67fb2173fa4579e7a5a48c1d6b02a6e81f562b1ded7a6ec22",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0010-internationalization.md",
+        "sha256": "e7f281a46894331cac02b44c7819e43c8c866cf94990b44971c6aaf5cd51dc50",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0011-windows-only-platform-and-ci.md",
+        "sha256": "fdcc4a9295232f62ea91deb727a2270898f78fc72cbbdbfbe227393dbf658dde",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0012-pr-template-conditional-rendering.md",
+        "sha256": "db95293540adf4c3f58e602b3a4960041df330b8d50379e911fb5083e5a8c713",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0015-performance-budgets-and-gates.md",
+        "sha256": "00c3625daf1400b8f0e2b65a4ca3f642da0c1e82e19aecdc8343f6ed90fe4a20",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0016-api-contracts-openapi.md",
+        "sha256": "4a70ec7489f11c1968c09f5a24e926dacc2cc2dccfd9acb40b9e9c006579aabc",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0017-quality-intelligence-dashboard-and-governance.md",
+        "sha256": "a2a9ce2e1a0446b5a66ee3a9408d82dfdc8926cbb6ccf4c2469d6ce34427c511",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0018-godot-runtime-and-distribution.md",
+        "sha256": "e73954aecacc7b3b694d0e3ea3cdeb9fcd03fffef65bab40bec2ddb8339f4d94",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0019-godot-security-baseline.md",
+        "sha256": "28bb155badcf83bb8a05bd9a85af252fcaea3b0017cd26f929f80e59a561b110",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0020-contract-location-standardization.md",
+        "sha256": "176ef6f28b61cbb0bbe2eda9300f5abc8a27b0ab80c4c693adb0a60b622d99c8",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0021-csharp-domain-layer-architecture.md",
+        "sha256": "ff4fe2d399c0c26f83825423be5fa0231423b9440f15da5992076bf0bf373c0b",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0022-godot-signal-system-and-contracts.md",
+        "sha256": "875304af0817ff039c9db1a12e16adbecf92cd726e2676e1e49fb15987537290",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0023-settings-ssot-configfile.md",
+        "sha256": "279788d6f4c15a479e049726de1fa13d35744981305d3ce4944a7ca1f77e0a09",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0024-template-lineage-and-naming.md",
+        "sha256": "2b44e7789732f790d638522a1346042a5d290f0186bd9f31db4a2fe2daed4d87",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0025-godot-test-strategy.md",
+        "sha256": "67e11300f164a11fd00c5c7694464483e7735dc239fd9263bb0a6a8368538628",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0026-event-publish-failure-strategy.md",
+        "sha256": "70557c9c91c923bc0e6922bcf1eedcfca176d2a0183842ce2925761c28074edf",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0027-ownership-write-entry.md",
+        "sha256": "e8c1c6fd440af2251e3b300e6649440bc11336db218d743b24e9fca6e78577fa",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0028-event-usage-tiering.md",
+        "sha256": "e462adc5482889bfae390fda501dfbbda09d0f68b12c5520a3cc315b59c6ea8f",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0029-error-handling-policy.md",
+        "sha256": "9c5b7baa0bcad1f8c5128dd417394d1773b6941d79c34be6523f7528fbcf455f",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0030-core-threading-model.md",
+        "sha256": "07810be470cf2f5e4b76170f87743cf246a3a51ac8abf60414850dbac7b894c8",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0031-security-profile-host-safe-default.md",
+        "sha256": "9c65cfec677cdf070e682efd26225646a87a3d10110c99ac9e6e049a82b4fee6",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0032-phase-service-hosted-shell.md",
+        "sha256": "a80dc4b43243926622a7e402ddbac5b355cc90b12bd614a202ec52004371c0f4",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0033-phase-metadata-sqlite-local-disk.md",
+        "sha256": "3efa3264e37fb6c25406ed7538b057467210102dffcabcdfc8ec098c17c8d1b2",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0034-phase-account-scoped-token-auth.md",
+        "sha256": "6b30258c5181269c1a151cc12b87109bbe6d32ea07abdc4f29d5d95458341b7d",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0035-phase-controlled-runner-workspace-execution.md",
+        "sha256": "f6124fd958177263f649bed46b0ecdc29181c90d9e2069915093c1fa9823ede0",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0036-phase-prototype-route-recovery-authority.md",
+        "sha256": "796b0d686b136a00418e8616aeab8438d0171da811d3c951ec17154de74d0346",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
+        "sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0038-phase-evidence-sidecars-readback.md",
+        "sha256": "8f9c8750480d8f9389ceb3d9b5a693f2b542353cd09940db66f04b186ffb6ae1",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0039-phase-runtime-caddy-recovery.md",
+        "sha256": "43ea02b03e4f109fcfda706d4a57d64a98da3df9e9dfb77a8ff2b441c939d831",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0040-phase-c-hardening-before-scaleout.md",
+        "sha256": "07d9b698fb7d0ec7c7d6b6ce8b77e0f4c80c0236e70fbfce5e842c759b397603",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "sha256": "23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0042-artifact-proof-trust-root-rotation-boundary.md",
+        "sha256": "98351e2eadf7fbb38cc543c84110fcaefb0291e66cb563d8ce6cd178ccd1108e",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md",
+        "sha256": "3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+        "sha256": "f00a514bc41e1881f3a3f6a25226b9d757600b19412ab5233b9b6d819d2742fe",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md",
+        "sha256": "0a50fdf6827847d74be23b5da1407e9602b37c855d1943d25c8f4e2f315d6293",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0046-knowledge-context-protected-integration-merge.md",
+        "sha256": "2e0f176dc155be2b5784650e99408e7d98984aea09571b473bf1d21212bdbb9b",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0047-e2-hosted-context-readiness-declaration.md",
+        "sha256": "63ee0204e41eb093abb562ac95c56813e5d566d7f6226eb9080020a0ff915371",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+        "sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md",
+        "sha256": "4aae9bdbb0512e6441c9ee80c4a54612a238a4fc114c521fa44dcafc2d39d41d",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+        "sha256": "6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+        "sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+        "sha256": "dfcd328ea3a74841cb81271653392c7fdebf5390e2d9173f0184bbfa6a83445e",
+        "source_role": "decision"
+      },
+      {
+        "path": "docs/adr/addenda/ADR-0005-godot-quality-gates-addendum.md",
+        "sha256": "d63e1f1dd2588efb81fd95d06a8c22ca844054403ebfac1d6c0293200e0622e3",
+        "source_role": "decision-support"
+      },
+      {
+        "path": "docs/adr/addenda/ADR-0006-godot-data-storage-addendum.md",
+        "sha256": "5c339d1223ed06d2bb069002cf702c5cb5596d141b1a86908241cf1995337afd",
+        "source_role": "decision-support"
+      },
+      {
+        "path": "docs/adr/guide.md",
+        "sha256": "361e992453ca350a26b06045de140ed431df4a46e22505daf85b5426c426b983",
+        "source_role": "navigation"
+      },
+      {
+        "path": "docs/architecture/ADR_INDEX_GODOT.md",
+        "sha256": "48d5f494482de5043559c7b9c4908a2f64f7efc70b189e9a7dc285294b18e109",
+        "source_role": "collection-index"
+      },
+      {
+        "path": "docs/architecture/ADR_INDEX_PHASE.md",
+        "sha256": "ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415",
+        "source_role": "collection-index"
+      },
+      {
+        "path": "docs/architecture/acceptance/01-goals.feature",
+        "sha256": "66d988cd8fe7d471bb392615383f0ef2029b54a41564505039f13ece12e66232",
+        "source_role": "acceptance-fixture"
+      },
+      {
+        "path": "docs/architecture/acceptance/02-security.feature",
+        "sha256": "7bd0796163c9ce2347f2d9aa34c99195b283d708425dd785d92603ba506e822c",
+        "source_role": "acceptance-fixture"
+      },
+      {
+        "path": "docs/architecture/base/00-README.md",
+        "sha256": "f7fb25e4d032b1ef1727f2b7581ccd0167552ee743d04b4e80d9c9cf3e12dbc1",
+        "source_role": "collection-index"
+      },
+      {
+        "path": "docs/architecture/base/01-introduction-and-goals-v2.md",
+        "sha256": "3f2a5eed758a7402cad21d5c7f27f3ef7e056a0ca49805223430937c4a284b53",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/02-security-baseline-godot-v2.md",
+        "sha256": "7e02285d99299995247a286ba9938ddae492291878f5cd0babeeb8aa4f91c592",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/03-observability-sentry-logging-v2.md",
+        "sha256": "aae684894f2a65211528ea93d3b9b42eea067aa48d368228fa2f7b643a702a79",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/04-system-context-c4-event-flows-v2.md",
+        "sha256": "a204e2382b1813bdce11ac5fdc9d57146f2fec324ced402aed26b77eec578946",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/05-data-models-and-storage-ports-v2.md",
+        "sha256": "8bed1f14c0262306b613083007146959ebc23d620181dd96348afabc7afd9399",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/06-runtime-view-loops-state-machines-error-paths-v2.md",
+        "sha256": "65567712381288b0e0fe946e10e9031420f2a7c3d81bd4655b1710a1589db2a3",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/07-dev-build-and-gates-v2.md",
+        "sha256": "cf47db256b4bef579891c2f4751cfb1c6b020cecf2e07901cb7fccaf16343d35",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/08-crosscutting-and-feature-slices.base.md",
+        "sha256": "582aefedf1dde6564987036cbb610c262ef6a5eb5c9c4b322a6102c2b572eb48",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/09-performance-and-capacity-v2.md",
+        "sha256": "e491a7f54a6cd4b6c9b8e698ee88e74f35a739791f1c6fdf7dffa34c911545b3",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/10-i18n-ops-release-v2.md",
+        "sha256": "20d876b2d2c6c6febec9c5fd14ea5bedc81b199f1a035a0fc9e152cf56eeaa91",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/11-risks-and-technical-debt-v2.md",
+        "sha256": "ccbc9bb7aaaf57875376f832189e119cc8ab5b7cae193a858fa510094621fbd6",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/12-glossary-v2.md",
+        "sha256": "39877a0ac9abad1205d0e64568daf154601f8d020888aefc462729615377a55c",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/base/ZZZ-encoding-fixture-bad.md",
+        "sha256": "9f5814839cb0e7651592c278a626d2fc170d02269f769a09a2a70e81e91e36aa",
+        "source_role": "integrity-only"
+      },
+      {
+        "path": "docs/architecture/base/ZZZ-encoding-fixture-clean.md",
+        "sha256": "3ab48f4db6a57f6a8061da6af3fec703e5027a7f36485599d0faed40b2b98020",
+        "source_role": "integrity-only"
+      },
+      {
+        "path": "docs/architecture/base/architecture-completeness-checklist.md",
+        "sha256": "c2e1698c90e49bd92249763088f340aa61ffde68dea609d44e715774f651c9f2",
+        "source_role": "integrity-only"
+      },
+      {
+        "path": "docs/architecture/base/front-matter-standardization-example.md",
+        "sha256": "5ca791be3065602491789a9a0e32444c07d67bec8b71b049484023eac9830849",
+        "source_role": "integrity-only"
+      },
+      {
+        "path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md",
+        "sha256": "83a1207b37179a19f5527a5b22fb031ec3b32a0bd78df377aad6247d542e0010",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/ACCEPTANCE_CHECKLIST.md",
+        "sha256": "946e5dff75bc8ae334b2f905a408c40345c9cf10258f4367f4e155e6a8874eaf",
+        "source_role": "integrity-only"
+      },
+      {
+        "path": "docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/_index.md",
+        "sha256": "1d405a6ccc708921ec66c1dcefae9bc1680b042fa1c90aff90283d12097e5c4e",
+        "source_role": "collection-index"
+      },
+      {
+        "path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-CloudEvent.md",
+        "sha256": "47b4b19cb122f0c77702c149f4bdfd79a4225ff1639b392fb04be8170cbe76f8",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-CloudEvents-Core.md",
+        "sha256": "eb7857a0191d4f0ef981967adaacf81848736a97424e5f427b9565cbb67783a5",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-Guild-Manager-Events.md",
+        "sha256": "ec8f17e2cbd94d4e024f85fb204d5d52018a3c58e7775475e4c03de93746d4e3",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-Preload-Whitelist.md",
+        "sha256": "7dba252bd6cf65c13f9151f56c883784b517478910b545be282fa6d9fbe8ca3e",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-Quality-Metrics.md",
+        "sha256": "d462f8e3c7c7031772d58fe00562da1dc1b587e7fec204b1c8d65a8f1a5ee296",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Contracts-Security.md",
+        "sha256": "66b4bd187bfea03d3e67688d87056e1b3dd69f42781fbd0e304490fa6fe360e2",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/overlays/PRD-Guild-Manager/08/08-Feature-Slice-Guild-Manager.md",
+        "sha256": "b3888668d5e0c1791210138321e5fc6ddb1f782e6d3ff90c2267b6b602f4ee09",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/overlays/PRD-Guild-Manager/08/ACCEPTANCE_CHECKLIST.md",
+        "sha256": "6bf69b8e7f36dbb9d4507df2257fc709e37b805261f63141ac1a6e38130b6599",
+        "source_role": "integrity-only"
+      },
+      {
+        "path": "docs/architecture/overlays/PRD-Guild-Manager/08/_index.md",
+        "sha256": "3d69b6c66dad15cb4ef21bc253f087d61110ebb0c325626eb24857b0db93f7a7",
+        "source_role": "collection-index"
+      },
+      {
+        "path": "docs/architecture/phase-service/_index.md",
+        "sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474",
+        "source_role": "collection-index"
+      },
+      {
+        "path": "docs/architecture/phase-service/audit-evidence-and-logs.md",
+        "sha256": "aa21a725498e1c9762c5dbc191c16d6fec1db51ea6f522e3c300cdbdf122542f",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/phase-service/auth-and-accounts.md",
+        "sha256": "943f7bdc95df1e08290277e6b649abd519e2187047b524a1a324196e1ce91a10",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
+        "sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/phase-service/llm-codex-execution.md",
+        "sha256": "83fec51044d4287038ade1a0f8462a905af792885322975c4dbce54e5f525aba",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/phase-service/metadata-db.md",
+        "sha256": "d86c087987187917d59a2b85b72cf3b01e951ab6e65ac34785741697560032a3",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/phase-service/prototype-routes-and-recovery.md",
+        "sha256": "a7815d65933cec85148dd1363db45dcb0726ba2f0d573a47037f8385194346b1",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/phase-service/roadmap-and-hardening.md",
+        "sha256": "5b3563aa5ff7ca093cf6009477556a5101f266c2f4df74e2a90f30f0ee697247",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/phase-service/runtime-caddy-and-recovery.md",
+        "sha256": "8038312358d6805e7068334f6caded6239d50eb2a3a182ae924fc02d928f3a74",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/architecture/phase-service/system-overview.md",
+        "sha256": "e1ac21ddd5f79d91c92f39148547a60d11e01b50f3108ba3571e535dcf9adfea",
+        "source_role": "architecture-module"
+      },
+      {
+        "path": "docs/standards/_index.md",
+        "sha256": "899501ea899747811c655d926a5f55cdf373275d5ee377cf80994195e42d31e0",
+        "source_role": "collection-index"
+      },
+      {
+        "path": "docs/standards/bootstrap-review-control-plane.md",
+        "sha256": "8b3ac7c233bdf63cf040270f34aa21427bad062e0bcd625241ec8e9ee262becc",
+        "source_role": "standard"
+      },
+      {
+        "path": "docs/standards/godot-diagnostics-quality-gates.md",
+        "sha256": "1514983de60713493397477d656676b24b713e056b17e952fad06239a2f7d693",
+        "source_role": "standard"
+      },
+      {
+        "path": "docs/standards/godot-engine-semantics.md",
+        "sha256": "b12535d8e39ef6fd64af56c0df9a189929ed28e7010d01fc9309f1216b4e3502",
+        "source_role": "standard"
+      },
+      {
+        "path": "docs/standards/godot-ui-capability-contract.md",
+        "sha256": "be4185b47b6622fbb453ba3d374b8fc5d4f497b6d45c6b6d2bfa7a133c6c2a38",
+        "source_role": "standard"
+      },
+      {
+        "path": "docs/standards/godot-ui-style-closure.md",
+        "sha256": "032c5c33653d289db73436f64b308fb700ce628b43b5e70a548cefe64d55292b",
+        "source_role": "standard"
+      },
+      {
+        "path": "docs/standards/godot-ui-style-contract.md",
+        "sha256": "88b78f10571a3ed6e5d0ae2ccba04ac16f58109a5db5dcbedb0c7bfe14813545",
+        "source_role": "standard"
+      },
+      {
+        "path": "docs/standards/godot-ui-style-schema-acceptance.md",
+        "sha256": "334a42b981fd5006f4ba4f43644527c7b8bd19d872940db4385e78e1a5209003",
+        "source_role": "standard"
+      },
+      {
+        "path": "docs/standards/phase-service.md",
+        "sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc",
+        "source_role": "standard"
+      },
+      {
+        "path": "docs/standards/repository-maintenance-agent-protocol.md",
+        "sha256": "94cffef015f48d32e6370fabb14f75367399d8cc3b55f15e083f2a3ad1900574",
+        "source_role": "standard"
+      },
+      {
+        "path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md",
+        "sha256": "26c6caa75b7637eafb97b3c72ed2ae3995cf4386df473d3dab56188034e07e31",
+        "source_role": "plan-index"
+      },
+      {
+        "path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/97-split-added-requirements-ledger.md",
+        "sha256": "ac9bfb7ac346b95a92c26697437943b55e2892f5578973ac7ce34704a290d608",
+        "source_role": "requirements-ledger"
+      },
+      {
+        "path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/implementation-contract.v1.json",
+        "sha256": "43c621adbc2b6d27041f5053214522c07a4712d8b75d83425707562288c83699",
+        "source_role": "implementation-contract"
+      },
+      {
+        "path": "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/00-index.md",
+        "sha256": "e8fbcfde1ea0adbfbe2999517f7c7dbef05c600980a11669b1d6a9194f43e5b4",
+        "source_role": "plan-index"
+      },
+      {
+        "path": "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/97-post-split-requirements-ledger.md",
+        "sha256": "99af67d7094f4a029aff2b4a973c7f6e22143c837a620631424578f21b6b6324",
+        "source_role": "requirements-ledger"
+      },
+      {
+        "path": "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/implementation-contract.v1.json",
+        "sha256": "c7da16cb8d42e8108fcd2ccec29488af346c6f73541a9c753c05f59f0006c110",
+        "source_role": "implementation-contract"
+      },
+      {
+        "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/00-index.md",
+        "sha256": "05787bfb5f4ece9da609121b1296186c572b0b2b0d878d8eda8adb85a45f63b3",
+        "source_role": "plan-index"
+      },
+      {
+        "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/97-plan-added-requirements-ledger.md",
+        "sha256": "a6d4444ddf8a73ac0319fcf5ae7cf997aa582b24a0bade63d09bb4bf5f36ab5a",
+        "source_role": "requirements-ledger"
+      },
+      {
+        "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json",
+        "sha256": "0a91b110e1c84f50484b4a93820bc733ef501a65559646c5e4cbbabf8ca48f13",
+        "source_role": "implementation-contract"
+      },
+      {
+        "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md",
+        "sha256": "495bd5176c006c870b6799cf26b176bf45e9ed2a4d0aa4707e274f2059c08529",
+        "source_role": "plan-index"
+      },
+      {
+        "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/97-requirements-ledger.md",
+        "sha256": "2e1c3a9a789094e010e1cee19b0b6b4140dfef50277742ea0ab3e8da9572c4d9",
+        "source_role": "requirements-ledger"
+      },
+      {
+        "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+        "sha256": "84306844c61390503ecc2d38fbc90a8fafbf540ba8905c66ad4dc11a2c90f84c",
+        "source_role": "implementation-contract"
+      },
+      {
+        "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/00-index.md",
+        "sha256": "9955f4f205bc92a11c7bf93ebfd04d6e8eb5fd2f94a6d24e7ac4dd661771cdda",
+        "source_role": "plan-index"
+      },
+      {
+        "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/command-registry.v1.json",
+        "sha256": "4e9da2cef8d1a10ead76ea22d233a2b43f4a836e568f209e8fd65cef1f604223",
+        "source_role": "command-registry"
+      },
+      {
+        "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/implementation-contract.v1.json",
+        "sha256": "fe67714a48e075d9eb55a7a36a6c5f2c5379c7d2df589becf93d63e25f9611bb",
+        "source_role": "implementation-contract"
+      },
+      {
+        "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/plan-state.v1.json",
+        "sha256": "a9012340b11275d5116b2bc18582d8e899178d5c703a495b3ac3be312c502e1e",
+        "source_role": "plan-state"
+      },
+      {
+        "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/requirements-ledger.v1.json",
+        "sha256": "363c9e1bc5c4de8104873286a184ec6ccc02bfd652187e04a24fcd05dc6a2036",
+        "source_role": "requirements-ledger"
+      },
+      {
+        "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/00-index.md",
+        "sha256": "f81c15e6f0e61aac2c4af6738969e89b5f5e5f879d3e6720f0dddf8abaee6255",
+        "source_role": "plan-index"
+      },
+      {
+        "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/01-requirements-and-acceptance.md",
+        "sha256": "8a45f6db7284bfe7e29fc6ae41b8a66b58bcf4949ab7725148cc6fc9365a9ba2",
+        "source_role": "requirements-ledger"
+      },
+      {
+        "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/authority-manifest.v1.json",
+        "sha256": "c9ed402adcb6f72d56c7e66a68a20474207f025c37dcf530ce9cbf280011aa16",
+        "source_role": "authority-manifest"
+      },
+      {
+        "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/command-registry.v1.json",
+        "sha256": "227cf11070a1e3580d68483a49f31fb692785d006482f1fc6cca7e1f8bc94a5c",
+        "source_role": "command-registry"
+      },
+      {
+        "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/implementation-contract.v1.json",
+        "sha256": "d6fab3c0f3b77bde2ab2c0f3a4d5d337bf8789fa619ad01fa757a6916b64ff40",
+        "source_role": "implementation-contract"
+      },
+      {
+        "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/plan-state.v1.json",
+        "sha256": "e52c92e134106c5bea8271ab3d825128c9ccdac74719ea5c8e60cb3ddb55e3e8",
+        "source_role": "plan-state"
+      },
+      {
+        "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
+        "sha256": "3296b59705ca13780032eb2a907c34b5101487dc5fef846ae98be83800c81c5d",
+        "source_role": "plan-index"
+      },
+      {
+        "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
+        "sha256": "6b8c446006bd56369335e38e6c5f140669957e4712c027ca5b7a6600566b87d9",
+        "source_role": "authority-manifest"
+      },
+      {
+        "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json",
+        "sha256": "724048bafd8b056aa43efbae1c31555302114e942ef1889a77f7976be7924462",
+        "source_role": "command-registry"
+      },
+      {
+        "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
+        "sha256": "370a0d20d1e0adf761ab09a92e9c44bdffdb8e392345a909d0975d8654e57156",
+        "source_role": "implementation-contract"
+      },
+      {
+        "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/plan-state.v1.json",
+        "sha256": "7a84d552774bcdecc6cce66f061fae3efd3fdcb5ced8942833dfaae15069135e",
+        "source_role": "plan-state"
+      },
+      {
+        "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/requirements-ledger.v1.json",
+        "sha256": "a8dccbac7925ec6deedd06815f2cf6787cd80604f407c9d4c340228b3c859167",
+        "source_role": "requirements-ledger"
+      },
+      {
+        "path": "knowledge/contracts/knowledge-consumer-context.v1.schema.json",
+        "sha256": "2b5c46987ff9d92a40a010dadcf37591bcca9b85c0ea244c7d66b9a77a4f66bf",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/knowledge-consumer-projections.v1.schema.json",
+        "sha256": "515ba5840ecd87d04f26a240c632dd27bb9d4f821f965172664d903b9b9a1b30",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/knowledge-generation-retention-policy.v1.schema.json",
+        "sha256": "40ad20e30fb7ea9d465baa559d348e3cd903e3bcaf3a53cc9a50a7575e280928",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/knowledge-index-pointer.v2.schema.json",
+        "sha256": "b0f62983102d7419f9f922f79ce9afd070654847a4f3e9b789c10e5f6cad2943",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/knowledge-locator-request.v1.schema.json",
+        "sha256": "f89ae3b9bff3d20640a2828dd4a18a5b622868b0db0d719a195dcd6020d7d451",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/knowledge-locator-result.v1.schema.json",
+        "sha256": "16979935f80ab144e36b511455a6eda421a58365a577f52024100a139f1c7c31",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/knowledge-publication-generation.v1.schema.json",
+        "sha256": "a091b8f20dd8f1bd8c90274f3f7168773d3850b4497e826bd4c1f94909447918",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/knowledge-publication-report.v1.schema.json",
+        "sha256": "87d0a311dd4eebe286e8583bca20034a22de61dcece0e82b5d8947e6d0f94414",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/repository-knowledge-catalog.v2.schema.json",
+        "sha256": "e04f03182c1f5fcd45d6daad17b8b5dbe4da84b122116307b9fdffc1a1ebfe13",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/contracts/repository-source-snapshot.v1.schema.json",
+        "sha256": "376f147f1e579489e1677641c45ec17cc31609ce04e8e7c4c9fe493b72025782",
+        "source_role": "contract"
+      },
+      {
+        "path": "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
+        "sha256": "758ad3841098a3b5c0ecc330c01583f88c8901e4145662237ffce4f17385dcf8",
+        "source_role": "evaluation-suite"
+      },
+      {
+        "path": "knowledge/policies/consumer-policies.v1.json",
+        "sha256": "f434cd08f439afe96a2a5a163993c18b491e135f478e74a571e92172c0887d70",
+        "source_role": "policy"
+      },
+      {
+        "path": "knowledge/policies/consumer-policies.v2.json",
+        "sha256": "eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+        "source_role": "policy"
+      },
+      {
+        "path": "knowledge/policies/generation-retention.v1.json",
+        "sha256": "17137f81e45b510acaa3b76e69b407c8edc1cea79b0c17145a81d659786c771c",
+        "source_role": "policy"
+      },
+      {
+        "path": "knowledge/policies/source-exclusions.v1.json",
+        "sha256": "c12514d500252b84c93041ccb2b564419a6d72bc77546af20dfde1e378287f2d",
+        "source_role": "policy"
+      },
+      {
+        "path": "runtime/phase-a/start-phasea.ps1",
+        "sha256": "b25cffbc6d35c9f41139460db0ab9bd9adc921a348e65a7b62824508c1fa5a54",
+        "source_role": "runtime-config"
+      },
+      {
+        "path": "scripts/python/_knowledge_catalog_builder.py",
+        "sha256": "157ecbf43d5d015b53b617d82890a788995b50cbb99a017755ce973d5dcc1f98",
+        "source_role": "catalog-core"
+      },
+      {
+        "path": "scripts/python/_knowledge_locator_core.py",
+        "sha256": "41cd902ff272468eb97129a13ea6b578dea9d54f5381cb5389590ae138e0e934",
+        "source_role": "core"
+      },
+      {
+        "path": "scripts/python/build_knowledge_catalog.py",
+        "sha256": "25d98e4b3ac9dfa9a105e2cec387abd871717f9891ae4e50cf3a4b33cef4e52c",
+        "source_role": "catalog-builder"
+      },
+      {
+        "path": "scripts/python/build_knowledge_index.py",
+        "sha256": "38984bce60c8e5fc25438d675bea08a2fa003a65fad96c886f84550f03bb7985",
+        "source_role": "index-builder"
+      },
+      {
+        "path": "scripts/python/evaluate_knowledge_queries.py",
+        "sha256": "c6ced4b4ad5f927bbb351be98768fb32fa043ce461071c021bb823a3007393b1",
+        "source_role": "query-evaluator"
+      },
+      {
+        "path": "scripts/python/knowledge_locator.py",
+        "sha256": "63c85df34a4e4d0c602cc9b4a427078de002a9249c0cc35f1ef2dd5682b1c813",
+        "source_role": "cli-entrypoint"
+      },
+      {
+        "path": "scripts/python/prune_knowledge_generations.py",
+        "sha256": "7b92607c875d1ef1a4da76fb6c9a51088edfe83a0147e7f69b14c4d22a23d3b7",
+        "source_role": "generation-pruner"
+      },
+      {
+        "path": "scripts/python/publish_knowledge_catalog.py",
+        "sha256": "5faec98277e3d4200fe9c7c525d85c9b317c0f986a8450e316c72faeb7895da2",
+        "source_role": "publication-gate"
+      }
+    ]
+  }
+}

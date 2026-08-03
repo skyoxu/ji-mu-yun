@@ -1,0 +1,235 @@
+{
+  "$id": "jimuyun.context-assembly.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assembly_status": {
+      "enum": [
+        "complete",
+        "optional-omissions",
+        "blocked"
+      ]
+    },
+    "budget_profile_revision": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "budget_remaining": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "estimated_tokens": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_raw_bytes": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "artifact_count",
+        "total_raw_bytes",
+        "estimated_tokens"
+      ],
+      "type": "object"
+    },
+    "budget_used": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "estimated_tokens": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_raw_bytes": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "artifact_count",
+        "total_raw_bytes",
+        "estimated_tokens"
+      ],
+      "type": "object"
+    },
+    "included_artifacts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "crop": {
+            "additionalProperties": false,
+            "properties": {
+              "end_boundary": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start_boundary": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "strategy": {
+                "enum": [
+                  "whole",
+                  "heading",
+                  "symbol"
+                ]
+              }
+            },
+            "required": [
+              "strategy",
+              "start_boundary",
+              "end_boundary"
+            ],
+            "type": "object"
+          },
+          "estimated_tokens": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "parent_artifact_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "priority_tier": {
+            "maximum": 4,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "raw_bytes": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "source_ref": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_ref",
+          "artifact_sha256",
+          "parent_artifact_sha256",
+          "priority_tier",
+          "required",
+          "raw_bytes",
+          "estimated_tokens",
+          "crop"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "omitted_artifacts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "estimated_tokens": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "priority_tier": {
+            "maximum": 4,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "raw_bytes": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "reason": {
+            "enum": [
+              "artifact_count_budget",
+              "byte_budget",
+              "token_budget"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "source_ref": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_ref",
+          "reason",
+          "priority_tier",
+          "required",
+          "raw_bytes",
+          "estimated_tokens"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "jimuyun.context-assembly.v1"
+    },
+    "selection_boundary": {
+      "additionalProperties": false,
+      "properties": {
+        "deterministic": {
+          "const": true
+        },
+        "last_included_sort_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last_included_tier": {
+          "maximum": 4,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "last_included_tier",
+        "last_included_sort_key",
+        "deterministic"
+      ],
+      "type": "object"
+    },
+    "token_estimator_revision": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "assembly_status",
+    "budget_profile_revision",
+    "token_estimator_revision",
+    "included_artifacts",
+    "omitted_artifacts",
+    "budget_used",
+    "budget_remaining",
+    "selection_boundary"
+  ],
+  "type": "object"
+}

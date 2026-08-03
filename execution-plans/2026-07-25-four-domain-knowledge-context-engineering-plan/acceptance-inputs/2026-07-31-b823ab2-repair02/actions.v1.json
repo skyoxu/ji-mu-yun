@@ -1,0 +1,63 @@
+[
+  {
+    "actionId": "plan-validator",
+    "dependsOn": [],
+    "order": 1,
+    "commandId": "plan-validator",
+    "activation": true
+  },
+  {
+    "actionId": "plan-validator-tests",
+    "dependsOn": [
+      "plan-validator"
+    ],
+    "order": 2,
+    "commandId": "plan-validator-tests",
+    "activation": true
+  },
+  {
+    "actionId": "report-index-validator",
+    "dependsOn": [
+      "plan-validator-tests"
+    ],
+    "order": 3,
+    "commandId": "report-index-validator",
+    "activation": true
+  },
+  {
+    "actionId": "quick-dev-adapter-tests",
+    "dependsOn": [
+      "report-index-validator"
+    ],
+    "order": 4,
+    "commandId": "quick-dev-adapter-tests",
+    "activation": true
+  },
+  {
+    "actionId": "bootstrap-review-tests",
+    "dependsOn": [
+      "quick-dev-adapter-tests"
+    ],
+    "order": 5,
+    "commandId": "bootstrap-review-tests",
+    "activation": true
+  },
+  {
+    "actionId": "phase-platform-tests",
+    "dependsOn": [
+      "bootstrap-review-tests"
+    ],
+    "order": 6,
+    "commandId": "phase-platform-tests",
+    "activation": true
+  },
+  {
+    "actionId": "e2-readiness",
+    "dependsOn": [
+      "phase-platform-tests"
+    ],
+    "order": 7,
+    "commandId": "e2-readiness",
+    "activation": true
+  }
+]

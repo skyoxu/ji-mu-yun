@@ -1,0 +1,1024 @@
+基于最新 main 的整体更新方案
+
+我重新检查了最新主分支。当前基线已经和本会话前半段明显不同：run-refactor-implementation-acceptance 不再处于“正在实施”状态，而是已经完成全部 S0–S5、确定性终态验证和维护者最终处置，生命周期正式进入 acceptance-passed；但 release、deployment、handoff 和 archived 仍未被授权。
+
+因此，原来的路线：
+
+完成 Refactor Acceptance
+→ 创建归档能力
+→ 改进 Phase 服务
+→ Skill Memory
+→ Self-Questioning
+→ Curator
+→ RL
+
+现在应更新为：
+
+当前可信基线固化
+→ 跨工作流证据目录
+→ Evaluation Baseline
+→ 确定性 Phase 服务优化
+→ Skill Memory Shadow
+→ Experience Miner + Self-Questioning
+→ Skill Curator
+→ 离线 RL Internalization
+一、最新版本已经完成了哪些前置工作
+1. Review 复用身份 P0 已经完成
+
+之前讨论的：
+
+HEAD
++ tracked diff
++ index diff
++ relevant untracked content hash
+
+已经不再是待办。
+
+当前实现已经引入版本化 Git 内容指纹，覆盖：
+
+tracked worktree diff；
+staged/index diff；
+relevant untracked 文件内容；
+Prompt 和运行时身份；
+模型、后端、实现字节；
+Acceptance commit blob 或 plan-local frozen snapshot；
+snapshot drift 的最终成功出口检查。
+
+同一 HEAD 和相同 git status、但内容不同的工作区，现在不会被视为相同输入；旧版身份可以读取，但不能获得新版本的复用资格。
+
+VDD 当前合同也明确要求 dirty candidate 绑定 HEAD、canonical tracked/index diff hash，以及相关 untracked 文件路径和内容哈希。
+
+更新结论：这项从路线图中移除，不再重复建设。
+
+2. Refactor Acceptance 已成为真正可用的 Reward Oracle
+
+当前 Acceptance Skill 已具备：
+
+target-owned persisted run；
+start-or-resume；
+route-acceptance；
+baseline/candidate custody；
+frozen knowledge context；
+deterministic actions；
+Bootstrap bounded routing；
+Quick Dev repair handoff；
+repair completeness audit；
+exact finalized Bootstrap envelope reuse；
+manual_pause 和维护者最终 disposition。
+
+它可以拥有完整协调循环，直到 typed acknowledgement、protected boundary、manual_pause 或终态，而不是只报告“需要调用另一个 Skill”后停止。
+
+最新 7 月 31 日处置显示：
+
+最终候选通过六项确定性动作；
+Acceptance、Bootstrap companion、plan validator 和 package validation 均通过；
+三轮语义预算已耗尽并正确进入 manual_pause；
+维护者在确认全部既有 P0/P1 有修复和回归证据后发布 acceptance-passed。
+
+更新结论：不再需要“先把 Acceptance 做完”。现在正是进入证据聚合与 Phase 改进阶段的时间。
+
+3. Bootstrap 已经具备部分 Archivist 和 Miner 基础
+
+Bootstrap 当前已经有：
+
+append-only process events；
+可再生 lease 和 registry；
+lineage family；
+两轮默认、三轮硬上限；
+repair delta；
+list-runs、inspect-run、inspect-lineage；
+historical policy replay；
+build-review-baseline；
+review history index；
+cost calibration candidate；
+finalized-run replay；
+exact candidate binding；
+validation envelope v3；
+exact Acceptance reuse。
+
+build-review-baseline 会重放 finalized runs，构建 append-only 历史索引和成本校准候选；这些输出明确 authorizes=[]，不能产生 clean、acceptance、release 或 done。
+
+Bootstrap Skill 也明确规定，历史基线只能作为成本和运营观察，不能自动更新已晋升校准，也不能成为当前语义真相。
+
+更新结论：新的 Run Archivist 不能重复实现 Bootstrap Registry、History Index 或 Cost Baseline。
+
+4. Quick Dev 到 Acceptance 的修复闭环已经建立
+
+Quick Dev 现在会在 P0/P1 修复完成后：
+
+生成标准 repair-review handoff；
+保留 baseline/candidate manifests；
+保留 changed files、direct consumers、targeted tests；
+生成 root-cause callsite inventory；
+保存 producer/consumer composition receipts；
+立即调用 Acceptance-owned audit-repair-completeness；
+不自行选择 Acceptance 路由；
+不自行创建 Bootstrap successor；
+不修改稳定 lineage family。
+
+更新结论：Experience Miner 的第一批高价值数据，不应只来自原始日志，而应优先消费这些结构化 repair handoff 和 completeness 结果。
+
+5. 知识系统已经有可复用的评测模式
+
+知识系统现在不是简单目录，而是：
+
+immutable generation；
+current/LKG；
+consumer policy；
+snapshot-bound evaluation；
+adapter decision gate；
+108-query evaluation；
+failed-build evidence；
+explicit publication 和 retention。
+
+maintain-knowledge-base 只维护派生知识，不修改源文件；发布 CLI 负责 108-query evaluation、原子 current/LKG 和失败证据。
+
+当前 query suite 已按 consumer、类别、期望路径、最大排名和 source terms 定义稳定的正例集。
+
+更新结论：后续 Phase Evaluation Suite、Skill Candidate Evaluation 和 Shadow Replay 应复用这种“快照绑定、固定样本、不可自动授权”的设计。
+
+二、对三个新 Skill 的最新调整
+
+仍然建议保留三个独立 Skill 包，但第一个 Skill 的定位需要调整。
+
+1. 不再建议做“复制型 Run Archivist”
+
+原来的名称：
+
+archive-phase-run
+
+容易让人误解为：
+
+把所有 Run 搬到统一目录；
+复制 Bootstrap/Acceptance 原始证据；
+建立新的生命周期权威；
+把现有运行目录统一重写。
+
+这与当前仓库已经形成的“生产者拥有自己的 append-only evidence”冲突。
+
+更新后的推荐名称
+maintain-phase-run-evidence-catalog
+
+或：
+
+index-phase-run-evidence
+
+它不是保存所有原始证据，而是建立一个跨工作流派生证据目录：
+
+VDD 原始证据仍归 VDD 所有
+Quick Dev 原始证据仍归 TDD Adapter 所有
+Bootstrap 原始证据仍归 Bootstrap Control Plane 所有
+Acceptance 原始证据仍归 Acceptance target-owned run 所有
+
+Evidence Catalog
+只记录它们的位置、类型、哈希、关系和可用性
+
+因此更准确的角色名称是：
+
+Run Evidence Catalog / Evidence Custodian，而不是集中式 Archive Authority。
+
+2. Experience Miner 保持独立
+
+推荐继续使用：
+
+mine-phase-run-experiences
+
+它读取统一 Evidence Catalog，按需回到各生产者的正式证据，不直接扫描整个仓库猜测运行状态。
+
+3. Skill Curator 保持治理一级入口
+
+推荐继续使用：
+
+curate-phase-skill-candidates
+
+它仍是独立显式治理入口，但第一版是：
+
+确定性状态机
++ 固定 Evaluation Suite
++ Shadow Replay
++ LLM 建议
++ 人工批准
+
+而不是自主修改 Skill 的 Agent。
+
+三、最新推荐架构
+生产控制面
+────────────────────────────────────
+
+VDD
+  ↓
+Quick Dev
+  ↓
+Bootstrap Review / Refactor Acceptance
+  ↓
+各自 append-only evidence store
+
+
+证据聚合控制面
+────────────────────────────────────
+
+maintain-phase-run-evidence-catalog
+  ├─ VDD Adapter
+  ├─ Quick Dev Adapter
+  ├─ Bootstrap Adapter
+  └─ Acceptance Adapter
+        ↓
+Derived Evidence Catalog
+
+
+学习控制面
+────────────────────────────────────
+
+mine-phase-run-experiences
+  ├─ Failure Family
+  ├─ Experience Candidate
+  ├─ Self-Question Candidate
+  ├─ Deterministic Check Candidate
+  └─ Skill Candidate
+
+
+治理控制面
+────────────────────────────────────
+
+curate-phase-skill-candidates
+  ├─ Candidate Registry
+  ├─ Shadow Replay
+  ├─ Evaluation Suite
+  ├─ VDD / Quick Dev / Bootstrap routing
+  ├─ Canary
+  ├─ Stable Promotion
+  └─ Rollback
+四、阶段 0：创建新的自托管 VDD 计划
+
+这套能力会改变：
+
+Skill 间调用关系；
+运行证据聚合边界；
+Knowledge 与 Experience 的边界；
+Candidate 生命周期；
+Curator 权限；
+Phase workflow observability；
+后期 Skill Memory 和 RL 的数据合同。
+
+按当前 VDD 规则，这类修改 VDD、Quick Dev、Acceptance、Review routing 或 controlling validator 的工作应使用 self-hosted profile。
+
+建议建立一个新的 execution plan
+
+暂定目标：
+
+execution-plans/<date>-phase-skill-evolution-control-plane/
+
+计划内容分为五个 slice：
+
+E0：Evidence Catalog contracts
+E1：Producer adapters and derived index
+E2：Evaluation baseline
+E3：Experience Miner shadow
+E4：Skill Curator governance
+
+不要把 RL 放进这次计划。RL 应作为后续独立计划。
+
+新 ADR 应确认的关键决策
+
+建议用下一个可用 ADR 编号，决策至少包括：
+
+原始证据由各生产者拥有；
+Evidence Catalog 是派生索引，不是新权威；
+Experience 与 Repository Knowledge 分离；
+Miner 输出永远非权威；
+Curator 不能静默晋升；
+Skill promotion 必须有 replay、evaluation 和 rollback；
+RL 不得覆盖确定性权威门禁。
+五、阶段 1：实现 Evidence Catalog v1
+
+这是当前最高优先级。
+
+1. 生产者适配器
+VDD Adapter
+
+消费：
+
+plan-state.v1.json；
+resume-state.v1.json；
+frozen knowledge context；
+authority manifest；
+95 implementation report；
+repair rounds；
+lifecycle transitions。
+Quick Dev Adapter
+
+消费：
+
+logs/tdd-adapter/<plan-id>/run-state.v1.json；
+stage/capsule/attempt evidence；
+RED/GREEN/REFACTOR；
+plan-local terminal predicate；
+repair-review handoff；
+composition receipts。
+Bootstrap Adapter
+
+直接复用现有：
+
+validated run registry；
+process events；
+history index；
+lineage state；
+final result；
+validation envelope；
+candidate binding；
+cost metrics。
+
+不能创建第二个 Bootstrap run registry。
+
+Acceptance Adapter
+
+消费：
+
+persisted run-state.json；
+action-events.jsonl；
+run input；
+candidate custody；
+matrix；
+route；
+Bootstrap import envelope；
+final outcome；
+maintainer disposition。
+2. 建议 Schema
+workflow-run-reference.v1
+{
+  "run_id": "...",
+  "producer": "vdd | quick-dev | bootstrap | refactor-acceptance",
+  "run_class": "production | review | acceptance | governance",
+  "source_root": "...",
+  "source_manifest_hash": "sha256:...",
+  "lifecycle_state": "...",
+  "terminal": true,
+  "authorizes": []
+}
+workflow-evidence-binding.v1
+{
+  "run_id": "...",
+  "evidence_type": "trace | process-event | outcome | handoff | matrix",
+  "path": "...",
+  "sha256": "...",
+  "producer_authority": "...",
+  "derived": false
+}
+workflow-invocation-edge.v1
+{
+  "caller_run_id": "...",
+  "callee_run_id": "...",
+  "caller_skill": "...",
+  "callee_skill": "...",
+  "reason": "repair-review-handoff",
+  "request_hash": "...",
+  "result_hash": "..."
+}
+workflow-outcome-projection.v1
+
+只做跨工作流统一查询：
+
+{
+  "run_id": "...",
+  "outcome_family": "success | needs-fix | blocked | invalid | manual-pause",
+  "native_outcome": "...",
+  "native_outcome_ref": "...",
+  "projection_authority": "non-authoritative"
+}
+
+统一投影不能覆盖各 Skill 的原始状态语义。
+
+3. CLI
+
+建议：
+
+scan-producer
+register-run-reference
+validate-run-reference
+inspect-run-reference
+list-runs
+list-related-runs
+rebuild-derived-index
+validate-catalog
+export-cohort
+
+不建议：
+
+move-run
+rewrite-run
+normalize-native-outcome
+migrate-historical-evidence
+delete-old-evidence
+4. Skill 入口等级
+name: maintain-phase-run-evidence-catalog
+entry_class: internal-composable
+primary_user_entry: false
+automatic_invocation: allowed
+execution_model: deterministic-only
+
+它主要由：
+
+VDD 编排器；
+Quick Dev 编排器；
+Bootstrap finalize；
+Acceptance finalization；
+Miner；
+Curator；
+
+调用。
+
+六、阶段 2：建立跨工作流 Evaluation Baseline
+
+不要立即开始 Miner。
+
+先建立一个固定、快照绑定的评测层。
+
+1. 复用现有模式
+
+知识系统已经证明以下模式适合仓库：
+
+固定 query suite
++ consumer policy
++ source snapshot
++ immutable generation
++ append-only failure evidence
++ publication gate
+
+Phase workflow evaluation 应照此建立：
+
+evaluation/phase-workflow-suite.v1.json
+evaluation/phase-workflow-baseline.v1.json
+evaluation/skill-candidate-suite.v1.json
+2. 基线 Cohort
+
+第一版建议覆盖：
+
+Bootstrap
+clean；
+blocked；
+P1 confirmed；
+P2 advisory；
+transport retry；
+manual pause；
+exact reuse accepted/rejected；
+cost cohort eligible/ineligible。
+Acceptance
+deterministic pass；
+Bootstrap required；
+exact reuse；
+focused repair；
+full implementation conformance；
+manual pause；
+maintainer accepted residual risk；
+invalid evidence。
+Quick Dev
+first-pass success；
+repeated failure；
+repair handoff；
+composition receipt success/failure；
+terminal predicate pass；
+external repair required。
+VDD
+plan-ready；
+blocked knowledge context；
+repair；
+scope ambiguity；
+protected path boundary；
+implementation authorization。
+3. 核心指标
+final outcome rate
+first-pass success
+P0/P1 discovery
+P1 later-discovery rate
+false positive
+false negative
+semantic rounds consumed
+transport retry
+manual pause
+human intervention
+token usage
+wall time
+context bytes
+artifact count
+reuse accepted/rejected
+stale evidence rate
+unattributable outcome rate
+七、阶段 3：重新安排四个 Review 优化项
+优化 1：Review 复用身份
+
+已完成。
+
+不用进入新计划，只需把当前 identity schema 作为 Evidence Catalog 的输入合同。
+
+优化 2：普通 fast-ship combined review
+
+仍未完成，建议作为第一个新的 Phase 服务性能实验。
+
+现在实施条件比之前成熟，因为已经有：
+
+强 Git 内容身份；
+runtime/prompt identity；
+deterministic reuse 与 LLM reuse 分离；
+Acceptance candidate custody；
+review metrics；
+Bootstrap baseline；
+exact reuse。
+
+但当前已完成的规范明确没有改变 reviewer policy defaults、默认 Prompt 限制和 external-agent-prompt 行为。
+
+建议模式
+ordinary_fast_ship_combined_v1
+
+与：
+
+bootstrap_full_v2
+
+完全分开。
+
+上线顺序
+Shadow
+→ 固定低风险 fixtures
+→ 真实低风险任务 A/B
+→ 1% Canary
+→ 5%
+→ 稳定风险族
+硬升级条件继续确定性控制
+security；
+auth；
+account isolation；
+contracts；
+ADR；
+release；
+review control plane；
+Knowledge publication；
+LLM/Codex entrypoint；
+protected path；
+evidence authority；
+lifecycle changes。
+优化 3：Bootstrap 按命令渐进加载
+
+这项现在需要缩小范围并先测量。
+
+当前 Bootstrap 已经有：
+
+read-only inspect commands；
+minimal-complete-closure；
+profile context classes；
+Artifact View；
+accepted knowledge decisions；
+thin Acceptance orchestration；
+route-specific closure。
+
+因此，过去设想的“从全量加载改成命令级加载”已经被部分吸收。
+
+更新建议
+
+先增加：
+
+contextLoadManifest
+contextBytes
+contextClassCount
+artifactCount
+promptBytes
+commandName
+excludedContextClasses
+
+然后只对高确定性命令优化：
+
+list-runs
+inspect-run
+inspect-lineage
+start-or-resume
+route-acceptance
+validate-finalized-run
+
+不要第一轮就改：
+
+run-layer
+gate
+independent verifier
+finalize
+
+这些操作依赖完整冻结上下文，错误缩减会直接损害语义覆盖。
+
+优化 4：review-input 非权威导航投影
+
+优先级进一步下降。
+
+当前 Acceptance 已经产生：
+
+exact candidate manifest；
+seven-class reviewScope；
+route kind；
+direct consumers；
+tests；
+standards；
+current evidence；
+repair completeness；
+impact projection。
+
+Bootstrap 也要求 minimal-complete-closure。
+
+所以一个新的导航投影只有在基线证明：
+
+Reviewer 的主要成本仍然来自“在完整闭包中寻找入口”，而不是语义审查本身
+
+时才值得实现。
+
+实现时应直接派生自现有数据
+candidate manifest
++ seven-class reviewScope
++ acceptance IDs
++ requirement IDs
++ changed paths
++ validation refs
+
+不要创建第二套 review-packet。
+
+八、阶段 4：路线一——Skill Memory Shadow
+
+Evidence Catalog 和 Evaluation Baseline 稳定后，再实施路线一。
+
+1. Experience 不要直接放入现有 Knowledge Catalog
+
+当前 Knowledge Catalog 服务的是：
+
+repository source；
+ADR；
+architecture；
+execution plan；
+toolchain；
+consumer-owned context freeze。
+
+它是权威来源定位系统。
+
+Experience 则是：
+
+运行后推断；
+有适用条件；
+有成功率；
+可能过期；
+可能被反例推翻；
+不一定是事实。
+
+因此应分开：
+
+knowledge/
+  catalogs/
+  indexes/
+  evaluation/
+
+experience/
+  catalogs/
+  candidates/
+  projections/
+  evaluation/
+
+或：
+
+knowledge/experiences/
+
+但必须明确：
+
+authority = non-authoritative
+2. 第一批 Skill Memory
+
+建议只做三个类别。
+
+Repair Pattern
+symptom
+failure family
+preconditions
+action sequence
+outcome
+counterexamples
+toolchain version
+Review Escalation Pattern
+change type
+risk boundary
+ordinary review result
+later Bootstrap result
+should_escalate
+Acceptance Gap Pattern
+missing evidence type
+detected phase
+should_have_been_detected_by
+candidate deterministic check
+3. Shadow 模式
+生产 Skill 正常运行
+→ Retriever 产生建议
+→ 不改变真实执行
+→ 记录建议
+→ Acceptance 后比较
+
+只有经过多次 replay 和 fixed suite 后，才允许：
+
+Level 1：显示建议
+Level 2：调整候选排序
+Level 3：低风险自动采用
+九、阶段 5：Experience Miner 与 Self-Questioning
+1. 推荐入口
+mine-phase-run-experiences
+
+入口等级：
+
+entry_class: maintenance-analysis
+primary_user_entry: secondary
+automatic_invocation: batch-only
+execution_model: llm-assisted-read-only
+2. 第一批分析模式
+mine-failure-family
+compare-run-cohorts
+analyze-repair-cycle
+analyze-review-strategy
+analyze-exact-reuse
+generate-self-questions
+propose-deterministic-checks
+3. 最适合的首个 Pilot
+Pilot A：Repair Review 收敛性
+
+使用：
+
+Quick Dev handoff
++ repair completeness
++ Bootstrap lineage
++ Acceptance route
++ final outcome
+
+分析：
+
+哪些 repair 在 Round 2 仍不完整；
+哪些 sibling callsites 被漏掉；
+哪些 composition checks 最有预测力；
+哪些问题应前移到 VDD；
+哪些问题可转为确定性检查。
+Pilot B：Bootstrap 成本与收益
+
+复用已有 build-review-baseline：
+
+不是重新扫描原始日志；
+不创建 findings corpus；
+只读取已验证 history index、metrics 和 outcome；
+比较 artifact count、Prompt、Token、finding yield、retry。
+Pilot C：Exact Reuse 拒绝原因
+
+分析：
+
+candidate drift；
+knowledge drift；
+route mismatch；
+lineage head mismatch；
+profile/policy mismatch；
+incomplete artifact binding。
+
+这些模式非常适合形成确定性修复建议。
+
+4. Self-Questioning 只在离线阶段运行
+
+第一版问题模板：
+
+为什么该问题直到 Bootstrap 才被发现？
+该问题能否在 Quick Dev terminal predicate 前被确定性检测？
+同类任务中是否存在反例？
+本次成功是 Skill 导致，还是原任务本来就会成功？
+该经验在哪个 toolchain/profile 下失效？
+新的检查是否会制造误报？
+
+生成的问题必须进入：
+
+question candidate
+→ counterexample
+→ replay
+→ evaluation
+→ skill candidate
+
+不能直接成为 Skill 规则。
+
+十、阶段 6：Skill Curator
+1. 推荐入口
+curate-phase-skill-candidates
+
+入口等级：
+
+entry_class: governance
+primary_user_entry: true
+automatic_invocation: forbidden
+execution_model: deterministic-policy-plus-approval
+2. Curator 路由
+inspect
+analyze
+register-candidate
+prepare-materialization
+evaluate
+review
+promote-canary
+promote-stable
+deprecate
+rollback
+3. 调用其他 Skill 的规则
+调用 VDD
+
+候选涉及：
+
+新一级 Skill；
+工作流权威；
+生命周期；
+新写权限；
+Bootstrap/Acceptance contracts；
+Experience/Knowledge 边界；
+promotion policy。
+调用 Quick Dev
+
+候选已获准物化，并需要：
+
+修改 SKILL.md；
+修改 CLI；
+修改 schema；
+增加 fixture；
+增加 tests。
+
+Quick Dev 只能写 candidate workspace/version，不能直接覆盖 stable。
+
+调用 Bootstrap
+
+候选涉及：
+
+控制面；
+security；
+recovery；
+evidence；
+lifecycle；
+LLM/Codex；
+high-risk routing。
+调用 Refactor Acceptance
+
+只有候选属于某个明确 refactor execution plan，或修改 Phase 服务实现并需要判断 Phase/Program DoD 时调用。
+
+调用 Evidence Catalog
+
+所有 Curator 决策都必须注册：
+
+candidate source；
+evaluation；
+review；
+approval；
+before/after hashes；
+rollback target。
+4. 第一版允许的决策
+noop
+register
+request-more-evidence
+merge
+split
+reject
+promote-canary
+pause-canary
+promote-stable
+deprecate
+rollback
+
+不允许：
+
+auto-promote-stable
+rewrite-history
+delete-failed-version
+change-acceptance-rule-from-current-result
+十一、阶段 7：RL Skill Internalization
+
+RL 的顺序保持不变，但门槛可以定义得更具体。
+
+启动条件
+
+至少满足：
+
+Evidence Catalog 稳定；
+同一决策类型有足够样本；
+Experience Candidate 有 accepted/rejected 对照；
+Curator 有人工决策记录；
+fixed Evaluation Suite；
+Shadow Replay；
+Canary；
+rollback；
+reward 不依赖 LLM 自评；
+环境失败与策略失败可区分。
+第一批训练对象
+1. Experience retrieval ranker
+2. Skill candidate ranker
+3. Curator decision recommendation
+4. Review escalation ranker
+5. Route candidate ranker
+6. Quick Dev next-action ranker
+
+暂时不训练：
+
+VDD authority；
+Acceptance predicates；
+Bootstrap gate；
+security；
+protected path；
+lineage budget；
+release authority。
+十二、更新后的优先级
+P0：现在开始
+1. 创建 Skill Evolution Control Plane 自托管 VDD 计划
+2. 接受 Evidence Catalog / Experience / Curator 边界 ADR
+3. 实现 maintain-phase-run-evidence-catalog
+4. 实现四个 producer adapter
+5. 建立跨工作流 Run Reference 和 Invocation Edge
+P1：Evidence Catalog 稳定后
+6. 建立 Phase Workflow Evaluation Suite
+7. 冻结当前 Bootstrap / Acceptance / Quick Dev / VDD baseline
+8. 增加 context load metrics
+9. 运行普通 fast-ship combined review Shadow
+10. 对只读和薄编排命令做渐进加载实验
+P2：有稳定数据后
+11. Skill Memory Shadow
+12. Experience Miner
+13. Failure Family
+14. Self-Questioning
+15. Deterministic Check Candidate
+P3：候选和评测成熟后
+16. Skill Curator
+17. Shadow Replay
+18. Canary
+19. Stable Promotion
+20. Rollback
+P4：长期
+21. 离线 RL
+22. Retriever / Curator / Route ranking
+23. 逐步 Canary
+十三、建议的最小第一个版本
+
+不要一次性建设完整演化平台。
+
+第一版只交付：
+
+maintain-phase-run-evidence-catalog
+
+包括：
+
+workflow-run-reference.v1
+workflow-evidence-binding.v1
+workflow-invocation-edge.v1
+workflow-outcome-projection.v1
+
+VDD adapter
+Quick Dev adapter
+Bootstrap adapter
+Acceptance adapter
+
+scan-producer
+validate-catalog
+inspect-run-reference
+list-related-runs
+export-cohort
+
+完成标准：
+
+不复制或改写原始 evidence；
+能关联一次 VDD → Quick Dev → Bootstrap → Acceptance 链；
+能表达 transport attempt、semantic round、repair round 和 acceptance run 的区别；
+能保留 native outcome；
+能导出稳定 cohort；
+能重建派生索引；
+所有输出 authorizes=[]；
+对历史 evidence 只读兼容；
+不自动把当前 acceptance-passed 计划变成 archived。
+
+当前 7 月 27 日 Acceptance 计划虽然已经 acceptance-passed，但最新处置明确说明 archive 尚未授权，因此 Evidence Catalog 只能登记它，不能替它推进生命周期。
+
+最终更新结论
+
+相比本会话前期，积木云已经跨过了几个关键阶段：
+
+Review 输入身份可信化        已完成
+Acceptance Reward Oracle      已完成
+Bootstrap bounded lifecycle   已完成
+Repair handoff                 已完成
+Exact finalized reuse          已完成
+Knowledge snapshot evaluation 已完成
+
+下一步不应再建设另一个大而全的归档系统，也不应立即进入 RL。
+
+最新的最合理路线是：
+
+建立派生 Evidence Catalog
+→ 冻结跨工作流 Evaluation Baseline
+→ 做 fast-ship 和 context-loading 的确定性实验
+→ 开启 Skill Memory Shadow
+→ 创建 Experience Miner
+→ 创建规则型 Skill Curator
+→ 最后评估 RL Internalization
+
+三个新 Skill 的最终定位调整为：
+
+maintain-phase-run-evidence-catalog
+内部可组合、确定性、派生证据目录
+
+mine-phase-run-experiences
+二级分析入口、只读、生成候选与问题
+
+curate-phase-skill-candidates
+一级治理入口、显式授权、管理版本与回滚
+
+其中当前最值得立即创建的是 Evidence Catalog Skill，而不是直接创建完整的 Miner 或 Curator。

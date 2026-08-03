@@ -1,0 +1,164 @@
+{
+  "$id": "jimuyun.knowledge-maintenance-result.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "after_snapshot_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "before_snapshot_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "entries": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "after_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "authority_status": {
+            "enum": [
+              "main-backed",
+              "provisional"
+            ]
+          },
+          "before_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "changed_fields": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "disposition": {
+            "enum": [
+              "unchanged",
+              "updated",
+              "missing",
+              "added",
+              "candidate"
+            ]
+          },
+          "entry_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "source_path": {
+            "minLength": 1,
+            "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$",
+            "type": "string"
+          },
+          "source_snapshot_kind": {
+            "enum": [
+              "main",
+              "worktree"
+            ]
+          }
+        },
+        "required": [
+          "entry_id",
+          "source_path",
+          "source_snapshot_kind",
+          "disposition",
+          "authority_status",
+          "before_sha256",
+          "after_sha256",
+          "changed_fields"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "lkg_disposition": {
+      "enum": [
+        "preserved",
+        "advanced",
+        "not-applicable"
+      ]
+    },
+    "log": {
+      "additionalProperties": false,
+      "properties": {
+        "append_only": {
+          "type": "boolean"
+        },
+        "failure_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "log_ref": {
+          "pattern": "^logs/knowledge-context/.+",
+          "type": "string"
+        },
+        "main_commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "append_only",
+        "log_ref",
+        "main_commit",
+        "failure_code"
+      ],
+      "type": "object"
+    },
+    "main_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "existing-only",
+        "targeted"
+      ]
+    },
+    "request_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "jimuyun.knowledge-maintenance-result.v1"
+    },
+    "source_mutation_count": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "unchanged",
+        "updated",
+        "failed"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "mode",
+    "main_commit",
+    "status",
+    "before_snapshot_id",
+    "after_snapshot_id",
+    "entries",
+    "lkg_disposition",
+    "source_mutation_count",
+    "log"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,1394 @@
+{
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "candidate_sha256": "sha256:e0fde0c09e683048e8769945e5ef8f5f317ff874324cdd7b6c918f739115d1d3",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/references/evidence-and-freshness.md",
+      "candidate_sha256": "sha256:aadd530a23ad81d6e47028cbb0dc83f053e71dc87713a826ed3112382d9e0101",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
+      "candidate_sha256": "sha256:c610abf803a7c514d1220d6842a541be00daed0455d1d26fe1e5d0a809c8d347",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/references/tdd-run-protocol.md",
+      "candidate_sha256": "sha256:18486bff8834c6b4a00413e7f0303c46353a7b5971aa505e1aa118d00f4ec632",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/adapter-decision.v1.schema.json",
+      "baseline_sha256": "sha256:648c97407bdeb36ef5369e8a90741fa298f19b8a611adc347ed4c501b5cc32c2",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/adapter-decision.v1.schema.json",
+      "candidate_sha256": "sha256:648c97407bdeb36ef5369e8a90741fa298f19b8a611adc347ed4c501b5cc32c2",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/agent-attempt-event.v1.schema.json",
+      "baseline_sha256": "sha256:193a4c0d63a23b1da3f8b1a54dd69f9d4a13c597d087db178f9f64fe3ecd909f",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/agent-attempt-event.v1.schema.json",
+      "candidate_sha256": "sha256:193a4c0d63a23b1da3f8b1a54dd69f9d4a13c597d087db178f9f64fe3ecd909f",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/attempt-ledger-manifest.v1.schema.json",
+      "baseline_sha256": "sha256:5b583be29c7e39004b0ed216256079273706ca08493cabadbf3aadca11ea60d0",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/attempt-ledger-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:5b583be29c7e39004b0ed216256079273706ca08493cabadbf3aadca11ea60d0",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/backend-request.v1.schema.json",
+      "baseline_sha256": "sha256:4670e7bc0c7bb860318bafdaed40775648a469b2637d7ed33949543c8974cf2b",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/backend-request.v1.schema.json",
+      "candidate_sha256": "sha256:4670e7bc0c7bb860318bafdaed40775648a469b2637d7ed33949543c8974cf2b",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/backend-response.v1.schema.json",
+      "baseline_sha256": "sha256:5f95bd7854ff3bc650b2e803fbb52b13dbab19c7c4d55268d0c20e87c934d337",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/backend-response.v1.schema.json",
+      "candidate_sha256": "sha256:5f95bd7854ff3bc650b2e803fbb52b13dbab19c7c4d55268d0c20e87c934d337",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+      "baseline_sha256": "sha256:5627b332d2066f7495c88a5d14cf8069b6a19a46a6a8864642e2fc0d14bff640",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:5627b332d2066f7495c88a5d14cf8069b6a19a46a6a8864642e2fc0d14bff640",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/context-manifest.v1.schema.json",
+      "baseline_sha256": "sha256:bbfeb7fb703918b80735e73fd0b314b6aec98c83144f0c3771ac5d1af1acb009",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/context-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:bbfeb7fb703918b80735e73fd0b314b6aec98c83144f0c3771ac5d1af1acb009",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diff-manifest.v1.schema.json",
+      "baseline_sha256": "sha256:8b32cad6e8a6720aca8f44a8483abd480acc0f08aa9638415e252c8144833e5f",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/diff-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:8b32cad6e8a6720aca8f44a8483abd480acc0f08aa9638415e252c8144833e5f",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-contract.v1.schema.json",
+      "baseline_sha256": "sha256:06d5bd0feec879f2f72f2de95966aa9ccc44e77c5adf7105a1521a2f78a12345",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/implementation-contract.v1.schema.json",
+      "candidate_sha256": "sha256:715d20e85ec99be5e482e067fdef0bef85d2499dcef89d7d0ee6f7591531e37a",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "renamed",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/slice-capsule.v1.schema.json",
+      "baseline_sha256": "sha256:fac248a880d7958f103f5d819d86071d9e79227c6ef0b05823152c1bbf9e4be9",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/slice-capsule.v1.schema.json",
+      "candidate_sha256": "sha256:fac248a880d7958f103f5d819d86071d9e79227c6ef0b05823152c1bbf9e4be9",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/stage-observation.v1.schema.json",
+      "candidate_sha256": "sha256:45191e9328276b71af079e903e1cbb7587e7749ec4053cecff288d11b670098e",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter-lifecycle-probe.txt",
+      "candidate_sha256": "sha256:d0cf7bb4821a41eb7427659b411d6e5e19549c1cce031c832777e6c8075502ef",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "candidate_sha256": "sha256:09c1fe3167f76e9051932898faf1cf3f1bc0bc2d80cad36c468c683713358ebb",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+      "candidate_sha256": "sha256:b6595f6af1eaf5e903a1f8b402a03c7d9c9d5f4bee04e69fd99a6bed82540865",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py",
+      "candidate_sha256": "sha256:4d85e1a2e452eee45e3c09cd5b4decf64c2c08840802d79d34ee68ae728d6d88",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "candidate_sha256": "sha256:94263454305121af66167304d36978d78028667c73190f0d5fc60f84e4f2918b",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/protocol_bundle_builder.py",
+      "candidate_sha256": "sha256:22419610315348e6c951db5fb219891ef7d40c718f3f4fb43ad3dde666ccb103",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/protocol_fixture_support.py",
+      "candidate_sha256": "sha256:800206d5d57b03c5667e80aadd8de8d4eb6365be4fb87a8c7a80d906a651457d",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "candidate_sha256": "sha256:ce276a824f42dfa78432eb9664908198e3f044ff720706170107b610c6ccf760",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+      "candidate_sha256": "sha256:5e578eabd4031c9ffc42e7c9a54f700f85f0bd4d156b24aba130a0d2c4c49e79",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py",
+      "candidate_sha256": "sha256:68c7f5883cd41ca4055fb60d94c8b77c9b203628b90c741f1a97f35eedfe5f72",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+      "candidate_sha256": "sha256:1fc2d4292abc886139f243c08d04afaee3f7b6dc3be89ac64eab5c2093997bf1",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_observation.py",
+      "candidate_sha256": "sha256:1c7a80aaa94506f1e124063bc012914f26b27f2f1d535f27fcfbfd2172e53969",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_observation_runner.py",
+      "candidate_sha256": "sha256:e64efb34f194359b43f29f1789a3d0f3cf42dd73d15eaa3ef57cb75448e8cad2",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/adapter_red_probe.py",
+      "candidate_sha256": "sha256:7c24fd4fec03399be0d2758d1edd4edad238c989d4f1710f9a40ecc64c22e9af",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json",
+      "candidate_sha256": "sha256:035e38d13e124750f5227c2bf3c8c0f1becbb8b6ba5a518a388a5615ac121003",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter.py",
+      "candidate_sha256": "sha256:4e6cd3354f4e6f4d35ec48310d1e6bde58f0640f7fa1e54b82dc3dd97f55b026",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter_red_probe.py",
+      "candidate_sha256": "sha256:a55cebfbe880c1d1975324b25c515d1806ba7bcc39881f1ba255a0b71ba6680e",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py",
+      "candidate_sha256": "sha256:747b11bbf9147dee93b567a93f65ac653c2fd802323aac6a77dffbe27565f417",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "candidate_sha256": "sha256:83eb054c104d7b6589a80c4655ae71f82c1394e412e4ab9233914a9a54e81c56",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0707_contract.py",
+      "candidate_sha256": "sha256:3fba4106ae1a0f4cd5329b6e722e1df861326db77120dac94e043ce4c8b87747",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0711_contract.py",
+      "candidate_sha256": "sha256:5feb6ccf60a8485224b1fcec789bcff662a6f14314972c167e2f2e0a1d512dcf",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_contract.py",
+      "candidate_sha256": "sha256:e75963f857a44d8cbb95cc5df0b8632c72f14f3620fb98870697827c551432bc",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_contract.py",
+      "candidate_sha256": "sha256:d16eba635c3aab48a341cf21c1a993bc3b537ca2b9d4d8c83791187c289f4cce",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/validate_adapter_contract.py",
+      "candidate_sha256": "sha256:10db5add9abd7d354e65f43f88226bd43727e0957e09cd6ab631a62dcf4946a3",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+      "baseline_sha256": "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+      "candidate_sha256": "sha256:638f92a8e687adde9910612970240952e018ad31d3a82ada4f31d1896cad504a",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+      "baseline_sha256": "sha256:09e0e3e2513a224dd8aff8f1f162aaf3038622a450da2061a9fdf1c24332804d",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+      "candidate_sha256": "sha256:747c4ccac71b4d663bd3ef4ab94958f7ddc88a3023865580495ea96123ca2f34",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "baseline_sha256": "sha256:ddb3c0c1178fa081f22b24ab04c321b0538427717f4404328a96dc48758f1232",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "candidate_sha256": "sha256:26ba741ed4754380b776996cf0d2bf03538b7e4e63fcdad3fba24b4267b023fd",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "baseline_sha256": "sha256:72ea10e87685f8c97e7849426ec80b766bbe5e397dc50d0c93f78274b9bf7d22",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "candidate_sha256": "sha256:3555348a5359ad3b9a0aaaf0ae2db1190a9ccad2813f7092a006f2001b3b230f",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "baseline_sha256": "sha256:dada33f2f00e938f8e77d810628412797c00cca96909b1f6ef213d7a0ba05c28",
+      "candidate_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "candidate_sha256": "sha256:cf065d3988d2e0d3513b7b4ff378c8611fc3e7afb20158d32ea7a18b03c726bc",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/vdd-execution-plan/agents/openai.yaml",
+      "baseline_sha256": "sha256:c5cbbf28d0512213e684d65edcc9ec22a7aed6af816e5e2b5552bfae081a6192",
+      "candidate_path": ".agents/skills/vdd-execution-plan/agents/openai.yaml",
+      "candidate_sha256": "sha256:f4e263c78e50fa3c71c5fa37b2b431054ff33a496f2e30961a42dd1b0f0f8aed",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+      "baseline_sha256": "sha256:8285138bd999f28aa7490b73ea39a39cf92bda33e158a7efac8ff3a5c3507817",
+      "candidate_path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+      "candidate_sha256": "sha256:09d2aa892686e056a67365595a361f4c81231657f94b19dc44eddfff63ab2f7d",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+      "baseline_sha256": "sha256:c8e27653e0a69231801110f6d66c0e6138be2dacb04bd845c9a7007057f9d466",
+      "candidate_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+      "candidate_sha256": "sha256:6962bf68883310bbee276beff3530995f7c9a3d186ba8a18deeb3c05f6d26468",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": ".gitignore",
+      "baseline_sha256": "sha256:db6e60fcec7bdb08f7a7a15a8ad09ee69bc95fc4fded540ed46ca5b44ecc3dda",
+      "candidate_path": ".gitignore",
+      "candidate_sha256": "sha256:9c39b88656fe4ec221e506e1146c578df997d89a97c8e07edc11731bd1662dcb",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "decision-logs/2026-07-21-rmap-replay-bootstrap-baseline.md",
+      "candidate_sha256": "sha256:06f1887cba30ea8c4639b6b84e14d87716eca988b66838bc5a6b21ac9f4b7b53",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "decision-logs/2026-07-21-rmap-vdd-creation-risk-log.md",
+      "candidate_sha256": "sha256:878410d5b64e897ab6dd578f03b6d2e72b4062514d68326cd70ad99da3696ee7",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "docs/PROJECT_DOCUMENTATION_INDEX.md",
+      "baseline_sha256": "sha256:f1fa1bc1b04e7d1a6d89815801d40462b27a13ed787bd1d5f59dc02caba719e2",
+      "candidate_path": "docs/PROJECT_DOCUMENTATION_INDEX.md",
+      "candidate_sha256": "sha256:3bc8339773b45f97810278ec90c47350d79f5866142e9d26849aaeafe23cc601",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/adr/ADR-0042-artifact-proof-trust-root-rotation-boundary.md",
+      "candidate_sha256": "sha256:98351e2eadf7fbb38cc543c84110fcaefb0291e66cb563d8ce6cd178ccd1108e",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "docs/standards/_index.md",
+      "baseline_sha256": "sha256:082b11c438e1256634e44dc57507f86ae9ffd1da56fa555187e2ed0a49994695",
+      "candidate_path": "docs/standards/_index.md",
+      "candidate_sha256": "sha256:899501ea899747811c655d926a5f55cdf373275d5ee377cf80994195e42d31e0",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "candidate_sha256": "sha256:94cffef015f48d32e6370fabb14f75367399d8cc3b55f15e083f2a3ad1900574",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/fixtures/tdd-adapter-shadow.v1.json",
+      "candidate_sha256": "sha256:41b29933ddf18c1f05763b923ec552363567d4118fbb0b257c3a69fcad928682",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:43c621adbc2b6d27041f5053214522c07a4712d8b75d83425707562288c83699",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/fixtures/tdd-adapter-shadow.v1.json",
+      "candidate_sha256": "sha256:0a9d5d66faf3f87b09cc0e3e2ce5101f5c391920873a9792fb35f7f186db2303",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:c7da16cb8d42e8108fcd2ccec29488af346c6f73541a9c753c05f59f0006c110",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/fixtures/tdd-adapter-shadow.v1.json",
+      "candidate_sha256": "sha256:66b46e1c36b2451337dcc4c13422832d4590976c2fde72e5328e0df7c8bd86df",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "consumer"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:0a91b110e1c84f50484b4a93820bc733ef501a65559646c5e4cbbabf8ca48f13",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md",
+      "baseline_sha256": "sha256:4bd69e239dba9e576f9c96ffa015eed5f15c54f5a97f2d9599ad36260a40304a",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md",
+      "candidate_sha256": "sha256:495bd5176c006c870b6799cf26b176bf45e9ed2a4d0aa4707e274f2059c08529",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/01-intent-authority-and-non-goals.md",
+      "baseline_sha256": "sha256:b7e4a4fa4e039c6207a73a5d395a293691be6f7e24697e62be2ebfbf94f5e30a",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/01-intent-authority-and-non-goals.md",
+      "candidate_sha256": "sha256:cc563f15712704c195bafa80c3e7bf433fdc688c4b1d9da321102a658423e741",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+      "baseline_sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+      "candidate_sha256": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/03-validators-fixtures-and-control-gates.md",
+      "baseline_sha256": "sha256:20c63acd536a369f748b3c59949938d851f85c3f8ba55f7fee900e5663cbed53",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/03-validators-fixtures-and-control-gates.md",
+      "candidate_sha256": "sha256:fe2b102834c2d63148987a39733fc2cb47386df236c3bbc1b7bdd6dd5a2e986a",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md",
+      "baseline_sha256": "sha256:ab9b900a39ad945bff6307c932914dc9fcd6003d5c0938f7de6c3dff9e5e509a",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md",
+      "candidate_sha256": "sha256:81fb4fba4bb5c17c846ca75ef445fcb1d8757fb12afc97730fbdfdca26dc6c8e",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/05-diagnostics-repair-and-reentry.md",
+      "baseline_sha256": "sha256:8cd89f36331f449a5bb211361d512910cadbb9e4ce8d4d4f2e47a938a6d2b795",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/05-diagnostics-repair-and-reentry.md",
+      "candidate_sha256": "sha256:b27ed10bb013ce670b7c45d4322fddc1c5c4d67356a08b683873cf24995feed0",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/06-testing-observability-and-evidence.md",
+      "baseline_sha256": "sha256:aad031b9f93325de6d2197394de5dac70dc751c8b9fabc25fde2b6ed78918319",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/06-testing-observability-and-evidence.md",
+      "candidate_sha256": "sha256:1a8a598ba52cf9e57364e942f5fe3c7a47d2dd4d241e2d4ed69855b51c84bda0",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/07-implementation-phases.md",
+      "baseline_sha256": "sha256:c6558f163512ba26d9098bf7f9518ba85e8e659c8daeab73c5215525a8378aff",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/07-implementation-phases.md",
+      "candidate_sha256": "sha256:4b1cfe508c4ee68489a52c83784a56c38bcf9b0aebf17a65f71deed4ea8574c6",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/08-risks-dod-and-glossary.md",
+      "baseline_sha256": "sha256:a22fe1becce026f18bc545f68be8849f2d28af1cd8c5efae8df5f6ed8dfea31c",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/08-risks-dod-and-glossary.md",
+      "candidate_sha256": "sha256:31ae191413273de904ceecbf1344ed8d01b5a5909fa246b869fa44eb643e49a7",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "evidence"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
+      "candidate_sha256": "sha256:0c4224300734abde99397b2e78081a7dfab1ffa9402a61a95ea76ac2d1dd2f95",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/96-global-review-and-validation.md",
+      "baseline_sha256": "sha256:218b760ec302520df8548a395f78e13c889dcea6f2f08625f838de1bdcede364",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/96-global-review-and-validation.md",
+      "candidate_sha256": "sha256:a4b97ae7ad12d464baa28d2c40ff727771e5ab41e00e522884dce0b954c8c252",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/97-requirements-ledger.md",
+      "baseline_sha256": "sha256:a89150810dc3ee812e90a9d4c226289c8bb338a96ce8733e705ded6ed23cdafe",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/97-requirements-ledger.md",
+      "candidate_sha256": "sha256:56a5b4a6936a80a3d7d0541aa4ea1a650653e3a9db3caa297634d99bb9596cee",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/98-source-to-split-audit.md",
+      "baseline_sha256": "sha256:f0856d8dd509ff1e922ccf8ee08c4602881d59b307e96a9723a715d901561587",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/98-source-to-split-audit.md",
+      "candidate_sha256": "sha256:727686659538df30a0359d5165b578e47a47ac5af656bea9ea3ffc2a4de9fb98",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "source"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/99-source-coverage.md",
+      "baseline_sha256": "sha256:c1414aa494165759f506e74cadc12984128cdbc94b89b790b0d0fc2c39cee844",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/99-source-coverage.md",
+      "candidate_sha256": "sha256:1157739ba64b0b14b89b23336231904f7435d49d22c90e57f454a56f6df9c1f7",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/candidate-diff-cases.v1.json",
+      "baseline_sha256": "sha256:9fc5b3e62113cfecd5d87b0aebec9b277e2494965ac5b3e95f77cb843484c9a8",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/candidate-diff-cases.v1.json",
+      "candidate_sha256": "sha256:634ba5f8c8801440a2a56796bcce75d8eb02d37cf597d61ea8005387b539abbe",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
+      "baseline_sha256": "sha256:b3ca8bd0645ea5b7e4aed19a30483723390e9ad075750095ec60f8e460f359ae",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
+      "candidate_sha256": "sha256:7ffec47dc88d065abab59866000fb97522d1f7cc3be28e64dce3e4e1bc7239a6",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+      "baseline_sha256": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+      "candidate_sha256": "sha256:c4242b63316181c60ccf2d1328641d9782763f95e60c967f3ecaa3c9dd5159dd",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+      "baseline_sha256": "sha256:d5d9ea9ee37570c7872f64c0794055a907bbecf77463db261434dcf5a022ddee",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+      "candidate_sha256": "sha256:2cde5b346ba502fde333d3edbf18f9f8cfc66facf457a5b6a1f876e5936f84d4",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
+      "baseline_sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
+      "candidate_sha256": "sha256:235894d68c9c5497a12a414ff75c3fd02ca8156e4592ea6ad95a52909bcdcaa1",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+      "baseline_sha256": "sha256:be3810aad4811b10a85a8b6b8830ba3d728ad1e44ed10e790077cb6d5ecd7636",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+      "candidate_sha256": "sha256:bcee54f0d40e62453613e0cf76a04beb76112362e5e088a5f1749926e1cd2b07",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
+      "baseline_sha256": "sha256:f21184b203b3e445265a651af0fde3584e8947723d89493384ebf4c1160e220a",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
+      "candidate_sha256": "sha256:bd1b327c8db36eea5236072837c8944eb6b5ce40c3b1733c7215a174928cd8f7",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/authority-manifest.v1.json",
+      "baseline_sha256": "sha256:1b4514e8df206df7624f39a6c39e15c1b7ccda02f84bbd3cf07c71b4a6752b2c",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/authority-manifest.v1.json",
+      "candidate_sha256": "sha256:a5e09f48673df0731f9a5d08eeab81c2910a486ef447009ce31a09b1de0dbcd9",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
+      "candidate_sha256": "sha256:2b1045d3928e6bb7b33201c347d2b8bb2ce55b86789405a44d44e7d88e285b39",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+      "baseline_sha256": "sha256:e229a521a2beae917c08b47e2fd74d97af933a9ae3ef080ec53dc34303fa6af6",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:d11e8154395566a063e9bcbf2ed420f51e2e64d53a751b53588050f8cb22377b",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/clarification-decisions.v1.json",
+      "baseline_sha256": "sha256:8d36bbfbde581f2786c07e2335c37e0dd02a9a5d65ce8a52bf3b0f44c4983dc0",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/clarification-decisions.v1.json",
+      "candidate_sha256": "sha256:43cbafb22f8f2350928b8a294a23ab41bb170b3f8775b82c78a27aac57ee8d88",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
+      "baseline_sha256": "sha256:dea1fbf3006880fd412c17483acd09c03ca706addbd733e9c998300de5480467",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
+      "candidate_sha256": "sha256:becaa415ebfa04767a1c5d107b23dfb08593c0a4289becb69522d5ac3fcf94c4",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
+      "candidate_sha256": "sha256:a9d0e0ac22f70977a0780394439fb08f5ff6836c4aa483b92eeca765ffd6e5cd",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
+      "baseline_sha256": "sha256:76157c83b83ca95073f360ca944151a22ac195261d6903172a301286ac1f014e",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
+      "candidate_sha256": "sha256:f51b585e1d538c4eb1c9c44c2a509d5632aacbc95f0f9c24fbaa4e368d3ad2df",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "baseline_sha256": "sha256:7b98bdf5f64a1c7d1bc7c63937afe3a7b9d6812f00be440ec5b6ce8adfe572c7",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "candidate_sha256": "sha256:a66682b2196e9f8e2912426b7ec4053373d54e399509a195a317f3968e15e6f2",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "copied",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
+      "baseline_sha256": "sha256:c859119ba6134ff36a9451bbe3ab8c969adebbde0f3f5cb42896ec8c2d68956a",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/authorization-event.json",
+      "candidate_sha256": "sha256:bef11ea1c06fe70b838512917da4a78c4a54dd3322bc17c283ca29cebc5844fd",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "copied",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
+      "baseline_sha256": "sha256:659172239aca47162f4051f3438a503612c35f578fe9833a202abe7d8a7f3ca1",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/policy-decision.json",
+      "candidate_sha256": "sha256:fe646d214b0ccded26121cda90d0d5e07ae6d8019100d32e86881ed7e7fb620e",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "copied",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
+      "baseline_sha256": "sha256:67e04414bf83b77f17cef3b5f2f26f413c2ac1c616c4560604039c914b50a17c",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
+      "candidate_sha256": "sha256:53cad41ab67126358eb9e2441b7d7e863675c23761074d1a624d1488e4942f04",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+      "candidate_sha256": "sha256:dced8b6df61680ece1045ee1bf1a781b68fe474065bb89ce8c5efbeba73167b8",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
+      "baseline_sha256": "sha256:6490ac173fcf1f030724faa6899236f1c5a8533182f4180994ef82f14c3ef6a7",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
+      "candidate_sha256": "sha256:6e841a804776b851bbf9a2d2c7613a57cf2a21dcc45dc2033bdaf13de7a1601b",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirements.v1.json",
+      "baseline_sha256": "sha256:643fd6ce9191ed916213b97be88d5b7f54db577844cf99c5ee4d7ce663bf1a19",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirements.v1.json",
+      "candidate_sha256": "sha256:fe0601a8244cb9dcfee4db4344003f411c2d570417a1d1c4c9720e04b1f1886a",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
+      "baseline_sha256": "sha256:50b8b72afeeff344395d6783f2e2a85dd85078937310eb8d64c643ef7c8fa726",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
+      "candidate_sha256": "sha256:5e39bf358f6534385e4dcd411a97c19ea582d78346d4ac2d7cc6b7e087a88578",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json",
+      "baseline_sha256": "sha256:90f0d449e698dd3cf79d0d0ec2c7fbfd9456bae6683bddc5be132e2a0a53c649",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json",
+      "candidate_sha256": "sha256:803f20e3b2c6de7dd28d1f4189156538bf776b5f16b2fd53572a2ee70d9c6702",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/source-coverage.v1.json",
+      "baseline_sha256": "sha256:9874f7dad50fc176ac4bd36b2f9a7b6928473e956438e453be4cea64aa65c142",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/source-coverage.v1.json",
+      "candidate_sha256": "sha256:5889371aa91cd0d0c07462694456a1cd2509c3c190d33a55b0be4fd0e1830abb",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
+      "baseline_sha256": "sha256:45d3475dff006d4e88dde0793ac5ae2ea441e525a320fe18f4f1d5716293ba61",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
+      "candidate_sha256": "sha256:917b533a10a3527c3b7f9efce0ebff69f1e7d20b2b2d42dda0fd43989c8c8dd1",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/stage-evidence-projection.v1.schema.json",
+      "candidate_sha256": "sha256:969c2a6650a09343c485e91b00e398571864cf60188658981db1d599b87b0120",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_inventory_support.py",
+      "baseline_sha256": "sha256:21e90ce700976023b3872cebcb9e86ef7bf4100f7cdb9b2e82fdb173be7103a7",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_inventory_support.py",
+      "candidate_sha256": "sha256:437a5989ddb144fcd370253bff3449edb4ed8777c1662bb72a2410576bec2554",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
+      "baseline_sha256": "sha256:f74ec0432ee0f03ef84c2b32469f13d5ac3879687b657e4d208c9b3ba4c65b61",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
+      "candidate_sha256": "sha256:5fc523fd8cd115e08d7370e8e28cfea29fcc148f8f2dbdc71a29261a2eb0fd37",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_builder.py",
+      "candidate_sha256": "sha256:3a4b0b19ae9d7a5bbf79f9f7fd359bc70b1a241e6d9270870686ca86e8a88a12",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py",
+      "baseline_sha256": "sha256:e25b287ee5635694b1fc4142888ce98777c764578719c91720a57ea13def0a8b",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py",
+      "candidate_sha256": "sha256:6e4588496add3eaa5dc930599307f204457b27793fc6387b778dd44667a11d43",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_builder.py",
+      "candidate_sha256": "sha256:efef222a0a20b6f5d9a7c575c24a0efe6e44328c32cc924ac12a242d041e1dfb",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+      "baseline_sha256": "sha256:f3160d7d7ba54aa66212fd696d2c17729b9ac53fd0f54e29d22e2a042a012903",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+      "candidate_sha256": "sha256:6953b8324cfeecd62ce9b0d0107ba10576fffd1908371fc6084811f0211cc9a1",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
+      "candidate_sha256": "sha256:bcd7761ebe36a4fa8713cdad545cf2ef41d8542aa3cc4ba142d2d75a642e5eb0",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+      "baseline_sha256": "sha256:a7a1a594f23143741472c71a75fed2e5f7efed37b64e45fc706d4ed69bd8e994",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+      "candidate_sha256": "sha256:11079ca42d114372bdc895abb64fb1f95393601b0c07381afbda7c931ebfd081",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_support.py",
+      "baseline_sha256": "sha256:b3bbf9321ba854263d7ca81daf5bc07cbbda1bedd00cc40a8581475045f9ccb5",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_support.py",
+      "candidate_sha256": "sha256:54576f8c7ac23a57aa642cb8b342f34db28da23e4773568d2813bc37b7ef3486",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py",
+      "baseline_sha256": "sha256:5cd3fad94fc9b0f74da32e6ee78b986081beaa2f6b1c5b430c92951ac78ad754",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py",
+      "candidate_sha256": "sha256:9cbcc5e634201c83f48b67992301038195235e54e917570bc85bcde0b7960889",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
+      "baseline_sha256": "sha256:e95731be2f7633df8f8e7999107dcec1712f1efc787e3f27cd043a3e76b9bea7",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
+      "candidate_sha256": "sha256:a8c4a9db13e0c30bffa1e9991cf20bb3b38004b8456f3b39cf7757c0475961e5",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
+      "candidate_sha256": "sha256:815933f0e2f0cce5b757992b55fceb8add9d25487f60091367e75140299dd0f0",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "baseline_sha256": "sha256:49492a0791864533cbf56e7677258d128c207f967b2a5341088bdbee09ed5b41",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "candidate_sha256": "sha256:ae2a2b9e346c0ea47e7fb12da9eadc9b82c624f311176e462eafd7b55f82bd5c",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
+      "baseline_sha256": "sha256:4c0d6432b62aecd46e80ba896d79f12e094457a1733a626f080f574bbace6eaa",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
+      "candidate_sha256": "sha256:6826afac6362d94cdc861509a9dbde13419db2efb322743a3fcfa2a16311a77a",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
+      "baseline_sha256": "sha256:ec4b564a5c4202a3700bdfed346aa06d7194b6007512982b6bff5c50862c080e",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
+      "candidate_sha256": "sha256:4f76f8a63a24eb82b355f47b5320854aee62dec76bac0e4cfc106ab096f55835",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
+      "candidate_sha256": "sha256:e7af865e806a62990b230bed945c6824186b80de3299825fbe45b5eeb5f29ce0",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
+      "baseline_sha256": "sha256:e3aaf30efffdcfa943ef78dea6cc88166ab8475bebebf15ca4293d8d00419d54",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
+      "candidate_sha256": "sha256:108cf84a982024cb45b701b3ad1d3f5ce603a48947ab328e07e7a3f4050a07d6",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_baseline_bridge.py",
+      "candidate_sha256": "sha256:3f7860f627669fcf5a140b61a0de034701cda32775fe13255113eb049208620e",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+      "baseline_sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+      "candidate_sha256": "sha256:4aa87d415c33682fd4342f569d5924793acf3d2ec653fb318f1655ec1aad9849",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
+      "baseline_sha256": "sha256:2367ff8c12d2613b304e2127f6ebe83cdf0949c6cbed2a915d70f2486859e022",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
+      "candidate_sha256": "sha256:3a902bf6c7e9c26dcd7b95d38233a774151f3f693048eb558a2bcc7ccd83a776",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
+      "baseline_sha256": "sha256:9c20bc5924128dec7b172d7e9a629a49bc809059b7917b6a0231022395011c7a",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
+      "candidate_sha256": "sha256:a66b012c4c52687937535601b8925bbd99b528110804a1a5fa3cbb784b3eae54",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_s2_red_probe_contract.py",
+      "candidate_sha256": "sha256:8db734d8e5c7edd6d5f774ac9c10111d7b2673db2acdf48959dc829e05a3b65f",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "test"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_stage_projection_guards.py",
+      "candidate_sha256": "sha256:1f0c1d2261c0b014644c03aaa4687ad7e9f4292803cfd78e518639c71906dc60",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "authority"
+      ],
+      "baseline_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py",
+      "baseline_sha256": "sha256:3ed29df358d20d7ec843aecc98cf177f8d170c80448ae9e33b2abeeae2d32cb1",
+      "candidate_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py",
+      "candidate_sha256": "sha256:061a81b1a9360abde028fab44eafac3aa5b630d6ffd8240d4acd7d22fd615e65",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "added",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/95-implementation-report-index.v1.json",
+      "candidate_sha256": "sha256:e49b27c5ec9de13f56c25698e928e638bdc498f295364bf3bd772b9ecbcc09fc",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    },
+    {
+      "change_type": "modified",
+      "roles": [
+        "implementation"
+      ],
+      "baseline_path": "execution-plans/README.md",
+      "baseline_sha256": "sha256:3e97e84f94fcfcae09bc0129aaecdf412fa3d74a28780804427c12795647e8c8",
+      "candidate_path": "execution-plans/README.md",
+      "candidate_sha256": "sha256:b70956494d3033b4b21b9234e90642b88e6908102484cece7de5c453eb08bbaf",
+      "inclusion_reason": "Immutable implementation candidate from the Quick Dev committed candidate range under current Git rename/copy semantics."
+    }
+  ]
+}

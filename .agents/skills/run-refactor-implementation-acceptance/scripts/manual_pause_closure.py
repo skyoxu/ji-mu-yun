@@ -26,6 +26,30 @@ _REQUIRED_AUTHORITIES = {
     "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
     "docs/standards/bootstrap-review-control-plane.md",
 }
+_PROTOCOL_REVIEW_REQUIRED_PATHS = _REQUIRED_AUTHORITIES | {
+    ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+    ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-recovery.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-repair-validation-envelope.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-protocol-repair-authority.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-verifier-output.v1.schema.json",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/repair_completeness.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/review_cycle_policy.py",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure-request.v1.schema.json",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure-challenge.v1.schema.json",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-manual-pause-closure.v1.schema.json",
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-repair-completeness.v1.schema.json",
+}
+_CLOSURE_SCHEMA_PATH = (
+    ".agents/skills/run-refactor-implementation-acceptance/schemas/"
+    "acceptance-manual-pause-closure.v1.schema.json"
+)
+_CLOSURE_SCHEMA_HASH = "sha256:78bf1168bb08bc52fc43e63647c02cd6cdda6f59798796b7329d8623c884ef0e"
 _RUN_ARTIFACTS = {
     "reviewInput": "review-input.json",
     "preflightResult": "preflight-result.json",
@@ -36,6 +60,10 @@ _RUN_ARTIFACTS = {
     "dispositions": "review-dispositions.json",
     "metrics": "review-metrics.json",
     "verifierOutput": "verifier-output.json",
+}
+_MANUAL_PAUSE_PROFILES = {
+    "bootstrap-implementation-conformance",
+    "bootstrap-upstream-plan",
 }
 
 
@@ -133,6 +161,10 @@ def _replay_manual_pause_route(
         "bootstrapExecutionState": state,
         "reviewScope": scope,
         **bounded,
+        "repairCompletenessRequest": request["repair_completeness_request"],
+        "repairCompletenessRequestHash": canonical_hash(
+            request["repair_completeness_request"]
+        ),
         "nextAction": "manual-pause",
         "authorizes": [],
     }
@@ -151,6 +183,161 @@ def _validate_authorities(root: Path, values: Any) -> list[dict[str, str]]:
     if [item["path"] for item in normalized] != sorted(_REQUIRED_AUTHORITIES):
         raise InputError("manual-pause protocol authority set is incomplete")
     return normalized
+
+
+def _validate_protocol_review(
+    root: Path,
+    value: Any,
+    authorities: list[dict[str, str]],
+) -> dict[str, str]:
+    legacy_fields = {"runDirectory", "envelopePath", "envelopeSha256"}
+    recovery_fields = legacy_fields | {"hardLimitAuthorityPath", "hardLimitAuthoritySha256"}
+    if not isinstance(value, dict) or frozenset(value) not in {
+        frozenset(legacy_fields), frozenset(recovery_fields)
+    }:
+        raise InputError("manual-pause protocol review binding is invalid")
+    run_relative = _relative(value.get("runDirectory"), "protocol review run")
+    run_dir = _resolve(root, run_relative, "protocol review run")
+    envelope_relative = _relative(value.get("envelopePath"), "protocol review envelope")
+    is_hard_limit_recovery = set(value) == recovery_fields
+    expected_envelope_name = (
+        "focused-repair-validation-envelope.json"
+        if is_hard_limit_recovery
+        else "finalized-run-validation.v3.json"
+    )
+    if envelope_relative != f"{run_relative}/{expected_envelope_name}":
+        raise InputError("manual-pause protocol review envelope path is invalid")
+    envelope_path = _resolve(root, envelope_relative, "protocol review envelope")
+    if (
+        _HASH.fullmatch(str(value.get("envelopeSha256"))) is None
+        or not envelope_path.is_file()
+        or _file_hash(envelope_path) != value["envelopeSha256"]
+    ):
+        raise InputError("manual-pause protocol review envelope is stale")
+    envelope = _read_json(envelope_path, "protocol review envelope")
+    try:
+        replayed = replay_finalized_bootstrap_run(root, run_relative)
+    except BootstrapBindingError as exc:
+        raise InputError("manual-pause protocol review cannot be replayed") from exc
+    rotating = {"generatedAt", "validatorHash"}
+    if (
+        not isinstance(envelope, dict)
+        or set(envelope) != set(replayed)
+        or {key: item for key, item in envelope.items() if key not in rotating}
+        != {key: item for key, item in replayed.items() if key not in rotating}
+    ):
+        raise InputError("manual-pause protocol review is not an eligible passed review")
+    if is_hard_limit_recovery:
+        authority_relative = _relative(
+            value.get("hardLimitAuthorityPath"), "hard-limit protocol repair authority"
+        )
+        if authority_relative != f"{run_relative}/hard-limit-protocol-repair-authority.json":
+            raise InputError("hard-limit protocol repair authority path is invalid")
+        authority_path = _resolve(root, authority_relative, "hard-limit protocol repair authority")
+        if (
+            _HASH.fullmatch(str(value.get("hardLimitAuthoritySha256"))) is None
+            or not authority_path.is_file()
+            or _file_hash(authority_path) != value["hardLimitAuthoritySha256"]
+        ):
+            raise InputError("hard-limit protocol repair authority is stale")
+        authority = _read_json(authority_path, "hard-limit protocol repair authority")
+        blocked = authority.get("blockedPredecessorEnvelope") if isinstance(authority, dict) else None
+        blocked_path = _resolve(
+            root,
+            _relative(blocked.get("path"), "blocked protocol review envelope")
+            if isinstance(blocked, dict)
+            else "",
+            "blocked protocol review envelope",
+        )
+        if (
+            replayed.get("schemaVersion")
+            != "bootstrap-hard-limit-focused-repair-validation-envelope.v1"
+            or replayed.get("status") != "passed"
+            or replayed.get("nextAction") != "deterministic-closure"
+            or replayed.get("authorizes") != []
+            or not isinstance(authority, dict)
+            or authority.get("schemaVersion")
+            != "bootstrap-hard-limit-protocol-repair-authority.v1"
+            or authority.get("status") != "passed"
+            or authority.get("maintenanceMode") != "ai-native-single-maintainer"
+            or authority.get("fullReviewRound") != 3
+            or authority.get("focusedRun") != run_relative
+            or authority.get("focusedInputHash") != replayed.get("inputHash")
+            or authority.get("lineageFamilyId") != replayed.get("lineageFamilyId")
+            or authority.get("findingIds") != replayed.get("findingIds")
+            or authority.get("hardLimitRecoveryHash") != replayed.get("hardLimitRecoveryHash")
+            or authority.get("deterministicRepairClosureHash")
+            != replayed.get("deterministicRepairClosureHash")
+            or authority.get("verifierOutputHash") != replayed.get("outputHash")
+            or authority.get("gateHash") != replayed.get("gateHash")
+            or authority.get("focusedValidationEnvelope")
+            != {"path": envelope_relative, "sha256": _file_hash(envelope_path)}
+            or authority.get("authorizes") != ["manual-pause-protocol-review"]
+            or authority.get("doesNotAuthorize")
+            != ["acceptance-passed", "round-4", "finding-discovery", "commit", "release"]
+            or not isinstance(blocked, dict)
+            or set(blocked) != {"path", "sha256", "finalStatus"}
+            or blocked.get("finalStatus") != "blocked"
+            or not blocked_path.is_file()
+            or _file_hash(blocked_path) != blocked.get("sha256")
+        ):
+            raise InputError("hard-limit protocol repair authority is invalid")
+        blocked_envelope = _read_json(blocked_path, "blocked protocol review predecessor")
+        if (
+            blocked_envelope.get("schemaVersion") != "bootstrap-finalized-run-validation.v3"
+            or blocked_envelope.get("validationStatus") != "passed"
+            or blocked_envelope.get("profileName") != "bootstrap-skill-route"
+            or blocked_envelope.get("fullReviewRound") != 3
+            or blocked_envelope.get("finalStatus") != "blocked"
+            or blocked_envelope.get("findingClosure", {}).get("unverifiedCount") != 0
+        ):
+            raise InputError("blocked protocol review predecessor is ineligible")
+    elif (
+        replayed.get("schemaVersion") != "bootstrap-finalized-run-validation.v3"
+        or replayed.get("validationStatus") != "passed"
+        or replayed.get("profileName") != "bootstrap-skill-route"
+        or replayed.get("finalStatus") not in {"clean", "advisory"}
+        or replayed.get("authorizes") != []
+    ):
+        raise InputError("manual-pause protocol review is not an eligible passed review")
+    review_input_path = run_dir / "review-input.json"
+    artifact_hashes = replayed.get("artifactHashes")
+    if not review_input_path.is_file() or (
+        not is_hard_limit_recovery
+        and (
+            not isinstance(artifact_hashes, dict)
+            or artifact_hashes.get("reviewInput") != _file_hash(review_input_path)
+        )
+    ):
+        raise InputError("manual-pause protocol review input binding is stale")
+    review_input = _read_json(review_input_path, "protocol review input")
+    artifacts = review_input.get("artifacts") if isinstance(review_input, dict) else None
+    if not isinstance(artifacts, list):
+        raise InputError("manual-pause protocol review artifact coverage is invalid")
+    reviewed = {
+        item.get("artifact"): item.get("sha256")
+        for item in artifacts
+        if isinstance(item, dict)
+    }
+    current = {item["path"]: item["sha256"] for item in authorities}
+    for relative in sorted(_PROTOCOL_REVIEW_REQUIRED_PATHS):
+        path = _resolve(root, relative, "protocol review required artifact")
+        expected = current.get(relative, _file_hash(path) if path.is_file() else None)
+        if expected is None or reviewed.get(relative) != expected:
+            raise InputError("manual-pause protocol review does not cover current protocol bytes")
+    result = {
+        "runDirectory": run_relative,
+        "envelopePath": envelope_relative,
+        "envelopeSha256": _file_hash(envelope_path),
+    }
+    if is_hard_limit_recovery:
+        result.update(
+            {
+                "hardLimitAuthorityPath": authority_relative,
+                "hardLimitAuthoritySha256": _file_hash(authority_path),
+            }
+        )
+    return result
 
 
 def _validate_finalized_run(
@@ -194,13 +381,18 @@ def _validate_finalized_run(
     ):
         raise InputError("manual-pause finalized envelope does not match canonical replay")
     envelope = replayed_envelope
+    legacy_family = last_run.get("changeId")
+    eligible_envelope_families = {family}
+    if isinstance(legacy_family, str) and legacy_family:
+        eligible_envelope_families.add(legacy_family)
     if (
         not isinstance(envelope, dict)
         or envelope.get("schemaVersion") != "bootstrap-finalized-run-validation.v3"
         or envelope.get("validationStatus") != "passed"
         or envelope.get("finalStatus") != "blocked"
-        or envelope.get("profileName") != "bootstrap-implementation-conformance"
-        or envelope.get("lineageFamilyId") != family
+        or envelope.get("profileName") not in _MANUAL_PAUSE_PROFILES
+        or envelope.get("lineageFamilyId") not in eligible_envelope_families
+        or envelope.get("changeId") != last_run.get("changeId")
         or envelope.get("fullReviewRound") != 3
         or envelope.get("reviewId") != last_run.get("reviewId")
         or envelope.get("inputHash") != last_run.get("inputHash")
@@ -257,6 +449,11 @@ def _validate_repairs(
     changed = set(repair["changedPaths"])
     tests = {item["path"] for item in repair["targetedTests"]}
     validations = {item["path"] for item in repair["validationRefs"]}
+    checks_by_receipt = {
+        item["receipt"]["path"]: item
+        for item in repair["compositionChecks"]
+        if isinstance(item, dict) and isinstance(item.get("receipt"), dict)
+    }
     normalized: list[dict[str, Any]] = []
     for item in value:
         if not isinstance(item, dict) or set(item) != {
@@ -280,7 +477,25 @@ def _validate_repairs(
             raise InputError("manual-pause finding repair tests are unbound")
         if not set(lists["validationRefs"]).issubset(validations):
             raise InputError("manual-pause finding repair validation is unbound")
+        selected_checks = [
+            checks_by_receipt[path]
+            for path in lists["validationRefs"]
+            if path in checks_by_receipt
+        ]
+        if not selected_checks:
+            raise InputError("manual-pause finding repair lacks composition validation")
+        covered_paths = {
+            binding["path"] for check in selected_checks for binding in check["bindings"]
+        }
+        covered_tests = {
+            path for check in selected_checks for path in check["targetedTests"]
+        }
+        if not set(lists["changedPaths"]).issubset(covered_paths):
+            raise InputError("manual-pause finding repair validation does not cover its changed paths")
+        if not set(lists["targetedTests"]).issubset(covered_tests):
+            raise InputError("manual-pause finding repair validation does not cover its tests")
         normalized.append({"findingId": item.get("findingId"), **lists})
+    normalized.sort(key=lambda item: item["findingId"])
     if [item["findingId"] for item in normalized] != confirmed:
         raise InputError("manual-pause finding repairs do not cover the exact confirmed set")
     return normalized
@@ -290,7 +505,7 @@ def prepare_manual_pause_closure(request: Any, source_request_path: str) -> dict
     required = {
         "schemaVersion", "repositoryRoot", "acceptanceTarget", "lineageFamilyId",
         "manualPauseRoute", "manualPauseRouteRequest", "finalizedRun", "repairCompletenessRequest",
-        "repairCompleteness", "findingRepairs", "protocolAuthorities", "authorizes",
+        "repairCompleteness", "findingRepairs", "protocolAuthorities", "protocolReview", "authorizes",
     }
     if (
         not isinstance(request, dict)
@@ -332,6 +547,7 @@ def prepare_manual_pause_closure(request: Any, source_request_path: str) -> dict
     envelope, confirmed = _validate_finalized_run(root, request["finalizedRun"], family, lineage["runs"][-1])
     repairs = _validate_repairs(request["findingRepairs"], confirmed, replayed_repair)
     authorities = _validate_authorities(root, request["protocolAuthorities"])
+    protocol_review = _validate_protocol_review(root, request["protocolReview"], authorities)
     source_relative = _relative(source_request_path, "manual-pause source request")
     source_path = _resolve(root, source_relative, "manual-pause source request")
     if not source_path.is_file() or _read_json(source_path, "manual-pause source request") != request:
@@ -356,6 +572,7 @@ def prepare_manual_pause_closure(request: Any, source_request_path: str) -> dict
         "findingRepairs": repairs,
         "repairCompletenessHash": canonical_hash(replayed_repair),
         "protocolAuthorities": authorities,
+        "protocolReview": protocol_review,
         "sourceRequestPath": source_relative,
         "sourceRequestHash": _file_hash(source_path),
         "authorizes": [],
@@ -401,7 +618,7 @@ def finalize_manual_pause_closure(root: Path, challenge_path: str, acknowledgeme
         or acknowledgement.get("authorizes") != ["manual-pause-closure"]
     ):
         raise InputError("manual-pause maintainer acknowledgement is invalid")
-    return {
+    result = {
         "schemaVersion": "acceptance-manual-pause-closure.v1",
         "status": "passed",
         "acceptanceTarget": challenge["acceptanceTarget"],
@@ -417,3 +634,30 @@ def finalize_manual_pause_closure(root: Path, challenge_path: str, acknowledgeme
         "authorizes": ["acceptance-passed"],
         "doesNotAuthorize": ["commit", "release", "archived"],
     }
+    schema_path = _resolve(repository_root, _CLOSURE_SCHEMA_PATH, "manual-pause closure schema")
+    required = {
+        "schemaVersion", "status", "acceptanceTarget", "lineageFamilyId",
+        "semanticRoundsConsumed", "confirmedFindingIds", "repairCompletenessHash",
+        "challengePath", "challengeHash", "closureBindingHash",
+        "maintainerAcknowledgement", "lifecycleTransition", "authorizes",
+        "doesNotAuthorize",
+    }
+    if (
+        not schema_path.is_file()
+        or _file_hash(schema_path) != _CLOSURE_SCHEMA_HASH
+        or set(result) != required
+        or result["schemaVersion"] != "acceptance-manual-pause-closure.v1"
+        or result["status"] != "passed"
+        or result["semanticRoundsConsumed"] != 3
+        or not result["confirmedFindingIds"]
+        or result["confirmedFindingIds"] != sorted(set(result["confirmedFindingIds"]))
+        or any(
+            _HASH.fullmatch(str(result[field])) is None
+            for field in ("repairCompletenessHash", "challengeHash", "closureBindingHash")
+        )
+        or result["lifecycleTransition"] != "acceptance-passed"
+        or result["authorizes"] != ["acceptance-passed"]
+        or result["doesNotAuthorize"] != ["commit", "release", "archived"]
+    ):
+        raise InputError("manual-pause closure result violates its reviewed schema")
+    return result

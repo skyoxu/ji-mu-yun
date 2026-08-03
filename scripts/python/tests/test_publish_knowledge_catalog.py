@@ -404,7 +404,15 @@ class KnowledgePublicationTests(unittest.TestCase):
                 text=True,
                 encoding="ascii",
             ).stdout.strip()
-            subprocess.run(["git", "checkout", "--quiet", "-B", "main", current_main], cwd=root, check=True)
+            subprocess.run(["git", "config", "core.sparseCheckout", "true"], cwd=root, check=True)
+            sparse_checkout = root / ".git" / "info" / "sparse-checkout"
+            sparse_checkout.parent.mkdir(parents=True, exist_ok=True)
+            sparse_checkout.write_text("/*\n!**/.acceptance-snapshots/\n", encoding="ascii", newline="\n")
+            subprocess.run(
+                ["git", "-c", "core.longpaths=true", "checkout", "--quiet", "-B", "main", current_main],
+                cwd=root,
+                check=True,
+            )
             target_index = root / "knowledge" / "indexes"
             target_generation = target_index / "generations" / generation_id
             target_generation.parent.mkdir(parents=True, exist_ok=True)

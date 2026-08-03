@@ -50,6 +50,11 @@ The implementation backend never owns review acceptance, severity, done, commit,
 - Command execution uses argument arrays with `shell=false` semantics.
 - Child environments are built from an explicit allowlist. Secrets are referenced by source identity and are never copied into evidence.
 - Command templates use typed placeholders; untyped string interpolation into executable arguments is prohibited.
+- A controlled command declared read-only compares repository file-content
+  hashes before and after execution, including ignored evidence under `logs/`.
+  Git porcelain labels alone are not a write detector because already-dirty
+  files may be rewritten without changing status. Missing tracked files are
+  stable tombstones in that manifest, not stale-path failures.
 - Codex Exec sets the current attempt directory as the sandbox workspace root and grants `workspace-write` only there for handshake and candidate evidence. The repository root is not the child workspace. Formal outputs remain parent-owned, and no reviewed or unrelated repository path is child-writable.
 - Manual and specialized-agent modes remain external execution boundaries. The repository runner v1 owns only isolated Codex Exec execution.
 - The runner atomically writes formal reviewer or verifier sidecars from schema-valid child candidate output. The model cannot directly overwrite formal role output. Completed reviewer and verifier payloads revalidate frozen launch authority immediately before publication; if that pre-publication check fails, the prior formal bytes remain unchanged and the attempt fails. An explicit child failure is a retryable transport failure and does not replace the pending formal reviewer output.
@@ -142,7 +147,8 @@ P2 command results reference both their immutable event sidecar and the shared a
   controlled producer/consumer composition before repair re-entry. Present
   changed paths are content-hash bound and deleted paths use explicit
   tombstones. Each composition check covers a changed path, uses declared
-  direct consumers, and binds its receipt as a validation reference. Repair
+  direct consumers, keeps producer and consumer path sets disjoint, and binds
+  its receipt as a validation reference. Repair
   paths, inventory matches, composition bindings, registries, receipts, tests,
   and validation evidence must all belong to the same minimal review closure.
   A successful focused repair verification closes ordinary Round 1 repair
@@ -165,7 +171,26 @@ P2 command results reference both their immutable event sidecar and the shared a
   remaining unverified verifier decision, bind the confirmed finding set,
   replay current repair completeness, require explicit maintainer
   acknowledgement, and preserve all Bootstrap evidence as blocked history.
-  Bootstrap does not emit or reinterpret `acceptance-passed`.
+  Bootstrap does not emit or reinterpret `acceptance-passed`. The independently
+  reviewed closure protocol binds the repository Bootstrap producer, Bootstrap
+  Skill, public Acceptance CLI, review-cycle policy, Acceptance lineage/replay
+  consumers, its final output schema, and the other protocol authorities by
+  current bytes; finalization rejects schema revision drift. Request paths are
+  normalized to repository-relative identity before replay, and finding-repair
+  ordering is canonical rather than caller-authoritative.
+- A closure-protocol lineage already blocked at Round 3 may perform one
+  same-round hard-limit focused recovery. The CLI binds explicit user
+  confirmation, recommendation/confidence, the exact blocked v3 envelope and
+  finding set, and current deterministic repair evidence. The run uses only
+  `focused_repair_verifier`, remains `verification_only`, is excluded from
+  semantic-round accounting, and rejects discovery, new blockers, escalation,
+  stale repair bytes, or a non-blocked/different predecessor. Its composite
+  authority may authorize only `manual-pause-protocol-review`; it cannot
+  authorize Acceptance, commit, release, discovery, or Round 4.
+- A hard-limit composite replays its focused envelope and authority from current
+  bytes, then validates the hash-bound blocked predecessor envelope as frozen
+  history. It does not revalidate the predecessor's historical repair closure
+  against the newer protocol revision covered by the focused verifier.
 - Omitting an unchanged predecessor artifact from a bounded repair scope is not
   deletion. A predecessor artifact is deleted only when the live path is
   absent. Its frozen old bytes enter the current Artifact View deleted tree and

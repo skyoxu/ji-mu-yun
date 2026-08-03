@@ -1,0 +1,33 @@
+{
+  "accepted_adr": {
+    "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+    "sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254"
+  },
+  "evolution_sources": [
+    {
+      "path": "docs/know1.txt",
+      "sha256": "aa221f7afc57508163ffb45929195b49aec610313b313059a646a644d083f4e7"
+    },
+    {
+      "path": "docs/know2.txt",
+      "sha256": "d4a040f1f6d4d48b9722f5c6b2629e7593ea754fa9262235531516ffd141a965"
+    },
+    {
+      "path": "docs/know3.txt",
+      "sha256": "025cd31cf2d92b1cca804012608081971881195884e7a4277be143da9621af40"
+    },
+    {
+      "path": "docs/know4.txt",
+      "sha256": "d1fc0b9083086abe8f44e93feb870d557388cf6b6dbd36407dd54ae852a57455"
+    },
+    {
+      "path": "docs/know5.txt",
+      "sha256": "4072f73efe574d97161879a1a8a4e1356595d5082e880a22f0802ad21cbcf44f"
+    }
+  ],
+  "original_requirements": {
+    "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan.md",
+    "sha256": "2aa794d6b7703e525b142e7c588496b651cdf8f336a5005c7a99fd931e5f600e"
+  },
+  "schema_version": "jimuyun.knowledge-source-provenance.v1"
+}

@@ -388,9 +388,17 @@ def audit_repair_completeness_command(request_path: str, output_path: str) -> di
 
 
 def prepare_manual_pause_closure_command(request_path: str, output_path: str) -> dict:
+    request = _read_json(request_path)
+    if not isinstance(request, dict) or not isinstance(request.get("repositoryRoot"), str):
+        raise InputError("manual-pause closure repository root is invalid")
+    repository_root = Path(request["repositoryRoot"]).resolve()
+    try:
+        source_request = Path(request_path).resolve().relative_to(repository_root).as_posix()
+    except ValueError as exc:
+        raise InputError("manual-pause closure request must be inside repository root") from exc
     return _publish_new_json(
         output_path,
-        prepare_manual_pause_closure(_read_json(request_path), Path(request_path).as_posix()),
+        prepare_manual_pause_closure(request, source_request),
     )
 
 

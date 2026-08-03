@@ -1,0 +1,158 @@
+{
+  "$id": "jimuyun.hosted-caller-inventory.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "callers": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "callsite_fingerprint": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "callsite_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "column": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "context_envelope_status": {
+            "const": "unassessed"
+          },
+          "line": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "migration_status": {
+            "const": "unassessed"
+          },
+          "path": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "reachability_status": {
+            "const": "unassessed"
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "symbol": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "callsite_id",
+          "path",
+          "line",
+          "column",
+          "symbol",
+          "source_sha256",
+          "callsite_fingerprint",
+          "reachability_status",
+          "migration_status",
+          "context_envelope_status"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "entrypoint_family": {
+      "enum": [
+        "codex-hosted",
+        "llm-route-engine",
+        "python-backend"
+      ]
+    },
+    "excluded_candidates": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "callsite_fingerprint": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "callsite_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "column": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "context_envelope_status": {
+            "const": "unassessed"
+          },
+          "line": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "migration_status": {
+            "const": "unassessed"
+          },
+          "path": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "reachability_status": {
+            "const": "unassessed"
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "symbol": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "callsite_id",
+          "path",
+          "line",
+          "column",
+          "symbol",
+          "source_sha256",
+          "callsite_fingerprint",
+          "reachability_status",
+          "migration_status",
+          "context_envelope_status"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "generated_by": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "jimuyun.hosted-caller-inventory.v1"
+    },
+    "source_snapshot_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "entrypoint_family",
+    "source_snapshot_id",
+    "generated_by",
+    "callers",
+    "excluded_candidates"
+  ],
+  "type": "object"
+}

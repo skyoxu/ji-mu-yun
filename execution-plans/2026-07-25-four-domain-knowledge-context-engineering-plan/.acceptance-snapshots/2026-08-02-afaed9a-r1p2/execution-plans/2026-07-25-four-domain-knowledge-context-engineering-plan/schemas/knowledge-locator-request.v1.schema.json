@@ -1,0 +1,219 @@
+{
+  "$id": "jimuyun.knowledge-locator-request.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "caller": {
+      "additionalProperties": false,
+      "properties": {
+        "caller_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "caller_type": {
+          "enum": [
+            "human",
+            "cli",
+            "skill",
+            "tool",
+            "mcp",
+            "phase-route"
+          ]
+        },
+        "intent_source": {
+          "enum": [
+            "human",
+            "llm",
+            "deterministic-tool"
+          ]
+        }
+      },
+      "required": [
+        "caller_id",
+        "caller_type",
+        "intent_source"
+      ],
+      "type": "object"
+    },
+    "intent": {
+      "additionalProperties": false,
+      "properties": {
+        "consumer_ref": {
+          "minLength": 1,
+          "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "keywords": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "preferred_modules": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "primary_domain_hint": {
+          "enum": [
+            "toolchain",
+            "phase",
+            "workspace",
+            "marketplace",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "query": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "query",
+        "consumer_ref",
+        "keywords",
+        "preferred_modules",
+        "primary_domain_hint"
+      ],
+      "type": "object"
+    },
+    "request_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "jimuyun.knowledge-locator-request.v1"
+    },
+    "trusted_envelope": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_domains": {
+          "items": {
+            "enum": [
+              "toolchain",
+              "phase",
+              "workspace",
+              "marketplace"
+            ]
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "authority_ref": {
+          "const": "refs/heads/main"
+        },
+        "dirty_worktree_authority": {
+          "const": false
+        },
+        "implicit_fetch": {
+          "const": false
+        },
+        "max_results": {
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "max_source_bytes": {
+          "maximum": 1048576,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "owner": {
+          "enum": [
+            "adapter",
+            "server-registry",
+            "llm"
+          ]
+        },
+        "path_policy": {
+          "additionalProperties": false,
+          "properties": {
+            "allowed_path_prefixes": {
+              "items": {
+                "minLength": 1,
+                "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "policy_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "policy_revision": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "policy_id",
+            "policy_revision",
+            "policy_sha256",
+            "allowed_path_prefixes"
+          ],
+          "type": "object"
+        },
+        "permission_source": {
+          "enum": [
+            "local-policy",
+            "server-registry"
+          ]
+        },
+        "source_commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "source_snapshot_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "trace_id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "owner",
+        "authority_ref",
+        "source_commit",
+        "source_snapshot_id",
+        "allowed_domains",
+        "path_policy",
+        "permission_source",
+        "max_results",
+        "max_source_bytes",
+        "trace_id",
+        "implicit_fetch",
+        "dirty_worktree_authority"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "caller",
+    "intent",
+    "trusted_envelope"
+  ],
+  "type": "object"
+}

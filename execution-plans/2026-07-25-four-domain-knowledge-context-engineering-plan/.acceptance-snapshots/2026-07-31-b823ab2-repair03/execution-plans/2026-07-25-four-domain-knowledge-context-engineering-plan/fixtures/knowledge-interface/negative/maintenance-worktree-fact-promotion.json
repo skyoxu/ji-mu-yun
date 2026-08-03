@@ -1,0 +1,67 @@
+{
+  "expected_failure_code": "worktree_fact_promotion",
+  "expected_result": "fail",
+  "fixture_id": "maintenance-worktree-fact-promotion",
+  "kind": "negative",
+  "operation": "maintenance",
+  "request": {
+    "append_only_log": true,
+    "authority": {
+      "authority_ref": "refs/heads/main",
+      "dirty_worktree_authority": false,
+      "implicit_fetch": false,
+      "main_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923"
+    },
+    "discovery_policy": "target-scoped",
+    "knowledge_snapshot_id": "knowledge-snapshot-001",
+    "knowledge_write_classes": [
+      "projection",
+      "index",
+      "maintenance-log"
+    ],
+    "log_root": "logs/knowledge-context",
+    "mode": "targeted",
+    "request_id": "maintenance-negative-002",
+    "schema_version": "jimuyun.knowledge-maintenance-request.v1",
+    "skill_id": "maintain-knowledge-base",
+    "source_write_policy": "forbidden",
+    "target": {
+      "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "kind": "execution-plan",
+      "repo_relative_path": "execution-plans/synthetic-plan/",
+      "snapshot_kind": "worktree"
+    }
+  },
+  "result": {
+    "after_snapshot_id": "knowledge-snapshot-invalid",
+    "before_snapshot_id": "knowledge-snapshot-001",
+    "entries": [
+      {
+        "after_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "authority_status": "main-backed",
+        "before_sha256": null,
+        "changed_fields": [
+          "new_entry"
+        ],
+        "disposition": "added",
+        "entry_id": "synthetic-plan.promoted",
+        "source_path": "execution-plans/synthetic-plan/00-index.md",
+        "source_snapshot_kind": "worktree"
+      }
+    ],
+    "lkg_disposition": "preserved",
+    "log": {
+      "append_only": true,
+      "failure_code": "worktree_fact_promotion",
+      "log_ref": "logs/knowledge-context/2026-07-25/maintenance-negative-002/result.v1.json",
+      "main_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923"
+    },
+    "main_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+    "mode": "targeted",
+    "request_id": "maintenance-negative-002",
+    "schema_version": "jimuyun.knowledge-maintenance-result.v1",
+    "source_mutation_count": 0,
+    "status": "failed"
+  },
+  "schema_version": "jimuyun.knowledge-interface-fixture.v1"
+}

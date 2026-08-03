@@ -75,3 +75,10 @@ This report is append-only continuity evidence. It has `authorizes: []` and cann
 - Added the main-pinned `repository-rules` catalog seed and verified it through the maintenance Skill without promoting dirty worktree source bytes as facts.
 - Updated the Locator CLI to return the stable request-bound location-only result envelope required by `knowledge/contracts/knowledge-locator-result.v1.schema.json`.
 - Replayed RMAP-S0 through RMAP-S7 under the current identity. `RUN-20260727T021207-941188` passed the registered terminal predicate; this remains implementation completion evidence only and authorizes no acceptance, release, deployment, handoff, or archive.
+
+## 2026-08-03: Acceptance prerequisite repair closure
+
+- Refreshed compatible authority hashes and replaced the stale VDD knowledge context through the canonical Locator and freeze producer against knowledge generation `1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf`.
+- Repaired the publication integration fixture so its temporary Git for Windows checkout excludes generated acceptance snapshots and supports repository long paths without changing evaluator or Locator inputs.
+- Added the publication test to the RMAP-S7 write, snapshot, and dependency boundaries, then passed 16 publication tests, 25 plan-validator tests, and the registered terminal predicate in `RUN-20260803T044719-632990Z`.
+- `repair/round-1/repair-closure.json` binds the three historical findings to current repair and slice evidence. It remains non-authorizing pending Acceptance-owned completeness audit and independent focused verification.

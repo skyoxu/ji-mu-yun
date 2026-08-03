@@ -1,0 +1,87 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-26-knowledge-locator-workflow-integration",
+  "authorityGraphChanged": false,
+  "authorizes": [],
+  "baselineManifestHash": "sha256:3684c7935c5e86a431b29e08103367ae4c3fdc9163cfed9f76769597f5df66c3",
+  "baselineManifestPath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/acceptance-inputs/2026-08-03-f3bb60c-repair-r1p2/baseline-content-manifest.v1.json",
+  "candidateManifestHash": "sha256:3523188c40a53468178c7bc797773eca8e65637b14c5778cfe56d30dbd8c7dbc",
+  "candidateManifestPath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/acceptance-inputs/2026-08-03-f3bb60c-repair-r1p2/candidate-content-manifest.v1.json",
+  "changedPaths": [
+    "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+    "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+    "knowledge/indexes/current.json",
+    "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/evaluation/query-report.v1.json",
+    "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/consumer-policies.v2.json",
+    "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/repository-knowledge-query-suite.v1.json",
+    "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/source-exclusions.v1.json",
+    "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/consumer-projections.v1.json",
+    "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v1.json",
+    "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v2.json",
+    "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-source-snapshot.v1.json",
+    "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/manifest.json",
+    "knowledge/indexes/last-known-good.json",
+    "knowledge/projections/consumer-projections.v1.json",
+    "knowledge/snapshots/repository-source-snapshot.v1.json",
+    "scripts/python/tests/test_knowledge_workflow_terminal.py",
+    "scripts/python/tests/test_publish_knowledge_catalog.py"
+  ],
+  "compositionChecks": [
+    {
+      "checkId": "kwi-repair-composition",
+      "commandRegistryPath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-command-registry.v1.json",
+      "consumerPaths": [
+        "scripts/python/publish_knowledge_catalog.py",
+        "scripts/python/validate_knowledge_workflow_integration.py"
+      ],
+      "producerPaths": [
+        "scripts/python/tests/test_knowledge_workflow_terminal.py",
+        "scripts/python/tests/test_publish_knowledge_catalog.py"
+      ],
+      "receiptPath": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.v1.json"
+    }
+  ],
+  "directConsumers": [
+    "scripts/python/publish_knowledge_catalog.py",
+    "scripts/python/validate_knowledge_workflow_integration.py"
+  ],
+  "highRiskBoundaryChanged": false,
+  "lineageFamilyId": "knowledge-locator-workflow-plan-v1",
+  "novelP0P1FindingIds": [],
+  "predecessorRun": "logs/ci/2026-07-26/review-gateway-bootstrap-knowledge-locator-workflow-plan-r1-20260726",
+  "repositoryRoot": "C:\\jimuyun",
+  "rootCauseInventories": [
+    {
+      "addressedPaths": [
+        "scripts/python/tests/test_knowledge_workflow_terminal.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "terminal-consumer-contract",
+      "searchRoots": [
+        "scripts/python/tests"
+      ],
+      "searchTerm": "module.CONSUMERS"
+    },
+    {
+      "addressedPaths": [
+        "scripts/python/tests/test_publish_knowledge_catalog.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "windows-long-path-checkout",
+      "searchRoots": [
+        "scripts/python/tests"
+      ],
+      "searchTerm": "core.sparseCheckout"
+    }
+  ],
+  "schemaVersion": "acceptance-repair-completeness-request.v1",
+  "semanticRoundsConsumed": 1,
+  "targetedTests": [
+    "scripts/python/tests/test_knowledge_workflow_terminal.py",
+    "scripts/python/tests/test_publish_knowledge_catalog.py"
+  ],
+  "validationRefs": [
+    "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/composition-receipt.v1.json",
+    "execution-plans/2026-07-26-knowledge-locator-workflow-integration/repair/round-1/repair-closure.json",
+    "logs/tdd-adapter/knowledge-locator-workflow-integration/RMAP-S7/RUN-20260803T044719-632990Z/implementation-complete-result.json"
+  ]
+}

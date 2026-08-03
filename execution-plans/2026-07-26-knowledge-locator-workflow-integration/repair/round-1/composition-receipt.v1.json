@@ -1,0 +1,103 @@
+{
+  "authorizes": [],
+  "commandId": "kwi-repair-composition",
+  "commandRegistryHash": "sha256:91aa6801107cc92baf93ec332cfc3c2d802585a8ef51cc7ccca58ad24fbb0791",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": "scripts/python/publish_knowledge_catalog.py",
+      "sha256": "sha256:5faec98277e3d4200fe9c7c525d85c9b317c0f986a8450e316c72faeb7895da2"
+    },
+    {
+      "path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "sha256": "sha256:2a256dfa5c9e7cfbfab469ebbf2a58f5483e9b0cb38e431944b0aacaad54a10f"
+    },
+    {
+      "path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+      "sha256": "sha256:dc84738fbbc316fec8cd8f2e01a10673de9c9e34365a3555d8991272a3f210a4"
+    },
+    {
+      "path": "scripts/python/validate_knowledge_workflow_integration.py",
+      "sha256": "sha256:245aa1ac1d3529f94665bcb88c1b92a594fbec5396f830cd19a92671d89f9e3d"
+    }
+  ],
+  "inputBindingsHash": "sha256:3d967144a5e086bed1efaef48c4b165236d1979a2e54afe963d55077211a34aa",
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "-c",
+      "import subprocess,sys; commands=[[sys.executable,'-B','-m','unittest','scripts.python.tests.test_knowledge_workflow_terminal.KnowledgeWorkflowTerminalTests.test_terminal_requires_all_consumers'],[sys.executable,'-B','-m','unittest','scripts.python.tests.test_publish_knowledge_catalog']]; raise SystemExit(max(subprocess.run(command).returncode for command in commands))",
+      "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "scripts/python/tests/test_publish_knowledge_catalog.py",
+      "scripts/python/validate_knowledge_workflow_integration.py",
+      "scripts/python/publish_knowledge_catalog.py"
+    ],
+    "commandId": "kwi-repair-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 300
+  },
+  "invocationHash": "sha256:6ee65077897667be93f11af25b53a30e8fe3628e5d432f71c02701fefe7caef9",
+  "processResult": {
+    "commandId": "kwi-repair-composition",
+    "exitCode": 0,
+    "stderrSha256": "sha256:34f63e9e0580e95cd273b7d3a40311f3cdc9d1540ac67bd36abda9d06c1e1763",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:44b0f74c87f92156def5c062db93ef0e0efe2a4a64f4930a0c097b4a349b9900",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

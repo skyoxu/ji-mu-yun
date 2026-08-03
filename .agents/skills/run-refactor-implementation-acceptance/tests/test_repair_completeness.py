@@ -8,6 +8,7 @@ import tempfile
 import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -103,6 +104,50 @@ class RepairCompletenessTests(unittest.TestCase):
             ["nested/AGENTS.md"],
         )
         self.assertEqual(["nested/AGENTS.md"], authority)
+
+    def test_adopted_lineage_accepts_legacy_change_id_at_current_head(self) -> None:
+        import repair_completeness
+
+        predecessor = self.root / "logs" / "legacy-round-3"
+        predecessor.mkdir()
+        manifest = {
+            "reviewId": "legacy-review-r3",
+            "changeId": "legacy-change-id",
+            "fullReviewRound": 3,
+            "inputHash": "sha256:" + "a" * 64,
+            "predecessorRun": None,
+        }
+        (predecessor / "review-input.json").write_text(
+            json.dumps(manifest), encoding="utf-8", newline="\n"
+        )
+        lineage = {
+            "semanticRoundsConsumed": 3,
+            "runs": [{
+                "runDirectory": "logs/legacy-round-3",
+                "reviewId": manifest["reviewId"],
+                "changeId": manifest["changeId"],
+                "fullReviewRound": 3,
+                "inputHash": manifest["inputHash"],
+            }],
+        }
+        module = types.SimpleNamespace(
+            BootstrapError=ValueError,
+            build_lineage_state=lambda *_args: lineage,
+            ensure_within=lambda path, *_args: Path(path),
+            read_json=lambda path: json.loads(Path(path).read_text(encoding="utf-8")),
+            blocker_finding_lineage=lambda *_args: {},
+        )
+
+        with mock.patch.object(repair_completeness, "_bootstrap_module", return_value=module):
+            novel, authority, high_risk = repair_completeness._derive_review_escalation(
+                self.root,
+                "ria-adopted-family",
+                3,
+                "logs/legacy-round-3",
+                ["src/producer.py"],
+            )
+
+        self.assertEqual(([], [], []), (novel, authority, high_risk))
 
     def _write_receipt(self, exit_code: int) -> None:
         from acceptance_core import canonical_hash
@@ -275,6 +320,29 @@ class RepairCompletenessTests(unittest.TestCase):
 
         self._write_receipt(1)
         with self.assertRaisesRegex(repair_completeness.InputError, "invalid or failed"):
+            repair_completeness.audit_repair_completeness(self.request())
+
+    def test_audit_rejects_self_composition(self) -> None:
+        import repair_completeness
+
+        request = self.request()
+        request["compositionChecks"][0]["consumerPaths"] = ["src/producer.py"]
+        request["directConsumers"] = ["src/producer.py"]
+        with self.assertRaisesRegex(repair_completeness.InputError, "must be distinct"):
+            repair_completeness.audit_repair_completeness(request)
+
+    def test_audit_rejects_a_self_consistent_forged_stdout_receipt(self) -> None:
+        import repair_completeness
+        from acceptance_core import canonical_hash
+
+        receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
+        receipt["processResult"]["stdout"] = "forged output"
+        receipt["processResult"]["stdoutSha256"] = self._hash_bytes(b"forged output")
+        receipt["processResultHash"] = canonical_hash(receipt["processResult"])
+        self.receipt_path.write_text(
+            json.dumps(receipt), encoding="utf-8", newline="\n"
+        )
+        with self.assertRaisesRegex(repair_completeness.InputError, "controlled replay"):
             repair_completeness.audit_repair_completeness(self.request())
 
     def test_audit_rejects_a_receipt_bound_to_a_stale_registry(self) -> None:

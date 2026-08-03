@@ -1,0 +1,22 @@
+{
+  "schema_version": "ria.command-registry.v1",
+  "commands": [
+    {
+      "id": "kwi-repair-composition",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-c",
+        "import subprocess,sys; commands=[[sys.executable,'-B','-m','unittest','scripts.python.tests.test_knowledge_workflow_terminal.KnowledgeWorkflowTerminalTests.test_terminal_requires_all_consumers'],[sys.executable,'-B','-m','unittest','scripts.python.tests.test_publish_knowledge_catalog']]; raise SystemExit(max(subprocess.run(command).returncode for command in commands))",
+        "scripts/python/tests/test_knowledge_workflow_terminal.py",
+        "scripts/python/tests/test_publish_knowledge_catalog.py",
+        "scripts/python/validate_knowledge_workflow_integration.py",
+        "scripts/python/publish_knowledge_catalog.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "shell": false
+    }
+  ]
+}

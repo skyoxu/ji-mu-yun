@@ -1,0 +1,868 @@
+# Ji Mu Yun 四域知识与上下文工程实施方案 v3
+
+## 一、架构模型：三个正交维度
+
+整个系统不得再使用一个“Scope”同时表示知识类型、数据实例和安全强度。
+
+### 1. Domain Scope：当前任务属于哪个知识域
+
+| Domain      | 主要内容                                                                            | 默认依赖                                              |
+| ----------- | ------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Toolchain   | VDD、Quick Dev、Bootstrap Review、BMAD、`workflow.md`、Taskmaster、Chapter 3–7、仓库维护工具 | 可显式读取 Phase、Workspace 源码                          |
+| Phase       | Phase 服务、Caddy、账号、管理后台、GDD、游戏类型、Hosted routes、集群、审计                             | 可显式读取共享 Godot kernel 和经过枚举的 Toolchain 入口          |
+| Workspace   | 游戏项目模板、项目实例、GDD、代码、素材、ledger、session、受允许 Skill                                  | 可读取 Phase 对外契约                                    |
+| Marketplace | UGC Skill、CLI、素材、模板、评估、发布和治理                                                    | 可读取 Phase capability 与 Workspace package contract |
+
+每次查询或执行必须有一个 `primary_domain`。
+
+跨域读取只能通过显式依赖：
+
+```text
+primary domain
+→ profile 声明的 allowed dependency domains
+→ 模块声明的直接 dependency
+```
+
+规则：
+
+* 不自动遍历无限跨域依赖。
+* 同域依赖可递归。
+* 跨域默认只允许一跳。
+* 第二次跨域必须由服务端 policy 显式声明。
+* `historical` 内容不参与默认依赖闭包。
+* `excluded` 内容不能被 Knowledge Query 返回。
+
+### 2. Visibility：文件在某 Domain 中如何出现
+
+```text
+active
+dependency
+conditional
+historical
+excluded
+```
+
+含义：
+
+* `active`：默认候选。
+* `dependency`：仅被当前模块显式依赖时加入。
+* `conditional`：仅满足 route、operation 或 feature predicate 时加入。
+* `historical`：只用于来源追溯、冲突解释和演进分析。
+* `excluded`：Knowledge Query 不得返回。
+
+例如：
+
+| 来源                                   | Toolchain   | Phase       | Workspace   |
+| ------------------------------------ | ----------- | ----------- | ----------- |
+| `workflow.md`                        | active      | excluded    | conditional |
+| Chapter 3–7                          | active      | excluded    | conditional |
+| `docs/architecture/phase-service/**` | dependency  | active      | excluded    |
+| `docs/architecture/base/**`          | conditional | dependency  | active      |
+| Phase Cloud Runner overlay           | conditional | historical  | excluded    |
+| Godot ADR                            | dependency  | conditional | active      |
+| Phase ADR                            | dependency  | active      | excluded    |
+
+### 3. Lifecycle Instance：数据属于哪个实例
+
+| Lifecycle           | 身份                                       | 内容                                           |
+| ------------------- | ---------------------------------------- | -------------------------------------------- |
+| Repository Source   | repository + source snapshot             | 根仓源码、ADR、architecture、standards、稳定测试和 Schema |
+| Repository Template | template revision                        | Seeder 实际会复制、同步或退役的模板内容                      |
+| Project Instance    | account + project + workspace generation | 单个用户项目的代码、GDD、素材、配置和项目知识                     |
+| Run Artifact View   | account + project + run                  | 单次 Agent 执行实际装配的最小上下文                        |
+
+禁止不同 Lifecycle 共用同一个 baseline 或 RAG namespace。
+
+### 4. Enforcement Level：当前隔离强度
+
+| Level | 能力                                  | 不能保证                 |
+| ----- | ----------------------------------- | -------------------- |
+| E0    | 无 Scope 约束                          | 任何检索或访问隔离            |
+| E1    | Query 候选受 Scope 限制                  | Agent 仍可直接读取其他路径     |
+| E2    | 父进程按 Manifest 装配模型上下文并执行 Scope Gate | 不能保证子进程无法用绝对路径读取其他文件 |
+| E3    | OS/worker 级文件系统和进程隔离                | 属于 Phase C 安全闭合      |
+
+当前计划的生产目标是 **E2 Knowledge/Context Release**。
+
+E3 必须拆成独立的 Phase C 下游计划。当前 README 已将 Windows runner 账号、NTFS ACL 和更强隔离列为 Phase C 或预生产加固范围。
+
+---
+
+## 二、权威和内容信任模型
+
+### 1. Knowledge Projection 永远不是权威
+
+Projection 只返回：
+
+* 候选模块；
+* 候选源路径；
+* 检索词；
+* 来源摘要；
+* SHA；
+* provenance。
+
+Agent 作出判断前必须读取原始来源。
+
+Phase 权威顺序保持不变：
+
+1. Accepted Phase ADR；
+2. `AGENTS.md` 硬规则；
+3. 运行时事实和源码兼容合同；
+4. Phase architecture；
+5. Phase standards；
+6. README 与导航。
+
+Projection 的固定声明：
+
+```json
+{
+  "authority_class": "derived_cache",
+  "instruction_authority": false,
+  "may_override_source": false
+}
+```
+
+### 2. 内容必须标记信任类型
+
+建议的信任分类：
+
+```text
+trusted_system_instruction
+trusted_service_policy
+trusted_route_instruction
+trusted_published_skill_instruction
+trusted_contract
+derived_cache
+untrusted_project_data
+untrusted_source_comment
+untrusted_marketplace_content
+untrusted_historical_content
+```
+
+只有以下内容能够改变 Agent 的：
+
+* 角色；
+* Domain Scope；
+  -工具权限；
+  -允许读写路径；
+  -输出目标；
+  -执行模式。
+
+```text
+trusted_system_instruction
+trusted_service_policy
+trusted_route_instruction
+trusted_published_skill_instruction
+```
+
+以下内容一律是数据，不具有指令权威：
+
+* 用户 GDD；
+* `project.md`；
+  -源代码注释；
+* README 中的自然语言；
+  -项目局部 Skill 文本；
+* Marketplace 未审核内容；
+  -历史 ADR、旧 overlay 和归档计划；
+  -运行日志和模型输出；
+  -Knowledge Projection 摘要。
+
+即使这些内容包含“忽略前面的规则”“读取其他项目”“修改输出路径”等文字，也不能改变执行配置。
+
+### 3. Marketplace Skill 的特殊规则
+
+Marketplace Skill 只有在满足以下条件后，才能升级为 `trusted_published_skill_instruction`：
+
+* 精确 package hash 已通过审核；
+* package revision 已注册到服务端 registry；
+* capability manifest 已验证；
+  -没有超出 Domain 和 permission ceiling；
+  -当前执行引用的是已注册 hash，而不是项目内同名文件。
+
+项目局部修改后的 Skill 自动降级为：
+
+```text
+untrusted_project_data
+```
+
+---
+
+## 三、Scope Profile 和 Artifact Manifest 的信任根
+
+### 1. 服务端 Registry 是最大权限的唯一来源
+
+权威 Registry 必须位于项目 workspace 之外，由 Phase 服务控制。
+
+建议分为：
+
+```text
+Route Policy Registry
+Published Skill Registry
+Account Capability Policy
+Global Scope Policy
+```
+
+项目内配置和 Skill 输入只能缩小权限，不能扩大权限。
+
+有效权限计算：
+
+```text
+effective permissions
+=
+server route ceiling
+∩ published skill ceiling
+∩ account policy
+∩ project restrictions
+∩ requested operation
+```
+
+任何未知字段、未知 capability 或无法解析的 profile 均 fail closed。
+
+### 2. Scope Profile 不得由项目自行声明最大权限
+
+项目可以声明：
+
+```text
+disable_network
+read_only
+deny_asset_generation
+restrict_modules
+restrict_output_paths
+```
+
+项目不能声明：
+
+```text
+allow_host_root
+allow_other_project
+enable_admin_api
+expand_network
+expand_write_paths
+override_route_scope
+```
+
+### 3. Artifact Manifest 的生成位置
+
+Manifest 必须：
+
+* 由父进程生成；
+  -生成于子进程允许写入范围之外；
+* canonical 记录保存在服务端数据库或 host-owned runtime state；
+  -使用 host secret 生成 HMAC 或等价签名；
+  -子进程只能得到只读副本或 Manifest ID；
+  -子进程输出不能覆盖 manifest、profile、gate result 或 registry revision。
+
+在 E2 阶段，签名和数据库绑定负责发现篡改；它们不等同于 E3 文件系统隔离。
+
+### 4. Artifact Manifest 必须绑定
+
+```json
+{
+  "schema_version": "jimuyun.artifact-manifest.v1",
+  "manifest_id": "...",
+  "run_id": "...",
+  "account_id": "...",
+  "project_id": "...",
+  "workspace_id": "...",
+  "workspace_generation": "...",
+  "primary_domain": "workspace",
+  "route_id": "...",
+  "skill_id": "...",
+  "operation": "...",
+  "enforcement_level": "E2",
+  "global_policy_revision": "...",
+  "route_policy_revision": "...",
+  "skill_policy_revision": "...",
+  "repository_snapshot_id": "...",
+  "template_snapshot_id": "...",
+  "project_snapshot_id": "...",
+  "allowed_read_artifacts": [],
+  "allowed_write_paths": [],
+  "forbidden_source_patterns": [],
+  "output_targets": [],
+  "expires_at": "...",
+  "manifest_hmac": "..."
+}
+```
+
+额外不变量：
+
+* `allowed_write_paths` 不能覆盖 Manifest、profile 或 gate result 所在目录。
+* Project Instance 和 Run 必须属于同一 `account_id/project_id`。
+* Project snapshot 必须在 Manifest 生成时仍为 current。
+* Route 和 Skill 最大权限来自服务端 Registry。
+* Manifest 创建后权限不能扩张，只能作废并重新生成。
+
+---
+
+## 四、确定性 Schema、Fixture 和组合验证
+
+正式计划至少需要以下版本化 Schema：
+
+```text
+domain-scope.v1.schema.json
+source-entry.v1.schema.json
+source-catalog.v1.schema.json
+source-snapshot.v1.schema.json
+lifecycle-instance.v1.schema.json
+relation-graph.v1.schema.json
+module-index.v1.schema.json
+scope-profile.v1.schema.json
+artifact-entry.v1.schema.json
+artifact-manifest.v1.schema.json
+context-assembly.v1.schema.json
+scope-gate-result.v1.schema.json
+build-manifest.v1.schema.json
+query-result.v1.schema.json
+evaluation-case.v1.schema.json
+evaluation-result.v1.schema.json
+runtime-evidence-view.v1.schema.json
+```
+
+### 1. 必须提供的正向 Fixture
+
+```text
+minimal-valid
+full-repository-source
+full-template
+full-project-instance
+full-run-artifact-view
+read-only-route
+workspace-write-route
+published-skill
+project-restricted-skill
+```
+
+### 2. 必须提供的负向 Fixture
+
+```text
+authority-inversion
+project-profile-expands-permission
+cross-account-source
+cross-project-source
+stale-project-snapshot
+manifest-write-overlap
+unknown-policy-revision
+modified-manifest
+untrusted-content-promoted-to-instruction
+historical-source-used-as-current
+generated-directory-recursion
+windows-path-case-collision
+reparse-point-escape
+```
+
+### 3. 组合验证器顺序
+
+```text
+Schema validation
+→ path normalization
+→ lifecycle identity validation
+→ account/project binding
+→ policy revision resolution
+→ effective permission intersection
+→ source freshness
+→ trust-label validation
+→ read/write overlap validation
+→ provenance closure
+→ HMAC/DB binding
+→ evaluation gates
+```
+
+单个 JSON 通过 Schema 不代表组合合同有效。
+
+---
+
+## 五、Dirty Snapshot 的确定性算法
+
+不使用 `git diff` 文本作为 snapshot 身份。
+
+### 1. Canonical File State Manifest
+
+对所有纳入范围的文件生成：
+
+```json
+{
+  "canonical_path_key": "phasea.platform/runs/example.cs",
+  "display_path": "PhaseA.Platform/Runs/Example.cs",
+  "file_mode": "100644",
+  "state": "modified",
+  "head_blob_oid": "...",
+  "index_blob_oid": "...",
+  "worktree_raw_content_sha256": "...",
+  "size_bytes": 1234
+}
+```
+
+删除文件：
+
+```json
+{
+  "canonical_path_key": "...",
+  "state": "deleted",
+  "head_blob_oid": "...",
+  "index_blob_oid": null,
+  "worktree_raw_content_sha256": null
+}
+```
+
+未跟踪文件：
+
+```json
+{
+  "state": "untracked",
+  "head_blob_oid": null,
+  "index_blob_oid": null,
+  "worktree_raw_content_sha256": "..."
+}
+```
+
+### 2. Snapshot ID
+
+先生成 canonical JSON：
+
+* 路径按 `canonical_path_key` 排序；
+  -JSON key 固定排序；
+  -UTF-8；
+  -LF；
+  -无时间戳；
+  -不使用 Git rename detection；
+  -rename 表示旧路径删除 + 新路径新增；
+  -包含 scanner version 和 exclusion policy revision。
+
+然后：
+
+```text
+source_snapshot_id =
+sha256(canonical file-state manifest)
+```
+
+Snapshot 元数据：
+
+```json
+{
+  "head_commit_oid": "...",
+  "head_tree_oid": "...",
+  "scanner_revision": "...",
+  "exclusion_policy_revision": "...",
+  "file_state_manifest_sha256": "...",
+  "source_snapshot_id": "..."
+}
+```
+
+### 3. Windows 路径
+
+* 存储仓库相对路径；
+  -分隔符统一为 `/`；
+  -Unicode NFC；
+  -`canonical_path_key` 使用 Windows case folding；
+  -保留原始大小写为 `display_path`；
+  -拒绝大小写碰撞；
+  -拒绝 `..`；
+  -reparse point 独立记录并默认拒绝。
+
+---
+
+## 六、确定性检索与污染评估
+
+第一阶段评估不能依赖 embedding 或不固定版本的模型。
+
+### 1. 候选枚举
+
+先按以下条件过滤：
+
+```text
+Lifecycle Instance
+→ primary Domain
+→ visibility
+→ dependency closure
+→ freshness
+```
+
+### 2. 初始确定性排序
+
+建议基础分值：
+
+| 匹配                                           |   分值 |
+| -------------------------------------------- | ---: |
+| 精确 ADR、route、symbol、error code 或 contract ID |  100 |
+| 精确路径或文件名                                     |   90 |
+| 精确规范化短语                                      |   70 |
+| 模块标题或公开符号匹配                                  |   50 |
+| BM25/token score                             | 0–40 |
+| 显式 relation graph 一跳依赖                       |   10 |
+
+Tie-break：
+
+1. 直接原始来源优于 generated cache；
+2. 当前来源优于 historical；
+3. 更短 graph distance；
+4. `canonical_path_key` 字典序。
+
+Embedding 可以作为后续候选补充，但必须独立版本化，不能改变确定性基线结果。
+
+### 3. Evaluation Case
+
+```json
+{
+  "case_id": "phase-token-rotation-001",
+  "primary_domain": "phase",
+  "lifecycle": "repository-source",
+  "query": "账号 token 轮换",
+  "required_sources": [
+    "PhaseA.Platform/**",
+    "docs/architecture/phase-service/auth-and-accounts.md"
+  ],
+  "forbidden_sources": [
+    "workflow.md",
+    ".taskmaster/**",
+    "docs/workflows/chapter*"
+  ],
+  "required_anchor_top_k": 5,
+  "evaluation_top_k": 10
+}
+```
+
+### 4. 初始阻断阈值
+
+关键 Phase 查询：
+
+```text
+forbidden@10 = 0
+cross-domain unexpected@10 = 0
+stale result count = 0
+required anchor 必须进入 top 5
+critical required source recall@20 = 1.0
+```
+
+普通查询集：
+
+```text
+macro precision@10 >= 0.80
+macro recall@20 >= 0.90
+MRR >= 0.70
+same snapshot ranking drift = 0
+```
+
+跨账号和跨项目评估：
+
+```text
+cross-account result count = 0
+cross-project result count = 0
+```
+
+阈值只能通过版本化 evaluation policy 修改。
+
+---
+
+## 七、修订后的实施顺序
+
+以下共 **15 个切片，K0–K14**。
+
+### K0：当前事实与污染基线
+
+测量：
+
+* 根仓 Phase 查询污染率；
+* Toolchain 查询召回；
+  -新建 workspace 实际复制内容；
+* `.agents/skills` 同步污染；
+* Agent 是否能直接读取排除路径；
+* Agent 是否能访问其他 workspace。
+
+产物：
+
+```text
+query-baseline.v1.json
+workspace-seed-baseline.v1.json
+hosted-access-baseline.v1.json
+```
+
+不修改根 AGENTS、README 或 Hosted 路由。
+
+### K1：三个正交维度和权威合同
+
+固定：
+
+* Domain Scope；
+* Visibility；
+* Lifecycle Instance；
+* Enforcement Level；
+  -权威顺序；
+  -内容信任标签；
+  -跨域依赖闭包。
+
+### K2：Schema、Fixture 和组合验证器
+
+先建立全部 Schema 和正负 Fixture。
+
+没有 Schema 通过，不得实现 Projection。
+
+### K3：确定性 Snapshot 和构建控制面
+
+实现：
+
+* raw content SHA-256；
+  -canonical text SHA-256；
+  -Git OID；
+  -canonical dirty manifest；
+  -原子 staging/build；
+  -并发锁；
+  -last-known-good；
+  -生成目录自排除。
+
+### K4：Repository Source Catalog
+
+只扫描：
+
+* Git 跟踪源码；
+  -ADR；
+  -architecture；
+  -standards；
+  -Schema；
+  -稳定测试和 Skill 定义。
+
+默认排除：
+
+* `logs/**`；
+  -workspace；
+  -runtime DB；
+  -用户内容；
+  -raw prompt。
+
+### K5：Domain 分类、Visibility 和关系图
+
+实现确定性分类与 provenance。
+
+LLM 只处理歧义，并按完整 cache key 固定结果。
+
+### K6：Query CLI 和评估控制面
+
+先完成：
+
+* query；
+  -explain；
+  -diff；
+  -evaluate；
+  -stale detection；
+  -leakage regression；
+  -same-snapshot zero diff。
+
+此时只能称为 E1。
+
+### K7：Repository Template Projection
+
+必须基于 Seeder 的实际行为生成，而不是基于根仓目录猜测。
+
+当前 Seeder 会持续同步 `scripts`、`_bmad/scripts`、`.agents/skills` 和 prototype type kits。
+
+它还会在首次或 baseline 缺失时复制根目录内容。
+
+Template Projection 必须记录：
+
+```text
+template_revision
+seeder_policy_revision
+managed_paths
+managed_if_missing_paths
+retired_paths
+```
+
+### K8：Project Instance Catalog 和 Projection
+
+每个项目独立：
+
+```text
+account_id
+project_id
+workspace_id
+workspace_generation
+template_revision
+project_snapshot_id
+```
+
+独立生成：
+
+* catalog；
+  -baseline；
+  -query index；
+  -RAG namespace；
+  -last-known-good。
+
+禁止与 Root 或其他项目共用 corpus。
+
+### K9：项目恢复与运行态 Projection
+
+在 Project Instance 内加入经过脱敏的：
+
+* route state；
+  -ledger；
+  -current blocker；
+  -checkpoint；
+  -evidence manifest；
+  -repair state。
+
+不得加入：
+
+* raw prompt；
+  -token；
+  -provider secret；
+  -宿主绝对路径；
+  -其他账号内容。
+
+遵循 ADR-0038 的账号作用域、脱敏和 source-hash 规则。
+
+### K10：Context Assembler 和 Artifact Manifest
+
+此时已有：
+
+* Root snapshot；
+  -Template snapshot；
+  -Project snapshot；
+  -项目恢复 Projection。
+
+Context Assembler 才具备生成可靠 Manifest 的条件。
+
+K10 只做父进程装配和 observe-only 验证，不修改生产调用语义。
+
+### K11：Hosted Scope Gate 兼容层
+
+K11 与现有暂停的前台边界计划存在交叉。
+
+当前 AGENTS 明确说明该计划处于 paused，BH-SF2 将同步 Platform/Hosted Codex routing 和 Preflight。
+
+因此正式关系为：
+
+```text
+K0–K10 可独立推进
+K11–K13 必须等待 BH-HANDOFF
+或通过显式决策将本计划与 BH-SF2 合并/取代
+```
+
+不得让两个计划并行修改同一保护路径。
+
+### K12：九个生产调用点渐进迁移
+
+当前对 `CodexHostedProcessCommandFactory.Build` 的生产调用至少分布于九个服务，包括 Skill、prototype workflow、quick fix、iteration、GDD 和 web preview adapter。
+
+迁移顺序：
+
+1. 增加新的 context envelope，但保留 legacy overload。
+2. 全部调用点进入 observe-only，记录本应使用的 Manifest。
+3. 一个 read-only route 强制 E2。
+4. SkillAction read-only 强制 E2。
+5. GDD 和 planning routes 强制 E2。
+6. workspace-write prototype routes 强制 E2。
+7. preview adapter 强制 E2。
+8. 统计 legacy bypass。
+9. legacy bypass 为零后才允许删除旧入口。
+
+Feature flag 必须按 route 控制，不得一次全开。
+
+### K13：E2 Knowledge/Context Release
+
+发布条件：
+
+* 所有 Hosted LLM/Codex 入口携带 run-bound Manifest；
+* Manifest 由服务端 Registry 派生；
+  -项目配置只能缩权；
+  -不存在跨账号或跨项目 corpus；
+  -Context Assembler 拒绝 stale snapshot；
+  -提示注入 trust label 验证通过；
+  -所有生产调用点无未记录 bypass；
+  -Projection 仍明确是 derived cache；
+  -产品文档明确声明当前是 E2，不是 workspace filesystem isolation。
+
+### K14：四域完整投影与持续维护
+
+完成：
+
+* Toolchain Projection；
+  -Phase Projection；
+  -Workspace shared/template/instance Projection；
+  -Marketplace 空 Schema、审核模型和 Projection；
+  -增量构建；
+  -bad case 自动回归；
+  -LKG 恢复；
+  -周期性全量重建；
+  -旧索引只保留为兼容导航。
+
+---
+
+## 八、K11–K13 与保护路径的实施合同
+
+以下文件属于保护或高风险路径：
+
+```text
+PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs
+PhaseA.Platform/Llm/LlmRouteEngine.cs
+scripts/sc/_llm_backend.py
+SkillActionService
+各 Hosted route service
+ProjectWorkspaceSeeder
+```
+
+修改前必须满足：
+
+1. BH-HANDOFF 已完成，或已有明确 supersede/merge 决策；
+   2.用户对保护路径修改给出显式授权；
+   3.列出全部调用点和迁移状态；
+   4.建立兼容 feature flag；
+   5.保留 rollback；
+   6.不得把未迁移 route 静默视为 E2。
+
+必测范围：
+
+* `CodexHostedProcessCommandFactoryTests`；
+* `LlmRouteEngineTests`；
+* `scripts/sc/tests/test_llm_backend.py`；
+* `ProjectWorkspaceSeederTests`；
+* `SkillActionService` tests；
+  -九个调用点各自的 route-specific tests；
+  -跨账号、stale manifest、modified manifest、legacy bypass tests；
+  -read-only 与 workspace-write 两类回归。
+
+---
+
+## 九、E2 与 E3 的独立 Definition of Done
+
+### E2 Knowledge/Context Release
+
+E2 完成表示：
+
+-检索候选受 Scope 控制；
+-模型初始上下文由父进程装配；
+-Manifest 与 run/account/project/snapshot 绑定；
+-项目和 Skill 不能自行扩权；
+-提示注入内容被标记为 untrusted data；
+-所有 Hosted 调用经过 Scope Gate；
+-运行记录可以证明实际注入了什么。
+
+E2 不表示：
+
+-子进程无法访问 workspace 其他文件；
+-子进程无法读取宿主路径；
+-不同 workspace 已有 OS 隔离；
+-已经达到生产多租户强隔离。
+
+### E3 Runner Isolation Closure
+
+E3 必须在独立 Phase C 计划中完成：
+
+-独立 Windows runner identity；
+-NTFS ACL；
+-restricted token；
+-宿主根目录不可访问；
+-其他 workspace 不可访问；
+-独立 Artifact View root；
+-受控 writeback；
+-reparse point 和 junction 边界；
+-进程、网络和 secret 隔离；
+-E3 越界负向测试。
+
+E3 的 DoD 才能要求：
+
+```text
+Agent 无法读取其他 workspace 或宿主仓库排除路径
+```
+
+该要求不得再放入 E2 的完成标准。

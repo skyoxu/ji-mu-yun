@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "bootstrap-lineage-adoption.v1",
+  "targetLineageFamilyId": "ria-66a252608cb9c06dafa0db2a93005299",
+  "legacyChangeId": "knowledge-locator-workflow-plan-v1",
+  "historicalRuns": [
+    {
+      "runDirectory": "logs/ci/2026-07-26/review-gateway-bootstrap-knowledge-locator-workflow-plan-r1-20260726",
+      "reviewInputHash": "sha256:e7a3f42beef7b34935ac01ce1a4d6a6efb4b743e36622a223009cdb21225f4d2",
+      "manifestFileHash": "sha256:e235b00f0a314a5bc5d466ac0139a26915b63817107d19ba0f1f9dfbab11b7ef"
+    },
+    {
+      "runDirectory": "logs/ci/2026-07-26/review-gateway-bootstrap-knowledge-locator-workflow-plan-r2-20260726",
+      "reviewInputHash": "sha256:0ff0e0777e614ac857486fb51cc14a9e4ba26b52996557879648913df03280fb",
+      "manifestFileHash": "sha256:a90b7225c5ca8c7a35d76869d93d02113b8d56b56b9bcf30d89e21bbd6329215"
+    },
+    {
+      "runDirectory": "logs/ci/2026-07-27/review-gateway-bootstrap-knowledge-locator-workflow-plan-r3b-20260727",
+      "reviewInputHash": "sha256:9288ab9c8a066d224f512533339d9ed7b9df868ad66e2cfb6a4841ef156f0f68",
+      "manifestFileHash": "sha256:aa8cce2d656ec4aba8e162052404afa2af01718ba1679d93418d4fb40aed02a9"
+    }
+  ],
+  "policyAuthority": {
+    "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+    "sha256": "sha256:e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc",
+    "status": "Accepted"
+  },
+  "reason": "Bridge the complete pre-family review history into the target-derived Refactor Acceptance lineage",
+  "authorizes": [],
+  "adoptionHash": "sha256:870daddac970f6b0736eef1307a320264d5a689862ee90d511c8b1f78b5deb4c"
+}

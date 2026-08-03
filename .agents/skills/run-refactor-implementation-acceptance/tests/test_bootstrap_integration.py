@@ -349,6 +349,7 @@ class BootstrapIntegrationTests(unittest.TestCase):
                         "sha256": "sha256:" + "b" * 64,
                     },
                 ],
+                "targetedTests": ["PhaseA.Platform.Tests/FeatureTests.cs"],
                 "commandRegistry": {
                     "path": "logs/ci/example/command-registry.json",
                     "sha256": "sha256:" + "f" * 64,
@@ -356,6 +357,20 @@ class BootstrapIntegrationTests(unittest.TestCase):
                 "receipt": {
                     "path": "logs/ci/example/composition-receipt.json",
                     "sha256": "sha256:" + "0" * 64,
+                },
+                "controlledReplay": {
+                    "schemaVersion": "acceptance-composition-controlled-replay.v1",
+                    "authorizes": [],
+                    "commandId": "feature-composition",
+                    "commandRegistryHash": "sha256:" + "f" * 64,
+                    "environmentIdentity": {"names": [], "hash": "sha256:" + "1" * 64},
+                    "invocation": {},
+                    "invocationHash": "sha256:" + "2" * 64,
+                    "exitCode": 0,
+                    "writeManifestDelta": {},
+                    "writeManifestDeltaHash": "sha256:" + "3" * 64,
+                    "inputBindings": [],
+                    "inputBindingsHash": "sha256:" + "4" * 64,
                 },
             }],
             "novelP0P1FindingIds": novel or [],

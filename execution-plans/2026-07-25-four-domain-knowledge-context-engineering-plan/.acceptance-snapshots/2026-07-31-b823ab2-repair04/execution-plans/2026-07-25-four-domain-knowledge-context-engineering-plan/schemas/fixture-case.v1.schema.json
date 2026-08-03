@@ -1,0 +1,256 @@
+{
+  "$id": "jimuyun.knowledge-fixture.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "expected_failure_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "expected_result": {
+      "enum": [
+        "pass",
+        "fail"
+      ]
+    },
+    "fixture_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "positive",
+        "negative"
+      ]
+    },
+    "payload": {
+      "additionalProperties": false,
+      "properties": {
+        "account_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "assembly_status": {
+          "enum": [
+            "complete",
+            "optional-omissions",
+            "blocked"
+          ]
+        },
+        "cache_root": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "computed_payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "current_project_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "e2_readiness": {
+          "type": "boolean"
+        },
+        "e2_readiness_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "all_reachable_callsites_enforced": {
+              "type": "boolean"
+            },
+            "atomic_nonce_consumption": {
+              "type": "boolean"
+            },
+            "inventory_current": {
+              "type": "boolean"
+            },
+            "manifest_persistence": {
+              "type": "boolean"
+            },
+            "rollback_evidence_current": {
+              "type": "boolean"
+            },
+            "shared_entrypoint_enforced": {
+              "type": "boolean"
+            },
+            "targeted_tests_current": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "manifest_persistence",
+            "atomic_nonce_consumption",
+            "shared_entrypoint_enforced",
+            "all_reachable_callsites_enforced",
+            "inventory_current",
+            "targeted_tests_current",
+            "rollback_evidence_current"
+          ],
+          "type": "object"
+        },
+        "enforcement_level": {
+          "enum": [
+            "E1",
+            "E2"
+          ]
+        },
+        "effective_capabilities": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "gate_mode": {
+          "enum": [
+            "legacy",
+            "observe",
+            "enforce"
+          ]
+        },
+        "identity_mode": {
+          "enum": [
+            "project-bound",
+            "account-bound"
+          ]
+        },
+        "inventory_source_snapshot_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "known_capabilities": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "known_policy_revisions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "nonce_status": {
+          "enum": [
+            "unused",
+            "consumed"
+          ]
+        },
+        "policy_revision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "project_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project_restrictions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "project_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recovery_order_contract_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "release_source_snapshot_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "required_omitted": {
+          "type": "boolean"
+        },
+        "signature_payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_boundary_evidence": {
+          "type": "boolean"
+        },
+        "source_boundary_mode": {
+          "enum": [
+            "required",
+            "not_applicable"
+          ]
+        },
+        "source_project_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workspace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workspace_root": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "identity_mode",
+        "account_id",
+        "project_id",
+        "source_project_id",
+        "workspace_id",
+        "workspace_root",
+        "cache_root",
+        "project_snapshot_id",
+        "current_project_snapshot_id",
+        "inventory_source_snapshot_id",
+        "release_source_snapshot_id",
+        "known_policy_revisions",
+        "policy_revision",
+        "known_capabilities",
+        "effective_capabilities",
+        "project_restrictions",
+        "signature_payload_sha256",
+        "computed_payload_sha256",
+        "nonce_status",
+        "assembly_status",
+        "required_omitted",
+        "recovery_order_contract_id",
+        "source_boundary_mode",
+        "source_boundary_evidence"
+      ],
+      "type": "object"
+    },
+    "schema_version": {
+      "const": "jimuyun.knowledge-fixture.v1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "fixture_id",
+    "kind",
+    "expected_result",
+    "expected_failure_code",
+    "payload"
+  ],
+  "type": "object"
+}

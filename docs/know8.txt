@@ -1,0 +1,796 @@
+一、我同意的最终架构修订
+1. Evidence Catalog 的名称和范围
+
+在你提出的两个名称里，我更倾向于：
+
+maintain-repository-workflow-evidence-catalog
+
+它比 maintain-toolchain-run-evidence-catalog 更合适，因为首版数据模型不应把所有对象抽象成 run。
+
+若允许再微调，一个更精确的名称是：
+
+maintain-toolchain-workflow-evidence-catalog
+
+它同时表达：
+
+面向仓库内部 Toolchain 工作流；
+不覆盖 Phase 浏览器/API 业务运行；
+不把所有对象统一为 Run；
+是 Evidence Catalog，而不是 Archive Authority。
+v1 明确排除
+logs/phase-a-innernet/**
+Hosted project workspaces
+账号级运行证据
+Live Phase runtime state
+浏览器/API 用户活动
+账号隔离和审计导出
+
+否则首版会立刻扩展到：
+
+account ownership；
+证据脱敏；
+跨账号读取权限；
+hosted workspace containment；
+live runtime retention；
+项目级数据删除和导出规则。
+
+这些不属于当前 Toolchain Evidence Catalog 的交付目标。
+
+2. 改为只读拉取式索引
+
+这一点应作为首版最重要的架构规则：
+
+生产者写自己的正式证据
+        ↓
+Catalog 通过显式 Registry 拉取
+        ↓
+验证来源和哈希
+        ↓
+构建不可变派生 Generation
+        ↓
+原子更新 Current/LKG 指针
+
+不采用：
+
+VDD finalize
+Quick Dev finalize
+Bootstrap finalize
+Acceptance finalize
+        ↓
+共同写一个共享 Catalog
+
+原因不仅是减少耦合，还包括：
+
+Catalog 不成为所有工作流的共享可用性依赖；
+Catalog 故障不阻断 VDD、Quick Dev、Bootstrap 或 Acceptance 终结；
+Producer 不需要了解 Catalog Schema；
+Catalog Schema 升级不要求同时升级四个生产者；
+可以从正式证据完整重建；
+生产者状态和派生索引不会发生分布式提交问题。
+
+生产者最多可以生成自己的原生 evidence；不能直接发布 Catalog entity、relation 或 projection。
+
+3. 首份 ADR 必须收窄
+
+首份 ADR 只决定四件事：
+
+原始证据继续由原生产者拥有；
+Catalog 是可重建、无授权能力的派生层；
+Catalog 不修改、归一化或推进原生生命周期；
+Phase hosted evidence 不属于 v1。
+
+第一份 ADR 不应决定：
+
+Experience Memory 的权威边界；
+Miner 的模型和输出；
+Self-Questioning；
+Skill Candidate 生命周期；
+Curator promotion；
+Canary；
+Git rollback；
+RL；
+Learned ranking。
+
+这些应在对应目录启动时，用当时已有的数据和实际需求单独决策。
+
+这能避免第一份 ADR 变成未来系统的“总宪法”，也避免尚未验证的设计过早变成 Accepted 约束。
+
+二、Evidence Catalog v1 的最终数据模型
+
+之前的：
+
+workflow-run-reference
+
+确实过度统一。
+
+更合适的是四类 Catalog Record，加一个 Generation Envelope：
+
+Entity
+Artifact
+Relation
+Projection
+
+Generation Envelope 不属于第五种原生对象；它负责绑定一次构建使用的 Registry、Adapter、Source Manifest 和 Projection Policy，使整个派生 Generation 可以复验和重建。
+
+1. Entity
+
+Entity 表达原生控制面对象，而不是假定它们都是 Run。
+
+建议类型：
+
+vdd_plan
+vdd_repair_round
+quick_dev_stage
+quick_dev_attempt
+quick_dev_handoff
+bootstrap_review_run
+bootstrap_attempt
+bootstrap_lineage
+acceptance_target
+acceptance_run
+acceptance_route_decision
+acceptance_action
+maintainer_disposition
+
+示例：
+
+{
+  "schema_version": "toolchain-evidence-entity.v1",
+  "entity_id": "entity:<repository-id>:refactor-acceptance:<native-id>",
+  "entity_type": "acceptance_run",
+  "repository_id": "...",
+  "producer_id": "refactor-acceptance",
+  "producer_contract_version": "...",
+  "native_id": "acceptance-...",
+  "native_identity": {
+    "path": "execution-plans/.../acceptance-runs/acceptance-...",
+    "path_identity": "windows-case-normalized-repository-relative"
+  },
+  "native_status_dimension": "acceptance-run-state",
+  "native_status": "manual_pause",
+  "native_status_ref": {
+    "path": ".../run-state.json",
+    "sha256": "sha256:..."
+  },
+  "authorizes": []
+}
+
+所有 Entity ID 必须由 repository_id、canonical producer_id、producer-owned native_id 和必要的规范化路径身份确定性派生。不能只依赖文件名、目录名或内容哈希。Producer ID 在 Registry、Entity、Artifact、Relation 和 Projection 中必须使用同一闭集；Adapter 版本和代码哈希由 Generation Envelope 绑定。
+2. Artifact
+
+Artifact 表达正式文件或证据，不重新解释其语义：
+
+{
+  "schema_version": "toolchain-evidence-artifact.v1",
+  "artifact_binding_id": "artifact:<producer-id>:<entity-id>:<path-hash>:<content-hash>",
+  "repository_id": "...",
+  "producer_id": "bootstrap-review",
+  "entity_id": "entity:...",
+  "artifact_type": "bootstrap-finalized-validation-envelope",
+  "authority_class": "supplemental_evidence",
+  "path": "logs/.../validation-envelope.json",
+  "content_sha256": "sha256:...",
+  "native_schema_version": "bootstrap-finalized-run-validation.v3",
+  "sensitivity": "internal-metadata",
+  "authorizes": []
+}
+
+Artifact 的内容哈希只表达字节身份，不能单独充当 Artifact 身份。同一内容出现在不同生产者、实体、路径或语义角色时，必须保留不同的 artifact_binding_id。
+
+Catalog 的 authorizes=[] 不覆盖原始 Artifact 自己的权威语义；它只表示 Catalog 记录本身无授权能力。
+
+3. Relation
+
+Relation 必须来自明确的原生证据。
+
+例如：
+
+implements
+reviews
+evaluates
+repairs
+supersedes
+selects_route
+launches
+imports
+produces
+consumes
+hands_off_to
+belongs_to_lineage
+has_attempt
+has_disposition
+
+示例：
+
+{
+  "schema_version": "toolchain-evidence-relation.v1",
+  "relation_id": "relation:...",
+  "relation_type": "launches",
+  "source_entity_id": "entity:acceptance-route-decision:...",
+  "target_entity_id": "entity:bootstrap-review-run:...",
+  "native_evidence_refs": [
+    {
+      "path": ".../bootstrap-route.v1.json",
+      "sha256": "sha256:..."
+    },
+    {
+      "path": ".../review-input.json",
+      "sha256": "sha256:..."
+    }
+  ],
+  "inference": false,
+  "authorizes": []
+}
+
+禁止根据以下条件产生 Relation：
+
+目录相邻
+文件名相似
+时间接近
+同一 Git commit
+同一计划目录
+自然语言报告提到另一个对象
+
+无法证明的关系应保持缺失，而不是推断。
+
+Relation 还必须区分控制决策和真实执行：selects_route 只表示 Acceptance 选择了某种 Bootstrap route；launches 必须绑定实际 Bootstrap run 的原生身份和启动证据；imports 必须绑定 Acceptance import envelope。不能因为 route 文件存在，就声称某个 Bootstrap run 已经启动。
+
+4. Projection
+
+Projection 仅用于统一查询。
+
+例如：
+
+{
+  "schema_version": "toolchain-evidence-projection.v1",
+  "entity_id": "entity:...",
+  "projection_type": "observed-outcome",
+  "projected_value": "blocked",
+  "mapping_status": "mapped",
+  "mapping_policy_ref": {
+    "path": ".../projection-policy.v1.json",
+    "sha256": "sha256:..."
+  },
+  "source_refs": [],
+  "authorizes": []
+}
+
+必须允许：
+
+mapped
+partially_mapped
+unknown
+unmapped
+not_applicable
+
+不能强制把所有状态压缩成 success/failed。
+
+5. Generation Envelope
+
+每个 Generation 必须绑定：
+
+generation_id 和 semantic_generation_hash；
+Producer Registry 的路径和哈希；
+每个 Adapter 的版本与代码哈希；
+scan request、explicit roots 和 source manifests；
+Projection mapping policy 的路径和哈希；
+构建工具版本；
+非语义 generated_at。
+
+相同输入重建的完成标准是 semantic_generation_hash 相同；generated_at、临时 staging 路径等非语义字段不要求逐字节一致。
+
+三、扫描边界必须成为确定性合同
+
+Catalog 不能从仓库根目录递归寻找“看起来像证据”的文件。
+
+Producer Registry
+
+建议显式注册：
+
+{
+  "schema_version": "toolchain-evidence-producer-registry.v1",
+  "producers": [
+    {
+      "producer_id": "vdd",
+      "producer_contract_version": "...",
+      "adapter": "adapters/vdd.py",
+      "allowed_root_kinds": [
+        "explicit-execution-plan-target"
+      ],
+      "excluded_content_roots": []
+    },
+    {
+      "producer_id": "quick-dev",
+      "producer_contract_version": "...",
+      "adapter": "adapters/quick_dev.py",
+      "allowed_root_kinds": [
+        "explicit-tdd-plan-root"
+      ],
+      "excluded_content_roots": [
+        "adapter-owned-workspace"
+      ]
+    }
+  ]
+}
+
+实际 root 必须由调用请求或已登记入口提供，并由 Adapter 验证其 root kind；不能让 VDD Adapter 枚举所有计划并猜测关系。Registry 中的 Adapter 代码哈希进入 Generation Envelope，Registry 自身不能把可变通配路径变成扫描授权。
+
+路径边界必须同时执行：
+
+resolved-path containment；
+Windows 大小写归一化；
+case collision 拒绝；
+symlink、junction 和 reparse-point 逃逸拒绝；
+循环遍历检测；
+repository-relative 输出路径规范化。
+
+全局硬排除与 Producer 内容边界
+
+v1 至少排除：
+
+logs/phase-a-innernet/**
+**/artifact-view/**
+**/artifact-view.v1/**
+**/attempts/*/workspace/**
+**/.acceptance-snapshots/**
+**/acceptance-snapshots/**
+嵌套 Bootstrap Skill 快照
+嵌套 Acceptance Skill 快照
+测试 fixture 中模拟的正式运行目录
+复制进执行计划的历史控制面快照
+
+snapshot、frozen-artifacts 等通用目录名不能无条件全局排除，因为它们可能包含生产者正式引用的证据。各 Adapter 必须通过原生 manifest 和结构合同区分“正式 Artifact”与“Artifact 内部内容根”。允许被索引的是外层正式 Artifact；嵌套副本可以作为该 Artifact 的内部内容，但不能被再次登记成独立生产者对象。
+
+原生证据权威分类
+
+每个 Adapter 必须使用显式 source allowlist，并把输入分类为：
+
+native_state_authority
+execution_fact
+supplemental_evidence
+narrative_report
+derived_view
+
+只有 producer contract 明确允许的 native_state_authority 或 execution_fact 可以建立原生状态与 Relation。95-*.md、自然语言 summary、旧 assistant 报告和其他 narrative_report 可以登记为 Artifact，但不能建立状态或 Relation。Bootstrap Adapter 应消费 validate-finalized-run 的正式 envelope，不得自行重解释内部 reviewer 文件来创造新的完成语义。
+
+四、真实闭环验收，而不是线性链
+
+首个目录不能以：
+
+VDD → Quick Dev → Bootstrap → Acceptance
+
+作为固定流程，因为实际控制方向不是这个顺序。
+
+应使用一个最小、detached、synthetic、可重放的协议闭环 Fixture。Fixture 使用真实 Schema、Validator 和哈希合同，但不复制 7 月 27 日大型历史运行、不依赖 live logs、不启动 LLM：
+
+VDD Plan
+   ↓ implements
+Quick Dev initial implementation
+   ↓ hands off
+Acceptance evaluates target
+   ↓ selects_route
+Acceptance route decision
+   ↓ launches
+Bootstrap Round 1
+   ↓ produces confirmed P0/P1
+Quick Dev repair
+   ↓ produces repair-review handoff
+Acceptance audit-repair-completeness
+   ↓ selects_route
+Acceptance repair route decision
+   ↓ launches
+Bootstrap repair round
+   ↓ finalized envelope
+Acceptance imports envelope
+   ↓
+Acceptance terminal result / manual disposition
+
+首版完成标准不是 Catalog 自己“理解”了这条链，而是：
+
+每个 Entity 来自生产者原生证据；
+每条 Relation 有明确原生证据；
+不依赖目录邻近推断；
+删除派生 generation 后能够重建相同 semantic_generation_hash；
+原始证据字节漂移会使旧 generation 验证为 stale/fail，合法的新来源状态可由 build-generation 生成新 generation；
+嵌套快照不会产生重复 Entity；
+原生状态保持不变；
+Catalog 不推进任何计划状态。
+五、Evaluation 的指标分级
+
+你对指标的修正也是必要的。
+
+第一阶段可直接测量
+
+这些是可观测事实：
+
+token count
+wall time
+attempt count
+semantic round count
+transport failure count
+artifact count
+context bytes
+prompt bytes
+reuse attempted
+reuse accepted
+reuse rejected
+reuse rejection reason
+manual pause
+human disposition present
+missing evidence field
+mapping status
+不能直接从当前数据推断
+
+以下指标需要额外标签协议：
+
+false negative
+false positive
+later-discovery rate
+missed P1
+repair effectiveness
+Skill Memory contribution
+counterfactual success
+
+它们需要：
+
+明确独立标签来源；
+定义观察窗口；
+定义“later”截止时间；
+区分同一问题与新问题；
+holdout；
+防止把当前 Acceptance 或 Bootstrap 结果同时作为预测和标签；
+对人工处置进行独立记录。
+
+因此目录 2 应先交付：
+
+observable baseline
+missingness model
+label provenance contract
+cohort definition
+
+而不是立刻承诺精确的漏报率。
+
+六、Miner Pilot 的顺序修订
+
+首个 Pilot 应改为：
+
+Pilot 1：Exact Reuse 拒绝原因
+
+这是最合适的首个 Miner 任务，因为：
+
+输入高度结构化；
+拒绝原因大多可以确定性复核；
+不依赖大量独立业务任务；
+不容易把单个大型 Acceptance lineage 过拟合成通用修复经验；
+可以先验证 Miner 是否忠实引用原生证据。
+
+建议分类：
+
+candidate_binding_mismatch
+candidate_manifest_drift
+knowledge_context_drift
+accepted_source_drift
+route_hash_mismatch
+scope_incomplete
+profile_mismatch
+policy_mismatch
+authority_mismatch
+lineage_head_mismatch
+legacy_envelope_ineligible
+final_status_not_clean
+missing_exact_binding
+
+Miner 第一版甚至可以是：
+
+确定性分类
++
+LLM 对聚类结果进行非权威解释
+
+而不是让 LLM 从原始运行自由归因。
+
+Pilot 2：成本与缺失数据
+
+分析：
+
+哪些 Attempt 有完整 Token 数据；
+哪些 Cohort 因 mixed model 被排除；
+哪些任务成本集中；
+哪些传输失败造成无语义收益消耗；
+哪些上下文字节与 Prompt 成本相关。
+Pilot 3 才考虑 Repair Pattern
+
+而且需要：
+
+多个独立 Plan；
+多个独立 Lineage；
+时间切分；
+相同 Failure Family 的不同实现；
+至少一个反例；
+避免以 7 月 27 日 Acceptance 项目作为主要训练分布。
+七、Curator 与 Catalog 的边界
+
+完全同意：
+
+Curator 决策不能写成 Catalog 自身状态。
+
+正确结构是：
+
+Skill Curator
+    ↓
+写入自己的 append-only decision store
+    ↓
+Evidence Catalog 下一次重建时只读索引
+
+例如：
+
+logs/skill-curator/decisions/<decision-id>/
+governance/skill-candidates/<candidate-id>/
+governance/skill-versions/<skill-id>/<version>/
+
+Catalog 只登记：
+
+Candidate Entity；
+Decision Artifact；
+Candidate → Decision Relation；
+Decision → Version Relation；
+Rollback Relation。
+
+Catalog 不能拥有：
+
+current_candidate_status
+promotion_authority
+stable_version_pointer
+rollback_execution
+approval state
+
+这些归 Curator 原生控制面所有。
+
+八、Canary 改为 Eligibility Cohort
+
+1% → 5% → 10% 确实不适合单维护者、低频且任务差异大的仓库。
+
+应改为：
+
+固定 Eligibility Cohort
++
+明确任务数量
++
+明确退出条件
+
+例如：
+
+Cohort A
+- 5 个历史 Replay 任务
+- 3 个新低风险任务
+- 不涉及 protected path
+- 不涉及 auth/security/ADR
+- 可由旧 Skill 完整回退
+
+Cohort B
+- 10 个独立任务
+- 至少 3 个不同计划
+- 至少 2 类失败族
+- 零关键回归
+
+Canary Promotion 依据：
+
+任务数；
+独立 Plan 数；
+独立 Lineage 数；
+时间跨度；
+Outcome；
+回归；
+成本；
+人工推翻次数。
+
+而不是流量百分比。
+
+九、六个 VDD 目录的最终拆分
+
+这个拆分合理，建议正式采用。
+
+顺序	目录交付物	Profile	启动门槛
+1	Toolchain Workflow Evidence Catalog v1	resumable；只有修改现有生产者 routing、schema 或 controlling validator 时才升为 self-hosted	现在
+2	Workflow Evaluation 与 Observability Baseline	resumable；修改控制面 Validator 时升为 self-hosted	目录 1 验收通过
+3	Ordinary Fast-Ship Combined Review Shadow	self-hosted	Baseline 和标签来源稳定
+4	Context-Loading 测量与渐进加载实验	self-hosted	Context Metrics 可用
+5	Experience Memory + Miner Shadow	resumable	有多个独立 Cohort
+6	Skill Candidate / Curator 治理与 Git Rollback	self-hosted	已有候选和人工处置记录
+条件 7	Offline RL / Ranking	暂不创建	达到独立数据门槛
+优先级标记
+P0
+目录 1
+
+P1
+目录 2
+目录 3
+目录 4
+
+P2
+目录 5
+
+P3
+目录 6
+
+P4 条件路线图
+目录 7
+
+目录 2、3、4 同为 P1，不代表应放入一个计划。它们具有不同的：
+
+权威边界；
+风险；
+验收方法；
+回滚策略；
+停止条件。
+十、现在只创建目录 1
+
+这一点非常重要。
+
+当前不应一次创建六个 VDD 目录，因为后续目录的输入尚未冻结：
+
+目录 2 的 Cohort Schema 依赖目录 1 实际输出；
+目录 3 的 Shadow 指标依赖目录 2；
+目录 4 需要目录 2 提供 Context Metrics；
+目录 5 依赖多个独立 Cohort；
+目录 6 依赖真实 Candidate 和人工处置记录。
+
+正确节奏：
+
+创建目录 1
+→ 实施
+→ Bootstrap / Acceptance
+→ 验收通过
+→ 观察真实 Schema 和缺口
+→ 冻结目录 2 输入
+
+这样能够避免再次形成一个同时修改：
+
+四个生产者；
+Evidence；
+Evaluation；
+Review topology；
+Context loading；
+Experience；
+Governance；
+
+的数百文件自托管计划。
+
+十一、目录 1 的推荐交付范围
+计划目标
+Toolchain Workflow Evidence Catalog v1
+包含
+窄 ADR
+Producer Registry
+Entity Schema
+Artifact Schema
+Relation Schema
+Projection Schema
+Generation Envelope Schema
+Native Evidence Authority Classification
+VDD Adapter
+Quick Dev Adapter
+Bootstrap Adapter
+Acceptance Adapter
+Generation Builder
+Catalog Validator
+Current/LKG 或等价发布指针
+真实闭环 Fixture
+嵌套副本排除测试
+重建一致性测试
+CLI
+
+建议：
+
+build-generation
+validate-generation
+publish-generation
+inspect-entity
+inspect-artifact
+list-relations
+trace-native-evidence
+compare-generations
+restore-lkg
+
+其中：
+
+build-generation 只写 immutable staging，不推进 Current/LKG；
+validate-generation 默认只读；
+publish-generation 是唯一允许原子推进 Current/LKG 的显式入口；
+restore-lkg 只有在 LKG 引用的原生证据仍可复验时才允许恢复；
+失败构建写 append-only sidecar，不覆盖 Current/LKG。
+
+稳定 Schema、Registry 和 Adapter 属于 Skill/源码所有；派生 Generation、Current/LKG 指针和失败证据属于专用 logs/toolchain-workflow-evidence-catalog/ 根。Catalog 默认只输出引用、类型、状态、哈希和安全元数据，不复制或打印 raw prompt、命令环境、secret、stdout/stderr 正文。
+
+可以有：
+
+scan-producer --producer <id> --root <explicit-root>
+
+但不能有无边界的：
+
+scan-repository
+discover-all-runs
+infer-relations
+normalize-status
+不包含
+Experience Memory
+Miner
+Self-Questioning
+Skill Candidate
+Curator
+Promotion
+Canary
+Rollback execution
+Review topology changes
+Context loading changes
+Navigation projection
+RL
+Phase hosted evidence
+十二、目录 1 的验收标准
+
+建议最终至少包含以下验收条款：
+
+Catalog 可从显式 Registry 和正式入口完整重建；
+构建过程不修改任何 Producer 原始证据；
+Catalog 构建失败不会影响 Producer 的正式生命周期；
+所有 Relation 都有可哈希的原生 Evidence Reference；
+目录邻近、时间和名称不能产生 Relation；
+原生状态使用 native_status_dimension/native_status/native_status_ref；
+未知状态保留为 unknown/unmapped；
+logs/phase-a-innernet/** 被硬排除；
+Artifact View、Attempt Workspace、Acceptance Snapshot 和嵌套副本不产生重复 Entity；
+删除派生 Generation 后可重建相同 semantic_generation_hash；
+validate-generation 在原始字节漂移时报告 stale/fail；build-generation 对合法的新来源状态创建新 Generation，而不是把变化本身视为构建失败；
+build、validate、publish 和 restore-lkg 权限分离，只有显式 publish-generation 可以推进 Current/LKG；
+restore-lkg 会重新验证其引用的原生证据，缺失或漂移时 fail closed；
+Entity ID、Artifact Binding ID、Producer ID 和 Windows 规范化路径身份在重建后保持稳定且无碰撞；
+Scanner 对 junction、symlink、reparse-point、case collision 和路径逃逸 fail closed；
+Narrative Report 和 Derived View 不能建立原生状态或 Relation；
+Catalog 所有输出无授权能力；
+Catalog 不能发布 plan-ready、implementation-complete、acceptance-passed 或 archived；
+真实闭环 Fixture 能追踪 Plan、Implementation、Acceptance、Bootstrap、Repair、Import 和终态；
+Fixture 中每条边都能回溯到原生证据，而不是推断。
+十三、对原整体路线的正式修订
+
+最终路线应更新为：
+
+P0
+Toolchain Workflow Evidence Catalog v1
+
+P1
+Workflow Evaluation / Observability Baseline
+Ordinary Fast-Ship Combined Review Shadow
+Context-Loading Measurement / Progressive Experiment
+
+P2
+Experience Memory + Miner Shadow
+首个 Pilot：Exact Reuse 拒绝原因
+第二 Pilot：成本与 Missingness
+
+P3
+Skill Candidate / Curator
+人工 Promotion
+Eligibility Cohort
+Git-Backed Rollback
+
+P4 条件路线
+Offline RL / Ranking
+
+其中当前延期：
+
+review-input navigation projection
+Skill Memory 自动采用
+完整自动 Curator 平台
+按百分比流量 Canary
+RL 执行计划
+最终判断
+
+你这次提出的修订不只是细节优化，而是对上一版方案的必要纠偏。它解决了上一版中四个主要风险：
+
+Evidence Catalog 可能演变成新的共享权威；
+所有生产者被错误统一成 Run 模型；
+一次 VDD 计划承载过多未来治理能力；
+在独立样本不足时过早进入经验提取和自动化。
+
+建议以这版作为后续正式规划依据：
+
+先建立窄范围、只读、拉取式、可重建的 Toolchain Workflow Evidence Catalog；后续每个能力都在前一目录验收通过并产生真实数据后，再单独冻结输入和创建 VDD 目录。

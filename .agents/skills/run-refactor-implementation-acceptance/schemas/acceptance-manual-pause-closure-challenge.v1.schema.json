@@ -7,7 +7,7 @@
     "schemaVersion", "status", "acceptanceTarget", "lineageFamilyId",
     "semanticRoundsConsumed", "lineageStateHash", "manualPauseRoute", "manualPauseRouteRequest",
     "finalizedRun", "finalizedEnvelopeCoreHash", "confirmedFindingIds",
-    "findingRepairs", "repairCompletenessHash", "protocolAuthorities",
+    "findingRepairs", "repairCompletenessHash", "protocolAuthorities", "protocolReview",
     "sourceRequestPath", "sourceRequestHash", "authorizes", "closureBindingHash"
   ],
   "properties": {
@@ -25,6 +25,22 @@
     "findingRepairs": {"type": "array", "minItems": 1},
     "repairCompletenessHash": {"$ref": "#/$defs/hash"},
     "protocolAuthorities": {"type": "array", "minItems": 3},
+    "protocolReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runDirectory", "envelopePath", "envelopeSha256"],
+      "properties": {
+        "runDirectory": {"type": "string", "minLength": 1},
+        "envelopePath": {"type": "string", "minLength": 1},
+        "envelopeSha256": {"$ref": "#/$defs/hash"},
+        "hardLimitAuthorityPath": {"type": "string", "minLength": 1},
+        "hardLimitAuthoritySha256": {"$ref": "#/$defs/hash"}
+      },
+      "oneOf": [
+        {"not": {"anyOf": [{"required": ["hardLimitAuthorityPath"]}, {"required": ["hardLimitAuthoritySha256"]}]}},
+        {"required": ["hardLimitAuthorityPath", "hardLimitAuthoritySha256"]}
+      ]
+    },
     "sourceRequestPath": {"type": "string", "minLength": 1},
     "sourceRequestHash": {"$ref": "#/$defs/hash"},
     "authorizes": {"const": []},

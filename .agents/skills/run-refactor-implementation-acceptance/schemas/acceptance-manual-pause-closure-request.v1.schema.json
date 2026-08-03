@@ -6,7 +6,7 @@
   "required": [
     "schemaVersion", "repositoryRoot", "acceptanceTarget", "lineageFamilyId",
     "manualPauseRoute", "manualPauseRouteRequest", "finalizedRun", "repairCompletenessRequest",
-    "repairCompleteness", "findingRepairs", "protocolAuthorities", "authorizes"
+    "repairCompleteness", "findingRepairs", "protocolAuthorities", "protocolReview", "authorizes"
   ],
   "properties": {
     "schemaVersion": {"const": "acceptance-manual-pause-closure-request.v1"},
@@ -47,6 +47,7 @@
       "minItems": 3,
       "items": {"$ref": "#/$defs/fileBinding"}
     },
+    "protocolReview": {"$ref": "#/$defs/reviewBinding"},
     "authorizes": {"const": []}
   },
   "$defs": {
@@ -59,6 +60,22 @@
         "path": {"type": "string", "minLength": 1},
         "sha256": {"$ref": "#/$defs/hash"}
       }
+    },
+    "reviewBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runDirectory", "envelopePath", "envelopeSha256"],
+      "properties": {
+        "runDirectory": {"type": "string", "minLength": 1},
+        "envelopePath": {"type": "string", "minLength": 1},
+        "envelopeSha256": {"$ref": "#/$defs/hash"},
+        "hardLimitAuthorityPath": {"type": "string", "minLength": 1},
+        "hardLimitAuthoritySha256": {"$ref": "#/$defs/hash"}
+      },
+      "oneOf": [
+        {"not": {"anyOf": [{"required": ["hardLimitAuthorityPath"]}, {"required": ["hardLimitAuthoritySha256"]}]}},
+        {"required": ["hardLimitAuthorityPath", "hardLimitAuthoritySha256"]}
+      ]
     },
     "nonemptyPaths": {
       "type": "array",

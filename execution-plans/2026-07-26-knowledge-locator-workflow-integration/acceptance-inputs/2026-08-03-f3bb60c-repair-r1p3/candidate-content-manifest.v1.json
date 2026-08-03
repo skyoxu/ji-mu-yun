@@ -1,0 +1,261 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "baseline_sha256": "sha256:84f14dee3225efc809eea3fc940a6a65983ee915692bd884283c8dea08d00a9f",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "candidate_sha256": "sha256:0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b",
+      "change_type": "modified",
+      "inclusion_reason": "explicit Round 3 finding repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "baseline_sha256": "sha256:35319e2a6f67f323e1e1a62713955430410ca531ccc179ab64b035e27f378a25",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "candidate_sha256": "sha256:9b968472086453fba4a20447e5b594f4d572c5fe8fd9eadb3d0a1bf51a742b20",
+      "change_type": "modified",
+      "inclusion_reason": "explicit Round 3 finding repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+      "candidate_sha256": "sha256:ec27ce244db1f55d3eab0e8331422f5888bb4cef668e9ee6e37dedab45b7a023",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit Round 3 finding repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py",
+      "candidate_sha256": "sha256:3cd7c81b09dc3e3e163302a9e26db77406b44dd8e5e027a202098a2d2d3d2c43",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit Round 3 finding repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "baseline_sha256": "sha256:cb581421d31d61bc14d33bffb189347dd242f180a03f92a8aaa993731e2f4d23",
+      "candidate_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "candidate_sha256": "sha256:8c4b73849255e1b4ab3db4de6aacd2d0557810d4491099b15f13ce106988eb71",
+      "change_type": "modified",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "baseline_sha256": "sha256:774da7b048a54d04b362406a781c0925ba3520b04838390e5906ec66975689d1",
+      "candidate_path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "candidate_sha256": "sha256:23f7990d05840072b9f57f47143197157bf732834adc3670cd3c6e9a3cdd988b",
+      "change_type": "modified",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/indexes/current.json",
+      "baseline_sha256": "sha256:5fa78f74e1f20ad619eecb7fc0bbfcff29ccd961d56ee58f7d5d1096d5574db9",
+      "candidate_path": "knowledge/indexes/current.json",
+      "candidate_sha256": "sha256:5fd54f53ff82af1765563c3acdec0500ba1d007fbce1d721c74f3a44eb9d3050",
+      "change_type": "modified",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/evaluation/query-report.v1.json",
+      "candidate_sha256": "sha256:534775023ff93a51419e5c1bf306ce865f2c572eed75babf70ec01d2d63bd16b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/consumer-policies.v2.json",
+      "candidate_sha256": "sha256:eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/repository-knowledge-query-suite.v1.json",
+      "candidate_sha256": "sha256:758ad3841098a3b5c0ecc330c01583f88c8901e4145662237ffce4f17385dcf8",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/inputs/source-exclusions.v1.json",
+      "candidate_sha256": "sha256:c12514d500252b84c93041ccb2b564419a6d72bc77546af20dfde1e378287f2d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/consumer-projections.v1.json",
+      "candidate_sha256": "sha256:eb7bf70e26d0004a9a1819b65e07ec75ca3e20f8a9327254697739d41c3ba90f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v1.json",
+      "candidate_sha256": "sha256:8c4b73849255e1b4ab3db4de6aacd2d0557810d4491099b15f13ce106988eb71",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-knowledge-catalog.v2.json",
+      "candidate_sha256": "sha256:23f7990d05840072b9f57f47143197157bf732834adc3670cd3c6e9a3cdd988b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/layers/repository-source-snapshot.v1.json",
+      "candidate_sha256": "sha256:9a98489f56e8472dd98bdce907862e50c02f6ab3e7736605f91fb8244c87913a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/1813db80806a7e52b86cb5b2c509b6cb19c1b35c3ef1388648786feeec57bfbf/manifest.json",
+      "candidate_sha256": "sha256:32cbc2620ee597ab481992434e02edaf6e8bcb106e55f9fc940764b82e37f4cd",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/indexes/last-known-good.json",
+      "baseline_sha256": "sha256:5fa78f74e1f20ad619eecb7fc0bbfcff29ccd961d56ee58f7d5d1096d5574db9",
+      "candidate_path": "knowledge/indexes/last-known-good.json",
+      "candidate_sha256": "sha256:5fd54f53ff82af1765563c3acdec0500ba1d007fbce1d721c74f3a44eb9d3050",
+      "change_type": "modified",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/projections/consumer-projections.v1.json",
+      "baseline_sha256": "sha256:7cc86732afaf6855d88784bf9f7bcc36751daea54e93ffb4f735b2181a580603",
+      "candidate_path": "knowledge/projections/consumer-projections.v1.json",
+      "candidate_sha256": "sha256:eb7bf70e26d0004a9a1819b65e07ec75ca3e20f8a9327254697739d41c3ba90f",
+      "change_type": "modified",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "baseline_sha256": "sha256:525b6cfc4de41ea919454855697caffcba9c8d9ed575c08977e5361b66a00af9",
+      "candidate_path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "candidate_sha256": "sha256:9a98489f56e8472dd98bdce907862e50c02f6ab3e7736605f91fb8244c87913a",
+      "change_type": "modified",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/python/knowledge_context_validation.py",
+      "candidate_sha256": "sha256:984e052c35120cc0b69a948379f26848ca6c4576ce0bde7508536d791b3c392b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit Round 3 finding repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/python/tests/test_knowledge_context_validation.py",
+      "candidate_sha256": "sha256:0ac004f895b36448ca34dd512200b6cf35424905b11a6c1771fde6a00c30de17",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit Round 3 finding repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "baseline_sha256": "sha256:08490ebe9aeedcbd5503c0f8b5e4529335d6ca6a4a2b9ed9ba53d3cb7763ebaa",
+      "candidate_path": "scripts/python/tests/test_knowledge_workflow_terminal.py",
+      "candidate_sha256": "sha256:2a256dfa5c9e7cfbfab469ebbf2a58f5483e9b0cb38e431944b0aacaad54a10f",
+      "change_type": "modified",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+      "baseline_sha256": "sha256:c92f9e819652a985f0026f3bbfecc8a38c327006e76623a1b8d1d00a4d50741b",
+      "candidate_path": "scripts/python/tests/test_publish_knowledge_catalog.py",
+      "candidate_sha256": "sha256:dc84738fbbc316fec8cd8f2e01a10673de9c9e34365a3555d8991272a3f210a4",
+      "change_type": "modified",
+      "inclusion_reason": "explicit 7-26 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

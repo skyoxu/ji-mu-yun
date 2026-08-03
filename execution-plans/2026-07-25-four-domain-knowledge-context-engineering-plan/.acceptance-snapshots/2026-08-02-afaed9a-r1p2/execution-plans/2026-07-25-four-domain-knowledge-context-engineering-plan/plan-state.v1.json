@@ -1,0 +1,55 @@
+{
+  "authorizes": [
+    "plan-ready",
+    "implementation-authorized",
+    "implementation-complete"
+  ],
+  "git_head": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+  "plan_id": "jimuyun-four-domain-knowledge-context.v1",
+  "profile": "resumable",
+  "schema_version": "jimuyun.knowledge-plan-state.v1",
+  "source_requirements": {
+    "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan.md",
+    "sha256": "2aa794d6b7703e525b142e7c588496b651cdf8f336a5005c7a99fd931e5f600e"
+  },
+  "status": "implementation-complete",
+  "status_history": [
+    {
+      "evidence": [],
+      "reason": "Directory created; composition validation has not yet published plan-ready.",
+      "status": "draft"
+    },
+    {
+      "evidence": [
+        "tools/validate_whole_directory.py --publish-plan-ready"
+      ],
+      "reason": "Whole-directory composition validation passed.",
+      "status": "plan-ready"
+    },
+    {
+      "evidence": [
+        "logs/ci/2026-07-25/kc-plan-r1e/validation-envelope.json",
+        "tools/tests/test_plan_validator.py",
+        "tools/validate_whole_directory.py"
+      ],
+      "reason": "Finalized Round 1 findings were repaired and deterministic validation preserved plan-ready without granting implementation authority.",
+      "status": "plan-ready"
+    },
+    {
+      "evidence": [
+        "Explicit maintainer authorization in the implementation request."
+      ],
+      "reason": "K0-K10 plan-local implementation was explicitly authorized; K11-K14 gates remain unchanged.",
+      "status": "implementation-authorized"
+    },
+    {
+      "evidence": [
+        "logs/tdd-adapter/jimuyun-four-domain-knowledge-context.v1/",
+        "tools/check_e2_readiness.py",
+        "tools/validate_whole_directory.py"
+      ],
+      "reason": "Quick Dev adapter observed current TDD evidence for K0-K14 and the plan-local completion predicate passed.",
+      "status": "implementation-complete"
+    }
+  ]
+}

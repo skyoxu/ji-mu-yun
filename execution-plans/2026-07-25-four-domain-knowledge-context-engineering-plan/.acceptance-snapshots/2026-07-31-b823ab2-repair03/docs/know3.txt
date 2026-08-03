@@ -1,0 +1,887 @@
+# Ji Mu Yun 四域知识与上下文工程实施方案（修订版）
+
+## 1. 不可违反的总原则
+
+### 1.1 权威链保持现状，投影不进入权威排序
+
+Phase 当前权威顺序已经明确规定为：
+
+1. Accepted Phase ADR；
+2. `AGENTS.md` 的硬规则；
+3. 运行时事实和源码兼容性合同；
+4. `docs/architecture/phase-service/**`；
+5. `docs/standards/phase-service.md`；
+6. README 和高层导航。
+
+Knowledge Projection 不得插入该顺序。
+
+正确关系是：
+
+```text
+原始权威来源
+    ↓ 读取和抽取
+Knowledge Projection
+    ↓ 返回候选路径、摘要和来源指针
+Agent 读取原始来源
+    ↓
+依据既有权威顺序作出判断
+```
+
+投影自身必须声明：
+
+```json
+{
+  "authority": "derived-cache",
+  "may_decide": false,
+  "may_override_sources": false
+}
+```
+
+发生以下任一情况时，投影必须判定为失效：
+
+* 投影和源文件冲突；
+* 源 SHA 已变化；
+* 引用的源文件不存在；
+* 无法确定来源；
+* 多个权威来源冲突但投影自行选边；
+* 投影把历史文件描述为当前事实。
+
+查询结果必须返回原始来源，而不是只返回生成摘要：
+
+```json
+{
+  "match": "phase.prototype-routes",
+  "derived_summary": "...",
+  "source_refs": [
+    {
+      "path": "docs/architecture/phase-service/prototype-routes-and-recovery.md",
+      "content_sha256": "...",
+      "authority_kind": "architecture-rationale"
+    }
+  ]
+}
+```
+
+---
+
+## 2. 系统必须拆成四个不同组件
+
+上一版错误地把它们都称为 Knowledge Compiler 的能力。修订后拆为：
+
+### 2.1 Source Catalog
+
+职责：
+
+* 扫描原始文件；
+* 记录内容身份；
+* 建立引用关系；
+* 分类四个知识域；
+* 不做访问控制；
+* 不形成权威。
+
+### 2.2 Knowledge Projection and Query
+
+职责：
+
+* 生成模块索引；
+* 提供候选文件；
+* 加快 `rg`、符号搜索和 RAG；
+* 降低无关上下文召回；
+* 记录检索依据。
+
+它只实现**检索隔离**。
+
+### 2.3 Context Assembler
+
+职责：
+
+* 根据 route、skill、账号、项目和操作类型选择允许进入模型上下文的 Artifact；
+* 生成 hash-bound Artifact Manifest；
+* 控制 prompt 中实际注入哪些内容；
+* 在模型调用前执行来源检查、脱敏和新鲜度检查。
+
+它实现**上下文装配边界**。
+
+### 2.4 Execution Boundary
+
+职责：
+
+* 限制 Agent 实际能读取和写入的文件；
+* 限制工作目录、工具、子进程、网络和 secrets；
+* 校验 Skill profile；
+* 拒绝未绑定 Artifact View 的 Hosted Codex 调用。
+
+它实现**访问边界**。
+
+这四个组件不能相互冒充：
+
+```text
+Projection ≠ Authority
+Query filter ≠ Context boundary
+Context manifest ≠ Filesystem isolation
+Working directory ≠ Security boundary
+```
+
+---
+
+## 3. 检索隔离与访问隔离的明确区分
+
+当前 `CodexHostedProcessCommandFactory` 直接接收 `RepositoryRoot`，将其传给 `codex exec --cd`，并使用 `workspace-write` 或其他 sandbox 模式；没有 Knowledge Scope 或 Artifact View 合同。
+
+最终创建的进程工作目录仍是完整的 `request.RepositoryRoot`。
+
+`SkillActionService` 也直接把 `project.RepoPath` 交给 legacy Codex 或 LLM route engine，没有 Scope gate。
+
+因此 Knowledge CLI 即使把 `workflow.md` 排除在候选结果之外，Agent 仍然可以自行执行：
+
+```text
+rg "Chapter 6" .
+cat workflow.md
+```
+
+### 3.1 必须定义四级 Enforcement Level
+
+```text
+E0 — Unscoped
+完整项目根目录，未装配知识边界。
+
+E1 — Retrieval Scoped
+Knowledge Query 只返回指定 Scope 的候选文件。
+不能阻止 Agent 自行读取其他文件。
+
+E2 — Context Bound
+模型输入只能来自经过校验的 Artifact Manifest。
+仍不能单独阻止进程读取工作目录中的其他文件。
+
+E3 — Filesystem Enforced
+进程只能访问 Artifact View 和允许的写入目录。
+这是“机械禁止”的最低有效等级。
+```
+
+任何 route、Skill 或文档都不得把 E1/E2 描述为安全隔离。
+
+### 3.2 Artifact View 还必须配合操作系统边界
+
+仅创建一个临时目录不够。同一 Windows 用户运行的进程仍可能通过绝对路径访问宿主仓库或其他 workspace。
+
+真正的 E3 需要至少一种机制：
+
+* 受限 Windows runner 账号和 NTFS ACL；
+* restricted token；
+* 独立 worker VM；
+* 容器或同等强隔离；
+* 只暴露 Artifact View 的远程执行 worker。
+
+Artifact View 负责“展示什么”，ACL/runner isolation 负责“其余内容确实不可读”。
+
+在 OS 隔离完成前，可以上线 E1、E2，但必须明确标为：
+
+```text
+enforcement_level: context-bound
+filesystem_isolation: false
+```
+
+---
+
+## 4. 知识数据必须分成四种生命周期
+
+不能只使用四个业务 Scope，还必须区分数据实例。
+
+### 4.1 Repository Source Catalog
+
+身份：
+
+```text
+repository_id
+git_commit
+tree_oid
+dirty_worktree_identity
+```
+
+内容：
+
+* Git 跟踪源码；
+* ADR；
+* architecture；
+* standards；
+  -仓库级 Skill；
+  -稳定 Schema 和测试。
+
+特点：
+
+* 全局；
+* 可提交；
+* 不含用户运行数据；
+* 可以为 Toolchain 和 Phase 源码维护服务。
+
+### 4.2 Repository Template Projection
+
+内容：
+
+* 会被 Seeder 复制给用户项目的模板文件；
+* 共享 Godot kernel；
+* 允许下发的 Skill；
+* 项目初始化文档和规则。
+
+它与根仓源码投影不同，因为 Seeder 不仅创建一次项目，还会持续同步部分目录。
+
+当前 Seeder 会同步：
+
+* `scripts`
+* `_bmad/scripts`
+* `.agents/skills`
+* `docs/prototype-type-kits`
+
+项目首次初始化或缺少 baseline 时还可能复制整个根目录，并在后续继续同步受管理目录。
+
+因此 Template Projection 必须基于 Seeder 的真实复制和同步规则生成，不能直接复用 Root Projection。
+
+### 4.3 Project Instance Projection
+
+身份至少包括：
+
+```text
+account_id
+project_id
+workspace_id
+template_revision
+workspace_generation
+```
+
+内容：
+
+* 该项目的 `project.md`；
+* 项目 GDD；
+* 当前项目代码；
+* 当前项目 routes；
+* 项目素材；
+* 项目局部 contracts；
+* 项目局部 Skill 配置；
+* 当前项目 ledger 和可恢复状态。
+
+每个项目必须拥有独立的：
+
+* source catalog；
+* baseline；
+* query index；
+* RAG namespace；
+* cache key；
+  -生命周期。
+
+禁止：
+
+```text
+Project A 和 Project B 共用向量集合
+以路径字符串作为唯一租户隔离
+把根模板结果直接当成项目当前事实
+```
+
+推荐 namespace：
+
+```text
+project:{account_id}:{project_id}:{workspace_generation}
+```
+
+### 4.4 Run Artifact View
+
+身份：
+
+```text
+account_id
+project_id
+run_id
+route_id
+artifact_manifest_sha256
+```
+
+这是单次 Hosted Agent 执行看到的最小视图。
+
+运行结束后：
+
+* Manifest 和必要 hash 可保存；
+* Raw context 不默认进入长期知识库；
+* Secret、raw prompt 和私有日志不能进入全局 Projection；
+* 新 run 使用新的 Artifact View。
+
+---
+
+## 5. 源码知识和运行态证据必须彻底分离
+
+### 5.1 全局源码投影允许的来源
+
+```text
+Git 跟踪代码
+ADR
+architecture
+standards
+schemas
+tests
+稳定 Skill 定义
+稳定 CLI 合同
+```
+
+### 5.2 全局源码投影默认排除
+
+```text
+logs/**
+logs/phase-a-innernet/**
+Hosted workspaces
+项目 sidecar
+用户素材
+用户 GDD
+raw prompts
+聊天记录
+运行时数据库
+token 和 provider 配置
+```
+
+根 README 已把 `logs/phase-a-innernet/` 定义为运行时数据库、workspace 和运行证据，而不是源码或稳定配置。
+
+### 5.3 项目运行态只进入项目实例层
+
+项目运行态知识可以包括：
+
+* 当前任务状态；
+* route latest state；
+* repair ledger；
+* acceptance blocker；
+* sanitized artifact manifest；
+  -恢复 checkpoint；
+  -项目局部 bad case。
+
+但必须满足：
+
+* `account_id` 和 `project_id` 双重绑定；
+* workspace-relative path；
+  -脱敏后写入；
+  -原子更新；
+  -不得被全局检索；
+  -管理员跨账号读取走单独 admin surface；
+  -不能把 raw prompt 作为浏览器或普通用户知识。
+
+ADR-0038 已要求 readback 默认账号作用域，只暴露逻辑 Artifact ID、摘要或脱敏的 workspace-relative path，并禁止未经脱敏和 Schema 验证的新 raw evidence。
+
+它还要求执行 prompt hash、持久化 prompt hash、源 hash 和数据库 run binding 分离，并明确 raw prompt 只能用于内部恢复，不能进入普通 artifact listing。
+
+---
+
+## 6. 当前问题基线必须先测量，而不是先改文档
+
+根 AGENTS 已明确规定：
+
+* `workflow.md` 不是 Phase 默认路径；
+  -普通 Phase 工作不得进入 Taskmaster、Chapter 3–7、overlay generator 或 Chapter 6 recovery。
+
+README 也已作出相同声明。
+
+因此不再把“重写 AGENTS/README”作为第一阶段。
+
+第一阶段需要证明的是：
+
+### 6.1 当前仓库检索污染率
+
+建立三组查询：
+
+```text
+Phase 查询
+Toolchain 查询
+Workspace 查询
+```
+
+例如 Phase 查询：
+
+```text
+账号 token 轮换
+Caddy public health 恢复
+prototype repair acceptance blocker
+GDD-to-module route
+```
+
+测量：
+
+* 前 10 个结果中 Toolchain-only 文件比例；
+* 是否召回 `workflow.md`；
+* 是否召回 Chapter 3–7；
+  -是否召回旧 overlay；
+  -是否错过当前 Phase architecture、代码和测试。
+
+### 6.2 Hosted Workspace 污染率
+
+创建全新的测试项目 workspace，扫描 Seeder 实际复制内容。
+
+测量：
+
+* `workflow.md` 是否存在；
+* Taskmaster/Chapter 文档是否存在；
+* `.agents/skills` 中有多少 Toolchain-only Skill；
+  -项目内检索是否把根模板规则视为项目事实；
+* Seeder 同步后 index 是否自动失效；
+  -模板 revision 是否可以追踪。
+
+### 6.3 Hosted Agent 越界能力
+
+测试：
+
+* Agent 是否能直接读取 Scope 排除文件；
+* Agent 是否能读取其他项目路径；
+  -绝对路径访问是否成功；
+* read-only route 是否仍可访问不相关项目内容；
+* Skill route 是否绕过 Context Assembler。
+
+这些结果决定后续优先级。
+
+---
+
+## 7. 完整确定性合同
+
+### 7.1 三种内容身份必须分开
+
+#### Git Object ID
+
+```text
+git_blob_oid
+git_tree_oid
+git_commit_oid
+```
+
+它是 Git 对象身份。当前仓库通常使用 SHA-1，但 Schema 不应把字段命名为 `sha1`，应允许未来 Git SHA-256。
+
+#### Raw Content SHA-256
+
+```text
+raw_content_sha256
+```
+
+计算对象：
+
+```text
+文件原始字节
+```
+
+用途：
+
+* 非 Git 文件；
+* dirty worktree；
+  -项目实例；
+  -运行 Artifact；
+  -跨 Git hash 算法比较。
+
+#### Canonical Text SHA-256
+
+```text
+canonical_text_sha256
+```
+
+仅对严格 UTF-8 文本生成。
+
+规范：
+
+* UTF-8 严格解码；
+* Unicode NFC；
+* CRLF/CR 统一为 LF；
+  -不删除末尾空格；
+  -不自动补换行；
+  -是否存在 BOM 必须另行记录；
+  -原始字节 hash 仍保留。
+
+#### Semantic Fingerprint
+
+```text
+semantic_fingerprint
+```
+
+按类型抽取：
+
+* C# public API；
+* HTTP route；
+* DTO/schema；
+* event；
+* CLI signature；
+  -环境变量；
+  -测试 anchor；
+  -权限能力。
+
+四种身份不得互相替代。
+
+### 7.2 Dirty Worktree 身份
+
+不能只记录 HEAD。
+
+```json
+{
+  "head_commit_oid": "...",
+  "head_tree_oid": "...",
+  "worktree_state": "dirty",
+  "tracked_diff_sha256": "...",
+  "staged_diff_sha256": "...",
+  "untracked_manifest_sha256": "...",
+  "source_snapshot_id": "..."
+}
+```
+
+`source_snapshot_id` 应由上述字段确定性组合。
+
+LLM 分类、Projection 和评估必须绑定 `source_snapshot_id`，而不是只绑定 commit。
+
+### 7.3 Windows 路径规范
+
+每个路径同时保存：
+
+```text
+display_path
+canonical_path_key
+```
+
+规范：
+
+* 仓库相对路径；
+  -分隔符统一为 `/`；
+  -路径段做 Unicode NFC；
+  -`canonical_path_key` 使用 Windows case folding；
+  -保留原始大小写作为 `display_path`；
+  -拒绝两个文件映射到同一个 canonical key；
+  -拒绝 `..`；
+  -拒绝越过 root；
+  -reparse point 单独标记并默认 fail closed。
+
+### 7.4 生成目录自排除
+
+全局扫描默认排除：
+
+```text
+knowledge/generated/**
+knowledge/.staging/**
+.cache/knowledge/**
+logs/**
+Hosted workspace roots
+bin/**
+obj/**
+.git/**
+```
+
+Project Instance Builder 必须显式指定 workspace root，不能被全局扫描器自动发现。
+
+### 7.5 原子构建
+
+禁止原地更新当前 Projection。
+
+正确流程：
+
+```text
+创建 immutable build directory
+→ 完整生成
+→ Schema 校验
+→ provenance 校验
+→ leakage eval
+→ stale-source 校验
+→ 写 build manifest
+→ 原子切换 current pointer
+```
+
+目录示例：
+
+```text
+knowledge/builds/<build_id>/
+knowledge/current.json
+knowledge/last-known-good.json
+```
+
+`current.json` 通过临时文件和原子 replace 更新。
+
+### 7.6 并发锁
+
+即使是一人维护，也可能存在：
+
+* Phase 后台任务；
+  -多个 Agent；
+* Seeder；
+* CI；
+  -本地 CLI 同时构建。
+
+需要：
+
+```text
+global repository projection lock
+per-project instance lock
+per-run artifact-view lock
+```
+
+Windows 下可使用：
+
+* 独占文件句柄；
+* named mutex；
+  -带 owner PID、start time 和 lease 的 lock sidecar。
+
+不得仅依赖“单人不会并发”。
+
+### 7.7 Last-Known-Good
+
+构建失败时：
+
+* 不修改 current pointer；
+  -继续使用 LKG；
+  -输出失败报告；
+  -标记 LKG 对当前 source snapshot 是否 stale；
+  -不得自动回退到一个来源不匹配但未声明 stale 的版本。
+
+### 7.8 LLM 分类可重复性
+
+LLM 只能处理确定性规则无法解决的歧义。
+
+缓存键：
+
+```text
+classifier_schema_version
+classification_policy_version
+model_identifier
+prompt_sha256
+raw_content_sha256
+dependency_context_sha256
+```
+
+命中缓存时禁止重跑。
+
+未命中时：
+
+-输出完整 provenance；
+-置信度低则 `unresolved`；
+-模型不可用则 fail closed；
+-不能为了得到不同答案反复调用模型；
+-模型或 prompt 版本变化必须显式触发新的分类世代。
+
+---
+
+## 8. 修订后的完整实施顺序
+
+以下共 **14 个切片，编号 K0–K13**。
+
+### K0：当前污染基线
+
+产物：
+
+```text
+query-baseline.json
+workspace-seed-baseline.json
+hosted-agent-access-baseline.json
+```
+
+测量检索污染、Seeder 污染和实际越界能力。
+
+不修改 AGENTS、README 或生产路由。
+
+### K1：权威与数据生命周期合同
+
+明确：
+
+* Projection 非权威；
+* repository、template、project instance、run view 四种生命周期；
+  -源码和运行态隔离；
+* ADR-0038 约束。
+
+### K2：确定性身份与构建基础
+
+实现：
+
+* Git OID；
+* raw/canonical SHA-256；
+* dirty snapshot；
+* Windows path canonicalization；
+  -自排除；
+  -原子构建；
+  -lock；
+  -LKG。
+
+### K3：只读 Source Catalog
+
+只扫描 Git 跟踪源码和稳定文档。
+
+不扫描：
+
+* logs；
+* workspaces；
+  -用户内容；
+  -runtime DB。
+
+### K4：Scope 分类与引用图
+
+生成四域分类、依赖和 provenance。
+
+此时仍不修改 Hosted Agent 行为。
+
+### K5：Query CLI 与回归评估
+
+在任何 Phase 投影被称为可用之前完成：
+
+-候选模块查询；
+-精确路径输出；
+-污染率计算；
+-bad case replay；
+-stale-source 检测；
+-同一 snapshot 零 diff 验证。
+
+### K6：Phase Projection 实验版
+
+状态只能是：
+
+```text
+experimental
+retrieval_enforcement: E1
+```
+
+用于本地查询实验，不接 Hosted route。
+
+### K7：Context Assembler 与 Artifact Manifest
+
+输入：
+
+```text
+account_id
+project_id
+route_id
+skill_id
+operation
+source_snapshot_id
+```
+
+输出 hash-bound Artifact Manifest。
+
+Context Assembler 必须在模型调用前：
+
+-校验账号和项目；
+-校验 Scope；
+-校验 source freshness；
+-执行脱敏；
+-拒绝 forbidden source；
+-记录实际注入内容的 hash。
+
+### K8：执行入口 Scope Gate
+
+修改至少：
+
+```text
+CodexHostedProcessCommandFactory
+SkillActionService
+共享 LLM/Codex route entrypoint
+```
+
+Hosted 调用必须携带：
+
+```text
+context_manifest
+scope_profile
+enforcement_level
+account_id
+project_id
+```
+
+没有 manifest 或 manifest 不匹配时 fail closed。
+
+完成后达到 E2，而不是 E3。
+
+### K9：Filesystem-Enforced Artifact View
+
+建设：
+
+-受限 runner identity；
+-NTFS ACL；
+-独立 Artifact View root；
+-允许写入路径；
+-禁止访问宿主 root 和其他 workspace；
+-执行后受控 writeback。
+
+只有该阶段完成后才能声明“机械禁止”。
+
+### K10：Template Projection
+
+根据 `ProjectWorkspaceSeeder` 的实际复制、同步和退役规则生成模板投影。
+
+每次 Seeder 规则改变，Template Projection baseline 必须失效。
+
+### K11：Project Instance Projection
+
+每个项目独立生成：
+
+```text
+account_id + project_id + workspace_generation
+```
+
+独立 catalog、cache、RAG namespace 和 LKG。
+
+不得复用根仓 baseline。
+
+### K12：运行证据与项目恢复投影
+
+只在项目实例层纳入：
+
+-脱敏 sidecar；
+-route state；
+-ledger；
+-acceptance blocker；
+-恢复 checkpoint。
+
+严格执行 ADR-0038，不进入全局源码投影。
+
+### K13：其他 Scope 与正式切换
+
+最后再构建：
+
+* Toolchain Projection；
+* Workspace shared-kernel Projection；
+* Marketplace 空 Schema 和 Projection。
+
+正式切换条件：
+
+* Query leakage 通过；
+* stale detection 通过；
+  -账号隔离通过；
+  -Artifact Manifest 通过；
+  -Hosted route Scope Gate 通过；
+  -E3 路径如未完成，产品必须明确显示当前仅为 E2；
+  -LKG rollback 通过；
+  -同一 snapshot 重建零 diff；
+  -原文件零迁移、零删除。
+
+---
+
+## 9. 正式完成标准
+
+这项工作完成不能只看是否生成了四份索引。
+
+必须同时满足：
+
+### 检索正确性
+
+* Phase 查询不默认召回 Toolchain-only 内容；
+* Toolchain 查询仍能找到完整 `workflow.md` 和 Chapter 3–7；
+  -每个查询结果可追溯到原始来源；
+* Projection 永不覆盖原始权威。
+
+### 实例隔离
+
+-根仓、模板和项目实例使用不同 snapshot；
+-不同账号项目不共享 corpus；
+-模板同步后项目索引明确失效或增量更新；
+-项目内容不进入全局 cache。
+
+### 运行态安全
+
+* Raw logs 和 raw prompts 不进入全局知识库；
+* readback 账号作用域；
+* Context Manifest 绑定 run；
+* Skill 和 Codex route 不能绕过 Scope Gate。
+
+### 确定性
+
+-同一 source snapshot 零 diff；
+
+* dirty worktree 可精确识别；
+  -Windows 路径不存在大小写碰撞；
+  -构建原子切换；
+  -失败保留 LKG；
+  -LLM 分类可缓存、可追溯、不随机重跑。
+
+### 执行隔离
+
+* E1、E2、E3 状态不会混淆；
+  -只有操作系统文件边界验证通过后才声明机械禁止；
+  -Agent 无法读取其他项目或宿主仓库排除路径。

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "acceptance-manual-pause-maintainer-ack.v1",
+  "decision": "accept-repaired-target",
+  "closureBindingHash": "sha256:e2b30423e4a925e14841d5ba9b6789a09ece9ec029e5d62c5428abc4e79d4518",
+  "acknowledgedFindingIds": [
+    "BSR-4F8A9341CD3CDFBC",
+    "BSR-59092136A5D5D414",
+    "BSR-ABDD6277892B502F",
+    "BSR-F0AF746EDA67B150"
+  ],
+  "authorityRole": "maintainer",
+  "rationale": "Maintainer explicitly accepted the exact challenge hash, closure binding, and repaired finding set.",
+  "recordedAt": "2026-08-03T13:52:52.9905446Z",
+  "authorizes": [
+    "manual-pause-closure"
+  ]
+}

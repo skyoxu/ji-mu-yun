@@ -1,0 +1,159 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-context.v1",
+  "locator_request": {
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "request_id": "kwi-20260727-vdd-successor-v2",
+    "consumer": "vdd",
+    "query": "repository rules knowledge locator workflow VDD Quick Dev Bootstrap",
+    "snapshot": {
+      "ref": "refs/heads/main",
+      "commit": "cb156e25f2cf95bbb739e4176f50e254dbe2f84b"
+    },
+    "policy_revision": "knowledge-consumer-policies.v1"
+  },
+  "locator_result": {
+    "candidates": [
+      {
+        "anchor": "Bootstrap Review Skill",
+        "line_end": 1,
+        "line_start": 1,
+        "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 2
+        },
+        "source_sha256": "ef538864db4ea1078848db13d4b7c90ae679276cbdb95bc16b782d01b9974b2b"
+      },
+      {
+        "anchor": "VDD Execution Plan",
+        "line_end": 1,
+        "line_start": 1,
+        "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 2
+        },
+        "source_sha256": "c82aea2ff3b91cc9aee9ab6a113c8173bc309e52f733c702e0d89105ae078d8d"
+      },
+      {
+        "anchor": "Repository Guide",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "AGENTS.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 2
+        },
+        "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"
+      },
+      {
+        "anchor": "ADR-0041",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 1
+        },
+        "source_sha256": "755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+      },
+      {
+        "anchor": "Phase Service Standard",
+        "line_end": 1,
+        "line_start": 1,
+        "path": "docs/standards/phase-service.md",
+        "provenance": [
+          "catalog"
+        ],
+        "rank_evidence": {
+          "strategy": "token",
+          "token_matches": 1
+        },
+        "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc"
+      }
+    ],
+    "request_id": "kwi-20260727-vdd-successor-v2",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "cb156e25f2cf95bbb739e4176f50e254dbe2f84b",
+      "ref": "refs/heads/main"
+    },
+    "status": "matched"
+  },
+  "required_modules": [
+    "repository-rules"
+  ],
+  "decisions": [
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "source_sha256": "ef538864db4ea1078848db13d4b7c90ae679276cbdb95bc16b782d01b9974b2b"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+        "source_sha256": "c82aea2ff3b91cc9aee9ab6a113c8173bc309e52f733c702e0d89105ae078d8d"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "AGENTS.md",
+        "source_sha256": "7687d1ee1503c80f340a25eb6ceda67bee38a97e341d695765f401bf25eee2fd"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "repository-rules"
+      ],
+      "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "source_sha256": "755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/standards/phase-service.md",
+        "source_sha256": "dbabd3730112b89fddbb988bf8da28cbddec2977610bff58d80dd9d44d48c1bc"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    }
+  ],
+  "request_sha256": "sha256:4bc673fec20374ce43e264d7e171c6b4f5062e3a3d364d116910757987171cd4",
+  "result_sha256": "sha256:4cb16e1bb955583f1a6b7c9b5caf7cf58e8dc3ed787109321f0e31d74793cce3",
+  "preflight": {
+    "status": "ready",
+    "failure_code": null,
+    "context_sha256": "sha256:158930b44a7f847f7e7ed8d457b039a4f13f134ed4115c9b4bdd948abfb0d935"
+  }
+}

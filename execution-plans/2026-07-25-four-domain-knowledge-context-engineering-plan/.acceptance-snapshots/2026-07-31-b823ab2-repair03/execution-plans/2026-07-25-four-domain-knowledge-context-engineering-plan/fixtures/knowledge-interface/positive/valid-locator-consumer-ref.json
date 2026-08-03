@@ -1,0 +1,105 @@
+{
+  "expected_failure_code": null,
+  "expected_result": "pass",
+  "fixture_id": "valid-locator-consumer-ref",
+  "kind": "positive",
+  "operation": "locator",
+  "request": {
+    "caller": {
+      "caller_id": "tool.synthetic.plan-reader",
+      "caller_type": "tool",
+      "intent_source": "deterministic-tool"
+    },
+    "intent": {
+      "consumer_ref": "execution-plans/synthetic-plan/",
+      "keywords": [],
+      "preferred_modules": [
+        "toolchain.vdd"
+      ],
+      "primary_domain_hint": "toolchain",
+      "query": "Find the lifecycle and plan-ready authority contract for this execution plan."
+    },
+    "request_id": "locator-request-002",
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "trusted_envelope": {
+      "allowed_domains": [
+        "toolchain"
+      ],
+      "authority_ref": "refs/heads/main",
+      "dirty_worktree_authority": false,
+      "implicit_fetch": false,
+      "max_results": 5,
+      "max_source_bytes": 32768,
+      "owner": "adapter",
+      "path_policy": {
+        "allowed_path_prefixes": [
+          "docs/architecture/phase-service",
+          "execution-plans/synthetic-plan"
+        ],
+        "policy_id": "locator-read-policy-synthetic",
+        "policy_revision": "locator-read-policy.synthetic.v1",
+        "policy_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "permission_source": "local-policy",
+      "source_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+      "source_snapshot_id": "source-snapshot-main-001",
+      "trace_id": "trace-locator-002"
+    }
+  },
+  "result": {
+    "confidence": {
+      "level": "high",
+      "score": 0.93
+    },
+    "next_action": "read-and-verify",
+    "normalized_keywords": [
+      "execution-plan",
+      "lifecycle",
+      "plan-ready"
+    ],
+    "path_policy_identity": {
+      "policy_id": "locator-read-policy-synthetic",
+      "policy_revision": "locator-read-policy.synthetic.v1",
+      "policy_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "recommended_reads": [
+      {
+        "anchor": "Authority and lifecycle",
+        "anchor_kind": "heading",
+        "line_end": 35,
+        "line_start": 20,
+        "matched_by": [
+          "exact-path",
+          "rg-lexical"
+        ],
+        "module_id": "toolchain.vdd.plan-authority",
+        "path": "execution-plans/synthetic-plan/00-index.md",
+        "provenance_refs": [
+          "catalog://toolchain/vdd-plan-authority"
+        ],
+        "rank": 1,
+        "ranking_breakdown": {
+          "bm25": 0.61,
+          "exact": 1.0,
+          "lexical": 0.86,
+          "relation": 0.0
+        },
+        "score": 0.93,
+        "source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "visibility_reason": "explicit consumer boundary"
+      }
+    ],
+    "request_id": "locator-request-002",
+    "result_kind": "location-recommendation",
+    "revalidation_required": true,
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "selected_domain": "toolchain",
+    "source_identity": {
+      "authority_ref": "refs/heads/main",
+      "source_commit": "7584f295c1b4d4124a4eaccc5ac51f05731ba923",
+      "source_snapshot_id": "source-snapshot-main-001"
+    },
+    "status": "matched"
+  },
+  "schema_version": "jimuyun.knowledge-interface-fixture.v1"
+}
