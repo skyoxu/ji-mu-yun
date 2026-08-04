@@ -26,6 +26,7 @@ from execution_control import (
     inspect_run,
     inspect_persisted_run,
     publish_receipt,
+    recover_stale_persisted_action,
     resume_persisted_run,
     resume_run,
     run_controlled_command,
@@ -891,6 +892,13 @@ def main() -> int:
     resume_persisted.add_argument("--run-input-hash", required=True)
     resume_persisted.add_argument("--contract-hash", required=True)
     resume_persisted.add_argument("--knowledge-context-hash")
+    recover_stale = subcommands.add_parser("recover-stale-action")
+    recover_stale.add_argument("--run-dir", required=True)
+    recover_stale.add_argument("--action-id", required=True)
+    recover_stale.add_argument("--run-input-hash", required=True)
+    recover_stale.add_argument("--contract-hash", required=True)
+    recover_stale.add_argument("--knowledge-context-hash")
+    recover_stale.add_argument("--minimum-age-seconds", type=int, default=60)
     subcommands.add_parser("validate-package")
     args = parser.parse_args()
     if args.command == "parse-run-input":
@@ -1014,6 +1022,12 @@ def main() -> int:
         )
         print(json.dumps(result, sort_keys=True))
         return 0 if result.get("receipt", {}).get("exitCode") == 0 else 1
+    if args.command == "recover-stale-action":
+        print(json.dumps(recover_stale_persisted_action(
+            Path(args.run_dir), args.action_id, args.run_input_hash, args.contract_hash,
+            args.knowledge_context_hash, minimum_age_seconds=args.minimum_age_seconds,
+        ), sort_keys=True))
+        return 0
     findings = validate_package(Path(__file__).resolve().parents[1])
     print(json.dumps({"status": "pass" if not findings else "fail", "findings": findings, "authorizes": []}, sort_keys=True))
     return 0 if not findings else 1

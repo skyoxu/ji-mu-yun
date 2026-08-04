@@ -424,6 +424,176 @@ class ExecutionControlTests(unittest.TestCase):
             self.assertEqual(0, receipt["processResult"]["exitCode"])
             self.assertEqual([], receipt["writeManifestDelta"]["changedPaths"])
 
+    def test_repository_manifest_uses_index_identity_only_for_clean_tracked_files(self) -> None:
+        import subprocess
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            clean = root / "clean.py"
+            dirty = root / "dirty.py"
+            clean.write_text("clean\n", encoding="utf-8", newline="\n")
+            dirty.write_text("before\n", encoding="utf-8", newline="\n")
+            subprocess.run(["git", "add", "clean.py", "dirty.py"], cwd=root, check=True)
+            dirty.write_text("dirty\n", encoding="utf-8", newline="\n")
+
+            original_hash = execution_control._hash_repository_file
+            hashed: list[str] = []
+
+            def recording_hash(path: Path) -> str:
+                hashed.append(path.name)
+                return original_hash(path)
+
+            with mock.patch.object(execution_control, "_hash_repository_file", side_effect=recording_hash):
+                manifest = execution_control._repository_content_manifest(root)
+
+            self.assertTrue(manifest["clean.py"].startswith("git-index:100644:"))
+            self.assertTrue(manifest["dirty.py"].startswith("sha256:"))
+            self.assertEqual(["dirty.py"], hashed)
+
+    def test_repository_manifest_hashes_untracked_and_ignored_log_bytes(self) -> None:
+        import hashlib
+        import subprocess
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            (root / ".gitignore").write_text("logs/\n", encoding="utf-8", newline="\n")
+            subprocess.run(["git", "add", ".gitignore"], cwd=root, check=True)
+            untracked = root / "candidate.txt"
+            ignored = root / "logs" / "evidence.txt"
+            ignored.parent.mkdir()
+            untracked.write_bytes(b"candidate\n")
+            ignored.write_bytes(b"evidence\n")
+
+            manifest = execution_control._repository_content_manifest(root)
+
+            self.assertEqual("sha256:" + hashlib.sha256(b"candidate\n").hexdigest(), manifest["candidate.txt"])
+            self.assertEqual("sha256:" + hashlib.sha256(b"evidence\n").hexdigest(), manifest["logs/evidence.txt"])
+
+    def test_repository_manifest_expands_ignored_nested_repository(self) -> None:
+        import hashlib
+        import subprocess
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            (root / ".gitignore").write_text("logs/\n", encoding="utf-8", newline="\n")
+            subprocess.run(["git", "add", ".gitignore"], cwd=root, check=True)
+            nested = root / "logs" / "nested"
+            nested.mkdir(parents=True)
+            subprocess.run(["git", "init", "--quiet"], cwd=nested, check=True)
+            payload = nested / "evidence.txt"
+            payload.write_bytes(b"nested evidence\n")
+
+            manifest = execution_control._repository_content_manifest(root)
+
+            self.assertEqual(
+                "sha256:" + hashlib.sha256(b"nested evidence\n").hexdigest(),
+                manifest["logs/nested/evidence.txt"],
+            )
+
+    def test_read_only_command_detects_ignored_evidence_rewrite(self) -> None:
+        import subprocess
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            (root / ".gitignore").write_text("logs/\n", encoding="utf-8", newline="\n")
+            subprocess.run(["git", "add", ".gitignore"], cwd=root, check=True)
+            evidence = root / "logs" / "evidence.txt"
+            evidence.parent.mkdir()
+            evidence.write_text("before\n", encoding="utf-8", newline="\n")
+            descriptor = {
+                "id": "rewrite-evidence", "executable": sys.executable,
+                "argv": ["-c", "from pathlib import Path; Path('logs/evidence.txt').write_text('after\\n', encoding='utf-8')"],
+                "cwd": ".", "timeout_seconds": 10, "shell": False,
+                "allowed_write_roots": [], "forbidden_write_roots": [],
+                "registry_hash": "sha256:" + "a" * 64, "environment_allowlist": [],
+                "typed_placeholders": {}, "placeholder_values": {},
+            }
+
+            with self.assertRaisesRegex(execution_control.ControlError, "changed repository bytes"):
+                execution_control.run_controlled_command(root, descriptor)
+
+    def test_stale_action_recovery_preserves_attempt_evidence_and_releases_claim(self) -> None:
+        import tempfile
+        import execution_control
+
+        run_input_hash = "sha256:" + "a" * 64
+        contract_hash = "sha256:" + "b" * 64
+        context_hash = "sha256:" + "c" * 64
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            run = execution_control.create_persisted_run(
+                root, "run-stale", run_input_hash, contract_hash,
+                knowledge_context_hash=context_hash,
+            )
+            claim = execution_control.claim_persisted_action(run, "validate", "validator")
+            lifecycle = {
+                "action_id": "validate", "attempt_id": "attempt-001",
+                "action_type": "run-command",
+                "input_hashes": {
+                    "runInputHash": run_input_hash, "contractHash": contract_hash,
+                    "knowledgeContextHash": context_hash,
+                },
+                "owner_token": "owner-run-stale", "formal_write_set": [],
+                "command_id": "validator",
+            }
+            execution_control.record_lifecycle_event(run, event_type="action-reserved", **lifecycle)
+            execution_control.record_lifecycle_event(run, event_type="action-started", **lifecycle)
+            claim_value = json.loads(claim.read_text(encoding="utf-8"))
+            claim_value["claimedUtc"] = "2026-01-01T00:00:00Z"
+            claim.write_text(json.dumps(claim_value) + "\n", encoding="utf-8", newline="\n")
+
+            with mock.patch.object(execution_control, "_process_is_running", return_value=False):
+                result = execution_control.recover_stale_persisted_action(
+                    run, "validate", run_input_hash, contract_hash, context_hash
+                )
+
+            self.assertEqual("stale-recovered", result["status"])
+            self.assertFalse(claim.exists())
+            events = [json.loads(line) for line in (run / "acceptance-events.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertEqual("action-stale", events[-1]["eventType"])
+            self.assertTrue((run / "actions" / "validate" / "attempt-001" / "request.json").is_file())
+
+    def test_stale_action_recovery_rejects_a_live_process(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            run = execution_control.create_persisted_run(
+                root, "run-live", "sha256:" + "a" * 64, "sha256:" + "b" * 64
+            )
+            claim = execution_control.claim_persisted_action(run, "validate", "validator")
+            lifecycle = {
+                "action_id": "validate", "attempt_id": "attempt-001",
+                "action_type": "run-command",
+                "input_hashes": {"runInputHash": "sha256:" + "a" * 64, "contractHash": "sha256:" + "b" * 64},
+                "owner_token": "owner-run-live", "formal_write_set": [], "command_id": "validator",
+            }
+            execution_control.record_lifecycle_event(run, event_type="action-reserved", **lifecycle)
+            execution_control.record_lifecycle_event(run, event_type="action-started", **lifecycle)
+            claim_value = json.loads(claim.read_text(encoding="utf-8"))
+            claim_value["claimedUtc"] = "2026-01-01T00:00:00Z"
+            claim.write_text(json.dumps(claim_value) + "\n", encoding="utf-8", newline="\n")
+
+            with mock.patch.object(execution_control, "_process_is_running", return_value=True):
+                with self.assertRaisesRegex(execution_control.ControlError, "still running"):
+                    execution_control.recover_stale_persisted_action(
+                        run, "validate", "sha256:" + "a" * 64, "sha256:" + "b" * 64
+                    )
+            self.assertTrue(claim.exists())
+
     def test_lifecycle_event_creates_immutable_attempt_evidence(self) -> None:
         import tempfile
         import execution_control

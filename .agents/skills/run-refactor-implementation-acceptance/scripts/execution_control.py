@@ -8,6 +8,7 @@ import os
 import re
 import signal
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -415,6 +416,105 @@ def release_persisted_action(claim_path: Path) -> None:
         raise ControlError("persisted action claim cannot be released") from exc
 
 
+def _process_is_running(process_id: int) -> bool:
+    if not isinstance(process_id, int) or isinstance(process_id, bool) or process_id <= 0:
+        raise ControlError("stale action process identity is invalid")
+    if os.name != "nt":
+        try:
+            os.kill(process_id, 0)
+            return True
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+    import ctypes
+    from ctypes import wintypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel32.OpenProcess.restype = wintypes.HANDLE
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+    handle = kernel32.OpenProcess(0x1000, False, process_id)
+    if not handle:
+        return ctypes.get_last_error() not in {87, 1168}
+    kernel32.CloseHandle(handle)
+    return True
+
+
+def recover_stale_persisted_action(
+    run_dir: Path,
+    action_id: str,
+    run_input_hash: str,
+    contract_hash: str,
+    knowledge_context_hash: str | None = None,
+    *,
+    minimum_age_seconds: int = 60,
+) -> dict[str, Any]:
+    """Close one dead-process attempt as stale and release only its transient claim."""
+    _verify_persisted_binding(run_dir, run_input_hash, contract_hash, knowledge_context_hash)
+    if not isinstance(action_id, str) or _RUN_ID.fullmatch(action_id) is None:
+        raise ControlError("stale action identity is invalid")
+    if not isinstance(minimum_age_seconds, int) or isinstance(minimum_age_seconds, bool) or minimum_age_seconds < 60:
+        raise ControlError("stale action minimum age is invalid")
+    claim_path = run_dir / "action-claims" / (action_id + ".json")
+    if not claim_path.is_file():
+        raise ControlError("stale action claim is missing")
+    try:
+        claim = json.loads(claim_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ControlError("stale action claim is malformed") from exc
+    if (
+        not isinstance(claim, dict)
+        or claim.get("schemaVersion") != "acceptance-action-claim.v1"
+        or claim.get("actionId") != action_id
+        or not isinstance(claim.get("commandId"), str)
+        or claim.get("authorizes") != []
+    ):
+        raise ControlError("stale action claim is malformed")
+    try:
+        claimed_utc = datetime.fromisoformat(str(claim["claimedUtc"]).replace("Z", "+00:00"))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ControlError("stale action claim time is invalid") from exc
+    age_seconds = (datetime.now(timezone.utc) - claimed_utc).total_seconds()
+    if age_seconds < minimum_age_seconds:
+        raise ControlError("stale action claim is not old enough")
+
+    events_path = run_dir / "acceptance-events.jsonl"
+    try:
+        events = [json.loads(line) for line in events_path.read_text(encoding="utf-8").splitlines()]
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ControlError("stale action lifecycle is malformed") from exc
+    matching = [event for event in events if event.get("actionId") == action_id]
+    if not matching or matching[-1].get("eventType") != "action-started":
+        raise ControlError("stale action is not an active started attempt")
+    started = matching[-1]
+    if started.get("commandId") != claim["commandId"]:
+        raise ControlError("stale action command binding is inconsistent")
+    if _process_is_running(started.get("processId")):
+        raise ControlError("stale action process is still running")
+    record_lifecycle_event(
+        run_dir,
+        action_id=action_id,
+        attempt_id=started["attemptId"],
+        action_type=started["actionType"],
+        event_type="action-stale",
+        input_hashes=started["inputHashes"],
+        owner_token=started["ownerToken"],
+        formal_write_set=started["formalWriteSet"],
+        command_id=started["commandId"],
+    )
+    release_persisted_action(claim_path)
+    return {
+        "schemaVersion": "acceptance-stale-action-recovery.v1",
+        "runId": _load_persisted_run(run_dir)[0]["runId"],
+        "actionId": action_id,
+        "attemptId": started["attemptId"],
+        "status": "stale-recovered",
+        "authorizes": [],
+    }
+
+
 def _next_attempt_id(run_dir: Path, action_id: str) -> str:
     events_path = run_dir / "acceptance-events.jsonl"
     if not events_path.is_file():
@@ -516,43 +616,243 @@ def build_write_manifest(root: Path) -> dict[str, str]:
     return manifest
 
 
-def _repository_content_manifest(root: Path) -> dict[str, str]:
+def _native_path(path: Path) -> Path:
+    """Use Windows extended paths while retaining repository-relative identities."""
+    if os.name != "nt":
+        return path
+    rendered = os.path.abspath(str(path))
+    if rendered.startswith("\\\\?\\"):
+        return Path(rendered)
+    if rendered.startswith("\\\\"):
+        return Path("\\\\?\\UNC\\" + rendered[2:])
+    return Path("\\\\?\\" + rendered)
+
+
+def _hash_repository_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with _native_path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
+
+
+def _expand_ignored_evidence_directories(root: Path, paths: set[str]) -> set[str]:
+    """Expand nested repositories that Git reports as one ignored directory sentinel."""
+    expanded = {relative for relative in paths if not relative.endswith("/")}
+    for sentinel in sorted(relative for relative in paths if relative.endswith("/")):
+        pure = PurePosixPath(sentinel)
+        stack = [(_native_path(root.joinpath(*pure.parts)), pure)]
+        while stack:
+            directory, relative_directory = stack.pop()
+            try:
+                entries = list(os.scandir(directory))
+            except OSError as exc:
+                raise ControlError("repository content manifest path is stale") from exc
+            for entry in entries:
+                relative = (relative_directory / entry.name).as_posix()
+                try:
+                    if entry.is_dir(follow_symlinks=False):
+                        stack.append((Path(entry.path), relative_directory / entry.name))
+                    elif entry.is_file(follow_symlinks=False):
+                        expanded.add(relative)
+                    elif entry.is_symlink():
+                        # Path.rglob(), used by the original guard, included file
+                        # links but did not recurse through linked directories.
+                        if Path(entry.path).is_file():
+                            expanded.add(relative)
+                    else:
+                        raise ControlError("repository content manifest path is stale")
+                except OSError as exc:
+                    raise ControlError("repository content manifest path is stale") from exc
+    return expanded
+
+
+class _WindowsRepositoryChangeWatch:
+    """Fail-closed recursive NTFS change observation for one read-only command."""
+
+    def __init__(self, root: Path) -> None:
+        import ctypes
+        from ctypes import wintypes
+
+        ulong_ptr = ctypes.c_size_t
+
+        class Overlapped(ctypes.Structure):
+            _fields_ = [
+                ("Internal", ulong_ptr), ("InternalHigh", ulong_ptr),
+                ("Offset", wintypes.DWORD), ("OffsetHigh", wintypes.DWORD),
+                ("hEvent", wintypes.HANDLE),
+            ]
+
+        self._ctypes = ctypes
+        self._wintypes = wintypes
+        self._kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        self._overlapped_type = Overlapped
+        self._root = root
+        self._directory_handle: Any = None
+        self._event_handle: Any = None
+        self._overlapped: Any = None
+        self._buffer: Any = None
+
+    def start(self) -> None:
+        ctypes = self._ctypes
+        wintypes = self._wintypes
+        kernel32 = self._kernel32
+        kernel32.CreateFileW.argtypes = [
+            wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID,
+            wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE,
+        ]
+        kernel32.CreateFileW.restype = wintypes.HANDLE
+        kernel32.CreateEventW.argtypes = [wintypes.LPVOID, wintypes.BOOL, wintypes.BOOL, wintypes.LPCWSTR]
+        kernel32.CreateEventW.restype = wintypes.HANDLE
+        kernel32.ReadDirectoryChangesW.argtypes = [
+            wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD, wintypes.BOOL,
+            wintypes.DWORD, ctypes.POINTER(wintypes.DWORD),
+            ctypes.POINTER(self._overlapped_type), wintypes.LPVOID,
+        ]
+        kernel32.ReadDirectoryChangesW.restype = wintypes.BOOL
+        kernel32.CancelIoEx.argtypes = [wintypes.HANDLE, wintypes.LPVOID]
+        kernel32.CancelIoEx.restype = wintypes.BOOL
+        kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        kernel32.CloseHandle.restype = wintypes.BOOL
+
+        self._directory_handle = kernel32.CreateFileW(
+            str(_native_path(self._root)), 0x0001, 0x0001 | 0x0002 | 0x0004,
+            None, 3, 0x02000000 | 0x40000000, None,
+        )
+        if self._directory_handle == wintypes.HANDLE(-1).value:
+            self.close()
+            raise ControlError("repository change observation is unavailable")
+        self._event_handle = kernel32.CreateEventW(None, True, False, None)
+        if not self._event_handle:
+            self.close()
+            raise ControlError("repository change observation is unavailable")
+        self._overlapped = self._overlapped_type()
+        self._overlapped.hEvent = self._event_handle
+        self._buffer = ctypes.create_string_buffer(65536)
+        returned = wintypes.DWORD()
+        accepted = kernel32.ReadDirectoryChangesW(
+            self._directory_handle, self._buffer, len(self._buffer), True,
+            0x0001 | 0x0002 | 0x0004 | 0x0008 | 0x0010 | 0x0040 | 0x0100,
+            ctypes.byref(returned), ctypes.byref(self._overlapped), None,
+        )
+        if not accepted and ctypes.get_last_error() != 997:
+            self.close()
+            raise ControlError("repository change observation is unavailable")
+
+    def changed(self) -> bool:
+        wintypes = self._wintypes
+        kernel32 = self._kernel32
+        kernel32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+        kernel32.WaitForSingleObject.restype = wintypes.DWORD
+        wait_result = kernel32.WaitForSingleObject(self._event_handle, 100)
+        if wait_result == 0:
+            return True
+        if wait_result != 258:
+            raise ControlError("repository change observation failed closed")
+        return False
+
+    def close(self) -> None:
+        if self._directory_handle not in (None, self._wintypes.HANDLE(-1).value):
+            if self._overlapped is not None:
+                self._kernel32.CancelIoEx(self._directory_handle, self._ctypes.byref(self._overlapped))
+            self._kernel32.CloseHandle(self._directory_handle)
+        if self._event_handle:
+            self._kernel32.CloseHandle(self._event_handle)
+        self._directory_handle = None
+        self._event_handle = None
+
+
+def _repository_content_manifest(root: Path, *, include_ignored_evidence: bool = True) -> dict[str, str]:
     """Hash reviewable worktree bytes and ignored evidence for read-only commands."""
-    def git_paths(*arguments: str) -> set[str]:
+    root = root.resolve()
+
+    def git_output(*arguments: str) -> bytes:
         completed = subprocess.run(
-            ["git", "-C", str(root), "ls-files", "-z", *arguments],
-            shell=False, capture_output=True, check=False, timeout=30,
+            ["git", "-c", "core.longpaths=true", "-C", str(root), *arguments],
+            shell=False, capture_output=True, check=False, timeout=120,
         )
         if completed.returncode != 0:
             raise ControlError("repository content manifest is unavailable")
+        return completed.stdout
+
+    def decode_paths(payload: bytes) -> set[str]:
         try:
-            return {item.decode("utf-8") for item in completed.stdout.split(b"\0") if item}
+            return {item.decode("utf-8") for item in payload.split(b"\0") if item}
         except UnicodeDecodeError as exc:
             raise ControlError("repository content manifest contains a non-UTF-8 path") from exc
 
-    tracked = git_paths("--cached")
-    untracked = git_paths("--others", "--exclude-standard")
-    evidence_root = root / "logs"
-    evidence = {
-        path.relative_to(root).as_posix()
-        for path in evidence_root.rglob("*")
-        if path.is_file()
-    } if evidence_root.is_dir() else set()
-    manifest: dict[str, str] = {}
-    for relative in sorted(tracked | untracked | evidence):
-        path = (root / relative).resolve()
+    index_entries: dict[str, str] = {}
+    try:
+        stage_records = [item for item in git_output("ls-files", "--cached", "--stage", "-z").split(b"\0") if item]
+        for record in stage_records:
+            metadata, encoded_path = record.split(b"\t", 1)
+            mode, object_id, stage = metadata.decode("ascii").split(" ")
+            relative = encoded_path.decode("utf-8")
+            if stage != "0" or relative in index_entries:
+                raise ControlError("repository content manifest has unresolved index entries")
+            index_entries[relative] = f"git-index:{mode}:{object_id}"
+    except (UnicodeDecodeError, UnicodeEncodeError, ValueError) as exc:
+        raise ControlError("repository content manifest contains malformed index data") from exc
+
+    dirty = decode_paths(git_output("diff-files", "--name-only", "--no-ext-diff", "-z"))
+    untracked = decode_paths(git_output("ls-files", "--others", "--exclude-standard", "-z"))
+    ignored_evidence = (
+        _expand_ignored_evidence_directories(
+            root,
+            decode_paths(
+                git_output("ls-files", "--others", "--ignored", "--exclude-standard", "-z", "--", "logs")
+            ),
+        )
+        if include_ignored_evidence else set()
+    )
+    tracked = set(index_entries)
+    actual_byte_paths = dirty | untracked | ignored_evidence
+    all_paths = tracked | actual_byte_paths
+
+    resolved_paths: dict[str, Path] = {}
+    tombstones: set[str] = set()
+    ignored_directory_links: set[str] = set()
+    native_root = _native_path(root).resolve()
+    for relative in sorted(all_paths):
+        pure = PurePosixPath(relative)
+        if pure.is_absolute() or not pure.parts or any(part in {"", ".", ".."} for part in pure.parts):
+            raise ControlError("repository content manifest path is stale")
+        path = _native_path(root.joinpath(*pure.parts))
         try:
-            normalized = path.relative_to(root).as_posix()
+            path.resolve().relative_to(native_root)
         except ValueError as exc:
             raise ControlError("repository content manifest path escapes root") from exc
-        if normalized != relative:
-            raise ControlError("repository content manifest path is stale")
         if path.is_file():
-            manifest[relative] = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+            resolved_paths[relative] = path
         elif relative in tracked and not path.exists():
-            manifest[relative] = "tracked-tombstone"
+            tombstones.add(relative)
+        elif relative in tracked and relative not in actual_byte_paths:
+            # Clean submodules are represented by their index commit identity.
+            continue
+        elif relative in ignored_evidence and path.is_symlink() and path.is_dir():
+            ignored_directory_links.add(relative)
         else:
             raise ControlError("repository content manifest path is stale")
+
+    manifest = {
+        relative: index_entries[relative]
+        for relative in sorted(tracked - actual_byte_paths - tombstones)
+    }
+    for relative in sorted(tombstones):
+        manifest[relative] = "tracked-tombstone"
+
+    paths_to_hash = sorted(actual_byte_paths - tombstones - ignored_directory_links)
+    worker_count = min(32, max(4, (os.cpu_count() or 1) * 2))
+    try:
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            digests = executor.map(
+                _hash_repository_file,
+                (resolved_paths[relative] for relative in paths_to_hash),
+            )
+            for relative, digest in zip(paths_to_hash, digests, strict=True):
+                manifest[relative] = digest
+    except OSError as exc:
+        raise ControlError("repository content manifest path is stale") from exc
     return manifest
 
 
@@ -659,7 +959,22 @@ def run_controlled_command(
         descriptor["argv"], descriptor["typed_placeholders"], descriptor["placeholder_values"], root, allowed_write_roots
     )
     read_only = not allowed_write_roots and (root / ".git").exists()
-    before_manifest = _repository_content_manifest(root) if read_only else build_write_manifest(root)
+    evidence_root = root / "logs"
+    change_watch = (
+        _WindowsRepositoryChangeWatch(evidence_root)
+        if read_only and os.name == "nt" and evidence_root.is_dir() else None
+    )
+    if change_watch is not None:
+        change_watch.start()
+    try:
+        before_manifest = (
+            _repository_content_manifest(root, include_ignored_evidence=change_watch is None)
+            if read_only else build_write_manifest(root)
+        )
+    except Exception:
+        if change_watch is not None:
+            change_watch.close()
+        raise
     invocation = {
         "commandId": descriptor["id"],
         "executable": descriptor["executable"],
@@ -731,12 +1046,21 @@ def run_controlled_command(
             raise ControlError("controlled command inputs changed during execution")
         receipt["inputBindings"] = input_bindings
         receipt["inputBindingsHash"] = _canonical_hash(input_bindings)
-    after_manifest = _repository_content_manifest(root) if read_only else build_write_manifest(root)
-    delta = (
-        _validate_read_only_status_delta(before_manifest, after_manifest)
-        if read_only
-        else validate_write_manifest_delta(before_manifest, after_manifest, allowed_write_roots, forbidden_write_roots)
-    )
+    try:
+        after_manifest = (
+            _repository_content_manifest(root, include_ignored_evidence=change_watch is None)
+            if read_only else build_write_manifest(root)
+        )
+        if change_watch is not None and change_watch.changed():
+            raise ControlError("read-only command changed repository bytes")
+        delta = (
+            _validate_read_only_status_delta(before_manifest, after_manifest)
+            if read_only
+            else validate_write_manifest_delta(before_manifest, after_manifest, allowed_write_roots, forbidden_write_roots)
+        )
+    finally:
+        if change_watch is not None:
+            change_watch.close()
     receipt["writeManifestDelta"] = delta
     receipt["writeManifestDeltaHash"] = _canonical_hash(delta)
     return receipt
