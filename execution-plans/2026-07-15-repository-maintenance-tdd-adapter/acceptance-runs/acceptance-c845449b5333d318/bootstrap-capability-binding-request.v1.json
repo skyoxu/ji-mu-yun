@@ -1,0 +1,33 @@
+{
+  "decision": {
+    "schemaVersion": "implementation-acceptance-bootstrap-requirement.v1",
+    "requirement": "required",
+    "requirementSources": [
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+      "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-c845449b5333d318/code-review-policy-binding.v1.json"
+    ],
+    "requiredCompanionCapabilityExpectations": [
+      {
+        "capabilityId": "acceptance-inventory-attestation",
+        "capabilityVersion": "1.0",
+        "producerRole": "acceptance_auditor"
+      }
+    ],
+    "authorizes": []
+  },
+  "profile": {
+    "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
+    "policyRevision": "sha256:177bbccd5905b4d644dea0e6a799075b6175f6a75e8582cfca89cfb85434d005",
+    "routeVersion": "bootstrap-review-route.v2",
+    "controlPlaneRevision": "bootstrap-control-plane.v2",
+    "companionCapabilities": [
+      {
+        "capabilityId": "acceptance-inventory-attestation",
+        "capabilityVersion": "1.0",
+        "producerRole": "acceptance_auditor",
+        "schemaPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+        "schemaHash": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"
+      }
+    ]
+  }
+}

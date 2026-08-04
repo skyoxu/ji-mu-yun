@@ -1,0 +1,51 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter",
+  "authorizes": [
+    "acceptance-passed"
+  ],
+  "challengeHash": "sha256:b86defc6981df4cc00c1042a1d595709b75918b0bd439f19b7ca43b9561c5e2e",
+  "challengePath": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/manual-pause-closure-challenge.v1.json",
+  "closureBindingHash": "sha256:d0b928c5cc0f6a1bc69a4d26687e65e07590a126bde0f7d197ac854674482471",
+  "confirmedFindingIds": [
+    "BSR-02DBD7797FCD0292",
+    "BSR-227F7F11FA687DE2",
+    "BSR-2626BA133FF060F7",
+    "BSR-4648A3C470A35CAB",
+    "BSR-8C32754D133491BA",
+    "BSR-B437B6DCE5C359D6",
+    "BSR-BE64CBEE5F31A84B",
+    "BSR-FC7358AD37D42A8B"
+  ],
+  "doesNotAuthorize": [
+    "commit",
+    "release",
+    "archived"
+  ],
+  "lifecycleTransition": "acceptance-passed",
+  "lineageFamilyId": "ria-07b4bb11ac7d248beb6faf98647df867",
+  "maintainerAcknowledgement": {
+    "acknowledgedFindingIds": [
+      "BSR-02DBD7797FCD0292",
+      "BSR-227F7F11FA687DE2",
+      "BSR-2626BA133FF060F7",
+      "BSR-4648A3C470A35CAB",
+      "BSR-8C32754D133491BA",
+      "BSR-B437B6DCE5C359D6",
+      "BSR-BE64CBEE5F31A84B",
+      "BSR-FC7358AD37D42A8B"
+    ],
+    "authorityRole": "maintainer",
+    "authorizes": [
+      "manual-pause-closure"
+    ],
+    "closureBindingHash": "sha256:d0b928c5cc0f6a1bc69a4d26687e65e07590a126bde0f7d197ac854674482471",
+    "decision": "accept-repaired-target",
+    "rationale": "Maintainer confirmed the exact challenge hash, closure binding, and eight confirmed findings for the repaired 7-15 acceptance target.",
+    "recordedAt": "2026-08-04T14:22:10.4918702Z",
+    "schemaVersion": "acceptance-manual-pause-maintainer-ack.v1"
+  },
+  "repairCompletenessHash": "sha256:9fcebbc1a9f2c7f56d6ec85bc57a66eb801a9c97bfcd48f415b95aebaade7374",
+  "schemaVersion": "acceptance-manual-pause-closure.v1",
+  "semanticRoundsConsumed": 3,
+  "status": "passed"
+}

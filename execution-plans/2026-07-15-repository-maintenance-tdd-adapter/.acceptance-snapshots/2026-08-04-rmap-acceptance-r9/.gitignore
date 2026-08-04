@@ -1,0 +1,108 @@
+# Godot 4+ specific ignores
+.godot/
+.serena/
+/android/
+
+# Windows reserved names
+nul
+NUL
+CON
+con
+PRN
+prn
+AUX
+aux
+COM1
+COM2
+COM3
+COM4
+COM5
+COM6
+COM7
+COM8
+COM9
+LPT1
+LPT2
+LPT3
+LPT4
+LPT5
+LPT6
+LPT7
+LPT8
+LPT9
+
+# Build and test artifacts
+build/
+# Keep SuperClaude-compatible scripts (source code) under scripts/sc/build
+!scripts/sc/build/
+!scripts/sc/build/**
+reports/
+artifacts/
+logs/*
+!logs/.gdignore
+gitlog/
+godot_local/
+tmp/
+**/bin/
+**/obj/
+.vs/
+TestResults/
+# Keep GdUnit4 CLI runner scripts inside plugin bin
+!Tests.Godot/addons/gdUnit4/bin/
+!Tests.Godot/addons/gdUnit4/bin/**
+# Tests.Godot must read the real game assets via Junction (do not version mirrored copies)
+Tests.Godot/Game.Godot/
+Tests.Godot/Game.Godot/**
+Tests.Godot/logs/
+Tests.Godot/logs/**
+# Godot/VS misc metadata not for VCS
+*.uid
+tmp_patch.txt
+
+# Local .NET SDK/runtime placed in repo (should not be versioned)
+.dotnet/
+
+# IDE/editor caches (keep project configs if any are explicitly added elsewhere)
+.idea/
+.vscode/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Windows/macOS system files
+Thumbs.db
+.DS_Store
+
+# Common local user files
+*.user
+*.suo
+.claude/settings.local.json.bak
+
+# Debug symbols/build outputs not meant for VCS
+*.pdb
+
+# Godot editor binaries/downloads (keep project assets only)
+Godot_v*.exe
+Godot_*.zip
+
+# Local: ignore cifix artifacts
+cifix*.*
+
+# Generated docs (do not version)
+docs/workflows/contracts-catalog-prd-*.md
+docs/workflows/generated/
+docs/workflows/generated/**
+
+# Local BMAD installation
+_bmad/*
+!_bmad/.gdignore
+
+# Local agent skill installation
+.agents/*
+!.agents/skills/
+!.agents/skills/**
+.agents/skills/**/__pycache__/
+.agents/skills/**/*.pyc
+backup/BMAD-METHOD-upstream/
+prototype_run_dump.txt

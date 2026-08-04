@@ -1,0 +1,1048 @@
+{
+  "schema_version": "jimuyun.implementation-contract.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "source_revision": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807",
+  "protocol_version": "1.0",
+  "authority": {
+    "index": "00-index.md",
+    "requirements": "schemas/requirements.v1.json",
+    "coverage": "schemas/source-coverage.v1.json",
+    "deltas": "schemas/spec-deltas.v1.json",
+    "source_hashes": {
+      "../../.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+      "../../.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-authority-root-registry.v1.schema.json": "sha256:35e6de7b0a1f2473b81e601afc2ce32da3010c874d5d88ffba823c21a5497899",
+      "../../.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json": "sha256:77636808f229d7829cdaee60b2d244e494baf32de1731f1744080da971644eea",
+      "../../.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json": "sha256:ed47c887684f2f94f6ef46dbee9755474450109ce5523804e7fcd9b02d67cb95",
+      "../2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py": "sha256:a0fed2fb438b54afcc77b146930eb024d7aaecd69f32368123f069e0a629aa06",
+      "../../agentbuild.txt": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807",
+      "../../AGENTS.md": "sha256:06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "../../.agents/skills/vdd-execution-plan/references/strict-vdd-standard.md": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+      "../2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md": "sha256:a0731a8c45a98bd5822f7024c78a83690e4afe44aa13947b0f8745aeae58914e",
+      "../2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json": "sha256:ca42e682cd6077a13b61d261ca75f70d98b1717547324c71c40b92c16de4048a",
+      "00-index.md": "sha256:495bd5176c006c870b6799cf26b176bf45e9ed2a4d0aa4707e274f2059c08529",
+      "01-intent-authority-and-non-goals.md": "sha256:cc563f15712704c195bafa80c3e7bf433fdc688c4b1d9da321102a658423e741",
+      "02-executable-contracts-and-invariants.md": "sha256:ea1861b41134ae3fe8fc0dd89eeb2f98924be35d9956eab7b251c6353f4e8be8",
+      "03-validators-fixtures-and-control-gates.md": "sha256:fe2b102834c2d63148987a39733fc2cb47386df236c3bbc1b7bdd6dd5a2e986a",
+      "04-behavior-slices-and-implementation-order.md": "sha256:70813ca2d54cce3557574e6255cf736f92024e35fb685fd7a09ef1c80d4a7ea2",
+      "05-diagnostics-repair-and-reentry.md": "sha256:b27ed10bb013ce670b7c45d4322fddc1c5c4d67356a08b683873cf24995feed0",
+      "06-testing-observability-and-evidence.md": "sha256:e2ecedbeaf477b6823411056d70323eaa6e50b417562135e77e42813b846713a",
+      "96-global-review-and-validation.md": "sha256:a4b97ae7ad12d464baa28d2c40ff727771e5ab41e00e522884dce0b954c8c252",
+      "schemas/clarification-decisions.v1.json": "sha256:43cbafb22f8f2350928b8a294a23ab41bb170b3f8775b82c78a27aac57ee8d88",
+      "schemas/review-blocking-state.v1.json": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
+      "schemas/acceptance-contracts.v1.json": "sha256:b22efb43332feef4bfffce20564d2438eed6f630236472edf880a81122fc0c23",
+      "../../.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json": "sha256:b1d50d874bbe4731413c8b03bc728474c9265317acf589b27a550bbea751dc64",
+      "../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+      "../../docs/standards/bootstrap-review-control-plane.md": "sha256:cf992a7ab13fd5e89da784cce1675177549153542414467512db71955b94d8bb",
+      "../../.agents/skills/run-phase-bootstrap-review/SKILL.md": "sha256:19f72247ac69a1faa99d590b3724fc75b67cb6d98dd686cba1a009070c1981c7",
+      "../../.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py": "sha256:11dbd2d739c083c4dafa0b2109ec89370b53a23b0058ee3c2054a4ad08b1e81c",
+      "../../.agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py": "sha256:50fd8ffdcd7d341feda1e6e32971e3055ef491eb90a4b31a9846303201eaeb15",
+      "../../.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json": "sha256:55b75323c95daae0532a06b06c95de3ef0389746d8456901f26b7ef1c6ef908a"
+    },
+    "acceptance_contracts": "schemas/acceptance-contracts.v1.json",
+    "authority_manifest": "schemas/authority-manifest.v1.json",
+    "clarification_projection": "schemas/clarification-decisions.v1.json",
+    "review_blocking_state": "schemas/review-blocking-state.v1.json",
+    "review_policy_reentry": "schemas/review-policy-reentry.v1.json"
+  },
+  "ownership": {
+    "standard_owner": "docs/standards/repository-maintenance-agent-protocol.md",
+    "common_protocol_owner": ".agents/skills/quick-dev-tdd-adapter",
+    "plan_instance_owner": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+    "runtime_evidence_owner": "logs/tdd-adapter",
+    "ownership_pattern_adr": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md"
+  },
+  "command_registry": "schemas/command-registry.v1.json",
+  "backend": {
+    "mode": "in-session-slice-capsule",
+    "hidden_state": false,
+    "provider_scheduling": false,
+    "subprocess_ownership": false,
+    "authorities": [
+      "implement-within-write-set",
+      "run-declared-deterministic-checks",
+      "report-candidate"
+    ],
+    "forbidden_authorities": [
+      "semantic-review",
+      "done",
+      "commit",
+      "implementation-accepted",
+      "protected-handoff",
+      "release-ready"
+    ]
+  },
+  "protocol_artifacts": {
+    "context_layout": "context/<capsule-id>",
+    "attempt_layout": "attempts/<attempt-id>",
+    "schemas": {
+      "context_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/context-manifest.v1.schema.json",
+      "slice_capsule": ".agents/skills/quick-dev-tdd-adapter/schemas/slice-capsule.v1.schema.json",
+      "backend_request": ".agents/skills/quick-dev-tdd-adapter/schemas/backend-request.v1.schema.json",
+      "backend_response": ".agents/skills/quick-dev-tdd-adapter/schemas/backend-response.v1.schema.json",
+      "diff_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/diff-manifest.v1.schema.json",
+      "adapter_decision": ".agents/skills/quick-dev-tdd-adapter/schemas/adapter-decision.v1.schema.json",
+      "attempt_event": ".agents/skills/quick-dev-tdd-adapter/schemas/agent-attempt-event.v1.schema.json",
+      "baseline_file_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+      "attempt_ledger_manifest": ".agents/skills/quick-dev-tdd-adapter/schemas/attempt-ledger-manifest.v1.schema.json"
+    },
+    "capsule_policy": {
+      "immutable_revisions": true,
+      "predecessor_hash_required_after_first": true,
+      "references_and_hashes_only": true,
+      "mutable_stage_evidence_forbidden": true,
+      "standalone_authority": false
+    },
+    "attempt_policy": {
+      "append_only": true,
+      "monotonic_sequence": true,
+      "decision_written_last": true,
+      "partial_attempt_fails_closed": true,
+      "one_accepted_lineage_per_stage": true,
+      "adapter_decision_authoritative": false,
+      "raw_body_persisted": false,
+      "sensitive_data_allowed": false
+    }
+  },
+  "recovery": {
+    "evidence_root_template": "logs/tdd-adapter/<plan-id>/<slice-id>/<run-id>",
+    "initial_state": "initialized",
+    "stale_state": "stale",
+    "successor_initial_state": "initialized",
+    "resume_requires_hash_match": true,
+    "lineage_fields": [
+      "predecessor_run_id",
+      "supersedes_run_id"
+    ],
+    "attempt_lineage_fields": [
+      "attempt_id",
+      "attempt_sequence",
+      "previous_attempt_id",
+      "previous_decision_hash"
+    ],
+    "partial_attempt_state": "incomplete",
+    "decision_written_last": true,
+    "one_accepted_attempt_per_stage": true,
+    "append_only": true
+  },
+  "drift_policy": {
+    "block_git_index_drift": true,
+    "block_authority_drift": true,
+    "block_contract_drift": true,
+    "block_validator_drift": true,
+    "block_command_registry_drift": true,
+    "block_write_set_overlap": true,
+    "block_execution_read_set_drift": true,
+    "block_dependency_closure_drift": true,
+    "allow_unrelated_worktree_drift": true
+  },
+  "replay_baseline_policy": {
+    "mode": "sealed-snapshot-copy-before-red",
+    "workspace_isolation": true,
+    "source_artifacts": [
+      "implementation-contract.v1.json",
+      "authority.source_hashes",
+      "source_revision"
+    ],
+    "manifest_schema": "schemas/replay-baseline-manifest.v1.schema.json",
+    "hash_bound": true,
+    "candidate_excluded": true,
+    "authorizes": [],
+    "does_not_authorize": [
+      "slice-ready",
+      "implementation-candidate",
+      "implementation-complete"
+    ]
+  },
+  "execution_replay_policy": {
+    "targeted_validation": {
+      "allowed_slices": [
+        "RMAP-S6",
+        "RMAP-S7"
+      ],
+      "must_run_in_order": true,
+      "evidence_marker": "targeted-validation.v1.json",
+      "authorizes": [],
+      "does_not_authorize": [
+        "slice-ready",
+        "implementation-candidate",
+        "implementation-complete",
+        "acceptance-passed",
+        "archived"
+      ]
+    },
+    "authoritative_full_replay": {
+      "start_slice": "RMAP-S0",
+      "requires_all_slices": true,
+      "authorizes": []
+    }
+  },
+  "acceptance_policy": {
+    "open_accepted_p0_p1_blocks": true,
+    "p2_requires_disposition": true,
+    "high_risk_p2_deferrable": false,
+    "expired_p2_deferral_blocks": true,
+    "confidence_authoritative": false,
+    "confidence_improvement_round_limit": 3,
+    "release_authorized": false,
+    "runtime_disposition_source": "bootstrap-finalized-run"
+  },
+  "shadow_backfills": [
+    {
+      "order": 1,
+      "plan_id": "llm-review-evidence-gate-hardening",
+      "authoritative": false,
+      "mode": "additive-metadata-shadow-only"
+    },
+    {
+      "order": 2,
+      "plan_id": "phase-a-frontend-gdd-to-module-workflow-hardening",
+      "authoritative": false,
+      "mode": "additive-metadata-shadow-only"
+    },
+    {
+      "order": 3,
+      "plan_id": "phase-frontend-boundary-hardening",
+      "authoritative": false,
+      "mode": "additive-metadata-shadow-only"
+    }
+  ],
+  "slices": [
+    {
+      "slice_id": "RMAP-S0",
+      "title": "Existing framework ADR and ownership standard",
+      "requirement_ids": [
+        "RMAP-001",
+        "RMAP-002",
+        "RMAP-019",
+        "RMAP-024",
+        "RMAP-020",
+        "RMAP-021",
+        "RMAP-027"
+      ],
+      "acceptance_ids": [
+        "RMAP-ACC-001",
+        "RMAP-ACC-002",
+        "RMAP-ACC-019",
+        "RMAP-ACC-024",
+        "RMAP-ACC-020",
+        "RMAP-ACC-021",
+        "RMAP-ACC-027"
+      ],
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md#rmap-s0-existing-framework-adr-and-ownership-standard"
+      ],
+      "depends_on": [],
+      "allowed_changes": {
+        "production": [
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/stage-evidence-projection.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-contract.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py"
+        ],
+        "tests": [
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/**"
+        ],
+        "documentation": [
+          "docs/standards/repository-maintenance-agent-protocol.md",
+          "docs/standards/_index.md",
+          "docs/PROJECT_DOCUMENTATION_INDEX.md",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/03-validators-fixtures-and-control-gates.md",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/candidate-diff-cases.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/clarification-decisions.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/source-coverage.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/authority-manifest.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json"
+        ]
+      },
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py"
+      ],
+      "forbidden_changes": [
+        "logs/phase-a-innernet/**",
+        "runtime/phase-a/**",
+        "PhaseA.Platform/**"
+      ],
+      "execution_read_set": [
+        "AGENTS.md",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "docs/standards/_index.md",
+        "docs/architecture/ADR_INDEX_PHASE.md",
+        "docs/architecture/ADR_INDEX_GODOT.md"
+      ],
+      "dependency_closure": [
+        "agentbuild.txt",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/**"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "rmap-observe-ownership-red",
+          "expected_failure_family": "ownership_duplicate",
+          "expected_failure_ids": [
+            "RMAP-OWNERSHIP-DUPLICATE"
+          ],
+          "test_selector": "test_duplicate_ownership_is_rejected",
+          "expected_exit": "nonzero"
+        },
+        "green": {
+          "command_id": "rmap-s0-preflight",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "rmap-validator-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "rmap-s0-preflight",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "review": {
+        "profile": "bootstrap-upstream-plan"
+      },
+      "post_refactor_command_id": "rmap-s0-slice-validate",
+      "exit_predicate": "slice-ready",
+      "phase_id": "P0"
+    },
+    {
+      "slice_id": "RMAP-S1",
+      "title": "Common contract and self-hosted plan instance",
+      "requirement_ids": [
+        "RMAP-003",
+        "RMAP-004",
+        "RMAP-013",
+        "RMAP-022",
+        "RMAP-025",
+        "RMAP-026",
+        "RMAP-027",
+        "RMAP-028"
+      ],
+      "acceptance_ids": [
+        "RMAP-ACC-003",
+        "RMAP-ACC-004",
+        "RMAP-ACC-013",
+        "RMAP-ACC-022",
+        "RMAP-ACC-025",
+        "RMAP-ACC-026",
+        "RMAP-ACC-027",
+        "RMAP-ACC-028"
+      ],
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md#rmap-s1-common-contract-and-self-hosted-plan-instance"
+      ],
+      "depends_on": [
+        "RMAP-S0"
+      ],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/quick-dev-tdd-adapter/**",
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/vdd-execution-plan/agents/openai.yaml",
+          ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_support.py"
+        ],
+        "tests": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/**",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_stage_projection_guards.py"
+        ],
+        "documentation": [
+          "execution-plans/README.md",
+          "execution-plans/95-implementation-report-index.v1.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/**"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/SKILL.md"
+      ],
+      "forbidden_changes": [
+        ".agents/skills/bmad-quick-dev/**",
+        ".agents/skills/gds-quick-dev/**",
+        "logs/phase-a-innernet/**"
+      ],
+      "execution_read_set": [
+        ".agents/skills/vdd-execution-plan/**",
+        ".agents/skills/bmad-quick-dev/**"
+      ],
+      "dependency_closure": [
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "docs/standards/repository-maintenance-agent-protocol.md"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "rmap-observe-shell-red",
+          "expected_failure_family": "unsafe_command",
+          "expected_failure_ids": [
+            "RMAP-CMD-SHELL"
+          ],
+          "test_selector": "test_shell_true_is_rejected",
+          "expected_exit": "nonzero"
+        },
+        "green": {
+          "command_id": "rmap-s1-preflight",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "rmap-adapter-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "rmap-s1-preflight",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "review": {
+        "profile": "bootstrap-skill-route"
+      },
+      "post_refactor_command_id": "rmap-s1-slice-validate",
+      "exit_predicate": "slice-ready",
+      "phase_id": "P0"
+    },
+    {
+      "slice_id": "RMAP-S2",
+      "title": "Stateless capsule and recovery adapter",
+      "requirement_ids": [
+        "RMAP-005",
+        "RMAP-007",
+        "RMAP-008",
+        "RMAP-009",
+        "RMAP-014",
+        "RMAP-015",
+        "RMAP-021",
+        "RMAP-023",
+        "RMAP-010",
+        "RMAP-011",
+        "RMAP-018",
+        "RMAP-006",
+        "RMAP-025",
+        "RMAP-026",
+        "RMAP-028",
+        "RMAP-029"
+      ],
+      "acceptance_ids": [
+        "RMAP-ACC-005",
+        "RMAP-ACC-007",
+        "RMAP-ACC-008",
+        "RMAP-ACC-009",
+        "RMAP-ACC-014",
+        "RMAP-ACC-015",
+        "RMAP-ACC-021",
+        "RMAP-ACC-023",
+        "RMAP-ACC-010",
+        "RMAP-ACC-011",
+        "RMAP-ACC-018",
+        "RMAP-ACC-006",
+        "RMAP-ACC-025",
+        "RMAP-ACC-026",
+        "RMAP-ACC-028",
+        "RMAP-ACC-029"
+      ],
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md#rmap-s2-stateless-capsule-and-recovery-adapter"
+      ],
+      "depends_on": [
+        "RMAP-S1"
+      ],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/quick-dev-tdd-adapter/**"
+        ],
+        "tests": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/**"
+        ],
+        "documentation": [
+          "docs/standards/repository-maintenance-agent-protocol.md",
+          ".gitignore",
+          "decision-logs/2026-07-21-rmap-replay-bootstrap-baseline.md",
+          "decision-logs/2026-07-21-rmap-vdd-creation-risk-log.md",
+          "docs/adr/ADR-0042-artifact-proof-trust-root-rotation-boundary.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
+      "forbidden_changes": [
+        "scripts/sc/**",
+        "scripts/python/**",
+        "runtime/phase-a/**",
+        "PhaseA.Platform/**"
+      ],
+      "execution_read_set": [
+        "AGENTS.md",
+        ".agents/skills/vdd-execution-plan/**",
+        ".agents/skills/quick-dev-tdd-adapter/**"
+      ],
+      "dependency_closure": [
+        "implementation-contract.v1.json",
+        "schemas/command-registry.v1.json"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "rmap-observe-adapter-red",
+          "expected_failure_family": "missing_behavior",
+          "expected_failure_ids": [
+            "RMAP-TDD-RED-NOT-OBSERVED"
+          ],
+          "test_selector": "test_implementation_before_red_is_rejected",
+          "expected_exit": "nonzero"
+        },
+        "green": {
+          "command_id": "rmap-adapter-tests",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "rmap-adapter-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "rmap-adapter-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "review": {
+        "profile": "bootstrap-skill-route"
+      },
+      "post_refactor_command_id": "rmap-s2-slice-validate",
+      "exit_predicate": "slice-ready",
+      "phase_id": "P1"
+    },
+    {
+      "slice_id": "RMAP-S3",
+      "title": "7-12 shadow canary",
+      "requirement_ids": [
+        "RMAP-017",
+        "RMAP-018"
+      ],
+      "acceptance_ids": [
+        "RMAP-ACC-017",
+        "RMAP-ACC-018"
+      ],
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md#rmap-s3-7-12-shadow-canary"
+      ],
+      "depends_on": [
+        "RMAP-S2"
+      ],
+      "allowed_changes": {
+        "production": [],
+        "tests": [
+          "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/fixtures/tdd-adapter-shadow.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_contract.py"
+        ],
+        "documentation": [
+          "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_contract.py"
+      ],
+      "forbidden_changes": [
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/*.md",
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/**",
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/schemas/**"
+      ],
+      "execution_read_set": [
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/**"
+      ],
+      "dependency_closure": [
+        ".agents/skills/quick-dev-tdd-adapter/**"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "rmap-observe-shadow-red",
+          "expected_failure_family": "shadow_contract_missing",
+          "expected_failure_ids": [
+            "RMAP-SHADOW-CONTRACT-MISSING"
+          ],
+          "test_selector": "test_shadow_contract_missing_is_rejected",
+          "expected_exit": "nonzero"
+        },
+        "green": {
+          "command_id": "rmap-s3-shadow-validate",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "rmap-adapter-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "rmap-s3-shadow-validate",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "review": {
+        "profile": "bootstrap-focused-change"
+      },
+      "post_refactor_command_id": "rmap-s3-slice-validate",
+      "exit_predicate": "slice-ready",
+      "phase_id": "P2"
+    },
+    {
+      "slice_id": "RMAP-S4",
+      "title": "7-07 shadow backfill",
+      "requirement_ids": [
+        "RMAP-017",
+        "RMAP-018"
+      ],
+      "acceptance_ids": [
+        "RMAP-ACC-017",
+        "RMAP-ACC-018"
+      ],
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md#rmap-s4-7-07-shadow-backfill"
+      ],
+      "depends_on": [
+        "RMAP-S3"
+      ],
+      "allowed_changes": {
+        "production": [],
+        "tests": [
+          "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/fixtures/tdd-adapter-shadow.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0707_contract.py"
+        ],
+        "documentation": [
+          "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/implementation-contract.v1.json"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0707_contract.py"
+      ],
+      "forbidden_changes": [
+        "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/*.md",
+        "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/schemas/**"
+      ],
+      "execution_read_set": [
+        "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/**"
+      ],
+      "dependency_closure": [
+        ".agents/skills/quick-dev-tdd-adapter/**"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "rmap-observe-shadow-red",
+          "expected_failure_family": "shadow_contract_missing",
+          "expected_failure_ids": [
+            "RMAP-SHADOW-CONTRACT-MISSING"
+          ],
+          "test_selector": "test_shadow_0707_contract_missing_is_rejected",
+          "expected_exit": "nonzero"
+        },
+        "green": {
+          "command_id": "rmap-s4-shadow-validate",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "rmap-adapter-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "rmap-s4-shadow-validate",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "review": {
+        "profile": "bootstrap-focused-change"
+      },
+      "post_refactor_command_id": "rmap-s4-slice-validate",
+      "exit_predicate": "slice-ready",
+      "phase_id": "P2"
+    },
+    {
+      "slice_id": "RMAP-S5",
+      "title": "7-11 shadow backfill",
+      "requirement_ids": [
+        "RMAP-017",
+        "RMAP-018"
+      ],
+      "acceptance_ids": [
+        "RMAP-ACC-017",
+        "RMAP-ACC-018"
+      ],
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md#rmap-s5-7-11-shadow-backfill"
+      ],
+      "depends_on": [
+        "RMAP-S4"
+      ],
+      "allowed_changes": {
+        "production": [],
+        "tests": [
+          "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/fixtures/tdd-adapter-shadow.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0711_contract.py"
+        ],
+        "documentation": [
+          "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/implementation-contract.v1.json"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0711_contract.py"
+      ],
+      "forbidden_changes": [
+        "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/*.md",
+        "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/tools/**",
+        "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/schemas/**"
+      ],
+      "execution_read_set": [
+        "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/**"
+      ],
+      "dependency_closure": [
+        "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/**",
+        ".agents/skills/quick-dev-tdd-adapter/**"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "rmap-observe-shadow-red",
+          "expected_failure_family": "shadow_contract_missing",
+          "expected_failure_ids": [
+            "RMAP-SHADOW-CONTRACT-MISSING"
+          ],
+          "test_selector": "test_shadow_0711_contract_missing_is_rejected",
+          "expected_exit": "nonzero"
+        },
+        "green": {
+          "command_id": "rmap-s5-shadow-validate",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "rmap-adapter-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "rmap-s5-shadow-validate",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "review": {
+        "profile": "bootstrap-focused-change"
+      },
+      "post_refactor_command_id": "rmap-s5-slice-validate",
+      "exit_predicate": "slice-ready",
+      "phase_id": "P2"
+    },
+    {
+      "slice_id": "RMAP-S6",
+      "title": "Bootstrap-bound candidate review",
+      "requirement_ids": [
+        "RMAP-010",
+        "RMAP-012",
+        "RMAP-016",
+        "RMAP-025",
+        "RMAP-026",
+        "RMAP-027"
+      ],
+      "acceptance_ids": [
+        "RMAP-ACC-010",
+        "RMAP-ACC-012",
+        "RMAP-ACC-016",
+        "RMAP-ACC-025",
+        "RMAP-ACC-026",
+        "RMAP-ACC-027"
+      ],
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md#rmap-s6-finalize-current-implementation-candidate"
+      ],
+      "depends_on": [
+        "RMAP-S5"
+      ],
+      "allowed_changes": {
+        "production": [
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/stage-evidence-projection.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
+          ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+        ],
+        "tests": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/**",
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "documentation": [
+          "docs/standards/repository-maintenance-agent-protocol.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_builder.py"
+      ],
+      "forbidden_changes": [
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bootstrap_review.py",
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/schemas/**"
+      ],
+      "execution_read_set": [
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/bootstrap/review-profiles.v1.json"
+      ],
+      "dependency_closure": [
+        "implementation-contract.v1.json",
+        "schemas/authority-manifest.v1.json",
+        "schemas/acceptance-contracts.v1.json",
+        "schemas/candidate-diff-manifest.v1.schema.json",
+        "schemas/candidate-lineage-manifest.v1.schema.json",
+        "schemas/candidate-supersession-proof.v1.schema.json",
+        "schemas/candidate-slice-effect.v1.schema.json",
+        "schemas/committed-candidate-range.v1.schema.json"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "rmap-s6-controlled-red",
+          "expected_failure_family": "candidate_not_bound",
+          "expected_failure_ids": [
+            "RMAP-REVIEW-CANDIDATE-NOT-BOUND"
+          ],
+          "test_selector": "test_candidate_identity_is_complete",
+          "expected_exit": "nonzero"
+        },
+        "green": {
+          "command_id": "rmap-s6-identity-validate",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "rmap-adapter-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "rmap-s6-identity-validate",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "review": {
+        "profile": "bootstrap-implementation-conformance"
+      },
+      "pre_terminal": [
+        {
+          "command_id": "rmap-s6-prepare-committed-candidate",
+          "expected_exit": "zero"
+        }
+      ],
+      "post_refactor_command_id": "rmap-s6-candidate-validate",
+      "exit_predicate": "implementation-candidate",
+      "phase_id": "P3"
+    },
+    {
+      "slice_id": "RMAP-S7",
+      "title": "Implementation completion and non-authorizing acceptance handoff",
+      "requirement_ids": [
+        "RMAP-011",
+        "RMAP-013",
+        "RMAP-016",
+        "RMAP-020",
+        "RMAP-027"
+      ],
+      "acceptance_ids": [
+        "RMAP-ACC-011",
+        "RMAP-ACC-013",
+        "RMAP-ACC-016",
+        "RMAP-ACC-020",
+        "RMAP-ACC-027"
+      ],
+      "source_refs": [
+        "04-behavior-slices-and-implementation-order.md#rmap-s7-implementation-acceptance-and-handoff"
+      ],
+      "depends_on": [
+        "RMAP-S6"
+      ],
+      "allowed_changes": {
+        "production": [],
+        "tests": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/**"
+        ],
+        "documentation": [
+          "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/**"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "forbidden_changes": [
+        "runtime/phase-a/**",
+        "PhaseA.Platform/**"
+      ],
+      "execution_read_set": [
+        "logs/tdd-adapter/<plan-id>/<slice-id>/<run-id>/**"
+      ],
+      "dependency_closure": [
+        "implementation-contract.v1.json",
+        "schemas/plan-state.v1.json",
+        "schemas/candidate-result-ref.v1.schema.json",
+        ".agents/skills/quick-dev-tdd-adapter/**",
+        "schemas/candidate-lineage-manifest.v1.schema.json",
+        "schemas/candidate-supersession-proof.v1.schema.json",
+        "schemas/acceptance-handoff.v1.schema.json",
+        "schemas/candidate-slice-effect.v1.schema.json"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "rmap-s7-controlled-red",
+          "expected_failure_family": "acceptance_handoff_authorization_escalation",
+          "expected_failure_ids": [
+            "RMAP-ACCEPTANCE-HANDOFF-AUTHORITY"
+          ],
+          "test_selector": "test_acceptance_handoff_authorization_escalation_is_rejected",
+          "expected_exit": "nonzero"
+        },
+        "green": {
+          "command_id": "rmap-validator-tests",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "rmap-adapter-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "review": {
+        "profile": "bootstrap-implementation-conformance"
+      },
+      "post_refactor_command_id": "rmap-s7-completion-validate",
+      "exit_predicate": "implementation-complete",
+      "phase_id": "P3"
+    }
+  ],
+  "candidate_identity_policy": {
+    "exact_match_required": true,
+    "worktree_scope": "declared-slice-closure-through-candidate",
+    "unrelated_worktree_drift": "excluded-from-candidate-hash",
+    "rename_policy": "delete-add-no-renames",
+    "committed_range": {
+      "base_commit": "8d1a97f639d37ef740bea9d8eca83b9344246480",
+      "head_commit": "01599e7b7743f918214861e5f1a4d5b9421bee38",
+      "mode": "hash-bound-commit-to-slice-map",
+      "authorizes": []
+    },
+    "candidate_artifact_schemas": {
+      "candidate_diff_manifest": "schemas/candidate-diff-manifest.v1.schema.json",
+      "candidate_result_ref": "schemas/candidate-result-ref.v1.schema.json",
+      "candidate_lineage_manifest": "schemas/candidate-lineage-manifest.v1.schema.json",
+      "candidate_supersession_proof": "schemas/candidate-supersession-proof.v1.schema.json",
+      "candidate_slice_effect": "schemas/candidate-slice-effect.v1.schema.json",
+      "candidate_baseline_bridge": "schemas/candidate-baseline-bridge.v1.schema.json",
+      "stage_evidence_projection": "schemas/stage-evidence-projection.v1.schema.json"
+    },
+    "protocol_run_artifacts": [
+      "changed-files.json",
+      "candidate-evidence.json",
+      "test-diff.patch",
+      "red-result.json",
+      "green-result.json",
+      "refactor-result.json",
+      "recovery-state.json",
+      "context-manifest.v1.json",
+      "slice-capsule.v1.json",
+      "backend-request.v1.json",
+      "backend-response.v1.json",
+      "diff-manifest.v1.json",
+      "adapter-decision.v1.json",
+      "run-events.jsonl",
+      "baseline-file-manifest.v1.json",
+      "attempt-ledger-manifest.v1.json",
+      "candidate-lineage-manifest.json"
+    ],
+    "stage_projection_artifacts": [
+      "red-result.json",
+      "green-result.json",
+      "refactor-result.json",
+      "recovery-state.json",
+      "stage-evidence-projection.v1.json"
+    ],
+    "stage_binding": {
+      "contract_and_validator_hashes_current": true,
+      "shared_nonempty_run_id": true,
+      "strict_observation_order": true,
+      "predecessor_hash_chain": true,
+      "command_selector_failure_and_exit_checked": true
+    },
+    "attempt_binding": {
+      "final_context_manifest_hash": true,
+      "final_capsule_hash": true,
+      "attempt_ledger_manifest_hash": true,
+      "run_events_hash": true,
+      "final_attempt_event_hash": true,
+      "accepted_attempt_id": true,
+      "accepted_attempt_decision_hash": true,
+      "accepted_attempt_fold_hash": true
+    },
+    "required_fields": [
+      "head",
+      "index_tree",
+      "tracked_diff_hash",
+      "untracked_manifest_hash",
+      "contract_hash",
+      "command_registry_hash",
+      "validator_hash",
+      "authority_manifest_hash",
+      "candidate_diff_manifest_hash",
+      "candidate_lineage_manifest_hash",
+      "test_diff_hash",
+      "red_run_id",
+      "green_run_id",
+      "refactor_run_id",
+      "candidate_worktree_hash",
+      "final_context_manifest_hash",
+      "final_capsule_hash",
+      "attempt_ledger_manifest_hash",
+      "run_events_hash",
+      "final_attempt_event_hash",
+      "accepted_attempt_id",
+      "accepted_attempt_decision_hash"
+    ]
+  }
+}

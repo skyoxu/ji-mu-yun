@@ -1,0 +1,37 @@
+{
+  "schema_version": "jimuyun.review-policy-reentry.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "state": "reentry_authorized",
+  "supersedes_blocker": {
+    "path": "schemas/review-blocking-state.v1.json",
+    "sha256": "sha256:ca2e23eefbc259c3bca5ba597c48301b53cce2d89af452062c526c34c146c192",
+    "review_id": "repo-maint-tdd-final-r3-20260716-110837",
+    "policy_revision": "sha256:2d5f9f1404d4d86307b66f9729b7c6f216aaef8bdd2f0f4062d763460673a5b8"
+  },
+  "successor_policy": {
+    "change_id": "repository-maintenance-tdd-adapter-trust-root-v3",
+    "policy_revision": "sha256:4176d43a642fbee3d25bfd4e6b0ab9f2b7d54739c321471c1f2630e53cea012b",
+    "authority_revision": "d097062190f9d435adf68031cf712cb948d702d6",
+    "input_hash": "sha256:72bebedbe17e28caa0539ac58bda0457f00c85f5e63f4bba463f1cdceef786d5",
+    "decision_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
+    "decision_sha256": "sha256:6e5784ea37012e5c991605f2e61a3f58276d5b2b6dc29719f4d44a2400599ea2"
+  },
+  "semantic_closure": {
+    "review_id": "repo-maint-tdd-trust-root-closure-b-20260718",
+    "bootstrap_run_path": "logs/ci/2026-07-18/review-gateway-bootstrap-repo-maint-tdd-trust-root-closure-b-20260718",
+    "envelope_path": "logs/ci/2026-07-18/review-gateway-bootstrap-repo-maint-tdd-trust-root-closure-b-20260718/finalized-run-validation-20260720.json",
+    "envelope_sha256": "sha256:4e1e73035063bafe4e2438618c161e30a978672007297a40feff34d90a463918",
+    "status": "clean"
+  },
+  "authorizes": [
+    "manual-pause-reentry"
+  ],
+  "does_not_authorize": [
+    "plan-ready",
+    "slice-ready",
+    "bootstrap-review",
+    "implementation-accepted",
+    "protected-handoff",
+    "release-ready"
+  ]
+}

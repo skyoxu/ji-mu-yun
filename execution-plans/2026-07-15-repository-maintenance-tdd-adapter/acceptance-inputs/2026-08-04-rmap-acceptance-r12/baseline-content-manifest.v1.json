@@ -1,0 +1,648 @@
+{
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "path": ".agents/skills/bmad-quick-dev/SKILL.md",
+      "sha256": "sha256:0450565b52ed723410bb38b979bce2bfdf42f8751c485bc4ce7b47ea526d4bea",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "sha256": "sha256:7e86fbfd1acf231f1dfd6a07f909da3c6a2d9ed1f7e351fa10da90124a9d6f69",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+      "sha256": "sha256:938634680e4e5b7407be923b840bcf0187fc36c4b08fa387b361d1bf47560764",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "sha256": "sha256:afbe840b25c016c14a3be98178b30a21ef668fb328b98977ad6d693fcfa36623",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+      "sha256": "sha256:09e0e3e2513a224dd8aff8f1f162aaf3038622a450da2061a9fdf1c24332804d",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "sha256": "sha256:ddb3c0c1178fa081f22b24ab04c321b0538427717f4404328a96dc48758f1232",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "sha256": "sha256:72ea10e87685f8c97e7849426ec80b766bbe5e397dc50d0c93f78274b9bf7d22",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "sha256": "sha256:dada33f2f00e938f8e77d810628412797c00cca96909b1f6ef213d7a0ba05c28",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/agents/openai.yaml",
+      "sha256": "sha256:c5cbbf28d0512213e684d65edcc9ec22a7aed6af816e5e2b5552bfae081a6192",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+      "sha256": "sha256:8285138bd999f28aa7490b73ea39a39cf92bda33e158a7efac8ff3a5c3507817",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+      "sha256": "sha256:c8e27653e0a69231801110f6d66c0e6138be2dacb04bd845c9a7007057f9d466",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "sha256:db6e60fcec7bdb08f7a7a15a8ad09ee69bc95fc4fded540ed46ca5b44ecc3dda",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "docs/PROJECT_DOCUMENTATION_INDEX.md",
+      "sha256": "sha256:f1fa1bc1b04e7d1a6d89815801d40462b27a13ed787bd1d5f59dc02caba719e2",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "docs/standards/_index.md",
+      "sha256": "sha256:082b11c438e1256634e44dc57507f86ae9ffd1da56fa555187e2ed0a49994695",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "sha256": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md",
+      "sha256": "sha256:4bd69e239dba9e576f9c96ffa015eed5f15c54f5a97f2d9599ad36260a40304a",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/01-intent-authority-and-non-goals.md",
+      "sha256": "sha256:b7e4a4fa4e039c6207a73a5d395a293691be6f7e24697e62be2ebfbf94f5e30a",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+      "sha256": "sha256:b3e41b3d8ed0f71bd75a5bfcc5bf7cf68019ddb3546f730423c525884a53459f",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/03-validators-fixtures-and-control-gates.md",
+      "sha256": "sha256:20c63acd536a369f748b3c59949938d851f85c3f8ba55f7fee900e5663cbed53",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md",
+      "sha256": "sha256:ab9b900a39ad945bff6307c932914dc9fcd6003d5c0938f7de6c3dff9e5e509a",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/05-diagnostics-repair-and-reentry.md",
+      "sha256": "sha256:8cd89f36331f449a5bb211361d512910cadbb9e4ce8d4d4f2e47a938a6d2b795",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/06-testing-observability-and-evidence.md",
+      "sha256": "sha256:aad031b9f93325de6d2197394de5dac70dc751c8b9fabc25fde2b6ed78918319",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/07-implementation-phases.md",
+      "sha256": "sha256:c6558f163512ba26d9098bf7f9518ba85e8e659c8daeab73c5215525a8378aff",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/08-risks-dod-and-glossary.md",
+      "sha256": "sha256:a22fe1becce026f18bc545f68be8849f2d28af1cd8c5efae8df5f6ed8dfea31c",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/96-global-review-and-validation.md",
+      "sha256": "sha256:218b760ec302520df8548a395f78e13c889dcea6f2f08625f838de1bdcede364",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/97-requirements-ledger.md",
+      "sha256": "sha256:a89150810dc3ee812e90a9d4c226289c8bb338a96ce8733e705ded6ed23cdafe",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/98-source-to-split-audit.md",
+      "sha256": "sha256:f0856d8dd509ff1e922ccf8ee08c4602881d59b307e96a9723a715d901561587",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/99-source-coverage.md",
+      "sha256": "sha256:c1414aa494165759f506e74cadc12984128cdbc94b89b790b0d0fc2c39cee844",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/candidate-diff-cases.v1.json",
+      "sha256": "sha256:9fc5b3e62113cfecd5d87b0aebec9b277e2494965ac5b3e95f77cb843484c9a8",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
+      "sha256": "sha256:b3ca8bd0645ea5b7e4aed19a30483723390e9ad075750095ec60f8e460f359ae",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+      "sha256": "sha256:9558d4a4dd85cb2881854a75a3ba972140ee43cfccf8b13c08fb1f804accdb99",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+      "sha256": "sha256:d5d9ea9ee37570c7872f64c0794055a907bbecf77463db261434dcf5a022ddee",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/adapter-decision.v1.schema.json",
+      "sha256": "sha256:648c97407bdeb36ef5369e8a90741fa298f19b8a611adc347ed4c501b5cc32c2",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/agent-attempt-event.v1.schema.json",
+      "sha256": "sha256:193a4c0d63a23b1da3f8b1a54dd69f9d4a13c597d087db178f9f64fe3ecd909f",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
+      "sha256": "sha256:8a5fc365cbd13b0a019942c2eacd8855773cf152aedcc97082dbeb257116ea86",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+      "sha256": "sha256:be3810aad4811b10a85a8b6b8830ba3d728ad1e44ed10e790077cb6d5ecd7636",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
+      "sha256": "sha256:f21184b203b3e445265a651af0fde3584e8947723d89493384ebf4c1160e220a",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/attempt-ledger-manifest.v1.schema.json",
+      "sha256": "sha256:5b583be29c7e39004b0ed216256079273706ca08493cabadbf3aadca11ea60d0",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/authority-manifest.v1.json",
+      "sha256": "sha256:1b4514e8df206df7624f39a6c39e15c1b7ccda02f84bbd3cf07c71b4a6752b2c",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/backend-request.v1.schema.json",
+      "sha256": "sha256:4670e7bc0c7bb860318bafdaed40775648a469b2637d7ed33949543c8974cf2b",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/backend-response.v1.schema.json",
+      "sha256": "sha256:5f95bd7854ff3bc650b2e803fbb52b13dbab19c7c4d55268d0c20e87c934d337",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+      "sha256": "sha256:5627b332d2066f7495c88a5d14cf8069b6a19a46a6a8864642e2fc0d14bff640",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+      "sha256": "sha256:e229a521a2beae917c08b47e2fd74d97af933a9ae3ef080ec53dc34303fa6af6",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/clarification-decisions.v1.json",
+      "sha256": "sha256:8d36bbfbde581f2786c07e2335c37e0dd02a9a5d65ce8a52bf3b0f44c4983dc0",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
+      "sha256": "sha256:dea1fbf3006880fd412c17483acd09c03ca706addbd733e9c998300de5480467",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/context-manifest.v1.schema.json",
+      "sha256": "sha256:bbfeb7fb703918b80735e73fd0b314b6aec98c83144f0c3771ac5d1af1acb009",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diff-manifest.v1.schema.json",
+      "sha256": "sha256:8b32cad6e8a6720aca8f44a8483abd480acc0f08aa9638415e252c8144833e5f",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-contract.v1.schema.json",
+      "sha256": "sha256:06d5bd0feec879f2f72f2de95966aa9ccc44e77c5adf7105a1521a2f78a12345",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
+      "sha256": "sha256:76157c83b83ca95073f360ca944151a22ac195261d6903172a301286ac1f014e",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "sha256": "sha256:7b98bdf5f64a1c7d1bc7c63937afe3a7b9d6812f00be440ec5b6ce8adfe572c7",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
+      "sha256": "sha256:c859119ba6134ff36a9451bbe3ab8c969adebbde0f3f5cb42896ec8c2d68956a",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
+      "sha256": "sha256:659172239aca47162f4051f3438a503612c35f578fe9833a202abe7d8a7f3ca1",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
+      "sha256": "sha256:67e04414bf83b77f17cef3b5f2f26f413c2ac1c616c4560604039c914b50a17c",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
+      "sha256": "sha256:6490ac173fcf1f030724faa6899236f1c5a8533182f4180994ef82f14c3ef6a7",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirements.v1.json",
+      "sha256": "sha256:643fd6ce9191ed916213b97be88d5b7f54db577844cf99c5ee4d7ce663bf1a19",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
+      "sha256": "sha256:50b8b72afeeff344395d6783f2e2a85dd85078937310eb8d64c643ef7c8fa726",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json",
+      "sha256": "sha256:90f0d449e698dd3cf79d0d0ec2c7fbfd9456bae6683bddc5be132e2a0a53c649",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/shadow-backfill.v1.json",
+      "sha256": "sha256:fbd85d0bb22b03d77a54adc2a6da1708b45711e806bda5fb51d715b7b99fbaab",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/slice-capsule.v1.schema.json",
+      "sha256": "sha256:fac248a880d7958f103f5d819d86071d9e79227c6ef0b05823152c1bbf9e4be9",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/source-coverage.v1.json",
+      "sha256": "sha256:9874f7dad50fc176ac4bd36b2f9a7b6928473e956438e453be4cea64aa65c142",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
+      "sha256": "sha256:45d3475dff006d4e88dde0793ac5ae2ea441e525a320fe18f4f1d5716293ba61",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_inventory_support.py",
+      "sha256": "sha256:21e90ce700976023b3872cebcb9e86ef7bf4100f7cdb9b2e82fdb173be7103a7",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
+      "sha256": "sha256:f74ec0432ee0f03ef84c2b32469f13d5ac3879687b657e4d208c9b3ba4c65b61",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py",
+      "sha256": "sha256:e25b287ee5635694b1fc4142888ce98777c764578719c91720a57ea13def0a8b",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+      "sha256": "sha256:f3160d7d7ba54aa66212fd696d2c17729b9ac53fd0f54e29d22e2a042a012903",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+      "sha256": "sha256:a7a1a594f23143741472c71a75fed2e5f7efed37b64e45fc706d4ed69bd8e994",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_support.py",
+      "sha256": "sha256:b3bbf9321ba854263d7ca81daf5bc07cbbda1bedd00cc40a8581475045f9ccb5",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py",
+      "sha256": "sha256:5cd3fad94fc9b0f74da32e6ee78b986081beaa2f6b1c5b430c92951ac78ad754",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
+      "sha256": "sha256:e95731be2f7633df8f8e7999107dcec1712f1efc787e3f27cd043a3e76b9bea7",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+      "sha256": "sha256:49492a0791864533cbf56e7677258d128c207f967b2a5341088bdbee09ed5b41",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py",
+      "sha256": "sha256:8f343284f08155605e9e578bd679e42d4a5eb326a1be7d422209177c8b3c1ecf",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
+      "sha256": "sha256:4c0d6432b62aecd46e80ba896d79f12e094457a1733a626f080f574bbace6eaa",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
+      "sha256": "sha256:ec4b564a5c4202a3700bdfed346aa06d7194b6007512982b6bff5c50862c080e",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
+      "sha256": "sha256:e3aaf30efffdcfa943ef78dea6cc88166ab8475bebebf15ca4293d8d00419d54",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+      "sha256": "sha256:9d31d3fdd9a1b12fdd745d2ec9147a7d3ccfa73fe391a2bee478638d14aea1d0",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
+      "sha256": "sha256:2367ff8c12d2613b304e2127f6ebe83cdf0949c6cbed2a915d70f2486859e022",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
+      "sha256": "sha256:9c20bc5924128dec7b172d7e9a629a49bc809059b7917b6a0231022395011c7a",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_validation_result_guards.py",
+      "sha256": "sha256:3f0f33ecce3a043b9c2f2a3624958a387818f71d2fd48f59dbf878009a50755e",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py",
+      "sha256": "sha256:3ed29df358d20d7ec843aecc98cf177f8d170c80448ae9e33b2abeeae2d32cb1",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    },
+    {
+      "path": "execution-plans/README.md",
+      "sha256": "sha256:3e97e84f94fcfcae09bc0129aaecdf412fa3d74a28780804427c12795647e8c8",
+      "roles": [
+        "implementation"
+      ],
+      "inclusion_reason": "7-15 frozen baseline"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.backend-response.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "slice_id", "run_id", "attempt_id", "stage", "backend_protocol_version", "self_reported_status", "changed_files", "commands_attempted", "blockers", "response_summary", "raw_response_hash", "raw_body_persisted", "contains_sensitive_data", "untrusted"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.backend-response.v1"},
+    "plan_id": {"type": "string", "minLength": 1},
+    "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"},
+    "run_id": {"type": "string", "minLength": 1},
+    "attempt_id": {"type": "string", "pattern": "^ATTEMPT-[0-9]{3,}$"},
+    "stage": {"enum": ["red", "green", "refactor"]},
+    "backend_protocol_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"},
+    "self_reported_status": {"enum": ["candidate", "blocked", "failed"]},
+    "changed_files": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "commands_attempted": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "response_summary": {"type": "string"},
+    "raw_response_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "raw_body_persisted": {"const": false},
+    "contains_sensitive_data": {"const": false},
+    "untrusted": {"const": true}
+  }
+}

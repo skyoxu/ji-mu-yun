@@ -1,0 +1,871 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter",
+  "authorityGraphChanged": true,
+  "authorizes": [],
+  "baselineManifestHash": "sha256:65399391219790d5d75156a5995ebe754b60b0eaf5fae03c8a33dd2f8f6707c4",
+  "baselineManifestPath": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-inputs/2026-08-04-rmap-acceptance-r13/baseline-content-manifest.v1.json",
+  "candidateManifestHash": "sha256:54eb698577e03f60fec9cda2378c70c322e3ba931ba4bc1e509bd9a7592579b6",
+  "candidateManifestPath": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-inputs/2026-08-04-rmap-acceptance-r13/candidate-content-manifest.v1.json",
+  "changedPaths": [
+    ".agents/skills/bmad-quick-dev/SKILL.md",
+    ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+    ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/references/evidence-and-freshness.md",
+    ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
+    ".agents/skills/quick-dev-tdd-adapter/references/tdd-run-protocol.md",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/adapter-decision.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/agent-attempt-event.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/attempt-ledger-manifest.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/backend-request.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/backend-response.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/context-manifest.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/diff-manifest.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/implementation-contract.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/slice-capsule.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/stage-observation.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/tools/adapter-lifecycle-probe.txt",
+    ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/protocol_bundle_builder.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/protocol_fixture_support.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_observation.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_observation_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/adapter_red_probe.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter_red_probe.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0707_contract.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0711_contract.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_contract.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_contract.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/validate_adapter_contract.py",
+    ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+    ".agents/skills/run-phase-bootstrap-review/references/artifact-proof-authority-root.v1.json",
+    ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+    ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py",
+    ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+    ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/agents/openai.yaml",
+    ".agents/skills/vdd-execution-plan/scripts/artifact_proof_compat.py",
+    ".agents/skills/vdd-execution-plan/scripts/fixtures/artifact-proof-root-policy-pass.json",
+    ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_artifact_proof_compat.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
+    ".gitignore",
+    "decision-logs/2026-07-21-rmap-replay-bootstrap-baseline.md",
+    "decision-logs/2026-07-21-rmap-vdd-creation-risk-log.md",
+    "docs/PROJECT_DOCUMENTATION_INDEX.md",
+    "docs/adr/ADR-0042-artifact-proof-trust-root-rotation-boundary.md",
+    "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+    "docs/standards/_index.md",
+    "docs/standards/bootstrap-review-control-plane.md",
+    "docs/standards/repository-maintenance-agent-protocol.md",
+    "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/fixtures/tdd-adapter-shadow.v1.json",
+    "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/implementation-contract.v1.json",
+    "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/fixtures/tdd-adapter-shadow.v1.json",
+    "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/implementation-contract.v1.json",
+    "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/fixtures/tdd-adapter-shadow.v1.json",
+    "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/01-intent-authority-and-non-goals.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/02-executable-contracts-and-invariants.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/03-validators-fixtures-and-control-gates.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/05-diagnostics-repair-and-reentry.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/06-testing-observability-and-evidence.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/07-implementation-phases.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/08-risks-dod-and-glossary.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/95-implementation-evolution-and-completion-report.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/96-global-review-and-validation.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/97-requirements-ledger.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/98-source-to-split-audit.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/99-source-coverage.md",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/candidate-diff-cases.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/fixtures/fixture-cases.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/acceptance-contracts.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/adapter-decision.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/agent-attempt-event.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-registry.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-required.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/attempt-ledger-manifest.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/authority-manifest.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/backend-request.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/backend-response.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-baseline-bridge.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/candidate-lineage-manifest.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/clarification-decisions.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/committed-candidate-range.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/context-manifest.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/diff-manifest.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/implementation-contract.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/plan-state.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/authorization-event.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/policy-decision.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/successor-authority.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/replay-baseline-manifest.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirement-quality.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/requirements.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/runtime-artifact-type-proof.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/shadow-backfill.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/shadow-protected-baseline.v2.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/slice-capsule.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/source-coverage.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/spec-deltas.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/stage-evidence-projection.v1.schema.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_inventory_support.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_builder.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_builder.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_support.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_baseline_bridge.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_s2_red_probe_contract.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_stage_projection_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_validation_result_guards.py",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py",
+    "execution-plans/95-implementation-report-index.v1.json",
+    "execution-plans/README.md"
+  ],
+  "compositionChecks": [
+    {
+      "checkId": "rmap-finding-repair-composition-targeted",
+      "commandRegistryPath": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-command-registry.v2.json",
+      "consumerPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "producerPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/contract_guards.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py",
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py"
+      ],
+      "receiptPath": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+    }
+  ],
+  "directConsumers": [
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+  ],
+  "highRiskBoundaryChanged": true,
+  "lineageFamilyId": "ria-07b4bb11ac7d248beb6faf98647df867",
+  "novelP0P1FindingIds": [
+    "BSR-02DBD7797FCD0292",
+    "BSR-227F7F11FA687DE2",
+    "BSR-2626BA133FF060F7",
+    "BSR-4648A3C470A35CAB",
+    "BSR-8C32754D133491BA",
+    "BSR-B437B6DCE5C359D6",
+    "BSR-BE64CBEE5F31A84B",
+    "BSR-FC7358AD37D42A8B"
+  ],
+  "predecessorRun": "logs/ci/2026-07-16/review-gateway-bootstrap-repo-maint-tdd-final-r3-20260716-110837",
+  "repositoryRoot": "C:\\jimuyun",
+  "rootCauseInventories": [
+    {
+      "addressedPaths": [
+        ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-001",
+      "searchRoots": [
+        ".agents/skills/bmad-quick-dev/scripts"
+      ],
+      "searchTerm": "or not all(isinstance(value, list) and value for value in (requirement_rows, acceptance_rows, plan_slices))"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-002",
+      "searchRoots": [
+        ".agents/skills/bmad-quick-dev/tests"
+      ],
+      "searchTerm": "f\"def validate():\\n    return {{'status': 'pass', 'validated_state': 'implementation-authorized', 'plan_id': '{name}'}}\\n\\n\""
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-003",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "contexts = [item for item in protocol_bundle.get(\"contexts\", []) if isinstance(item, dict) and item.get(\"context_manifest\", {}).get(\"stage\") == stage]"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-004",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "if (candidate.parent / \"targeted-validation.v1.json\").is_file() and os.environ.get(\"JIMUYUN_TDD_EXECUTION_MODE\") != \"targeted-validation\":"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-005",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "print(json.dumps({\"observed\": args.failure_id, \"controlled\": True}, sort_keys=True))"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-006",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "_run([str(runner), \"--repository-root\", str(root), \"--plan-dir\", str(plan), \"--slice-id\", slice_id, \"--snapshot-path\", *snapshots])"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/protocol_bundle_builder.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-007",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "return _fixture_support().hydrate_protocol_fixture(base, stage_documents, external_artifacts, initial_bytes)"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/protocol_fixture_support.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-008",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "refs.extend([*capsule.get(\"authority_refs\", []), capsule.get(\"implementation_contract\"), capsule.get(\"baseline_ref\"), *capsule.get(\"stage_evidence_refs\", [])])"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-009",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "if result.get(\"predicate\") == exit_predicate and result.get(\"status\") == \"pass\" and current and (required_artifact is None or required_artifact.is_file()):"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-010",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "output.write_text(json.dumps(projection.build(workspace, run_dir, args.slice_id, args.snapshot_path), indent=2) + \"\\n\", encoding=\"utf-8\", newline=\"\\n\")"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-011",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "\"requirement_ids\": list(run_context[\"requirement_ids\"]), \"acceptance_ids\": list(run_context[\"acceptance_ids\"]), \"source_refs\": list(run_context[\"source_refs\"]),"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/stage_lifecycle_runner.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-012",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "def close(self, run_context: dict[str, Any], artifact_store: dict[tuple[str, str], bytes]) -> dict[str, Any]:"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/stage_observation.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-013",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "if not isinstance(observation[\"exit_code\"], int) or not isinstance(observation[\"observed_at\"], str) or not isinstance(observation[\"response_summary\"], str):"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/stage_observation_runner.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-014",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "output.write_text(json.dumps(observation, ensure_ascii=False, sort_keys=True, separators=(\",\", \":\")) + \"\\n\", encoding=\"utf-8\", newline=\"\\n\")"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/adapter_red_probe.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-015",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "prepared = ADAPTER.prepare(contract, \"RMAP-S2\", {\"contract_hash\": \"sha256:contract\", \"validator_hash\": \"sha256:validator\"})"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-016",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "result = ADAPTER.execute(Path(tmp) / \"run-001\", self._contract(), \"RMAP-S2\", {\"contract_hash\": \"sha256:contract\", \"validator_hash\": \"sha256:validator\"}, events)"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter_red_probe.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-017",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "result = subprocess.run([sys.executable, str(probe)], check=False, capture_output=True, text=True)"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-018",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "self.assertTrue(all(value.get(key) for key in (\"head\", \"contract_hash\", \"validator_hash\")), \"RMAP-REVIEW-CANDIDATE-NOT-BOUND\")"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-019",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "(result / \"slice-ready-result.json\").write_text(json.dumps({\"predicate\": \"slice-ready\", \"status\": \"pass\", \"contract_hash\": contract_hash}), encoding=\"utf-8\")"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0707_contract.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-020",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "def test_shadow_0707_contract_missing_is_rejected(self) -> None:"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_0711_contract.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-021",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "def test_shadow_0711_contract_missing_is_rejected(self) -> None:"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shadow_contract.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-022",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "SHADOW_FIXTURE = REPOSITORY_ROOT / \"execution-plans/2026-07-12-llm-review-evidence-gate-hardening/fixtures/tdd-adapter-shadow.v1.json\""
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_contract.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-023",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "def test_version_currency_commit_gate_is_conditional_and_non_authoritative(self) -> None:"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/validate_adapter_contract.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-024",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "if not isinstance(protocol, dict) or protocol.get(\"context_layout\") != \"context/<capsule-id>\" or protocol.get(\"attempt_layout\") != \"attempts/<attempt-id>\":"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-025",
+      "searchRoots": [
+        ".agents/skills/run-phase-bootstrap-review/scripts"
+      ],
+      "searchTerm": "raise ControlPlaneError(f\"Windows case-normalized artifact collision: {previous} vs {relative}\")"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/artifact_proof_root_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-026",
+      "searchRoots": [
+        ".agents/skills/run-phase-bootstrap-review/scripts"
+      ],
+      "searchTerm": "DOES_NOT_AUTHORIZE = [\"plan-ready\", \"slice-ready\", \"bootstrap-review\", \"implementation-accepted\", \"protected-handoff\", \"release-ready\"]"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-027",
+      "searchRoots": [
+        ".agents/skills/run-phase-bootstrap-review/scripts"
+      ],
+      "searchTerm": "non_impact, _ = load_evidence_ref(entry.get(\"nonImpactEvidenceRef\"), f\"P2 non-impact evidence for {finding_id}\", \"bootstrap-p2-evidence-result.v1.schema.json\")"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-028",
+      "searchRoots": [
+        ".agents/skills/run-phase-bootstrap-review/tests"
+      ],
+      "searchTerm": "context = {\"accepted\": [{\"path\": \"AGENTS.md\", \"source_sha256\": \"a\" * 64, \"satisfies\": [\"repository-rules\", \"unknown\"], \"readSet\": [{\"path\": \"AGENTS.md\"}]}]}"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-029",
+      "searchRoots": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts"
+      ],
+      "searchTerm": "candidate_revision=request[\"candidate_revision\"], candidate_manifest_hash=request[\"candidate_manifest_hash\"], candidate_manifest=request[\"candidate_manifest\"],"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-030",
+      "searchRoots": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts"
+      ],
+      "searchTerm": "if not isinstance(required_approver_role, str) or not required_approver_role or any(not _HASH.fullmatch(value) for value in expected_hashes.values()):"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-031",
+      "searchRoots": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests"
+      ],
+      "searchTerm": "envelope = {\"schemaVersion\": \"bootstrap-import-envelope.v1\", \"controlPlaneRevision\": \"bootstrap-control-plane.v2\", **expected, \"authorizes\": []}"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/vdd-execution-plan/scripts/artifact_proof_compat.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-032",
+      "searchRoots": [
+        ".agents/skills/vdd-execution-plan/scripts"
+      ],
+      "searchTerm": "!= {\"rule_id\", \"validator_path\", \"validator_sha256\", \"callable\", \"negative_test_path\", \"negative_test_sha256\", \"expected_failure_ids\"}"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_artifact_proof_compat.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-033",
+      "searchRoots": [
+        ".agents/skills/vdd-execution-plan/scripts/tests"
+      ],
+      "searchTerm": "\"VDD-ARTIFACT-PROOF-PRODUCER\": lambda value: value[\"schema_producer_authority\"].update(authority_sha256=\"sha256:\" + \"0\" * 64),"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-034",
+      "searchRoots": [
+        ".agents/skills/vdd-execution-plan/scripts/tests"
+      ],
+      "searchTerm": "path.write_text(json.dumps({\"exit_attestation\": {\"explicit_write_permission\": True}}), encoding=\"utf-8\", newline=\"\\n\")"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/artifact_proof_inventory_support.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-035",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "\"execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json\": \"successor-policy-authorization\","
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-036",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "bootstrap_input_path = contained_file(repository_root, f\"{bootstrap_run_value}/review-input.json\" if isinstance(bootstrap_run_value, str) else None)"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_builder.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-037",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "if findings or [{key: item[key] for key in (\"change_type\", \"baseline_path\", \"candidate_path\", \"before_sha256\", \"after_sha256\")} for item in files] != folded:"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_diff_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-038",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "expected, expected_patch, exclusions = derive_candidate_snapshot(plan_root, repository_root, contract, replay_baseline_ref=lineage.get(\"replay_baseline_ref\"))"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_builder.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-039",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "or any(not isinstance(value.get(key), str) or not value[key].startswith(\"sha256:\") for key in (\"from_baseline_hash\", \"to_baseline_hash\", \"transition_hash\"))"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/candidate_lineage_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-040",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "return [_finding(\"RMAP-CANDIDATE-SUPERSESSION\", \"candidate-supersession-proof\", \"authoritative recovery or event lineage shows the S6 candidate is not active\")]"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/committed_candidate_builder.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-041",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "for name, value in ((\"committed-candidate-range.json\", range_map), (\"changed-files.json\", manifest), (\"candidate-lineage-manifest.json\", lineage)):"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/fixture_checks.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-042",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "mutated[\"does_not_authorize\"] = [\"plan-ready\", \"slice-ready\", \"bootstrap-review\", \"implementation-accepted\", \"protected-handoff\", \"release-ready\"]"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_fixture_support.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-043",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "_CORE_PATH = Path(__file__).resolve().parents[3] / \".agents/skills/quick-dev-tdd-adapter/tools/protocol_fixture_support.py\""
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/protocol_validation_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-044",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "refs.extend([*capsule.get(\"authority_refs\", []), capsule.get(\"implementation_contract\"), capsule.get(\"baseline_ref\"), *capsule.get(\"stage_evidence_refs\", [])])"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-045",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "state_path = REPOSITORY_ROOT / \"logs\" / \"vdd-clarifications\" / \"2026-07-15-repository-maintenance-tdd-adapter-f6d1143a\" / run_id / \"state.json\""
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/replay_baseline_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-046",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "schema = json.loads((plan_root / \"schemas\" / \"replay-baseline-manifest.v1.schema.json\").read_text(encoding=\"utf-8\"))"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-047",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "\"schemas/spec-deltas.v1.json\", \"schemas/requirement-quality.v1.json\", \"schemas/create-baseline-manifest.v1.json\", \"schemas/shadow-backfill.v1.json\","
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/shadow_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-048",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "findings.append({\"rule_id\": \"RMAP-SHADOW-PROTECTED-DRIFT\", \"target\": str(item.get(\"plan_id\")), \"message\": \"protected tree bytes differ from baseline\"})"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-049",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "check = {\"rule_id\": \"RMAP-AUTH-SLICE\", \"status\": \"pass\" if not findings else \"fail\", \"evidence\": [f\"{slice_id} parsed outputs and explicit stage evidence\"]}"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/source_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-050",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "\"negative_fixture_ids\": [\"plan-lifecycle-terminal-predicate-bypassed\"], \"expected_failure_ids\": [\"RMAP-PLAN-LIFECYCLE-POLICY\"], \"exit_predicate\": \"slice-ready\","
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/stage_projection_builder.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-051",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "registry = json.loads((root / \"execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/command-registry.v1.json\").read_text(encoding=\"utf-8\"))"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-052",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "\"execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json\": [],"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_baseline_bridge.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-053",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "entry = {\"change_type\": \"add\", \"baseline_path\": None, \"candidate_path\": \"docs/bootstrap.txt\", \"before_sha256\": None, \"after_sha256\": \"sha256:\" + \"a\" * 64}"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-054",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "authority_ref = {\"path\": authority_path.relative_to(repository_root).as_posix(), \"sha256\": \"sha256:\" + hashlib.sha256(authority_path.read_bytes()).hexdigest()}"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-055",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "rules = {item[\"rule_id\"] for item in validate_candidate_review_documents(PLAN_ROOT, relative, candidate, envelope, review_input, result, dispositions, current)}"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_protocol_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-056",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "{item[\"rule_id\"] for item in validate_protocol_bundle(PLAN_ROOT, bundle, artifact_store=store, file_versions=versions, require_complete=True)},"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_s2_red_probe_contract.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-057",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "self.assertNotEqual(s2[\"tdd\"][\"red\"][\"command_id\"], s2[\"tdd\"][\"green\"][\"command_id\"])"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_stage_projection_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-058",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "result, findings = validate_stage_evidence_projection(PLAN_ROOT, root, \"logs/stage-run/stage-evidence-projection.v1.json\", \"RMAP-S0\", \"stage-run\")"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_validation_result_guards.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-059",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "def test_result_lineage_is_recomputed_from_the_predecessor_envelope(self) -> None:"
+    },
+    {
+      "addressedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "rmap-repair-source-060",
+      "searchRoots": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+      ],
+      "searchTerm": "repository = nullcontext(REPOSITORY_ROOT) if os.environ.get(\"RMAP_ISOLATED_TEST_REPOSITORY\") == \"1\" else isolated_test_repository(REPOSITORY_ROOT, PLAN_ROOT)"
+    }
+  ],
+  "schemaVersion": "acceptance-repair-completeness-request.v1",
+  "semanticRoundsConsumed": 3,
+  "targetedTests": [
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+  ],
+  "validationRefs": [
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+  ]
+}

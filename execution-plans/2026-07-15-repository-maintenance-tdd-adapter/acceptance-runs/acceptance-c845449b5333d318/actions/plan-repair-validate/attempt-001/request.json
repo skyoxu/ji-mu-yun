@@ -1,0 +1,20 @@
+{
+  "actionId": "plan-repair-validate",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "rmap-plan-repair-validate",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+    "knowledgeContextHash": "sha256:a004638a10146e1fd3fd5a6a952148add91527faef1fe702981b7c45a447b1ee",
+    "runInputHash": "sha256:ef5d3018418e9eedc0e6d63226de2d945408e7383b4bd097cb654f8a9eed3e3a"
+  },
+  "ownerToken": "owner-acceptance-c845449b5333d318",
+  "processId": 9572,
+  "recordedUtc": "2026-08-04T07:16:39.813753Z",
+  "runId": "acceptance-c845449b5333d318",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 1
+}

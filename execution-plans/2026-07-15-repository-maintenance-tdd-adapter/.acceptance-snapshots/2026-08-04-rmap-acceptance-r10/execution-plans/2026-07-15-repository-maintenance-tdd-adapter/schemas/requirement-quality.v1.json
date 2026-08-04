@@ -1,0 +1,125 @@
+{
+  "schema_version": "rmap.requirement-quality.v2",
+  "requirements_hash": "sha256:fe0601a8244cb9dcfee4db4344003f411c2d570417a1d1c4c9720e04b1f1886a",
+  "acceptance_contracts_hash": "sha256:b22efb43332feef4bfffce20564d2438eed6f630236472edf880a81122fc0c23",
+  "validator_version": "rmap-plan-validator.v2",
+  "generated_at": "2026-07-23T10:34:08.580331Z",
+  "requirements": [
+    {
+      "requirement_id": "RMAP-001",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-002",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-003",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-004",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-005",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-006",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-007",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-008",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-009",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-010",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-011",
+      "normative_strength": "must_not"
+    },
+    {
+      "requirement_id": "RMAP-012",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-013",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-014",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-015",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-016",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-017",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-018",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-019",
+      "normative_strength": "must_not"
+    },
+    {
+      "requirement_id": "RMAP-020",
+      "normative_strength": "must_not"
+    },
+    {
+      "requirement_id": "RMAP-021",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-022",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-023",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-024",
+      "normative_strength": "must_not"
+    },
+    {
+      "requirement_id": "RMAP-025",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-026",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-027",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-028",
+      "normative_strength": "must"
+    },
+    {
+      "requirement_id": "RMAP-029",
+      "normative_strength": "must"
+    }
+  ]
+}

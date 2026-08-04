@@ -1,0 +1,20 @@
+{
+  "actionId": "s6-identity-validate",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "rmap-s6-identity-validate",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+    "knowledgeContextHash": "sha256:18887ca78c86488bfb89abbd7b178d4ec1e47bc73b1c8a39f11b10a1d4815973",
+    "runInputHash": "sha256:b5bb69abf2b0a72fd38ff82012bba4887a3de763ea666145bbd4e95380cf2f8b"
+  },
+  "ownerToken": "owner-acceptance-94a2f1499699b5bf",
+  "processId": 12108,
+  "recordedUtc": "2026-08-04T06:55:08.526576Z",
+  "runId": "acceptance-94a2f1499699b5bf",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 13
+}

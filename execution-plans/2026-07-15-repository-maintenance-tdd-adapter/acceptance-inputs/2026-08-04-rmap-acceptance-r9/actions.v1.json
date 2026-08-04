@@ -1,0 +1,72 @@
+[
+  {
+    "actionId": "plan-repair-validate",
+    "dependsOn": [],
+    "order": 1,
+    "commandId": "rmap-plan-repair-validate",
+    "activation": true
+  },
+  {
+    "actionId": "plan-validate",
+    "dependsOn": [
+      "plan-repair-validate"
+    ],
+    "order": 2,
+    "commandId": "rmap-plan-validate",
+    "activation": true
+  },
+  {
+    "actionId": "validator-tests",
+    "dependsOn": [
+      "plan-validate"
+    ],
+    "order": 3,
+    "commandId": "rmap-validator-tests",
+    "activation": true
+  },
+  {
+    "actionId": "adapter-tests",
+    "dependsOn": [
+      "validator-tests"
+    ],
+    "order": 4,
+    "commandId": "rmap-adapter-tests",
+    "activation": true
+  },
+  {
+    "actionId": "s6-identity-validate",
+    "dependsOn": [
+      "adapter-tests"
+    ],
+    "order": 5,
+    "commandId": "rmap-s6-identity-validate",
+    "activation": true
+  },
+  {
+    "actionId": "quick-dev-router-tests",
+    "dependsOn": [
+      "s6-identity-validate"
+    ],
+    "order": 6,
+    "commandId": "quick-dev-router-tests",
+    "activation": true
+  },
+  {
+    "actionId": "bootstrap-review-tests",
+    "dependsOn": [
+      "quick-dev-router-tests"
+    ],
+    "order": 7,
+    "commandId": "bootstrap-review-tests",
+    "activation": true
+  },
+  {
+    "actionId": "acceptance-integration-tests",
+    "dependsOn": [
+      "bootstrap-review-tests"
+    ],
+    "order": 8,
+    "commandId": "acceptance-integration-tests",
+    "activation": true
+  }
+]

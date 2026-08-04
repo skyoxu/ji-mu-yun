@@ -1,0 +1,16 @@
+{
+  "authorizes": [],
+  "requiredCompanionCapabilityExpectations": [
+    {
+      "capabilityId": "acceptance-inventory-attestation",
+      "capabilityVersion": "1.0",
+      "producerRole": "acceptance_auditor"
+    }
+  ],
+  "requirement": "required",
+  "requirementSources": [
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
+    "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-inputs/2026-08-04-rmap-acceptance-r13/toolchain-code-review.v1.json"
+  ],
+  "schemaVersion": "implementation-acceptance-bootstrap-requirement.v1"
+}

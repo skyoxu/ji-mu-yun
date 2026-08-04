@@ -1,0 +1,106 @@
+{
+  "schema_version": "jimuyun.knowledge-consumer-context.v1",
+  "consumer": "refactor-acceptance",
+  "locator_request": {
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "request_id": "ria-7-15-r10",
+    "consumer": "refactor-acceptance",
+    "query": "AI native single maintainer finding severity downgrade maintenance mode",
+    "max_candidates": 1,
+    "snapshot": {
+      "ref": "refs/heads/main",
+      "commit": "5f029eebcff12fb4594e00642b4cec4cc280a02c"
+    },
+    "policy_revision": "knowledge-consumer-policies.v2"
+  },
+  "locator_result": {
+    "candidates": [
+      {
+        "anchor": "Decision",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 17,
+        "line_start": 17,
+        "module_id": "adr.ADR-0056",
+        "path": "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 176,
+          "strategy": "hybrid-token",
+          "token_matches": 8
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md",
+            "role": "primary",
+            "source_sha256": "b4069d0dcda7605bcb2e9a856f2d5a4af0aa2fc4cbe6056f4221d28aa3ee3505"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0051",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0055",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "b4069d0dcda7605bcb2e9a856f2d5a4af0aa2fc4cbe6056f4221d28aa3ee3505",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      }
+    ],
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "request_id": "ria-7-15-r10",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "5f029eebcff12fb4594e00642b4cec4cc280a02c",
+      "ref": "refs/heads/main"
+    },
+    "source_snapshot_id": "sha256:bdc952ebdbd739a4ee07b20184790096f9f08af3a9eab7c3e7d377b6ea3e35c1",
+    "status": "matched"
+  },
+  "required_modules": [
+    "acceptance-scope"
+  ],
+  "decisions": [
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md",
+        "source_sha256": "b4069d0dcda7605bcb2e9a856f2d5a4af0aa2fc4cbe6056f4221d28aa3ee3505"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "acceptance-scope"
+      ],
+      "rejection_reason": null
+    }
+  ],
+  "request_sha256": "sha256:72c3d3ae7cbf669bc92f276bb2294a06b8e21f9b80b8bba4ea52ce1670a9ebf5",
+  "result_sha256": "sha256:eaf8007dfbea99118554e1b1c8fad110d00d6188992e9b2e1f22de8474a3db84",
+  "preflight": {
+    "status": "ready",
+    "failure_code": null,
+    "context_sha256": "sha256:851210513621925792234d1160bd13b79ba5f910e054b16a72c69ce8bc05e495"
+  }
+}

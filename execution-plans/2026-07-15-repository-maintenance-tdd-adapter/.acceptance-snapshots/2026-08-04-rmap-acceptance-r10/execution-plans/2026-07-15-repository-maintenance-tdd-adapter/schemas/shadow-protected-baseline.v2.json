@@ -1,0 +1,32 @@
+{
+  "schema_version": "rmap.shadow-protected-baseline.v2",
+  "baseline_id": "acceptance-20260804-downstream-control-plane-successor",
+  "captured_from_review": "accepted-downstream-control-plane-lineages",
+  "predecessor_baseline_id": "repair-20260718-1500-bootstrap-trust-root-successor",
+  "revision_reason": "accepted-downstream-control-plane-evolution",
+  "historical_source": {
+    "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/shadow-protected-baseline.v1.json",
+    "sha256": "sha256:9d592e50f213856d9bbe5952279d7d64dbb7dc2a978dfa97e0b1dfdb2e64a93b",
+    "required_for_clean_checkout_validation": false
+  },
+  "plans": [
+    {
+      "plan_id": "llm-review-evidence-gate-hardening",
+      "path": "../2026-07-12-llm-review-evidence-gate-hardening",
+      "protected_tree_sha256": "sha256:b6e3e4b124d4c8761e31e7de64c0174cd48f7541fde02e195298c40ac91ae432",
+      "protected_file_count": 28
+    },
+    {
+      "plan_id": "phase-a-frontend-gdd-to-module-workflow-hardening",
+      "path": "../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening",
+      "protected_tree_sha256": "sha256:db18e10f8e6ca73f2c27a6e531a8fb42682339023e477b94bc40dbb592b5007f",
+      "protected_file_count": 32
+    },
+    {
+      "plan_id": "phase-frontend-boundary-hardening",
+      "path": "../2026-07-11-phase-frontend-boundary-hardening-execution-plan",
+      "protected_tree_sha256": "sha256:dc7a03532fbe2cffb923781e937d8e13343c5884b2b1b4a999b7f09b12cfe79b",
+      "protected_file_count": 29
+    }
+  ]
+}

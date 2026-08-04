@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.committed-candidate-range.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "slice_id", "base_commit", "head_commit", "base_tree", "head_tree", "rename_policy", "files", "authorizes", "root_hash"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.committed-candidate-range.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "slice_id": {"const": "RMAP-S6"},
+    "base_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "head_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "base_tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "head_tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "rename_policy": {"const": "delete-add-no-renames"},
+    "files": {"type": "array"},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "root_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": "rmap.shadow-backfill.v1",
+  "mode": "additive-metadata-shadow-only",
+  "authoritative": false,
+  "protected_baseline_id": "acceptance-20260804-downstream-control-plane-successor",
+  "preserve_existing_bytes": [
+    "books",
+    "status",
+    "validators",
+    "historical_evidence"
+  ],
+  "plans": [
+    {
+      "order": 1,
+      "plan_id": "llm-review-evidence-gate-hardening",
+      "path": "../2026-07-12-llm-review-evidence-gate-hardening",
+      "additive_files": [
+        "implementation-contract.v1.json",
+        "fixtures/tdd-adapter-shadow.v1.json"
+      ],
+      "state_change_authorized": false
+    },
+    {
+      "order": 2,
+      "plan_id": "phase-a-frontend-gdd-to-module-workflow-hardening",
+      "path": "../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening",
+      "additive_files": [
+        "implementation-contract.v1.json",
+        "fixtures/tdd-adapter-shadow.v1.json"
+      ],
+      "state_change_authorized": false
+    },
+    {
+      "order": 3,
+      "plan_id": "phase-frontend-boundary-hardening",
+      "path": "../2026-07-11-phase-frontend-boundary-hardening-execution-plan",
+      "additive_files": [
+        "implementation-contract.v1.json",
+        "fixtures/tdd-adapter-shadow.v1.json"
+      ],
+      "state_change_authorized": false
+    }
+  ]
+}

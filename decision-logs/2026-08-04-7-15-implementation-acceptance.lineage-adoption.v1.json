@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "bootstrap-lineage-adoption.v1",
+  "targetLineageFamilyId": "ria-07b4bb11ac7d248beb6faf98647df867",
+  "legacyChangeId": "repository-maintenance-tdd-adapter-final-freeze",
+  "historicalRuns": [
+    {
+      "runDirectory": "logs/ci/2026-07-16/review-gateway-bootstrap-repo-maint-tdd-final-20260716-0129",
+      "reviewInputHash": "sha256:ee195d76be105dfc91dbfcdb8d87a63c9567286919e0097913127d52f894ff22",
+      "manifestFileHash": "sha256:126ba2caaf1d2466d9001722dd8f3ab04e152789bd245d05017de6d555d8ad5a"
+    },
+    {
+      "runDirectory": "logs/ci/2026-07-16/review-gateway-bootstrap-repo-maint-tdd-final-r2-20260716-024940",
+      "reviewInputHash": "sha256:994b92c5d0c95e5ae0b9280c94bc2ce23e49ac05641bcaa25c8f61da782c72aa",
+      "manifestFileHash": "sha256:80bbf69326b8fb751ee7cb1f5d72933c143837824d7a1038793c474137282961"
+    },
+    {
+      "runDirectory": "logs/ci/2026-07-16/review-gateway-bootstrap-repo-maint-tdd-final-r3-20260716-110837",
+      "reviewInputHash": "sha256:e82c818fcfa3275eecf8b4e828ee4d5a10d10c701318ed890759497bfa69a8c7",
+      "manifestFileHash": "sha256:80fb6687756d60cd52818992b84acdfdf67e3271676f1035a5a33bdd9c691796"
+    }
+  ],
+  "policyAuthority": {
+    "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+    "sha256": "sha256:e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc",
+    "status": "Accepted"
+  },
+  "reason": "Preserve the three semantic Bootstrap rounds already consumed by the same repository-maintenance TDD adapter acceptance target before lineage-family identities became mandatory.",
+  "authorizes": [],
+  "adoptionHash": "sha256:024303830d60ef4311ecf129840ecdfeb1395225d435dd277bd344d1486a0a46"
+}

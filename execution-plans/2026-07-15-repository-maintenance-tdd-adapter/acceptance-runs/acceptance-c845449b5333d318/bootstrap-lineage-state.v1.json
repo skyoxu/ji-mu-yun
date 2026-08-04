@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "bootstrap-review-lineage-state.v1",
+  "lineageFamilyId": "ria-07b4bb11ac7d248beb6faf98647df867",
+  "semanticRoundsConsumed": 0,
+  "consumedRoundNumbers": [],
+  "defaultFullReviewRoundLimit": 2,
+  "hardFullReviewRoundLimit": 3,
+  "nextFullReviewRound": 1,
+  "state": "available",
+  "runs": [],
+  "authorizes": [],
+  "lineageStateHash": "sha256:270541238db4d1db541bb34854f162cbc5aafb769b6e515658a9546691c80d42"
+}

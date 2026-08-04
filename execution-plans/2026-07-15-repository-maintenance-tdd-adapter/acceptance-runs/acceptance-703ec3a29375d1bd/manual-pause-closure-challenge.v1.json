@@ -1,0 +1,156 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter",
+  "authorizes": [],
+  "closureBindingHash": "sha256:d0b928c5cc0f6a1bc69a4d26687e65e07590a126bde0f7d197ac854674482471",
+  "confirmedFindingIds": [
+    "BSR-02DBD7797FCD0292",
+    "BSR-227F7F11FA687DE2",
+    "BSR-2626BA133FF060F7",
+    "BSR-4648A3C470A35CAB",
+    "BSR-8C32754D133491BA",
+    "BSR-B437B6DCE5C359D6",
+    "BSR-BE64CBEE5F31A84B",
+    "BSR-FC7358AD37D42A8B"
+  ],
+  "finalizedEnvelopeCoreHash": "sha256:62baf8ea9ce4e17ac9cf65f5d137f4b2a43c33dd151a69eb21db38ca41465386",
+  "finalizedRun": {
+    "envelopePath": "logs/ci/2026-07-16/review-gateway-bootstrap-repo-maint-tdd-final-r3-20260716-110837/finalized-run-validation.v3.json",
+    "envelopeSha256": "sha256:05d8a610b8168273cf24396404a0acd095fad90ebc504d7ebc72cde994518805",
+    "runDirectory": "logs/ci/2026-07-16/review-gateway-bootstrap-repo-maint-tdd-final-r3-20260716-110837"
+  },
+  "findingRepairs": [
+    {
+      "changedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py"
+      ],
+      "findingId": "BSR-02DBD7797FCD0292",
+      "targetedTests": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py"
+      ],
+      "findingId": "BSR-227F7F11FA687DE2",
+      "targetedTests": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/rmap_checks.py"
+      ],
+      "findingId": "BSR-2626BA133FF060F7",
+      "targetedTests": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/04-behavior-slices-and-implementation-order.md"
+      ],
+      "findingId": "BSR-4648A3C470A35CAB",
+      "targetedTests": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py"
+      ],
+      "findingId": "BSR-8C32754D133491BA",
+      "targetedTests": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py"
+      ],
+      "findingId": "BSR-B437B6DCE5C359D6",
+      "targetedTests": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py"
+      ],
+      "findingId": "BSR-BE64CBEE5F31A84B",
+      "targetedTests": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+      ]
+    },
+    {
+      "changedPaths": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/slice_guards.py"
+      ],
+      "findingId": "BSR-FC7358AD37D42A8B",
+      "targetedTests": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_plan_validator.py"
+      ],
+      "validationRefs": [
+        "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/repair-composition-receipt.v2.json"
+      ]
+    }
+  ],
+  "lineageFamilyId": "ria-07b4bb11ac7d248beb6faf98647df867",
+  "lineageStateHash": "sha256:fd141c1bed4c64c5102bf5fbd841b3e5de063d799ecf7a26ab14b33acbb647c9",
+  "manualPauseRoute": {
+    "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/bootstrap-route.v3.json",
+    "sha256": "sha256:41c6d7d89a4cddf75db276565ab959370e93985a5ff478f1ba18f346c7beca68"
+  },
+  "manualPauseRouteRequest": {
+    "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/bootstrap-route-request.v3.json",
+    "sha256": "sha256:ada1e5bcb6ed7bbc07a22c7f2b1f2f2e9b703853f4957de102419f11fe585f7b"
+  },
+  "protocolAuthorities": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "sha256": "sha256:602cccecb506398cc68feeced776c2d1a0fe35942d455545b3283641bc4f7741"
+    },
+    {
+      "path": "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
+      "sha256": "sha256:25d18279176a6a43a7c8b66ca14f516876ae4a15fba20b36f77c022f53d702fe"
+    },
+    {
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "sha256": "sha256:363da79a7bf47b8d6112acf11c8423180e289d5fd8900fe3f3e284f23e912a26"
+    }
+  ],
+  "protocolReview": {
+    "envelopePath": "logs/ci/2026-08-04/manual-pause-closure-protocol-v3-focused-recovery-7-15/focused-repair-validation-envelope.json",
+    "envelopeSha256": "sha256:ce5475364e14d18e14a7c7a9e12ea20d5380822f5174d235f223f3c1bdbba039",
+    "hardLimitAuthorityPath": "logs/ci/2026-08-04/manual-pause-closure-protocol-v3-focused-recovery-7-15/hard-limit-protocol-repair-authority.json",
+    "hardLimitAuthoritySha256": "sha256:691af17b1ff00a14f854551e354d6a077f67057f7687f7d164880b3c25f86ad1",
+    "runDirectory": "logs/ci/2026-08-04/manual-pause-closure-protocol-v3-focused-recovery-7-15"
+  },
+  "repairCompletenessHash": "sha256:9fcebbc1a9f2c7f56d6ec85bc57a66eb801a9c97bfcd48f415b95aebaade7374",
+  "schemaVersion": "acceptance-manual-pause-closure-challenge.v1",
+  "semanticRoundsConsumed": 3,
+  "sourceRequestHash": "sha256:670747aa79a8aea65ab20e787649cc7b3f59a6c22808d0a250894fae59588e42",
+  "sourceRequestPath": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/manual-pause-closure-request.v3.json",
+  "status": "awaiting-maintainer-ack"
+}

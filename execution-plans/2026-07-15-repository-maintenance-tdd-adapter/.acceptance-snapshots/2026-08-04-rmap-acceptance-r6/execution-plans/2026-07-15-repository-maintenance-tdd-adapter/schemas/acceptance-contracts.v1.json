@@ -1,0 +1,792 @@
+{
+  "schema_version": "rmap.acceptance-contracts.v1",
+  "plan_id": "repository-maintenance-tdd-adapter",
+  "acceptances": [
+    {
+      "acceptance_id": "RMAP-ACC-001",
+      "requirement_id": "RMAP-001",
+      "owner_slice_id": "RMAP-S0",
+      "supporting_slice_ids": [],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s0-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "adr-id-collision"
+      ],
+      "expected_failure_ids": [
+        "RMAP-OWNERSHIP-ADR-ID-COLLISION"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-002",
+      "requirement_id": "RMAP-002",
+      "owner_slice_id": "RMAP-S0",
+      "supporting_slice_ids": [],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s0-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "duplicate-ownership"
+      ],
+      "expected_failure_ids": [
+        "RMAP-OWNERSHIP-DUPLICATE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-003",
+      "requirement_id": "RMAP-003",
+      "owner_slice_id": "RMAP-S1",
+      "supporting_slice_ids": [],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s1-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "schema-missing-plan-id"
+      ],
+      "expected_failure_ids": [
+        "RMAP-STRUCT-SCHEMA"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-004",
+      "requirement_id": "RMAP-004",
+      "owner_slice_id": "RMAP-S1",
+      "supporting_slice_ids": [],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s1-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "shell-true"
+      ],
+      "expected_failure_ids": [
+        "RMAP-CMD-SHELL"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-005",
+      "requirement_id": "RMAP-005",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "backend-commit-authority"
+      ],
+      "expected_failure_ids": [
+        "RMAP-BACKEND-AUTHORITY"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-006",
+      "requirement_id": "RMAP-006",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "stale-source-hash"
+      ],
+      "expected_failure_ids": [
+        "RMAP-HASH-SOURCE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-007",
+      "requirement_id": "RMAP-007",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "red-stage-exit-conflict"
+      ],
+      "expected_failure_ids": [
+        "RMAP-TDD-STAGE-EXPECTATION"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-008",
+      "requirement_id": "RMAP-008",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "stale-source-hash"
+      ],
+      "expected_failure_ids": [
+        "RMAP-HASH-SOURCE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-009",
+      "requirement_id": "RMAP-009",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "missing-slice-dependency"
+      ],
+      "expected_failure_ids": [
+        "RMAP-TDD-DEPENDENCY"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-010",
+      "requirement_id": "RMAP-010",
+      "owner_slice_id": "RMAP-S6",
+      "supporting_slice_ids": [
+        "RMAP-S2"
+      ],
+      "phase_id": "P3",
+      "positive_command_ids": [
+        "rmap-s6-candidate-validate"
+      ],
+      "negative_fixture_ids": [
+        "candidate-changed-file-omitted"
+      ],
+      "expected_failure_ids": [
+        "RMAP-CANDIDATE-DIFF-EXACT"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id",
+        "candidate-diff-manifest-hash",
+        "scoped-git-exact-set",
+        "reproducible-test-patch"
+      ],
+      "exit_predicate": "implementation-candidate"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-011",
+      "requirement_id": "RMAP-011",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [
+        "RMAP-S7"
+      ],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "backend-commit-authority"
+      ],
+      "expected_failure_ids": [
+        "RMAP-BACKEND-AUTHORITY"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-012",
+      "requirement_id": "RMAP-012",
+      "owner_slice_id": "RMAP-S6",
+      "supporting_slice_ids": [],
+      "phase_id": "P3",
+      "positive_command_ids": [
+        "rmap-s6-candidate-validate"
+      ],
+      "negative_fixture_ids": [
+        "candidate-changed-file-omitted"
+      ],
+      "expected_failure_ids": [
+        "RMAP-CANDIDATE-DIFF-EXACT"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id",
+        "candidate-result-ref",
+        "bootstrap-input-candidate-byte-binding"
+      ],
+      "exit_predicate": "implementation-candidate"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-013",
+      "requirement_id": "RMAP-013",
+      "owner_slice_id": "RMAP-S1",
+      "supporting_slice_ids": [
+        "RMAP-S7"
+      ],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s1-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "predicate-authority-escalation"
+      ],
+      "expected_failure_ids": [
+        "RMAP-AUTH-PREDICATE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-014",
+      "requirement_id": "RMAP-014",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "candidate-lineage-missing-slice"
+      ],
+      "expected_failure_ids": [
+        "RMAP-CANDIDATE-LINEAGE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id",
+        "baseline-and-candidate-byte-hashes",
+        "candidate-worktree-identity",
+        "cross-slice-candidate-lineage"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-015",
+      "requirement_id": "RMAP-015",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "successor-starts-stale"
+      ],
+      "expected_failure_ids": [
+        "RMAP-RECOVERY-NEW-RUN-STATE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-016",
+      "requirement_id": "RMAP-016",
+      "owner_slice_id": "RMAP-S7",
+      "supporting_slice_ids": [
+        "RMAP-S6"
+      ],
+      "phase_id": "P3",
+      "positive_command_ids": [
+        "rmap-s7-completion-validate"
+      ],
+      "negative_fixture_ids": [
+        "candidate-supersession-stale"
+      ],
+      "expected_failure_ids": [
+        "RMAP-CANDIDATE-SUPERSESSION"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id",
+        "candidate-result-ref",
+        "non-superseded-predecessor-run",
+        "acceptance-handoff",
+        "non-authorizing-handoff"
+      ],
+      "exit_predicate": "implementation-complete"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-017",
+      "requirement_id": "RMAP-017",
+      "owner_slice_id": "RMAP-S3",
+      "supporting_slice_ids": [
+        "RMAP-S4",
+        "RMAP-S5"
+      ],
+      "phase_id": "P2",
+      "positive_command_ids": [
+        "rmap-s3-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "shadow-authoritative"
+      ],
+      "expected_failure_ids": [
+        "RMAP-SHADOW-AUTHORITY"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-018",
+      "requirement_id": "RMAP-018",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [
+        "RMAP-S3",
+        "RMAP-S4",
+        "RMAP-S5"
+      ],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "shadow-protected-tree-drift"
+      ],
+      "expected_failure_ids": [
+        "RMAP-SHADOW-PROTECTED-DRIFT"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-019",
+      "requirement_id": "RMAP-019",
+      "owner_slice_id": "RMAP-S0",
+      "supporting_slice_ids": [],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s0-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "predicate-authority-escalation"
+      ],
+      "expected_failure_ids": [
+        "RMAP-AUTH-PREDICATE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-020",
+      "requirement_id": "RMAP-020",
+      "owner_slice_id": "RMAP-S0",
+      "supporting_slice_ids": [
+        "RMAP-S7"
+      ],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s0-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "predicate-authority-escalation"
+      ],
+      "expected_failure_ids": [
+        "RMAP-AUTH-PREDICATE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-021",
+      "requirement_id": "RMAP-021",
+      "owner_slice_id": "RMAP-S0",
+      "supporting_slice_ids": [
+        "RMAP-S2"
+      ],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s0-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "clarification-projection-log-path"
+      ],
+      "expected_failure_ids": [
+        "RMAP-REQ-CLARIFICATION-PROJECTION"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-022",
+      "requirement_id": "RMAP-022",
+      "owner_slice_id": "RMAP-S1",
+      "supporting_slice_ids": [],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s1-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "stale-source-hash"
+      ],
+      "expected_failure_ids": [
+        "RMAP-HASH-SOURCE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-023",
+      "requirement_id": "RMAP-023",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "typed-plan-path-escape"
+      ],
+      "expected_failure_ids": [
+        "RMAP-CMD-PATH-CONTAINMENT"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-024",
+      "requirement_id": "RMAP-024",
+      "owner_slice_id": "RMAP-S0",
+      "supporting_slice_ids": [],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s0-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "duplicate-ownership"
+      ],
+      "expected_failure_ids": [
+        "RMAP-OWNERSHIP-DUPLICATE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "stage-result",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-025",
+      "requirement_id": "RMAP-025",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [
+        "RMAP-S1",
+        "RMAP-S6"
+      ],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "capsule-reference-omitted-from-manifest"
+      ],
+      "expected_failure_ids": [
+        "RMAP-CAPSULE-ARTIFACT-CLOSURE"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "immutable-context-manifest",
+        "immutable-slice-capsule",
+        "typed-artifact-ref-union",
+        "actual-artifact-byte-hashes",
+        "predecessor-capsule-hash",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-026",
+      "requirement_id": "RMAP-026",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [
+        "RMAP-S1",
+        "RMAP-S6"
+      ],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "candidate-ledger-fold-mismatch"
+      ],
+      "expected_failure_ids": [
+        "RMAP-CANDIDATE-LEDGER-FOLD"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "backend-request-hash",
+        "backend-response-hash",
+        "actual-diff-hash",
+        "adapter-decision-hash",
+        "stage-result-decision-binding",
+        "attempt-ledger-manifest-hash",
+        "run-events-byte-hash",
+        "final-event-hash",
+        "attempt-predecessor-hash",
+        "stable-rule-id",
+        "accepted-attempt-fold-hash",
+        "cumulative-candidate-exactness"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-027",
+      "requirement_id": "RMAP-027",
+      "owner_slice_id": "RMAP-S0",
+      "supporting_slice_ids": [
+        "RMAP-S1",
+        "RMAP-S6",
+        "RMAP-S7"
+      ],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s0-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "artifact-proof-missing-dimension",
+        "artifact-proof-missing-verdict",
+        "artifact-proof-unauthorized-na",
+        "artifact-proof-pass-without-executable-rule",
+        "artifact-proof-static-authority-escalation",
+        "artifact-proof-required-item-omitted",
+        "artifact-proof-forged-producer",
+        "artifact-proof-self-refreshed-identity",
+        "artifact-proof-unrelated-source",
+        "artifact-proof-unknown-rule",
+        "artifact-proof-empty-invalidation",
+        "artifact-proof-missing-lineage-field",
+        "artifact-proof-empty-consumer",
+        "artifact-proof-authority-root-self-refresh-escalation",
+        "artifact-proof-lineage-broken-predecessor",
+        "artifact-proof-lineage-wrong-predecessor",
+        "artifact-proof-lineage-stale-predecessor",
+        "artifact-proof-synchronized-lattice-escalation",
+        "artifact-proof-synchronized-staleness-truncation",
+        "artifact-proof-synchronized-lineage-forgery",
+        "artifact-proof-synchronized-producer-source",
+        "artifact-proof-full-stack-authority-takeover",
+        "protected-verifier-identity-bypass"
+      ],
+      "expected_failure_ids": [
+        "RMAP-ARTIFACT-PROOF-SCHEMA",
+        "RMAP-ARTIFACT-PROOF-PRODUCER",
+        "RMAP-ARTIFACT-PROOF-IDENTITY",
+        "RMAP-ARTIFACT-PROOF-DERIVATION",
+        "RMAP-ARTIFACT-PROOF-RULE",
+        "RMAP-ARTIFACT-PROOF-STALENESS",
+        "RMAP-ARTIFACT-PROOF-LINEAGE",
+        "RMAP-ARTIFACT-PROOF-CONSUMER",
+        "RMAP-ARTIFACT-PROOF-PROTECTED-ROOT",
+        "RMAP-ARTIFACT-PROOF-APPLICABILITY",
+        "RMAP-PROTECTED-VERIFIER-IDENTITY"
+      ],
+      "evidence_required": [
+        "artifact-proof-schema",
+        "independent-proof-authority-inventory",
+        "independent-proof-required-inventory",
+        "static-contract-zero-authority",
+        "runtime-artifact-type-proof",
+        "exact-predicate-permission-lattice",
+        "registered-consumer-and-negative-test",
+        "authority-manifest-hashes",
+        "independent-validator",
+        "seven-dimension-specific-stable-rule-ids",
+        "pass-or-type-authorized-na-verdicts",
+        "external-vdd-skill-trust-root",
+        "bootstrap-owned-root-hash-guard",
+        "candidate-external-provisional-root-and-guard-diagnostics",
+        "provisional-diagnostic-no-protected-authority",
+        "protected-verifier-identity-blocker",
+        "full-stack-authority-takeover-counterexample",
+        "synchronized-trust-root-counterexamples",
+        "broken-wrong-and-stale-predecessor-counterexamples"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-028",
+      "requirement_id": "RMAP-028",
+      "owner_slice_id": "RMAP-S1",
+      "supporting_slice_ids": [
+        "RMAP-S2"
+      ],
+      "phase_id": "P0",
+      "positive_command_ids": [
+        "rmap-s1-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "plan-lifecycle-audit-omitted",
+        "plan-lifecycle-report-index-bypassed"
+      ],
+      "expected_failure_ids": [
+        "RMAP-PLAN-LIFECYCLE-POLICY"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "plan-audit-before-freeze",
+        "unique-target-95-report",
+        "vdd-repair-write-gate",
+        "target-plan-validator-pass",
+        "target-95-append-only-change-entry",
+        "refrozen-authority-candidate-and-validator-hashes",
+        "report-excluded-from-authority-and-candidate-hash",
+        "repository-report-index-first-lookup",
+        "target-directory-only-index-miss-fallback",
+        "target-95-index-synchronized",
+        "index-non-authoritative",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    },
+    {
+      "acceptance_id": "RMAP-ACC-029",
+      "requirement_id": "RMAP-029",
+      "owner_slice_id": "RMAP-S2",
+      "supporting_slice_ids": [],
+      "phase_id": "P1",
+      "positive_command_ids": [
+        "rmap-s2-slice-validate"
+      ],
+      "negative_fixture_ids": [
+        "plan-lifecycle-terminal-predicate-bypassed"
+      ],
+      "expected_failure_ids": [
+        "RMAP-PLAN-LIFECYCLE-POLICY"
+      ],
+      "evidence_required": [
+        "current-contract-hash",
+        "current-validator-hash",
+        "terminal-predicate-pass",
+        "target-95-append-only-completion-entry",
+        "completion-command-exit-test-and-hash-summary",
+        "changed-files-evidence-and-residual-gaps",
+        "report-non-authority",
+        "stable-rule-id"
+      ],
+      "exit_predicate": "slice-ready"
+    }
+  ]
+}

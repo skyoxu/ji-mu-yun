@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "bootstrap-successor-policy-decision.v1",
+  "decisionId": "repo-maint-tdd-replay-decision-20260722",
+  "supersededReviewId": "repo-maint-tdd-final-r3-20260716-110837",
+  "supersededChangeId": "repository-maintenance-tdd-adapter-final-freeze",
+  "successorChangeId": "repository-maintenance-tdd-adapter-replay-v4",
+  "policyRevision": "sha256:d4077a8c91b9b271ff3607548b3575d1616d14dc3c10733849856959ee6ebc0a",
+  "authorityRevision": "8d1a97f639d37ef740bea9d8eca83b9344246480",
+  "authorizationEventRef": {
+    "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260722/authorization-event.json",
+    "sha256": "sha256:bef11ea1c06fe70b838512917da4a78c4a54dd3322bc17c283ca29cebc5844fd"
+  },
+  "authorizationEventId": "repo-maint-tdd-replay-event-20260722",
+  "consumer": "repository-maintenance-tdd-adapter-plan-reentry",
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "plan-ready",
+    "slice-ready",
+    "bootstrap-review",
+    "implementation-accepted",
+    "protected-handoff",
+    "release-ready"
+  ],
+  "decidedAt": "2026-07-22T00:06:00Z"
+}

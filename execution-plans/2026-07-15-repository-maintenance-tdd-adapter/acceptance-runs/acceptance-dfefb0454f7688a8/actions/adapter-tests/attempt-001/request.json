@@ -1,0 +1,20 @@
+{
+  "actionId": "adapter-tests",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "rmap-adapter-tests",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:3abfd2f7d8ab02126eac6650eae5573ab80d40c51a0540b8ac948a1402272578",
+    "knowledgeContextHash": "sha256:364b81901ecc25feea66f5fd03a2702f8ca23a9060c350c410c37bb11aca984f",
+    "runInputHash": "sha256:51d34cc3bd6a3e5ae71a0d5bf58e0f60d48b56f41999ebe6032ce5d61610742a"
+  },
+  "ownerToken": "owner-acceptance-dfefb0454f7688a8",
+  "processId": 18528,
+  "recordedUtc": "2026-08-04T11:32:35.430656Z",
+  "runId": "acceptance-dfefb0454f7688a8",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 10
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.adapter-decision.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "slice_id", "run_id", "attempt_id", "stage", "stage_binding_id", "stage_result_path", "actor", "input_context_hash", "backend_request_hash", "backend_response_hash", "actual_diff_hash", "decision", "failure_ids", "evidence_refs", "previous_attempt_id", "previous_decision_hash", "next_allowed_state", "authorizes", "does_not_authorize", "finalized", "written_last"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.adapter-decision.v1"},
+    "plan_id": {"type": "string", "minLength": 1},
+    "slice_id": {"type": "string", "pattern": "^RMAP-S[0-9]+$"},
+    "run_id": {"type": "string", "minLength": 1},
+    "attempt_id": {"type": "string", "pattern": "^ATTEMPT-[0-9]{3,}$"},
+    "stage": {"enum": ["red", "green", "refactor"]},
+    "stage_binding_id": {"type": "string", "pattern": "^STAGE-(RED|GREEN|REFACTOR)$"},
+    "stage_result_path": {"type": "string", "pattern": "^(red|green|refactor)-result\\.json$"},
+    "actor": {"type": "object", "additionalProperties": false, "required": ["role", "adapter_protocol_version"], "properties": {"role": {"const": "repository-maintenance-tdd-adapter"}, "adapter_protocol_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"}}},
+    "input_context_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "backend_request_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "backend_response_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "actual_diff_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "decision": {"enum": ["accepted_for_validation", "rejected", "incomplete"]},
+    "failure_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "evidence_refs": {"type": "array", "items": {"$ref": "#/$defs/artifactRef"}},
+    "previous_attempt_id": {"type": ["string", "null"], "pattern": "^ATTEMPT-[0-9]{3,}$"},
+    "previous_decision_hash": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
+    "next_allowed_state": {"enum": ["red-observed", "green-observed", "refactor-verified", "blocked", "failed"]},
+    "authorizes": {"const": []},
+    "does_not_authorize": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 1}},
+    "finalized": {"const": true},
+    "written_last": {"const": true}
+  },
+  "$defs": {
+    "artifactRef": {"type": "object", "additionalProperties": false, "required": ["path_type", "path", "sha256"], "properties": {"path_type": {"enum": ["repo_path", "plan_path", "run_path"]}, "path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}
+  }
+}

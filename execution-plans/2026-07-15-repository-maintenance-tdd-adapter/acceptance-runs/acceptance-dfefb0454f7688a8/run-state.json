@@ -1,0 +1,9 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:3abfd2f7d8ab02126eac6650eae5573ab80d40c51a0540b8ac948a1402272578",
+  "createdUtc": "2026-08-04T11:22:31.544129Z",
+  "knowledgeContextHash": "sha256:364b81901ecc25feea66f5fd03a2702f8ca23a9060c350c410c37bb11aca984f",
+  "runId": "acceptance-dfefb0454f7688a8",
+  "runInputHash": "sha256:51d34cc3bd6a3e5ae71a0d5bf58e0f60d48b56f41999ebe6032ce5d61610742a",
+  "schemaVersion": "acceptance-execution-run.v1"
+}

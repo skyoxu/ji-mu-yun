@@ -1,0 +1,111 @@
+{
+  "schema_version": "vdd.artifact-proof-root-fixture.v1",
+  "root_id": "detached-artifact-proof-root",
+  "proof": {
+    "artifact_path": "detached-plan/schemas/artifact-proof-authority.v1.json",
+    "artifact_kind": "normative",
+    "proof_scope": "static-contract",
+    "finding_ids": [
+      "ARTIFACT-PROOF-CONTRACT"
+    ],
+    "dimension_verdicts": {
+      "schema_producer_authority": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-PRODUCER"]},
+      "immutable_identity": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-IDENTITY"]},
+      "source_of_truth_derivation": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-DERIVATION"]},
+      "independent_recomputation": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-RULE"]},
+      "staleness_propagation": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-STALENESS"]},
+      "recovery_supersession": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-LINEAGE"]},
+      "consumer_authorization_boundary": {"status": "PASS", "evidence_rule_ids": ["ARTIFACT-PROOF-CONSUMER"]}
+    },
+    "schema_producer_authority": {
+      "authority_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
+      "authority_category": "protocol_authority",
+      "authority_sha256": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+      "producer_kind": "manual-authority",
+      "generator_path": null,
+      "generator_sha256": null
+    },
+    "immutable_identity": {
+      "mode": "semantic-root-policy",
+      "algorithm": "vdd-root-policy-v1",
+      "artifact_sha256": null,
+      "authority_revision": "vdd-artifact-proof-root-policy.v2",
+      "manifest_path": "schemas/authority-manifest.v1.json"
+    },
+    "source_of_truth_derivation": {
+      "rules": [
+        {
+          "source": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
+          "source_sha256": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+          "field": "/3-authority-intent-kernels-and-executable-contracts",
+          "target_field": "$policy",
+          "derivation": "semantic-policy-reference"
+        }
+      ]
+    },
+    "independent_recomputation": {
+      "rule_id": "vdd-skill-artifact-proof-root-policy.v1",
+      "validator_path": ".agents/skills/vdd-execution-plan/scripts/artifact_proof_compat.py",
+      "validator_sha256": "sha256:6715a9b6834b3fafdf979fbe613c55a7bdeb6aa6503eca7d787728dc1a00a75e",
+      "callable": "validate_artifact_proof_trust_roots",
+      "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_artifact_proof_compat.py",
+      "negative_test_sha256": "sha256:4235e7841b0f1aeddc05ec0d27eb1fc78afd0da8dacb52588dd7a25894dc6e29",
+      "expected_failure_ids": [
+        "VDD-ARTIFACT-PROOF-PRODUCER",
+        "VDD-ARTIFACT-PROOF-IDENTITY",
+        "VDD-ARTIFACT-PROOF-DERIVATION",
+        "VDD-ARTIFACT-PROOF-RULE",
+        "VDD-ARTIFACT-PROOF-STALENESS",
+        "VDD-ARTIFACT-PROOF-LINEAGE",
+        "VDD-ARTIFACT-PROOF-CONSUMER",
+        "VDD-ARTIFACT-PROOF-APPLICABILITY"
+      ]
+    },
+    "staleness_propagation": {
+      "inputs": [
+        {
+          "source": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
+          "source_sha256": "sha256:6c640256b59b5bd400dd0104698a7b300538543371c9fa48d69cdfca6b932b72",
+          "field": "/3-authority-intent-kernels-and-executable-contracts",
+          "target_field": "$policy",
+          "derivation": "semantic-policy-reference"
+        }
+      ],
+      "invalidates": [
+        "artifact-proof-registry",
+        "runtime-artifact-type-proof",
+        "plan-repair-verified",
+        "plan-ready"
+      ],
+      "regeneration_command_id": "refresh-projections",
+      "revalidation_command_id": "validate-plan-repair"
+    },
+    "recovery_supersession": {
+      "history_policy": "append-only-successor-no-rewrite",
+      "schema_path": "detached-plan/schemas/artifact-proof.v1.schema.json",
+      "lineage_fields": [
+        "artifact_path",
+        "immutable_identity",
+        "recovery_supersession"
+      ],
+      "predecessor_policy": "external-vdd-skill-contract-revision",
+      "lifecycle_status": "supersedes",
+      "predecessor_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "consumer_authorization_boundary": {
+      "consumers": [
+        "composite-plan-validator"
+      ],
+      "predicate": "artifact-contract-proof",
+      "authorizes": [],
+      "does_not_authorize": [
+        "plan-ready",
+        "slice-ready",
+        "bootstrap-review",
+        "implementation-accepted",
+        "protected-handoff",
+        "release-ready"
+      ]
+    }
+  }
+}

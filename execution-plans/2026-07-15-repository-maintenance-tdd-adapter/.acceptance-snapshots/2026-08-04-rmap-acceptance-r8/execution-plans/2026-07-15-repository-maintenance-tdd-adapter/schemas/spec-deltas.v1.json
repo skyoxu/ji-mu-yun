@@ -1,0 +1,634 @@
+{
+  "schema_version": "rmap.spec-deltas.v1",
+  "prior_source": {
+    "path": "../../agentbuild.txt",
+    "sha256": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807"
+  },
+  "deltas": [
+    {
+      "id": "RMAP-DELTA-001",
+      "operation": "MODIFIED",
+      "requirements": [
+        "RMAP-017"
+      ],
+      "summary": "Backfill all three existing refactor plans rather than one pilot.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "7-12",
+        "7-07",
+        "7-11"
+      ],
+      "compatibility": "additive-shadow-only",
+      "acceptance_ids": [
+        "RMAP-ACC-017"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "shadow-authoritative"
+      ],
+      "affected_slices": [
+        "RMAP-S3",
+        "RMAP-S4",
+        "RMAP-S5"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-SHADOW-AUTHORITY"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-002",
+      "operation": "MODIFIED",
+      "requirements": [
+        "RMAP-011"
+      ],
+      "summary": "Use a repository-owned capsule executor instead of stock Quick Dev backend v1.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "adapter",
+        "backend"
+      ],
+      "compatibility": "stock-quick-dev-remains-unchanged",
+      "acceptance_ids": [
+        "RMAP-ACC-011"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "backend-commit-authority"
+      ],
+      "affected_slices": [
+        "RMAP-S2",
+        "RMAP-S7"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-BACKEND-AUTHORITY"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-003",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-001",
+        "RMAP-002",
+        "RMAP-024"
+      ],
+      "summary": "Reuse accepted ADR-0041 for the shared ownership pattern, keep Bootstrap execution scope explicit, and assign TDD Adapter semantics to its standard and Skill.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "standards",
+        "Skill",
+        "plans",
+        "logs"
+      ],
+      "compatibility": "new-framework-authority",
+      "acceptance_ids": [
+        "RMAP-ACC-001",
+        "RMAP-ACC-002",
+        "RMAP-ACC-024"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py",
+        "tools/current_state_guards.py"
+      ],
+      "affected_fixtures": [
+        "duplicate-ownership"
+      ],
+      "affected_slices": [
+        "RMAP-S0"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-OWNERSHIP-DUPLICATE",
+        "RMAP-DOC-CURRENT-STATE"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-004",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-004",
+        "RMAP-014",
+        "RMAP-023"
+      ],
+      "summary": "Replace baseline and candidate identity with an existing-file global baseline, first-add derivation, complete protocol-bundle recomputation, and separate previous-slice effect hash lineage.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "command registry",
+        "adapter"
+      ],
+      "compatibility": "fail-closed",
+      "acceptance_ids": [
+        "RMAP-ACC-004",
+        "RMAP-ACC-014",
+        "RMAP-ACC-023"
+      ],
+      "affected_validators": [
+        "tools/authority_guards.py",
+        "tools/candidate_diff_guards.py",
+        "tools/candidate_lineage_guards.py",
+        "tools/contract_guards.py",
+        "tools/fixture_checks.py",
+        "tools/protocol_validation_guards.py",
+        "tools/rmap_checks.py",
+        "tools/validate_all.py"
+      ],
+      "affected_fixtures": [
+        "authority-manifest-missing-agents",
+        "candidate-after-hash-stale",
+        "candidate-lineage-missing-slice",
+        "candidate-supersession-successor-present",
+        "candidate-test-patch-not-reproducible",
+        "shell-true",
+        "slice-effect-fabricated-with-valid-ledger-hashes",
+        "slice-effect-first-add-valid",
+        "slice-effect-future-path-baseline-invalid",
+        "typed-plan-path-escape"
+      ],
+      "affected_slices": [
+        "RMAP-S1",
+        "RMAP-S2"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-CANDIDATE-DIFF-EXACT",
+        "RMAP-CANDIDATE-LEDGER-FOLD",
+        "RMAP-CANDIDATE-LINEAGE",
+        "RMAP-CANDIDATE-SUPERSESSION",
+        "RMAP-CANDIDATE-TEST-PATCH",
+        "RMAP-CMD-PATH-CONTAINMENT",
+        "RMAP-CMD-SHELL",
+        "RMAP-HASH-AUTHORITY-MANIFEST"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-005",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-015",
+        "RMAP-021"
+      ],
+      "summary": "Add append-only recovery with stale predecessor and normally initialized successor.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "recovery",
+        "logs"
+      ],
+      "compatibility": "new-evidence-contract",
+      "acceptance_ids": [
+        "RMAP-ACC-015",
+        "RMAP-ACC-021"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "clarification-projection-log-path",
+        "successor-starts-stale"
+      ],
+      "affected_slices": [
+        "RMAP-S0",
+        "RMAP-S2"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-RECOVERY-NEW-RUN-STATE",
+        "RMAP-REQ-CLARIFICATION-PROJECTION"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-006",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-016"
+      ],
+      "summary": "Require authoritative S7 supersession proof, runtime Bootstrap dispositions, and immutable successor-policy reentry.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "implementation-accepted"
+      ],
+      "compatibility": "stricter-acceptance",
+      "acceptance_ids": [
+        "RMAP-ACC-016"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py",
+        "tools/candidate_diff_guards.py",
+        "tools/candidate_lineage_guards.py",
+        "tools/evidence_guards.py"
+      ],
+      "affected_fixtures": [
+        "manual-pause-cleared",
+        "candidate-supersession-stale",
+        "review-reentry-stale-blocker"
+      ],
+      "affected_slices": [
+        "RMAP-S6",
+        "RMAP-S7"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-REVIEW-MANUAL-PAUSE",
+        "RMAP-CANDIDATE-REF",
+        "RMAP-CANDIDATE-SUPERSESSION",
+        "RMAP-REVIEW-P2-SOURCE",
+        "RMAP-REVIEW-REENTRY"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-007",
+      "operation": "REMOVED",
+      "requirements": [
+        "RMAP-012"
+      ],
+      "summary": "Replace partial Bootstrap consumption with the repository v2 finalized producer, direct verifier/P2 hashes, formal successor policy authorization, and fresh re-entry recomputation.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "7-12 Bootstrap CLI"
+      ],
+      "compatibility": "existing-extension-points-first",
+      "acceptance_ids": [
+        "RMAP-ACC-012"
+      ],
+      "affected_validators": [
+        "tools/authority_guards.py",
+        "tools/evidence_guards.py",
+        "tools/fixture_checks.py",
+        "tools/rmap_checks.py",
+        "tools/validate_all.py"
+      ],
+      "affected_fixtures": [
+        "manual-pause-cleared",
+        "p2-transitive-evidence-stale",
+        "reentry-empty-policy",
+        "reentry-partial-envelope",
+        "verifier-output-empty"
+      ],
+      "affected_slices": [
+        "RMAP-S6"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-REVIEW-MANUAL-PAUSE",
+        "RMAP-REVIEW-P2-SOURCE",
+        "RMAP-REVIEW-REENTRY",
+        "RMAP-REVIEW-VERIFIER-SOURCE"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-008",
+      "operation": "REMOVED",
+      "requirements": [
+        "RMAP-019"
+      ],
+      "summary": "Remove P4 BMAD elimination from this plan.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "future plan"
+      ],
+      "compatibility": "separate-plan-required",
+      "acceptance_ids": [
+        "RMAP-ACC-019"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "predicate-authority-escalation"
+      ],
+      "affected_slices": [
+        "RMAP-S0"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-AUTH-PREDICATE"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-009",
+      "operation": "RENAMED",
+      "requirements": [
+        "RMAP-005"
+      ],
+      "summary": "Rename quick-dev-tdd-adapter architecture concept to Repository Maintenance TDD Adapter while retaining the stateless adapter identity.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "plan",
+        "future Skill"
+      ],
+      "compatibility": "identity-preserved",
+      "acceptance_ids": [
+        "RMAP-ACC-005"
+      ],
+      "affected_validators": [
+        "tools/validate_all.py",
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/fixture_checks.py"
+      ],
+      "affected_fixtures": [
+        "backend-commit-authority"
+      ],
+      "affected_slices": [
+        "RMAP-S2"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-BACKEND-AUTHORITY"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-010",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-003",
+        "RMAP-006",
+        "RMAP-007",
+        "RMAP-008",
+        "RMAP-009",
+        "RMAP-010",
+        "RMAP-013",
+        "RMAP-018",
+        "RMAP-020",
+        "RMAP-022"
+      ],
+      "summary": "Add the remaining executable contract, lifecycle, cumulative candidate-diff, validation, test, confidence, and source-custody requirements needed for a complete VDD control chain.",
+      "prior_revision": "sha256:9617c46c9e5a636acaf472c4181596437186ec44c069c378bf206dc9b607d7c0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "plan validator",
+        "adapter",
+        "test suite",
+        "source audit"
+      ],
+      "compatibility": "new-control-plane",
+      "acceptance_ids": [
+        "RMAP-ACC-003",
+        "RMAP-ACC-006",
+        "RMAP-ACC-007",
+        "RMAP-ACC-008",
+        "RMAP-ACC-009",
+        "RMAP-ACC-010",
+        "RMAP-ACC-013",
+        "RMAP-ACC-018",
+        "RMAP-ACC-020",
+        "RMAP-ACC-022"
+      ],
+      "affected_validators": [
+        "tools/authority_guards.py",
+        "tools/candidate_diff_guards.py",
+        "tools/current_state_guards.py",
+        "tools/fixture_checks.py",
+        "tools/rmap_checks.py",
+        "tools/validate_all.py"
+      ],
+      "affected_fixtures": [
+        "candidate-changed-file-omitted",
+        "candidate-identity-incomplete",
+        "candidate-test-patch-empty-with-test-change",
+        "missing-slice-dependency",
+        "predicate-authority-escalation",
+        "red-stage-exit-conflict",
+        "schema-missing-plan-id",
+        "shadow-protected-tree-drift",
+        "stale-source-hash"
+      ],
+      "affected_slices": [
+        "RMAP-S0",
+        "RMAP-S1",
+        "RMAP-S2",
+        "RMAP-S3",
+        "RMAP-S4",
+        "RMAP-S5",
+        "RMAP-S6",
+        "RMAP-S7"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-AUTH-PREDICATE",
+        "RMAP-CANDIDATE-DIFF-EXACT",
+        "RMAP-CANDIDATE-TEST-PATCH",
+        "RMAP-HASH-CANDIDATE-IDENTITY",
+        "RMAP-HASH-SOURCE",
+        "RMAP-SHADOW-PROTECTED-DRIFT",
+        "RMAP-STRUCT-SCHEMA",
+        "RMAP-TDD-DEPENDENCY",
+        "RMAP-TDD-STAGE-EXPECTATION"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-011",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-025",
+        "RMAP-026"
+      ],
+      "summary": "Replace self-asserted cross-slice effects with complete run-bundle validation and independently derived accepted decisions, diffs, events, stage results, and ledger roots.",
+      "prior_revision": "sha256:5d318a8e9198faa85dba1df97308006900c82fb0210f7e827ca6c71d0dba28e0",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "adapter prepare",
+        "backend adapter",
+        "stage validator",
+        "recovery reader",
+        "candidate validator"
+      ],
+      "compatibility": "additive-protocol-evidence",
+      "acceptance_ids": [
+        "RMAP-ACC-025",
+        "RMAP-ACC-026"
+      ],
+      "affected_validators": [
+        "tools/authority_guards.py",
+        "tools/candidate_diff_guards.py",
+        "tools/candidate_lineage_guards.py",
+        "tools/evidence_guards.py",
+        "tools/protocol_guards.py",
+        "tools/rmap_checks.py",
+        "tools/slice_guards.py",
+        "tools/validate_all.py"
+      ],
+      "affected_fixtures": [
+        "attempt-decision-authority-escalation",
+        "attempt-decision-missing",
+        "attempt-decision-stale-response",
+        "attempt-diff-forbidden",
+        "attempt-duplicate-accepted-stage",
+        "attempt-event-chain-stale",
+        "attempt-next-state-mismatch",
+        "attempt-request-capsule-stale",
+        "attempt-response-raw-body",
+        "candidate-ledger-fold-mismatch",
+        "capsule-context-hash-stale",
+        "capsule-path-escape",
+        "capsule-s2-predicate-escalation",
+        "slice-effect-accepted-attempt-id-omitted",
+        "slice-effect-effects-not-derived-from-diffs",
+        "slice-effect-final-event-self-asserted"
+      ],
+      "affected_slices": [
+        "RMAP-S1",
+        "RMAP-S2",
+        "RMAP-S6"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-ATTEMPT-AUTHORITY",
+        "RMAP-ATTEMPT-DECISION-BINDING",
+        "RMAP-ATTEMPT-DIFF-BINDING",
+        "RMAP-ATTEMPT-LINEAGE",
+        "RMAP-ATTEMPT-PARTIAL",
+        "RMAP-ATTEMPT-REQUEST-BINDING",
+        "RMAP-ATTEMPT-SENSITIVE-EVIDENCE",
+        "RMAP-ATTEMPT-STAGE",
+        "RMAP-ATTEMPT-STAGE-UNIQUENESS",
+        "RMAP-CANDIDATE-LEDGER-FOLD",
+        "RMAP-CANDIDATE-LINEAGE",
+        "RMAP-CAPSULE-CONTEXT",
+        "RMAP-CAPSULE-PREDICATE",
+        "RMAP-PROTOCOL-PATH"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-012",
+      "operation": "MODIFIED",
+      "requirements": [
+        "RMAP-027"
+      ],
+      "summary": "Require seven explicit executable PASS or type-authorized reasoned N/A verdicts for every formal finding-added artifact; require seven PASS results for authorization-participating artifacts and reserve external identity for protected handoff and release.",
+      "prior_revision": "sha256:3a8fe1611473a0ba006328c7446e8370db4e7f8e83076ca80e49d2478be8da06",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "composite plan validator",
+        "artifact producer",
+        "artifact consumer",
+        "VDD Skill trust-root validator",
+        "Codex Home provisional artifact-proof diagnostic verifier",
+        "plan-state workflow threat-model contract"
+      ],
+      "compatibility": "stricter-fail-closed-verdicts-with-protected-only-external-identity",
+      "acceptance_ids": [
+        "RMAP-ACC-027"
+      ],
+      "affected_validators": [
+        "tools/artifact_proof_guards.py",
+        "tools/fixture_checks.py",
+        "tools/authority_guards.py",
+        "tools/validate_all.py",
+        "C:/Users/Administrator/.codex/skills/run-phase-bootstrap-review/scripts/verify_artifact_proof_boundary.py"
+      ],
+      "affected_fixtures": [
+        "artifact-proof-missing-verdict",
+        "artifact-proof-unauthorized-na",
+        "artifact-proof-pass-without-executable-rule",
+        "artifact-proof-forged-producer",
+        "artifact-proof-self-refreshed-identity",
+        "artifact-proof-unrelated-source",
+        "artifact-proof-unknown-rule",
+        "artifact-proof-empty-invalidation",
+        "artifact-proof-missing-lineage-field",
+        "artifact-proof-empty-consumer",
+        "artifact-proof-authority-root-self-refresh-escalation",
+        "artifact-proof-lineage-broken-predecessor",
+        "artifact-proof-lineage-wrong-predecessor",
+        "artifact-proof-lineage-stale-predecessor",
+        "artifact-proof-synchronized-lattice-escalation",
+        "artifact-proof-synchronized-staleness-truncation",
+        "artifact-proof-synchronized-lineage-forgery",
+        "artifact-proof-synchronized-producer-source",
+        "artifact-proof-full-stack-authority-takeover",
+        "protected-verifier-identity-bypass"
+      ],
+      "affected_slices": [
+        "RMAP-S0"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-ARTIFACT-PROOF-PRODUCER",
+        "RMAP-ARTIFACT-PROOF-IDENTITY",
+        "RMAP-ARTIFACT-PROOF-DERIVATION",
+        "RMAP-ARTIFACT-PROOF-RULE",
+        "RMAP-ARTIFACT-PROOF-STALENESS",
+        "RMAP-ARTIFACT-PROOF-LINEAGE",
+        "RMAP-ARTIFACT-PROOF-CONSUMER",
+        "RMAP-ARTIFACT-PROOF-PROTECTED-ROOT",
+        "RMAP-ARTIFACT-PROOF-APPLICABILITY",
+        "RMAP-PROTECTED-VERIFIER-IDENTITY"
+      ]
+    },
+    {
+      "id": "RMAP-DELTA-013",
+      "operation": "ADDED",
+      "requirements": [
+        "RMAP-028",
+        "RMAP-029"
+      ],
+      "summary": "Add the Quick Dev target-plan lifecycle contract: index-first 95 report resolution and synchronized creation, audit and repair before implementation identity freeze, append-only change history, and terminal-predicate-gated overall completion reporting.",
+      "prior_revision": "sha256:0f35c36757ab524898b623114641ca32c27686f67436e3b0b7eaa9bfa81a0def",
+      "proposed_contract_hash": "sha256:afc34752ba647e0ccd2a5445a176d4021b619c83d4884241878ce267d7d5028e",
+      "consumers": [
+        "Quick Dev prepare",
+        "VDD execution-plan repair",
+        "execution-plan 95 report index",
+        "target 95 report writer",
+        "plan validator"
+      ],
+      "compatibility": "additive-plan-lifecycle-control",
+      "acceptance_ids": [
+        "RMAP-ACC-028",
+        "RMAP-ACC-029"
+      ],
+      "affected_validators": [
+        "tools/rmap_checks.py",
+        "tools/authority_guards.py",
+        "tools/source_guards.py",
+        "tools/fixture_checks.py",
+        "tools/validate_all.py"
+      ],
+      "affected_fixtures": [
+        "plan-lifecycle-audit-omitted",
+        "plan-lifecycle-report-index-bypassed",
+        "plan-lifecycle-terminal-predicate-bypassed"
+      ],
+      "affected_slices": [
+        "RMAP-S1",
+        "RMAP-S2"
+      ],
+      "revalidation_command": "rmap-plan-repair-validate",
+      "expected_rule_ids": [
+        "RMAP-PLAN-LIFECYCLE-POLICY"
+      ]
+    }
+  ]
+}

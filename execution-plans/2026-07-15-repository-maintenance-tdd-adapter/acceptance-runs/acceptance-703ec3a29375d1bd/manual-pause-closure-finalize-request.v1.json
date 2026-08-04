@@ -1,0 +1,25 @@
+{
+  "repositoryRoot": "C:\\jimuyun",
+  "challengePath": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/acceptance-runs/acceptance-703ec3a29375d1bd/manual-pause-closure-challenge.v1.json",
+  "acknowledgement": {
+    "schemaVersion": "acceptance-manual-pause-maintainer-ack.v1",
+    "decision": "accept-repaired-target",
+    "closureBindingHash": "sha256:d0b928c5cc0f6a1bc69a4d26687e65e07590a126bde0f7d197ac854674482471",
+    "acknowledgedFindingIds": [
+      "BSR-02DBD7797FCD0292",
+      "BSR-227F7F11FA687DE2",
+      "BSR-2626BA133FF060F7",
+      "BSR-4648A3C470A35CAB",
+      "BSR-8C32754D133491BA",
+      "BSR-B437B6DCE5C359D6",
+      "BSR-BE64CBEE5F31A84B",
+      "BSR-FC7358AD37D42A8B"
+    ],
+    "authorityRole": "maintainer",
+    "rationale": "Maintainer confirmed the exact challenge hash, closure binding, and eight confirmed findings for the repaired 7-15 acceptance target.",
+    "recordedAt": "2026-08-04T14:22:10.4918702Z",
+    "authorizes": [
+      "manual-pause-closure"
+    ]
+  }
+}
