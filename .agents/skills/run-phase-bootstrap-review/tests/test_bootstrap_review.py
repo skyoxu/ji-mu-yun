@@ -3932,6 +3932,63 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn("Do not edit formal output files", prompt)
         self.assertNotIn("fill\n`reviewer-outputs/blind_hunter.json`", prompt)
 
+    def test_codex_runner_prompt_maps_mandatory_skill_authority_to_snapshots(self) -> None:
+        authority_scopes = []
+        for relative in bootstrap.DELEGATED_BOOTSTRAP_AUTHORITY_PATHS:
+            target = self.repo / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(f"authority for {relative}\n", encoding="utf-8", newline="\n")
+            authority_scopes.append(target)
+        subprocess.run(["git", "add", "."], cwd=self.repo, check=True)
+        subprocess.run(["git", "commit", "-qm", "add delegated authority"], cwd=self.repo, check=True)
+        self.prepare(execution_mode="codex-exec", extra_scopes=authority_scopes)
+        manifest = self.read_json("review-input.json")
+        attempt_dir = self.run_dir / "attempts" / "delegated-authority-prompt"
+        attempt_dir.mkdir(parents=True)
+        helper_path, request_path, output_path = bootstrap.materialize_access_handshake_helper(
+            self.run_dir, manifest, "blind_hunter", attempt_dir
+        )
+
+        prompt = bootstrap.runner_prompt(
+            self.run_dir, manifest, "blind_hunter", "delegated-authority-prompt",
+            helper_path, request_path, output_path,
+        )
+
+        self.assertIn("# Frozen Delegated Bootstrap Authority", prompt)
+        view = json.loads(
+            (self.run_dir / manifest["artifactView"]["manifestPath"]).read_text(encoding="utf-8")
+        )
+        entries = {item["originalPath"]: item for item in view["entries"]}
+        for relative in bootstrap.DELEGATED_BOOTSTRAP_AUTHORITY_PATHS:
+            self.assertIn(f'"originalPath": "{relative}"', prompt)
+            snapshot = bootstrap.ensure_within(
+                self.run_dir / entries[relative]["snapshotPath"],
+                self.run_dir / "artifact-view",
+                "Test delegated authority snapshot",
+            )
+            self.assertIn(json.dumps(str(snapshot)), prompt)
+        self.assertIn("do not fail merely because a live `.agents` path is inaccessible", prompt)
+
+    def test_codex_runner_prompt_fails_before_launch_when_skill_authority_is_incomplete(self) -> None:
+        skill = self.repo / bootstrap.DELEGATED_BOOTSTRAP_AUTHORITY_PATHS[0]
+        skill.parent.mkdir(parents=True, exist_ok=True)
+        skill.write_text("# Bootstrap Skill\n", encoding="utf-8", newline="\n")
+        subprocess.run(["git", "add", "."], cwd=self.repo, check=True)
+        subprocess.run(["git", "commit", "-qm", "add incomplete authority"], cwd=self.repo, check=True)
+        self.prepare(execution_mode="codex-exec", extra_scopes=[skill])
+        manifest = self.read_json("review-input.json")
+        attempt_dir = self.run_dir / "attempts" / "incomplete-authority-prompt"
+        attempt_dir.mkdir(parents=True)
+        helper_path, request_path, output_path = bootstrap.materialize_access_handshake_helper(
+            self.run_dir, manifest, "blind_hunter", attempt_dir
+        )
+
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "missing mandatory delegated"):
+            bootstrap.runner_prompt(
+                self.run_dir, manifest, "blind_hunter", "incomplete-authority-prompt",
+                helper_path, request_path, output_path,
+            )
+
     def test_acceptance_auditor_prompt_contains_exact_inventory_attestation_contract(self) -> None:
         self.prepare(
             execution_mode="codex-exec",

@@ -83,6 +83,15 @@ LINEAGE_ADOPTION_SCHEMA = "bootstrap-lineage-adoption.v1"
 HISTORICAL_POLICY_PATH = SKILL_ROOT / "references" / "historical-policy-revisions.v1.json"
 COST_CALIBRATION_PATH = SKILL_ROOT / "references" / "review-cost-calibration.v1.json"
 COST_CALIBRATION_HASH = "sha256:72b1b76b6de9bd73f5828e84efc28216080aa20a17e66c527d6a3965b9a5b601"
+DELEGATED_BOOTSTRAP_AUTHORITY_PATHS = (
+    ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+    "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md",
+    "docs/standards/bootstrap-review-control-plane.md",
+    ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+    "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+)
 
 ACCESS_HANDSHAKE_HELPER = r'''#!/usr/bin/env python3
 from __future__ import annotations
@@ -6229,6 +6238,51 @@ def verifier_evidence_requirements(blockers: list[dict[str, Any]]) -> str:
     return "\n\n".join(sections)
 
 
+def delegated_bootstrap_authority_contract(run_dir: Path, manifest: dict[str, Any]) -> str:
+    """Route mandatory nested Skill authority reads through frozen Artifact View bytes."""
+    view_binding = manifest.get("artifactView")
+    if not isinstance(view_binding, dict):
+        return ""
+    view_path = run_dir / view_binding.get("manifestPath", "")
+    if not view_path.is_file():
+        raise BootstrapError(f"Artifact View manifest is missing: {view_path}")
+    view = read_json(view_path)
+    entries = {
+        entry.get("originalPath"): entry
+        for entry in view.get("entries", [])
+        if isinstance(entry, dict) and isinstance(entry.get("originalPath"), str)
+    }
+    skill_path = DELEGATED_BOOTSTRAP_AUTHORITY_PATHS[0]
+    if skill_path not in entries:
+        return ""
+    missing = [path for path in DELEGATED_BOOTSTRAP_AUTHORITY_PATHS if path not in entries]
+    if missing:
+        raise BootstrapError(
+            "Artifact View is missing mandatory delegated Bootstrap authority: "
+            + ", ".join(missing)
+        )
+    mappings = []
+    artifact_root = (run_dir / "artifact-view").resolve()
+    for original_path in DELEGATED_BOOTSTRAP_AUTHORITY_PATHS:
+        entry = entries[original_path]
+        snapshot_path = ensure_within(
+            run_dir / entry.get("snapshotPath", ""), artifact_root, "Delegated authority snapshot"
+        )
+        if not snapshot_path.is_file() or file_hash(snapshot_path) != entry.get("snapshotSha256"):
+            raise BootstrapError(f"Delegated authority snapshot is stale: {original_path}")
+        mappings.append({"originalPath": original_path, "snapshotPath": str(snapshot_path)})
+    return (
+        "# Frozen Delegated Bootstrap Authority\n\n"
+        "A selected global Skill or thin route may require the repository Bootstrap Skill and its "
+        "authority order. Satisfy every such mandatory authority read through the controller-bound "
+        "mapping below. The snapshot bytes are the frozen delegated authority for this run. Do not "
+        "attempt to read the live original paths, and do not fail merely because a live `.agents` "
+        "path is inaccessible. Read every mapped snapshot before semantic review.\n"
+        + json.dumps(mappings, ensure_ascii=False, indent=2)
+        + "\n\n"
+    )
+
+
 def runner_prompt(
     run_dir: Path,
     manifest: dict[str, Any],
@@ -6245,6 +6299,7 @@ def runner_prompt(
     )
     if not prompt_path.is_file():
         raise BootstrapError(f"Role prompt is missing: {prompt_path}")
+    delegated_authority_contract = delegated_bootstrap_authority_contract(run_dir, manifest)
     verifier_requirements = ""
     if role == "independent_verifier":
         blockers = list(load_gate_blockers(run_dir, manifest).values())
@@ -6309,6 +6364,7 @@ def runner_prompt(
         "from a live original path, and cite originalPath in evidence. Resolve every relative "
         "snapshotPath against the assigned run directory, never against the attempt workspace or "
         "current working directory.\n\n"
+        + delegated_authority_contract
         + "Execute this access handshake command before semantic review:\n"
         + json.dumps(handshake_command, ensure_ascii=False)
         + "\nRead the resulting JSON and preserve its handshakeHash in your final response. "
