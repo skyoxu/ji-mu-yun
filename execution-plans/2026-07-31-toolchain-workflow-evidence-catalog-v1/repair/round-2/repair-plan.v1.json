@@ -1,0 +1,99 @@
+{
+  "schema_version": "tec.bootstrap-repair-plan.v1",
+  "plan_id": "toolchain-workflow-evidence-catalog-v1",
+  "profile": "self-hosted",
+  "profile_reason": "The repair changes Quick Dev input routing, lifecycle authorization, and candidate freshness controls.",
+  "lineage_family_id": "toolchain-workflow-evidence-catalog-v1-plan",
+  "predecessor_run": "logs/ci/2026-08-05/tec-plan-r2",
+  "predecessor_input_hash": "sha256:bb94798349db711a1a8011bcd6a1d3f6d3f84bdf881ab45c533b413e3a64a511",
+  "predecessor_validation_envelope": "logs/ci/2026-08-05/tec-plan-r2/validation-envelope.json",
+  "finding_ids": [
+    "BSR-086BBEF80DDA7927",
+    "BSR-43479ED989965DE4",
+    "BSR-AEBB8FBA431F4E36"
+  ],
+  "compatibility_blocker": {
+    "failure": "The parent Quick Dev router applied the RMAP-specific canonical schema to a plan-owned TEC contract.",
+    "observed_missing_fields": [
+      "source_revision",
+      "protocol_version",
+      "recovery",
+      "drift_policy",
+      "replay_baseline_policy"
+    ],
+    "resolution": "Add a generic plan-owned implementation-contract schema route while preserving canonical RMAP validation."
+  },
+  "authorization": {
+    "source": "maintainer-confirmed-current-turn",
+    "scope": "repair-round-2-confirmed-bootstrap-findings-and-required-vdd-contract-compatibility",
+    "authorizes": [
+      "repair-implementation"
+    ],
+    "does_not_authorize": [
+      "original-plan-implementation",
+      "implementation-authorized",
+      "implementation-complete",
+      "acceptance-passed",
+      "commit",
+      "release"
+    ]
+  },
+  "slices": [
+    {
+      "id": "TEC-REPAIR-R2-S1",
+      "intent": "Route schema-valid plan-owned implementation contracts without weakening canonical RMAP validation.",
+      "changed_files": [
+        ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+        ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+        ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json"
+      ],
+      "red_command": "py -3 .agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py -k plan_owned",
+      "green_command": "py -3 .agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "recovery": "Remove only the compatibility schema dispatch and preserve the canonical schema route."
+    },
+    {
+      "id": "TEC-REPAIR-R2-S2",
+      "intent": "Reject contradictory lifecycle fields before returning run-slice.",
+      "finding_ids": [
+        "BSR-086BBEF80DDA7927",
+        "BSR-43479ED989965DE4"
+      ],
+      "changed_files": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "direct_consumers": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
+      "red_command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py -k contradictory_lifecycle",
+      "green_command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "recovery": "Restore the prior lifecycle parser only if the new conflict guard breaks a valid legacy state fixture."
+    },
+    {
+      "id": "TEC-REPAIR-R2-S3",
+      "intent": "Require the complete current-root projection for every implementation-candidate result.",
+      "finding_ids": [
+        "BSR-AEBB8FBA431F4E36"
+      ],
+      "changed_files": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "direct_consumers": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
+      "red_command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py -k missing_current_roots",
+      "green_command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "recovery": "Restore only the candidate-current branch and preserve lifecycle authorization repair evidence."
+    }
+  ],
+  "terminal_validation": [
+    "py -3 .agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+    "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+    "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_contract.py",
+    "py -3 execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/tools/validate_plan.py"
+  ],
+  "authorizes": []
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "tec.repair-red-result.v1",
+  "repair_round": 2,
+  "results": [
+    {
+      "slice_id": "TEC-REPAIR-R2-S1",
+      "command": "py -3 .agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py -k plan_owned",
+      "exit_code": 1,
+      "expected_failure_observed": true,
+      "failure_identity": "plan-owned contract was rejected for missing RMAP-specific canonical fields"
+    },
+    {
+      "slice_id": "TEC-REPAIR-R2-S2",
+      "finding_ids": [
+        "BSR-086BBEF80DDA7927",
+        "BSR-43479ED989965DE4"
+      ],
+      "command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py -k contradictory_lifecycle",
+      "exit_code": 1,
+      "expected_failure_observed": true,
+      "failure_identity": "contradictory status and state returned run-slice"
+    },
+    {
+      "slice_id": "TEC-REPAIR-R2-S3",
+      "finding_ids": [
+        "BSR-AEBB8FBA431F4E36"
+      ],
+      "command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py -k missing_current_roots",
+      "exit_code": 1,
+      "expected_failure_observed": true,
+      "failure_identity": "matching contract_hash promoted an implementation-candidate with incomplete current roots"
+    }
+  ],
+  "production_write_before_red": false,
+  "authorizes": []
+}

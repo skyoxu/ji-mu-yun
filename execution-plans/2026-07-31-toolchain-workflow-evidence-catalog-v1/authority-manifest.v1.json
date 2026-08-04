@@ -17,8 +17,8 @@
   "sources": [
     {"path": "AGENTS.md", "binding": "git-main", "role": "repository-rules", "sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"},
     {"path": "docs/know8.txt", "binding": "worktree", "role": "user-intent", "sha256": "b3371f2fa9224fa3ea177e3466897358e17d2fdd80c4ac40d99eb4d982616e13"},
-    {"path": "knowledge-context.v1.json", "binding": "plan-local", "role": "knowledge-context", "sha256": "009d87603a3f8b68c0c302ca61a85227ee6ce350a472a72957ed8c20f044fa2b"},
-    {"path": "knowledge-context.freeze.v1.json", "binding": "plan-local", "role": "knowledge-freeze", "sha256": "da79e732f0617798538e449231475c6ac8c7edfd2817c66e6ce115ea5b75844c"},
+    {"path": "knowledge-context.v1.json", "binding": "plan-local", "role": "knowledge-context", "sha256": "bc25192ee19b7bdb2d8720e494c90bae04972d03305425e62f65470497b208b1"},
+    {"path": "knowledge-context.freeze.v1.json", "binding": "plan-local", "role": "knowledge-freeze", "sha256": "eef5f621b248c6421dbce2d86710a511e52a7ca07c7ad5888e3d1f4b4d007e93"},
     {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "binding": "git-main", "role": "workflow-authority", "sha256": "7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72"},
     {"path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md", "binding": "git-main", "role": "producer-contract", "sha256": "08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06"},
     {"path": ".agents/skills/run-phase-bootstrap-review/SKILL.md", "binding": "git-main", "role": "producer-contract", "sha256": "0292f716721b0b196ccf6c9d873faab7b75dba8160d141644155482185028170"},

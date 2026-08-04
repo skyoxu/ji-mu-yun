@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "acceptance-command-registry.v1",
+  "commands": [
+    {
+      "id": "repair-route-composition-v2",
+      "executable": "C:\\Program Files\\Python312\\python.exe",
+      "argv": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+        "-k",
+        "implementation_authorization"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120,
+      "shell": false,
+      "allowed_write_roots": [],
+      "forbidden_write_roots": [],
+      "registry_hash": "sha256:bcc6087925a7c29440cbac2d374e294e4bc27be66d7f09ad3f56076ff97be927",
+      "environment_allowlist": [
+        "SYSTEMROOT",
+        "WINDIR"
+      ],
+      "typed_placeholders": {},
+      "placeholder_values": {}
+    }
+  ],
+  "registryHash": "sha256:bcc6087925a7c29440cbac2d374e294e4bc27be66d7f09ad3f56076ff97be927"
+}

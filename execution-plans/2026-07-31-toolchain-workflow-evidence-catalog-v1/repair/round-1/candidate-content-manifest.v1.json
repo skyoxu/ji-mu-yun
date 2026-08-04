@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "change_type": "modified",
+      "roles": ["implementation"],
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "baseline_sha256": "sha256:0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "candidate_sha256": "sha256:649003c733b6540010f9fb194c8d867a51855c56d29077ce5c884f8d352c64da",
+      "inclusion_reason": "Require implementation authorization before run-slice"
+    },
+    {
+      "change_type": "modified",
+      "roles": ["test"],
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "baseline_sha256": "sha256:27abbd38d63c73720f3894538e1f70e7b693e3521fa288cdc13c082c3377d6a0",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "candidate_sha256": "sha256:93436568ddb6da2c2bf176144e750e53d898c1958cd4c2cc56a515d7c775630b",
+      "inclusion_reason": "Cover plan-ready, authorized, and completed lifecycle states"
+    }
+  ]
+}

@@ -37,18 +37,18 @@ class QuickDevInputRouterTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.repo = Path(self.temp.name) / "repo"
         (self.repo / "execution-plans").mkdir(parents=True)
-        schema_target = (
-            self.repo
-            / ".agents/skills/quick-dev-tdd-adapter/schemas/implementation-contract.v1.schema.json"
-        )
-        schema_target.parent.mkdir(parents=True)
-        schema_target.write_text(
-            (
-                REPOSITORY_ROOT
-                / ".agents/skills/quick-dev-tdd-adapter/schemas/implementation-contract.v1.schema.json"
-            ).read_text(encoding="utf-8"),
-            encoding="utf-8",
-        )
+        schema_root = self.repo / ".agents/skills/quick-dev-tdd-adapter/schemas"
+        schema_root.mkdir(parents=True)
+        for name in (
+            "implementation-contract.v1.schema.json",
+            "plan-owned-implementation-contract.v1.schema.json",
+        ):
+            (schema_root / name).write_text(
+                (REPOSITORY_ROOT / ".agents/skills/quick-dev-tdd-adapter/schemas" / name).read_text(
+                    encoding="utf-8"
+                ),
+                encoding="utf-8",
+            )
 
     def tearDown(self) -> None:
         self.temp.cleanup()
@@ -134,6 +134,51 @@ class QuickDevInputRouterTests(unittest.TestCase):
         (plan / "implementation-contract.v1.json").write_text("{}", encoding="utf-8")
         with self.assertRaisesRegex(router.InputRoutingError, "schema-invalid"):
             router.route_input(self.repo, plan, normal_facts())
+
+    def test_routes_schema_valid_plan_owned_contract_to_strict_adapter(self) -> None:
+        plan = self.repo / "execution-plans" / "plan-owned"
+        plan.mkdir()
+        contract = {
+            "schema_version": "example.implementation-contract.v1",
+            "plan_id": "plan-owned",
+            "profile": "resumable",
+            "command_registry": "command-registry.v1.json",
+            "backend": {"hidden_state": False},
+            "protocol_artifacts": {
+                "context_layout": "context/<capsule-id>",
+                "attempt_layout": "attempts/<attempt-id>",
+            },
+            "authority": {"authority_manifest": "authority-manifest.v1.json"},
+            "slices": [{
+                "slice_id": "EXAMPLE-S0",
+                "title": "Example",
+                "requirement_ids": ["EXAMPLE-001"],
+                "acceptance_ids": ["EXAMPLE-ACC-001"],
+                "source_refs": ["requirements.md"],
+                "depends_on": [],
+                "allowed_changes": {"production": ["src/example.py"], "tests": ["tests/test_example.py"], "documentation": []},
+                "execution_snapshot_paths": ["src/example.py"],
+                "forbidden_changes": ["runtime/phase-a/**"],
+                "execution_read_set": ["AGENTS.md"],
+                "dependency_closure": ["requirements.md"],
+                "tdd": {
+                    "red": {"command_id": "example-red", "test_selector": "test_example", "expected_exit": "nonzero", "expected_failure_family": "example", "expected_failure_ids": ["EXAMPLE-RED"]},
+                    "green": {"command_id": "example-green", "expected_exit": "zero"},
+                    "refactor": {"invocations": [{"command_id": "example-green", "expected_exit": "zero"}]},
+                },
+                "post_refactor_command_id": "example-predicate",
+                "exit_predicate": "slice-ready",
+                "recovery": "Revert the bounded candidate and rerun RED.",
+            }],
+        }
+        (plan / "implementation-contract.v1.json").write_text(
+            json.dumps(contract), encoding="utf-8"
+        )
+
+        result = router.route_input(self.repo, plan, normal_facts())
+
+        self.assertEqual("strict_tdd_plan", result["lane"])
+        self.assertEqual("quick-dev-tdd-adapter", result["backend"])
 
     def test_callers_cannot_consume_another_lane(self) -> None:
         requirement = self.repo / "requirement.md"

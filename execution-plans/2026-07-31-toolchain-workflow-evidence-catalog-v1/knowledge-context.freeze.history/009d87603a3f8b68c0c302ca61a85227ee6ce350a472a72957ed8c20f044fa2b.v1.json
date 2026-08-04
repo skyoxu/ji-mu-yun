@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:bc25192ee19b7bdb2d8720e494c90bae04972d03305425e62f65470497b208b1",
-  "canonical_context_sha256": "sha256:1ba6d6137516eca455b84f72903b7936f363cb1af0dfc59b05140dba955ce499",
-  "request_sha256": "sha256:3e2ce34bdaa1e54cb71e3771d4d3fe2848098673b3b088309c37d19ec61413b4",
-  "result_sha256": "sha256:1c0b4ae82acf1b69a0544cd10548cc2026768847d8cd70b80b4f041b3e8564b9",
+  "context_sha256": "sha256:009d87603a3f8b68c0c302ca61a85227ee6ce350a472a72957ed8c20f044fa2b",
+  "canonical_context_sha256": "sha256:98e062474f59ace529e4d998fd9597723df5c356174677d22f8d28c257cdf25b",
+  "request_sha256": "sha256:75082edfe02368fe5f1dc2559c2db4a742d1fa0316bb22bd669ac5cebd9d70c6",
+  "result_sha256": "sha256:ebd87f1a810672f84a51cdedd66d0c60b3a5fce3de205fe628b5347bf392ecbb",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "6e990f120eeed9d15fc52a3f13235ff17002b237"
+    "commit": "d713e74e977629ebf134ee10a92ee3af8e10eb85"
   },
-  "source_snapshot_id": "sha256:14f58124290440f8dbbed4e6eb8bab3bf4377104cd2e526fb9d1d83f26ffa030",
+  "source_snapshot_id": "sha256:49e94949cc2caf12d288c0009f80d14e8ec31eed20e0c5c983542f0749f1324f",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -92,8 +92,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:009d87603a3f8b68c0c302ca61a85227ee6ce350a472a72957ed8c20f044fa2b",
-    "freeze_receipt_path": "knowledge-context.freeze.history/009d87603a3f8b68c0c302ca61a85227ee6ce350a472a72957ed8c20f044fa2b.v1.json",
-    "reason": "repair commit advanced current main and Quick Dev route source bytes"
+    "context_sha256": "sha256:9f5894dc72160a94bee061357bf13f2c0637b0c6fd743f711b54bd3616b60df8",
+    "freeze_receipt_path": "knowledge-context.freeze.history/9f5894dc72160a94bee061357bf13f2c0637b0c6fd743f711b54bd3616b60df8.v1.json",
+    "reason": "repository knowledge publication advanced after nested Skill Artifact View routing fix"
   }
 }

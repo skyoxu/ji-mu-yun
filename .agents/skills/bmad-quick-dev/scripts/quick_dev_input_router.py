@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -68,9 +69,23 @@ def _within(path: Path, root: Path, label: str) -> Path:
 
 def _strict_contract_lane(target: Path, contract_path: Path) -> dict[str, Any]:
     contract = _read_json(contract_path, "implementation contract")
+    schema_version = contract.get("schema_version")
+    canonical_version = "jimuyun.implementation-contract.v1"
+    plan_owned_version = re.compile(
+        r"^[a-z0-9][a-z0-9.-]*\.implementation-contract\.v1$"
+    )
+    if schema_version == canonical_version:
+        schema_name = "implementation-contract.v1.schema.json"
+    elif isinstance(schema_version, str) and plan_owned_version.fullmatch(schema_version):
+        schema_name = "plan-owned-implementation-contract.v1.schema.json"
+    else:
+        raise InputRoutingError(
+            "implementation contract is schema-invalid: unsupported schema_version"
+        )
     schema_path = (
         REPOSITORY_ROOT
-        / ".agents/skills/quick-dev-tdd-adapter/schemas/implementation-contract.v1.schema.json"
+        / ".agents/skills/quick-dev-tdd-adapter/schemas"
+        / schema_name
     )
     schema = _read_json(schema_path, "implementation contract schema")
     errors = schema_errors(schema, contract)

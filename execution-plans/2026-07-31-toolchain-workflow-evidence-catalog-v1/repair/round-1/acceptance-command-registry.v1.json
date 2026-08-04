@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "acceptance-command-registry.v1",
+  "commands": [
+    {
+      "id": "repair-route-composition",
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+        "-k",
+        "implementation_authorization"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120,
+      "shell": false,
+      "allowed_write_roots": [],
+      "forbidden_write_roots": [],
+      "registry_hash": "sha256:f74bf5aa8cf836f835d894342974f86f219a566b16ac511f18143173a317f140",
+      "environment_allowlist": [],
+      "typed_placeholders": {},
+      "placeholder_values": {}
+    }
+  ],
+  "registryHash": "sha256:f74bf5aa8cf836f835d894342974f86f219a566b16ac511f18143173a317f140"
+}

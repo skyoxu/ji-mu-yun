@@ -85,7 +85,19 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
             "reason": "invalid-plan-state",
             "authorizes": [],
         }
-    lifecycle_state = document.get("state", document.get("status"))
+    current_state = document.get("status")
+    legacy_state = document.get("state")
+    if (
+        isinstance(current_state, str)
+        and isinstance(legacy_state, str)
+        and current_state != legacy_state
+    ):
+        return {
+            "next_action": "external-repair-required",
+            "reason": "invalid-plan-state",
+            "authorizes": [],
+        }
+    lifecycle_state = current_state if isinstance(current_state, str) else legacy_state
     if (
         document.get("plan_id") != plan_id
         or not isinstance(lifecycle_state, str)
@@ -96,12 +108,19 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
             "reason": "invalid-plan-state",
             "authorizes": [],
         }
-    if (
-        lifecycle_state == "implementation-authorized"
-        and document["authorizes"] == ["implementation-authorized"]
+    if lifecycle_state == "implementation-authorized" and document["authorizes"] in (
+        ["implementation-authorized"],
+        ["plan-ready", "implementation-authorized"],
     ):
         return None
     if lifecycle_state in {"draft", "plan-ready"}:
+        expected = [] if lifecycle_state == "draft" else ["plan-ready"]
+        if document["authorizes"] != expected:
+            return {
+                "next_action": "external-repair-required",
+                "reason": "invalid-plan-state",
+                "authorizes": [],
+            }
         return {
             "next_action": "awaiting-implementation-authorization",
             "reason": "implementation-authorization-required",
@@ -155,7 +174,11 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
             contract_current = result.get("contract_hash") == contract_hash
             required_artifact = result_path.with_name("candidate-evidence.json") if exit_predicate == "implementation-candidate" else None
             current = contract_current
-            if all(key in result for key in _IMPLEMENTATION_CANDIDATE_ROOTS):
+            if exit_predicate == "implementation-candidate":
+                current = _implementation_candidate_current(
+                    result, _validation_snapshot(target, slice_id)
+                )
+            elif all(key in result for key in _IMPLEMENTATION_CANDIDATE_ROOTS):
                 # RMAP validation envelopes (including slice-ready) own
                 # freshness through current roots rather than contract_hash.
                 # Compare every root, not only the candidate hash, so a

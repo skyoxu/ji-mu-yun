@@ -1,0 +1,61 @@
+{
+  "authorizes": [],
+  "commandId": "repair-route-composition",
+  "commandRegistryHash": "sha256:f74bf5aa8cf836f835d894342974f86f219a566b16ac511f18143173a317f140",
+  "environmentIdentity": {
+    "hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "names": []
+  },
+  "exitCode": 1,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+      "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "sha256": "sha256:649003c733b6540010f9fb194c8d867a51855c56d29077ce5c884f8d352c64da"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "sha256": "sha256:93436568ddb6da2c2bf176144e750e53d898c1958cd4c2cc56a515d7c775630b"
+    }
+  ],
+  "inputBindingsHash": "sha256:118cecfcc9fa86fb7dff2410f9bdbfaa2ad5621ad7e7b5f36eed17dd2e8d6a3d",
+  "invocation": {
+    "argv": [
+      "-3",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "-k",
+      "implementation_authorization"
+    ],
+    "commandId": "repair-route-composition",
+    "cwd": ".",
+    "environmentAllowlist": [],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 120
+  },
+  "invocationHash": "sha256:b2f7a488b5630c5b28938c15944dcb906d9516bece25322fd374423ccce600db",
+  "processResult": {
+    "commandId": "repair-route-composition",
+    "exitCode": 1,
+    "stderr": "Traceback (most recent call last):\r\n  File \"C:\\jimuyun\\.agents\\skills\\quick-dev-tdd-adapter\\tools\\tests\\test_plan_directory_loop.py\", line 8, in <module>\r\n    from unittest import mock\r\n  File \"C:\\Program Files\\Python312\\Lib\\unittest\\mock.py\", line 26, in <module>\r\n    import asyncio\r\n  File \"C:\\Program Files\\Python312\\Lib\\asyncio\\__init__.py\", line 43, in <module>\r\n    from .windows_events import *\r\n  File \"C:\\Program Files\\Python312\\Lib\\asyncio\\windows_events.py\", line 8, in <module>\r\n    import _overlapped\r\nOSError: [WinError 10106] �޷����ػ��ʼ������ķ����ṩ����\r\n",
+    "stderrSha256": "sha256:c345ab7487f8074e576bd509e9c2d3acf0f81ccd3d4e09a5226a0c902bc10d78",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:d4f26135f9273d5f9387fbda47c08d811dda37bcaf8902612da0fc84f07213b7",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

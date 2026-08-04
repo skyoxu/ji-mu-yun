@@ -1,0 +1,43 @@
+{
+  "schema_version": "tec.repair-green-result.v1",
+  "repair_round": 2,
+  "status": "targeted-passed",
+  "checks": [
+    {
+      "command": "py -3 -m unittest discover -s .agents/skills/quick-dev-tdd-adapter/tools/tests -p test_*.py",
+      "exit_code": 0,
+      "result": "67 tests passed"
+    },
+    {
+      "command": "py -3 .agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "exit_code": 0,
+      "result": "9 tests passed"
+    },
+    {
+      "command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_contract.py",
+      "exit_code": 0,
+      "result": "3 tests passed"
+    },
+    {
+      "command": "py -3 execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/tools/validate_plan.py",
+      "exit_code": 0,
+      "result": "plan-ready validation passed"
+    },
+    {
+      "command": "py -3 .agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py --caller quick-dev-tdd-adapter",
+      "exit_code": 0,
+      "result": "strict_tdd_plan routed to quick-dev-tdd-adapter"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "passed"
+    }
+  ],
+  "pending_gate": {
+    "code": "KWI-QUICK-FROZEN-CONTEXT-STALE",
+    "detail": "candidate_worktree_source_hash_mismatch",
+    "required_action": "Commit the reviewed control-plane candidate, publish a current-main knowledge generation, and refreeze the VDD context before final route validation."
+  },
+  "authorizes": []
+}

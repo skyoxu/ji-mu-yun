@@ -78,6 +78,23 @@ class PlanDirectoryLoopTests(unittest.TestCase):
 
             self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
+    def test_router_rejects_contradictory_lifecycle_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2",
+                "plan_id": "target",
+                "status": "plan-ready",
+                "state": "implementation-authorized",
+                "authorizes": ["implementation-authorized"],
+            }), encoding="utf-8")
+
+            result = ROUTER.route(root, plan)
+
+            self.assertEqual("external-repair-required", result["next_action"])
+            self.assertEqual("invalid-plan-state", result["reason"])
+
     def test_router_rejects_slice_execution_from_completed_plan_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -120,6 +137,32 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "current_candidate_hash": "sha256:current", "predicate_input_root": "sha256:current",
             }), encoding="utf-8")
             self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
+    def test_router_replays_implementation_candidate_with_missing_current_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            slices = [
+                {"slice_id": "RMAP-S6", "depends_on": [], "exit_predicate": "implementation-candidate"},
+                {"slice_id": "RMAP-S7", "depends_on": ["RMAP-S6"]},
+            ]
+            plan = self._plan(root, slices)
+            contract_hash = "sha256:" + __import__("hashlib").sha256(
+                (plan / "implementation-contract.v1.json").read_bytes()
+            ).hexdigest()
+            evidence = root / "logs/tdd-adapter/target/RMAP-S6/current"
+            evidence.mkdir(parents=True)
+            (evidence / "implementation-candidate-result.json").write_text(json.dumps({
+                "predicate": "implementation-candidate",
+                "status": "pass",
+                "contract_hash": contract_hash,
+                "candidate_hash": "sha256:candidate",
+            }), encoding="utf-8")
+            (evidence / "candidate-evidence.json").write_text("{}", encoding="utf-8")
+
+            result = ROUTER.route(root, plan)
+
+            self.assertEqual("run-slice", result["next_action"])
+            self.assertEqual("RMAP-S6", result["slice_id"])
 
     def test_router_accepts_current_slice_evidence_with_targeted_validation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

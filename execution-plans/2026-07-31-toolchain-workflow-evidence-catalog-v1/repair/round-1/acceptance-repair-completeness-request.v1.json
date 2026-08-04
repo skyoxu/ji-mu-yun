@@ -1,0 +1,68 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1",
+  "authorityGraphChanged": true,
+  "authorizes": [],
+  "baselineManifestHash": "sha256:b930a017546640100180d3a2267f974a2e5794d61dd92051472f2ce9dd06f31e",
+  "baselineManifestPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-1/baseline-content-manifest.v1.json",
+  "candidateManifestHash": "sha256:7221365decb1e9f9927fc08493d6f4dbcb4d8fe387e983cc8fe95daa743b36d3",
+  "candidateManifestPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-1/candidate-content-manifest.v1.json",
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "compositionChecks": [
+    {
+      "checkId": "repair-route-composition-v2",
+      "commandRegistryPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-1/acceptance-command-registry.v2.json",
+      "consumerPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
+      "producerPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+      ],
+      "receiptPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-1/composition-receipt.v2.json"
+    }
+  ],
+  "directConsumers": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+  ],
+  "highRiskBoundaryChanged": false,
+  "lineageFamilyId": "toolchain-workflow-evidence-catalog-v1-plan",
+  "novelP0P1FindingIds": [],
+  "predecessorRun": "logs/ci/2026-08-05/tec-plan-r1e",
+  "repositoryRoot": "C:\\jimuyun",
+  "rootCauseInventories": [
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "slice-authorization-gate",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "_slice_authorization_gate"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "implementation-authorization-tests",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "implementation_authorization"
+    }
+  ],
+  "schemaVersion": "acceptance-repair-completeness-request.v1",
+  "semanticRoundsConsumed": 1,
+  "targetedTests": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "validationRefs": [
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-1/composition-receipt.v2.json"
+  ]
+}
