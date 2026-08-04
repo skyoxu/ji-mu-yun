@@ -48,6 +48,52 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             (stale / "slice-ready-result.json").write_text(json.dumps({"predicate": "slice-ready", "status": "pass", "contract_hash": "sha256:stale"}), encoding="utf-8")
             self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
 
+    def test_router_requires_implementation_authorization_before_run_slice(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2",
+                "plan_id": "target",
+                "status": "plan-ready",
+                "authorizes": ["plan-ready"],
+            }), encoding="utf-8")
+
+            result = ROUTER.route(root, plan)
+
+            self.assertEqual("awaiting-implementation-authorization", result["next_action"])
+            self.assertEqual("implementation-authorization-required", result["reason"])
+            self.assertEqual([], result["authorizes"])
+
+    def test_router_runs_slice_after_explicit_implementation_authorization(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2",
+                "plan_id": "target",
+                "status": "implementation-authorized",
+                "authorizes": ["implementation-authorized"],
+            }), encoding="utf-8")
+
+            self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
+    def test_router_rejects_slice_execution_from_completed_plan_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2",
+                "plan_id": "target",
+                "status": "implementation-complete",
+                "authorizes": ["implementation-complete"],
+            }), encoding="utf-8")
+
+            result = ROUTER.route(root, plan)
+
+            self.assertEqual("external-repair-required", result["next_action"])
+            self.assertEqual("plan-state-precludes-slice-execution", result["reason"])
+
     def test_router_routes_s7_as_an_ordinary_completion_slice(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); slices = [{"slice_id": "S0", "depends_on": []}, {"slice_id": "RMAP-S7", "depends_on": ["S0"]}]

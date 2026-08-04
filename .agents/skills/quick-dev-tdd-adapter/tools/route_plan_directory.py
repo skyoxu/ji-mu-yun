@@ -67,6 +67,53 @@ def _implementation_candidate_current(result: dict[str, object], current: dict[s
     return all(result.get(key) == current[key] for key in _IMPLEMENTATION_CANDIDATE_ROOTS)
 
 
+def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object] | None:
+    state_path = plan_dir / "plan-state.v1.json"
+    if not state_path.is_file():
+        return None
+    try:
+        document = json.loads(state_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return {
+            "next_action": "external-repair-required",
+            "reason": "invalid-plan-state",
+            "authorizes": [],
+        }
+    if not isinstance(document, dict):
+        return {
+            "next_action": "external-repair-required",
+            "reason": "invalid-plan-state",
+            "authorizes": [],
+        }
+    lifecycle_state = document.get("state", document.get("status"))
+    if (
+        document.get("plan_id") != plan_id
+        or not isinstance(lifecycle_state, str)
+        or not isinstance(document.get("authorizes"), list)
+    ):
+        return {
+            "next_action": "external-repair-required",
+            "reason": "invalid-plan-state",
+            "authorizes": [],
+        }
+    if (
+        lifecycle_state == "implementation-authorized"
+        and document["authorizes"] == ["implementation-authorized"]
+    ):
+        return None
+    if lifecycle_state in {"draft", "plan-ready"}:
+        return {
+            "next_action": "awaiting-implementation-authorization",
+            "reason": "implementation-authorization-required",
+            "authorizes": [],
+        }
+    return {
+        "next_action": "external-repair-required",
+        "reason": "plan-state-precludes-slice-execution",
+        "authorizes": [],
+    }
+
+
 def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
     execution_root = (repository_root / "execution-plans").resolve()
     target = plan_dir.resolve()
@@ -123,6 +170,9 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
             continue
         if not set(slice_item.get("depends_on", [])).issubset(completed):
             continue
+        authorization_gate = _slice_authorization_gate(target, contract["plan_id"])
+        if authorization_gate is not None:
+            return authorization_gate
         return {"next_action": "run-slice", "slice_id": slice_id, "authorizes": []}
     return {"next_action": "validate-terminal", "authorizes": []}
 

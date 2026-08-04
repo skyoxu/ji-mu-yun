@@ -1,0 +1,11 @@
+{
+  "schema_version": "tec.repair-red-result.v1",
+  "slice_id": "TEC-REPAIR-R1-S1",
+  "finding_id": "BSR-22F8CDF717F2694A",
+  "command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py -k implementation_authorization",
+  "exit_code": 1,
+  "expected_failure_observed": true,
+  "failure_identity": "plan-ready route returned run-slice instead of awaiting-implementation-authorization",
+  "production_write_before_red": false,
+  "authorizes": []
+}

@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:009d87603a3f8b68c0c302ca61a85227ee6ce350a472a72957ed8c20f044fa2b",
-  "canonical_context_sha256": "sha256:98e062474f59ace529e4d998fd9597723df5c356174677d22f8d28c257cdf25b",
-  "request_sha256": "sha256:75082edfe02368fe5f1dc2559c2db4a742d1fa0316bb22bd669ac5cebd9d70c6",
-  "result_sha256": "sha256:ebd87f1a810672f84a51cdedd66d0c60b3a5fce3de205fe628b5347bf392ecbb",
+  "context_sha256": "sha256:9f5894dc72160a94bee061357bf13f2c0637b0c6fd743f711b54bd3616b60df8",
+  "canonical_context_sha256": "sha256:4368e3865a198fa8850b4344cc1d27b491688d5afdbf4a8b9b448a706c125e90",
+  "request_sha256": "sha256:8703e397b1591ce14e84f041aace019b1d53277c556aaf7d1178762a70d6a651",
+  "result_sha256": "sha256:e17dd3e2f9c092eaf378fd75aa01b9fc5c9d234d6aca08a26c33570c0a09d425",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "d713e74e977629ebf134ee10a92ee3af8e10eb85"
+    "commit": "06bdf5e50ff41ab848b4c2dfb62b4c70cfd0becd"
   },
-  "source_snapshot_id": "sha256:49e94949cc2caf12d288c0009f80d14e8ec31eed20e0c5c983542f0749f1324f",
+  "source_snapshot_id": "sha256:caa6ebcc3481b4ea48e663f659e738e33aed02260b9859203aeed5d504ca79d5",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -28,7 +28,7 @@
     },
     {
       "path": "docs/standards/bootstrap-review-control-plane.md",
-      "source_sha256": "9fa8057d9fec30fa45109538c8af1a85b6033507c95193f84fcb7c6e39a6157a",
+      "source_sha256": "363da79a7bf47b8d6112acf11c8423180e289d5fd8900fe3f3e284f23e912a26",
       "satisfies": [
         "existing-workflow"
       ]
@@ -92,8 +92,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:9f5894dc72160a94bee061357bf13f2c0637b0c6fd743f711b54bd3616b60df8",
-    "freeze_receipt_path": "knowledge-context.freeze.history/9f5894dc72160a94bee061357bf13f2c0637b0c6fd743f711b54bd3616b60df8.v1.json",
-    "reason": "repository knowledge publication advanced after nested Skill Artifact View routing fix"
+    "context_sha256": "sha256:fd47b86e122a634f5aa489609a74ae9befb85c74e6488d59de35d9b5045096df",
+    "freeze_receipt_path": "knowledge-context.freeze.history/fd47b86e122a634f5aa489609a74ae9befb85c74e6488d59de35d9b5045096df.v1.json",
+    "reason": "repository knowledge publication advanced to current main before renewed Bootstrap plan review"
   }
 }

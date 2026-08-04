@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-toolchain-contract-context-20260805-bootstrap-r1e",
+    "request_id": "vdd-toolchain-contract-context-20260805-bootstrap-rerun",
     "consumer": "vdd",
     "query": "AGENTS Repository Guide VDD Execution Plan Repository Maintenance TDD Adapter Bootstrap Review Control Plane ADR-0044 Knowledge Projection Authority E2 Hosted Context Envelope ADR-0048 Repository Knowledge Locator Workflow Consumption ADR-0050 Knowledge Publication LKG Recovery Generation Retention ADR-0051 Bootstrap Lineage Family Bounded Repair Re-entry ADR-0052 Bootstrap Review Calibration Exact Envelope Reuse Solo-Maintainer VDD Standard",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "d713e74e977629ebf134ee10a92ee3af8e10eb85"
+      "commit": "06bdf5e50ff41ab848b4c2dfb62b4c70cfd0becd"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -188,7 +188,7 @@
           {
             "path": "docs/standards/bootstrap-review-control-plane.md",
             "role": "primary",
-            "source_sha256": "9fa8057d9fec30fa45109538c8af1a85b6033507c95193f84fcb7c6e39a6157a"
+            "source_sha256": "363da79a7bf47b8d6112acf11c8423180e289d5fd8900fe3f3e284f23e912a26"
           }
         ],
         "relations": [
@@ -227,7 +227,7 @@
         ],
         "semantic_eligible": true,
         "source_role": "standard",
-        "source_sha256": "9fa8057d9fec30fa45109538c8af1a85b6033507c95193f84fcb7c6e39a6157a",
+        "source_sha256": "363da79a7bf47b8d6112acf11c8423180e289d5fd8900fe3f3e284f23e912a26",
         "status": "active",
         "visibility": {
           "marketplace": "excluded",
@@ -376,7 +376,7 @@
           {
             "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
             "role": "cli",
-            "source_sha256": "7e6a26c2323352057a0053c4b2da1d23cecb518601c7b50be6f9786d05cc39d9"
+            "source_sha256": "046a58bca5617abc3a4056909af08cffff529c3a3eb04c7d11c87270074e13e4"
           },
           {
             "path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
@@ -742,13 +742,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-toolchain-contract-context-20260805-bootstrap-r1e",
+    "request_id": "vdd-toolchain-contract-context-20260805-bootstrap-rerun",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "d713e74e977629ebf134ee10a92ee3af8e10eb85",
+      "commit": "06bdf5e50ff41ab848b4c2dfb62b4c70cfd0becd",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:49e94949cc2caf12d288c0009f80d14e8ec31eed20e0c5c983542f0749f1324f",
+    "source_snapshot_id": "sha256:caa6ebcc3481b4ea48e663f659e738e33aed02260b9859203aeed5d504ca79d5",
     "status": "matched"
   },
   "required_modules": [
@@ -784,7 +784,7 @@
       "owner": "adapter",
       "candidate": {
         "path": "docs/standards/bootstrap-review-control-plane.md",
-        "source_sha256": "9fa8057d9fec30fa45109538c8af1a85b6033507c95193f84fcb7c6e39a6157a"
+        "source_sha256": "363da79a7bf47b8d6112acf11c8423180e289d5fd8900fe3f3e284f23e912a26"
       },
       "decision": "accepted",
       "satisfies": [
@@ -899,11 +899,11 @@
       "rejection_reason": null
     }
   ],
-  "request_sha256": "sha256:75082edfe02368fe5f1dc2559c2db4a742d1fa0316bb22bd669ac5cebd9d70c6",
-  "result_sha256": "sha256:ebd87f1a810672f84a51cdedd66d0c60b3a5fce3de205fe628b5347bf392ecbb",
+  "request_sha256": "sha256:8703e397b1591ce14e84f041aace019b1d53277c556aaf7d1178762a70d6a651",
+  "result_sha256": "sha256:e17dd3e2f9c092eaf378fd75aa01b9fc5c9d234d6aca08a26c33570c0a09d425",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:b2344889c1e3a154f1351e1196bc938bd29bfdcff5f0eef38c1d5ed94cd2a71c"
+    "context_sha256": "sha256:60a9eaddc68f23b8d7fce94b86aeb7a570116b27a61a29da4007b68def9f73ce"
   }
 }

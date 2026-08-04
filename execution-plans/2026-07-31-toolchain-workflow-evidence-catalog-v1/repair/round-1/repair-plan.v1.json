@@ -1,0 +1,51 @@
+{
+  "schema_version": "tec.bootstrap-repair-plan.v1",
+  "plan_id": "toolchain-workflow-evidence-catalog-v1",
+  "lineage_family_id": "toolchain-workflow-evidence-catalog-v1-plan",
+  "predecessor_run": "logs/ci/2026-08-05/tec-plan-r1e",
+  "predecessor_input_hash": "sha256:335ea18e827e7ca49e45a5118661553cda45ed0d342ef08ebfc90431a57a0c38",
+  "predecessor_validation_envelope": "logs/ci/2026-08-05/tec-plan-r1e/validation-envelope.json",
+  "finding_ids": [
+    "BSR-22F8CDF717F2694A"
+  ],
+  "profile_upgrade": "self-hosted",
+  "accepted_adrs": [
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md"
+  ],
+  "authorization": {
+    "source": "maintainer-confirmed-current-turn",
+    "scope": "repair-confirmed-bootstrap-finding",
+    "authorizes": [
+      "repair-implementation"
+    ],
+    "does_not_authorize": [
+      "original-plan-implementation",
+      "acceptance-passed",
+      "commit",
+      "release"
+    ]
+  },
+  "slices": [
+    {
+      "id": "TEC-REPAIR-R1-S1",
+      "intent": "Require implementation-authorized plan state before Quick Dev returns run-slice.",
+      "changed_files": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "direct_consumers": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
+      "red_command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py -k implementation_authorization",
+      "green_command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "regression_commands": [
+        "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_contract.py",
+        "py -3 execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/tools/validate_plan.py"
+      ],
+      "recovery": "Revert only the repair delta before generating repair closure; preserve Round 1 review evidence."
+    }
+  ],
+  "authorizes": []
+}
