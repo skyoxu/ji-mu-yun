@@ -1,7 +1,7 @@
 {
   "schemaVersion": "code-review-policy-pack.v1",
   "policyId": "toolchain-code-review",
-  "policyRevision": "sha256:4f5833ffab5a8148dda48bc3b7b1ef53901c623e2a2e1808e12326f46e69ecb8",
+  "policyRevision": "sha256:ec7ee400158f28b7ff6b406c7a3048e713a8dc685f349746962fafd3092f52e0",
   "targetDomain": "toolchain",
   "authorityRefs": [
     "AGENTS.md",
@@ -11,9 +11,12 @@
   ],
   "pathRules": {
     "ownedPrefixes": [
+      ".gitignore",
       ".agents/skills/",
       "scripts/sc/",
       "execution-plans/",
+      "decision-logs/",
+      "docs/PROJECT_DOCUMENTATION_INDEX.md",
       "docs/adr/",
       "docs/standards/",
       "docs/architecture/"

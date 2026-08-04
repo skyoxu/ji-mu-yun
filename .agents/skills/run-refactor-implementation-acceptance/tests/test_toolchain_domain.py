@@ -40,9 +40,12 @@ class ToolchainDomainTests(unittest.TestCase):
 
     def test_toolchain_policy_covers_workflows_docs_plan_and_shared_phase_entrypoint(self) -> None:
         paths = (
+            ".gitignore",
             ".agents/skills/vdd-execution-plan/SKILL.md",
             "scripts/sc/workflow_model_routing.py",
             "scripts/sc/_llm_backend.py",
+            "decision-logs/2026-07-21-example.md",
+            "docs/PROJECT_DOCUMENTATION_INDEX.md",
             "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
             "docs/architecture/ADR_INDEX_PHASE.md",
             "execution-plans/example/00-index.md",
