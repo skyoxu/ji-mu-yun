@@ -1,0 +1,8 @@
+{
+  "schema_version": "rmap.shadow-implementation-contract.v1",
+  "plan_id": "phase-frontend-boundary-hardening",
+  "authoritative": false,
+  "mode": "adapter-shadow-only",
+  "adapter_skill": ".agents/skills/quick-dev-tdd-adapter",
+  "state_change_authorized": false
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.stage-observation.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["stage", "exit_code", "observed_at", "changed_files", "commands_attempted", "response_summary"],
+  "properties": {
+    "stage": {"enum": ["red", "green", "refactor"]},
+    "exit_code": {"type": "integer"},
+    "observed_at": {"type": "string", "minLength": 1},
+    "changed_files": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "before_bytes_base64", "after_bytes_base64"], "properties": {"path": {"type": "string", "minLength": 1}, "before_bytes_base64": {"type": ["string", "null"]}, "after_bytes_base64": {"type": ["string", "null"]}}}},
+    "commands_attempted": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "response_summary": {"type": "string"}
+  }
+}

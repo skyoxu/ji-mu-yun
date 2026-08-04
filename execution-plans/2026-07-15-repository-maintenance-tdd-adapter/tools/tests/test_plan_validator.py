@@ -156,20 +156,20 @@ class PlanValidatorTests(unittest.TestCase):
         _, findings, _ = validate_static(PLAN_ROOT)
         self.assertEqual([], findings)
     def test_repair_predicate_passes_without_higher_authority(self) -> None:
-        with patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
+        with patch("validate_all.validate_fixture_suite", return_value=[]), patch("validate_all.validate_candidate_fixture_suite", return_value=[]), patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
             result, exit_code = run_predicate("plan-repair-verified")
         self.assertEqual(0, exit_code)
         self.assertEqual("pass", result["status"])
         self.assertEqual(["plan-repair-verified"], result["authorizes"])
     def test_plan_ready_uses_workflow_integrity_assurance(self) -> None:
-        with patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
+        with patch("validate_all.validate_fixture_suite", return_value=[]), patch("validate_all.validate_candidate_fixture_suite", return_value=[]), patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
             result, exit_code = run_predicate("plan-ready")
         self.assertEqual((0, "pass", ["plan-ready"]), (exit_code, result["status"], result["authorizes"]))
         self.assertEqual([], result["diagnostics"])
     def test_authorized_reentry_does_not_supply_higher_predicate_evidence(self) -> None:
         for predicate in ("slice-ready", "implementation-candidate", "implementation-complete"):
             with self.subTest(predicate=predicate):
-                with patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
+                with patch("validate_all.validate_fixture_suite", return_value=[]), patch("validate_all.validate_candidate_fixture_suite", return_value=[]), patch("validate_all.run_unit_tests", return_value=({"rule_id": "RMAP-UNIT-TESTS", "status": "pass", "evidence": ["mocked"]}, [])):
                     result, exit_code = run_predicate(predicate)
                 self.assertEqual((1, "fail"), (exit_code, result["status"]))
                 self.assertIn("RMAP-AUTH-EVIDENCE-MISSING", {item["rule_id"] for item in result["diagnostics"]})
@@ -227,8 +227,8 @@ class PlanValidatorTests(unittest.TestCase):
         self.assertEqual(["plan-lifecycle-audit-omitted", "plan-lifecycle-report-index-bypassed"], acceptances["RMAP-028"]["negative_fixture_ids"])
         self.assertTrue({"terminal-predicate-pass", "target-95-append-only-completion-entry"} <= set(acceptances["RMAP-029"]["evidence_required"]))
     def test_contract_schema_required_field_is_enforced(self) -> None:
-        contract = copy.deepcopy(self.data["contract"]); del contract["plan_id"]
-        self.assertEqual(["RMAP-STRUCT-SCHEMA"], [item["rule_id"] for item in validate_contract(PLAN_ROOT, contract, self.data["requirements"], self.data["commands"])])
+        contract = copy.deepcopy(self.data["contract"]); del contract["plan_id"]; self.assertEqual(["RMAP-STRUCT-SCHEMA"], [item["rule_id"] for item in validate_contract(PLAN_ROOT, contract, self.data["requirements"], self.data["commands"])])
+        contract = copy.deepcopy(self.data["contract"]); del contract["candidate_identity_policy"]["committed_range"]["head_commit"]; self.assertEqual(["RMAP-STRUCT-SCHEMA"], [item["rule_id"] for item in validate_contract(PLAN_ROOT, contract, self.data["requirements"], self.data["commands"])])
     def test_execution_snapshot_paths_are_explicit_existing_and_allowed(self) -> None:
         allowed = [".agents/skills/quick-dev-tdd-adapter/tools/tests/**"]; valid = [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"]
         self.assertEqual([], validate_execution_snapshot_paths(PLAN_ROOT, "RMAP-S7", valid, allowed))
@@ -246,7 +246,7 @@ class PlanValidatorTests(unittest.TestCase):
         if result is None: self.skipTest("junction creation is unavailable for this Windows token")
         self.assertTrue(result)
     def test_validator_identity_binds_all_authorizing_helpers(self) -> None:
-        digest = hashlib.sha256(); paths = [TOOLS / name for name in ("validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py", "slice_freshness.py")]
+        digest = hashlib.sha256(); paths = [TOOLS / name for name in ("validate_all.py", "isolated_test_repository.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py", "slice_freshness.py")]
         for path in paths: digest.update(path.name.encode("utf-8")); digest.update(b"\0"); digest.update(path.read_bytes()); digest.update(b"\0")
         self.assertEqual(f"rmap-plan-validator.v2+sha256:{digest.hexdigest()}", validator_identity())
     def test_nested_write_and_forbidden_globs_overlap(self) -> None:

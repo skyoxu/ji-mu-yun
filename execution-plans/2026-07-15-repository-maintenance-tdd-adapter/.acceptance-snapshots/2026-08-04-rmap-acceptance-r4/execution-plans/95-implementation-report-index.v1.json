@@ -1,0 +1,33 @@
+{
+  "schema_version": "jimuyun.execution-plan-95-report-index.v1",
+  "entries": [
+    {
+      "plan_directory": "2026-07-15-repository-maintenance-tdd-adapter",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-07-25-four-domain-knowledge-context-engineering-plan",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-07-26-knowledge-locator-workflow-integration",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-07-27-refactor-implementation-acceptance-skill",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-07-31-toolchain-workflow-evidence-catalog-v1",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-08-01-refactor-acceptance-toolchain-compact-vdd",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-08-01-workflow-model-routing-control-plane",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    }
+  ]
+}

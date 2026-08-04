@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from fixture_checks import evaluate_fixture, validate_fixture_suite
 from candidate_diff_guards import validate_candidate_fixture_suite
 from protocol_guards import evaluate_protocol_fixture
 from evidence_guards import validate_candidate_document
+from isolated_test_repository import isolated_test_repository, read_only_index_tree
 from slice_guards import validate_slice_outputs
 from validation_result_guards import (
     build_result as build_validation_result,
@@ -33,7 +35,7 @@ from rmap_checks import (
 PLAN_ROOT, REPOSITORY_ROOT, UNIT_TEST_TIMEOUT_SECONDS = Path(__file__).resolve().parents[1], Path(__file__).resolve().parents[3], 300
 def validator_identity() -> str:
     digest = hashlib.sha256()
-    names = ["validate_all.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py", "slice_freshness.py"]
+    names = ["validate_all.py", "isolated_test_repository.py", "rmap_checks.py", "contract_guards.py", "authority_guards.py", "review_reentry_environment.py", "artifact_proof_guards.py", "artifact_proof_verdicts.py", "artifact_proof_inventory_support.py", "validation_result_guards.py", "evidence_guards.py", "candidate_diff_guards.py", "candidate_lineage_guards.py", "current_state_guards.py", "shadow_guards.py", "source_guards.py", "slice_guards.py", "fixture_checks.py", "protocol_guards.py", "protocol_validation_guards.py", "protocol_fixture_support.py", "protocol_fixture_cases.py", "protocol_fixture_mutations.py", "protocol_artifact_guards.py", "attempt_lineage_guards.py", "slice_freshness.py"]
     for path in (Path(__file__).with_name(name) for name in names):
         digest.update(path.name.encode("utf-8"))
         digest.update(b"\0")
@@ -41,41 +43,27 @@ def validator_identity() -> str:
         digest.update(b"\0")
     return f"{VALIDATOR_VERSION}+sha256:{digest.hexdigest()}"
 def run_unit_tests() -> tuple[dict[str, Any], list[dict[str, str]]]:
-    command = [
-        sys.executable,
-        "-m",
-        "unittest",
-        "discover",
-        "-s",
-        str(PLAN_ROOT / "tools" / "tests"),
-        "-p",
-        "test_*.py",
-    ]
     env = dict(os.environ)
-    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env.update({"PYTHONDONTWRITEBYTECODE": "1", "RMAP_ISOLATED_TEST_REPOSITORY": "1"})
     try:
-        result = subprocess.run(
-            command,
-            cwd=REPOSITORY_ROOT,
-            env=env,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            capture_output=True,
-            timeout=UNIT_TEST_TIMEOUT_SECONDS,
-            check=False,
-        )
+        repository = nullcontext(REPOSITORY_ROOT) if os.environ.get("RMAP_ISOLATED_TEST_REPOSITORY") == "1" else isolated_test_repository(REPOSITORY_ROOT, PLAN_ROOT)
+        with repository as clone_root:
+            clone_plan = clone_root / PLAN_ROOT.relative_to(REPOSITORY_ROOT)
+            command = [sys.executable, "-m", "unittest", "discover", "-s", str(clone_plan / "tools" / "tests"), "-p", "test_*.py"]
+            result = subprocess.run(
+                command, cwd=clone_root, env=env, text=True, encoding="utf-8",
+                errors="replace", capture_output=True, timeout=UNIT_TEST_TIMEOUT_SECONDS, check=False,
+            )
     except subprocess.TimeoutExpired:
-        check = {
-            "rule_id": "RMAP-UNIT-TESTS",
-            "status": "fail",
-            "evidence": [f"timeout_seconds={UNIT_TEST_TIMEOUT_SECONDS}"],
-        }
+        check = {"rule_id": "RMAP-UNIT-TESTS", "status": "fail", "evidence": [f"timeout_seconds={UNIT_TEST_TIMEOUT_SECONDS}"]}
         return check, [{
             "rule_id": "RMAP-UNIT-TESTS",
             "target": "tools/tests",
             "message": f"unit tests exceeded timeout of {UNIT_TEST_TIMEOUT_SECONDS} seconds",
         }]
+    except (OSError, subprocess.SubprocessError):
+        check = {"rule_id": "RMAP-UNIT-TESTS", "status": "fail", "evidence": ["isolated test repository setup failed"]}
+        return check, [{"rule_id": "RMAP-UNIT-TESTS", "target": "tools/tests", "message": "isolated test repository setup failed"}]
     evidence = (result.stdout + result.stderr).strip().splitlines()
     check = {
         "rule_id": "RMAP-UNIT-TESTS",
@@ -136,7 +124,9 @@ def _hash_bytes(value: bytes) -> str:
 
 
 def _git_bytes(*args: str) -> bytes:
-    result = subprocess.run(["git", *args], cwd=REPOSITORY_ROOT, capture_output=True, check=False)
+    environment = dict(os.environ)
+    environment["GIT_OPTIONAL_LOCKS"] = "0"
+    result = subprocess.run(["git", *args], cwd=REPOSITORY_ROOT, env=environment, capture_output=True, check=False)
     if result.returncode != 0:
         raise ValueError(result.stderr.decode("utf-8", errors="replace"))
     return result.stdout
@@ -175,7 +165,7 @@ def _manifest_hash(paths: list[str]) -> str:
 
 def current_candidate_identity(slice_id: str = "RMAP-S6") -> dict[str, str]:
     head = _git_bytes("rev-parse", "HEAD").decode("utf-8").strip()
-    index_tree = _git_bytes("write-tree").decode("utf-8").strip()
+    index_tree = read_only_index_tree(REPOSITORY_ROOT)
     contract = strict_load(PLAN_ROOT / "implementation-contract.v1.json")
     slices = contract.get("slices", [])
     selected = next((index for index, item in enumerate(slices) if item.get("slice_id") == slice_id), None)

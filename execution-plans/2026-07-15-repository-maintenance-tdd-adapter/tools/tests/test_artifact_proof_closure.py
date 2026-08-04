@@ -105,6 +105,14 @@ def git_baseline_hash(relative: str) -> str | None:
 
 
 class ArtifactProofClosureTests(unittest.TestCase):
+    def test_generated_acceptance_history_is_outside_plan_artifact_inventory(self) -> None:
+        generated = [Path(value) for value in (
+            ".acceptance-snapshots/r6/tool.py", "acceptance-inputs/r6/request.json",
+            "acceptance-runs/r6/result.json", "acceptance-run-request.r6.v1.json",
+            "knowledge-context.refactor-acceptance.r6.v1.json")]
+        self.assertTrue(all(artifact_proof_projection_support.is_generated_acceptance_artifact(path) for path in generated))
+        self.assertFalse(artifact_proof_projection_support.is_generated_acceptance_artifact(Path("tools/validate_all.py")))
+
     def test_every_closure_member_maps_to_an_executable_type_contract(self) -> None:
         closure = load_json("schemas/predicate-artifact-closure.v1.json")
         contracts = closure["type_contracts"]

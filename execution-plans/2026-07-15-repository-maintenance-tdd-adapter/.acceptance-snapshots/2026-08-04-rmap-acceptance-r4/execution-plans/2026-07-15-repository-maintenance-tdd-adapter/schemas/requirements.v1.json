@@ -1,0 +1,661 @@
+{
+  "schema_version": "rmap.requirements.v1",
+  "requirements": [
+    {
+      "id": "RMAP-001",
+      "summary": "ADR-0041 owns the shared control-plane ownership pattern and Bootstrap execution boundary without defining TDD Adapter semantics or allocating a colliding ADR ID.",
+      "owner": "workflow architect",
+      "owner_book": "01-intent-authority-and-non-goals.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-001",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:1-70",
+        "clarification:CQ-003",
+        "repair-20260717:CQ-001",
+        "repair-20260717-999:CQ-006"
+      ],
+      "consumers": [
+        "ADR index",
+        "standards",
+        "adapter Skill",
+        "execution plans"
+      ],
+      "failure_family": "duplicate_authority",
+      "evidence_intent": "Existing Accepted ADR citation, collision fixture, and ownership validation.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-002",
+      "summary": "Standards, repository-owned Skills, plan instances, compatibility adapters, and logs have distinct owners.",
+      "owner": "workflow architect",
+      "owner_book": "01-intent-authority-and-non-goals.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-002",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:74-199",
+        "clarification:CQ-003",
+        "clarification:CQ-017",
+        "repair-20260717:CQ-002",
+        "repair-20260717-999:CQ-006"
+      ],
+      "consumers": [
+        "standards index",
+        "Bootstrap Skill",
+        "adapter Skill",
+        "7-12 compatibility adapter",
+        "plan validators",
+        "evidence readers"
+      ],
+      "failure_family": "ownership_conflict",
+      "evidence_intent": "Unique-owner registry, compatibility-boundary projection, and negative duplicate-owner fixture.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-003",
+      "summary": "Each participating plan owns one compact implementation-contract instance.",
+      "owner": "contract maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-003",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:74-199",
+        "clarification:CQ-002",
+        "clarification:CQ-017"
+      ],
+      "consumers": [
+        "adapter",
+        "plan validator",
+        "Bootstrap preflight"
+      ],
+      "failure_family": "contract_missing",
+      "evidence_intent": "Valid self-hosted instance and three shadow instances.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-004",
+      "summary": "Commands are structured, shell-free, allowlisted, and typed.",
+      "owner": "command-contract maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-004",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:107-171",
+        "clarification:CQ-008",
+        "repair-20260718-1500:CQ-002",
+        "repair-20260718-1600:RMAP-ARTIFACT-PROOF-CLOSURE"
+      ],
+      "consumers": [
+        "adapter",
+        "backend",
+        "evidence validator"
+      ],
+      "failure_family": "unsafe_command",
+      "evidence_intent": "Shell, env, raw-string, and placeholder fixtures.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-005",
+      "summary": "Adapter v1 is stateless, in-session, recoverable, and has no provider scheduler.",
+      "owner": "adapter maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-005",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:203-221",
+        "clarification:CQ-004",
+        "clarification:CQ-011"
+      ],
+      "consumers": [
+        "implementation backend",
+        "operator",
+        "recovery reader"
+      ],
+      "failure_family": "router_or_hidden_state",
+      "evidence_intent": "No-provider/no-hidden-state contract and recovery tests.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-006",
+      "summary": "Prepare fails closed on invalid authority, contract, predecessor, path, command, hash, or blocker state.",
+      "owner": "adapter maintainer",
+      "owner_book": "04-behavior-slices-and-implementation-order.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-006",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:225-247"
+      ],
+      "consumers": [
+        "adapter prepare",
+        "slice authorizer"
+      ],
+      "failure_family": "prepare_invalid",
+      "evidence_intent": "Prepare negative fixtures and structured diagnostics.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-007",
+      "summary": "Production writes require an observed expected RED.",
+      "owner": "TDD gate maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-007",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:248-280"
+      ],
+      "consumers": [
+        "adapter RED gate",
+        "implementation backend"
+      ],
+      "failure_family": "red_not_observed",
+      "evidence_intent": "Observed expected failure ID and RED result envelope.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-008",
+      "summary": "GREEN uses current RED evidence and the smallest declared production write set.",
+      "owner": "TDD gate maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-008",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:281-300"
+      ],
+      "consumers": [
+        "adapter GREEN gate",
+        "backend"
+      ],
+      "failure_family": "green_without_red",
+      "evidence_intent": "Stale-RED and out-of-write-set fixtures.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-009",
+      "summary": "REFACTOR begins after GREEN and preserves declared regressions.",
+      "owner": "TDD gate maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-009",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:302-322"
+      ],
+      "consumers": [
+        "adapter REFACTOR gate",
+        "backend"
+      ],
+      "failure_family": "refactor_before_green",
+      "evidence_intent": "Transition and regression-preservation tests.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-010",
+      "summary": "Candidate envelope authorizes Bootstrap review only.",
+      "owner": "evidence maintainer",
+      "owner_book": "06-testing-observability-and-evidence.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-010",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:324-360",
+        "clarification:CQ-012",
+        "repair-20260717-999:CQ-001",
+        "repair-20260717-999:CQ-002",
+        "repair-20260717-999:CQ-003"
+      ],
+      "consumers": [
+        "Bootstrap review",
+        "plan validator"
+      ],
+      "failure_family": "authority_escalation",
+      "evidence_intent": "Exact authorizes/does-not-authorize envelope test.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-011",
+      "summary": "Implementation backend owns no review, done, commit, acceptance, or release transition.",
+      "owner": "backend-contract maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-011",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:364-416",
+        "clarification:CQ-004"
+      ],
+      "consumers": [
+        "backend interface",
+        "adapter"
+      ],
+      "failure_family": "backend_authority_escape",
+      "evidence_intent": "Forbidden-authority mutation fixture.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-012",
+      "summary": "Bootstrap remains the sole semantic-review authority and exposes a freshly recomputed v2 finalized-run envelope with direct verifier and P2 evidence binding.",
+      "owner": "review integration maintainer",
+      "owner_book": "06-testing-observability-and-evidence.md",
+      "first_phase": "P3",
+      "acceptance_id": "RMAP-ACC-012",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:57-70",
+        "clarification:CQ-005",
+        "repair-20260717:CQ-007",
+        "repair-20260717-999:CQ-004",
+        "repair-20260717-999:CQ-007",
+        "repair-20260718-1500:CQ-001",
+        "repair-20260718-1500:CQ-002",
+        "repair-20260718-1500:CQ-003",
+        "repair-20260718-1500:CQ-005"
+      ],
+      "consumers": [
+        "Bootstrap Skill",
+        "7-12 compatibility adapter",
+        "review operator",
+        "plan validator"
+      ],
+      "failure_family": "competing_review_authority",
+      "evidence_intent": "Repository producer recomputation, successor policy/event lineage, complete profile projection, direct verifier/P2 hashes, and non-authorizing envelope evidence.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-013",
+      "summary": "Plan validator exposes four exact predicates without release authority.",
+      "owner": "plan validator maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-013",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:506-513",
+        "clarification:CQ-012"
+      ],
+      "consumers": [
+        "plan operator",
+        "adapter",
+        "Bootstrap",
+        "acceptance reader"
+      ],
+      "failure_family": "predicate_authority_mismatch",
+      "evidence_intent": "Exact predicate authority-set fixtures.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-014",
+      "summary": "A real existing-file global baseline plus independently recomputed S0-S6 protocol bundles produce byte-verifiable cumulative candidate effects and a separate cross-slice hash chain.",
+      "owner": "baseline maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-014",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:225-280",
+        "clarification:CQ-009",
+        "clarification:CQ-016",
+        "repair-20260717:CQ-004",
+        "repair-20260717-999:CQ-001",
+        "repair-20260717-999:CQ-003",
+        "repair-20260717-1200:CQ-001"
+      ],
+      "consumers": [
+        "prepare",
+        "resume",
+        "diff validator",
+        "candidate validator",
+        "candidate lineage validator"
+      ],
+      "failure_family": "baseline_drift",
+      "evidence_intent": "Full run-bundle recomputation, first-add semantics, previous-slice effect chain, and stale before/after/event/ledger counterexamples.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-015",
+      "summary": "Recovery preserves stale runs and starts linked successors normally.",
+      "owner": "recovery maintainer",
+      "owner_book": "05-diagnostics-repair-and-reentry.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-015",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:225-360",
+        "clarification:CQ-011",
+        "clarification:CQ-014",
+        "repair-20260718-1500:CQ-003",
+        "repair-20260718-1500:CQ-005"
+      ],
+      "consumers": [
+        "status",
+        "resume",
+        "operator"
+      ],
+      "failure_family": "recovery_lineage_invalid",
+      "evidence_intent": "Stale predecessor and non-stale successor tests.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-016",
+      "summary": "Acceptance consumes authoritative candidate supersession proof plus runtime Bootstrap dispositions and source evidence.",
+      "owner": "acceptance maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P3",
+      "acceptance_id": "RMAP-ACC-016",
+      "status": "active",
+      "source_refs": [
+        "clarification:CQ-012",
+        "clarification:CQ-015",
+        "repair-20260717:CQ-007",
+        "repair-20260717-999:CQ-004",
+        "repair-20260717-999:CQ-007",
+        "repair-20260717-1200:CQ-002",
+        "repair-20260717-1200:CQ-003",
+        "repair-20260718-1500:CQ-001",
+        "repair-20260718-1500:CQ-002",
+        "repair-20260718-1500:CQ-005"
+      ],
+      "consumers": [
+        "implementation-accepted predicate",
+        "recovery"
+      ],
+      "failure_family": "review_disposition_open",
+      "evidence_intent": "Stale lineage/supersession, open blocker, incomplete runtime P2, verifier source, and valid disposition fixtures.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-017",
+      "summary": "Backfill 7-12, 7-07, and 7-11 additively in shadow mode.",
+      "owner": "migration maintainer",
+      "owner_book": "04-behavior-slices-and-implementation-order.md",
+      "first_phase": "P2",
+      "acceptance_id": "RMAP-ACC-017",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:517-567",
+        "clarification:CQ-002",
+        "clarification:CQ-010",
+        "clarification:CQ-013"
+      ],
+      "consumers": [
+        "three old plans",
+        "shadow validator"
+      ],
+      "failure_family": "shadow_authority_leak",
+      "evidence_intent": "Byte-preservation and non-authoritative shadow evidence.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-018",
+      "summary": "Adapter and validator use positive, negative, boundary, stale, mutation, and pressure scenarios.",
+      "owner": "test maintainer",
+      "owner_book": "06-testing-observability-and-evidence.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-018",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:436-464",
+        "repair-20260718-1500:CQ-004"
+      ],
+      "consumers": [
+        "Skill release",
+        "plan validator",
+        "Bootstrap preflight"
+      ],
+      "failure_family": "test_contract_incomplete",
+      "evidence_intent": "Fixture matrix and executed unit/mutation suite.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-019",
+      "summary": "This plan owns P0-P3; BMAD removal is a separate P4 plan.",
+      "owner": "plan owner",
+      "owner_book": "01-intent-authority-and-non-goals.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-019",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:517-570",
+        "clarification:CQ-001"
+      ],
+      "consumers": [
+        "phase router",
+        "future plan"
+      ],
+      "failure_family": "scope_creep",
+      "evidence_intent": "Phase registry rejects P4 activation.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-020",
+      "summary": "Confidence is advisory and bounded to three improvement rounds.",
+      "owner": "plan validator maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-020",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:18",
+        "clarification:CQ-006",
+        "repair-20260717-999:CQ-005",
+        "repair-20260717-999:CQ-007"
+      ],
+      "consumers": [
+        "plan operator",
+        "adapter operator"
+      ],
+      "failure_family": "confidence_as_authority",
+      "evidence_intent": "Confidence cannot alter predicate result test.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-021",
+      "summary": "Plan intent and immutable refs stay separate from logs-owned mutable evidence.",
+      "owner": "evidence maintainer",
+      "owner_book": "06-testing-observability-and-evidence.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-021",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:37-39",
+        "clarification:CQ-017",
+        "repair-20260717-999:CQ-005",
+        "repair-20260718-1500:CQ-004"
+      ],
+      "consumers": [
+        "plan",
+        "Skill",
+        "logs",
+        "recovery"
+      ],
+      "failure_family": "evidence_owner_conflict",
+      "evidence_intent": "Path ownership and mutable-state rejection tests.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-022",
+      "summary": "Preserve and hash-bind agentbuild.txt as the single original intent source.",
+      "owner": "source custodian",
+      "owner_book": "01-intent-authority-and-non-goals.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-022",
+      "status": "active",
+      "source_refs": [
+        "clarification:CQ-007"
+      ],
+      "consumers": [
+        "98 audit",
+        "99 coverage",
+        "validator"
+      ],
+      "failure_family": "source_stale_or_duplicated",
+      "evidence_intent": "Current source hash and unique source path check.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-023",
+      "summary": "Windows paths remain contained, normalized, protected, and reparse-safe.",
+      "owner": "path-security maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-023",
+      "status": "active",
+      "source_refs": [
+        "AGENTS.md:Highest Encoding Rule",
+        "AGENTS.md:Protected Phase Paths",
+        "clarification:CQ-008",
+        "clarification:CQ-016",
+        "repair-20260717-999:CQ-003"
+      ],
+      "consumers": [
+        "adapter path gate",
+        "backend"
+      ],
+      "failure_family": "path_escape_or_protected_write",
+      "evidence_intent": "Case, containment, overlap, and reparse fixtures.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-024",
+      "summary": "Reject a top-level Router and new authority in historical script directories.",
+      "owner": "workflow architect",
+      "owner_book": "01-intent-authority-and-non-goals.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-024",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:593-597",
+        "clarification:CQ-003"
+      ],
+      "consumers": [
+        "framework ADR",
+        "directory validator"
+      ],
+      "failure_family": "router_or_script_authority_growth",
+      "evidence_intent": "ADR and forbidden-owner/path fixture.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-025",
+      "summary": "Each backend invocation consumes an immutable Capsule whose typed artifact refs exactly close over byte-verified context.",
+      "owner": "context protocol maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-025",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:285-295",
+        "repair-20260717:CQ-002",
+        "repair-20260717:CQ-003",
+        "repair-20260717:CQ-004"
+      ],
+      "consumers": [
+        "adapter prepare",
+        "backend request",
+        "recovery reader",
+        "candidate validator"
+      ],
+      "failure_family": "capsule_context_invalid",
+      "evidence_intent": "Actual-byte, exact-union, duplicate, typed-root, blocker-ref, authority, and predecessor fixtures.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-026",
+      "summary": "Attempts form a complete RED-GREEN-REFACTOR prefix whose real decisions, diffs, events, stage results, and ledger roots independently derive every slice and candidate projection.",
+      "owner": "attempt protocol maintainer",
+      "owner_book": "05-diagnostics-repair-and-reentry.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-026",
+      "status": "active",
+      "source_refs": [
+        "agentbuild.txt:389-404",
+        "repair-20260717:CQ-004",
+        "repair-20260717:CQ-005",
+        "repair-20260717:CQ-006",
+        "repair-20260717-999:CQ-002"
+      ],
+      "consumers": [
+        "backend adapter",
+        "stage validator",
+        "recovery reader",
+        "candidate validator"
+      ],
+      "failure_family": "attempt_lineage_invalid",
+      "evidence_intent": "Protocol validation plus fabricated-effect, omitted-attempt, self-asserted-event, and diff-derivation counterexamples.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-027",
+      "summary": "Every formal artifact introduced for a review finding records seven machine verdicts; each is an executable PASS or a type-authorized reasoned N/A, and authorization-participating artifacts require seven PASS results.",
+      "owner": "artifact proof maintainer",
+      "owner_book": "03-validators-fixtures-and-control-gates.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-027",
+      "status": "active",
+      "source_refs": [
+        "repair-20260717-1300:CQ-003",
+        "repair-20260717-1300:CQ-005",
+        "repair-20260718-1500:CQ-001",
+        "repair-20260718-1500:CQ-002"
+      ],
+      "consumers": [
+        "composite plan validator",
+        "review repair author",
+        "artifact producer",
+        "artifact consumer"
+      ],
+      "failure_family": "artifact_proof_incomplete",
+      "evidence_intent": "Exact formal artifact population, seven PASS/N/A verdicts, static zero-authority boundaries, authorization-participating seven-PASS enforcement, protected-only external identity, and single-rule missing, unauthorized-N/A, fake-PASS, producer, identity, derivation, staleness, lineage, and consumer counterexamples.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-028",
+      "summary": "Before implementation writes or identity freeze, resolve the target 95 report through the repository index with target-directory-only fallback, synchronize registration when creating it, audit the target execution-plan directory, route material defects through VDD repair, append the change entry, validate the repaired plan, and refreeze all affected identities.",
+      "owner": "plan lifecycle maintainer",
+      "owner_book": "02-executable-contracts-and-invariants.md",
+      "first_phase": "P0",
+      "acceptance_id": "RMAP-ACC-028",
+      "status": "active",
+      "source_refs": [
+        "repair-20260722-lifecycle:RMAP-PLAN-LIFECYCLE-PREIMPLEMENTATION",
+        "repair-20260722-lifecycle:RMAP-PLAN-LIFECYCLE-REPORT-INDEX"
+      ],
+      "consumers": [
+        "Quick Dev prepare",
+        "VDD repair route",
+        "execution-plan report index reader and writer",
+        "target report writer",
+        "identity freezer"
+      ],
+      "failure_family": "target_plan_lifecycle_invalid",
+      "evidence_intent": "Index-first target report resolution, target-only fallback, synchronized registration, target-plan audit, unique 95 ownership, VDD repair gate, append-only change entry, fresh validator pass, and post-repair identity freeze evidence.",
+      "quality_check": "pass"
+    },
+    {
+      "id": "RMAP-029",
+      "summary": "Append an overall implementation result to the target 95 report only after the declared terminal predicate passes for the current candidate, while keeping the report non-authorizing.",
+      "owner": "completion report maintainer",
+      "owner_book": "06-testing-observability-and-evidence.md",
+      "first_phase": "P1",
+      "acceptance_id": "RMAP-ACC-029",
+      "status": "active",
+      "source_refs": [
+        "repair-20260722-lifecycle:RMAP-PLAN-LIFECYCLE-COMPLETION"
+      ],
+      "consumers": [
+        "terminal result reporter",
+        "target plan operator",
+        "recovery reader"
+      ],
+      "failure_family": "premature_or_authoritative_completion_report",
+      "evidence_intent": "Current terminal predicate envelope, command/exit/test/hash summary, changed-file and residual-gap record, append-only completion entry, and explicit non-authority boundary.",
+      "quality_check": "pass"
+    }
+  ]
+}

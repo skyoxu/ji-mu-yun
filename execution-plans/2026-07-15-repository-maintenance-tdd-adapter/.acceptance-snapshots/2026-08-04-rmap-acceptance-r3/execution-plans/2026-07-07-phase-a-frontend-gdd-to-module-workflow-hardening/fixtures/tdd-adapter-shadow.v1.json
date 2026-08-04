@@ -1,0 +1,11 @@
+{
+  "schema_version": "rmap.tdd-adapter-shadow.v1",
+  "plan_id": "phase-a-frontend-gdd-to-module-workflow-hardening",
+  "authoritative": false,
+  "mode": "shadow-baseline-comparison",
+  "state_change_authorized": false,
+  "expected_baselines": [
+    "whole-directory",
+    "existing-unit-tests"
+  ]
+}

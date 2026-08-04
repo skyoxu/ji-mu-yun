@@ -406,7 +406,7 @@
     {
       "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
       "class_id": "bootstrap-normative",
-      "sha256": "sha256:03b9f7dc3169b490408c579eae19da7eb91c663ea5e77271a962d1be97dd7785",
+      "sha256": "sha256:0ea76af452ea9e07d3e4dc8ff5b4d1d8bad5b1421d1447b5ca86ebb34b633405",
       "lifecycle_status": "supersedes",
       "predecessor_sha256": "sha256:f61339dc9a31320807159803c818a40f3fe5a642b4964b91e6004af968e34319",
       "derivation_rules": [
@@ -562,7 +562,7 @@
     {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
       "class_id": "successor-evidence",
-      "sha256": "sha256:c859119ba6134ff36a9451bbe3ab8c969adebbde0f3f5cb42896ec8c2d68956a",
+      "sha256": "sha256:42eef6712590866c58dc20ae713e0140d957276d7425761a815f431ec71f1267",
       "derivation_rules": [
         {
           "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
@@ -599,7 +599,7 @@
     {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/policy-decision.json",
       "class_id": "successor-evidence",
-      "sha256": "sha256:659172239aca47162f4051f3438a503612c35f578fe9833a202abe7d8a7f3ca1",
+      "sha256": "sha256:6e5784ea37012e5c991605f2e61a3f58276d5b2b6dc29719f4d44a2400599ea2",
       "derivation_rules": [
         {
           "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/authorization-event.json",
@@ -637,7 +637,7 @@
     {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/reentry-successor-20260718/successor-authority.json",
       "class_id": "successor-evidence",
-      "sha256": "sha256:67e04414bf83b77f17cef3b5f2f26f413c2ac1c616c4560604039c914b50a17c",
+      "sha256": "sha256:73dd45425f1d4894246dc2e3883f7f42b85daee0bb2fdde684b03a6885cde19d",
       "derivation_rules": [
         {
           "source": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
@@ -681,7 +681,7 @@
     {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/review-policy-reentry.v1.json",
       "class_id": "plan-normative",
-      "sha256": "sha256:5e39bf358f6534385e4dcd411a97c19ea582d78346d4ac2d7cc6b7e087a88578",
+      "sha256": "sha256:e0e9583a273c6d722b8837c9136b1d77957cd702f9d53f2d340e4a2a749c6414",
       "proof_scope": "authorization-participating",
       "consumer_authorization_boundary": {
         "consumers": [
@@ -794,7 +794,7 @@
     {
       "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_artifact_proof_closure.py",
       "class_id": "plan-validator",
-      "sha256": "sha256:108cf84a982024cb45b701b3ad1d3f5ce603a48947ab328e07e7a3f4050a07d6",
+      "sha256": "sha256:a015e19fb74ca719b4320daf6f0616c3c20ad188240777bcd64e4caf662af860",
       "lifecycle_status": "new",
       "derivation_rules": [
         {
@@ -869,7 +869,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
       },
       "source_of_truth_derivation": {
         "rules": [
@@ -897,13 +897,13 @@
       },
       "independent_recomputation": {
         "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "validator_sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
+        "validator_sha256": "sha256:11dbd2d739c083c4dafa0b2109ec89370b53a23b0058ee3c2054a4ad08b1e81c",
         "callable": "validate_finalized_run_evidence",
         "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
         "rule_ids": [
           "bootstrap-finalized-run-validator.v2"
         ],
-        "negative_test_sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
+        "negative_test_sha256": "sha256:18fc94605f5a2af963ccf6dab7fdd967ed20b83562a5e90c2fe6be9f289c32cc",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -985,7 +985,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
       },
       "source_of_truth_derivation": {
         "rules": [
@@ -1021,13 +1021,13 @@
       },
       "independent_recomputation": {
         "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "validator_sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
+        "validator_sha256": "sha256:11dbd2d739c083c4dafa0b2109ec89370b53a23b0058ee3c2054a4ad08b1e81c",
         "callable": "validate_p2_dispositions",
         "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
         "rule_ids": [
           "bootstrap-p2-disposition-evidence.v2"
         ],
-        "negative_test_sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
+        "negative_test_sha256": "sha256:18fc94605f5a2af963ccf6dab7fdd967ed20b83562a5e90c2fe6be9f289c32cc",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1109,7 +1109,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
       },
       "source_of_truth_derivation": {
         "rules": [
@@ -1149,13 +1149,13 @@
       },
       "independent_recomputation": {
         "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "validator_sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
+        "validator_sha256": "sha256:11dbd2d739c083c4dafa0b2109ec89370b53a23b0058ee3c2054a4ad08b1e81c",
         "callable": "validate_p2_dispositions",
         "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
         "rule_ids": [
           "bootstrap-p2-process-event.v1"
         ],
-        "negative_test_sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
+        "negative_test_sha256": "sha256:18fc94605f5a2af963ccf6dab7fdd967ed20b83562a5e90c2fe6be9f289c32cc",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1237,7 +1237,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/standards/bootstrap-review-control-plane.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e"
+        "authority_sha256": "sha256:cf992a7ab13fd5e89da784cce1675177549153542414467512db71955b94d8bb"
       },
       "source_of_truth_derivation": {
         "rules": [
@@ -1265,13 +1265,13 @@
       },
       "independent_recomputation": {
         "validator": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "validator_sha256": "sha256:782bc5d9da7500baf71d997e11d78ab28e89aaa879cc385bd8d307d2efb96bd1",
+        "validator_sha256": "sha256:11dbd2d739c083c4dafa0b2109ec89370b53a23b0058ee3c2054a4ad08b1e81c",
         "callable": "validate_successor_policy_authorization",
         "negative_test": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
         "rule_ids": [
           "bootstrap-successor-policy-authorization.v1"
         ],
-        "negative_test_sha256": "sha256:d525cb6ea6554448eeebab933a636fd549afe11a9781caa0044578a88b99e900",
+        "negative_test_sha256": "sha256:18fc94605f5a2af963ccf6dab7fdd967ed20b83562a5e90c2fe6be9f289c32cc",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -1469,7 +1469,7 @@
       },
       "independent_recomputation": {
         "validator": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/authority_guards.py",
-        "validator_sha256": "sha256:80d2f76b0e22622eddbcb78a64bfe34690329f2f8b402986f96eeccaaa4671aa",
+        "validator_sha256": "sha256:f3d2df906cd4b9eefd6d60347676c719978556a2be794d22ec572676dbd245dd",
         "callable": "validate_review_reentry",
         "negative_test": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/tests/test_candidate_diff_guards.py",
         "rule_ids": [
@@ -1586,7 +1586,7 @@
           "RMAP-RESULT-LINEAGE"
         ],
         "validator_sha256": "sha256:e4097829ce56911c254cdfeeac876c76ccd017aa5e92f23d976a004e1b46c1ff",
-        "negative_test_sha256": "sha256:3f0f33ecce3a043b9c2f2a3624958a387818f71d2fd48f59dbf878009a50755e",
+        "negative_test_sha256": "sha256:6e14396aeb585fb2fffcafeeff898b5573a9276e8d2d0e9958a4985c0c1998b1",
         "expected_failure_ids": [
           "RMAP-ARTIFACT-PROOF-PRODUCER",
           "RMAP-ARTIFACT-PROOF-IDENTITY",

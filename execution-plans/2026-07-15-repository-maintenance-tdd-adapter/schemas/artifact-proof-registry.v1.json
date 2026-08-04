@@ -68,7 +68,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -87,7 +87,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -116,7 +116,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -210,7 +210,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -229,7 +229,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -258,7 +258,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -353,7 +353,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -372,7 +372,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -401,7 +401,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -495,7 +495,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -514,7 +514,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -543,7 +543,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -637,7 +637,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -656,7 +656,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -685,7 +685,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -778,7 +778,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -797,7 +797,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -826,7 +826,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -920,7 +920,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -939,7 +939,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -968,7 +968,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -1062,7 +1062,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -1081,7 +1081,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -1110,7 +1110,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -1204,7 +1204,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -1212,7 +1212,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:03b9f7dc3169b490408c579eae19da7eb91c663ea5e77271a962d1be97dd7785",
+        "artifact_sha256": "sha256:0ea76af452ea9e07d3e4dc8ff5b4d1d8bad5b1421d1447b5ca86ebb34b633405",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -1223,7 +1223,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -1252,7 +1252,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -1346,7 +1346,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -1365,7 +1365,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -1394,7 +1394,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -1488,7 +1488,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -1507,7 +1507,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -1536,7 +1536,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -1631,7 +1631,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde",
+        "authority_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -1650,7 +1650,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ]
       },
@@ -1679,7 +1679,7 @@
             "field": "$authority",
             "target_field": "$contract",
             "derivation": "authority-derived",
-            "source_sha256": "sha256:755ceef44a4994c50080b90544791e4f50dbb6ecdbe7cff0c6801218fbac9dde"
+            "source_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
           }
         ],
         "invalidates": [
@@ -1772,7 +1772,7 @@
       "schema_producer_authority": {
         "authority_path": ".agents/skills/vdd-execution-plan/references/strict-vdd-standard.md",
         "authority_category": "protocol_authority",
-        "authority_sha256": "sha256:e44a386e6ddc35ba76a27ec5223e6b0349823a7b5250f3baa22c9a464fff28a8",
+        "authority_sha256": "sha256:2a3ed94742539e9d00a0492af713cde28ccbc9327194d27b2eb707671bbce497",
         "producer_kind": "manual-authority",
         "generator_path": null,
         "generator_sha256": null
@@ -1797,11 +1797,11 @@
       },
       "independent_recomputation": {
         "rule_id": "vdd-skill-artifact-proof-trust-root.v1",
-        "validator_path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
-        "validator_sha256": "sha256:4e02c926793237aacc6497b6bd0266637b1c7ba05366be5ce953b6743f27a58d",
+        "validator_path": ".agents/skills/vdd-execution-plan/scripts/artifact_proof_compat.py",
+        "validator_sha256": "sha256:6715a9b6834b3fafdf979fbe613c55a7bdeb6aa6503eca7d787728dc1a00a75e",
         "callable": "validate_artifact_proof_trust_roots",
-        "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py",
-        "negative_test_sha256": "sha256:72641954a9dbf9791cfb3b05141ab1d4490ff2e54f12dc5da1d59ea7b8701c35",
+        "negative_test_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_artifact_proof_compat.py",
+        "negative_test_sha256": "sha256:4235e7841b0f1aeddc05ec0d27eb1fc78afd0da8dacb52588dd7a25894dc6e29",
         "expected_failure_ids": [
           "VDD-ARTIFACT-PROOF-PRODUCER",
           "VDD-ARTIFACT-PROOF-IDENTITY",
@@ -2056,7 +2056,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "authority_category": "machine_owners",
-        "authority_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
+        "authority_sha256": "sha256:63efc2761d49fd75d30704c27896db81fbb30bd4846f2f278b7f2dad632da02c",
         "producer_kind": "generated-projection",
         "generator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
         "generator_sha256": "sha256:a8c4a9db13e0c30bffa1e9991cf20bb3b38004b8456f3b39cf7757c0475961e5"
@@ -2072,7 +2072,7 @@
         "rules": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
+            "source_sha256": "sha256:63efc2761d49fd75d30704c27896db81fbb30bd4846f2f278b7f2dad632da02c",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -2101,7 +2101,7 @@
         "inputs": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
+            "source_sha256": "sha256:63efc2761d49fd75d30704c27896db81fbb30bd4846f2f278b7f2dad632da02c",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -2769,7 +2769,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/standards/bootstrap-review-control-plane.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e",
+        "authority_sha256": "sha256:cf992a7ab13fd5e89da784cce1675177549153542414467512db71955b94d8bb",
         "producer_kind": "authorized-event",
         "generator_path": null,
         "generator_sha256": null
@@ -2777,7 +2777,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:c859119ba6134ff36a9451bbe3ab8c969adebbde0f3f5cb42896ec8c2d68956a",
+        "artifact_sha256": "sha256:42eef6712590866c58dc20ae713e0140d957276d7425761a815f431ec71f1267",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -2788,7 +2788,7 @@
             "field": "$bytes",
             "target_field": "/authoritySourceRef",
             "derivation": "hash-bound-reference",
-            "source_sha256": "sha256:67e04414bf83b77f17cef3b5f2f26f413c2ac1c616c4560604039c914b50a17c"
+            "source_sha256": "sha256:73dd45425f1d4894246dc2e3883f7f42b85daee0bb2fdde684b03a6885cde19d"
           }
         ]
       },
@@ -2817,7 +2817,7 @@
             "field": "$bytes",
             "target_field": "/authoritySourceRef",
             "derivation": "hash-bound-reference",
-            "source_sha256": "sha256:67e04414bf83b77f17cef3b5f2f26f413c2ac1c616c4560604039c914b50a17c"
+            "source_sha256": "sha256:73dd45425f1d4894246dc2e3883f7f42b85daee0bb2fdde684b03a6885cde19d"
           }
         ],
         "invalidates": [
@@ -2909,7 +2909,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/standards/bootstrap-review-control-plane.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e",
+        "authority_sha256": "sha256:cf992a7ab13fd5e89da784cce1675177549153542414467512db71955b94d8bb",
         "producer_kind": "authorized-event",
         "generator_path": null,
         "generator_sha256": null
@@ -2917,7 +2917,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:659172239aca47162f4051f3438a503612c35f578fe9833a202abe7d8a7f3ca1",
+        "artifact_sha256": "sha256:6e5784ea37012e5c991605f2e61a3f58276d5b2b6dc29719f4d44a2400599ea2",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -2928,7 +2928,7 @@
             "field": "$bytes",
             "target_field": "/authorizationEventRef",
             "derivation": "hash-bound-reference",
-            "source_sha256": "sha256:c859119ba6134ff36a9451bbe3ab8c969adebbde0f3f5cb42896ec8c2d68956a"
+            "source_sha256": "sha256:42eef6712590866c58dc20ae713e0140d957276d7425761a815f431ec71f1267"
           }
         ]
       },
@@ -2957,7 +2957,7 @@
             "field": "$bytes",
             "target_field": "/authorizationEventRef",
             "derivation": "hash-bound-reference",
-            "source_sha256": "sha256:c859119ba6134ff36a9451bbe3ab8c969adebbde0f3f5cb42896ec8c2d68956a"
+            "source_sha256": "sha256:42eef6712590866c58dc20ae713e0140d957276d7425761a815f431ec71f1267"
           }
         ],
         "invalidates": [
@@ -3050,7 +3050,7 @@
       "schema_producer_authority": {
         "authority_path": "docs/standards/bootstrap-review-control-plane.md",
         "authority_category": "architecture_authority",
-        "authority_sha256": "sha256:7d580ec42ff2148b3512fd5c683592e99dfd909df33ac5e259361d200401ff0e",
+        "authority_sha256": "sha256:cf992a7ab13fd5e89da784cce1675177549153542414467512db71955b94d8bb",
         "producer_kind": "authorized-event",
         "generator_path": null,
         "generator_sha256": null
@@ -3058,7 +3058,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:67e04414bf83b77f17cef3b5f2f26f413c2ac1c616c4560604039c914b50a17c",
+        "artifact_sha256": "sha256:73dd45425f1d4894246dc2e3883f7f42b85daee0bb2fdde684b03a6885cde19d",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -3213,7 +3213,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:5e39bf358f6534385e4dcd411a97c19ea582d78346d4ac2d7cc6b7e087a88578",
+        "artifact_sha256": "sha256:e0e9583a273c6d722b8837c9136b1d77957cd702f9d53f2d340e4a2a749c6414",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },
@@ -3490,7 +3490,7 @@
       "schema_producer_authority": {
         "authority_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
         "authority_category": "machine_owners",
-        "authority_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
+        "authority_sha256": "sha256:63efc2761d49fd75d30704c27896db81fbb30bd4846f2f278b7f2dad632da02c",
         "producer_kind": "generated-projection",
         "generator_path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/refresh_projections.py",
         "generator_sha256": "sha256:a8c4a9db13e0c30bffa1e9991cf20bb3b38004b8456f3b39cf7757c0475961e5"
@@ -3506,7 +3506,7 @@
         "rules": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
+            "source_sha256": "sha256:63efc2761d49fd75d30704c27896db81fbb30bd4846f2f278b7f2dad632da02c",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -3535,7 +3535,7 @@
         "inputs": [
           {
             "source": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/artifact-proof-authority.v1.json",
-            "source_sha256": "sha256:f1188df247a04ba3ba814e6cc0f144ff3b870ea1c0cd79cb68057cc0e27645b5",
+            "source_sha256": "sha256:63efc2761d49fd75d30704c27896db81fbb30bd4846f2f278b7f2dad632da02c",
             "field": "/artifacts",
             "target_field": "$document",
             "derivation": "exact-projection"
@@ -4212,7 +4212,7 @@
       "immutable_identity": {
         "mode": "pinned-bytes",
         "algorithm": "sha256-bytes",
-        "artifact_sha256": "sha256:108cf84a982024cb45b701b3ad1d3f5ce603a48947ab328e07e7a3f4050a07d6",
+        "artifact_sha256": "sha256:a015e19fb74ca719b4320daf6f0616c3c20ad188240777bcd64e4caf662af860",
         "authority_revision": "sha256:4c807e0e0dd9956c1eecb355825f76789c028b80d26da280ef972d40bf22e202",
         "manifest_path": "schemas/authority-manifest.v1.json"
       },

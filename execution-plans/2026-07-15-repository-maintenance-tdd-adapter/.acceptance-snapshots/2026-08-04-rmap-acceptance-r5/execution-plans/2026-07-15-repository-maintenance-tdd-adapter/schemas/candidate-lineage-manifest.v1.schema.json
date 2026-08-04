@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.candidate-lineage-manifest.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "candidate_run_id", "baseline_identity", "slice_runs", "baseline_bridges", "replay_baseline_ref", "cumulative_fold_hash", "root_hash"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.candidate-lineage-manifest.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "candidate_run_id": {"type": "string", "minLength": 1},
+    "baseline_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["head", "index_tree"],
+      "properties": {
+        "head": {"type": "string", "minLength": 1},
+        "index_tree": {"type": "string", "minLength": 1}
+      }
+    },
+    "slice_runs": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slice_id", "run_id", "previous_slice_id", "previous_slice_run_id", "previous_slice_effect_hash", "run_path", "run_artifact_sha256", "accepted_attempt_fold_hash", "final_event_hash"],
+        "properties": {
+          "slice_id": {"pattern": "^RMAP-S[0-6]$"},
+          "run_id": {"type": "string", "minLength": 1},
+          "previous_slice_id": {"type": ["string", "null"], "pattern": "^RMAP-S[0-6]$"},
+          "previous_slice_run_id": {"type": ["string", "null"]},
+          "previous_slice_effect_hash": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
+          "run_path": {"type": "string", "minLength": 1},
+          "run_artifact_sha256": {"pattern": "^sha256:[0-9a-f]{64}$"},
+          "accepted_attempt_fold_hash": {"pattern": "^sha256:[0-9a-f]{64}$"},
+          "final_event_hash": {"pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "baseline_bridges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from_slice_id", "to_slice_id", "bridge_path", "bridge_sha256"],
+        "properties": {
+          "from_slice_id": {"pattern": "^RMAP-S[0-5]$"},
+          "to_slice_id": {"pattern": "^RMAP-S[1-6]$"},
+          "bridge_path": {"type": "string", "minLength": 1},
+          "bridge_sha256": {"pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "replay_baseline_ref": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"pattern": "^sha256:[0-9a-f]{64}$"}}
+    },
+    "cumulative_fold_hash": {"pattern": "^sha256:[0-9a-f]{64}$"},
+    "root_hash": {"pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

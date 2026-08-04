@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.candidate-baseline-bridge.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "from_slice_id", "to_slice_id", "from_baseline_hash", "to_baseline_hash", "transition_files", "transition_hash", "authorizes"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.candidate-baseline-bridge.v1"},
+    "from_slice_id": {"pattern": "^RMAP-S[0-5]$"},
+    "to_slice_id": {"pattern": "^RMAP-S[1-6]$"},
+    "from_baseline_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "to_baseline_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "transition_files": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "before_sha256", "after_sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "before_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}, "after_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}}}},
+    "transition_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "authorizes": {"const": []}
+  }
+}

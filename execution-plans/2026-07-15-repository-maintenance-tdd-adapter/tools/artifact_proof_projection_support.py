@@ -48,6 +48,17 @@ DIMENSIONS = {
     "recovery_supersession",
     "consumer_authorization_boundary",
 }
+GENERATED_ACCEPTANCE_DIRECTORIES = {
+    ".acceptance-snapshots", "acceptance-inputs", "acceptance-runs",
+}
+
+
+def is_generated_acceptance_artifact(relative: Path) -> bool:
+    if relative.parts and relative.parts[0] in GENERATED_ACCEPTANCE_DIRECTORIES:
+        return True
+    return relative.name.startswith((
+        "acceptance-run-request.", "knowledge-context.refactor-acceptance.",
+    ))
 DIMENSION_RULES = {
     "schema_producer_authority": "RMAP-ARTIFACT-PROOF-PRODUCER",
     "immutable_identity": "RMAP-ARTIFACT-PROOF-IDENTITY",
@@ -197,7 +208,10 @@ def build_predicate_artifact_closure(
     plan_files = {
         path.relative_to(repository_root).as_posix()
         for path in plan_root.rglob("*")
-        if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
+        if path.is_file()
+        and "__pycache__" not in path.parts
+        and path.suffix != ".pyc"
+        and not is_generated_acceptance_artifact(path.relative_to(plan_root))
     }
     records = []
     for relative in sorted(members, key=str.casefold):
@@ -339,4 +353,3 @@ def validate_predicate_artifact_closure(
         if item.get("authorizes") != [] or item.get("does_not_authorize") != DOES_NOT_AUTHORIZE:
             return [_finding("RMAP-ARTIFACT-PROOF-CONSUMER", relative, "static closure member gained runtime authority")]
     return []
-

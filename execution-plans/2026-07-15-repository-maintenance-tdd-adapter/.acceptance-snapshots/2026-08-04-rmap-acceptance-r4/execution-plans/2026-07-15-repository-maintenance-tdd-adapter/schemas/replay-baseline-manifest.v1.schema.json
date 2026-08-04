@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.replay-baseline-manifest.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "source_mismatch_ref", "source_mismatch_sha256", "paths", "authorizes", "does_not_authorize", "root_hash"],
+  "properties": {
+    "schema_version": {"const": "jimuyun.replay-baseline-manifest.v1"},
+    "plan_id": {"const": "repository-maintenance-tdd-adapter"},
+    "source_mismatch_ref": {"type": "string", "minLength": 1},
+    "source_mismatch_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "paths": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["path", "candidate_change"], "properties": {"path": {"type": "string", "minLength": 1}, "candidate_change": {"type": "object", "additionalProperties": false, "required": ["change_type", "baseline_path", "candidate_path", "before_sha256", "after_sha256"], "properties": {"change_type": {"enum": ["add", "modify", "delete"]}, "baseline_path": {"type": ["string", "null"]}, "candidate_path": {"type": ["string", "null"]}, "before_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}, "after_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}}}}}},
+    "authorizes": {"const": []},
+    "does_not_authorize": {"const": ["slice-ready", "implementation-candidate", "implementation-accepted"]},
+    "root_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

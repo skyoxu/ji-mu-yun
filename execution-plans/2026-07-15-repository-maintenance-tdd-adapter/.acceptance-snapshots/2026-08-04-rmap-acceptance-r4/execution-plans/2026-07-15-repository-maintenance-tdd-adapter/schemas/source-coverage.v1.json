@@ -1,0 +1,324 @@
+{
+  "schema_version": "rmap.source-coverage.v1",
+  "sources": [
+    {
+      "source_id": "agentbuild",
+      "path": "../../agentbuild.txt",
+      "sha256": "sha256:1eff0054ca233d70ef00a8b5883f748a8e466e454fc9ff8f8f07a4d4f9dd8807",
+      "sections": [
+        {
+          "id": "AGENT-SRC-I",
+          "lines": "1-70",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-005",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-020",
+            "RMAP-024"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-II",
+          "lines": "74-199",
+          "requirements": [
+            "RMAP-002",
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-006",
+            "RMAP-013",
+            "RMAP-017",
+            "RMAP-019",
+            "RMAP-021",
+            "RMAP-022"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-III",
+          "lines": "203-221",
+          "requirements": [
+            "RMAP-005",
+            "RMAP-006",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-024"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-IV",
+          "lines": "225-360",
+          "requirements": [
+            "RMAP-004",
+            "RMAP-006",
+            "RMAP-007",
+            "RMAP-008",
+            "RMAP-009",
+            "RMAP-010",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-021",
+            "RMAP-023",
+            "RMAP-025"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-V",
+          "lines": "364-416",
+          "requirements": [
+            "RMAP-005",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-019",
+            "RMAP-024",
+            "RMAP-026"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-VI",
+          "lines": "420-432",
+          "requirements": [
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-007",
+            "RMAP-008",
+            "RMAP-009",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-018"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-VII",
+          "lines": "436-464",
+          "requirements": [
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-006",
+            "RMAP-007",
+            "RMAP-008",
+            "RMAP-009",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-017",
+            "RMAP-018",
+            "RMAP-020",
+            "RMAP-023"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-VIII",
+          "lines": "468-513",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-006",
+            "RMAP-010",
+            "RMAP-013",
+            "RMAP-017",
+            "RMAP-021",
+            "RMAP-022",
+            "RMAP-023",
+            "RMAP-024"
+          ]
+        },
+        {
+          "id": "AGENT-SRC-IX",
+          "lines": "517-597",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-006",
+            "RMAP-007",
+            "RMAP-008",
+            "RMAP-009",
+            "RMAP-010",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-017",
+            "RMAP-018",
+            "RMAP-019",
+            "RMAP-021",
+            "RMAP-022",
+            "RMAP-023",
+            "RMAP-024"
+          ]
+        }
+      ]
+    },
+    {
+      "source_id": "clarification-projection",
+      "path": "schemas/clarification-decisions.v1.json",
+      "sha256": "sha256:43cbafb22f8f2350928b8a294a23ab41bb170b3f8775b82c78a27aac57ee8d88",
+      "sections": [
+        {
+          "id": "CREATE-CQ-001-005",
+          "lines": "creation:CQ-001..CQ-005",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-003",
+            "RMAP-005",
+            "RMAP-011",
+            "RMAP-012",
+            "RMAP-017",
+            "RMAP-019",
+            "RMAP-024"
+          ]
+        },
+        {
+          "id": "CREATE-CQ-006-012",
+          "lines": "creation:CQ-006..CQ-012",
+          "requirements": [
+            "RMAP-004",
+            "RMAP-005",
+            "RMAP-010",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-017",
+            "RMAP-020",
+            "RMAP-022",
+            "RMAP-023"
+          ]
+        },
+        {
+          "id": "CREATE-CQ-013-017",
+          "lines": "creation:CQ-013..CQ-017",
+          "requirements": [
+            "RMAP-003",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-017",
+            "RMAP-021"
+          ]
+        },
+        {
+          "id": "REPAIR-CQ-001-005",
+          "lines": "repair:CQ-001..CQ-005",
+          "requirements": [
+            "RMAP-003",
+            "RMAP-004",
+            "RMAP-006",
+            "RMAP-007",
+            "RMAP-010",
+            "RMAP-013",
+            "RMAP-014",
+            "RMAP-016",
+            "RMAP-017",
+            "RMAP-018",
+            "RMAP-021",
+            "RMAP-023"
+          ]
+        },
+        {
+          "id": "REPAIR-20260717-CQ-001-007",
+          "lines": "repair-20260717:CQ-001..CQ-007",
+          "requirements": [
+            "RMAP-005",
+            "RMAP-010",
+            "RMAP-014",
+            "RMAP-015",
+            "RMAP-021",
+            "RMAP-024",
+            "RMAP-025",
+            "RMAP-026"
+          ]
+        },
+        {
+          "id": "REPAIR-20260717-999-CQ-001-007",
+          "lines": "repair-20260717-999:CQ-001..CQ-007",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-010",
+            "RMAP-012",
+            "RMAP-014",
+            "RMAP-016",
+            "RMAP-020",
+            "RMAP-021",
+            "RMAP-023",
+            "RMAP-026"
+          ]
+        },
+        {
+          "id": "REPAIR-20260717-1200-CQ-001-005",
+          "lines": "repair-20260717-1200:CQ-001..CQ-005",
+          "requirements": [
+            "RMAP-001",
+            "RMAP-002",
+            "RMAP-014",
+            "RMAP-016"
+          ]
+        },
+        {
+          "id": "REPAIR-20260717-1300-CQ-001-005",
+          "lines": "repair-20260717-1300:CQ-001..CQ-005",
+          "requirements": [
+            "RMAP-012",
+            "RMAP-014",
+            "RMAP-026",
+            "RMAP-027"
+          ]
+        },
+        {
+          "id": "REPAIR-20260718-1500-CQ-001-005",
+          "lines": "repair-20260718-1500:CQ-001..CQ-005",
+          "requirements": [
+            "RMAP-004",
+            "RMAP-012",
+            "RMAP-015",
+            "RMAP-016",
+            "RMAP-018",
+            "RMAP-021",
+            "RMAP-027"
+          ]
+        },
+        {
+          "id": "REPAIR-20260718-1600-CLOSURE",
+          "lines": "repair-20260718-1600:RMAP-ARTIFACT-PROOF-CLOSURE",
+          "requirements": [
+            "RMAP-027"
+          ]
+        },
+        {
+          "id": "REPAIR-20260718-1700-EXTERNAL-ROOT-CLOSURE",
+          "lines": "repair-20260718-1700:RMAP-ARTIFACT-PROOF-EXTERNAL-ROOT-CLOSURE",
+          "requirements": [
+            "RMAP-027"
+          ]
+        },
+        {
+          "id": "REPAIR-20260722-PLAN-LIFECYCLE",
+          "lines": "repair-20260722-lifecycle:RMAP-PLAN-LIFECYCLE-PREIMPLEMENTATION..RMAP-PLAN-LIFECYCLE-COMPLETION",
+          "requirements": [
+            "RMAP-028",
+            "RMAP-029"
+          ]
+        }
+      ]
+    }
+  ]
+}
