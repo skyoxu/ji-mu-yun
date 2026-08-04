@@ -1,41 +1,41 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:9f5894dc72160a94bee061357bf13f2c0637b0c6fd743f711b54bd3616b60df8",
-  "canonical_context_sha256": "sha256:4368e3865a198fa8850b4344cc1d27b491688d5afdbf4a8b9b448a706c125e90",
-  "request_sha256": "sha256:8703e397b1591ce14e84f041aace019b1d53277c556aaf7d1178762a70d6a651",
-  "result_sha256": "sha256:e17dd3e2f9c092eaf378fd75aa01b9fc5c9d234d6aca08a26c33570c0a09d425",
+  "context_sha256": "sha256:fd47b86e122a634f5aa489609a74ae9befb85c74e6488d59de35d9b5045096df",
+  "canonical_context_sha256": "sha256:723b4e931a5f1a53b45e542bd5060c6198312276d9a1a5bead6de0a1f7e5a945",
+  "request_sha256": "sha256:6d7b15d25622507b63811f4629571d8903d786dbef4822f2401a2392e66ecd92",
+  "result_sha256": "sha256:72d020843f175fc2c0c98173e217e68e94fb5990d9b3836d6f78d9af36b588ac",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "06bdf5e50ff41ab848b4c2dfb62b4c70cfd0becd"
+    "commit": "990732dadadbeeee35418588acfcf91a420386e0"
   },
-  "source_snapshot_id": "sha256:caa6ebcc3481b4ea48e663f659e738e33aed02260b9859203aeed5d504ca79d5",
+  "source_snapshot_id": "sha256:2c8a4b95bed0d860fd60c5d132a77e4294708d98dfcb24d2ef6b46f244664bfd",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
       "path": ".agents/skills/vdd-execution-plan/SKILL.md",
-      "source_sha256": "283a4c423259a2c315f87786bc3c328680c40dcc2dc2900ec6c1e96f317567b2",
-      "satisfies": [
-        "existing-workflow"
-      ]
-    },
-    {
-      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
-      "source_sha256": "f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167",
+      "source_sha256": "7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72",
       "satisfies": [
         "existing-workflow"
       ]
     },
     {
       "path": "docs/standards/bootstrap-review-control-plane.md",
-      "source_sha256": "363da79a7bf47b8d6112acf11c8423180e289d5fd8900fe3f3e284f23e912a26",
+      "source_sha256": "8b3ac7c233bdf63cf040270f34aa21427bad062e0bcd625241ec8e9ee262becc",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "source_sha256": "08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06",
       "satisfies": [
         "existing-workflow"
       ]
     },
     {
       "path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
-      "source_sha256": "fd45958417226ba0041b2bcbe7e3d997e6d30cb91632e43eada91df80f2b8186",
+      "source_sha256": "dfcd328ea3a74841cb81271653392c7fdebf5390e2d9173f0184bbfa6a83445e",
       "satisfies": [
         "existing-workflow"
       ]
@@ -49,14 +49,7 @@
     },
     {
       "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
-      "source_sha256": "4fe1d7e28a1c9cb71f463f18d62c8ce9bbf0eb4363160857bfc2618da4269817",
-      "satisfies": [
-        "existing-workflow"
-      ]
-    },
-    {
-      "path": "docs/architecture/ADR_INDEX_PHASE.md",
-      "source_sha256": "a4924e787cce840f730fc38af2b21c070e644f2273a0f1f6fd2510193b8231da",
+      "source_sha256": "0292f716721b0b196ccf6c9d873faab7b75dba8160d141644155482185028170",
       "satisfies": [
         "existing-workflow"
       ]
@@ -76,6 +69,13 @@
       ]
     },
     {
+      "path": "docs/architecture/ADR_INDEX_PHASE.md",
+      "source_sha256": "ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
       "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
       "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
       "satisfies": [
@@ -92,8 +92,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:fd47b86e122a634f5aa489609a74ae9befb85c74e6488d59de35d9b5045096df",
-    "freeze_receipt_path": "knowledge-context.freeze.history/fd47b86e122a634f5aa489609a74ae9befb85c74e6488d59de35d9b5045096df.v1.json",
-    "reason": "repository knowledge publication advanced to current main before renewed Bootstrap plan review"
+    "context_sha256": "sha256:88d50549f14e81d2f2d846d0b8b4471d6bcb7c3a3f40eeb0833868f9de54b854",
+    "freeze_receipt_path": "knowledge-context.freeze.history/88d50549f14e81d2f2d846d0b8b4471d6bcb7c3a3f40eeb0833868f9de54b854.v1.json",
+    "reason": "Bootstrap control-plane commit advanced main and required a freshly published main-bound knowledge context."
   }
 }
