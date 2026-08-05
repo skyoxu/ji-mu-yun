@@ -47,10 +47,18 @@ guess scope, revisions, changed paths, commands, or acceptance actions. If a
 required source is missing or ambiguous, report `prerequisite_blocked` with the
 missing artifacts and stop before `start-or-resume`.
 
-Create the knowledge context only through the canonical Locator. If it returns
-`blocked`, including `catalog_stale`, route to `maintain-knowledge-base` and
-stop this Acceptance attempt until a fresh context succeeds. Never hand-author
-candidate selections, accept an old context, or bypass Locator freshness.
+Create the knowledge context only through the canonical Locator and bind the
+adapter to exactly one explicit `--target-plan`. If it returns `catalog_stale`,
+the adapter emits a hash-bound `knowledge-maintenance-required` route with
+`automatic_publication_allowed=false`, `authorizes=[]`, and stops. This Skill
+must not invoke publication automatically; a maintainer must explicitly enter
+`maintain-knowledge-base` and create a publication request. Other blocked
+knowledge failures route to `knowledge-context-repair-required`. Never
+hand-author candidate selections, accept an old context, bypass Locator
+freshness, or write knowledge artifacts outside the explicit target plan. The
+adapter persists the route append-only under
+`<target-plan>/knowledge-context-routes/<hash>.json`; maintenance must bind that
+exact route before catalog-stale publication.
 
 Create or resume the target-owned append-only run with the canonical run-input
 request hash that `prepare-run` will publish as `inputHash`, plus the
@@ -350,6 +358,7 @@ through the canonical Locator:
 ```text
 py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py \
   --repository-root <repo> --request-id <id> --query <query> \
+  --target-plan <execution-plans/target> \
   --required-module acceptance-scope \
   --accept <candidate-path>=acceptance-scope \
   --output <target-plan>/knowledge-context.refactor-acceptance.v1.json

@@ -23,7 +23,129 @@ from _knowledge_catalog_builder import build_layers
 from _knowledge_locator_core import verify_current_publication
 
 
+def publication_authorization() -> dict:
+    return {
+        "request_id": "request-1",
+        "caller": "maintain-knowledge-base",
+        "trigger": "operator-requested",
+        "target_plan": "execution-plans/example",
+        "request_sha256": "sha256:" + "2" * 64,
+        "source_route": None,
+    }
+
+
+def publication_authorization_token() -> publication._PublicationAuthorization:
+    return publication._PublicationAuthorization(publication_authorization())
+
+
 class KnowledgePublicationTests(unittest.TestCase):
+    def test_publish_bundle_rejects_missing_authorization_before_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with self.assertRaisesRegex(ValueError, "knowledge_publication_request_required"):
+                publication._publish_bundle(
+                    root,
+                    main_commit="a" * 40,
+                    layer_bytes={name: b"{}\n" for name in publication.LAYER_PATHS},
+                    input_bytes={name: b"{}\n" for name in publication.INPUT_PATHS},
+                    report_bytes=b"{}\n",
+                    report={"snapshot": {"snapshot_id": "sha256:" + "1" * 64}, "policy_revision": "p", "summary": {}},
+                )
+            self.assertFalse((root / "knowledge/indexes/current.json").exists())
+
+    def test_publish_requires_explicit_maintainer_request(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            result = publication.run(root, publish=True, repeat=1)
+            self.assertEqual("blocked", result["status"])
+            self.assertEqual("authorize-publication", result["phase"])
+            self.assertEqual("knowledge_publication_request_required", result["error"])
+
+    def test_publication_request_is_main_bound_and_maintainer_owned(self) -> None:
+        request = {
+            "schema_version": "jimuyun.knowledge-publication-request.v1",
+            "request_id": "request-1",
+            "caller": "maintain-knowledge-base",
+            "trigger": "operator-requested",
+            "target_plan": "execution-plans/example",
+            "main_commit": "a" * 40,
+            "automatic": False,
+            "maintainer_confirmation": True,
+            "recorded_at": "2026-08-05T00:00:00+00:00",
+            "authorizes": ["knowledge-publication"],
+            "source_route": None,
+        }
+        summary = publication._validate_publication_request(request, expected_main="a" * 40)
+        self.assertEqual("request-1", summary["request_id"])
+        self.assertTrue(summary["request_sha256"].startswith("sha256:"))
+        for field, value in (("caller", "refactor-acceptance"), ("automatic", True), ("main_commit", "b" * 40)):
+            changed = {**request, field: value}
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                publication._validate_publication_request(changed, expected_main="a" * 40)
+        with self.assertRaisesRegex(ValueError, "target_invalid"):
+            publication._validate_publication_request({**request, "target_plan": "execution-plans\\example"}, expected_main="a" * 40)
+        with self.assertRaisesRegex(ValueError, "target_invalid"):
+            publication._validate_publication_request({**request, "target_plan": "execution-plans/.."}, expected_main="a" * 40)
+
+    def test_publication_request_file_must_be_in_append_only_log_namespace(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with self.assertRaisesRegex(ValueError, "path_invalid"):
+                publication._load_publication_request(root, Path("request.json"), expected_main="a" * 40)
+
+    def test_publication_request_target_must_exist_at_pinned_main(self) -> None:
+        request = {
+            "schema_version": "jimuyun.knowledge-publication-request.v1", "request_id": "r",
+            "caller": "maintain-knowledge-base", "trigger": "operator-requested",
+            "target_plan": "execution-plans/missing", "main_commit": "a" * 40,
+            "automatic": False, "maintainer_confirmation": True,
+            "recorded_at": "2026-08-05T00:00:00+00:00", "authorizes": ["knowledge-publication"],
+            "source_route": None,
+        }
+        with tempfile.TemporaryDirectory() as temporary, mock.patch.object(publication, "_main_blob", side_effect=ValueError("missing")):
+            with self.assertRaisesRegex(ValueError, "target_invalid"):
+                publication._validate_publication_request(request, expected_main="a" * 40, repository_root=Path(temporary))
+
+    def test_catalog_stale_request_binds_verified_acceptance_route(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = "execution-plans/example"
+            route_body = {
+                "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+                "status": "blocked", "failure_code": "catalog_stale",
+                "next_action": "knowledge-maintenance-required", "target_plan": target,
+                "snapshot": {"ref": "refs/heads/main", "commit": "b" * 40},
+                "request_sha256": "sha256:" + "3" * 64, "result_sha256": "sha256:" + "4" * 64,
+                "automatic_publication_allowed": False,
+                "requires_explicit_maintainer_confirmation": True, "authorizes": [],
+            }
+            route_seed = publication.prefixed_sha256(publication.canonical_bytes(route_body)).removeprefix("sha256:")
+            route_relative = Path(target) / "knowledge-context-routes" / f"{route_seed}.json"
+            route_body["route_output"] = route_relative.as_posix()
+            route_body["route_sha256"] = publication.prefixed_sha256(publication.canonical_bytes(route_body))
+            route_path = root / route_relative
+            route_path.parent.mkdir(parents=True)
+            route_path.write_text(json.dumps(route_body), encoding="utf-8")
+            request = {
+                "schema_version": "jimuyun.knowledge-publication-request.v1", "request_id": "r",
+                "caller": "maintain-knowledge-base", "trigger": "catalog-stale-maintenance",
+                "target_plan": target, "main_commit": "a" * 40,
+                "automatic": False, "maintainer_confirmation": True,
+                "recorded_at": "2026-08-05T00:00:00+00:00", "authorizes": ["knowledge-publication"],
+                "source_route": {"path": route_relative.as_posix(), "sha256": route_body["route_sha256"]},
+            }
+            request_relative = Path("logs/knowledge-context/publication-requests/request.json")
+            request_path = root / request_relative
+            request_path.parent.mkdir(parents=True)
+            request_path.write_text(json.dumps(request), encoding="utf-8")
+            with mock.patch.object(publication, "_main_blob", return_value=b"# plan\n"):
+                authorization = publication._load_publication_request(root, request_relative, expected_main="a" * 40)
+                self.assertEqual(request["source_route"], authorization.summary["source_route"])
+                route_body["failure_code"] = "other"
+                route_path.write_text(json.dumps(route_body), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "route_invalid"):
+                    publication._load_publication_request(root, request_relative, expected_main="a" * 40)
+
     @classmethod
     def setUpClass(cls) -> None:
         policy = json.loads((REPOSITORY_ROOT / publication.INPUT_PATHS["policy"]).read_text(encoding="utf-8"))
@@ -95,15 +217,18 @@ class KnowledgePublicationTests(unittest.TestCase):
                 target = root / path
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(input_bytes[name])
+            request_summary = publication_authorization()
             with mock.patch.object(publication, "_main_commit", return_value="a" * 40), mock.patch.object(publication, "_locator_smoke"):
-                publication._publish_bundle(
+                manifest, _pointer = publication._publish_bundle(
                     root,
                     main_commit="a" * 40,
                     layer_bytes=layer_bytes,
                     input_bytes=input_bytes,
                     report_bytes=b"{}\n",
                     report=report,
+                    publication_authorization=publication._PublicationAuthorization(request_summary),
                 )
+            self.assertEqual(request_summary, manifest["publication_request"])
             self.assertTrue(
                 verify_current_publication(
                     root,
@@ -132,7 +257,7 @@ class KnowledgePublicationTests(unittest.TestCase):
             (index_root / "current.json").write_bytes(current)
             (index_root / "last-known-good.json").write_bytes(last_known_good)
             (index_root / "publication.lock").write_text("{}\n", encoding="utf-8", newline="\n")
-            result = publication.run(root, publish=True, repeat=1)
+            result = publication.run(root, publish=True, repeat=1, publication_request=Path("request-present"))
             self.assertEqual("blocked", result["status"])
             self.assertEqual("knowledge_publication_lock_conflict", result["error"])
             self.assertEqual(current, (index_root / "current.json").read_bytes())
@@ -198,6 +323,7 @@ class KnowledgePublicationTests(unittest.TestCase):
                     input_bytes=input_bytes,
                     report_bytes=b"{}\n",
                     report=report,
+                    publication_authorization=publication_authorization_token(),
                 )
             manifest, payloads = publication._generation_payloads(root, pointer)
             self.assertEqual(pointer["generation_id"], manifest["generation_id"])
@@ -296,7 +422,7 @@ class KnowledgePublicationTests(unittest.TestCase):
             report = {"snapshot": {"snapshot_id": "sha256:" + "1" * 64}, "policy_revision": "policy-v1", "summary": {"status": "passed"}}
             with mock.patch.object(publication, "_main_commit", return_value="a" * 40), mock.patch.object(publication, "_atomic_bytes", side_effect=fail_lkg):
                 with self.assertRaisesRegex(OSError, "injected lkg"):
-                    publication._publish_bundle(root, main_commit="a" * 40, layer_bytes=layer_bytes, input_bytes=input_bytes, report_bytes=b"{}\n", report=report)
+                    publication._publish_bundle(root, main_commit="a" * 40, layer_bytes=layer_bytes, input_bytes=input_bytes, report_bytes=b"{}\n", report=report, publication_authorization=publication_authorization_token())
             for path in tracked:
                 self.assertEqual(b"before\n", path.read_bytes())
 
@@ -318,7 +444,7 @@ class KnowledgePublicationTests(unittest.TestCase):
 
             report = {"snapshot": {"snapshot_id": "sha256:" + "1" * 64}, "policy_revision": "policy-v1", "summary": {"status": "passed"}}
             with mock.patch.object(publication, "_main_commit", return_value="a" * 40), mock.patch.object(publication, "_atomic_bytes", side_effect=record), mock.patch.object(publication, "verify_current_publication", return_value=True), mock.patch.object(publication, "_locator_smoke"):
-                publication._publish_bundle(root, main_commit="a" * 40, layer_bytes=layer_bytes, input_bytes=input_bytes, report_bytes=b"{}\n", report=report)
+                publication._publish_bundle(root, main_commit="a" * 40, layer_bytes=layer_bytes, input_bytes=input_bytes, report_bytes=b"{}\n", report=report, publication_authorization=publication_authorization_token())
             current = root / "knowledge/indexes/current.json"
             self.assertEqual(current, writes[-1])
 

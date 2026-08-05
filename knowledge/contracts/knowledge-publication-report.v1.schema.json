@@ -12,6 +12,32 @@
     "main_commit": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
     "recorded_at": {"type": "string", "format": "date-time"},
     "evaluation_report_path": {"type": ["string", "null"]},
-    "evaluation_report_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}
+    "evaluation_report_sha256": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
+    "publication_request": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["request_id", "caller", "trigger", "target_plan", "request_sha256", "source_route"],
+      "properties": {
+        "request_id": {"type": "string", "minLength": 1},
+        "caller": {"const": "maintain-knowledge-base"},
+        "trigger": {"enum": ["operator-requested", "catalog-stale-maintenance"]},
+        "target_plan": {"type": "string", "pattern": "^execution-plans/(?!\\.\\.?$)[^/\\\\]+$"},
+        "request_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "source_route": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "sha256"],
+              "properties": {
+                "path": {"type": "string", "minLength": 1},
+                "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+              }
+            }
+          ]
+        }
+      }
+    }
   }
 }

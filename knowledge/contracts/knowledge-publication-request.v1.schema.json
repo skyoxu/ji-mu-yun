@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.knowledge-publication-request.v1",
+  "title": "Knowledge publication request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "caller",
+    "trigger",
+    "target_plan",
+    "main_commit",
+    "automatic",
+    "maintainer_confirmation",
+    "recorded_at",
+    "authorizes",
+    "source_route"
+  ],
+  "properties": {
+    "schema_version": {"const": "jimuyun.knowledge-publication-request.v1"},
+    "request_id": {"type": "string", "minLength": 1},
+    "caller": {"const": "maintain-knowledge-base"},
+    "trigger": {"enum": ["operator-requested", "catalog-stale-maintenance"]},
+    "target_plan": {"type": "string", "pattern": "^execution-plans/(?!\\.\\.?$)[^/\\\\]+$"},
+    "main_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "automatic": {"const": false},
+    "maintainer_confirmation": {"const": true},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "authorizes": {"const": ["knowledge-publication"]},
+    "source_route": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": {"type": "string", "pattern": "^execution-plans/[^/]+/knowledge-context-routes/[0-9a-f]{64}\\.json$"},
+            "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"trigger": {"const": "catalog-stale-maintenance"}}},
+      "then": {"properties": {"source_route": {"type": "object"}}},
+      "else": {"properties": {"source_route": {"type": "null"}}}
+    }
+  ]
+}

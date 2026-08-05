@@ -57,6 +57,7 @@ class RefactorAcceptanceKnowledgeContextTests(unittest.TestCase):
                 "prepare", "--repository-root", str(root), "--request-id", "request-1",
                 "--query", "acceptance scope", "--max-candidates", "1",
                 "--required-module", "acceptance-scope",
+                "--target-plan", "execution-plans/plan",
                 "--accept", "AGENTS.md=acceptance-scope", "--output", "execution-plans/plan/knowledge-context.json",
             ]
             with mock.patch.object(module.subprocess, "run", side_effect=fake_run), \
@@ -75,7 +76,8 @@ class RefactorAcceptanceKnowledgeContextTests(unittest.TestCase):
         module = _load("prepare_knowledge_context.py")
         with mock.patch.object(sys, "argv", [
             "prepare", "--request-id", "request-1", "--query", "scope",
-            "--max-candidates", "0", "--output", "execution-plans/plan/context.json",
+            "--max-candidates", "0", "--target-plan", "execution-plans/plan",
+            "--output", "execution-plans/plan/context.json",
         ]):
             with self.assertRaisesRegex(SystemExit, "between 1 and 12"):
                 module.main()
@@ -100,16 +102,51 @@ class RefactorAcceptanceKnowledgeContextTests(unittest.TestCase):
         self.assertIn('prepare.add_argument("--knowledge-context", required=True', source)
         self.assertNotIn("knowledge_locator.py", source)
 
-    def test_prepare_output_must_be_repository_relative_under_execution_plans(self) -> None:
+    def test_prepare_output_must_be_bound_to_explicit_target_plan(self) -> None:
         module = _load("prepare_knowledge_context.py")
         root = Path("C:/repository").resolve()
-        for raw in (Path("C:/outside/context.json"), Path("../context.json"), Path("docs/context.json")):
+        target = module._target_plan_path(root, Path("execution-plans/plan"))
+        for raw in (
+            Path("C:/outside/context.json"), Path("../context.json"), Path("docs/context.json"),
+            Path("execution-plans/other/context.json"),
+        ):
             with self.subTest(raw=str(raw)), self.assertRaises(ValueError):
-                module._output_path(root, raw)
+                module._output_path(root, raw, target)
         self.assertEqual(
             (root / "execution-plans/plan/context.json").resolve(),
-            module._output_path(root, Path("execution-plans/plan/context.json")),
+            module._output_path(root, Path("execution-plans/plan/context.json"), target),
         )
+
+    def test_catalog_stale_returns_typed_maintenance_route_without_writing_context(self) -> None:
+        module = _load("prepare_knowledge_context.py")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
+            catalog.parent.mkdir(parents=True)
+            catalog.write_text(json.dumps({"source_snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}}), encoding="utf-8")
+            policy = root / "knowledge/policies/consumer-policies.v2.json"
+            policy.parent.mkdir(parents=True)
+            policy.write_text(json.dumps({"policy_revision": "test-policy-v2"}), encoding="utf-8")
+            locator = {"status": "matched", "candidates": [], "source_snapshot_id": "sha256:" + "b" * 64}
+            argv = [
+                "prepare", "--repository-root", str(root), "--request-id", "request-1",
+                "--query", "scope", "--target-plan", "execution-plans/plan",
+                "--output", "execution-plans/plan/knowledge-context.json",
+            ]
+            with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(locator), stderr="")), \
+                 mock.patch.object(module, "validate_context", return_value="catalog_stale"), \
+                 mock.patch.object(sys, "argv", argv), mock.patch("builtins.print") as printed:
+                self.assertEqual(2, module.main())
+            route = json.loads(printed.call_args.args[0])
+            self.assertEqual("knowledge-maintenance-required", route["next_action"])
+            self.assertFalse(route["automatic_publication_allowed"])
+            self.assertTrue(route["requires_explicit_maintainer_confirmation"])
+            self.assertEqual([], route["authorizes"])
+            self.assertTrue(route["route_sha256"].startswith("sha256:"))
+            route_output = root / route["route_output"]
+            self.assertTrue(route_output.is_file())
+            self.assertEqual(route, json.loads(route_output.read_text(encoding="utf-8")))
+            self.assertFalse((root / "execution-plans/plan/knowledge-context.json").exists())
 
 
 if __name__ == "__main__":

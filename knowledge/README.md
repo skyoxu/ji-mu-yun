@@ -2,7 +2,7 @@
 
 The repository knowledge base is a derived, main-pinned location service. It
 does not replace repository source, Accepted ADRs, runtime facts, or current
-acceptance evidence. ADR-0044 and ADR-0048 govern this boundary.
+acceptance evidence. ADR-0044, ADR-0048, and ADR-0057 govern this boundary.
 
 ## Three Layers
 
@@ -44,9 +44,13 @@ verifies every returned read-set hash.
   CLI, orchestrator, route registry or policy, operations, and freeze point.
 - Each execution-plan directory contributes one discoverable plan module at
   `00-index.md`. The module binds available requirements, implementation
-  contract, authority manifest, plan state, knowledge context, and command
-  registry files. Fixtures, tools, tests, and implementation reports do not
-  become global semantic modules.
+  contract, plan state, and command registry files. Context-bound lifecycle
+  artifacts such as authority manifests and knowledge contexts never enter the
+  global semantic source closure; this prevents catalog-to-plan-to-context
+  recursion. Fixtures, tools, tests, and implementation reports do not become
+  global semantic modules. Versioned top-level plan resources use the highest
+  available numeric version and accept both `requirements-ledger.vN.json` and
+  `requirements.vN.json`.
 - `docs/migration/**` is hard-excluded from snapshots, catalogs, semantic
   retrieval, and targeted maintenance.
 
@@ -54,7 +58,7 @@ verifies every returned read-set hash.
 
 ```powershell
 py -3 -B scripts/python/publish_knowledge_catalog.py --check
-py -3 -B scripts/python/publish_knowledge_catalog.py --publish
+py -3 -B scripts/python/publish_knowledge_catalog.py --publish --publication-request <request>
 py -3 -B scripts/python/publish_knowledge_catalog.py --restore-lkg
 ```
 
@@ -68,6 +72,19 @@ must themselves byte-match that pinned main, so an uncommitted control-plane
 change cannot produce a publishable generation. It never promotes
 dirty-worktree bytes as repository facts. This is a local release gate; no CI
 workflow file is required.
+
+`build_knowledge_catalog.py` is permanently read-only and reports only whether
+the formal layers match a staged build. Formal layer activation is available
+only through the authorized publication CLI.
+
+Publication is never a consumer-side recovery side effect. `--publish` requires
+an append-only request created by `maintain-knowledge-base`, bound to one target
+plan, its hash-verified stale-maintenance route, and the current local main
+commit, with explicit maintainer confirmation. The target plan must exist at
+pinned main.
+Acceptance and VDD stop with typed non-authorizing routes when maintenance is
+required; they may write knowledge artifacts only inside their explicit target
+execution-plan directory.
 
 `--restore-lkg` is an explicit recovery operation. The generation source commit
 must be an ancestor of local `refs/heads/main`; every indexed source and bundled

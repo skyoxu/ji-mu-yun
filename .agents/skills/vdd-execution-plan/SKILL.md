@@ -114,8 +114,10 @@ matches remain explicit and non-authorizing.
 
 Use `scripts/prepare_knowledge_context.py` to create the request and frozen
 Locator result. Its `--accept` arguments are explicit adapter decisions; it
-never promotes a search result automatically. Run `vdd_knowledge_preflight.py`
-on the emitted context before publishing `plan-ready`.
+requires `--target-plan execution-plans/<one-plan>`, rejects output outside
+that exact directory, and never promotes a search result automatically. Run
+`vdd_knowledge_preflight.py` on the emitted context before publishing
+`plan-ready`.
 
 The producer writes no formal context or receipt when preflight is blocked.
 Ready output is restricted to one `execution-plans/<plan>/` directory, stages

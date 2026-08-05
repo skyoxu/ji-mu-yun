@@ -240,6 +240,10 @@ def validate_context(
     snapshot = request.get("snapshot")
     if not isinstance(snapshot, dict) or snapshot.get("ref") != "refs/heads/main" or not isinstance(snapshot.get("commit"), str):
         return "locator_snapshot_invalid"
+    if repository_root is not None and verify_catalog:
+        catalog_error = validate_catalog_freshness(repository_root.resolve())
+        if catalog_error:
+            return catalog_error
     if result.get("status") != "matched":
         return "locator_result_not_matched"
     if any(not isinstance(module, str) or not module for module in required_modules) or len(set(required_modules)) != len(required_modules):
@@ -305,9 +309,6 @@ def validate_context(
         return None
     repository_root = repository_root.resolve()
     if verify_catalog:
-        catalog_error = validate_catalog_freshness(repository_root)
-        if catalog_error:
-            return catalog_error
         catalog = json.loads((repository_root / CATALOG_RELATIVE).read_text(encoding="utf-8"))
         source_snapshot = catalog.get("source_snapshot", {})
         if request.get("snapshot") != {"ref": source_snapshot.get("ref"), "commit": source_snapshot.get("commit")}:

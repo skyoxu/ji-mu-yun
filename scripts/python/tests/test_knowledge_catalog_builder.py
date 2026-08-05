@@ -10,7 +10,7 @@ from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
-from _knowledge_catalog_builder import is_policy_excluded
+from _knowledge_catalog_builder import build_layers, is_policy_excluded, select_versioned_plan_resource
 CATALOG_PATH = REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
 SNAPSHOT_PATH = REPOSITORY_ROOT / "knowledge/snapshots/repository-source-snapshot.v1.json"
 PROJECTION_PATH = REPOSITORY_ROOT / "knowledge/projections/consumer-projections.v1.json"
@@ -18,6 +18,19 @@ BUILDER_PATH = REPOSITORY_ROOT / "scripts/python/build_knowledge_catalog.py"
 
 
 class KnowledgeCatalogBuilderTests(unittest.TestCase):
+    def test_plan_resource_selection_accepts_current_names_and_highest_version(self) -> None:
+        directory = "execution-plans/example"
+        paths = [
+            f"{directory}/requirements.v1.json",
+            f"{directory}/requirements.v2.json",
+            f"{directory}/implementation-contract.v1.json",
+            f"{directory}/implementation-contract.v2.json",
+            f"{directory}/repair/command-registry.v9.json",
+        ]
+        self.assertEqual(f"{directory}/requirements.v2.json", select_versioned_plan_resource(directory, paths, ("requirements-ledger", "requirements")))
+        self.assertEqual(f"{directory}/implementation-contract.v2.json", select_versioned_plan_resource(directory, paths, ("implementation-contract",)))
+        self.assertIsNone(select_versioned_plan_resource(directory, paths, ("command-registry",)))
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
@@ -44,6 +57,16 @@ class KnowledgeCatalogBuilderTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+
+    def test_builder_cli_defaults_to_read_only_check(self) -> None:
+        before = {path: path.read_bytes() for path in (CATALOG_PATH, SNAPSHOT_PATH, PROJECTION_PATH)}
+        completed = subprocess.run(
+            [sys.executable, "-B", str(BUILDER_PATH), "--repository-root", str(REPOSITORY_ROOT)],
+            capture_output=True, text=True, encoding="utf-8", check=False,
+        )
+        self.assertIn(completed.returncode, {0, 2})
+        self.assertNotIn('"status": "generated"', completed.stdout)
+        self.assertEqual(before, {path: path.read_bytes() for path in before})
 
     def test_migration_tree_is_hard_excluded_from_every_layer(self) -> None:
         self.assertFalse(any(item["path"].startswith("docs/migration/") for item in self.snapshot["sources"]))
@@ -107,7 +130,8 @@ class KnowledgeCatalogBuilderTests(unittest.TestCase):
 
     def test_execution_plan_directories_have_one_bounded_module_each(self) -> None:
         plans = [item for item in self.catalog["modules"] if item["kind"] == "execution-plan"]
-        self.assertEqual(7, len(plans))
+        expected_plan_indexes = {item["path"] for item in self.snapshot["sources"] if item["path"].startswith("execution-plans/") and item["path"].endswith("/00-index.md")}
+        self.assertEqual(expected_plan_indexes, {item["source_path"] for item in plans})
         for plan in plans:
             self.assertTrue(plan["source_path"].endswith("/00-index.md"))
             self.assertFalse(any("/fixtures/" in item["path"] or "/tools/" in item["path"] or "/95-" in item["path"] for item in plan["resources"]))
@@ -115,6 +139,18 @@ class KnowledgeCatalogBuilderTests(unittest.TestCase):
         self.assertFalse(any(item["path"].endswith("/knowledge-context.v1.json") for item in self.snapshot["sources"]))
         self.assertEqual("historical", self.modules["plan.2026-07-25-four-domain-knowledge-context-engineering-plan"]["status"])
         self.assertEqual("conditional", self.modules["plan.2026-07-11-phase-frontend-boundary-hardening-execution-plan"]["status"])
+
+    def test_in_memory_plan_layers_exclude_recursive_lifecycle_artifacts(self) -> None:
+        policy = json.loads((REPOSITORY_ROOT / "knowledge/policies/consumer-policies.v2.json").read_text(encoding="utf-8"))
+        exclusions = json.loads((REPOSITORY_ROOT / "knowledge/policies/source-exclusions.v1.json").read_text(encoding="utf-8"))
+        snapshot, catalog, _projections, _legacy = build_layers(
+            REPOSITORY_ROOT, policy=policy, exclusions=exclusions, authority_ref="refs/heads/main"
+        )
+        plan_resources = [item for item in catalog["modules"] if item["kind"] == "execution-plan"]
+        self.assertFalse(any(resource["role"] == "authority-manifest" for plan in plan_resources for resource in plan["resources"]))
+        source_paths = {item["path"] for item in snapshot["sources"]}
+        self.assertFalse(any(path.endswith("/authority-manifest.v1.json") for path in source_paths))
+        self.assertFalse(any("/knowledge-context" in path for path in source_paths))
 
     def test_consumer_projections_are_hash_bound_and_quick_dev_is_empty(self) -> None:
         values = {item["consumer"]: item for item in self.projections["projections"]}

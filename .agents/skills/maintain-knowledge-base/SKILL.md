@@ -25,8 +25,10 @@ promote dirty-worktree bytes as repository facts.
    `provisional` candidate.
 5. Run `scripts/maintain_knowledge.py` with the request, catalog, derived
    output and append-only log root. When it reports a stale catalog snapshot,
-   run `scripts/python/publish_knowledge_catalog.py --check`; publish only with
-   the explicit `--publish` mode after staging passes. The publication CLI,
+   run `scripts/python/publish_knowledge_catalog.py --check`; publish only after
+   an explicit maintainer confirmation creates an append-only, current-main-
+   bound publication request. Acceptance, VDD, Bootstrap, and Quick Dev cannot
+   create this authority or invoke publication implicitly. The publication CLI,
    not this Skill, owns the single-writer lock, layer composition and hash
    checks, 108-query evaluation, adapter-decision gate, immutable generation,
    atomic current/LKG pointers, and failed-build evidence. `docs/migration/**`
@@ -54,14 +56,25 @@ under `logs/knowledge-context/`.
 
 ```powershell
 py -3 -B scripts/python/publish_knowledge_catalog.py --check
-py -3 -B scripts/python/publish_knowledge_catalog.py --publish
+py -3 .agents/skills/maintain-knowledge-base/scripts/prepare_publication_request.py `
+  --trigger catalog-stale-maintenance --target-plan execution-plans/<target> `
+  --source-route execution-plans/<target>/knowledge-context-routes/<hash>.json `
+  --output logs/knowledge-context/publication-requests/<request>.json `
+  --ack-maintainer
+py -3 -B scripts/python/publish_knowledge_catalog.py --publish `
+  --publication-request logs/knowledge-context/publication-requests/<request>.json
 py -3 -B scripts/python/publish_knowledge_catalog.py --restore-lkg
 ```
 
 `--check` is the default and never advances `current.json` or
 `last-known-good.json`. A failed check or publication preserves the previous
 LKG and writes append-only failure evidence under `logs/knowledge-context/`.
-Do not call `build_knowledge_catalog.py` as a publication substitute.
+`--publish` fails closed without a request created by the maintainer helper;
+the request binds caller, trigger, one target plan, current main, confirmation,
+publication authority, and the hash-verified Acceptance maintenance route. The
+target plan must exist at pinned main with `00-index.md`; the request summary
+and hash are recorded in the immutable generation. Do not call
+`build_knowledge_catalog.py` as a publication substitute; that CLI is read-only.
 
 `--restore-lkg` is the only recovery mode. It restores the four formal layers
 from the immutable LKG only when that generation still matches local main,

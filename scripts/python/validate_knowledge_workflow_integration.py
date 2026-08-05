@@ -34,6 +34,7 @@ def _declared_checks() -> tuple[tuple[str, list[str]], ...]:
         _command("refactor-acceptance", "-m", "unittest", "discover", "-s", ".agents/skills/run-refactor-implementation-acceptance/tests", "-p", "test_*.py"),
         _command("refactor-acceptance-package", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "validate-package"),
         _command("maintenance", ".agents/skills/maintain-knowledge-base/scripts/test_maintain_knowledge.py"),
+        _command("maintenance-publication-request", "-m", "unittest", "discover", "-s", ".agents/skills/maintain-knowledge-base/tests", "-p", "test_*.py"),
         _command("publication", "-m", "unittest", "scripts.python.tests.test_publish_knowledge_catalog"),
         _command("generation-retention", "-m", "unittest", "scripts.python.tests.test_prune_knowledge_generations"),
         _command("migration", "scripts/python/tests/test_knowledge_workflow_migration.py"),
@@ -68,6 +69,7 @@ def _required_paths(repository_root: Path) -> list[str]:
         "knowledge/contracts/repository-knowledge-catalog.v2.schema.json",
         "knowledge/contracts/knowledge-consumer-projections.v1.schema.json",
         "knowledge/contracts/knowledge-consumer-context.v1.schema.json",
+        "knowledge/contracts/knowledge-publication-request.v1.schema.json",
         "knowledge/contracts/vdd-knowledge-freeze.v1.schema.json",
         "knowledge/contracts/knowledge-generation-retention-policy.v1.schema.json",
         "knowledge/policies/consumer-policies.v2.json",
@@ -90,9 +92,12 @@ def _required_paths(repository_root: Path) -> list[str]:
         ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py",
         ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
         ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+        ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
         ".agents/skills/run-refactor-implementation-acceptance/scripts/package_validation.py",
         ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
         ".agents/skills/maintain-knowledge-base/SKILL.md",
+        ".agents/skills/maintain-knowledge-base/scripts/prepare_publication_request.py",
+        ".agents/skills/maintain-knowledge-base/tests/test_prepare_publication_request.py",
     )
     return [relative for relative in required if not (repository_root / relative).is_file()]
 

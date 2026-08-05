@@ -165,7 +165,7 @@ class VddKnowledgePreflightTests(unittest.TestCase):
             )
             with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(result), stderr="")), \
                  mock.patch.object(module, "_validator", return_value=validator), \
-                 mock.patch.object(sys, "argv", ["prepare", "--repository-root", str(root), "--request-id", "request-1", "--query", "rules", "--required-module", "repository-rules", "--accept", "AGENTS.md=repository-rules", "--output", str(output)]):
+                 mock.patch.object(sys, "argv", ["prepare", "--repository-root", str(root), "--request-id", "request-1", "--query", "rules", "--required-module", "repository-rules", "--accept", "AGENTS.md=repository-rules", "--target-plan", "execution-plans/plan", "--output", str(output)]):
                 self.assertEqual(0, module.main())
                 freeze_path = output.with_name("knowledge-context.freeze.v1.json")
                 freeze_path.unlink()
@@ -197,10 +197,20 @@ class VddKnowledgePreflightTests(unittest.TestCase):
                 validate_context=lambda *_args, **_kwargs: "required_modules_unsatisfied",
                 canonical_hash=lambda value: "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
             )
-            with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(result), stderr="")), mock.patch.object(module, "_validator", return_value=validator), mock.patch.object(sys, "argv", ["prepare", "--repository-root", str(root), "--request-id", "request-1", "--query", "rules", "--required-module", "repository-rules", "--output", str(output)]):
+            with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(result), stderr="")), mock.patch.object(module, "_validator", return_value=validator), mock.patch.object(sys, "argv", ["prepare", "--repository-root", str(root), "--request-id", "request-1", "--query", "rules", "--required-module", "repository-rules", "--target-plan", "execution-plans/plan", "--output", str(output)]):
                 self.assertEqual(2, module.main())
             self.assertFalse(output.exists())
             self.assertFalse(output.with_name("knowledge-context.freeze.v1.json").exists())
+
+    def test_prepare_rejects_output_outside_explicit_target_plan(self) -> None:
+        module = load_prepare()
+        with mock.patch.object(sys, "argv", [
+            "prepare", "--request-id", "request-1", "--query", "rules",
+            "--target-plan", "execution-plans/plan-a",
+            "--output", "execution-plans/plan-b/knowledge-context.v1.json",
+        ]):
+            with self.assertRaisesRegex(SystemExit, "target execution-plan"):
+                module.main()
 
 
 if __name__ == "__main__":

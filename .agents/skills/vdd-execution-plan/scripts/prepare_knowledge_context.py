@@ -68,6 +68,7 @@ def main() -> int:
     parser.add_argument("--query", required=True)
     parser.add_argument("--required-module", action="append", default=[])
     parser.add_argument("--accept", action="append", default=[], help="candidate-path=module[,module]")
+    parser.add_argument("--target-plan", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--replace-stale-context", action="store_true")
     parser.add_argument("--supersede-frozen-context", action="store_true")
@@ -75,6 +76,20 @@ def main() -> int:
     parser.add_argument("--supersession-reason")
     args = parser.parse_args()
     root = args.repository_root.resolve()
+    if args.target_plan.is_absolute() or ".." in args.target_plan.parts:
+        raise SystemExit("--target-plan must be repository-relative")
+    target_plan = (root / args.target_plan).resolve()
+    try:
+        relative_target = target_plan.relative_to(root)
+    except ValueError as exc:
+        raise SystemExit("--target-plan must stay inside the repository") from exc
+    if len(relative_target.parts) != 2 or relative_target.parts[0] != "execution-plans":
+        raise SystemExit("--target-plan must name one direct execution-plan directory")
+    output = (args.output if args.output.is_absolute() else root / args.output).resolve()
+    try:
+        output.relative_to(target_plan)
+    except ValueError as exc:
+        raise SystemExit("VDD knowledge context output must stay inside the target execution-plan") from exc
     validator = _validator(root)
     catalog_path = args.catalog if args.catalog.is_absolute() else root / args.catalog
     canonical_catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
@@ -120,7 +135,6 @@ def main() -> int:
         "failure_code": failure_code,
         "context_sha256": validator.canonical_hash(payload),
     }
-    output = (args.output if args.output.is_absolute() else root / args.output).resolve()
     if output.name != "knowledge-context.v1.json":
         raise SystemExit("VDD knowledge context output must be named knowledge-context.v1.json")
     try:

@@ -36,15 +36,24 @@ def _policy_revision(root: Path) -> str:
     return revision
 
 
-def _output_path(root: Path, raw: Path) -> Path:
+def _target_plan_path(root: Path, raw: Path) -> Path:
+    if raw.is_absolute() or ".." in raw.parts:
+        raise ValueError("target plan must be repository-relative")
+    target = (root / raw).resolve()
+    relative = target.relative_to(root)
+    if len(relative.parts) != 2 or relative.parts[0] != "execution-plans":
+        raise ValueError("target plan must name one direct execution-plans directory")
+    return target
+
+
+def _output_path(root: Path, raw: Path, target_plan: Path) -> Path:
     if raw.is_absolute() or ".." in raw.parts:
         raise ValueError("knowledge context output must be repository-relative")
     output = (root / raw).resolve()
-    execution_root = (root / "execution-plans").resolve()
     try:
-        output.relative_to(execution_root)
+        output.relative_to(target_plan)
     except ValueError as exc:
-        raise ValueError("knowledge context output must stay under execution-plans") from exc
+        raise ValueError("knowledge context output must stay inside the target execution-plan") from exc
     return output
 
 
@@ -56,11 +65,17 @@ def main() -> int:
     parser.add_argument("--max-candidates", type=int, default=12)
     parser.add_argument("--required-module", action="append", default=[])
     parser.add_argument("--accept", action="append", default=[])
+    parser.add_argument("--target-plan", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if not 1 <= args.max_candidates <= 12:
         raise SystemExit("--max-candidates must be between 1 and 12")
     root = args.repository_root.resolve()
+    try:
+        target_plan = _target_plan_path(root, args.target_plan)
+        output = _output_path(root, args.output, target_plan)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     catalog_path = root / "knowledge" / "catalogs" / "repository-knowledge-catalog.v2.json"
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     snapshot = catalog.get("source_snapshot", {})
@@ -127,10 +142,33 @@ def main() -> int:
         "failure_code": failure_code,
         "context_sha256": canonical_hash(payload),
     }
-    try:
-        output = _output_path(root, args.output)
-    except ValueError as exc:
-        raise SystemExit(str(exc)) from exc
+    if failure_code is not None:
+        route = {
+            "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+            "status": "blocked",
+            "failure_code": failure_code,
+            "next_action": "knowledge-maintenance-required" if failure_code == "catalog_stale" else "knowledge-context-repair-required",
+            "target_plan": target_plan.relative_to(root).as_posix(),
+            "snapshot": request["snapshot"],
+            "request_sha256": payload["request_sha256"],
+            "result_sha256": payload["result_sha256"],
+            "automatic_publication_allowed": False,
+            "requires_explicit_maintainer_confirmation": failure_code == "catalog_stale",
+            "authorizes": [],
+        }
+        route_seed = canonical_hash(route).removeprefix("sha256:")
+        route_output = target_plan / "knowledge-context-routes" / f"{route_seed}.json"
+        route["route_output"] = route_output.relative_to(root).as_posix()
+        route["route_sha256"] = canonical_hash(route)
+        route_output.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with route_output.open("x", encoding="utf-8", newline="\n") as stream:
+                stream.write(json.dumps(route, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+        except FileExistsError:
+            if json.loads(route_output.read_text(encoding="utf-8")) != route:
+                raise SystemExit("knowledge maintenance route output is append-only")
+        print(json.dumps(route, sort_keys=True))
+        return 2
     output.parent.mkdir(parents=True, exist_ok=True)
     try:
         with output.open("x", encoding="utf-8", newline="\n") as stream:
@@ -138,7 +176,7 @@ def main() -> int:
     except FileExistsError as exc:
         raise SystemExit("knowledge context output is append-only") from exc
     print(json.dumps({"status": payload["preflight"]["status"], "output": str(output), "authorizes": []}, sort_keys=True))
-    return 0 if failure_code is None else 2
+    return 0
 
 
 if __name__ == "__main__":

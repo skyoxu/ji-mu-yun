@@ -13,6 +13,7 @@ import tempfile
 import time
 import uuid
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
@@ -44,6 +45,7 @@ CONTROL_PATHS = (
 SCHEMA_VERSION = "jimuyun.knowledge-publication-generation.v1"
 POINTER_SCHEMA_VERSION = "jimuyun.knowledge-index-pointer.v2"
 REPORT_SCHEMA_VERSION = "jimuyun.knowledge-publication-report.v1"
+PUBLICATION_REQUEST_SCHEMA_VERSION = "jimuyun.knowledge-publication-request.v1"
 MALFORMED_LOCK_GRACE_SECONDS = 60
 REQUIRED_ARTIFACTS = {*LAYER_PATHS, *INPUT_PATHS, "query_report"}
 EXPECTED_BUNDLE_PATHS = {
@@ -56,6 +58,11 @@ EXPECTED_REPOSITORY_PATHS = {
     **INPUT_PATHS,
     "query_report": Path("logs/knowledge-context"),
 }
+
+
+@dataclass(frozen=True)
+class _PublicationAuthorization:
+    summary: dict[str, Any]
 
 
 def _render(value: Any) -> bytes:
@@ -80,6 +87,133 @@ def _load_json_bytes(payload: bytes, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"{label}_schema_invalid")
     return value
+
+
+def _validate_publication_request(
+    request: dict[str, Any],
+    *,
+    expected_main: str,
+    repository_root: Path | None = None,
+) -> dict[str, Any]:
+    required = {
+        "schema_version", "request_id", "caller", "trigger", "target_plan", "main_commit",
+        "automatic", "maintainer_confirmation", "recorded_at", "authorizes", "source_route",
+    }
+    if set(request) != required or request.get("schema_version") != PUBLICATION_REQUEST_SCHEMA_VERSION:
+        raise ValueError("knowledge_publication_request_schema_invalid")
+    if not isinstance(request.get("request_id"), str) or not request["request_id"]:
+        raise ValueError("knowledge_publication_request_schema_invalid")
+    if request.get("caller") != "maintain-knowledge-base":
+        raise ValueError("knowledge_publication_request_caller_invalid")
+    if request.get("trigger") not in {"operator-requested", "catalog-stale-maintenance"}:
+        raise ValueError("knowledge_publication_request_trigger_invalid")
+    target = request.get("target_plan")
+    target_name = target.removeprefix("execution-plans/") if isinstance(target, str) else ""
+    if (
+        not isinstance(target, str)
+        or "\\" in target
+        or target.count("/") != 1
+        or not target.startswith("execution-plans/")
+        or not target_name
+        or target_name in {".", ".."}
+    ):
+        raise ValueError("knowledge_publication_request_target_invalid")
+    if request.get("main_commit") != expected_main:
+        raise ValueError("knowledge_publication_request_main_mismatch")
+    if request.get("automatic") is not False or request.get("maintainer_confirmation") is not True:
+        raise ValueError("knowledge_publication_request_confirmation_required")
+    if request.get("authorizes") != ["knowledge-publication"]:
+        raise ValueError("knowledge_publication_request_authority_invalid")
+    source_route = request.get("source_route")
+    if request["trigger"] == "catalog-stale-maintenance":
+        route_path = source_route.get("path") if isinstance(source_route, dict) else None
+        expected_prefix = f"{target}/knowledge-context-routes/"
+        if (
+            not isinstance(source_route, dict)
+            or set(source_route) != {"path", "sha256"}
+            or not isinstance(route_path, str)
+            or not route_path.startswith(expected_prefix)
+            or len(Path(route_path).stem) != 64
+            or Path(route_path).suffix != ".json"
+            or any(character not in "0123456789abcdef" for character in Path(route_path).stem)
+            or not _is_sha256(source_route.get("sha256"))
+        ):
+            raise ValueError("knowledge_publication_request_route_invalid")
+    elif source_route is not None:
+        raise ValueError("knowledge_publication_request_route_invalid")
+    recorded_at = request.get("recorded_at")
+    if not isinstance(recorded_at, str):
+        raise ValueError("knowledge_publication_request_recorded_at_invalid")
+    try:
+        parsed = datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("knowledge_publication_request_recorded_at_invalid") from exc
+    if parsed.tzinfo is None:
+        raise ValueError("knowledge_publication_request_recorded_at_invalid")
+    if repository_root is not None:
+        try:
+            _main_blob(repository_root, expected_main, Path(target) / "00-index.md")
+        except ValueError as exc:
+            raise ValueError("knowledge_publication_request_target_invalid") from exc
+        if source_route is not None:
+            _validate_source_route(repository_root, target, source_route)
+    return {
+        "request_id": request["request_id"],
+        "caller": request["caller"],
+        "trigger": request["trigger"],
+        "target_plan": target,
+        "request_sha256": _sha(_render(request)),
+        "source_route": source_route,
+    }
+
+
+def _validate_source_route(repository_root: Path, target_plan: str, summary: dict[str, str]) -> None:
+    raw = Path(summary["path"])
+    if raw.is_absolute() or ".." in raw.parts:
+        raise ValueError("knowledge_publication_request_route_invalid")
+    route_path = (repository_root / raw).resolve()
+    allowed = (repository_root / target_plan / "knowledge-context-routes").resolve()
+    try:
+        route_path.relative_to(allowed)
+        route = _load_json_bytes(route_path.read_bytes(), "publication_route")
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError("knowledge_publication_request_route_invalid") from exc
+    route_without_hash = {key: value for key, value in route.items() if key != "route_sha256"}
+    expected = {
+        "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+        "status": "blocked",
+        "failure_code": "catalog_stale",
+        "next_action": "knowledge-maintenance-required",
+        "target_plan": target_plan,
+        "automatic_publication_allowed": False,
+        "requires_explicit_maintainer_confirmation": True,
+        "authorizes": [],
+        "route_output": raw.as_posix(),
+    }
+    route_hash = prefixed_sha256(canonical_bytes(route_without_hash))
+    if (
+        any(route.get(key) != value for key, value in expected.items())
+        or route.get("route_sha256") != route_hash
+        or summary["sha256"] != route_hash
+    ):
+        raise ValueError("knowledge_publication_request_route_invalid")
+
+
+def _load_publication_request(repository_root: Path, raw: Path, *, expected_main: str) -> _PublicationAuthorization:
+    if raw.is_absolute() or ".." in raw.parts:
+        raise ValueError("knowledge_publication_request_path_invalid")
+    path = (repository_root / raw).resolve()
+    allowed = (repository_root / "logs" / "knowledge-context" / "publication-requests").resolve()
+    try:
+        path.relative_to(allowed)
+    except ValueError as exc:
+        raise ValueError("knowledge_publication_request_path_invalid") from exc
+    if not path.is_file():
+        raise ValueError("knowledge_publication_request_unavailable")
+    request = _load_json_bytes(path.read_bytes(), "publication_request")
+    return _PublicationAuthorization(
+        _validate_publication_request(request, expected_main=expected_main, repository_root=repository_root)
+    )
 
 
 def _git(repository_root: Path, *arguments: str) -> subprocess.CompletedProcess[bytes]:
@@ -768,6 +902,7 @@ def _write_failure(
     error: str,
     main_commit: str | None,
     evaluation_report: dict[str, Any] | None = None,
+    publication_request: dict[str, Any] | None = None,
 ) -> Path:
     now = datetime.now(timezone.utc)
     relative = Path("logs/knowledge-context") / now.date().isoformat() / "publication-failures" / f"{now.strftime('%H%M%S%f')}-{uuid.uuid4().hex}.json"
@@ -787,6 +922,7 @@ def _write_failure(
         "recorded_at": now.isoformat(),
         "evaluation_report_path": report_path.as_posix() if report_path is not None else None,
         "evaluation_report_sha256": report_hash,
+        "publication_request": publication_request,
     }
     _atomic_bytes(repository_root / relative, _render(payload))
     return relative
@@ -800,7 +936,11 @@ def _publish_bundle(
     input_bytes: dict[str, bytes],
     report_bytes: bytes,
     report: dict[str, Any],
+    publication_authorization: _PublicationAuthorization | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    if not isinstance(publication_authorization, _PublicationAuthorization):
+        raise ValueError("knowledge_publication_request_required")
+    publication_request = publication_authorization.summary
     index_root = repository_root / "knowledge" / "indexes"
     artifacts: dict[str, dict[str, str]] = {}
     bundle_payloads: dict[Path, bytes] = {}
@@ -823,6 +963,8 @@ def _publish_bundle(
         "artifacts": artifacts,
         "evaluation_summary": report["summary"],
     }
+    if publication_request is not None:
+        body["publication_request"] = publication_request
     generation_id = hashlib.sha256(canonical_bytes(body)).hexdigest()
     manifest = {**body, "generation_id": generation_id}
     generation_root = index_root / "generations" / generation_id
@@ -889,16 +1031,25 @@ def _publish_bundle(
     return manifest, pointer
 
 
-def run(repository_root: Path, *, publish: bool, repeat: int) -> dict[str, Any]:
+def run(repository_root: Path, *, publish: bool, repeat: int, publication_request: Path | None = None) -> dict[str, Any]:
     repository_root = repository_root.resolve()
     index_root = repository_root / "knowledge" / "indexes"
     phase = "lock"
     pinned_main: str | None = None
     report: dict[str, Any] | None = None
+    request_summary: dict[str, Any] | None = None
+    request_authorization: _PublicationAuthorization | None = None
     try:
+        if publish and publication_request is None:
+            phase = "authorize-publication"
+            raise ValueError("knowledge_publication_request_required")
         with _single_writer(index_root):
             phase = "pin-main"
             pinned_main = _main_commit(repository_root)
+            if publish:
+                phase = "authorize-publication"
+                request_authorization = _load_publication_request(repository_root, publication_request, expected_main=pinned_main)
+                request_summary = request_authorization.summary
             phase = "bind-publication-controls"
             _require_main_controls(repository_root, pinned_main)
             phase = "load-main-inputs"
@@ -959,6 +1110,7 @@ def run(repository_root: Path, *, publish: bool, repeat: int) -> dict[str, Any]:
                 input_bytes=input_bytes,
                 report_bytes=report_bytes,
                 report=report,
+                publication_authorization=request_authorization,
             )
             return {
                 "status": "published",
@@ -975,6 +1127,7 @@ def run(repository_root: Path, *, publish: bool, repeat: int) -> dict[str, Any]:
             error=str(error),
             main_commit=pinned_main,
             evaluation_report=report,
+            publication_request=request_summary,
         )
         return {"status": "blocked", "phase": phase, "error": str(error), "evidence": evidence.as_posix()}
 
@@ -988,14 +1141,17 @@ def main() -> int:
     mode.add_argument("--check", action="store_true", help="Build and evaluate staging without publication (default).")
     mode.add_argument("--publish", action="store_true", help="Publish a validated immutable generation.")
     mode.add_argument("--restore-lkg", action="store_true", help="Restore the four formal layers from the immutable last-known-good generation.")
+    parser.add_argument("--publication-request", type=Path, help="Repository-relative maintainer authorization under logs/knowledge-context/publication-requests/ (required with --publish).")
     parser.add_argument("--repeat", type=int, default=2)
     args = parser.parse_args()
     if args.repeat < 1:
         parser.error("--repeat must be at least 1")
+    if args.publication_request is not None and not args.publish:
+        parser.error("--publication-request is valid only with --publish")
     result = (
         restore_last_known_good(args.repository_root, repeat=args.repeat)
         if args.restore_lkg
-        else run(args.repository_root, publish=args.publish, repeat=args.repeat)
+        else run(args.repository_root, publish=args.publish, repeat=args.repeat, publication_request=args.publication_request)
     )
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0 if result["status"] in {"publishable", "published", "restored"} else 2

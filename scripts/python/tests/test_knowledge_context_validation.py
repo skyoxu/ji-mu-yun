@@ -48,6 +48,17 @@ def payload(*, path: str = "AGENTS.md", digest: str = "a" * 64) -> dict:
 
 
 class KnowledgeContextValidationTests(unittest.TestCase):
+    def test_catalog_stale_precedes_blocked_locator_result(self) -> None:
+        document = payload()
+        document["locator_result"].update({"status": "blocked", "candidates": []})
+        document["decisions"] = []
+        document["result_sha256"] = canonical_hash(document["locator_result"])
+        with mock.patch.object(validation, "validate_catalog_freshness", return_value="catalog_stale"):
+            self.assertEqual(
+                "catalog_stale",
+                validate_context(document, repository_root=Path.cwd(), verify_catalog=True),
+            )
+
     def test_catalog_validation_fails_closed_when_publication_pointer_is_invalid(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

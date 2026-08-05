@@ -18,7 +18,9 @@ this required sequence:
    bytes against the candidate `source_sha256`. Record an adapter-owned
    accepted or rejected decision for each candidate.
 6. Run `scripts/prepare_knowledge_context.py`, which performs the same
-   preflight before writing the context. Its nonzero exit blocks `plan-ready`.
+   preflight before writing the context. Pass exactly one repository-relative
+   `--target-plan execution-plans/<plan>`; output outside that directory is a
+   CLI error. Its nonzero exit blocks `plan-ready`.
    The emitted input contains the `locator_request`, `locator_result`, required
    modules, and decisions. An accepted decision must name a path/hash returned
    by that Locator result. The command exclusively creates both

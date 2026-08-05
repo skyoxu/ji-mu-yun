@@ -1,6 +1,6 @@
 """Build deterministic repository knowledge layers from committed main facts.
 
-The derived catalog implements ADR-0044 and ADR-0048. Source bytes are read
+The derived catalog implements ADR-0044, ADR-0048, and ADR-0057. Source bytes are read
 only from the pinned Git ref; the worktree is never promoted as fact.
 """
 
@@ -40,6 +40,25 @@ def normalized_path(value: str) -> str:
     if path.is_absolute() or ".." in path.parts or not path.parts:
         raise ValueError("invalid_repository_path")
     return path.as_posix()
+
+
+def select_versioned_plan_resource(
+    directory: str,
+    paths: Iterable[str],
+    stems: tuple[str, ...],
+) -> str | None:
+    direct_depth = directory.count("/") + 1
+    candidates: list[tuple[int, int, str]] = []
+    for path in paths:
+        if path.count("/") != direct_depth:
+            continue
+        name = PurePosixPath(path).name
+        for priority, stem in enumerate(stems):
+            matched = re.fullmatch(rf"{re.escape(stem)}\.v(\d+)\.json", name, re.IGNORECASE)
+            if matched:
+                candidates.append((int(matched.group(1)), -priority, path))
+                break
+    return max(candidates)[2] if candidates else None
 
 
 def is_hard_excluded(path: str) -> bool:
@@ -499,6 +518,7 @@ class CatalogBuilder:
                     ("route-registry", ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json"),
                     ("acceptance-matrix-contract", ".agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json"),
                     ("phase-graph-contract", ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json"),
+                    ("knowledge-maintenance-route-contract", ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json"),
                 ),
                 "consumer": "refactor-acceptance",
                 "operations": ["inspect", "build-matrix", "bootstrap-gate", "finalize"],
@@ -526,6 +546,7 @@ class CatalogBuilder:
                     ("contract", "knowledge/contracts/knowledge-publication-generation.v1.schema.json"),
                     ("contract", "knowledge/contracts/knowledge-index-pointer.v2.schema.json"),
                     ("contract", "knowledge/contracts/knowledge-publication-report.v1.schema.json"),
+                    ("contract", "knowledge/contracts/knowledge-publication-request.v1.schema.json"),
                     ("contract", "knowledge/contracts/knowledge-generation-retention-policy.v1.schema.json"),
                     ("evaluation-suite", "knowledge/evaluation/repository-knowledge-query-suite.v1.json"),
                     ("policy", "knowledge/policies/consumer-policies.v1.json"),
@@ -544,13 +565,15 @@ class CatalogBuilder:
                 "primary": ".agents/skills/maintain-knowledge-base/SKILL.md",
                 "resources": (
                     ("cli", ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py"),
+                    ("publication-authorizer", ".agents/skills/maintain-knowledge-base/scripts/prepare_publication_request.py"),
                     ("catalog-builder", "scripts/python/build_knowledge_catalog.py"),
                     ("publication-gate", "scripts/python/publish_knowledge_catalog.py"),
+                    ("publication-request-contract", "knowledge/contracts/knowledge-publication-request.v1.schema.json"),
                     ("generation-pruner", "scripts/python/prune_knowledge_generations.py"),
                     ("retention-policy", "knowledge/policies/generation-retention.v1.json"),
                 ),
                 "consumer": "maintainer",
-                "operations": ["existing-only", "targeted", "refresh-derived-index", "restore-lkg", "prune-generations"],
+                "operations": ["existing-only", "targeted", "refresh-derived-index", "authorize-publication", "restore-lkg", "prune-generations"],
                 "freeze_point": "pinned-main-at-run-start",
                 "locator_mode": "maintenance-only",
             },
@@ -570,6 +593,16 @@ class CatalogBuilder:
                     *(
                         ({"type": "governed_by", "target": "adr.ADR-0050"},)
                         if component["id"] in {"governance.knowledge-locator", "governance.knowledge-maintenance"}
+                        else ()
+                    ),
+                    *(
+                        ({"type": "governed_by", "target": "adr.ADR-0057"},)
+                        if component["id"] in {
+                            "governance.vdd-execution-plan",
+                            "governance.refactor-implementation-acceptance",
+                            "governance.knowledge-locator",
+                            "governance.knowledge-maintenance",
+                        }
                         else ()
                     ),
                 ),
@@ -601,18 +634,20 @@ class CatalogBuilder:
             directory = index_path.rsplit("/", 1)[0]
             directory_paths = [path for path in self.snapshot.paths if path.startswith(directory + "/")]
             resource_candidates: list[tuple[str, str]] = []
-            fixed = (
-                ("requirements-ledger", "requirements-ledger.v1.json"),
-                ("requirements-ledger", "01-requirements-and-acceptance.md"),
-                ("implementation-contract", "implementation-contract.v1.json"),
-                ("authority-manifest", "authority-manifest.v1.json"),
-                ("plan-state", "plan-state.v1.json"),
-                ("command-registry", "command-registry.v1.json"),
+            versioned = (
+                ("requirements-ledger", ("requirements-ledger", "requirements")),
+                ("implementation-contract", ("implementation-contract",)),
+                ("plan-state", ("plan-state",)),
+                ("command-registry", ("command-registry",)),
             )
-            for role, name in fixed:
-                path = f"{directory}/{name}"
-                if path in directory_paths and not any(existing_role == role for existing_role, _ in resource_candidates):
+            for role, stems in versioned:
+                path = select_versioned_plan_resource(directory, directory_paths, stems)
+                if path is not None:
                     resource_candidates.append((role, path))
+            if not any(role == "requirements-ledger" for role, _ in resource_candidates):
+                canonical_markdown = f"{directory}/01-requirements-and-acceptance.md"
+                if canonical_markdown in directory_paths:
+                    resource_candidates.append(("requirements-ledger", canonical_markdown))
             if not any(role == "requirements-ledger" for role, _ in resource_candidates):
                 fallback = next(
                     (
