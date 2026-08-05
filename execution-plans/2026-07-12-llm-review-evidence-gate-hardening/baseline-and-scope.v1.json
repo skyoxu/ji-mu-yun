@@ -1,0 +1,36 @@
+{
+  "schema_version": "vdd.baseline-and-scope.v1",
+  "plan_id": "llm-review-evidence-gate-hardening",
+  "git_baseline": "2154485bc07e1fe6c8830b350492fc107e3dc61a",
+  "scope_roots": [
+    "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/",
+    "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/",
+    "execution-plans/95-implementation-report-index.v1.json"
+  ],
+  "source_authority": [
+    "AGENTS.md",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "scripts/sc/config/workflow_model_routes.v1.json",
+    "scripts/sc/workflow_model_routing.py",
+    "docs/standards/bootstrap-review-control-plane.md",
+    "docs/know.md",
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/00-index.md",
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/01-requirements-and-acceptance.md",
+    "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/00-index.md",
+    "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md"
+  ],
+  "excluded_non_candidate_dirty_paths": [
+    ".agents/skills/run-refactor-implementation-acceptance/**",
+    ".agents/skills/vdd-execution-plan/**",
+    "scripts/python/**",
+    "knowledge/contracts/**",
+    "logs/**"
+  ],
+  "environmental_blockers": [
+    "The Current knowledge Catalog is stale against main.",
+    "Uncommitted publication-control changes cannot be used to publish repository facts."
+  ],
+  "authorizes": []
+}

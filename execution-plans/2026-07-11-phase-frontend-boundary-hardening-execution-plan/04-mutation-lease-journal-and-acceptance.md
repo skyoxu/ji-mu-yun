@@ -135,6 +135,22 @@ Default behavior:
 
 Only an accepted route contract may select `failed_preserved_by_contract`. It must state rationale, user-visible behavior, repair path, retention, and account-safe evidence. Missing declaration always means rollback.
 
+### Relocated Review Facts Are Not Acceptance Authority
+
+A repository Bootstrap finalized-run envelope is a review fact consumed by the
+Phase adapter; it is never a Permit, Mutation, Acceptance, Postflight, browser,
+deployment, or release decision. BH-SF3 stores its validated hash and bounded
+account-scoped reference alongside the transaction correlation tuple, but
+continues to derive rollback/finalization from the upstream route acceptance
+contract and latest live acceptance blocker.
+
+The adapter may not translate Bootstrap `clean`, `blocked`, `incomplete`,
+`manual_pause`, finding severity, or review-cycle state into upstream route or
+browser vocabulary. A stale envelope after Mutation preparation blocks the
+review-dependent transition and follows normal reconciliation; it cannot
+release the lease, skip Acceptance, or overwrite a newer live blocker. This is
+the receiving contract for existing `PBR-024` and `PBR-062`.
+
 Before rollback, re-read formal workspace hash and compare it with the recorded post-commit hash. Any unexpected change enters `rollback_conflict`; automatic rollback stops and preserves both baseline and current state. A named recovery owner decides merge/manual restore without overwriting newer user work.
 
 ## Quarantine Security

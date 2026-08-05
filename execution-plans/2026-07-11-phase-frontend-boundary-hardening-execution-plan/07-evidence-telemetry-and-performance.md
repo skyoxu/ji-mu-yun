@@ -154,3 +154,18 @@ Timeout returns stable failure and never disables security checks.
 - Benchmarks are reproducible from recorded environment and fixture.
 - Supported workspace limits are enforced and the boundary fixture meets every P95 budget.
 - Audit-only exit has fixture and sampled-review evidence, not only pass rate.
+
+## Relocated Review Evidence Projection
+
+For the 7-12 R4 relocation, downstream evidence stores only the validated
+Bootstrap envelope schema/version, review/change/lineage identity, final
+status, validator identity, envelope hash, account/project/workspace/route
+binding, current live-blocker binding, and correlation IDs. The complete
+Bootstrap run remains Toolchain-owned native evidence and is neither copied
+into the Phase evidence store nor rewritten into Phase status taxonomy.
+
+BH-PILOT uses one low-risk route to prove cross-project denial, stale-envelope
+rejection, browser-safe redaction, latest-live-blocker precedence, and the
+absence of Permit/Mutation/Acceptance authority. Its observations satisfy only
+the review-consumption portion of existing `PBR-044`; they do not establish a
+general review Catalog, cost baseline, or Toolchain acceptance.

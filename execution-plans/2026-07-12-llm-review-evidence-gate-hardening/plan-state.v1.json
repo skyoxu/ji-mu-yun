@@ -1,0 +1,23 @@
+{
+  "schema_version": "vdd.plan-state.v1",
+  "plan_id": "llm-review-evidence-gate-hardening",
+  "profile": "self-hosted",
+  "state": "draft",
+  "state_owner": "vdd",
+  "resume": {
+    "next_action": "After publication controls match current main, obtain separate maintainer confirmation for a 7-12-bound knowledge publication request, let maintain-knowledge-base publish, freeze the VDD knowledge context, and run the terminal plan validator before publishing plan-ready.",
+    "last_completed_step": "scope-repair-draft-and-r4-relocation",
+    "recovery_instruction": "Preserve repair/round-1 and unrelated dirty work. VDD must not publish knowledge. Re-run the read-only publication check only after publication controls match current main."
+  },
+  "slices": [
+    {"id": "RFG2-S0", "status": "pending", "depends_on": []},
+    {"id": "RFG2-S1", "status": "pending", "depends_on": ["RFG2-S0"]},
+    {"id": "RFG2-S2", "status": "pending", "depends_on": ["RFG2-S0"]},
+    {"id": "RFG2-S3", "status": "pending", "depends_on": ["RFG2-S0", "RFG2-S1", "RFG2-S2"]}
+  ],
+  "blocking_conditions": [
+    "VDD knowledge Locator is blocked because the Current Catalog is stale and publication controls have unrelated uncommitted changes; publication requires a separate maintainer-confirmed maintain-knowledge-base request."
+  ],
+  "authorizes": [],
+  "does_not_authorize": ["plan-ready", "implementation-authorized", "implementation-complete", "acceptance-passed", "archived"]
+}

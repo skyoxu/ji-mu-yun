@@ -132,12 +132,17 @@ Deliver:
 - integrate the BH-SF0B Attestation Authority and protected Postflight supervisor with final source/snapshot/host manifest, test and evidence binding
 - mandatory equal-assurance Change Origin Gate for every Phase service diff and actor type
 - Work Declaration validation
+- relocated 7-12 R4 adapter that validates the repository Bootstrap finalized
+  envelope and binds account/project/workspace/route/current-blocker context
+  without copying Bootstrap authority
 
 Exit:
 
 - all supported Platform Codex entries preflight
 - unsupported IDE/CLI write integrations cannot produce merge-eligible Codex evidence
 - Hosted missing authority/capability fails before writable process
+- cross-scope, stale, non-finalized, or browser-unsafe review evidence fails
+  before the review-dependent Phase transition
 
 ## Phase BH-SF3: Mutation Transaction
 
@@ -153,6 +158,8 @@ Deliver:
 - side-effect ledger and quarantine security
 - complete Mutation/Acceptance/rollback-conflict state machines
 - evidence/quarantine quotas, rollback capacity reserve and safe raw-export policy
+- review-envelope correlation that remains separate from Permit, Mutation,
+  Acceptance, Postflight, browser, deployment, and release authority
 
 Exit:
 
@@ -181,6 +188,8 @@ Entry: BH-SF4 signed exit, active handoffEpoch and exact imported upstream actio
 
 - Select one low-risk file-changing sub-operation from the UpstreamHandoffManifest.
 - Import its exact action/route descriptor and acceptance refs into Work Policy without redefining them.
+- Consume one fresh account/project/workspace-bound repository Bootstrap
+  envelope as a review fact and prove latest-live-blocker precedence.
 - Run audit-only with enforced containment.
 - Enforce after exit criteria.
 
@@ -266,7 +275,7 @@ No implementation phase may use role placeholders as actual accountability. BH-H
 | Timing | Required documentation change |
 | --- | --- |
 | Before BH-HANDOFF implementation | AGENTS.md keeps the plan paused, routes agents to this plan, preserves current runtime commands and forbids claims that Permit/Preflight/React are already active. |
-| BH-SF2/BH-SF3 change | AGENTS.md, Phase standards and architecture docs update in the same change as canonical launcher/Permit/Mutation enforcement. README AI/LLM protocol changes only after the behavior lands. |
+| BH-SF2/BH-SF3 change | AGENTS.md, Phase standards and architecture docs update in the same change as canonical launcher/Permit/Mutation enforcement and the relocated 7-12 R4 adapter. README AI/LLM protocol changes only after the behavior lands. |
 | BH-RP1 change | README current-state/version sections update in the same change as public/admin version behavior. |
 | BH-REACT1/BH-REACT2 change | README documents internal trial, session/CSRF boundary, default surface, legacy state and rollback only when each behavior is real. |
 | BH-RELEASE change | README and AGENTS current-state, SemVer, bundle/compatibility and durable-document links close with release evidence. |

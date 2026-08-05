@@ -1,0 +1,67 @@
+{
+  "schema_version": "jimuyun.llm-review-evidence-gate-implementation-contract.v2",
+  "plan_id": "llm-review-evidence-gate-hardening",
+  "profile": "self-hosted",
+  "lifecycle_state": "draft",
+  "prerequisites": [
+    "TC-D1 acceptance-passed",
+    "ready VDD knowledge context bound to current main",
+    "current 7-12 and 7-11 plan validators pass"
+  ],
+  "global_forbidden_changes": [
+    ".agents/skills/bmad-*/**",
+    ".agents/skills/gds-*/**",
+    ".agents/skills/maintain-toolchain-workflow-evidence-catalog/**",
+    "PhaseA.Platform/**",
+    "PhaseA.Platform.Tests/**",
+    "runtime/phase-a/**",
+    "logs/phase-a-innernet/**",
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/**",
+    "execution-plans/*-toolchain-core-skill-replay-portability-and-evaluation-seed/**"
+  ],
+  "slices": [
+    {
+      "id": "RFG2-S0",
+      "behavior": "Publish the legacy authority closure, active-entrypoint census, and R4 relocation mapping without changing durable review semantics.",
+      "requirements": ["RFG2-001", "RFG2-005", "RFG2-006"],
+      "depends_on": [],
+      "red_or_legacy": "Legacy regression: current repository Bootstrap whole-directory validation and 7-12 compatibility validation pass before migration edits.",
+      "green": "The census and relocation contract pass targeted migration tests while implementation-contract.v1 remains non-authoritative.",
+      "downstream_dependents": ["RFG2-S1", "RFG2-S2", "RFG2-S3"],
+      "recovery": "Disable the new census consumer and retain the current repository Bootstrap owner plus old compatibility adapter."
+    },
+    {
+      "id": "RFG2-S1",
+      "behavior": "Project a non-authorizing baseline-informed complete finding-mode re-entry recommendation.",
+      "requirements": ["RFG2-002"],
+      "depends_on": ["RFG2-S0"],
+      "red_or_legacy": "RED: current CLI has no deterministic recommendation producer and accepts caller-supplied recommendation fields only.",
+      "green": "Detached tests cover recommend, do-not-recommend, missing cohort, stale lineage, stale calibration, trigger mismatch, and explicit-confirmation preservation.",
+      "downstream_dependents": ["RFG2-S3"],
+      "recovery": "Remove the projection entrypoint; existing explicit re-entry authorization remains available with its current contract."
+    },
+    {
+      "id": "RFG2-S2",
+      "behavior": "Promote and roll back reviewed Bootstrap cost calibrations through versioned repository references.",
+      "requirements": ["RFG2-003"],
+      "depends_on": ["RFG2-S0"],
+      "red_or_legacy": "RED: build-review-baseline emits candidates and runtime consumes one static reference, but no bounded promotion/rollback workflow exists.",
+      "green": "Detached promotion, substitution, incompatible predecessor, fallback, retained-run-binding, and rollback tests pass.",
+      "downstream_dependents": ["RFG2-S3"],
+      "recovery": "Select the last retained compatible reference or conservative fallback; never delete candidate or historical bindings."
+    },
+    {
+      "id": "RFG2-S3",
+      "behavior": "Apply thin Bootstrap delegation only after a declared high-risk Toolchain caller selects complete semantic review, then run one terminal migration replay across Bootstrap, Acceptance, legacy 7-12, and relocated 7-11 plan contracts.",
+      "requirements": ["RFG2-004", "RFG2-005", "RFG2-006"],
+      "depends_on": ["RFG2-S0", "RFG2-S1", "RFG2-S2"],
+      "red_or_legacy": "RED: census fixture contains an unclassified or direct high-risk semantic-review caller; low-risk fixture is incorrectly forced into complete finding mode.",
+      "green": "All entrypoints are classified, selected high-risk complete-review routes delegate, low-risk routes remain unchanged, and terminal replay passes without BMAD/GDS, Catalog, TC-D1, TC-D2, TC-D3, TC-D6, or Phase product changes.",
+      "downstream_dependents": [],
+      "recovery": "Disable selective routing additions independently, preserve existing Bootstrap and Acceptance routes, and keep R4 paused in 7-11."
+    }
+  ],
+  "terminal_validation": "py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_revised_plan.py",
+  "authorizes": [],
+  "does_not_authorize": ["implementation-authorized", "implementation-complete", "acceptance-passed", "commit", "release", "archived"]
+}

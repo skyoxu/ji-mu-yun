@@ -1,0 +1,62 @@
+{
+  "schema_version": "jimuyun.llm-review-evidence-gate-requirements.v2",
+  "plan_id": "llm-review-evidence-gate-hardening",
+  "profile": "self-hosted",
+  "requirements": [
+    {
+      "id": "RFG2-001",
+      "text": "Close the legacy 7-12 control-plane surface as revision-bound compatibility and inventory every active formal repository review entrypoint.",
+      "acceptance_ids": ["RFG2-A01", "RFG2-A02"],
+      "slice_ids": ["RFG2-S0"]
+    },
+    {
+      "id": "RFG2-002",
+      "text": "Produce a read-only finding-mode re-entry recommendation bound to current lineage, trigger, workload, promoted calibration, available baseline history, expected benefit, expected cost, confidence, and missingness.",
+      "acceptance_ids": ["RFG2-A03", "RFG2-A04"],
+      "slice_ids": ["RFG2-S1"]
+    },
+    {
+      "id": "RFG2-003",
+      "text": "Add reviewed, versioned cost-calibration promotion, conservative fallback, retained predecessor bindings, and rollback without self-promotion or history deletion.",
+      "acceptance_ids": ["RFG2-A05", "RFG2-A06"],
+      "slice_ids": ["RFG2-S2"]
+    },
+    {
+      "id": "RFG2-004",
+      "text": "When a declared high-risk Toolchain entrypoint has already selected complete semantic review, require thin Bootstrap delegation while preserving the existing lightweight route for ordinary low-risk AI-led single-maintainer work.",
+      "acceptance_ids": ["RFG2-A07", "RFG2-A08"],
+      "slice_ids": ["RFG2-S3"]
+    },
+    {
+      "id": "RFG2-005",
+      "text": "Relocate Phase-facing R4 behavior to 7-11 BH-SF2, BH-SF3, and BH-PILOT using existing PBR-026, PBR-044, PBR-024, and PBR-062 without copying Bootstrap authority.",
+      "acceptance_ids": ["RFG2-A09"],
+      "slice_ids": ["RFG2-S0", "RFG2-S3"]
+    },
+    {
+      "id": "RFG2-006",
+      "text": "Remain disjoint from current Bootstrap and Acceptance capabilities, the 7-31 Evidence Catalog, TC-D1 replay and seeds, TC-D2 quality baselines, BMAD/GDS installed files, and Phase product implementation.",
+      "acceptance_ids": ["RFG2-A10"],
+      "slice_ids": ["RFG2-S0", "RFG2-S3"]
+    }
+  ],
+  "acceptance": [
+    {"id": "RFG2-A01", "assertion": "A machine-readable census classifies every active formal review entrypoint as repository-owner, thin-delegate, compatibility-only, or retired."},
+    {"id": "RFG2-A02", "assertion": "The old 7-12 CLI remains revision-bound, non-authoritative, and unable to acquire new durable behavior."},
+    {"id": "RFG2-A03", "assertion": "Recommendation replay fails closed on stale lineage, trigger, calibration, workload, or baseline bindings and preserves unknown data as missing."},
+    {"id": "RFG2-A04", "assertion": "Recommendation output carries authorizes empty and cannot replace explicit maintainer confirmation."},
+    {"id": "RFG2-A05", "assertion": "Only an explicit reviewed promotion command can publish a new committed calibration reference; generated candidates cannot self-promote."},
+    {"id": "RFG2-A06", "assertion": "Rollback selects a retained compatible predecessor or conservative fallback without deleting candidates, references, or run-bound history."},
+    {"id": "RFG2-A07", "assertion": "A declared high-risk Skill, route, lifecycle, acceptance, review-control, protected-path, or release-policy Toolchain caller that selects complete semantic review uses the repository Bootstrap owner; this rule does not automatically select review."},
+    {"id": "RFG2-A08", "assertion": "Ordinary low-risk work is not forced through complete three-layer finding mode and BMAD/GDS installed files remain unchanged."},
+    {"id": "RFG2-A09", "assertion": "7-11 plan validation binds the relocated adapter to existing PBRs and keeps review facts separate from Phase Permit, Mutation, Acceptance, browser, and release authority."},
+    {"id": "RFG2-A10", "assertion": "Terminal validation rejects any 7-12 slice that implements Catalog generation/publication, generic TC-D1 replay/seeds, TC-D2 quality labels, TC-D3 combined-review cohorts or activation, TC-D6 core Skill version governance, or Phase product behavior."}
+  ],
+  "legacy_disposition": {
+    "implemented_or_superseded": ["R0A", "R0B", "R1", "R2-core", "R5-existing-baseline-builder"],
+    "cancelled": ["R0C", "R0D", "R3", "R6-global-blocking"],
+    "relocated": [{"scope": "R4", "target": "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan"}],
+    "reframed": ["R2-entrypoint-migration", "R5-cost-calibration"]
+  },
+  "authorizes": []
+}

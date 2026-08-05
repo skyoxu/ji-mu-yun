@@ -2,6 +2,10 @@
   "schema_version": "jimuyun.execution-plan-95-report-index.v1",
   "entries": [
     {
+      "plan_directory": "2026-07-12-llm-review-evidence-gate-hardening",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
       "plan_directory": "2026-07-15-repository-maintenance-tdd-adapter",
       "report_filename": "95-implementation-evolution-and-completion-report.md"
     },

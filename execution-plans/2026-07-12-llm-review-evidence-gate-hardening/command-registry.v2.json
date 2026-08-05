@@ -1,0 +1,22 @@
+{
+  "schema_version": "jimuyun.llm-review-evidence-gate-command-registry.v2",
+  "plan_id": "llm-review-evidence-gate-hardening",
+  "commands": [
+    {
+      "id": "legacy-compatibility",
+      "command": "py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+      "purpose": "Validate the immutable compatibility surface."
+    },
+    {
+      "id": "r4-relocation",
+      "command": "py -3 execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/tools/validate_whole_directory.py",
+      "purpose": "Validate the receiving Phase boundary plan and existing PBR closure."
+    },
+    {
+      "id": "terminal-revised-plan",
+      "command": "py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_revised_plan.py",
+      "purpose": "Validate current repair artifacts, non-overlap, knowledge readiness, and both compatibility validators."
+    }
+  ],
+  "authorizes": []
+}

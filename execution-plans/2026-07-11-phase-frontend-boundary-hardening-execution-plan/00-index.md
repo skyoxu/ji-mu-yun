@@ -7,6 +7,7 @@ Status: Primary split implementation plan for Phase platform trust, React migrat
 - The top-level execution plan is the recovery entry and metadata owner.
 - This directory is the implementation detail authority.
 - `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/` remains the authority for GDD-to-module business contracts and route semantics.
+- This plan receives the Phase-facing behavior formerly named 7-12 R4. BH-SF2 owns the account/project/workspace-bound Bootstrap review adapter, BH-SF3 keeps review facts separate from mutation and acceptance authority, and BH-PILOT owns the first bounded observation using existing PBR-026, PBR-044, PBR-024, and PBR-062.
 - This plan is strictly downstream. No implementation task, protected-path change, React/DB/Gate/runtime work or legacy freeze may start until BH-HANDOFF proves the upstream Phase 0-6/global-review/closure/final-commit package complete.
 - After handoff, every downstream business-facing projection resolves through the immutable UpstreamHandoffManifest plus the unique active-registry event chain; downstream-derived API/frontend/persistence observations are technical snapshots with source refs, never new business authority.
 - New durable rules move to accepted ADRs, `docs/standards/**`, `docs/architecture/phase-service/**`, or relevant workflow docs when implemented.

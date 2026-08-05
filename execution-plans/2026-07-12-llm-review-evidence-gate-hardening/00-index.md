@@ -1,79 +1,120 @@
-# LLM 审查事实门禁与降噪实施计划索引
+# LLM Review Evidence Gate Hardening - Revised Execution Plan
 
-状态：Plan-ready；Phase R0 Bootstrap Review 可以在 handoff 前只读运行，R1–R6 仍等待两个上游重构目录的完成/handoff evidence。通过只表示计划可实施，不表示正式 gateway 或产品代码完成。
-语言：中文
-研究依据：[`_bmad-output/planning-artifacts/research/technical-everything-claude-code-review-anti-hallucination-research-2026-07-12.md`](../../_bmad-output/planning-artifacts/research/technical-everything-claude-code-review-anti-hallucination-research-2026-07-12.md)
+- Status: `draft`
+- Profile: `self-hosted`
+- Plan ID: `llm-review-evidence-gate-hardening`
+- Repair: `repair/round-1`
+- Git baseline: `2154485bc07e1fe6c8830b350492fc107e3dc61a`
+- Current authority: `docs/standards/bootstrap-review-control-plane.md` and `.agents/skills/run-phase-bootstrap-review/`
+- Recovery command: `py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_revised_plan.py`
 
-## 目标
+## Current Outcome
 
-为代码、文档和执行计划审查建立一套仓库自有、升级安全、机器可验证的事实门禁，同时覆盖：
+The original 7-12 plan has already produced the repository-owned Bootstrap
+Review control plane and its compatibility artifacts. This repair removes the
+completed, cancelled, relocated, and duplicated work from the active
+implementation queue. The remaining outcome is intentionally narrow:
 
-- 平台长期开发使用的 Codex；
-- 前台用户创建项目、游戏及后续工作流触发的 Codex；
-- BMAD/GDS reviewer 产生的候选 finding；
-- 后台 Blind Hunter、Edge Case Hunter、Acceptance Auditor 三层 review route；
-- profile-bound 角色 rubric、误报抑制、受审内容不可信边界与确定性 preflight；
-- 批量修复、默认两轮/硬上限三轮的完整语义 Review 止损；
-- reviewer 前 authority freeze、跨 run lineage、单一语义 authority、计划绑定检查、高成本确认与 process lease；
-- 本仓 `scripts/sc/**` 审查与恢复链路。
+1. close the legacy 7-12 compatibility surface without adding durable behavior
+   to the old plan-local CLI;
+2. add a read-only, baseline-informed recommendation for complete finding-mode
+   re-entry after Round 1;
+3. add reviewed promotion, version binding, fallback, and rollback for
+   Bootstrap cost calibration candidates;
+4. inventory active formal review entrypoints and make a declared high-risk
+   Toolchain caller delegate to the repository Bootstrap owner when that
+   caller has already selected complete semantic review;
+5. keep ordinary low-risk AI-led, single-maintainer work on the existing
+   lightweight route.
 
-所有 P0、P1、P2 finding 都必须具有三联证明：精确证据与行号、具体失败场景、现有防护为何未阻止。缺少任一项时删除；只有仍能证明较低等级具体失败时才允许降级。零 finding 是合法结果。
+The plan does not recreate finding schemas, the Bootstrap runner, lineage,
+focused repair verification, exact envelope reuse, Refactor Acceptance's
+toolchain domain, or compact-VDD projection. Those are current repository
+capabilities and regression inputs.
 
-## 权威边界
+## R4 Relocation
 
-- 本目录是实施意图权威，不直接修改 `.agents/skills/bmad-*` 或 `.agents/skills/gds-*` 安装内容。
-- 实施后的长期规则归属 `docs/standards/llm-review-findings.md`，本目录不能成为永久运行时标准。
-- `_bmad/custom/*.toml` 只做升级安全的薄适配；机器事实门禁由仓库自有 review gateway 执行。
-- reviewer 只能产生 candidate；未经 gateway 接受的 finding 不得展示、写入任务、触发修复或阻断完成。
-- `AGENTS.md` 与 `README.md` 按 [05 的分阶段同步合同](05-bmad-gds-and-codex-integration.md#6-agents-与-readme-同步时机) 更新；不得提前声明能力，也不得把已 operational 的路由拖到 R6 才记录。
-- 涉及 Phase 共享 LLM/Codex 入口、认证、账户隔离或运行态路径时，必须遵守 `AGENTS.md` 的 Protected Phase Paths 审批要求。
+Original Phase R4 is relocated to
+[`2026-07-11-phase-frontend-boundary-hardening-execution-plan`](../2026-07-11-phase-frontend-boundary-hardening-execution-plan/00-index.md).
+The receiving plan uses existing `PBR-026`, `PBR-044`, `PBR-024`, and
+`PBR-062` rather than creating a second review authority. BH-SF2 owns the
+Phase/Hosted adapter and preflight binding, BH-SF3 owns mutation and acceptance
+recovery, and BH-PILOT owns first route observation. The adapter consumes a
+fresh repository Bootstrap finalized-run validation envelope; it does not copy
+Bootstrap schemas, routing, lifecycle, finding memory, or cost policy.
 
-## 与现有两个重构目录的关系
+7-07 receives no R4 work. Its planned large Phase workflow refactor remains
+independent of Toolchain review-control implementation.
 
-- [`2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening`](../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md) 和 [`2026-07-11-phase-frontend-boundary-hardening-execution-plan`](../2026-07-11-phase-frontend-boundary-hardening-execution-plan/00-index.md) 仅作为文档结构参考和后续集成依赖。
-- 本目录不复制它们的 GDD-to-module、React `/ui-v2`、Permit、mutation、数据迁移或 Phase 路由业务要求。
-- 在上述进行中重构完成前，本计划只允许实施不触碰其文件和共享 Phase 入口的 Phase R0 Bootstrap Review；其余运行时接入必须等待两个上游计划完成并取得明确 handoff evidence。
-- Bootstrap Review 是本目录拥有的只读 CLI 与显式授权编排合同：CLI 生成 reviewer prompt/template、消费隔离 reviewer/verifier 输出并写独立 evidence；profile 按计划 authority、实施闭合、Skill/路由、聚焦变更选择不同 reasoning/depth，但全部要求完整 artifact/context、禁止 sampling。CLI 不得自动调用 reviewer、修改目标目录、接入 `scripts/sc`、写 repair guide 或冒充 BH-HANDOFF/production gateway。
-- 7 月 7 日既有历史 review run、prompt、输出和 ledger 保持不变；用户可从新的显式 review ID 开始，对 7-07/7-11 运行 supplemental Bootstrap Review。R3 仍只接管 handoff 后的新正式 review route。
+## First-Class Directory Boundaries
 
-## 分册顺序
+### Existing 7-31 Evidence Catalog
 
-1. [范围、权威与非目标](01-scope-authority-and-non-goals.md)
-2. [Finding 合同与严重等级](02-finding-contract-and-severity.md)
-3. [代码、文档与计划审查适配](03-code-document-and-plan-adapters.md)
-4. [Gateway、去重、核验与记忆](04-gateway-dedup-verification-and-memory.md)
-5. [BMAD/GDS 与两类 Codex 集成](05-bmad-gds-and-codex-integration.md)
-6. [测试、观测与渐进启用](06-testing-observability-and-rollout.md)
-7. [实施阶段](07-implementation-phases.md)
-8. [风险、DoD 与术语](08-risks-dod-and-glossary.md)
-9. [Bootstrap Review 手工操作指南](09-bootstrap-review-operator-guide.md)
-10. [Whole-directory review 标准](96-global-review-and-validation.md)
-11. [计划新增要求台账](97-plan-added-requirements-ledger.md)
-12. [来源到拆分审计](98-source-to-split-audit.md)
-13. [来源覆盖图](99-source-coverage.md)
+[`2026-07-31-toolchain-workflow-evidence-catalog-v1`](../2026-07-31-toolchain-workflow-evidence-catalog-v1/00-index.md)
+owns pull-only producer adapters, native evidence identities, immutable
+generations, Current/LKG publication, bounded queries, and derived catalog
+recovery. This plan does not implement or depend on that catalog at runtime.
+New 7-12 outputs remain producer-native evidence that a later accepted Catalog
+adapter may index without gaining review authority.
 
-机器合同：
+### TC-D1 From `docs/know.md`
 
-- [review-finding.v1.schema.json](schemas/review-finding.v1.schema.json)
-- [review-rejection.v1.schema.json](schemas/review-rejection.v1.schema.json)
-- [review-result.v1.schema.json](schemas/review-result.v1.schema.json)
-- [review-validation-fixtures.v1.json](schemas/review-validation-fixtures.v1.json)
-- [bootstrap-reviewer-output.v1.schema.json](schemas/bootstrap-reviewer-output.v1.schema.json)
-- [bootstrap-preflight-result.v1.schema.json](schemas/bootstrap-preflight-result.v1.schema.json)
-- [bootstrap-verifier-output.v1.schema.json](schemas/bootstrap-verifier-output.v1.schema.json)
-- [bootstrap-review-gate-result.v1.schema.json](schemas/bootstrap-review-gate-result.v1.schema.json)
-- [bootstrap-review-launch-authorization.v1.schema.json](schemas/bootstrap-review-launch-authorization.v1.schema.json)
-- [bootstrap-process-leases.v1.schema.json](schemas/bootstrap-process-leases.v1.schema.json)
-- [review-profiles.v1.json](bootstrap/review-profiles.v1.json)
+The next new VDD directory owns portable core-Skill validator resolution,
+historical compatibility replay, and non-authorizing evaluation seeds for the
+three 8-01 repair families. This plan does not create that directory, copy its
+seeds, or implement its generic replay capability. Implementation of this
+revised 7-12 waits for TC-D1 `acceptance-passed` so every Bootstrap Skill delta
+can carry a distinct Evaluation delta through the portable mechanism.
 
-计划验证入口：
+### Future Evaluation Baseline
 
-```powershell
-py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py
-```
+Cross-Skill Anchor/Frontier/Challenge/Holdout sets, label provenance, Pareto
+comparison, workflow observability, Miner, memory, version governance, and RL
+remain in the independent directories reserved by `docs/know.md`. In
+particular, 7-12 does not create TC-D3's `ordinary_fast_ship_combined` mode,
+eligibility cohorts, or shadow activation, and it does not create TC-D6's core
+Skill version promotion or Git rollback workflow. A Bootstrap cost calibration
+is an operational estimate, not a Skill quality baseline or Skill version.
 
-## 全局实施顺序
+## Active Slices
 
-`R0A 计划基线` → `R0B Bootstrap Review 工具` → `R0C 用户手工审查 7-07/7-11` → `R0D 上游 handoff` → `R1 标准和机器合同` → `R2 平台开发审查网关` → `R3 BMAD/GDS 薄适配` → `R4 前台触发 Codex 接入` → `R5 shadow 评估` → `R6 强制门禁与文档同步`。
+1. `RFG2-S0`: legacy authority closure and active-entrypoint census.
+2. `RFG2-S1`: baseline-informed finding-mode re-entry recommendation.
+3. `RFG2-S2`: reviewed cost-calibration promotion and rollback.
+4. `RFG2-S3`: selective high-risk routing and terminal migration replay.
 
-任何阶段不得以 reviewer 的自然语言总结代替 schema、测试和 evidence sidecar。
+The detailed behavior, RED/legacy paths, GREEN commands, dependents, and
+recovery actions are owned by `implementation-contract.v2.json`.
+
+## Lifecycle
+
+`draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived`
+
+This repair remains `draft` while the mandatory VDD knowledge preflight is
+blocked by a stale Current Catalog and uncommitted changes to the knowledge
+publication controls. The blocked Locator result grants no authority. VDD
+cannot publish a knowledge generation. After the controls match current main,
+the maintainer must separately confirm a target-bound publication request and
+`maintain-knowledge-base` must publish the fresh generation. VDD may then
+freeze `knowledge-context.v1.json` plus its receipt, run the terminal plan
+validator, and only then publish `plan-ready`.
+
+## Current And Historical Artifacts
+
+- Current requirements: `requirements.v2.json`.
+- Current implementation contract: `implementation-contract.v2.json`.
+- Current command registry: `command-registry.v2.json`.
+- Non-authorizing VDD route decision: `model-route-decision.v1.json`.
+- Current lifecycle/resume state: `plan-state.v1.json`.
+- Current scope rationale: `10-current-scope-revision.md`.
+- Repair record: `repair/round-1/repair-plan.md`.
+- Append-only continuity: `95-implementation-evolution-and-completion-report.md`.
+- Historical compatibility books: `01` through `09` and `96` through `99`.
+- Historical compatibility adapter: `implementation-contract.v1.json`,
+  `tools/run_bootstrap_review.py`, schemas, fixtures, and profile snapshot.
+
+Historical compatibility artifacts remain readable and byte-preserving. Their
+old `active` labels are historical source-state, not the current implementation
+queue. `requirements.v2.json` is the current disposition authority.
+
+兼容性不变量：7 月 7 日既有历史 review run、prompt、输出和 ledger 保持不变。

@@ -141,6 +141,31 @@ If the spike cannot enforce the applicable properties, Platform and Hosted works
 
 ## Acceptance
 
+### Relocated 7-12 R4 Review Envelope Consumption
+
+This plan receives the Phase-facing portion formerly named R4 in the 7-12
+review-gate plan. The receiving behavior is an adapter over the repository
+Bootstrap owner, not a second review gateway.
+
+- BH-SF2 binds account, project, workspace, route action, current authority
+  hash, current live acceptance blocker, and the fresh
+  `bootstrap-finalized-run-validation.v3` envelope before projecting any review
+  state into a Phase job.
+- Missing, stale, non-finalized, cross-account, cross-project, cross-workspace,
+  or route-mismatched review evidence fails the review projection closed. It
+  cannot be converted into clean, Permit-ready, or route-success state.
+- `ILlmRouteEngine`, `CodexHostedProcessCommandFactory`, and
+  `scripts/sc/_llm_backend.py::run_llm_exec` remain the shared Phase execution
+  entrypoints. The adapter does not construct a second model invocation,
+  reviewer lifecycle, finding schema, cost policy, or lineage store.
+- Browser-safe output exposes only bounded status and account-safe evidence
+  references. It never exposes host paths, prompts, another project's finding
+  or disposition memory, or Bootstrap operator details.
+
+This relocation implements the review-specific portion of existing `PBR-026`.
+It does not create a new PBR family and does not activate before BH-SF2 entry
+and protected-path authorization are satisfied.
+
 - All supported Platform Codex jobs perform preflight before work.
 - Hosted tool child cannot access provider egress or host secret.
 - Controller cannot use arbitrary child tools outside broker.
