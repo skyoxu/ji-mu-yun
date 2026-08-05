@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "change_type": "modified",
+      "roles": ["implementation"],
+      "baseline_path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "baseline_sha256": "sha256:d57127bd07504c0d6307a95f904217aa2075c20e84862bfcbfeeda06d881ebe7",
+      "candidate_path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "candidate_sha256": "sha256:9cccbf6555502b7355a9632efda0fe88e8df066e620238f2eedbf610494f8f62",
+      "inclusion_reason": "Route plan-owned implementation contracts through their generic schema"
+    },
+    {
+      "change_type": "modified",
+      "roles": ["test"],
+      "baseline_path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "baseline_sha256": "sha256:25906a406bba52f8dc899f984de7087c4d553bd10c29f7a82db1a2817c539d73",
+      "candidate_path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "candidate_sha256": "sha256:84922533581bf2d5c933bdd17122272d3338c0aa6f38d24d6abc39b21a43d278",
+      "inclusion_reason": "Cover canonical and plan-owned contract routing"
+    },
+    {
+      "change_type": "added",
+      "roles": ["authority"],
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+      "candidate_sha256": "sha256:ff22e3f57868ea4cb208cee4d2ab2b3ae30fc96b464dd2a791f78d361a78ea93",
+      "inclusion_reason": "Validate non-RMAP plan-owned implementation contracts without weakening canonical RMAP validation"
+    },
+    {
+      "change_type": "modified",
+      "roles": ["implementation"],
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "baseline_sha256": "sha256:649003c733b6540010f9fb194c8d867a51855c56d29077ce5c884f8d352c64da",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "candidate_sha256": "sha256:6dad3e00514afb1b0614a3af13bd8e6b0eed5638ed210f6208dd411f798c2c6c",
+      "inclusion_reason": "Fail closed on contradictory lifecycle authority and incomplete implementation-candidate roots"
+    },
+    {
+      "change_type": "modified",
+      "roles": ["test"],
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "baseline_sha256": "sha256:93436568ddb6da2c2bf176144e750e53d898c1958cd4c2cc56a515d7c775630b",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "candidate_sha256": "sha256:78d3ff2f8cb3cfd393d92b59e85bb7db794f336f4ff08fb4d2d8e7c6ee06d3b8",
+      "inclusion_reason": "Cover lifecycle contradiction and complete freshness roots"
+    }
+  ]
+}

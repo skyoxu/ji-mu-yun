@@ -1,0 +1,13 @@
+{
+  "schema_version": "jimuyun.vdd-repair-green-result.v1",
+  "slice_id": "TEC-R3-S1",
+  "status": "passed",
+  "checks": [
+    {"command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py -k abbreviated_v2_implementation_authority", "tests": 1, "status": "passed"},
+    {"command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py", "tests": 18, "status": "passed"},
+    {"command": "py -3 -m unittest discover -s .agents/skills/quick-dev-tdd-adapter/tools/tests -p test_*.py", "tests": 68, "status": "passed"},
+    {"command": "py -3 .agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py", "tests": 9, "status": "passed"}
+  ],
+  "behavior": "Only the cumulative [plan-ready, implementation-authorized] vector permits v2 slice execution; the abbreviated vector fails closed as invalid-plan-state.",
+  "authorizes": []
+}

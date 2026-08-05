@@ -1,0 +1,220 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1",
+  "authorityGraphArtifacts": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "authorityGraphChanged": true,
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/baseline-content-manifest.v1.json",
+    "sha256": "sha256:d383101ea342801a9d480ff8a364d2aad021029a9fe0e95289ac8fced7a7e514"
+  },
+  "candidateManifest": {
+    "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/candidate-content-manifest.v1.json",
+    "sha256": "sha256:3d808746b454da72b25a6399c5db0ee3e39bec29e876206563190dd68817ff38"
+  },
+  "changedPathBindings": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "sha256": "sha256:2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "sha256": "sha256:2d5e56647d1e1717e9e5d3fb50337f45df092a3dae3a19367aae22d143e1aab2",
+      "state": "present"
+    }
+  ],
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "compositionChecks": [
+    {
+      "bindings": [
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+          "role": "producer",
+          "sha256": "sha256:2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
+        },
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+          "role": "consumer",
+          "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+        },
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+          "role": "consumer",
+          "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+        }
+      ],
+      "checkId": "round-three-lifecycle-composition",
+      "commandRegistry": {
+        "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/acceptance-command-registry.v1.json",
+        "sha256": "sha256:61d663c81c02564ce0a3c8f1721b36cf19287afd14aacc1c5ef476d371445c15"
+      },
+      "controlledReplay": {
+        "authorizes": [],
+        "commandId": "round-three-lifecycle-composition",
+        "commandRegistryHash": "sha256:43b7c4f00f3de8d6c7461cecd6a871d7b1c7b7b33815c9396f39be5e151ccbcb",
+        "environmentIdentity": {
+          "hash": "sha256:f047e9877601714fb21afd5c8eb5293900b6af5f27a7b05dfdddf5d4750114c6",
+          "names": [
+            "ComSpec",
+            "PATHEXT",
+            "Path",
+            "SystemRoot",
+            "TEMP",
+            "TMP",
+            "USERNAME",
+            "windir"
+          ]
+        },
+        "exitCode": 0,
+        "inputBindings": [
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+            "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+            "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+            "sha256": "sha256:2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+            "sha256": "sha256:2d5e56647d1e1717e9e5d3fb50337f45df092a3dae3a19367aae22d143e1aab2"
+          }
+        ],
+        "inputBindingsHash": "sha256:93afa316f827d819b1c54a65094fb9bc446fa420cd50a52b00f376ec46cae494",
+        "invocation": {
+          "argv": [
+            "-3",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+          ],
+          "commandId": "round-three-lifecycle-composition",
+          "cwd": ".",
+          "environmentAllowlist": [
+            "ComSpec",
+            "Path",
+            "PATHEXT",
+            "SystemRoot",
+            "TEMP",
+            "TMP",
+            "USERNAME",
+            "windir"
+          ],
+          "executable": "C:\\Windows\\py.exe",
+          "shell": false,
+          "timeoutSeconds": 120
+        },
+        "invocationHash": "sha256:38b806a7c714713c60a57effa1d38d16e0a93a618d43ab755d38536672263402",
+        "schemaVersion": "acceptance-composition-controlled-replay.v1",
+        "writeManifestDelta": {
+          "added": [],
+          "changedPaths": [],
+          "deleted": [],
+          "modified": []
+        },
+        "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+      },
+      "receipt": {
+        "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/composition-receipt.v1.json",
+        "sha256": "sha256:44c14155c2a8c2565f9ce15ff649a8a750bfe313b1dda27e5371c68f4641257f"
+      },
+      "targetedTests": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ]
+    }
+  ],
+  "directConsumers": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+      "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+    }
+  ],
+  "highRiskBoundaryArtifacts": [],
+  "highRiskBoundaryChanged": false,
+  "lineageFamilyId": "toolchain-workflow-evidence-catalog-v1-plan",
+  "novelP0P1FindingIds": [
+    "BSR-A16D7BD04595439A",
+    "BSR-CC406D26ADDA6B7D",
+    "BSR-F66419802975166C"
+  ],
+  "predecessorRun": "logs/ci/2026-08-05/tec-plan-r3-review-b",
+  "requestHash": "sha256:ef62c833d8d0df24b83e22d2ce8d266b40fcc6a8ad46067958a1b422b74ed0ae",
+  "rootCauseInventories": [
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "v2-authorization-gate-callsites",
+      "matches": [
+        {
+          "lineNumbers": [
+            70,
+            199
+          ],
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+          "sha256": "sha256:2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "_slice_authorization_gate"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "v2-abbreviated-authority-regression",
+      "matches": [
+        {
+          "lineNumbers": [
+            81
+          ],
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+          "sha256": "sha256:2d5e56647d1e1717e9e5d3fb50337f45df092a3dae3a19367aae22d143e1aab2"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "test_router_rejects_abbreviated_v2_implementation_authority"
+    }
+  ],
+  "schemaVersion": "acceptance-repair-completeness.v1",
+  "semanticRoundsConsumed": 3,
+  "status": "passed",
+  "targetedTests": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "sha256": "sha256:2d5e56647d1e1717e9e5d3fb50337f45df092a3dae3a19367aae22d143e1aab2"
+    }
+  ],
+  "validationRefs": [
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/composition-receipt.v1.json",
+      "sha256": "sha256:44c14155c2a8c2565f9ce15ff649a8a750bfe313b1dda27e5371c68f4641257f"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/green-result.v1.json",
+      "sha256": "sha256:4c6a6bc4ea83d23d94c3bc3420e0cb11d58304e8c4ee3291a1e5853072d0ec53"
+    },
+    {
+      "path": "logs/ci/2026-08-05/tec-plan-r3-review-b/validation-envelope.json",
+      "sha256": "sha256:de771850b9f598ab27615925a7470dfa556cc37089d49bcac8b2905e915b2306"
+    }
+  ]
+}

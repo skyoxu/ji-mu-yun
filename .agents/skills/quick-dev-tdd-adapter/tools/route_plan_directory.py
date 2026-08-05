@@ -108,11 +108,14 @@ def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object]
             "reason": "invalid-plan-state",
             "authorizes": [],
         }
-    if lifecycle_state == "implementation-authorized" and document["authorizes"] in (
-        ["implementation-authorized"],
-        ["plan-ready", "implementation-authorized"],
-    ):
-        return None
+    if lifecycle_state == "implementation-authorized":
+        if document["authorizes"] == ["plan-ready", "implementation-authorized"]:
+            return None
+        return {
+            "next_action": "external-repair-required",
+            "reason": "invalid-plan-state",
+            "authorizes": [],
+        }
     if lifecycle_state in {"draft", "plan-ready"}:
         expected = [] if lifecycle_state == "draft" else ["plan-ready"]
         if document["authorizes"] != expected:

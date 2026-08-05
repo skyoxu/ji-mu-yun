@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "acceptance-command-registry.v1",
+  "commands": [
+    {
+      "id": "round-three-lifecycle-composition",
+      "executable": "C:\\Windows\\py.exe",
+      "argv": ["-3", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"],
+      "cwd": ".",
+      "timeout_seconds": 120,
+      "shell": false,
+      "allowed_write_roots": [],
+      "forbidden_write_roots": [],
+      "environment_allowlist": ["ComSpec", "Path", "PATHEXT", "SystemRoot", "TEMP", "TMP", "USERNAME", "windir"],
+      "typed_placeholders": {},
+      "placeholder_values": {},
+      "registry_hash": "sha256:43b7c4f00f3de8d6c7461cecd6a871d7b1c7b7b33815c9396f39be5e151ccbcb"
+    }
+  ],
+  "registryHash": "sha256:43b7c4f00f3de8d6c7461cecd6a871d7b1c7b7b33815c9396f39be5e151ccbcb"
+}

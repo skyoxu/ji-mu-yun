@@ -1,0 +1,15 @@
+{
+  "schema_version": "jimuyun.vdd-repair-red-result.v1",
+  "slice_id": "TEC-R3-S1",
+  "command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py -k abbreviated_v2_implementation_authority",
+  "status": "observed-failure",
+  "exit_code": 1,
+  "observed": "The router returned run-slice for vdd.plan-state.v2 with authorizes=[implementation-authorized].",
+  "expected": "The router returns external-repair-required with reason invalid-plan-state.",
+  "finding_ids": [
+    "BSR-A16D7BD04595439A",
+    "BSR-CC406D26ADDA6B7D",
+    "BSR-F66419802975166C"
+  ],
+  "authorizes": []
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": "jimuyun.vdd-repair-closure.v1",
+  "plan_id": "toolchain-workflow-evidence-catalog-v1",
+  "lineage_family_id": "toolchain-workflow-evidence-catalog-v1-plan",
+  "review_round": 2,
+  "baseline_commit": "6e990f120eeed9d15fc52a3f13235ff17002b237",
+  "candidate_commit": "43efcbe3b38978f6f85819edc474fb683d21f2ab",
+  "predecessor_run": "logs/ci/2026-08-05/tec-plan-r2",
+  "finding_ids": [
+    "BSR-086BBEF80DDA7927",
+    "BSR-43479ED989965DE4",
+    "BSR-AEBB8FBA431F4E36"
+  ],
+  "finding_mappings": [
+    {
+      "finding_id": "BSR-086BBEF80DDA7927",
+      "repair_slice": "TEC-R2-S1",
+      "disposition": "fixed",
+      "changed_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ]
+    },
+    {
+      "finding_id": "BSR-43479ED989965DE4",
+      "repair_slice": "TEC-R2-S1",
+      "disposition": "fixed",
+      "changed_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ]
+    },
+    {
+      "finding_id": "BSR-AEBB8FBA431F4E36",
+      "repair_slice": "TEC-R2-S2",
+      "disposition": "fixed",
+      "changed_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "path": "logs/ci/2026-08-05/tec-plan-r2/validation-envelope.json",
+      "role": "finalized-finding-authority",
+      "sha256": "sha256:bdaa93b76afb903d7f18d433001fa4f15e450dc9c4370cba35f5b8618f7545bb"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/repair-plan.v1.json",
+      "role": "repair-plan",
+      "sha256": "sha256:995b4792faa6693f0257d1d6023aba9e0b1755be73c852dee2b03dd7002a1d80"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/red-result.v1.json",
+      "role": "red-evidence",
+      "sha256": "sha256:83940960c1339f25cfdf571224a01434072e7e52e65fbdfdb662dbed9ead0b56"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/green-result.v1.json",
+      "role": "green-evidence",
+      "sha256": "sha256:2db3adf6ad2a8a043124ea4507a94a82d5ae06d64eb07bcfca694eaad9da82cd"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/acceptance-repair-completeness.v1.json",
+      "role": "repair-completeness",
+      "sha256": "sha256:297c26a861b1ea539e38d1a3947ba770ca065938cfa649f8300821a6e78ba5c4"
+    },
+    {
+      "path": "logs/ci/2026-08-05/tec-plan-r2/repair/quick-dev-route.v3.json",
+      "role": "current-plan-route",
+      "sha256": "sha256:1e5deefc40784a9c3b08a976be9efe4f3ec18fe46b8ab319715f63b6d5793c12"
+    }
+  ],
+  "repair_completeness_status": "passed",
+  "current_plan_route": {
+    "next_action": "awaiting-implementation-authorization",
+    "reason": "implementation-authorization-required"
+  },
+  "round_three_triggers": [
+    "novel_p0_p1",
+    "authority_context_graph_changed",
+    "high_risk_boundary_changed"
+  ],
+  "status": "repair-closed-awaiting-reentry-decision",
+  "authorizes": []
+}

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "quick-dev-repair-review-handoff-input.v1",
+  "repositoryRoot": "C:\\jimuyun",
+  "acceptanceTarget": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1",
+  "lineageFamilyId": "toolchain-workflow-evidence-catalog-v1-plan",
+  "semanticRoundsConsumed": 2,
+  "predecessorRun": "logs/ci/2026-08-05/tec-plan-r2",
+  "baselineManifestPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/baseline-content-manifest.v1.json",
+  "baselineManifestHash": "sha256:d817296a249e3bd3586f57ced3a68bb818fdc1bdbc1a2ce612dca0e31643bfae",
+  "candidateManifestPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/candidate-content-manifest.v1.json",
+  "candidateManifestHash": "sha256:d0e19145ba069f148744c231a012a460aaff43025abf83eacdf69125a6d1e23d",
+  "changedFiles": [
+    ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+    ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "directConsumers": [
+    ".agents/skills/bmad-quick-dev/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+  ],
+  "targetedTests": [
+    ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "validationRefs": [
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/control-plane-composition-receipt.v4.json",
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/green-result.v1.json",
+    "logs/ci/2026-08-05/tec-plan-r2/repair/quick-dev-route.v3.json"
+  ],
+  "rootCauseInventories": [
+    {
+      "inventoryId": "route-lifecycle-gate-callsites",
+      "searchTerm": "_slice_authorization_gate",
+      "searchRoots": [".agents/skills/quick-dev-tdd-adapter/tools"],
+      "addressedPaths": [".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"],
+      "exclusions": []
+    },
+    {
+      "inventoryId": "route-lifecycle-regression-callsites",
+      "searchTerm": "test_router_rejects_contradictory_lifecycle_fields",
+      "searchRoots": [".agents/skills/quick-dev-tdd-adapter/tools/tests"],
+      "addressedPaths": [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"],
+      "exclusions": []
+    },
+    {
+      "inventoryId": "plan-owned-contract-schema-callsites",
+      "searchTerm": "plan-owned-implementation-contract.v1.schema.json",
+      "searchRoots": [".agents/skills/bmad-quick-dev"],
+      "addressedPaths": [
+        ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+        ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py"
+      ],
+      "exclusions": []
+    }
+  ],
+  "compositionChecks": [
+    {
+      "checkId": "round-two-control-plane-composition",
+      "producerPaths": [
+        ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+        ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+      ],
+      "consumerPaths": [
+        ".agents/skills/bmad-quick-dev/SKILL.md",
+        ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
+      "receiptPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/control-plane-composition-receipt.v4.json",
+      "commandRegistryPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/acceptance-command-registry.v3.json"
+    }
+  ],
+  "novelP0P1FindingIds": [
+    "BSR-086BBEF80DDA7927",
+    "BSR-43479ED989965DE4",
+    "BSR-AEBB8FBA431F4E36"
+  ],
+  "authorityGraphChanged": true,
+  "highRiskBoundaryChanged": true,
+  "authorizes": []
+}

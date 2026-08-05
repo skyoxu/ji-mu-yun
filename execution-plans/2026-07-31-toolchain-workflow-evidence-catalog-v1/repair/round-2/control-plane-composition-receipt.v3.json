@@ -1,0 +1,96 @@
+{
+  "authorizes": [],
+  "commandId": "round-two-control-plane-composition",
+  "commandRegistryHash": "sha256:76ac9b9fddd0bef0de4ed48d24838db145064eb98ba57c6c2618bbd5a1856697",
+  "environmentIdentity": {
+    "hash": "sha256:f047e9877601714fb21afd5c8eb5293900b6af5f27a7b05dfdddf5d4750114c6",
+    "names": [
+      "ComSpec",
+      "PATHEXT",
+      "Path",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ]
+  },
+  "exitCode": 1,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/bmad-quick-dev/SKILL.md",
+      "sha256": "sha256:26928e0a5126cc64be950b0aaf240dfe9226f35b48ff2246b85e47a1af29a0f9"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "sha256": "sha256:9cccbf6555502b7355a9632efda0fe88e8df066e620238f2eedbf610494f8f62"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "sha256": "sha256:84922533581bf2d5c933bdd17122272d3338c0aa6f38d24d6abc39b21a43d278"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+      "sha256": "sha256:ff22e3f57868ea4cb208cee4d2ab2b3ae30fc96b464dd2a791f78d361a78ea93"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+      "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "sha256": "sha256:6dad3e00514afb1b0614a3af13bd8e6b0eed5638ed210f6208dd411f798c2c6c"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "sha256": "sha256:78d3ff2f8cb3cfd393d92b59e85bb7db794f336f4ff08fb4d2d8e7c6ee06d3b8"
+    }
+  ],
+  "inputBindingsHash": "sha256:606cbfd38831a0b19ee8defb816010b14116db60e47d04c1a0235206d14ed25b",
+  "invocation": {
+    "argv": [
+      "-3",
+      "-m",
+      "unittest",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py"
+    ],
+    "commandId": "round-two-control-plane-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "ComSpec",
+      "Path",
+      "PATHEXT",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ],
+    "executable": "C:\\Windows\\py.exe",
+    "shell": false,
+    "timeoutSeconds": 120
+  },
+  "invocationHash": "sha256:a79f4c49a5b92063553b4faa70fdcc21a9cab7f30f28f827e450789775140508",
+  "processResult": {
+    "commandId": "round-two-control-plane-composition",
+    "exitCode": 1,
+    "stderr": "Traceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\Program Files\\Python312\\Lib\\unittest\\__main__.py\", line 18, in <module>\r\n    main(module=None)\r\n  File \"C:\\Program Files\\Python312\\Lib\\unittest\\main.py\", line 104, in __init__\r\n    self.parseArgs(argv)\r\n  File \"C:\\Program Files\\Python312\\Lib\\unittest\\main.py\", line 153, in parseArgs\r\n    self.createTests()\r\n  File \"C:\\Program Files\\Python312\\Lib\\unittest\\main.py\", line 164, in createTests\r\n    self.test = self.testLoader.loadTestsFromNames(self.testNames,\r\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Program Files\\Python312\\Lib\\unittest\\loader.py\", line 207, in loadTestsFromNames\r\n    suites = [self.loadTestsFromName(name, module) for name in names]\r\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Program Files\\Python312\\Lib\\unittest\\loader.py\", line 137, in loadTestsFromName\r\n    module = __import__(module_name)\r\n             ^^^^^^^^^^^^^^^^^^^^^^^\r\nValueError: Empty module name\r\n",
+    "stderrSha256": "sha256:3c7857f5e5ed776de3439c7fbc74a96df800da975ced31f957275eb475c19382",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:e6b86307b299d4d2f351b01461c2159290dd4bae1b0f65c4decc6441662d0c15",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

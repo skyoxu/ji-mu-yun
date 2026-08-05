@@ -1,0 +1,314 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1",
+  "authorityGraphArtifacts": [
+    ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+    ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "authorityGraphChanged": true,
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/baseline-content-manifest.v1.json",
+    "sha256": "sha256:d817296a249e3bd3586f57ced3a68bb818fdc1bdbc1a2ce612dca0e31643bfae"
+  },
+  "candidateManifest": {
+    "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/candidate-content-manifest.v1.json",
+    "sha256": "sha256:d0e19145ba069f148744c231a012a460aaff43025abf83eacdf69125a6d1e23d"
+  },
+  "changedPathBindings": [
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "sha256": "sha256:9cccbf6555502b7355a9632efda0fe88e8df066e620238f2eedbf610494f8f62",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "sha256": "sha256:84922533581bf2d5c933bdd17122272d3338c0aa6f38d24d6abc39b21a43d278",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+      "sha256": "sha256:ff22e3f57868ea4cb208cee4d2ab2b3ae30fc96b464dd2a791f78d361a78ea93",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "sha256": "sha256:6dad3e00514afb1b0614a3af13bd8e6b0eed5638ed210f6208dd411f798c2c6c",
+      "state": "present"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "sha256": "sha256:78d3ff2f8cb3cfd393d92b59e85bb7db794f336f4ff08fb4d2d8e7c6ee06d3b8",
+      "state": "present"
+    }
+  ],
+  "changedPaths": [
+    ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+    ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+    ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "compositionChecks": [
+    {
+      "bindings": [
+        {
+          "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+          "role": "producer",
+          "sha256": "sha256:9cccbf6555502b7355a9632efda0fe88e8df066e620238f2eedbf610494f8f62"
+        },
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+          "role": "producer",
+          "sha256": "sha256:ff22e3f57868ea4cb208cee4d2ab2b3ae30fc96b464dd2a791f78d361a78ea93"
+        },
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+          "role": "producer",
+          "sha256": "sha256:6dad3e00514afb1b0614a3af13bd8e6b0eed5638ed210f6208dd411f798c2c6c"
+        },
+        {
+          "path": ".agents/skills/bmad-quick-dev/SKILL.md",
+          "role": "consumer",
+          "sha256": "sha256:26928e0a5126cc64be950b0aaf240dfe9226f35b48ff2246b85e47a1af29a0f9"
+        },
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+          "role": "consumer",
+          "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+        },
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+          "role": "consumer",
+          "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+        }
+      ],
+      "checkId": "round-two-control-plane-composition",
+      "commandRegistry": {
+        "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/acceptance-command-registry.v3.json",
+        "sha256": "sha256:c8aaf71c1cb80e1bd1f6015116ddcd0c18e6f470b66a2a16441f85738a81880f"
+      },
+      "controlledReplay": {
+        "authorizes": [],
+        "commandId": "round-two-control-plane-composition",
+        "commandRegistryHash": "sha256:b694c34a6cf0e258b602e2f4e00aef6c6ec095d65877c0c0ac43f64510837f12",
+        "environmentIdentity": {
+          "hash": "sha256:f047e9877601714fb21afd5c8eb5293900b6af5f27a7b05dfdddf5d4750114c6",
+          "names": [
+            "ComSpec",
+            "PATHEXT",
+            "Path",
+            "SystemRoot",
+            "TEMP",
+            "TMP",
+            "USERNAME",
+            "windir"
+          ]
+        },
+        "exitCode": 0,
+        "inputBindings": [
+          {
+            "path": ".agents/skills/bmad-quick-dev/SKILL.md",
+            "sha256": "sha256:26928e0a5126cc64be950b0aaf240dfe9226f35b48ff2246b85e47a1af29a0f9"
+          },
+          {
+            "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+            "sha256": "sha256:9cccbf6555502b7355a9632efda0fe88e8df066e620238f2eedbf610494f8f62"
+          },
+          {
+            "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+            "sha256": "sha256:84922533581bf2d5c933bdd17122272d3338c0aa6f38d24d6abc39b21a43d278"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+            "sha256": "sha256:ff22e3f57868ea4cb208cee4d2ab2b3ae30fc96b464dd2a791f78d361a78ea93"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+            "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+            "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+            "sha256": "sha256:6dad3e00514afb1b0614a3af13bd8e6b0eed5638ed210f6208dd411f798c2c6c"
+          },
+          {
+            "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+            "sha256": "sha256:78d3ff2f8cb3cfd393d92b59e85bb7db794f336f4ff08fb4d2d8e7c6ee06d3b8"
+          }
+        ],
+        "inputBindingsHash": "sha256:606cbfd38831a0b19ee8defb816010b14116db60e47d04c1a0235206d14ed25b",
+        "invocation": {
+          "argv": [
+            "-3",
+            "-c",
+            "import subprocess,sys; raise SystemExit(max(subprocess.run([sys.executable,p]).returncode for p in sys.argv[1:]))",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+            ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py"
+          ],
+          "commandId": "round-two-control-plane-composition",
+          "cwd": ".",
+          "environmentAllowlist": [
+            "ComSpec",
+            "Path",
+            "PATHEXT",
+            "SystemRoot",
+            "TEMP",
+            "TMP",
+            "USERNAME",
+            "windir"
+          ],
+          "executable": "C:\\Windows\\py.exe",
+          "shell": false,
+          "timeoutSeconds": 120
+        },
+        "invocationHash": "sha256:4f75fad8ac6a2fc1d3fe34b5558b6bfa7edb2c7537bc80148e8407ebc09ad24d",
+        "schemaVersion": "acceptance-composition-controlled-replay.v1",
+        "writeManifestDelta": {
+          "added": [],
+          "changedPaths": [],
+          "deleted": [],
+          "modified": []
+        },
+        "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+      },
+      "receipt": {
+        "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/control-plane-composition-receipt.v4.json",
+        "sha256": "sha256:daeb0af1243ce789d75ceb4476333bbba414738384ea8c193bbdd7a6dc7c43cf"
+      },
+      "targetedTests": [
+        ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ]
+    }
+  ],
+  "directConsumers": [
+    {
+      "path": ".agents/skills/bmad-quick-dev/SKILL.md",
+      "sha256": "sha256:26928e0a5126cc64be950b0aaf240dfe9226f35b48ff2246b85e47a1af29a0f9"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+      "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+    }
+  ],
+  "highRiskBoundaryArtifacts": [
+    ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json"
+  ],
+  "highRiskBoundaryChanged": true,
+  "lineageFamilyId": "toolchain-workflow-evidence-catalog-v1-plan",
+  "novelP0P1FindingIds": [
+    "BSR-086BBEF80DDA7927",
+    "BSR-43479ED989965DE4",
+    "BSR-AEBB8FBA431F4E36"
+  ],
+  "predecessorRun": "logs/ci/2026-08-05/tec-plan-r2",
+  "requestHash": "sha256:f269904fd9aaf85dd1bc61c80436435c4932e6cb3840736b818424b1038fc98d",
+  "rootCauseInventories": [
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "route-lifecycle-gate-callsites",
+      "matches": [
+        {
+          "lineNumbers": [
+            70,
+            196
+          ],
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+          "sha256": "sha256:6dad3e00514afb1b0614a3af13bd8e6b0eed5638ed210f6208dd411f798c2c6c"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "_slice_authorization_gate"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "route-lifecycle-regression-callsites",
+      "matches": [
+        {
+          "lineNumbers": [
+            81
+          ],
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+          "sha256": "sha256:78d3ff2f8cb3cfd393d92b59e85bb7db794f336f4ff08fb4d2d8e7c6ee06d3b8"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "test_router_rejects_contradictory_lifecycle_fields"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+        ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "plan-owned-contract-schema-callsites",
+      "matches": [
+        {
+          "lineNumbers": [
+            80
+          ],
+          "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+          "sha256": "sha256:9cccbf6555502b7355a9632efda0fe88e8df066e620238f2eedbf610494f8f62"
+        },
+        {
+          "lineNumbers": [
+            44
+          ],
+          "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+          "sha256": "sha256:84922533581bf2d5c933bdd17122272d3338c0aa6f38d24d6abc39b21a43d278"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/bmad-quick-dev"
+      ],
+      "searchTerm": "plan-owned-implementation-contract.v1.schema.json"
+    }
+  ],
+  "schemaVersion": "acceptance-repair-completeness.v1",
+  "semanticRoundsConsumed": 2,
+  "status": "passed",
+  "targetedTests": [
+    {
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "sha256": "sha256:84922533581bf2d5c933bdd17122272d3338c0aa6f38d24d6abc39b21a43d278"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "sha256": "sha256:78d3ff2f8cb3cfd393d92b59e85bb7db794f336f4ff08fb4d2d8e7c6ee06d3b8"
+    }
+  ],
+  "validationRefs": [
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/control-plane-composition-receipt.v4.json",
+      "sha256": "sha256:daeb0af1243ce789d75ceb4476333bbba414738384ea8c193bbdd7a6dc7c43cf"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-2/green-result.v1.json",
+      "sha256": "sha256:2db3adf6ad2a8a043124ea4507a94a82d5ae06d64eb07bcfca694eaad9da82cd"
+    },
+    {
+      "path": "logs/ci/2026-08-05/tec-plan-r2/repair/quick-dev-route.v3.json",
+      "sha256": "sha256:1e5deefc40784a9c3b08a976be9efe4f3ec18fe46b8ab319715f63b6d5793c12"
+    }
+  ]
+}

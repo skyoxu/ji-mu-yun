@@ -1,0 +1,77 @@
+{
+  "authorizes": [],
+  "commandId": "quick-dev-router-schema-composition",
+  "commandRegistryHash": "sha256:93cbbe581f95dd436d2de186adc0f8f3efeffe44d18a35c3feaadbb6eb5d37a8",
+  "environmentIdentity": {
+    "hash": "sha256:f047e9877601714fb21afd5c8eb5293900b6af5f27a7b05dfdddf5d4750114c6",
+    "names": [
+      "ComSpec",
+      "PATHEXT",
+      "Path",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/bmad-quick-dev/SKILL.md",
+      "sha256": "sha256:26928e0a5126cc64be950b0aaf240dfe9226f35b48ff2246b85e47a1af29a0f9"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "sha256": "sha256:9cccbf6555502b7355a9632efda0fe88e8df066e620238f2eedbf610494f8f62"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "sha256": "sha256:84922533581bf2d5c933bdd17122272d3338c0aa6f38d24d6abc39b21a43d278"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+      "sha256": "sha256:ff22e3f57868ea4cb208cee4d2ab2b3ae30fc96b464dd2a791f78d361a78ea93"
+    }
+  ],
+  "inputBindingsHash": "sha256:b2ebfdcec0aa2a7c32bcb51eb77557fc401c1dc5913cb638d9a9e5ad5aad0c9d",
+  "invocation": {
+    "argv": [
+      "-3",
+      ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py"
+    ],
+    "commandId": "quick-dev-router-schema-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "ComSpec",
+      "Path",
+      "PATHEXT",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ],
+    "executable": "C:\\Windows\\py.exe",
+    "shell": false,
+    "timeoutSeconds": 120
+  },
+  "invocationHash": "sha256:7b0f9110d21f68e7231dd45e1d03106550dcb82ca4afadeba4dc107e43d06ecd",
+  "processResult": {
+    "commandId": "quick-dev-router-schema-composition",
+    "exitCode": 0,
+    "stderr": ".........\r\n----------------------------------------------------------------------\r\nRan 9 tests in 0.258s\r\n\r\nOK\r\n",
+    "stderrSha256": "sha256:819e7f811974506c782f52a818cca3307429bc1543e4475a8caee84dc4c90953",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:1c2cd334671f1c22dd34012249130072480c2ff574ec50e60c50e9b47f74d045",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

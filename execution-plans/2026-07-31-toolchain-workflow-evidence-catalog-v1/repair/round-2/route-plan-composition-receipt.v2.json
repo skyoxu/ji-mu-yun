@@ -1,0 +1,81 @@
+{
+  "authorizes": [],
+  "commandId": "route-plan-consumer-composition",
+  "commandRegistryHash": "sha256:93cbbe581f95dd436d2de186adc0f8f3efeffe44d18a35c3feaadbb6eb5d37a8",
+  "environmentIdentity": {
+    "hash": "sha256:f047e9877601714fb21afd5c8eb5293900b6af5f27a7b05dfdddf5d4750114c6",
+    "names": [
+      "ComSpec",
+      "PATHEXT",
+      "Path",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "sha256": "sha256:84922533581bf2d5c933bdd17122272d3338c0aa6f38d24d6abc39b21a43d278"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+      "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "sha256": "sha256:6dad3e00514afb1b0614a3af13bd8e6b0eed5638ed210f6208dd411f798c2c6c"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "sha256": "sha256:78d3ff2f8cb3cfd393d92b59e85bb7db794f336f4ff08fb4d2d8e7c6ee06d3b8"
+    }
+  ],
+  "inputBindingsHash": "sha256:cc5a68e66831edc552d9a6d02dcbbf9d18307f2a07621b99265c44d0a4dc0ef6",
+  "invocation": {
+    "argv": [
+      "-3",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+    ],
+    "commandId": "route-plan-consumer-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "ComSpec",
+      "Path",
+      "PATHEXT",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ],
+    "executable": "C:\\Windows\\py.exe",
+    "shell": false,
+    "timeoutSeconds": 120
+  },
+  "invocationHash": "sha256:93541e1168ff2cb7833bac07ed20eadc70aeefde98093877f742caca14078835",
+  "processResult": {
+    "commandId": "route-plan-consumer-composition",
+    "exitCode": 0,
+    "stderr": ".................\r\n----------------------------------------------------------------------\r\nRan 17 tests in 0.479s\r\n\r\nOK\r\n",
+    "stderrSha256": "sha256:771e3fd606273d32416886fccfd12b1a2025ef4b9413b5d829562c533c5343e4",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:20305aa6daa27d5e45a1c6c42b09faa0289aede805888cc49f593d1de416b968",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

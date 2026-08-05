@@ -73,10 +73,26 @@ class PlanDirectoryLoopTests(unittest.TestCase):
                 "schema_version": "vdd.plan-state.v2",
                 "plan_id": "target",
                 "status": "implementation-authorized",
-                "authorizes": ["implementation-authorized"],
+                "authorizes": ["plan-ready", "implementation-authorized"],
             }), encoding="utf-8")
 
             self.assertEqual("run-slice", ROUTER.route(root, plan)["next_action"])
+
+    def test_router_rejects_abbreviated_v2_implementation_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            (plan / "plan-state.v1.json").write_text(json.dumps({
+                "schema_version": "vdd.plan-state.v2",
+                "plan_id": "target",
+                "status": "implementation-authorized",
+                "authorizes": ["implementation-authorized"],
+            }), encoding="utf-8")
+
+            result = ROUTER.route(root, plan)
+
+            self.assertEqual("external-repair-required", result["next_action"])
+            self.assertEqual("invalid-plan-state", result["reason"])
 
     def test_router_rejects_contradictory_lifecycle_fields(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

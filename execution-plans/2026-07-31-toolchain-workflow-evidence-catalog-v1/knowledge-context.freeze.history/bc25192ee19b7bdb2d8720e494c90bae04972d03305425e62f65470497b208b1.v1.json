@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:f60a8f27c583279473dbaa540a151e9f3827e00fdfa2cfe8081c7627b4c0ea43",
-  "canonical_context_sha256": "sha256:e1b721afce3a847b9770984cb34aef1e86fe13355d23f7effbf8cae67e780654",
-  "request_sha256": "sha256:ad99705f53453e725a2ca55154b4175819d674a55c947f134e3a44c3cc8ecbd0",
-  "result_sha256": "sha256:97af0e8a2ffce47e32d82c582f1ddb72c19a61f8826a69b9da64929fdf92fef3",
+  "context_sha256": "sha256:bc25192ee19b7bdb2d8720e494c90bae04972d03305425e62f65470497b208b1",
+  "canonical_context_sha256": "sha256:1ba6d6137516eca455b84f72903b7936f363cb1af0dfc59b05140dba955ce499",
+  "request_sha256": "sha256:3e2ce34bdaa1e54cb71e3771d4d3fe2848098673b3b088309c37d19ec61413b4",
+  "result_sha256": "sha256:1c0b4ae82acf1b69a0544cd10548cc2026768847d8cd70b80b4f041b3e8564b9",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "43efcbe3b38978f6f85819edc474fb683d21f2ab"
+    "commit": "6e990f120eeed9d15fc52a3f13235ff17002b237"
   },
-  "source_snapshot_id": "sha256:5cc71a2eaa02cd1bae320a0ada5ea08b1b75e6599ca871cd550069873c8d4858",
+  "source_snapshot_id": "sha256:14f58124290440f8dbbed4e6eb8bab3bf4377104cd2e526fb9d1d83f26ffa030",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -92,8 +92,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:bc25192ee19b7bdb2d8720e494c90bae04972d03305425e62f65470497b208b1",
-    "freeze_receipt_path": "knowledge-context.freeze.history/bc25192ee19b7bdb2d8720e494c90bae04972d03305425e62f65470497b208b1.v1.json",
-    "reason": "round two compatibility repair advanced current main and Quick Dev route source bytes"
+    "context_sha256": "sha256:009d87603a3f8b68c0c302ca61a85227ee6ce350a472a72957ed8c20f044fa2b",
+    "freeze_receipt_path": "knowledge-context.freeze.history/009d87603a3f8b68c0c302ca61a85227ee6ce350a472a72957ed8c20f044fa2b.v1.json",
+    "reason": "repair commit advanced current main and Quick Dev route source bytes"
   }
 }

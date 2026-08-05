@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "acceptance-command-registry.v1",
+  "commands": [
+    {
+      "id": "round-two-control-plane-composition",
+      "executable": "C:\\Windows\\py.exe",
+      "argv": [
+        "-3",
+        "-c",
+        "import subprocess,sys; raise SystemExit(max(subprocess.run([sys.executable,p]).returncode for p in sys.argv[1:]))",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+        ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120,
+      "shell": false,
+      "allowed_write_roots": [],
+      "forbidden_write_roots": [],
+      "environment_allowlist": ["ComSpec", "Path", "PATHEXT", "SystemRoot", "TEMP", "TMP", "USERNAME", "windir"],
+      "typed_placeholders": {},
+      "placeholder_values": {},
+      "registry_hash": "sha256:b694c34a6cf0e258b602e2f4e00aef6c6ec095d65877c0c0ac43f64510837f12"
+    }
+  ],
+  "registryHash": "sha256:b694c34a6cf0e258b602e2f4e00aef6c6ec095d65877c0c0ac43f64510837f12"
+}

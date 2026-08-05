@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {"path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py", "sha256": "sha256:6dad3e00514afb1b0614a3af13bd8e6b0eed5638ed210f6208dd411f798c2c6c", "roles": ["implementation"], "inclusion_reason": "Round 3 authorization gate baseline"},
+    {"path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py", "sha256": "sha256:78d3ff2f8cb3cfd393d92b59e85bb7db794f336f4ff08fb4d2d8e7c6ee06d3b8", "roles": ["test"], "inclusion_reason": "Round 3 lifecycle regression baseline"}
+  ]
+}

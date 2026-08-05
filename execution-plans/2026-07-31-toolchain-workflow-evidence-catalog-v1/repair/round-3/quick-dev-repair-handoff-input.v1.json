@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "quick-dev-repair-review-handoff-input.v1",
+  "repositoryRoot": "C:\\jimuyun",
+  "acceptanceTarget": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1",
+  "lineageFamilyId": "toolchain-workflow-evidence-catalog-v1-plan",
+  "semanticRoundsConsumed": 3,
+  "predecessorRun": "logs/ci/2026-08-05/tec-plan-r3-review-b",
+  "baselineManifestPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/baseline-content-manifest.v1.json",
+  "baselineManifestHash": "sha256:d383101ea342801a9d480ff8a364d2aad021029a9fe0e95289ac8fced7a7e514",
+  "candidateManifestPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/candidate-content-manifest.v1.json",
+  "candidateManifestHash": "sha256:3d808746b454da72b25a6399c5db0ee3e39bec29e876206563190dd68817ff38",
+  "changedFiles": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "directConsumers": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+  ],
+  "targetedTests": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "validationRefs": [
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/composition-receipt.v1.json",
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/green-result.v1.json",
+    "logs/ci/2026-08-05/tec-plan-r3-review-b/validation-envelope.json"
+  ],
+  "rootCauseInventories": [
+    {
+      "inventoryId": "v2-authorization-gate-callsites",
+      "searchTerm": "_slice_authorization_gate",
+      "searchRoots": [".agents/skills/quick-dev-tdd-adapter/tools"],
+      "addressedPaths": [".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"],
+      "exclusions": []
+    },
+    {
+      "inventoryId": "v2-abbreviated-authority-regression",
+      "searchTerm": "test_router_rejects_abbreviated_v2_implementation_authority",
+      "searchRoots": [".agents/skills/quick-dev-tdd-adapter/tools/tests"],
+      "addressedPaths": [".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"],
+      "exclusions": []
+    }
+  ],
+  "compositionChecks": [
+    {
+      "checkId": "round-three-lifecycle-composition",
+      "producerPaths": [".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"],
+      "consumerPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
+      "receiptPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/composition-receipt.v1.json",
+      "commandRegistryPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/acceptance-command-registry.v1.json"
+    }
+  ],
+  "novelP0P1FindingIds": [
+    "BSR-A16D7BD04595439A",
+    "BSR-CC406D26ADDA6B7D",
+    "BSR-F66419802975166C"
+  ],
+  "authorityGraphChanged": true,
+  "highRiskBoundaryChanged": false,
+  "authorizes": []
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "jimuyun.vdd-repair-plan.v1",
+  "plan_id": "toolchain-workflow-evidence-catalog-v1",
+  "lineage_family_id": "toolchain-workflow-evidence-catalog-v1-plan",
+  "review_round": 3,
+  "predecessor_run": "logs/ci/2026-08-05/tec-plan-r3-review-b",
+  "finding_ids": [
+    "BSR-A16D7BD04595439A",
+    "BSR-CC406D26ADDA6B7D",
+    "BSR-F66419802975166C"
+  ],
+  "root_cause": "The route accepted an abbreviated implementation-authorized authority vector that the accountable vdd.plan-state.v2 validator rejects.",
+  "slices": [
+    {
+      "slice_id": "TEC-R3-S1",
+      "intent": "Require the cumulative v2 authority vector before any file-changing slice can run.",
+      "changed_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "red_command": "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py -k abbreviated_v2_implementation_authority",
+      "green_commands": [
+        "py -3 .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+        "py -3 -m unittest discover -s .agents/skills/quick-dev-tdd-adapter/tools/tests -p test_*.py",
+        "py -3 .agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py"
+      ],
+      "downstream_dependents": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
+      "recovery": "Restore the cumulative authority predicate and rerun the complete adapter suite; do not relax the plan-local validator."
+    }
+  ],
+  "does_not_authorize": ["implementation", "acceptance", "commit", "release"],
+  "authorizes": []
+}

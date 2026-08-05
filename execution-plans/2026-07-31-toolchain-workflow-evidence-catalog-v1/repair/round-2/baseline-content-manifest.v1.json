@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete",
+  "coverageGaps": [],
+  "authorizes": [],
+  "files": [
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "sha256": "sha256:d57127bd07504c0d6307a95f904217aa2075c20e84862bfcbfeeda06d881ebe7",
+      "roles": ["implementation"],
+      "inclusion_reason": "Round 2 parent Quick Dev contract routing baseline"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "sha256": "sha256:25906a406bba52f8dc899f984de7087c4d553bd10c29f7a82db1a2817c539d73",
+      "roles": ["test"],
+      "inclusion_reason": "Round 2 parent Quick Dev regression baseline"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "sha256": "sha256:649003c733b6540010f9fb194c8d867a51855c56d29077ce5c884f8d352c64da",
+      "roles": ["implementation"],
+      "inclusion_reason": "Round 2 lifecycle and candidate freshness baseline"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "sha256": "sha256:93436568ddb6da2c2bf176144e750e53d898c1958cd4c2cc56a515d7c775630b",
+      "roles": ["test"],
+      "inclusion_reason": "Round 2 route regression baseline"
+    }
+  ]
+}

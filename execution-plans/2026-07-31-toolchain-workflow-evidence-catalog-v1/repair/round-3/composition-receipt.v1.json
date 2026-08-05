@@ -1,0 +1,77 @@
+{
+  "authorizes": [],
+  "commandId": "round-three-lifecycle-composition",
+  "commandRegistryHash": "sha256:43b7c4f00f3de8d6c7461cecd6a871d7b1c7b7b33815c9396f39be5e151ccbcb",
+  "environmentIdentity": {
+    "hash": "sha256:f047e9877601714fb21afd5c8eb5293900b6af5f27a7b05dfdddf5d4750114c6",
+    "names": [
+      "ComSpec",
+      "PATHEXT",
+      "Path",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+      "sha256": "sha256:36feb9d6fbdd9acdba734042d0894cc4cb3fe5a17bacf29f2ff708db20f22533"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py",
+      "sha256": "sha256:fdb3be7ae39aa90a3cb54968e6ac8269d29b81ec25f9d340ba1d1a7ecebaab4e"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "sha256": "sha256:2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "sha256": "sha256:2d5e56647d1e1717e9e5d3fb50337f45df092a3dae3a19367aae22d143e1aab2"
+    }
+  ],
+  "inputBindingsHash": "sha256:93afa316f827d819b1c54a65094fb9bc446fa420cd50a52b00f376ec46cae494",
+  "invocation": {
+    "argv": [
+      "-3",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+    ],
+    "commandId": "round-three-lifecycle-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "ComSpec",
+      "Path",
+      "PATHEXT",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "windir"
+    ],
+    "executable": "C:\\Windows\\py.exe",
+    "shell": false,
+    "timeoutSeconds": 120
+  },
+  "invocationHash": "sha256:38b806a7c714713c60a57effa1d38d16e0a93a618d43ab755d38536672263402",
+  "processResult": {
+    "commandId": "round-three-lifecycle-composition",
+    "exitCode": 0,
+    "stderr": "..................\r\n----------------------------------------------------------------------\r\nRan 18 tests in 0.404s\r\n\r\nOK\r\n",
+    "stderrSha256": "sha256:fb6859ab3d9cb54079e29feba8cd72da9ec2280af9882d9ae32b49c780c65cb5",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:5c99676d9a3a4dde19680165446647aacbc2f4a2dbfdf39af01b4d535f098a69",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

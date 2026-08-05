@@ -1,0 +1,74 @@
+{
+  "acceptanceTarget": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1",
+  "authorityGraphChanged": true,
+  "authorizes": [],
+  "baselineManifestHash": "sha256:d383101ea342801a9d480ff8a364d2aad021029a9fe0e95289ac8fced7a7e514",
+  "baselineManifestPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/baseline-content-manifest.v1.json",
+  "candidateManifestHash": "sha256:3d808746b454da72b25a6399c5db0ee3e39bec29e876206563190dd68817ff38",
+  "candidateManifestPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/candidate-content-manifest.v1.json",
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "compositionChecks": [
+    {
+      "checkId": "round-three-lifecycle-composition",
+      "commandRegistryPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/acceptance-command-registry.v1.json",
+      "consumerPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+      ],
+      "producerPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+      ],
+      "receiptPath": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/composition-receipt.v1.json"
+    }
+  ],
+  "directConsumers": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/loop_plan_directory.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/persistent_plan_loop.py"
+  ],
+  "highRiskBoundaryChanged": false,
+  "lineageFamilyId": "toolchain-workflow-evidence-catalog-v1-plan",
+  "novelP0P1FindingIds": [
+    "BSR-A16D7BD04595439A",
+    "BSR-CC406D26ADDA6B7D",
+    "BSR-F66419802975166C"
+  ],
+  "predecessorRun": "logs/ci/2026-08-05/tec-plan-r3-review-b",
+  "repositoryRoot": "C:\\jimuyun",
+  "rootCauseInventories": [
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "v2-authorization-gate-callsites",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools"
+      ],
+      "searchTerm": "_slice_authorization_gate"
+    },
+    {
+      "addressedPaths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "v2-abbreviated-authority-regression",
+      "searchRoots": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests"
+      ],
+      "searchTerm": "test_router_rejects_abbreviated_v2_implementation_authority"
+    }
+  ],
+  "schemaVersion": "acceptance-repair-completeness-request.v1",
+  "semanticRoundsConsumed": 3,
+  "targetedTests": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py"
+  ],
+  "validationRefs": [
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/composition-receipt.v1.json",
+    "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/repair/round-3/green-result.v1.json",
+    "logs/ci/2026-08-05/tec-plan-r3-review-b/validation-envelope.json"
+  ]
+}
