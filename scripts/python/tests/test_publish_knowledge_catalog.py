@@ -510,6 +510,39 @@ class KnowledgePublicationTests(unittest.TestCase):
                         payloads={},
                     )
 
+    def test_lkg_locator_smoke_binds_generation_snapshot_after_main_advances(self) -> None:
+        snapshot = {
+            "ref": "refs/heads/main",
+            "commit": "a" * 40,
+            "snapshot_id": "sha256:" + "1" * 64,
+        }
+        captured: dict = {}
+
+        def run_locator(*_args, **kwargs):
+            request = json.loads(kwargs["input"].decode("utf-8"))
+            captured.update(request)
+            result = {
+                "schema_version": "jimuyun.knowledge-locator-result.v1",
+                "request_id": request["request_id"],
+                "snapshot": request["snapshot"],
+                "source_snapshot_id": snapshot["snapshot_id"],
+                "policy_revision": "policy-v2",
+                "status": "matched",
+                "candidates": [{"path": "AGENTS.md", "source_sha256": "2" * 64}],
+            }
+            return SimpleNamespace(returncode=0, stdout=json.dumps(result).encode("utf-8"))
+
+        with (
+            mock.patch.object(publication, "_main_commit", return_value="b" * 40),
+            mock.patch.object(publication.subprocess, "run", side_effect=run_locator),
+        ):
+            publication._locator_smoke(REPOSITORY_ROOT, snapshot, "policy-v2")
+
+        self.assertEqual(
+            {"ref": "refs/heads/main", "commit": "a" * 40},
+            captured["snapshot"],
+        )
+
     def test_restore_lkg_runs_real_evaluator_and_locator_in_temporary_clone(self) -> None:
         source_index = REPOSITORY_ROOT / "knowledge" / "indexes"
         pointer_path = source_index / "last-known-good.json"
