@@ -1,15 +1,15 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:1126f827d0f9e5324ad6eaba5b1d79964c4bdb5420352b04343fa152c33f3149",
-  "canonical_context_sha256": "sha256:e4872f3ead97c3fedef6b070a2ce831fe4f28e7cdfb04dc8cb2fb1cbdfb392f5",
-  "request_sha256": "sha256:b2822ad18abe69b8211b097ea3cbcc7fa605987f71d6d1ebd9f73318e69bfada",
-  "result_sha256": "sha256:60526a724e21b8893717433e34c5f91624d07affddc296ae10b178f902ed928f",
+  "context_sha256": "sha256:f60a8f27c583279473dbaa540a151e9f3827e00fdfa2cfe8081c7627b4c0ea43",
+  "canonical_context_sha256": "sha256:e1b721afce3a847b9770984cb34aef1e86fe13355d23f7effbf8cae67e780654",
+  "request_sha256": "sha256:ad99705f53453e725a2ca55154b4175819d674a55c947f134e3a44c3cc8ecbd0",
+  "result_sha256": "sha256:97af0e8a2ffce47e32d82c582f1ddb72c19a61f8826a69b9da64929fdf92fef3",
   "snapshot": {
     "ref": "refs/heads/main",
-    "commit": "64af27087667892cac36f0beba3b2a447e9d90df"
+    "commit": "43efcbe3b38978f6f85819edc474fb683d21f2ab"
   },
-  "source_snapshot_id": "sha256:c9728e3e16c52b145c77bf64cd5580844d9af5564fa9d10290eb1ee5300d66dd",
+  "source_snapshot_id": "sha256:5cc71a2eaa02cd1bae320a0ada5ea08b1b75e6599ca871cd550069873c8d4858",
   "policy_revision": "knowledge-consumer-policies.v2",
   "accepted": [
     {
@@ -92,8 +92,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:f60a8f27c583279473dbaa540a151e9f3827e00fdfa2cfe8081c7627b4c0ea43",
-    "freeze_receipt_path": "knowledge-context.freeze.history/f60a8f27c583279473dbaa540a151e9f3827e00fdfa2cfe8081c7627b4c0ea43.v1.json",
-    "reason": "round three cumulative authority repair advanced current main and Quick Dev route source bytes"
+    "context_sha256": "sha256:bc25192ee19b7bdb2d8720e494c90bae04972d03305425e62f65470497b208b1",
+    "freeze_receipt_path": "knowledge-context.freeze.history/bc25192ee19b7bdb2d8720e494c90bae04972d03305425e62f65470497b208b1.v1.json",
+    "reason": "round two compatibility repair advanced current main and Quick Dev route source bytes"
   }
 }

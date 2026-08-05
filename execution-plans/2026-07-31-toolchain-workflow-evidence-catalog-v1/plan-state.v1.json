@@ -2,9 +2,10 @@
   "schema_version": "vdd.plan-state.v2",
   "plan_id": "toolchain-workflow-evidence-catalog-v1",
   "profile": "resumable",
-  "status": "plan-ready",
+  "status": "implementation-authorized",
   "authorizes": [
-    "plan-ready"
+    "plan-ready",
+    "implementation-authorized"
   ],
   "git_baseline": {
     "head": "dbe2a731c9465946d3dc21ac3888491e33340c28",
@@ -24,6 +25,14 @@
       "reason": "The complete resumable directory passed its deterministic plan-ready predicate.",
       "evidence": [
         "tools/validate_plan.py --publish-plan-ready"
+      ]
+    },
+    {
+      "status": "implementation-authorized",
+      "reason": "The maintainer explicitly authorized implementation after accepting the residual risk that the Round 3 repair has deterministic completeness evidence but no post-fix independent semantic verifier.",
+      "evidence": [
+        "repair/round-3/acceptance-repair-completeness.v1.json",
+        "logs/ci/2026-08-05/tec-plan-r3-review-b/validation-envelope.json"
       ]
     }
   ]

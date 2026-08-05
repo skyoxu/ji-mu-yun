@@ -1,7 +1,7 @@
 # Toolchain Workflow Evidence Catalog v1 Execution Plan
 
 - Title: Toolchain Workflow Evidence Catalog v1
-- Status: plan-ready
+- Status: implementation-authorized
 - Profile: resumable
 - Profile reason: The work spans dependent slices and sessions, but it adds a pull-only catalog without modifying existing VDD, Quick Dev, Bootstrap Review, or Acceptance routing, schemas, or controlling validators.
 - Profile upgrade trigger: Upgrade to `self-hosted` before implementation if any existing producer control-plane route, schema, lifecycle publisher, or controlling validator must change.
@@ -10,7 +10,7 @@
 - Baseline tree: `bb20a0f9ad45eadae2eb955dff56e9072e7a13ae`
 - User intent: `docs/know8.txt` at SHA-256 `b3371f2fa9224fa3ea177e3466897358e17d2fdd80c4ac40d99eb4d982616e13`
 - Goal: Build a deterministic, pull-only, non-authorizing catalog of formal repository Toolchain workflow evidence owned by VDD, Quick Dev, Bootstrap Review, and Refactor Implementation Acceptance.
-- Current step: Await explicit implementation authorization before `TEC-S0`.
+- Current step: Route the authorized `TEC-S0` slice through Quick Dev without starting later slices.
 - Recovery command: `py -3 -B execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/tools/validate_plan.py`
 
 ## Outcome Boundary

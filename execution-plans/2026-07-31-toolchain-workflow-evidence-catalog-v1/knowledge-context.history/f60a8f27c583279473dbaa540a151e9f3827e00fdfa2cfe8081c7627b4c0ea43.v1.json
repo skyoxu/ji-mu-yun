@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-toolchain-contract-context-20260805-repair-r3-post-commit",
+    "request_id": "vdd-toolchain-contract-context-20260805-repair-r2",
     "consumer": "vdd",
     "query": "AGENTS Repository Guide VDD Execution Plan Repository Maintenance TDD Adapter Bootstrap Review Control Plane ADR-0044 Knowledge Projection Authority E2 Hosted Context Envelope ADR-0048 Repository Knowledge Locator Workflow Consumption ADR-0050 Knowledge Publication LKG Recovery Generation Retention ADR-0051 Bootstrap Lineage Family Bounded Repair Re-entry ADR-0052 Bootstrap Review Calibration Exact Envelope Reuse Solo-Maintainer VDD Standard",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "64af27087667892cac36f0beba3b2a447e9d90df"
+      "commit": "43efcbe3b38978f6f85819edc474fb683d21f2ab"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -130,7 +130,7 @@
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
             "role": "orchestrator",
-            "source_sha256": "2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
+            "source_sha256": "6dad3e00514afb1b0614a3af13bd8e6b0eed5638ed210f6208dd411f798c2c6c"
           },
           {
             "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
@@ -742,13 +742,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-toolchain-contract-context-20260805-repair-r3-post-commit",
+    "request_id": "vdd-toolchain-contract-context-20260805-repair-r2",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "64af27087667892cac36f0beba3b2a447e9d90df",
+      "commit": "43efcbe3b38978f6f85819edc474fb683d21f2ab",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:c9728e3e16c52b145c77bf64cd5580844d9af5564fa9d10290eb1ee5300d66dd",
+    "source_snapshot_id": "sha256:5cc71a2eaa02cd1bae320a0ada5ea08b1b75e6599ca871cd550069873c8d4858",
     "status": "matched"
   },
   "required_modules": [
@@ -899,11 +899,11 @@
       "rejection_reason": null
     }
   ],
-  "request_sha256": "sha256:b2822ad18abe69b8211b097ea3cbcc7fa605987f71d6d1ebd9f73318e69bfada",
-  "result_sha256": "sha256:60526a724e21b8893717433e34c5f91624d07affddc296ae10b178f902ed928f",
+  "request_sha256": "sha256:ad99705f53453e725a2ca55154b4175819d674a55c947f134e3a44c3cc8ecbd0",
+  "result_sha256": "sha256:97af0e8a2ffce47e32d82c582f1ddb72c19a61f8826a69b9da64929fdf92fef3",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:6a65bcd290c1b69fe74e87253d163e8a3a16c195459d018dd0375218e5cc0793"
+    "context_sha256": "sha256:53fb1f6d9cb6a190dd5083be7bcede2b35555ac1a3eb702032e739bcf0800b78"
   }
 }
