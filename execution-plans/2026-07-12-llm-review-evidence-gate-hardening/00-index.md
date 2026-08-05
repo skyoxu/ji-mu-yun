@@ -86,6 +86,14 @@ is an operational estimate, not a Skill quality baseline or Skill version.
 The detailed behavior, RED/legacy paths, GREEN commands, dependents, and
 recovery actions are owned by `implementation-contract.v2.json`.
 
+## Knowledge Retrieval Compatibility
+
+The LLM review evidence gate treats reviewer output as a candidate rather than
+an acceptance decision: reviewer 只能产生 candidate，控制器复验后才形成审查事实并通过门禁。
+Finding-mode re-entry uses 默认两轮、硬上限三轮，并在边际收益不足时止损。
+Its 降噪 quality is measured with precision and recall so lower 噪音 cannot be
+claimed by merely suppressing findings.
+
 ## Lifecycle
 
 `draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived`
