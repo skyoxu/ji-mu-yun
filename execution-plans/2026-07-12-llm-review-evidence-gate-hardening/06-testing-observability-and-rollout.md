@@ -34,7 +34,8 @@
 - old/new `routeVersion` 的 sidecar、fingerprint namespace 和 metrics 不混用。
 - finding/candidate 缺 routeVersion，或 fingerprint/suppression fingerprint 未绑定 routeVersion 时被拒绝。
 - Bootstrap prepare 不调用 subprocess/LLM/reviewer，且目标 scope 在 prepare/gate/finalize 前后 hash 不变；
-- Bootstrap profile/manifest/prompt 必须一致投影 review object/depth、required context、complete/no-sampling policy、逐角色 reasoning、`gpt-5.6-terra` 首选、`gpt-5.5 -> gpt-5.4` 回退、`gpt-5.6-sol` 禁用和 mandatory tool probe；跨会话替换必须 fail closed；
+- Bootstrap profile/manifest/prompt 必须一致投影 review object/depth、required context、complete/no-sampling policy、逐角色 reasoning 和 mandatory tool probe；Round 1-2 discovery 使用 profile 声明的 Terra/fallback 路由，合法 Round 3 使用 Sol/high，standard P1 verifier 使用 Terra/high，高风险 P1 使用 Sol/high，P0/security 使用 Sol/max；跨会话替换必须 fail closed；
+- discovery access proof 必须覆盖每个不同的 role-specific model/reasoning 路由；相同路由可共享 proof，缺任一路由 proof 或 proof/layer 不等价时授权失败；
 - Bootstrap 输出目录位于 scope 内、scope 越过 repository root 或包含不存在路径时 fail closed；
 - required reviewer 输出缺失与空 findings 明确区分；三层均完成且零 finding 可以 clean；
 - 每层 reviewer 写回后必须通过只读 `validate-layer`；该命令只接受 `completed`，`pending`/`failed`、`missingArtifacts` 非空、required/read 集合不等或 coverage 不是精确分区时失败，且不得产生 gate sidecar；

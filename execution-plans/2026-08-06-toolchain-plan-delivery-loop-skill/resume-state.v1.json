@@ -1,0 +1,18 @@
+{
+  "schema_version": "vdd.resume-state.v2",
+  "plan_id": "toolchain-plan-delivery-loop-skill",
+  "profile": "self-hosted",
+  "current_slice": "RMAP-S0",
+  "slice_status": {
+    "RMAP-S0": "pending",
+    "RMAP-S1": "pending",
+    "RMAP-S2": "pending",
+    "RMAP-S3": "pending"
+  },
+  "invalidated_slices": [],
+  "next_action": "Run the required Bootstrap upstream-plan review, repair through VDD if needed, and wait for explicit maintainer implementation authorization before RMAP-S0.",
+  "recovery": "Revalidate the plan and frozen knowledge context, inspect current Bootstrap lineage even when it reports zero rounds, preserve unrelated dirty work, and never infer authorization from review text.",
+  "live_phase_paths_allowed": false,
+  "authorizes": []
+}
+

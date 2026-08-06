@@ -44,7 +44,7 @@
 | RFG-038 | Bootstrap P0/P1 必须等待用户手工独立 verifier，verifier 不得新增 finding | 04 | R0 | `review-gate://RFG-038/manual-verifier-test` | active |
 | RFG-039 | Bootstrap evidence 必须标记 supplemental，不得重写历史或替代 BH-HANDOFF/完成 authority | 01 | R0 | `review-gate://RFG-039/bootstrap-authority-isolation-test` | active |
 | RFG-040 | R1 必须提升同一 Bootstrap schema/profile revision，不得重新派生第二套合同 | 05 | R1 | `review-gate://RFG-040/bootstrap-promotion-identity-test` | active |
-| RFG-041 | Bootstrap reviewer/verifier 的 Codex exec 模型必须由 profile/manifest 跨会话绑定：首选 gpt-5.6-terra，回退 gpt-5.5/gpt-5.4，禁用 gpt-5.6-sol，并要求 tool probe | 09 | R0 | `review-gate://RFG-041/bootstrap-codex-model-policy-test` | active |
+| RFG-041 | Bootstrap reviewer/verifier 的 Codex exec 路由必须由 profile/manifest 跨会话绑定：Round 1-2 discovery 使用 profile 声明的 Terra/fallback 路由，合法 Round 3 使用 Sol/high，standard P1 verifier 使用 Terra/high，高风险 P1 使用 Sol/high，P0/security 使用 Sol/max；access proof 覆盖每个不同的 role-specific model/reasoning 路由，并要求 tool probe | 09 | R0 | `review-gate://RFG-041/bootstrap-codex-model-policy-test` | active |
 | RFG-042 | Review 必须按计划 authority、实施闭合、Skill/路由、聚焦变更选择对象 profile；所有 profile 均要求全 artifact、禁止 sampling、上下文闭包，推理等级不得降低完整性 | 01 | R0 | `review-gate://RFG-042/review-object-profile-completeness-test` | active |
 | RFG-043 | Gate 重跑遇到非空 verifier decisions 时必须在任何写入前 fail closed，并保持 verifier 文件字节不变 | 04 | R0 | `review-gate://RFG-043/verifier-decision-preservation-test` | active |
 | RFG-044 | Dedup 必须按 hash-bound evidence root 合并并保留最高 severity，P2 不得吞掉同根 P1/P0 | 04 | R0 | `review-gate://RFG-044/severity-safe-evidence-root-dedup-test` | active |

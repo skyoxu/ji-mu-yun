@@ -1,0 +1,51 @@
+{
+  "schema_version": "vdd.scoped-dirty-worktree-baseline.v1",
+  "plan_id": "toolchain-plan-delivery-loop-skill",
+  "captured_date": "2026-08-06",
+  "git": {
+    "head": "8c47a52fc8f241f76da9ccb5d936b0fafe807f0f",
+    "tree": "6963a7c3ef477ddabd0acd9459d268a8f2ceb982",
+    "preexisting_relevant_tracked_diff_sha256": "sha256:abba947be93f21e7e456cc7e554c85c25cd391c67f492bc4d23104e3cc902dee",
+    "preexisting_relevant_index_diff_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scope_roots": [
+    ".agents/skills/orchestrate-plan-delivery/",
+    "docs/adr/ADR-0059-opt-in-plan-delivery-coordinator.md",
+    "docs/architecture/ADR_INDEX_PHASE.md",
+    "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/",
+    "execution-plans/95-implementation-report-index.v1.json"
+  ],
+  "preexisting_dirty_paths": [
+    ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+    ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+    ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/schemas/review-finding.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+    ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+    "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md",
+    "docs/standards/bootstrap-review-control-plane.md",
+    "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+    "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+    "execution-plans/95-implementation-report-index.v1.json",
+    "docs/tools.md",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/"
+  ],
+  "preexisting_read_only_dependency_hashes": {
+    ".agents/skills/run-phase-bootstrap-review/SKILL.md": "sha256:0e0553a56df307f98df9d385229b180bb64d6e017b9cd508c65d83a2ff84e07c",
+    "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md": "sha256:3a58878f36f70e8cd5a2b48bc06776bdc627f666a29b9ba795c5e8217773d778",
+    "docs/standards/bootstrap-review-control-plane.md": "sha256:73baa755c29b064536481bafa6403dac56caaab5a54aff6f8b74a4b17b0da2a5",
+    "docs/tools.md": "sha256:3bd4e83adeb44eca8a82ad4423c521f3939b5655fab01a66a84d1a9afc10cd4e"
+  },
+  "excluded_generated_or_unrelated": [
+    "logs/",
+    "logs/phase-a-innernet/",
+    "PhaseA.Platform/",
+    "PhaseA.Platform.Tests/",
+    "runtime/phase-a/",
+    "all child Skill implementation and historical evidence paths"
+  ],
+  "candidate_rule": "Freeze a new complete scoped candidate after plan commit and implementation authorization. Preexisting dirty child-control-plane bytes are read-only dependencies and cannot enter this plan's write set.",
+  "authorizes": []
+}
+

@@ -74,6 +74,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
         terminal_type: str = "attempt-completed",
         exit_code: int = 0,
         typed_placeholders: dict[str, str] | None = None,
+        operation_id: str | None = None,
+        reasoning_effort: str = "high",
     ) -> list[dict]:
         attempt = run_dir / "attempts" / attempt_id
         attempt.mkdir(parents=True)
@@ -81,7 +83,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         process_completed = start + timedelta(seconds=max(1, duration_seconds // 2))
         terminal = start + timedelta(seconds=duration_seconds)
         timestamp = lambda value: value.isoformat().replace("+00:00", "Z")
-        operation_id = (
+        operation_id = operation_id or (
             "verifier" if role == "independent_verifier"
             else (f"model-probe:{model}" if role == "model_probe" else f"reviewer:{role}")
         )
@@ -98,7 +100,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "inputHash": input_hash,
             "argv": [
                 "codex", "exec", "--sandbox", "workspace-write", "-m", model,
-                "-c", "model_reasoning_effort=high", "--json",
+                "-c", f"model_reasoning_effort={reasoning_effort}", "--json",
                 "--output-last-message", "candidate-output.json", "-",
             ],
             "shell": False,
@@ -555,15 +557,30 @@ class BootstrapReviewCliTests(unittest.TestCase):
             args.append("--ack-high-cost")
         self.assertEqual(0, bootstrap.main(args))
 
-    def complete_access_proof(self, manifest: dict, proof_role: str = "discovery") -> None:
-        suffix = "verifier" if proof_role == "independent_verifier" else "discovery"
+    def complete_access_proof(
+        self, manifest: dict, proof_role: str = "discovery",
+        reviewer_role: str | None = None,
+    ) -> None:
+        if proof_role == "discovery" and reviewer_role is None:
+            for roles, _path, _route in bootstrap.discovery_access_route_groups(
+                self.run_dir, manifest
+            ):
+                self.complete_access_proof(
+                    manifest, proof_role, reviewer_role=roles[0]
+                )
+            return
+        suffix = (
+            "verifier"
+            if proof_role == "independent_verifier"
+            else (reviewer_role or "discovery")
+        )
         attempt_dir = self.run_dir / "attempts" / f"test-{suffix}-access-probe"
         attempt_dir.mkdir(parents=True, exist_ok=True)
         handshake_path = attempt_dir / "access-handshake.json"
         handshake = bootstrap.access_handshake_payload(self.run_dir, manifest, "model_probe")
         self.write_json(f"attempts/test-{suffix}-access-probe/access-handshake.json", handshake)
         proof_path, route, gate_hash = bootstrap.access_proof_route(
-            self.run_dir, manifest, proof_role
+            self.run_dir, manifest, proof_role, reviewer_role=reviewer_role
         )
         _child_environment, environment_evidence = bootstrap.child_environment()
         proof = {
@@ -653,7 +670,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         )
 
     def complete_codex_gate_with_blocker(
-        self, *, complete_verifier_access: bool = True
+        self, *, complete_verifier_access: bool = True, verifier_risk_class: str = "standard"
     ) -> tuple[dict, dict]:
         self.prepare(execution_mode="codex-exec")
         self.complete_preflight()
@@ -663,7 +680,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
             output["status"] = "completed"
             output["coverage"]["readArtifacts"] = output["coverage"]["requiredArtifacts"]
             output["coverage"]["missingArtifacts"] = []
-            output["candidates"] = [self.candidate()] if layer == "blind_hunter" else []
+            candidate = self.candidate()
+            candidate["verifierRiskClass"] = verifier_risk_class
+            output["candidates"] = [candidate] if layer == "blind_hunter" else []
             self.write_json(f"reviewer-outputs/{layer}.json", output)
             self.complete_process_lease(f"reviewer:{layer}", layer)
         self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
@@ -789,6 +808,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "contextRead": ["upstream-plan/plan.md:1"],
             "existingGuardAnalysis": "No validator checks this authority assignment",
             "maintenanceRiskClass": "runtime_product_risk",
+            "verifierRiskClass": "standard",
             "proposedSeverity": severity,
             "severityRationale": "The reachable workflow executes the wrong required work",
             "confidence": 0.95,
@@ -975,6 +995,17 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual("schema_invalid", code)
         self.assertIn("fields", reason)
 
+    def test_new_candidate_requires_structured_verifier_risk_class(self) -> None:
+        self.prepare()
+        manifest = self.read_json("review-input.json")
+        candidate = self.candidate()
+        del candidate["verifierRiskClass"]
+        code, reason = bootstrap.candidate_reason(
+            candidate, manifest, self.repo, self.run_dir
+        )
+        self.assertEqual("schema_invalid", code)
+        self.assertIn("fields", reason)
+
     def test_operator_guide_matches_reviewer_owned_template_fields(self) -> None:
         guide = (PLAN_ROOT / "09-bootstrap-review-operator-guide.md").read_text(encoding="utf-8")
         self.assertIn("Preserve the manifest-bound routeVersion", guide)
@@ -1006,7 +1037,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.assertEqual(bootstrap.PROCESS_LEASE_POLICY, profile["processLeasePolicy"])
             self.assertEqual(bootstrap.REVIEW_COST_POLICY, profile["reviewCostPolicy"])
             self.assertEqual(bootstrap.ACCESS_PROBE_POLICY, profile["accessProbePolicy"])
-            self.assertEqual("gpt-5.6-sol", profile["verifierPolicy"]["preferredModel"])
+            self.assertEqual("gpt-5.6-terra", profile["verifierPolicy"]["preferredModel"])
+            self.assertEqual("gpt-5.6-sol", profile["verifierPolicy"]["escalatedModel"])
             self.assertEqual("max", profile["verifierPolicy"]["escalatedReasoningEffort"])
             self.assertNotIn("gpt-5.6-sol", profile["codexExecPolicy"]["forbiddenModels"])
             self.assertEqual(
@@ -1027,7 +1059,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             ["reasoningEffortByRole"]["blind_hunter"],
         )
         self.assertEqual(
-            "gpt-5.6-sol",
+            "gpt-5.6-terra",
             profiles["bootstrap-skill-route"]["codexExecPolicy"]["preferredModel"],
         )
 
@@ -1046,7 +1078,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 route = bootstrap.discovery_execution_route(
                     {**skill, "fullReviewRound": review_round}, role
                 )
-                self.assertEqual(("gpt-5.6-sol", "high"), (
+                self.assertEqual(("gpt-5.6-terra", "high"), (
                     route["model"], route["reasoningEffort"]
                 ))
 
@@ -1072,11 +1104,107 @@ class BootstrapReviewCliTests(unittest.TestCase):
         security_route = bootstrap.verifier_execution_route(
             implementation, [{"proposedSeverity": "P1", "dimension": "security"}]
         )
-        self.assertEqual(("gpt-5.6-sol", "high"), (
+        high_risk_p1_route = bootstrap.verifier_execution_route(
+            implementation,
+            [{
+                "proposedSeverity": "P1",
+                "dimension": "code",
+                "verifierRiskClass": "shared_entrypoint",
+            }],
+        )
+        self.assertEqual(("gpt-5.6-terra", "high"), (
             p1_route["model"], p1_route["reasoningEffort"]
         ))
-        self.assertEqual("max", p0_route["reasoningEffort"])
-        self.assertEqual("max", security_route["reasoningEffort"])
+        self.assertEqual(("gpt-5.6-sol", "high"), (
+            high_risk_p1_route["model"], high_risk_p1_route["reasoningEffort"]
+        ))
+        self.assertEqual(("gpt-5.6-sol", "max"), (
+            p0_route["model"], p0_route["reasoningEffort"]
+        ))
+        self.assertEqual(("gpt-5.6-sol", "max"), (
+            security_route["model"], security_route["reasoningEffort"]
+        ))
+
+    def test_discovery_access_proofs_cover_each_distinct_role_route(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        groups = bootstrap.discovery_access_route_groups(self.run_dir, manifest)
+        self.assertEqual(2, len(groups))
+        self.assertEqual(["blind_hunter"], groups[0][0])
+        self.assertEqual("medium", groups[0][2]["reasoningEffort"])
+        self.assertEqual(["edge_case_hunter", "acceptance_auditor"], groups[1][0])
+        self.assertEqual("high", groups[1][2]["reasoningEffort"])
+
+        self.complete_access_proof(manifest)
+        aggregate_hash = bootstrap.validate_access_proof(
+            self.run_dir, manifest, "discovery"
+        )
+        self.assertRegex(aggregate_hash or "", r"^sha256:[0-9a-f]{64}$")
+        self.complete_preflight()
+        self.authorize_launch()
+        self.assertEqual(
+            aggregate_hash,
+            self.read_json("review-launch-authorization.json")["accessProofHash"],
+        )
+        for role in bootstrap.LAYERS:
+            path, route, _gate_hash = bootstrap.access_proof_route(
+                self.run_dir, manifest, "discovery", reviewer_role=role
+            )
+            proof = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(route["reasoningEffort"], proof["reasoningEffort"])
+
+    def test_focused_route_uses_frozen_predecessor_policy_and_complete_candidates(self) -> None:
+        predecessor = self.repo / "focused-route-predecessor"
+        predecessor.mkdir()
+        current = bootstrap.load_profile("bootstrap-focused-repair-verification")
+        current.update({
+            "repositoryRoot": str(self.repo),
+            "predecessorRun": predecessor.relative_to(self.repo).as_posix(),
+        })
+        legacy_manifest = {
+            "codexExecPolicy": {
+                "preferredModel": "gpt-5.6-sol",
+                "fallbackModels": [],
+                "reasoningEffortByRole": {"independent_verifier": "high"},
+            }
+        }
+        (predecessor / "review-input.json").write_text(
+            json.dumps(legacy_manifest), encoding="utf-8", newline="\n"
+        )
+        (predecessor / "review-candidates.json").write_text(
+            json.dumps({"findings": [{"proposedSeverity": "P1", "dimension": "code"}]}),
+            encoding="utf-8", newline="\n",
+        )
+        with mock.patch.object(bootstrap, "finalized_review_result", return_value={}):
+            legacy_route = bootstrap.focused_repair_execution_route(current)
+        self.assertEqual(("gpt-5.6-sol", "high"), (
+            legacy_route["model"], legacy_route["reasoningEffort"]
+        ))
+
+        current_predecessor = bootstrap.load_profile("bootstrap-implementation-conformance")
+        (predecessor / "review-input.json").write_text(
+            json.dumps(current_predecessor), encoding="utf-8", newline="\n"
+        )
+        (predecessor / "review-candidates.json").write_text(
+            json.dumps({"findings": [
+                {
+                    "findingId": "VISIBLE-P1", "proposedSeverity": "P1",
+                    "dimension": "code", "verifierRiskClass": "standard",
+                },
+                {
+                    "findingId": "HIDDEN-P0", "proposedSeverity": "P0",
+                    "dimension": "security", "verifierRiskClass": "protected_path",
+                },
+            ]}),
+            encoding="utf-8", newline="\n",
+        )
+        with mock.patch.object(bootstrap, "finalized_review_result", return_value={
+            "findings": [{"findingId": "VISIBLE-P1", "proposedSeverity": "P1"}]
+        }):
+            complete_route = bootstrap.focused_repair_execution_route(current)
+        self.assertEqual(("gpt-5.6-sol", "max"), (
+            complete_route["model"], complete_route["reasoningEffort"]
+        ))
 
     def test_prepare_projects_each_review_object_profile_into_manifest_and_prompts(self) -> None:
         profile_names = (
@@ -1337,7 +1465,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             for field, value in bootstrap.bootstrap_sidecar_binding(manifest).items():
                 self.assertEqual(value, sidecar[field], f"{relative} has stale {field}")
         verifier_prompt = (self.run_dir / "verification-prompt.md").read_text(encoding="utf-8")
-        self.assertIn("Preferred Codex exec model: `gpt-5.6-sol`", verifier_prompt)
+        self.assertIn("Preferred Codex exec model: `gpt-5.6-terra`", verifier_prompt)
         self.assertIn("Fallback models: ``", verifier_prompt)
         self.assertIn("Forbidden models: ``", verifier_prompt)
         self.assertIn("Reasoning effort: `high`", verifier_prompt)
@@ -1623,6 +1751,22 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(["blind_hunter", "edge_case_hunter"], findings[0]["sourceReviewers"])
         self.assertEqual("duplicate", self.read_json("review-rejections.json")["rejections"][0]["reasonCode"])
         self.assertEqual("awaiting_verification", self.read_json("review-gate-result.json")["status"])
+
+    def test_gate_deduplicates_risk_class_disagreement_and_retains_high_risk(self) -> None:
+        self.prepare()
+        standard = self.candidate("BOOT-CANDIDATE-STANDARD")
+        high_risk = self.candidate("BOOT-CANDIDATE-HIGH-RISK")
+        high_risk["verifierRiskClass"] = "protected_path"
+        self.complete_layers({
+            "blind_hunter": [standard], "edge_case_hunter": [high_risk]
+        })
+        self.assertEqual(0, bootstrap.main(["gate", "--run-dir", str(self.run_dir)]))
+        findings = self.read_json("review-candidates.json")["findings"]
+        self.assertEqual(1, len(findings))
+        self.assertEqual("protected_path", findings[0]["verifierRiskClass"])
+        self.assertEqual(
+            ["blind_hunter", "edge_case_hunter"], findings[0]["sourceReviewers"]
+        )
 
     def test_gate_keeps_same_evidence_with_distinct_failure_tuple(self) -> None:
         self.prepare()
@@ -2642,7 +2786,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "run-layer", "--run-dir", str(self.run_dir),
             "--role", "independent_verifier",
             "--codex-command", "test-codex-command",
-            "--model", "gpt-5.6-sol",
+            "--model", "gpt-5.6-terra",
         ]))
         self.assertEqual(
             attempts_before,
@@ -2652,7 +2796,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.complete_access_proof(manifest, "independent_verifier")
         verifier_proof = self.read_json("verifier-access-proof.json")
         self.assertEqual("independent_verifier", verifier_proof["proofRole"])
-        self.assertEqual("gpt-5.6-sol", verifier_proof["model"])
+        self.assertEqual("gpt-5.6-terra", verifier_proof["model"])
         self.assertEqual("high", verifier_proof["reasoningEffort"])
         self.assertEqual(
             bootstrap.file_hash(self.run_dir / "review-gate-state.json"),
@@ -2662,6 +2806,16 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "run-independent-verifier",
             bootstrap.classify_run(self.run_dir, manifest)["nextAction"],
         )
+
+    def test_high_risk_p1_verifier_access_proof_uses_sol_high(self) -> None:
+        manifest, _finding = self.complete_codex_gate_with_blocker(
+            complete_verifier_access=False,
+            verifier_risk_class="protected_path",
+        )
+        self.complete_access_proof(manifest, "independent_verifier")
+        verifier_proof = self.read_json("verifier-access-proof.json")
+        self.assertEqual("gpt-5.6-sol", verifier_proof["model"])
+        self.assertEqual("high", verifier_proof["reasoningEffort"])
 
     def test_verifier_access_probe_is_rejected_before_gate(self) -> None:
         self.prepare(execution_mode="codex-exec")
@@ -3327,6 +3481,13 @@ class BootstrapReviewCliTests(unittest.TestCase):
         manifest = self.read_json("review-input.json")
         self.assertEqual([bootstrap.FOCUSED_REPAIR_ROLE], manifest["requiredLayers"])
         self.assertEqual("verification_only", manifest["findingMode"])
+        _proof_path, focused_route, gate_hash = bootstrap.access_proof_route(
+            self.run_dir, manifest, bootstrap.FOCUSED_REPAIR_ROLE
+        )
+        self.assertIsNone(gate_hash)
+        self.assertEqual(("gpt-5.6-terra", "high"), (
+            focused_route["model"], focused_route["reasoningEffort"]
+        ))
         with self.assertRaisesRegex(
             bootstrap.BootstrapError, "Discovery access is forbidden"
         ):
@@ -3615,7 +3776,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
         self.assertEqual(expected, actual)
         self.assertEqual(
-            "sha256:339e0598bbf8bc39bfa0ece78859f2b67eba669fcc8be958d6a0ea659996eb85",
+            "sha256:12c7ee7e1c12ede2c59e31d7ae5b49f3d79c1a20497960566218fc3d9a39e900",
             actual["policyRevision"],
         )
 
@@ -4766,12 +4927,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "policyRevision": profile["policyRevision"],
             "routeVersion": profile["routeVersion"],
             "controlPlaneRevision": profile["controlPlaneRevision"],
-            "model": profile["codexExecPolicy"]["preferredModel"],
-            "reasoningProfile": bootstrap.value_hash(
-                {
-                    role: bootstrap.discovery_execution_route(profile, role)["reasoningEffort"]
-                    for role in bootstrap.LAYERS
-                }
+            "model": bootstrap.cost_model_cohort_key({**profile, "fullReviewRound": 1}),
+            "reasoningProfile": bootstrap.cost_reasoning_profile(
+                {**profile, "fullReviewRound": 1}
             ),
             "fullReviewRound": 1,
             "workloadBucket": "small",
@@ -4916,10 +5074,15 @@ class BootstrapReviewCliTests(unittest.TestCase):
             },
             "codexExecPolicy": profile["codexExecPolicy"],
             "verifierPolicy": profile["verifierPolicy"],
+            "accessProbePolicy": profile["accessProbePolicy"],
         }
         (run_dir / "review-candidates.json").write_text(json.dumps({
             "findings": [
-                {"proposedSeverity": "P1", "dimension": "correctness"},
+                {
+                    "proposedSeverity": "P1",
+                    "dimension": "correctness",
+                    "verifierRiskClass": "protected_path",
+                },
                 {"proposedSeverity": "P2", "dimension": "security"},
             ],
         }), encoding="utf-8", newline="\n")
@@ -4952,6 +5115,70 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(["gpt-5.6-sol", "gpt-5.6-terra"], result["selectedModels"])
         self.assertRegex(result["modelCohortKey"], r"^sha256:[0-9a-f]{64}$")
         self.assertEqual([], result["exclusionReasons"])
+
+    def test_structured_cost_evidence_binds_probe_to_exact_discovery_role_route(self) -> None:
+        run_dir = self.repo / "role-bound-probe-cost-run"
+        run_dir.mkdir()
+        input_hash = "sha256:" + "c" * 64
+        profile = bootstrap.load_profile("bootstrap-upstream-plan")
+        manifest = {
+            "executionMode": "codex-exec",
+            "inputHash": input_hash,
+            "fullReviewRound": 1,
+            "requiredLayers": list(bootstrap.LAYERS),
+            "executionReadSet": [],
+            "dependencyClosure": [],
+            "artifactView": {
+                "manifestPath": "artifact-view/manifest.json",
+                "manifestHash": "sha256:" + "f" * 64,
+            },
+            "codexExecPolicy": profile["codexExecPolicy"],
+            "verifierPolicy": profile["verifierPolicy"],
+            "accessProbePolicy": profile["accessProbePolicy"],
+        }
+        (run_dir / "review-candidates.json").write_text(
+            json.dumps({"findings": []}), encoding="utf-8", newline="\n"
+        )
+        (run_dir / "access-proof.edge_case_hunter.json").write_text(
+            "{}\n", encoding="utf-8", newline="\n"
+        )
+        events = []
+        for index, role in enumerate(bootstrap.LAYERS):
+            effort = bootstrap.reviewer_execution_route(manifest, role)["reasoningEffort"]
+            events.extend(self.write_cost_attempt(
+                run_dir, f"reviewer-{role}", role, 10,
+                input_hash=input_hash, model="gpt-5.6-terra",
+                start_minute=index, reasoning_effort=effort,
+            ))
+        events.extend(self.write_cost_attempt(
+            run_dir, "probe-blind", "model_probe", 5,
+            input_hash=input_hash, model="gpt-5.6-terra", start_minute=3,
+            operation_id="model-probe:discovery:blind_hunter:gpt-5.6-terra",
+            reasoning_effort="medium",
+        ))
+        events.extend(self.write_cost_attempt(
+            run_dir, "probe-edge", "model_probe", 5,
+            input_hash=input_hash, model="gpt-5.6-terra", start_minute=4,
+            operation_id="model-probe:discovery:edge_case_hunter:gpt-5.6-terra",
+            reasoning_effort="high",
+        ))
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            result = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertTrue(result["complete"])
+
+        request_path = run_dir / "attempts" / "probe-edge" / "request.json"
+        request = json.loads(request_path.read_text(encoding="utf-8"))
+        request["argv"][request["argv"].index("model_reasoning_effort=high")] = (
+            "model_reasoning_effort=medium"
+        )
+        request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
+        for event in events:
+            if event.get("attemptId") == "probe-edge" and event.get("eventType") == "attempt-started":
+                event["requestHash"] = bootstrap.value_hash(request)
+        with mock.patch.object(bootstrap, "read_process_events", return_value=events):
+            mismatch = bootstrap.structured_run_cost_evidence(run_dir, manifest)
+        self.assertFalse(mismatch["complete"])
+        self.assertFalse(mismatch["modelConsistent"])
 
     def test_structured_cost_evidence_replays_registered_placeholder_policy(self) -> None:
         run_dir = self.repo / "historical-placeholder-cost-run"

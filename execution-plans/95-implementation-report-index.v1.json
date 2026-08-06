@@ -32,6 +32,14 @@
     {
       "plan_directory": "2026-08-01-workflow-model-routing-control-plane",
       "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-08-06-toolchain-plan-delivery-loop-skill",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
     }
   ]
 }

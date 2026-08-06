@@ -212,7 +212,7 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prov
   [--ack-high-cost]
 ```
 
-The discovery route is profile- and round-bound. Ordinary implementation conformance uses Terra/high in Rounds 1-2, Skill/route review uses Sol/high in Rounds 1-2, and every valid Round 3 uses Sol/high. Round 2 inherits its profile route. The probe must use the same executable identity, resolved model route, sandbox, environment class, and Artifact View contract intended for reviewers. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
+The discovery route is round-bound. Every Round 1-2 profile, including Skill/route review, uses Terra at its profile-declared effort; every valid Round 3 uses Sol/high. Ordinary focused repair verification also uses Terra/high. A focused repair whose frozen predecessor contains P0, `security`, or a structured high-risk verifier class uses the same escalation policy as independent verification. The probe must use the same executable identity, exact resolved model/reasoning route, sandbox, environment class, and Artifact View contract intended for reviewers. When reviewer roles resolve to different routes, one `prove-access --role discovery` command creates one proof per distinct route; roles with an identical route share a proof, and launch authorization binds the complete proof set. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
 
 The runner materializes the deterministic handshake helper inside each attempt directory so the sandboxed child does not need to read the repository `.agents` entrypoint. The parent revalidates the complete Artifact View coverage and handshake hash; a child-produced hash alone is never access proof.
 
@@ -270,7 +270,7 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prov
   [--ack-high-cost]
 ```
 
-This creates `verifier-access-proof.json` only after the gate exists. A P1-only blocker set resolves to Sol/high; any P0 or `security` blocker resolves the whole verifier run to Sol/max. Data-corruption and permission-boundary findings must be classified as P0 or `security` so the structured gate can trigger max effort. The discovery `access-proof.json` cannot authorize the verifier.
+This creates `verifier-access-proof.json` only after the gate exists. A standard P1-only blocker set resolves to Terra/high. A P1 finding classified as `authority_control`, `lifecycle_control`, `protected_path`, or `shared_entrypoint` resolves the whole verifier run to Sol/high. Any P0 or `security` blocker resolves it to Sol/max. `verifierRiskClass` selects model capacity only and never changes severity. Data-corruption and permission-boundary findings must be classified as P0 or `security` so the structured gate can trigger max effort. The discovery `access-proof.json` cannot authorize the verifier.
 
 Then run one independent verifier through `run-layer --role independent_verifier` or the approved external verifier boundary. The verifier must cover each blocker's exact evidence and every `contextRead` reference. If `inspect-run` reports `prove-verifier-access`, complete the verifier probe before launching the verifier.
 

@@ -1,0 +1,35 @@
+{
+  "schema_version": "jimuyun.toolchain-plan-delivery-loop-authority-manifest.v1",
+  "plan_id": "toolchain-plan-delivery-loop-skill",
+  "authority_order": [
+    "AGENTS.md",
+    "accepted ADRs",
+    "child Skill contracts",
+    "bootstrap review standard",
+    "frozen VDD knowledge context",
+    "this plan directory"
+  ],
+  "current_sources": [
+    {"path":"AGENTS.md","sha256":"sha256:06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4","role":"repository-rules"},
+    {"path":"README.md","sha256":"sha256:56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6","role":"repository-overview"},
+    {"path":"workflow.md","sha256":"sha256:cfea35cb31807c72e38988eb7147958a5d3a086d949c85df76cb2f083ed27d0b","role":"chapter6-harness-reference"},
+    {"path":"docs/tools.md","sha256":"sha256:3bd4e83adeb44eca8a82ad4423c521f3939b5655fab01a66a84d1a9afc10cd4e","role":"non-authorizing-current-design-input"},
+    {"path":".agents/skills/run-phase-bootstrap-review/SKILL.md","sha256":"sha256:0e0553a56df307f98df9d385229b180bb64d6e017b9cd508c65d83a2ff84e07c","role":"bootstrap-owner-contract-preexisting-dirty-read-only"},
+    {"path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","sha256":"sha256:f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167","role":"implementation-owner-contract"},
+    {"path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","sha256":"sha256:5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68","role":"acceptance-owner-contract"},
+    {"path":"docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md","sha256":"sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3","role":"ownership-decision"},
+    {"path":"docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md","sha256":"sha256:e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc","role":"lineage-decision"},
+    {"path":"docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md","sha256":"sha256:5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3","role":"acceptance-toolchain-decision"},
+    {"path":"docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md","sha256":"sha256:3a58878f36f70e8cd5a2b48bc06776bdc627f666a29b9ba795c5e8217773d778","role":"finding-mode-decision-preexisting-dirty-read-only"},
+    {"path":"docs/standards/bootstrap-review-control-plane.md","sha256":"sha256:73baa755c29b064536481bafa6403dac56caaab5a54aff6f8b74a4b17b0da2a5","role":"bootstrap-standard-preexisting-dirty-read-only"}
+  ],
+  "external_capabilities": [
+    {"id":"skill-creator","required_for":"Skill initialization, openai.yaml generation, package validation, and forward-test guidance","absolute_path_persisted":false}
+  ],
+  "planned_decision": {
+    "path": "docs/adr/ADR-0059-opt-in-plan-delivery-coordinator.md",
+    "required_status_before_enablement": "Accepted"
+  },
+  "authorizes": []
+}
+

@@ -68,6 +68,15 @@
         "external_requirement_injection"
       ]
     },
+    "verifierRiskClass": {
+      "enum": [
+        "standard",
+        "authority_control",
+        "lifecycle_control",
+        "protected_path",
+        "shared_entrypoint"
+      ]
+    },
     "proposedSeverity": { "enum": ["P0", "P1", "P2"] },
     "reportedSeverity": { "enum": ["P0", "P1", "P2"] },
     "severityAdjustment": {

@@ -1,0 +1,17 @@
+{
+  "schema_version": "vdd.resume-state.v2",
+  "plan_id": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "profile": "self-hosted",
+  "current_slice": "RMAP-S0",
+  "slice_status": {
+    "RMAP-S0": "pending",
+    "RMAP-S1": "pending",
+    "RMAP-S2": "pending",
+    "RMAP-S3": "pending"
+  },
+  "invalidated_slices": [],
+  "next_action": "Begin RMAP-S0 with the plan-owned Quick Dev TDD adapter; keep the slice pending until its controlled RED, GREEN and refactor commands pass.",
+  "recovery": "Read 00-index.md, plan-state.v1.json, authority-manifest.v1.json, requirements.v1.json, implementation-contract.v1.json, knowledge-context.v1.json, its freeze receipt, the Round 3 blocked envelope and the accepted manual repair evidence. Preserve all historical 8-01 bytes and run tools/validate_plan.py --implementation-state before resuming.",
+  "live_phase_paths_allowed": false,
+  "authorizes": []
+}

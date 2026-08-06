@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-02
+- Amended: 2026-08-06
 
 ## Context
 
@@ -40,11 +41,19 @@ did not provide a deterministic enforcement boundary.
 - Focused repair verification covers only predecessor findings. It cannot emit
   new findings or escalation triggers; a still-broken predecessor finding
   remains blocking.
+- Round 1-2 discovery, including Skill/route review, uses Terra at the
+  profile-declared effort. Every valid Round 3 remains Sol/high.
+- New candidates classify verifier risk independently from severity as
+  `standard`, `authority_control`, `lifecycle_control`, `protected_path`, or
+  `shared_entrypoint`. Standard P1 verification uses Terra/high; a high-risk P1
+  uses Sol/high; P0 or `security` uses Sol/max. Focused repair derives the same
+  route from its frozen predecessor finding set.
 - Historical run bytes remain read-only compatible under their frozen policy.
 
 This ADR refines ADR-0051 and ADR-0055 and supersedes their statements that a
 focused verifier may originate an escalation trigger. It does not change the
-three-round hard limit or independent verification of accepted P0/P1 findings.
+three-round hard limit, independent verification of accepted P0/P1 findings,
+or the explicit no-hidden-provider-dispatch boundary.
 
 ## Consequences
 
@@ -55,6 +64,8 @@ three-round hard limit or independent verification of accepted P0/P1 findings.
 - A declined second discovery pass has a narrow, hash-bound deterministic exit
   instead of becoming an acceptance dead end.
 - Ordinary precise repair stays on the single focused verifier path.
+- Routine review and verification cost falls to Terra while Sol remains bound
+  to late-round or structured high-risk evidence.
 
 ## References
 

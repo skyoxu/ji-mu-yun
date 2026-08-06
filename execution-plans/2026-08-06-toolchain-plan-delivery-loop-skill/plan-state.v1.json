@@ -1,0 +1,22 @@
+{
+  "schema_version": "vdd.plan-state.v1",
+  "plan_id": "toolchain-plan-delivery-loop-skill",
+  "profile": "self-hosted",
+  "state": "plan-ready",
+  "state_owner": "vdd-execution-plan",
+  "resume": {
+    "next_action": "Run bootstrap-upstream-plan review over this exact directory. Route any plan findings to VDD repair, then obtain explicit maintainer implementation authorization.",
+    "last_completed_step": "vdd-plan-ready",
+    "recovery_instruction": "Read 00-index.md, requirements.v1.json, implementation-contract.v1.json, resume-state.v1.json, knowledge-context.v1.json and its freeze receipt; rerun tools/validate_plan.py before review."
+  },
+  "slices": [
+    {"id":"RMAP-S0","status":"pending","depends_on":[]},
+    {"id":"RMAP-S1","status":"pending","depends_on":["RMAP-S0"]},
+    {"id":"RMAP-S2","status":"pending","depends_on":["RMAP-S0","RMAP-S1"]},
+    {"id":"RMAP-S3","status":"pending","depends_on":["RMAP-S0","RMAP-S1","RMAP-S2"]}
+  ],
+  "blocking_conditions": [],
+  "authorizes": ["plan-ready"],
+  "does_not_authorize": ["implementation-authorized","implementation-complete","acceptance-passed","release","archived"]
+}
+

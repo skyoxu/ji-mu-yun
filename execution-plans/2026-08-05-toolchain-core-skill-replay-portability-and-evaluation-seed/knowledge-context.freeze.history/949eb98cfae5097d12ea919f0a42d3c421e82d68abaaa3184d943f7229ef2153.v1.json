@@ -1,0 +1,45 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:949eb98cfae5097d12ea919f0a42d3c421e82d68abaaa3184d943f7229ef2153",
+  "canonical_context_sha256": "sha256:0c4f6c04f6678b7d4ceca1fb1e04ad59904f753ebe4c78a06ed0acc5c968fcaf",
+  "request_sha256": "sha256:cf547d297c3b4a76944fb8c9ac332cd73e7a3a26c3714d8ad8c4c29487981b01",
+  "result_sha256": "sha256:07537c216a49ecf0ec045d08750fe89dcfc33c49acbae767873d9e0c4ab0005e",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "fda1b959c205bc202528919d5b2496de52ecbf57"
+  },
+  "source_snapshot_id": "sha256:eafe3789c2e9e6e4189dc2911e58b9654ceb77a37c7e04054657c5b992ca8362",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/00-index.md",
+      "source_sha256": "764c37e240d5e415ed687f7e4ceab4edb3eac53f6ff6652d12230d8917a46af4",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef",
+      "satisfies": [
+        "current-toolchain-consumer-contracts"
+      ]
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "source_sha256": "5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68",
+      "satisfies": [
+        "current-toolchain-consumer-contracts"
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "satisfies": [
+        "repository-rules"
+      ]
+    }
+  ],
+  "authorizes": []
+}

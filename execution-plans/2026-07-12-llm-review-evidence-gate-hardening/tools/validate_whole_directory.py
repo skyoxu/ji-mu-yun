@@ -608,7 +608,7 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
             "skill-route",
             "instruction-route-contract-closure",
             ["skill-source", "operator-guide", "route-or-cli", "profiles-and-config", "schemas", "tests", "usage-evidence", "repository-rules"],
-            "gpt-5.6-sol",
+            "gpt-5.6-terra",
             {"blind_hunter": "high", "edge_case_hunter": "high", "acceptance_auditor": "high", "independent_verifier": "high"},
         ),
         "bootstrap-focused-change": (
@@ -654,8 +654,14 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
         ],
     }
     verifier_policy = {
-        "preferredModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-5.6-terra",
+        "escalatedModel": "gpt-5.6-sol",
         "fallbackModels": [],
+        "modelEscalateOnSeverities": ["P0"],
+        "modelEscalateOnDimensions": ["security"],
+        "modelEscalateOnRiskClasses": [
+            "authority_control", "lifecycle_control", "protected_path", "shared_entrypoint",
+        ],
         "defaultReasoningEffort": "high",
         "escalatedReasoningEffort": "max",
         "escalateOnSeverities": ["P0"],
@@ -700,7 +706,7 @@ def validate_bootstrap_contracts(errors: list[str]) -> None:
         or not isinstance(focused_instruction.get("falsePositiveRules"), list)
         or not focused_instruction["falsePositiveRules"]
         or not isinstance(focused_codex, dict)
-        or focused_codex.get("preferredModel") != "gpt-5.6-sol"
+        or focused_codex.get("preferredModel") != "gpt-5.6-terra"
         or focused_codex.get("fallbackModels") != []
         or focused_codex.get("forbiddenModels") != []
         or focused_codex.get("toolProbeRequired") is not True

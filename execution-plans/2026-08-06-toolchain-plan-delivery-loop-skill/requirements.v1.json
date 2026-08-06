@@ -1,0 +1,44 @@
+{
+  "schema_version": "jimuyun.toolchain-plan-delivery-loop-requirements.v1",
+  "plan_id": "toolchain-plan-delivery-loop-skill",
+  "profile": "self-hosted",
+  "requirements": [
+    {"id":"PDL-001","text":"Accept exactly one existing direct-child execution-plans target and fail before any state, log, model, or production write when containment, identity, required contract, or lifecycle validation fails.","acceptance_ids":["PDL-A01","PDL-A02"],"slice_ids":["RMAP-S1"]},
+    {"id":"PDL-002","text":"Coordinate Bootstrap upstream-plan review through the repository-owned Skill, consume its native confidence and finalized evidence, and route plan repairs only through VDD.","acceptance_ids":["PDL-A03","PDL-A04"],"slice_ids":["RMAP-S2"]},
+    {"id":"PDL-003","text":"Require plan-ready plus explicit target-bound maintainer authorization before Quick Dev starts; Bootstrap clean or assistant text alone cannot publish implementation-authorized.","acceptance_ids":["PDL-A05"],"slice_ids":["RMAP-S2"]},
+    {"id":"PDL-004","text":"Invoke Quick Dev TDD only through its strict plan-directory route and continue until its plan-local terminal predicate publishes implementation-complete or a typed stop is reached.","acceptance_ids":["PDL-A06","PDL-A07"],"slice_ids":["RMAP-S2"]},
+    {"id":"PDL-005","text":"Invoke Refactor Acceptance as the acceptance owner and follow its deterministic, Bootstrap, focused-repair, Quick Dev repair, and manual-pause routes until acceptance-passed or a typed stop is reached.","acceptance_ids":["PDL-A08","PDL-A09"],"slice_ids":["RMAP-S2","RMAP-S3"]},
+    {"id":"PDL-006","text":"Recompute one typed next action from current owner evidence before every expensive action and never infer completion from prose, stale checkpoint data, or process names.","acceptance_ids":["PDL-A10"],"slice_ids":["RMAP-S1","RMAP-S2"]},
+    {"id":"PDL-007","text":"Persist a compact non-authorizing checkpoint under logs so a compacted or later Codex session can quickly recover target identity, current owner, last completed action, blockers, evidence refs, and next action.","acceptance_ids":["PDL-A11"],"slice_ids":["RMAP-S1"]},
+    {"id":"PDL-008","text":"Do not create a timer, scheduled task, service, three-minute poller, detached Codex launcher, or process-name based Skill detector; recovery is explicit-invocation and owner-inspection based.","acceptance_ids":["PDL-A12"],"slice_ids":["RMAP-S0","RMAP-S1","RMAP-S3"]},
+    {"id":"PDL-009","text":"Automatically continue only within already granted ordinary write authority and retain explicit per-boundary acknowledgement for high-cost launch, later finding-mode re-entry, protected paths, and manual-pause closure.","acceptance_ids":["PDL-A13"],"slice_ids":["RMAP-S2"]},
+    {"id":"PDL-010","text":"Preserve child lifecycle ownership, bounded Bootstrap lineage, transport retry semantics, P2 current-run closure, append-only evidence, and historical failures.","acceptance_ids":["PDL-A14"],"slice_ids":["RMAP-S0","RMAP-S2","RMAP-S3"]},
+    {"id":"PDL-011","text":"Package the coordinator as a concise repository-local Skill with SKILL.md, agents/openai.yaml, only necessary scripts/references/schemas/tests, and no auxiliary README or machine-specific path.","acceptance_ids":["PDL-A15"],"slice_ids":["RMAP-S0","RMAP-S3"]},
+    {"id":"PDL-012","text":"Provide detached positive and negative composition fixtures covering invalid targets, active and stale child attempts, context compaction, plan repair, implementation completion, acceptance repair, confirmation stops, and acceptance-passed.","acceptance_ids":["PDL-A16"],"slice_ids":["RMAP-S0","RMAP-S3"]},
+    {"id":"PDL-013","text":"Keep Phase service, runtime, live workspaces, auth, shared LLM entrypoints, the three child Skill packages, and their historical run evidence outside the implementation write set.","acceptance_ids":["PDL-A17"],"slice_ids":["RMAP-S0","RMAP-S1","RMAP-S2","RMAP-S3"]},
+    {"id":"PDL-014","text":"Require an Accepted ADR before enabling the opt-in coordinator because the current design input rejects a unified automatic Toolchain Harness entry.","acceptance_ids":["PDL-A18"],"slice_ids":["RMAP-S0"]}
+  ],
+  "acceptance": [
+    {"id":"PDL-A01","assertion":"A deterministic CLI accepts one canonical direct child of execution-plans and records its resolved repository-relative identity."},
+    {"id":"PDL-A02","assertion":"Missing, file, root, nested, traversal, reparse/symlink escape, ambiguous, schema-invalid, or lifecycle-invalid targets fail with zero checkpoint, log, model, or target writes."},
+    {"id":"PDL-A03","assertion":"The initial review action selects bootstrap-upstream-plan and uses inspect-lineage, preflight, access proof, launch authorization, gate, verification, closure, and finalized-run validation from the Bootstrap owner."},
+    {"id":"PDL-A04","assertion":"Each finding retains Bootstrap confidence and disposition; P0/P1 plan repair routes to VDD as one batch and P2 follows current-run closure without an unbounded semantic loop."},
+    {"id":"PDL-A05","assertion":"A fixture proves Bootstrap clean without explicit target-bound maintainer authorization cannot start Quick Dev or publish implementation-authorized."},
+    {"id":"PDL-A06","assertion":"Quick Dev is entered only for a strict schema-valid implementation contract in implementation-authorized state and publishes at most implementation-complete."},
+    {"id":"PDL-A07","assertion":"Repeated implementation failures follow Quick Dev fingerprint stop-loss and repair handoff rules rather than blind reruns."},
+    {"id":"PDL-A08","assertion":"Acceptance is entered only after implementation-complete and remains the sole publisher of acceptance-passed."},
+    {"id":"PDL-A09","assertion":"Acceptance-required Bootstrap and repair actions preserve the stable target-derived lineage, bounded round budget, exact repair completeness, and typed manual pauses."},
+    {"id":"PDL-A10","assertion":"Every dispatch is preceded by a fresh owner inspection; stale checkpoints and process-name observations cannot select or authorize an action."},
+    {"id":"PDL-A11","assertion":"A fresh session can reconstruct a concise status and next action from the target plan, owner evidence, and a hash-verified non-authorizing checkpoint without conversation history."},
+    {"id":"PDL-A12","assertion":"Static and runtime tests reject background polling, scheduled-task/service installation, detached Codex launch, and process-name based Skill liveness checks."},
+    {"id":"PDL-A13","assertion":"Fixtures stop before unknown high-cost acknowledgement, later discovery confirmation, protected-path approval, and manual-pause acknowledgement; a standing prompt cannot silently satisfy an estimate- or trigger-bound gate."},
+    {"id":"PDL-A14","assertion":"The coordinator carries authorizes empty and cannot alter child evidence, reset Bootstrap lineage, convert transport failures into semantic rounds, or treat assistant text as completion."},
+    {"id":"PDL-A15","assertion":"Skill package validation and UI metadata validation pass with no README, placeholder file, user-profile path, or unneeded resource directory."},
+    {"id":"PDL-A16","assertion":"Detached fixture and forward-test matrices cover every declared route and recovery family without launching live high-cost reviewers or touching live Phase state."},
+    {"id":"PDL-A17","assertion":"Candidate and command manifests contain no child Skill, Phase, runtime, auth, hosted workspace, shared LLM entrypoint, or historical evidence write path."},
+    {"id":"PDL-A18","assertion":"ADR-0059 is Accepted, indexed, and explicitly distinguishes this opt-in same-session coordinator from a repository-global Harness or lifecycle owner."}
+  ],
+  "terminal_validation": "py -3 -B execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_implementation.py",
+  "authorizes": []
+}
+

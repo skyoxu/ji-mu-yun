@@ -3,7 +3,7 @@
   "profiles": {
     "bootstrap-upstream-plan": {
       "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
-      "policyRevision": "sha256:4176d43a642fbee3d25bfd4e6b0ab9f2b7d54739c321471c1f2630e53cea012b",
+      "policyRevision": "sha256:2bccdae31913e984e6108157733554a97fa117d83c5007fe19a41b7d9e88dd78",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -48,8 +48,21 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-5.6-terra",
+        "escalatedModel": "gpt-5.6-sol",
         "fallbackModels": [],
+        "modelEscalateOnSeverities": [
+          "P0"
+        ],
+        "modelEscalateOnDimensions": [
+          "security"
+        ],
+        "modelEscalateOnRiskClasses": [
+          "authority_control",
+          "lifecycle_control",
+          "protected_path",
+          "shared_entrypoint"
+        ],
         "defaultReasoningEffort": "high",
         "escalatedReasoningEffort": "max",
         "escalateOnSeverities": [
@@ -175,7 +188,7 @@
     },
     "bootstrap-implementation-conformance": {
       "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
-      "policyRevision": "sha256:177bbccd5905b4d644dea0e6a799075b6175f6a75e8582cfca89cfb85434d005",
+      "policyRevision": "sha256:36bcd27f0967109fe63217593fc3742be76f9520ac67faa60494fa50cd2cae3f",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -230,8 +243,21 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-5.6-terra",
+        "escalatedModel": "gpt-5.6-sol",
         "fallbackModels": [],
+        "modelEscalateOnSeverities": [
+          "P0"
+        ],
+        "modelEscalateOnDimensions": [
+          "security"
+        ],
+        "modelEscalateOnRiskClasses": [
+          "authority_control",
+          "lifecycle_control",
+          "protected_path",
+          "shared_entrypoint"
+        ],
         "defaultReasoningEffort": "high",
         "escalatedReasoningEffort": "max",
         "escalateOnSeverities": [
@@ -357,7 +383,7 @@
     },
     "bootstrap-skill-route": {
       "reviewProfile": "review-policy://bootstrap-skill-route/v1",
-      "policyRevision": "sha256:43e5c0bcc9408150e7c1059e494cbb466f5790426603c2fe7583e1b76b237c9f",
+      "policyRevision": "sha256:5ea2fb59260675f9c19b4c810be0f79360716457f9dc8b06ad8b6e9a15c168f9",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -379,7 +405,7 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-5.6-terra",
         "fallbackModels": [
           "gpt-5.5",
           "gpt-5.4"
@@ -404,8 +430,21 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-5.6-terra",
+        "escalatedModel": "gpt-5.6-sol",
         "fallbackModels": [],
+        "modelEscalateOnSeverities": [
+          "P0"
+        ],
+        "modelEscalateOnDimensions": [
+          "security"
+        ],
+        "modelEscalateOnRiskClasses": [
+          "authority_control",
+          "lifecycle_control",
+          "protected_path",
+          "shared_entrypoint"
+        ],
         "defaultReasoningEffort": "high",
         "escalatedReasoningEffort": "max",
         "escalateOnSeverities": [
@@ -531,7 +570,7 @@
     },
     "bootstrap-focused-change": {
       "reviewProfile": "review-policy://bootstrap-focused-change/v1",
-      "policyRevision": "sha256:a6ed31be4a093471268a6f02f5780260d03b2867f23162100e5d2fa488694402",
+      "policyRevision": "sha256:8f7b25659bda7e811cb506ec283edfd4877249b2e974a585439c235d1e72510b",
       "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
@@ -576,8 +615,21 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-5.6-terra",
+        "escalatedModel": "gpt-5.6-sol",
         "fallbackModels": [],
+        "modelEscalateOnSeverities": [
+          "P0"
+        ],
+        "modelEscalateOnDimensions": [
+          "security"
+        ],
+        "modelEscalateOnRiskClasses": [
+          "authority_control",
+          "lifecycle_control",
+          "protected_path",
+          "shared_entrypoint"
+        ],
         "defaultReasoningEffort": "high",
         "escalatedReasoningEffort": "max",
         "escalateOnSeverities": [
@@ -702,7 +754,7 @@
     },
     "bootstrap-focused-repair-verification": {
       "reviewProfile": "review-policy://bootstrap-focused-repair-verification/v1",
-      "policyRevision": "sha256:339e0598bbf8bc39bfa0ece78859f2b67eba669fcc8be958d6a0ea659996eb85",
+      "policyRevision": "sha256:12c7ee7e1c12ede2c59e31d7ae5b49f3d79c1a20497960566218fc3d9a39e900",
       "authorityRootRegistry": {
         "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
         "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
@@ -725,7 +777,7 @@
         "focused_repair_verifier"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-5.6-terra",
         "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
@@ -737,8 +789,21 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-5.6-sol",
+        "preferredModel": "gpt-5.6-terra",
+        "escalatedModel": "gpt-5.6-sol",
         "fallbackModels": [],
+        "modelEscalateOnSeverities": [
+          "P0"
+        ],
+        "modelEscalateOnDimensions": [
+          "security"
+        ],
+        "modelEscalateOnRiskClasses": [
+          "authority_control",
+          "lifecycle_control",
+          "protected_path",
+          "shared_entrypoint"
+        ],
         "defaultReasoningEffort": "high",
         "escalatedReasoningEffort": "max",
         "escalateOnSeverities": [

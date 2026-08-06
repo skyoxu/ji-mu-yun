@@ -189,9 +189,23 @@ CODEX_EXEC_POLICY_KEYS = {
 REASONING_ROLES = (*REVIEWER_ROLES, "independent_verifier")
 ALLOWED_REASONING_EFFORTS = {"medium", "high", "max"}
 VERIFIER_POLICY_KEYS = {
-    "preferredModel", "fallbackModels", "defaultReasoningEffort",
+    "preferredModel", "escalatedModel", "fallbackModels", "modelEscalateOnSeverities",
+    "modelEscalateOnDimensions", "modelEscalateOnRiskClasses", "defaultReasoningEffort",
     "escalatedReasoningEffort", "escalateOnSeverities", "escalateOnDimensions",
 }
+VERIFIER_RISK_CLASSES = {
+    "standard",
+    "authority_control",
+    "lifecycle_control",
+    "protected_path",
+    "shared_entrypoint",
+}
+VERIFIER_MODEL_ESCALATION_CLASSES = [
+    "authority_control",
+    "lifecycle_control",
+    "protected_path",
+    "shared_entrypoint",
+]
 ACCESS_PROBE_POLICY = {
     "discoverySidecar": "access-proof.json",
     "verifierSidecar": "verifier-access-proof.json",
@@ -914,8 +928,12 @@ def load_profile(name: str) -> dict[str, Any]:
     if (
         not isinstance(verifier_policy, dict)
         or set(verifier_policy) != VERIFIER_POLICY_KEYS
-        or verifier_policy.get("preferredModel") != "gpt-5.6-sol"
+        or verifier_policy.get("preferredModel") != "gpt-5.6-terra"
+        or verifier_policy.get("escalatedModel") != "gpt-5.6-sol"
         or verifier_policy.get("fallbackModels") != []
+        or verifier_policy.get("modelEscalateOnSeverities") != ["P0"]
+        or verifier_policy.get("modelEscalateOnDimensions") != ["security"]
+        or verifier_policy.get("modelEscalateOnRiskClasses") != VERIFIER_MODEL_ESCALATION_CLASSES
         or verifier_policy.get("defaultReasoningEffort") != "high"
         or verifier_policy.get("escalatedReasoningEffort") != "max"
         or verifier_policy.get("escalateOnSeverities") != ["P0"]
@@ -1027,19 +1045,49 @@ def verifier_execution_route(
             "allowedModels": [codex_policy["preferredModel"], *codex_policy["fallbackModels"]],
             "reasoningEffort": codex_policy["reasoningEffortByRole"]["independent_verifier"],
         }
-    escalated = any(
+    effort_escalated = any(
         item.get("proposedSeverity") in policy["escalateOnSeverities"]
         or item.get("dimension") in policy["escalateOnDimensions"]
         for item in values
         if isinstance(item, dict)
     )
+    model_escalated = any(
+        item.get("proposedSeverity") in policy.get("modelEscalateOnSeverities", [])
+        or item.get("dimension") in policy.get("modelEscalateOnDimensions", [])
+        or item.get("verifierRiskClass") in policy.get("modelEscalateOnRiskClasses", [])
+        for item in values
+        if isinstance(item, dict)
+    )
+    model = policy.get("escalatedModel", policy["preferredModel"]) if model_escalated else policy["preferredModel"]
     return {
-        "model": policy["preferredModel"],
-        "allowedModels": [policy["preferredModel"], *policy["fallbackModels"]],
+        "model": model,
+        "allowedModels": [model, *policy["fallbackModels"]],
         "reasoningEffort": (
-            policy["escalatedReasoningEffort"] if escalated else policy["defaultReasoningEffort"]
+            policy["escalatedReasoningEffort"] if effort_escalated else policy["defaultReasoningEffort"]
         ),
     }
+
+
+def focused_repair_execution_route(policy_owner: dict[str, Any]) -> dict[str, Any]:
+    predecessor_run = policy_owner.get("predecessorRun")
+    repository_root = policy_owner.get("repositoryRoot")
+    if not isinstance(predecessor_run, str) or not predecessor_run or not isinstance(repository_root, str):
+        return verifier_execution_route(policy_owner, [])
+    root = Path(repository_root)
+    predecessor_dir = ensure_within(root / predecessor_run, root, "Focused predecessor run")
+    predecessor_manifest = read_json(predecessor_dir / "review-input.json")
+    finalized_review_result(predecessor_dir, predecessor_manifest)
+    candidate_document = read_json(predecessor_dir / "review-candidates.json")
+    findings = candidate_document.get("findings") if isinstance(candidate_document, dict) else None
+    if not isinstance(findings, list):
+        raise BootstrapError("Focused predecessor candidate evidence has an invalid finding set")
+    return verifier_execution_route(predecessor_manifest, findings)
+
+
+def reviewer_execution_route(policy_owner: dict[str, Any], role: str) -> dict[str, Any]:
+    if role == FOCUSED_REPAIR_ROLE:
+        return focused_repair_execution_route(policy_owner)
+    return discovery_execution_route(policy_owner, role)
 
 
 def required_companion_capability(
@@ -1460,20 +1508,13 @@ def _matching_cost_cohort(
     workload_bucket: str,
 ) -> dict[str, Any] | None:
     route_owner = {**profile, "fullReviewRound": full_review_round}
-    roles = profile["requiredLayers"]
-    discovery_routes = {
-        role: discovery_execution_route(route_owner, role) for role in roles
-    }
-    selected_models = {route["model"] for route in discovery_routes.values()}
     identity = {
         "reviewProfile": profile["reviewProfile"],
         "policyRevision": profile["policyRevision"],
         "routeVersion": profile["routeVersion"],
         "controlPlaneRevision": profile["controlPlaneRevision"],
-        "model": next(iter(selected_models)) if len(selected_models) == 1 else "mixed",
-        "reasoningProfile": value_hash({
-            role: discovery_routes[role]["reasoningEffort"] for role in roles
-        }),
+        "model": cost_model_cohort_key(route_owner),
+        "reasoningProfile": cost_reasoning_profile(route_owner),
         "fullReviewRound": full_review_round,
         "workloadBucket": workload_bucket,
     }
@@ -1558,7 +1599,7 @@ def review_cost_estimate(
     effort_units = {"medium": 1, "high": 2, "max": 3}
     route_owner = {**profile, "fullReviewRound": full_review_round}
     reviewer_units = sum(
-        effort_units[discovery_execution_route(route_owner, layer)["reasoningEffort"]]
+        effort_units[reviewer_execution_route(route_owner, layer)["reasoningEffort"]]
         for layer in profile["requiredLayers"]
     )
     artifact_count = len(artifacts)
@@ -2706,11 +2747,7 @@ def validate_launch_authorization(
                 errors.append("preflightResultHash is stale")
         try:
             if historical_replay:
-                validate_baseline_access_proof(run_dir, manifest)
-                access_proof_path = run_dir / "access-proof.json"
-                access_proof_hash = (
-                    file_hash(access_proof_path) if access_proof_path.is_file() else None
-                )
+                access_proof_hash = validate_baseline_access_proof(run_dir, manifest)
             else:
                 access_proof_hash = validate_access_proof(
                     run_dir, manifest, primary_access_proof_role(manifest)
@@ -2900,6 +2937,21 @@ Before exiting, re-read your saved JSON and run this read-only validator from th
 `py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/run_bootstrap_review.py validate-layer --run-dir {run_dir} --layer {layer}`.
 Do not report success until it exits zero."""
     route = discovery_execution_route(manifest, layer)
+    verifier_risk_enabled = "modelEscalateOnRiskClasses" in manifest.get("verifierPolicy", {})
+    verifier_risk_guidance = (
+        "Classify the independent-verifier route in `verifierRiskClass`: use `standard` unless the "
+        "finding directly changes or defeats authority control, lifecycle control, a repository-protected "
+        "path, or a shared execution entrypoint; then use the matching `authority_control`, "
+        "`lifecycle_control`, `protected_path`, or `shared_entrypoint` value. This field selects model "
+        "capacity only and must not change severity.\n\n"
+        if verifier_risk_enabled else ""
+    )
+    verifier_risk_field = ", `verifierRiskClass`" if verifier_risk_enabled else ""
+    verifier_risk_enum = (
+        " `verifierRiskClass` must be one of "
+        "`standard|authority_control|lifecycle_control|protected_path|shared_entrypoint`."
+        if verifier_risk_enabled else ""
+    )
     return f"""# Isolated Bootstrap Review: {layer}
 
 Review ID: `{manifest['reviewId']}`
@@ -2926,7 +2978,7 @@ are automatically shifted by the parent CLI: P0 to P1, P1 to non-blocking P2, an
 Do not relabel those assumptions as runtime product risk to evade this policy. Internal service
 calls are trusted unless the reviewed product boundary supplies concrete contrary evidence.
 
-Role mission:
+{verifier_risk_guidance}Role mission:
 {role_lines}
 
 False-positive suppression rules:
@@ -2961,7 +3013,7 @@ Each candidate object must contain exactly these fields:
 `candidateId`, `artifactKind`, `artifact`, `artifactHash`, `startLine`, `endLine`, `exactEvidence`,
 `triggerInput`, `requiredState`, `badOutcome`, `contextRead`, `existingGuardAnalysis`, `maintenanceRiskClass`,
 `proposedSeverity`, `severityRationale`, `confidence`, `dimension`, `authorityOwner`, `consumer`,
-and `validatorRef`.
+`validatorRef`{verifier_risk_field}.
 
 Use a stable uppercase `candidateId` matching `[A-Z][A-Z0-9-]{{4,63}}`. `artifactKind` must be one
 of `code|document|plan|schema|fixture`; `proposedSeverity` must be `P0|P1|P2`; and `dimension` must
@@ -2969,7 +3021,7 @@ be one of `code|document|plan|security|acceptance|edge-case`. Set `startLine` an
 inclusive positive integers and copy those lines verbatim into `exactEvidence`. Set `contextRead`
 to a non-empty array of manifest artifact references using `path`, `path:line`, or
 `path:start-end`. `maintenanceRiskClass` must be one of `runtime_product_risk`,
-`multi_maintainer_concurrency`, or `external_requirement_injection`. Do not add any other candidate fields.
+`multi_maintainer_concurrency`, or `external_requirement_injection`.{verifier_risk_enum} Do not add any other candidate fields.
 Do not write verifier decisions or gateway-owned dispositions.
 """
 
@@ -5516,8 +5568,37 @@ def command_access_handshake(args: argparse.Namespace) -> int:
     return 0
 
 
+def discovery_access_route_groups(
+    run_dir: Path, manifest: dict[str, Any],
+) -> list[tuple[list[str], Path, dict[str, Any]]]:
+    policy = manifest["accessProbePolicy"]
+    layers = manifest.get("requiredLayers")
+    if not isinstance(layers, list) or not layers:
+        raise BootstrapError("Discovery access requires at least one reviewer role")
+    grouped: list[tuple[list[str], Path, dict[str, Any]]] = []
+    route_indexes: dict[str, int] = {}
+    sidecar = Path(policy["discoverySidecar"])
+    for role in layers:
+        if role not in REVIEWER_ROLES:
+            raise BootstrapError(f"Unsupported discovery role: {role}")
+        route = reviewer_execution_route(manifest, role)
+        route_key = value_hash(route)
+        if route_key in route_indexes:
+            grouped[route_indexes[route_key]][0].append(role)
+            continue
+        path = (
+            run_dir / sidecar
+            if not grouped
+            else run_dir / sidecar.with_name(f"{sidecar.stem}.{role}{sidecar.suffix}")
+        )
+        route_indexes[route_key] = len(grouped)
+        grouped.append(([role], path, route))
+    return grouped
+
+
 def access_proof_route(
     run_dir: Path, manifest: dict[str, Any], proof_role: str,
+    reviewer_role: str | None = None,
 ) -> tuple[Path, dict[str, Any], str | None]:
     policy = manifest["accessProbePolicy"]
     if proof_role in {"discovery", FOCUSED_REPAIR_ROLE}:
@@ -5525,9 +5606,21 @@ def access_proof_route(
             raise BootstrapError("Discovery access is forbidden after the lineage finding round")
         if proof_role == FOCUSED_REPAIR_ROLE and manifest.get("findingMode") != "verification_only":
             raise BootstrapError("Focused verification access requires verification_only finding mode")
+        if proof_role == "discovery":
+            groups = discovery_access_route_groups(run_dir, manifest)
+            if reviewer_role is None:
+                _roles, path, route = groups[0]
+            else:
+                matches = [item for item in groups if reviewer_role in item[0]]
+                if len(matches) != 1:
+                    raise BootstrapError(
+                        f"Discovery access route does not cover reviewer role: {reviewer_role}"
+                    )
+                roles, path, route = matches[0]
+            return path, route, None
         return (
             run_dir / policy["discoverySidecar"],
-            discovery_execution_route(manifest, manifest["requiredLayers"][0]),
+            reviewer_execution_route(manifest, FOCUSED_REPAIR_ROLE),
             None,
         )
     if proof_role != "independent_verifier":
@@ -5548,10 +5641,26 @@ def access_proof_route(
 
 def validate_access_proof(
     run_dir: Path, manifest: dict[str, Any], proof_role: str = "discovery",
+    reviewer_role: str | None = None,
 ) -> str | None:
     if manifest["executionMode"] != "codex-exec":
         return None
-    path, route, gate_hash = access_proof_route(run_dir, manifest, proof_role)
+    if proof_role == "discovery" and reviewer_role is None:
+        groups = discovery_access_route_groups(run_dir, manifest)
+        hashes = [
+            {
+                "reviewerRoles": roles,
+                "path": path.relative_to(run_dir).as_posix(),
+                "sha256": validate_access_proof(
+                    run_dir, manifest, proof_role, reviewer_role=roles[0]
+                ),
+            }
+            for roles, path, _route in groups
+        ]
+        return hashes[0]["sha256"] if len(hashes) == 1 else value_hash(hashes)
+    path, route, gate_hash = access_proof_route(
+        run_dir, manifest, proof_role, reviewer_role=reviewer_role
+    )
     if not path.is_file():
         raise BootstrapError(f"Required {proof_role} access proof is missing: {path}")
     proof = read_json(path)
@@ -5622,6 +5731,16 @@ def command_prove_access(args: argparse.Namespace) -> int:
         raise BootstrapError(
             f"Access proof role {proof_role} is forbidden by finding mode {manifest.get('findingMode')}"
         )
+    reviewer_role = getattr(args, "_reviewer_role", None)
+    if proof_role == "discovery" and reviewer_role is None:
+        for roles, _path, _route in discovery_access_route_groups(run_dir, manifest):
+            child_args = argparse.Namespace(**vars(args))
+            child_args._reviewer_role = roles[0]
+            if command_prove_access(child_args) != 0:
+                return 1
+        validate_access_proof(run_dir, manifest, proof_role)
+        print("Proved every role-specific discovery access route")
+        return 0
     if proof_role in {"discovery", FOCUSED_REPAIR_ROLE}:
         validate_preflight_result(run_dir, manifest)
     else:
@@ -5641,9 +5760,13 @@ def command_prove_access(args: argparse.Namespace) -> int:
             f"retryRisk={estimate['retryRisk']}, samples={estimate['basisSampleCount']}, "
             f"confidence={estimate['confidence']})"
         )
-    proof_path, route, gate_hash = access_proof_route(run_dir, manifest, proof_role)
+    proof_path, route, gate_hash = access_proof_route(
+        run_dir, manifest, proof_role, reviewer_role=reviewer_role
+    )
     if proof_path.exists():
-        validate_access_proof(run_dir, manifest, proof_role)
+        validate_access_proof(
+            run_dir, manifest, proof_role, reviewer_role=reviewer_role
+        )
         print(f"Artifact access is already proven: {proof_path}")
         return 0
     model = args.model or route["model"]
@@ -5694,7 +5817,12 @@ def command_prove_access(args: argparse.Namespace) -> int:
         "createdAt": utc_now(),
     }
     write_json(attempt_dir / "request.json", request)
-    operation_id = f"model-probe:{proof_role}:{model}"
+    operation_scope = (
+        f"{proof_role}:{reviewer_role}"
+        if proof_role == "discovery" and reviewer_role is not None
+        else proof_role
+    )
+    operation_id = f"model-probe:{operation_scope}:{model}"
     try:
         process = subprocess.Popen(
             argv, cwd=manifest["repositoryRoot"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -6389,7 +6517,7 @@ def run_codex_attempt(
     route = (
         verifier_execution_route(manifest, load_gate_blockers(run_dir, manifest))
         if role == "independent_verifier"
-        else discovery_execution_route(manifest, role)
+        else reviewer_execution_route(manifest, role)
     )
     if model not in route["allowedModels"] or model in policy["forbiddenModels"]:
         raise BootstrapError(f"Model is not allowed by the review profile: {model}")
@@ -6663,8 +6791,13 @@ def command_run_layer(args: argparse.Namespace) -> int:
         if args.role == "independent_verifier"
         else primary_access_proof_role(manifest)
     )
-    proof_path, route, _gate_hash = access_proof_route(run_dir, manifest, proof_role)
-    validate_access_proof(run_dir, manifest, proof_role)
+    reviewer_role = args.role if proof_role == "discovery" else None
+    proof_path, route, _gate_hash = access_proof_route(
+        run_dir, manifest, proof_role, reviewer_role=reviewer_role
+    )
+    validate_access_proof(
+        run_dir, manifest, proof_role, reviewer_role=reviewer_role
+    )
     selected_model = args.model or route["model"]
     proof = read_json(proof_path)
     command_path = Path(args.codex_command)
@@ -6940,6 +7073,8 @@ def candidate_reason(
     }
     if "findingModePolicy" in manifest:
         required.add("maintenanceRiskClass")
+    if "modelEscalateOnRiskClasses" in manifest.get("verifierPolicy", {}):
+        required.add("verifierRiskClass")
     if set(candidate) != required:
         return "schema_invalid", "Candidate fields do not match bootstrap-reviewer-output.v1"
     candidate_id = candidate.get("candidateId")
@@ -7046,11 +7181,12 @@ def candidate_reason(
         "artifactKind": {"code", "document", "plan", "schema", "fixture"},
         "dimension": {"code", "document", "plan", "security", "acceptance", "edge-case"},
         "maintenanceRiskClass": MAINTENANCE_RISK_CLASSES,
+        "verifierRiskClass": VERIFIER_RISK_CLASSES,
     }
     if any(
         candidate.get(key) not in values
         for key, values in enums.items()
-        if key in candidate or key != "maintenanceRiskClass"
+        if key in candidate or key not in {"maintenanceRiskClass", "verifierRiskClass"}
     ):
         return "schema_invalid", "Candidate enum value is invalid"
     for key in ("severityRationale", "authorityOwner", "consumer", "validatorRef"):
@@ -7091,12 +7227,11 @@ def finding_from_candidate(candidate: dict[str, Any], layer: str, manifest: dict
         normalize_finding_identity_text(candidate[field])
         for field in ("triggerInput", "requiredState", "badOutcome")
     ]
-    fingerprint = value_hash(
-        [
-            manifest["routeVersion"], candidate["artifact"], candidate["startLine"], candidate["endLine"],
-            evidence_hash, *failure_identity, candidate["dimension"], manifest["authorityRevision"],
-        ]
-    )
+    fingerprint_parts = [
+        manifest["routeVersion"], candidate["artifact"], candidate["startLine"], candidate["endLine"],
+        evidence_hash, *failure_identity, candidate["dimension"], manifest["authorityRevision"],
+    ]
+    fingerprint = value_hash(fingerprint_parts)
     reported_severity = candidate["proposedSeverity"]
     risk_class = candidate.get("maintenanceRiskClass", "runtime_product_risk")
     severity_shift = manifest.get("findingModePolicy", {}).get("severityShift", {}).get(risk_class, {})
@@ -7265,6 +7400,13 @@ def evaluate_reviewer_outputs(
             fingerprint = finding["evidenceFingerprint"]
             candidates_by_fingerprint.setdefault(fingerprint, []).append((candidate, layer, finding))
     severity_rank = {"P0": 3, "P1": 2, "P2": 1}
+    verifier_risk_rank = {
+        "authority_control": 4,
+        "lifecycle_control": 3,
+        "protected_path": 2,
+        "shared_entrypoint": 1,
+        "standard": 0,
+    }
     findings = []
     for fingerprint, group in candidates_by_fingerprint.items():
         ranked = sorted(
@@ -7277,6 +7419,15 @@ def evaluate_reviewer_outputs(
         )
         selected_candidate, _selected_layer, selected_finding = ranked[0]
         selected_finding["sourceReviewers"] = sorted({item[1] for item in group})
+        risk_classes = [
+            item[2].get("verifierRiskClass")
+            for item in group
+            if item[2].get("verifierRiskClass") in verifier_risk_rank
+        ]
+        if risk_classes:
+            selected_finding["verifierRiskClass"] = max(
+                risk_classes, key=lambda value: verifier_risk_rank[value]
+            )
         findings.append(selected_finding)
         for candidate, layer, _finding in ranked[1:]:
             rejections.append(
@@ -8970,19 +9121,48 @@ def cost_model_route_policy(manifest: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(layers, list) or any(role not in REVIEWER_ROLES for role in layers):
         raise BootstrapError("Cost model route requires an exact reviewer role set")
     reviewer_models = {
-        role: discovery_execution_route(manifest, role)["model"]
+        role: reviewer_execution_route(manifest, role)["model"]
         for role in layers
     }
-    verifier_model = verifier_execution_route(manifest, [])["model"]
+    if "modelEscalateOnRiskClasses" not in manifest.get("verifierPolicy", {}):
+        return {
+            "reviewers": reviewer_models,
+            "independentVerifier": verifier_execution_route(manifest, [])["model"],
+        }
+    verifier_routes = {
+        "standardP1": verifier_execution_route(
+            manifest,
+            [{"proposedSeverity": "P1", "dimension": "code", "verifierRiskClass": "standard"}],
+        ),
+    }
+    verifier_routes["highRiskP1"] = verifier_execution_route(
+        manifest,
+        [{
+            "proposedSeverity": "P1",
+            "dimension": "code",
+            "verifierRiskClass": "protected_path",
+        }],
+    )
+    verifier_routes["critical"] = verifier_execution_route(
+        manifest,
+        [{"proposedSeverity": "P0", "dimension": "security", "verifierRiskClass": "standard"}],
+    )
     return {
         "reviewers": reviewer_models,
-        "independentVerifier": verifier_model,
+        "independentVerifier": verifier_routes,
     }
 
 
 def cost_model_cohort_key(manifest: dict[str, Any]) -> str:
     route = cost_model_route_policy(manifest)
-    models = {*route["reviewers"].values(), route["independentVerifier"]}
+    verifier_route = route["independentVerifier"]
+    if isinstance(verifier_route, str):
+        models = {*route["reviewers"].values(), verifier_route}
+        return next(iter(models)) if len(models) == 1 else value_hash(route)
+    models = {
+        *route["reviewers"].values(),
+        *(item["model"] for item in verifier_route.values()),
+    }
     return next(iter(models)) if len(models) == 1 else value_hash(route)
 
 
@@ -8992,7 +9172,7 @@ def cost_reasoning_profile(manifest: dict[str, Any]) -> str:
         raise BootstrapError("Cost reasoning profile requires an exact reviewer role set")
     return value_hash({
         "reviewers": {
-            role: discovery_execution_route(manifest, role)["reasoningEffort"]
+            role: reviewer_execution_route(manifest, role)["reasoningEffort"]
             for role in layers
         },
         "verifierPolicy": manifest.get("verifierPolicy") or {
@@ -9157,7 +9337,7 @@ def structured_run_cost_evidence(
             if isinstance(manifest, dict):
                 try:
                     if role in REVIEWER_ROLES:
-                        route_candidates = [discovery_execution_route(manifest, role)]
+                        route_candidates = [reviewer_execution_route(manifest, role)]
                     else:
                         candidate_doc = read_json(run_dir / "review-candidates.json")
                         findings = (
@@ -9172,11 +9352,47 @@ def structured_run_cost_evidence(
                         if role == "independent_verifier":
                             route_candidates = [verifier_execution_route(manifest, blocker_values)]
                         elif role == "model_probe":
-                            route_candidates = [discovery_execution_route(manifest, "blind_hunter")]
-                            if isinstance(manifest.get("verifierPolicy"), dict):
-                                route_candidates.append(
+                            operation_ids = {
+                                event.get("operationId")
+                                for _index, event in event_attempts.get(attempt_dir.name, [])
+                                if isinstance(event.get("operationId"), str)
+                            }
+                            operation_id = (
+                                next(iter(operation_ids)) if len(operation_ids) == 1 else ""
+                            )
+                            parts = operation_id.split(":")
+                            if (
+                                len(parts) == 4
+                                and parts[:2] == ["model-probe", "discovery"]
+                                and parts[2] in manifest.get("requiredLayers", [])
+                                and parts[3] == selected_model
+                            ):
+                                route_candidates = [
+                                    reviewer_execution_route(manifest, parts[2])
+                                ]
+                            elif (
+                                len(parts) == 3
+                                and parts[:2] == ["model-probe", FOCUSED_REPAIR_ROLE]
+                                and parts[2] == selected_model
+                            ):
+                                route_candidates = [focused_repair_execution_route(manifest)]
+                            elif (
+                                len(parts) == 3
+                                and parts[:2] == ["model-probe", "independent_verifier"]
+                                and parts[2] == selected_model
+                            ):
+                                route_candidates = [
                                     verifier_execution_route(manifest, blocker_values)
-                                )
+                                ]
+                            else:
+                                route_candidates = [
+                                    reviewer_execution_route(manifest, reviewer_role)
+                                    for reviewer_role in manifest.get("requiredLayers", [])
+                                ]
+                                if isinstance(manifest.get("verifierPolicy"), dict):
+                                    route_candidates.append(
+                                        verifier_execution_route(manifest, blocker_values)
+                                    )
                 except (BootstrapError, KeyError, TypeError, ValueError):
                     route_candidates = []
             forbidden_models = policy.get("forbiddenModels", [])
@@ -9452,8 +9668,15 @@ def structured_run_cost_evidence(
         else:
             required_roles.update(layers)
         required_roles.add("model_probe")
-        required_role_counts["model_probe"] = (
-            2 if (run_dir / "verifier-access-proof.json").is_file() else 1
+        try:
+            route_group_count = len(discovery_access_route_groups(run_dir, manifest))
+        except (BootstrapError, KeyError, TypeError, ValueError):
+            route_group_count = 1
+        discovery_probe_count = (
+            route_group_count if list(run_dir.glob("access-proof.*.json")) else 1
+        )
+        required_role_counts["model_probe"] = discovery_probe_count + (
+            1 if (run_dir / "verifier-access-proof.json").is_file() else 0
         )
         candidate_path = run_dir / "review-candidates.json"
         if candidate_path.is_file():
@@ -9554,13 +9777,38 @@ def _baseline_runs(
     return sorted(found, key=lambda item: repository_relative_path(item[0], repository_root))
 
 
-def validate_baseline_access_proof(run_dir: Path, manifest: dict[str, Any]) -> None:
+def validate_baseline_access_proof(
+    run_dir: Path, manifest: dict[str, Any],
+) -> str | None:
+    primary_path = run_dir / "access-proof.json"
     _validate_baseline_access_proof_path(
-        run_dir, manifest, run_dir / "access-proof.json", "discovery"
+        run_dir, manifest, primary_path, "discovery"
     )
+    additional_paths = sorted(run_dir.glob("access-proof.*.json"))
+    for path in additional_paths:
+        _validate_baseline_access_proof_path(run_dir, manifest, path, "discovery")
     _validate_baseline_access_proof_path(
         run_dir, manifest, run_dir / "verifier-access-proof.json", "independent_verifier"
     )
+    if not primary_path.is_file():
+        return None
+    if not additional_paths:
+        return file_hash(primary_path)
+    groups = discovery_access_route_groups(run_dir, manifest)
+    expected_paths = [path for _roles, path, _route in groups]
+    if (
+        expected_paths[0] != primary_path
+        or set(expected_paths[1:]) != set(additional_paths)
+    ):
+        raise BootstrapError("Historical discovery access proof set does not match frozen routes")
+    return value_hash([
+        {
+            "reviewerRoles": roles,
+            "path": path.relative_to(run_dir).as_posix(),
+            "sha256": file_hash(path),
+        }
+        for roles, path, _route in groups
+    ])
 
 
 def _validate_baseline_access_proof_path(
@@ -10087,10 +10335,14 @@ def classify_run(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
     }[execution_state]
     if relationship == "active" and execution_state == "prepared" and isinstance(preflight, dict):
         if preflight.get("status") == "passed":
-            if manifest.get("executionMode") == "codex-exec" and not (run_dir / "access-proof.json").is_file():
-                next_action = "prove-access"
-            else:
-                next_action = "authorize-launch"
+            next_action = "authorize-launch"
+            if manifest.get("executionMode") == "codex-exec":
+                try:
+                    validate_access_proof(
+                        run_dir, manifest, primary_access_proof_role(manifest)
+                    )
+                except (BootstrapError, ControlPlaneError):
+                    next_action = "prove-access"
     if expired_p2:
         next_action = "expired-p2-deferral-blocks"
     verifier_recovery_state = "none"
