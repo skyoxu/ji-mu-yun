@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "vdd-root-cause-callsite-inventory.v1",
+  "inventoryCommand": {
+    "argv": ["rg", "-n", "FORBIDDEN|terminal_replay_command_ids|authority.*source_files|validate_round3_repair", "execution-plans/2026-08-06-skill-authoring-standard/tools"],
+    "shell": false,
+    "timeoutSeconds": 30
+  },
+  "sourceRoots": ["tools", "tools/tests"],
+  "callSites": [
+    {"path": "tools/validate_plan.py", "role": "producer", "disposition": "changed", "reason": "Enforces generic Skill boundary, authority containment, and replayed VDD repair evidence."},
+    {"path": "tools/validate_implementation.py", "role": "producer", "disposition": "changed", "reason": "Rejects a missing or reordered SAS-A12 terminal command set."},
+    {"path": "tools/tests/test_validate_plan.py", "role": "consumer", "disposition": "changed", "reason": "Exercises generic Skill, authority path, and receipt-path negative branches."},
+    {"path": "tools/tests/test_validate_implementation.py", "role": "consumer", "disposition": "changed", "reason": "Exercises the terminal command omission and reordering branch."}
+  ],
+  "authorizes": []
+}

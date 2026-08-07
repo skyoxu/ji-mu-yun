@@ -822,6 +822,83 @@ class BootstrapReviewCliTests(unittest.TestCase):
         profile = bootstrap.load_profile("bootstrap-upstream-plan")
         return bootstrap.authority_root_reference(profile)
 
+    def test_repair_binding_excludes_current_authority_only_closure(self) -> None:
+        artifacts = [
+            {"artifact": "plan.md", "sha256": "sha256:" + "1" * 64},
+            {
+                "artifact": "repair/bootstrap-repair-closure.v1.json",
+                "sha256": "sha256:" + "2" * 64,
+            },
+        ]
+        bound = bootstrap.repair_binding_hashes(
+            artifacts,
+            {"plan-source": ["plan.md"]},
+            [],
+            "repair/bootstrap-repair-closure.v1.json",
+        )
+        self.assertEqual(bound["candidateHash"], bootstrap.value_hash([artifacts[0]]))
+        self.assertNotEqual(bound["candidateHash"], bootstrap.value_hash(artifacts))
+
+    def test_repair_closure_requires_proof_for_fixed_items(self) -> None:
+        closure = {
+            "schemaVersion": "bootstrap-repair-closure.v1",
+            "predecessorRun": "run",
+            "predecessorInputHash": "sha256:" + "a" * 64,
+            "predecessorResultHash": "sha256:" + "b" * 64,
+            "findingIds": ["F-1"],
+            "items": [{
+                "findingId": "F-1", "disposition": "fixed", "risk": "normal",
+                "proofFamily": "regression", "reason": "fixed",
+                "fixRefs": [], "validationCommands": [], "evidence": [],
+            }],
+            "currentBindings": {"candidateHash": "sha256:" + "c" * 64, "sourceHash": "sha256:" + "d" * 64, "validatorHash": "sha256:" + "e" * 64},
+            "gitIndexHash": "sha256:" + "f" * 64,
+            "writeSetHash": "sha256:" + "1" * 64,
+            "executionReadSetHash": "sha256:" + "2" * 64,
+            "dependencyClosureHash": "sha256:" + "3" * 64,
+        }
+        errors = bootstrap.schema_validation_errors("bootstrap-repair-closure.v1.schema.json", closure)
+        self.assertTrue(any("minItems" in error for error in errors))
+
+    def test_repair_closure_rejects_null_evidence_path_without_type_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            predecessor = root / "predecessor"
+            predecessor.mkdir()
+            gate = predecessor / "review-gate-result.json"
+            gate.write_text("{}\n", encoding="utf-8")
+            (predecessor / "review-dispositions.json").write_text(
+                json.dumps({"dispositions": [{"findingId": "F-1"}]}), encoding="utf-8"
+            )
+            closure_path = root / "repair-closure.json"
+            closure = {
+                "schemaVersion": "bootstrap-repair-closure.v1",
+                "predecessorRun": "predecessor",
+                "predecessorInputHash": "sha256:" + "a" * 64,
+                "predecessorResultHash": bootstrap.file_hash(gate),
+                "findingIds": ["F-1"],
+                "items": [{
+                    "findingId": "F-1", "disposition": "fixed", "risk": "normal",
+                    "proofFamily": "regression", "reason": "fixed", "fixRefs": ["x"],
+                    "validationCommands": ["x"], "evidence": [{"path": None, "sha256": "sha256:" + "0" * 64}],
+                }],
+                "currentBindings": {"candidateHash": "sha256:" + "c" * 64, "sourceHash": "sha256:" + "d" * 64, "validatorHash": "sha256:" + "e" * 64},
+                "gitIndexHash": "sha256:" + "f" * 64,
+                "writeSetHash": "sha256:" + "1" * 64,
+                "executionReadSetHash": "sha256:" + "2" * 64,
+                "dependencyClosureHash": "sha256:" + "3" * 64,
+            }
+            closure_path.write_text(json.dumps(closure), encoding="utf-8")
+            predecessor_manifest = {"inputHash": closure["predecessorInputHash"]}
+            with mock.patch.object(bootstrap, "finalized_review_result", return_value={"findings": []}):
+                with self.assertRaises(bootstrap.BootstrapError) as raised:
+                    bootstrap.validate_repair_closure(
+                        closure_path, root, predecessor, predecessor_manifest,
+                        closure["currentBindings"], closure["gitIndexHash"],
+                        ["write"], ["read"], ["dependency"],
+                    )
+            self.assertIn("repair evidence path is invalid", str(raised.exception))
+
     def write_p2_registry(self, manifest: dict) -> tuple[Path, dict[str, str]]:
         exclusions = ["implementation-acceptance", "protected-handoff", "release", "commit", "done"]
         registry = {
@@ -1005,6 +1082,22 @@ class BootstrapReviewCliTests(unittest.TestCase):
         )
         self.assertEqual("schema_invalid", code)
         self.assertIn("fields", reason)
+
+    def test_manifest_requires_lineage_contract_for_current_runs(self) -> None:
+        self.prepare()
+        manifest = self.read_json("review-input.json")
+        for field in ("lineageFamilyId", "candidateBindingHash", "repairReviewDelta", "reviewEntryDecision"):
+            manifest.pop(field, None)
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "lineage-family contract"):
+            bootstrap.validate_manifest_controls(manifest, bootstrap.load_profile("bootstrap-upstream-plan"))
+
+    def test_manifest_requires_finding_mode_contract_for_current_runs(self) -> None:
+        self.prepare()
+        manifest = self.read_json("review-input.json")
+        for field in ("maintenanceMode", "findingMode", "findingModePolicy"):
+            manifest.pop(field, None)
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "finding-mode policy"):
+            bootstrap.validate_manifest_controls(manifest, bootstrap.load_profile("bootstrap-upstream-plan"))
 
     def test_operator_guide_matches_reviewer_owned_template_fields(self) -> None:
         guide = (PLAN_ROOT / "09-bootstrap-review-operator-guide.md").read_text(encoding="utf-8")
@@ -1358,6 +1451,68 @@ class BootstrapReviewCliTests(unittest.TestCase):
         )
         self.assertEqual(1, result)
         self.assertFalse(self.run_dir.exists())
+
+    def test_skill_route_freezes_direct_runtime_dependency_inventory(self) -> None:
+        dependencies = bootstrap.bootstrap_skill_route_runtime_dependencies(
+            bootstrap.REPOSITORY_ROOT, [bootstrap.BOOTSTRAP_ROUTE_PATH]
+        )
+        self.assertEqual(
+            list(bootstrap.BOOTSTRAP_ROUTE_RUNTIME_DEPENDENCIES), dependencies
+        )
+        self.assertIn(
+            ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+            dependencies,
+        )
+        mapping = {
+            "skill-source": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
+            "operator-guide": ["execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md"],
+            "route-or-cli": [bootstrap.BOOTSTRAP_ROUTE_PATH],
+            "profiles-and-config": [".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json"],
+            "schemas": [".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json"],
+            "tests": [".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"],
+            "usage-evidence": ["logs/ci/model-probes/skill-route-review-model-selection-20260713.json"],
+            "repository-rules": ["AGENTS.md"],
+        }
+        artifacts = [{"artifact": bootstrap.BOOTSTRAP_ROUTE_PATH}]
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "outside the prepared Artifact View"):
+            bootstrap.validate_bootstrap_skill_route_dependency_inventory(
+                bootstrap.REPOSITORY_ROOT, "bootstrap-skill-route", artifacts, mapping
+            )
+        augmented = bootstrap.augment_bootstrap_skill_route_dependency_context(
+            "bootstrap-skill-route", mapping, dependencies
+        )
+        self.assertIn(dependencies[0], augmented["route-or-cli"])
+        profile_dependencies = {
+            ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+        }
+        self.assertTrue(profile_dependencies.issubset(set(augmented["profiles-and-config"])))
+        legacy_dependencies = [
+            path for path in dependencies
+            if path != ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json"
+        ]
+        legacy_artifacts = [{"artifact": bootstrap.BOOTSTRAP_ROUTE_PATH}] + [
+            {"artifact": path} for path in legacy_dependencies
+        ]
+        legacy_mapping = {
+            name: [
+                path for path in paths
+                if path != ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json"
+            ]
+            for name, paths in augmented.items()
+        }
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "outside the prepared Artifact View"):
+            bootstrap.validate_bootstrap_skill_route_dependency_inventory(
+                bootstrap.REPOSITORY_ROOT, "bootstrap-skill-route", legacy_artifacts, legacy_mapping
+            )
+        bootstrap.validate_bootstrap_skill_route_dependency_inventory(
+            bootstrap.REPOSITORY_ROOT,
+            "bootstrap-skill-route",
+            legacy_artifacts,
+            legacy_mapping,
+            allow_frozen_historical_policy_omission=True,
+        )
 
     def test_prepare_grants_current_user_modify_on_reviewer_templates(self) -> None:
         with mock.patch.object(bootstrap, "grant_current_user_modify") as grant:
@@ -2590,6 +2745,38 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn("model-probe:parallel-a", operations)
         self.assertIn("model-probe:parallel-b", operations)
 
+    def test_process_lease_lock_binds_pid_and_process_identity(self) -> None:
+        self.prepare()
+        lock_path = self.run_dir / ".process-leases.lock"
+        with bootstrap.process_lease_lock(self.run_dir):
+            owner = json.loads(lock_path.read_text(encoding="utf-8"))
+            self.assertEqual(os.getpid(), owner["pid"])
+            self.assertEqual(
+                bootstrap.process_creation_identity(os.getpid()),
+                owner["processIdentity"],
+            )
+        self.assertFalse(lock_path.exists())
+
+    def test_process_lease_lock_retries_its_own_windows_cleanup(self) -> None:
+        self.prepare()
+        lock_path = self.run_dir / ".process-leases.lock"
+        original_unlink = Path.unlink
+        attempts = 0
+
+        def flaky_unlink(path: Path, *args: object, **kwargs: object) -> None:
+            nonlocal attempts
+            if path == lock_path and attempts == 0:
+                attempts += 1
+                raise PermissionError("transient sharing violation")
+            original_unlink(path, *args, **kwargs)
+
+        with mock.patch.object(Path, "unlink", new=flaky_unlink):
+            with bootstrap.process_lease_lock(self.run_dir):
+                pass
+
+        self.assertEqual(1, attempts)
+        self.assertFalse(lock_path.exists())
+
     def test_codex_exec_gate_requires_completed_reviewer_process_leases(self) -> None:
         self.prepare(execution_mode="codex-exec")
         self.complete_preflight()
@@ -3683,6 +3870,37 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "--user-confirmed",
             "--out", str(authorization_path),
         ]))
+        upstream_profile = bootstrap.load_profile("bootstrap-upstream-plan")
+        predecessor_manifest["profileName"] = "bootstrap-upstream-plan"
+        predecessor_manifest["routeVersion"] = upstream_profile["routeVersion"]
+        predecessor_manifest["reviewProfile"] = upstream_profile["reviewProfile"]
+        predecessor_manifest["policyRevision"] = upstream_profile["policyRevision"]
+        (predecessor / "review-input.json").write_text(
+            json.dumps(predecessor_manifest), encoding="utf-8", newline="\n"
+        )
+        for sidecar_name in ("review-gate-result.json", "review-dispositions.json", "review-metrics.json"):
+            sidecar_path = predecessor / sidecar_name
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            sidecar.update(bootstrap.bootstrap_sidecar_binding(predecessor_manifest))
+            sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8", newline="\n")
+        envelope = json.loads(envelope_path.read_text(encoding="utf-8"))
+        envelope["profileName"] = "bootstrap-upstream-plan"
+        envelope_path.write_text(json.dumps(envelope), encoding="utf-8", newline="\n")
+        repair_document = json.loads(repair_path.read_text(encoding="utf-8"))
+        repair_document["predecessorEnvelope"]["sha256"] = bootstrap.file_hash(envelope_path)
+        repair_path.write_text(json.dumps(repair_document), encoding="utf-8", newline="\n")
+        upstream_authorization_path = self.repo / "hard-limit-upstream-plan-recovery.json"
+        self.assertEqual(0, bootstrap.main([
+            "authorize-hard-limit-focused-recovery",
+            "--repository-root", str(self.repo),
+            "--lineage-family-id", family_id,
+            "--predecessor-run-dir", str(predecessor),
+            "--deterministic-repair-closure", str(repair_path),
+            "--recommendation", "recommend", "--confidence", "0.92",
+            "--rationale", "Plan authority review uses the same verification-only recovery contract",
+            "--user-confirmed",
+            "--out", str(upstream_authorization_path),
+        ]))
         authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
         self.assertEqual([], authorization["authorizes"])
         self.run_dir = self.repo / "hard-limit-focused-run"
@@ -3693,7 +3911,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             lineage_family_id=family_id,
             review_round=3,
             predecessor_run=predecessor,
-            hard_limit_recovery=authorization_path,
+            hard_limit_recovery=upstream_authorization_path,
         )
         manifest = self.read_json("review-input.json")
         self.assertEqual("verification_only", manifest["findingMode"])
@@ -3976,6 +4194,14 @@ class BootstrapReviewCliTests(unittest.TestCase):
         prompt = bootstrap.prompt_text("blind_hunter", manifest, self.run_dir)
         self.assertIn(f"Removed artifact tombstones: `{boundary_relative}`", prompt)
         removed = manifest["repairReviewDelta"]["removedArtifactSnapshots"][0]
+        self.assertIn(
+            boundary_relative,
+            manifest["artifactView"]["requiredArtifacts"],
+        )
+        self.assertIn(
+            boundary_relative,
+            bootstrap.completed_reviewer_coverage(manifest)["requiredArtifacts"],
+        )
         self.assertIn(boundary_relative, bootstrap.reviewer_template("blind_hunter", manifest)["coverage"]["requiredArtifacts"])
         deleted_candidate = self.candidate("DELETED-BOUNDARY-001")
         deleted_candidate.update(

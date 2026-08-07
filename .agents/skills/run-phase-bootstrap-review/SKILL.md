@@ -363,7 +363,16 @@ verifier cannot create the trigger itself.
 Round 2/3 repair closure is checked twice:
 
 1. Prepare checks schema, predecessor identity, exact finding set, evidence paths, and proof-family compatibility.
-2. Authorize checks current evidence hashes, source/validator bindings, Git index, write set, execution read set, dependency closure, and context freshness.
+2. Authorize checks current evidence hashes, source/validator bindings, Git index, write set, execution read set, dependency closure, and context freshness. Prepare also adds the live plan validator and every plan-local schema loaded by the control plane to the Artifact View, so any runtime authority drift fails closed before execution.
+
+The current `bootstrap-repair-closure.v1.json` is an authority-only input. It
+remains in the frozen Artifact View for reviewer read/hash coverage, while its
+exact path is excluded from the repair `candidateHash`. This prevents a
+whole-directory plan scope from creating a self-referential closure; all other
+candidate artifacts and source/validator bindings remain bound.
+Round 2/3 callers must list that closure path explicitly in `--scope`; the
+controller does not silently widen a frozen scope. Missing or extra Artifact
+View entries fail closed through the required-artifact-set binding.
 
 At the third-round hard limit, unresolved blockers produce manual pause. Do not create Round 4 by changing the review ID.
 

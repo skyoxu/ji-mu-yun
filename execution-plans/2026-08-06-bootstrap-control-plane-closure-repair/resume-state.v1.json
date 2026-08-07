@@ -1,0 +1,1 @@
+{"schema_version":"vdd.resume-state.v1","plan_id":"bootstrap-control-plane-closure-repair","status":"ready","next_action":"Run bootstrap-skill-route review over the control-plane files and targeted tests.","authorizes":[]}

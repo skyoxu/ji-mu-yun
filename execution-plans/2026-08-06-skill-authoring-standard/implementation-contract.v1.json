@@ -1,0 +1,113 @@
+{
+  "schema_version": "rmap.implementation-contract.v1",
+  "plan_id": "skill-authoring-standard",
+  "profile": "self-hosted",
+  "backend": {
+    "kind": "repository-maintenance",
+    "hidden_state": false,
+    "authority": "plan-local-predicates",
+    "write_mode": "workspace-write",
+    "shell": false
+  },
+  "authority": {
+    "authority_manifest": "authority-manifest.v1.json"
+  },
+  "protocol_artifacts": {
+    "context_layout": "context/<capsule-id>",
+    "attempt_layout": "attempts/<attempt-id>",
+    "run_state": "logs/tdd-adapter/<plan-id>/run-state.v1.json"
+  },
+  "adapter_actions": ["prepare","red","green","refactor","finalize-candidate","status","resume"],
+  "source_authority": [
+    "AGENTS.md",
+    "README.md",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md",
+    "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+    "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+    "docs/standards/repository-maintenance-agent-protocol.md",
+    "docs/workflows/skill-control-plane-evolution-requirements.md#Package-A-Skill-Authoring-Standard",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md",
+    ".agents/skills/vdd-execution-plan/references/clarification-gate.md",
+    ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.md",
+    "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+    "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json"
+  ],
+  "command_registry": "command-registry.v1.json",
+  "slices": [
+    {
+      "slice_id":"SAS-S0",
+      "title":"Normative standard and contract vocabulary",
+      "requirement_ids":["SAS-001","SAS-002","SAS-009","SAS-010"],
+      "acceptance_ids":["SAS-A01","SAS-A02","SAS-A09","SAS-A10"],
+      "depends_on":[],
+      "source_refs":["docs/workflows/skill-control-plane-evolution-requirements.md#Package-A-Skill-Authoring-Standard","docs/standards/repository-maintenance-agent-protocol.md"],
+      "allowed_changes":{
+        "production":["scripts/sc/config/skill-authoring-standard.v1.json","scripts/sc/schemas/skill-quality-contract.v1.schema.json"],
+        "tests":["scripts/sc/tests/fixtures/skill-quality/contract/**"],
+        "documentation":["docs/standards/skill-authoring-standard.md","docs/adr/ADR-0060-repository-skill-authoring-contract.md","docs/architecture/ADR_INDEX_PHASE.md"]
+      },
+      "forbidden_changes":[".agents/skills/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**","knowledge/indexes/current.json","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"],
+      "execution_snapshot_paths":["docs/workflows/skill-control-plane-evolution-requirements.md","docs/standards/repository-maintenance-agent-protocol.md"],
+      "execution_read_set":["AGENTS.md","README.md","docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md","docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md","docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md","docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md","docs/standards/repository-maintenance-agent-protocol.md","docs/workflows/skill-control-plane-evolution-requirements.md"],
+      "dependency_closure":["docs/adr/**","docs/standards/**","docs/workflows/skill-control-plane-evolution-requirements.md","scripts/sc/config/**","scripts/sc/schemas/**"],
+      "tdd":{"red":{"command_id":"slice-s0-predicate","test_selector":"normative standard and contract are absent","expected_exit":"nonzero","expected_failure_family":"skill-authoring-standard-absent","expected_failure_ids":["SAS-A01","SAS-A02"]},"green":{"command_id":"standard-contract-tests","expected_exit":"zero"},"refactor":{"invocations":[{"command_id":"plan-validator-tests","expected_exit":"zero"}] }},
+      "post_refactor_command_id":"slice-s0-predicate",
+      "exit_predicate":"slice-ready",
+      "recovery":"Preserve failed evidence; disable only new Package A consumers and repair this slice or its declared dependents without changing existing Skill authority."
+    },
+    {
+      "slice_id":"SAS-S1",
+      "title":"Machine-readable validator and deterministic result envelopes",
+      "requirement_ids":["SAS-003","SAS-004","SAS-005","SAS-006","SAS-007"],
+      "acceptance_ids":["SAS-A03","SAS-A04","SAS-A05","SAS-A06","SAS-A07"],
+      "depends_on":["SAS-S0"],
+      "source_refs":["docs/standards/skill-authoring-standard.md","scripts/sc/schemas/skill-quality-contract.v1.schema.json"],
+      "allowed_changes":{"production":["scripts/sc/validate_skill_quality.py","scripts/sc/schemas/skill-quality-result.v1.schema.json"],"tests":["scripts/sc/tests/test_validate_skill_quality.py","scripts/sc/tests/fixtures/skill-quality/validator/**"],"documentation":[]},
+      "forbidden_changes":[".agents/skills/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**","knowledge/indexes/current.json","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"],
+      "execution_snapshot_paths":["docs/standards/repository-maintenance-agent-protocol.md","docs/workflows/skill-control-plane-evolution-requirements.md"],
+      "execution_read_set":["docs/standards/skill-authoring-standard.md","scripts/sc/config/skill-authoring-standard.v1.json","scripts/sc/schemas/skill-quality-contract.v1.schema.json"],
+      "dependency_closure":["scripts/sc/config/**","scripts/sc/schemas/**","scripts/sc/validate_skill_quality.py","scripts/sc/tests/**","docs/standards/skill-authoring-standard.md"],
+      "tdd":{"red":{"command_id":"slice-s1-predicate","test_selector":"quality validator is absent or rejects the declared contract","expected_exit":"nonzero","expected_failure_family":"skill-quality-validator-absent","expected_failure_ids":["SAS-A03","SAS-A05"]},"green":{"command_id":"standard-contract-tests","expected_exit":"zero"},"refactor":{"invocations":[{"command_id":"standard-example-tests","expected_exit":"zero"},{"command_id":"plan-validator-tests","expected_exit":"zero"}]}},
+      "post_refactor_command_id":"slice-s1-predicate",
+      "exit_predicate":"slice-ready",
+      "recovery":"Keep the validator disabled for consumers until schema and result-envelope tests pass; retain all failed fixtures and receipts."
+    },
+    {
+      "slice_id":"SAS-S2",
+      "title":"Capability safety, examples, FAQ reachability, and fixtures",
+      "requirement_ids":["SAS-003","SAS-004","SAS-006","SAS-007","SAS-008","SAS-009","SAS-010","SAS-011"],
+      "acceptance_ids":["SAS-A03","SAS-A04","SAS-A06","SAS-A07","SAS-A08","SAS-A09","SAS-A10","SAS-A11"],
+      "depends_on":["SAS-S0","SAS-S1"],
+      "source_refs":["docs/standards/skill-authoring-standard.md","docs/workflows/skill-control-plane-evolution-requirements.md#Package-A-Skill-Authoring-Standard"],
+      "allowed_changes":{"production":["scripts/sc/skill_quality_examples.py"],"tests":["scripts/sc/tests/test_skill_quality_examples.py","scripts/sc/tests/fixtures/skill-quality/examples/**","scripts/sc/tests/fixtures/skill-quality/security/**"],"documentation":[]},
+      "forbidden_changes":[".agents/skills/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**","knowledge/indexes/current.json","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"],
+      "execution_snapshot_paths":["docs/standards/repository-maintenance-agent-protocol.md",".agents/skills/vdd-execution-plan/SKILL.md"],
+      "execution_read_set":["docs/standards/skill-authoring-standard.md","scripts/sc/validate_skill_quality.py","scripts/sc/schemas/**","scripts/sc/config/skill-authoring-standard.v1.json"],
+      "dependency_closure":["scripts/sc/**","docs/standards/skill-authoring-standard.md"],
+      "tdd":{"red":{"command_id":"slice-s2-predicate","test_selector":"example, FAQ, and capability fixtures are incomplete","expected_exit":"nonzero","expected_failure_family":"skill-quality-coverage-incomplete","expected_failure_ids":["SAS-A03","SAS-A08","SAS-A10"]},"green":{"command_id":"standard-example-tests","expected_exit":"zero"},"refactor":{"invocations":[{"command_id":"standard-contract-tests","expected_exit":"zero"},{"command_id":"package-a-terminal","expected_exit":"zero"}]}},
+      "post_refactor_command_id":"slice-s2-predicate",
+      "exit_predicate":"slice-ready",
+      "recovery":"Re-run only affected fixture and validator checks; no existing Skill consumer is enabled by this slice."
+    },
+    {
+      "slice_id":"SAS-S3",
+      "title":"Migration policy, integration bindings, and terminal replay",
+      "requirement_ids":["SAS-011","SAS-012"],
+      "acceptance_ids":["SAS-A11","SAS-A12"],
+      "depends_on":["SAS-S0","SAS-S1","SAS-S2"],
+      "source_refs":["docs/workflows/skill-control-plane-evolution-requirements.md#Package-A-Skill-Authoring-Standard","docs/standards/skill-authoring-standard.md"],
+      "allowed_changes":{"production":[],"tests":["scripts/sc/tests/fixtures/skill-quality/migration/**"],"documentation":["docs/standards/skill-authoring-standard.md","docs/adr/ADR-0060-repository-skill-authoring-contract.md","docs/architecture/ADR_INDEX_PHASE.md","execution-plans/2026-08-06-skill-authoring-standard/95-implementation-evolution-and-completion-report.md"]},
+      "forbidden_changes":[".agents/skills/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**","knowledge/indexes/current.json","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"],
+      "execution_snapshot_paths":["docs/workflows/skill-control-plane-evolution-requirements.md",".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md"],
+      "execution_read_set":["docs/standards/skill-authoring-standard.md","docs/adr/ADR-0060-repository-skill-authoring-contract.md","scripts/sc/config/skill-authoring-standard.v1.json","scripts/sc/validate_skill_quality.py","scripts/sc/tests/**"],
+      "dependency_closure":["docs/standards/skill-authoring-standard.md","docs/adr/ADR-0060-repository-skill-authoring-contract.md","scripts/sc/**","execution-plans/2026-08-06-skill-authoring-standard/**"],
+      "tdd":{"red":{"command_id":"slice-s3-predicate","test_selector":"migration policy or terminal bindings are absent","expected_exit":"nonzero","expected_failure_family":"skill-authoring-terminal-closure-absent","expected_failure_ids":["SAS-A11","SAS-A12"]},"green":{"command_id":"package-a-terminal","expected_exit":"zero"},"refactor":{"invocations":[{"command_id":"plan-validator-tests","expected_exit":"zero"},{"command_id":"standard-contract-tests","expected_exit":"zero"},{"command_id":"standard-example-tests","expected_exit":"zero"}]}},
+      "post_refactor_command_id":"slice-s3-predicate",
+      "exit_predicate":"implementation-complete",
+      "recovery":"Preserve the plan report and failed terminal receipt; create an in-place repair round for this slice unless the acceptance target or authority changes."
+    }
+  ],
+  "authorizes": []
+}

@@ -100,6 +100,31 @@ class KnowledgeContextValidationTests(unittest.TestCase):
             hashes = _main_source_hashes(root, catalog)
             self.assertIn("AGENTS.md", hashes)
 
+    def test_rejects_non_string_catalog_snapshot_commit(self) -> None:
+        with self.assertRaisesRegex(ValueError, "catalog_source_snapshot_invalid"):
+            _main_source_hashes(Path.cwd(), {"source_snapshot": {"commit": None, "sources": []}})
+
+    def test_requires_read_set_when_catalog_entry_has_resources(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            catalog_path = root / validation.CATALOG_RELATIVE
+            catalog_path.parent.mkdir(parents=True)
+            digest = "a" * 64
+            catalog_path.write_text(json.dumps({
+                "source_snapshot": {"ref": "refs/heads/main", "commit": "a" * 40},
+                "modules": [{
+                    "source_path": "AGENTS.md",
+                    "source_sha256": digest,
+                    "resources": [{"path": "README.md", "source_sha256": "b" * 64}],
+                }],
+            }), encoding="utf-8")
+            document = payload(digest=digest)
+            with mock.patch.object(validation, "validate_catalog_freshness", return_value=None):
+                self.assertEqual(
+                    "locator_candidate_read_set_required",
+                    validate_context(document, repository_root=root, verify_catalog=True),
+                )
+
     def test_rejects_forged_accepted_candidate(self) -> None:
         document = payload()
         document["decisions"][0]["candidate"]["path"] = "README.md"

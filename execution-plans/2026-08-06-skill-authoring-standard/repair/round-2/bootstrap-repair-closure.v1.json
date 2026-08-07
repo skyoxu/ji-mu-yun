@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r1",
+  "predecessorInputHash": "sha256:d79f1259e2581bdf5f09d7a8f591b192f9320e8970741fa56aa86456eb93d76f",
+  "predecessorResultHash": "sha256:c1fe336584504493d05e37dda619578ddd824fe3b7f8548dd8c6761f0b0b6a3e",
+  "findingIds": [
+    "BSR-20AB74A2C1D309C9",
+    "BSR-8257F0A04BBD5AF3",
+    "BSR-A22C79B1E17EA4A3",
+    "BSR-AE56D6FBD57A73C7",
+    "BSR-BB14A3B748311D9F",
+    "BSR-BB24626ADDFEBB34",
+    "BSR-BB9F958B34B16F16"
+  ],
+  "items": [
+    {
+      "findingId": "BSR-20AB74A2C1D309C9",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "authority-predicate",
+      "reason": "External validator paths and SHA-256 bindings are now explicit in the plan authority manifest.",
+      "fixRefs": ["authority-manifest.v1.json", "tools/validate_plan.py"],
+      "validationCommands": ["package-a-plan-tests", "package-a-plan-validator", "adapter-contract-validation"],
+      "evidence": [{"path": "logs/tdd-adapter/skill-authoring-standard/repair-round-1/repair-result.v1.json", "sha256": "sha256:b5a0a219e4f40d0974922ee96f658d5986d6eabd51e60d1403a4612686204fc7"}]
+    },
+    {
+      "findingId": "BSR-8257F0A04BBD5AF3",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "authority-predicate",
+      "reason": "Terminal validation now replays the registry-declared commands and aggregates their results.",
+      "fixRefs": ["tools/validate_implementation.py", "tools/tests/test_validate_implementation.py"],
+      "validationCommands": ["package-a-plan-tests", "terminal-predicate-negative"],
+      "evidence": [{"path": "logs/tdd-adapter/skill-authoring-standard/repair-round-1/repair-result.v1.json", "sha256": "sha256:b5a0a219e4f40d0974922ee96f658d5986d6eabd51e60d1403a4612686204fc7"}]
+    },
+    {
+      "findingId": "BSR-A22C79B1E17EA4A3",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "negative-fixture",
+      "reason": "Plan and resume lifecycle states are now compared before plan readiness is accepted.",
+      "fixRefs": ["tools/validate_plan.py", "tools/tests/test_validate_plan.py"],
+      "validationCommands": ["package-a-plan-tests", "package-a-plan-validator"],
+      "evidence": [{"path": "logs/tdd-adapter/skill-authoring-standard/repair-round-1/repair-result.v1.json", "sha256": "sha256:b5a0a219e4f40d0974922ee96f658d5986d6eabd51e60d1403a4612686204fc7"}]
+    },
+    {
+      "findingId": "BSR-AE56D6FBD57A73C7",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "negative-fixture",
+      "reason": "Required production outputs are type-checked as files and fixture roots as directories.",
+      "fixRefs": ["tools/validate_implementation.py", "tools/tests/test_validate_implementation.py"],
+      "validationCommands": ["package-a-plan-tests", "terminal-predicate-negative"],
+      "evidence": [{"path": "logs/tdd-adapter/skill-authoring-standard/repair-round-1/repair-result.v1.json", "sha256": "sha256:b5a0a219e4f40d0974922ee96f658d5986d6eabd51e60d1403a4612686204fc7"}]
+    },
+    {
+      "findingId": "BSR-BB14A3B748311D9F",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "negative-fixture",
+      "reason": "Protected path comparisons now canonicalize and case-fold Windows paths.",
+      "fixRefs": ["tools/validate_plan.py", "tools/tests/test_validate_plan.py"],
+      "validationCommands": ["package-a-plan-tests", "package-a-plan-validator"],
+      "evidence": [{"path": "logs/tdd-adapter/skill-authoring-standard/repair-round-1/repair-result.v1.json", "sha256": "sha256:b5a0a219e4f40d0974922ee96f658d5986d6eabd51e60d1403a4612686204fc7"}]
+    },
+    {
+      "findingId": "BSR-BB24626ADDFEBB34",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "authority-predicate",
+      "reason": "The implementation-complete predicate is bound to contract, example, package, and terminal replay commands.",
+      "fixRefs": ["command-registry.v1.json", "tools/validate_implementation.py"],
+      "validationCommands": ["package-a-plan-tests", "terminal-predicate-negative"],
+      "evidence": [{"path": "logs/tdd-adapter/skill-authoring-standard/repair-round-1/repair-result.v1.json", "sha256": "sha256:b5a0a219e4f40d0974922ee96f658d5986d6eabd51e60d1403a4612686204fc7"}]
+    },
+    {
+      "findingId": "BSR-BB9F958B34B16F16",
+      "disposition": "fixed",
+      "risk": "high",
+      "proofFamily": "negative-fixture",
+      "reason": "Absolute paths and traversal are rejected before allowed-change prefix checks.",
+      "fixRefs": ["tools/validate_plan.py", "tools/tests/test_validate_plan.py"],
+      "validationCommands": ["package-a-plan-tests", "package-a-plan-validator"],
+      "evidence": [{"path": "logs/tdd-adapter/skill-authoring-standard/repair-round-1/repair-result.v1.json", "sha256": "sha256:b5a0a219e4f40d0974922ee96f658d5986d6eabd51e60d1403a4612686204fc7"}]
+    }
+  ],
+  "currentBindings": {
+    "candidateHash": "sha256:944a4d7b6760267a8f6b69adbae648e895e174b201fd9a2fe56b7ce38944a0d5",
+    "sourceHash": "sha256:a3a16fce8e2b794cb87803ed3594192d0530f26343c061e97db9b6b6ae336f0f",
+    "validatorHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "gitIndexHash": "sha256:ecbf987189519e78bf5016ad5f6bc2e244b183528bee63d4ed26a601ee9630d3",
+  "writeSetHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "executionReadSetHash": "sha256:2a3ecc25e4db92a96683bdebc8e6831c3a9bc7855b78a3bc08e696576c9035da",
+  "dependencyClosureHash": "sha256:c620a4bfcc05fff18f59e8ea55239d5beb404f92ac8effc7868d225a5e06f296"
+}

@@ -2,12 +2,12 @@
   "schema_version": "vdd.plan-state.v1",
   "plan_id": "toolchain-plan-delivery-loop-skill",
   "profile": "self-hosted",
-  "state": "plan-ready",
-  "state_owner": "vdd-execution-plan",
+  "state": "implementation-authorized",
+  "state_owner": "maintainer",
   "resume": {
-    "next_action": "Run bootstrap-upstream-plan review over this exact directory. Route any plan findings to VDD repair, then obtain explicit maintainer implementation authorization.",
-    "last_completed_step": "vdd-plan-ready",
-    "recovery_instruction": "Read 00-index.md, requirements.v1.json, implementation-contract.v1.json, resume-state.v1.json, knowledge-context.v1.json and its freeze receipt; rerun tools/validate_plan.py before review."
+    "next_action": "Resolve KWI-QUICK-FROZEN-CONTEXT-STALE through its shared knowledge-context control-plane owner, then rerun quick-dev-tdd-adapter for the declared implementation slices.",
+    "last_completed_step": "maintainer-implementation-authorized",
+    "recovery_instruction": "Read resume-state.v1.json and the Quick Dev route result. The frozen knowledge-context validator must byte-match refs/heads/main before RED; rerun tools/validate_plan.py --implementation-state and route_plan_directory.py before implementation."
   },
   "slices": [
     {"id":"RMAP-S0","status":"pending","depends_on":[]},
@@ -16,7 +16,6 @@
     {"id":"RMAP-S3","status":"pending","depends_on":["RMAP-S0","RMAP-S1","RMAP-S2"]}
   ],
   "blocking_conditions": [],
-  "authorizes": ["plan-ready"],
-  "does_not_authorize": ["implementation-authorized","implementation-complete","acceptance-passed","release","archived"]
+  "authorizes": ["implementation-authorized"],
+  "does_not_authorize": ["implementation-complete","acceptance-passed","release","archived"]
 }
-

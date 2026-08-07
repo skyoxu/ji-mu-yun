@@ -54,6 +54,8 @@ def _main_source_hashes(repository_root: Path, catalog: dict[str, Any]) -> dict[
         raise ValueError("catalog_main_commit_unavailable")
     current_commit = current.stdout.strip()
     snapshot_commit = snapshot.get("commit")
+    if not isinstance(snapshot_commit, str) or not snapshot_commit:
+        raise ValueError("catalog_source_snapshot_invalid")
     ancestry = subprocess.run(
         ["git", "-C", str(repository_root), "merge-base", "--is-ancestor", snapshot_commit, current_commit],
         capture_output=True,
@@ -106,7 +108,7 @@ def validate_catalog_freshness(repository_root: Path) -> str | None:
         ):
             return "catalog_publication_invalid"
         freshness = require_fresh_catalog(catalog, _main_source_hashes(repository_root, catalog))
-    except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+    except (OSError, UnicodeError, TypeError, ValueError, json.JSONDecodeError):
         return "catalog_invalid"
     if freshness.get("status") != "current":
         return "catalog_stale"
@@ -353,12 +355,15 @@ def validate_context(
                 return "locator_candidate_catalog_mismatch"
             if eligible_module_ids is not None and candidate.get("module_id") not in eligible_module_ids:
                 return "locator_candidate_outside_consumer_projection"
+            resources = [
+                (item.get("path"), item.get("source_sha256"))
+                for item in entry.get("resources", [])
+                if isinstance(item, dict)
+            ]
+            if resources and candidate.get("read_set") is None:
+                return "locator_candidate_read_set_required"
             if candidate.get("read_set") is not None:
-                expected = [(entry["source_path"], entry["source_sha256"])] + [
-                    (item.get("path"), item.get("source_sha256"))
-                    for item in entry.get("resources", [])
-                    if isinstance(item, dict)
-                ]
+                expected = [(entry["source_path"], entry["source_sha256"])] + resources
                 try:
                     actual = _candidate_read_set(candidate)
                 except ValueError as exc:

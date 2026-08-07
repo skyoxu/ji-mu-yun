@@ -1,0 +1,42 @@
+{
+  "schema_version": "vdd.baseline-and-scope.v1",
+  "plan_id": "skill-authoring-standard",
+  "git": {
+    "commit": "49c5cff216646cf82179d906db60426d5f1ef314",
+    "tree": "bb82574606412a36a235a9c8ab49a1cc1b2a246e",
+    "main_ref": "refs/heads/main"
+  },
+  "source_requirements": "docs/workflows/skill-control-plane-evolution-requirements.md",
+  "scope": {
+    "tracked_paths": [],
+    "untracked_paths": [
+      "docs/workflows/skill-control-plane-evolution-requirements.md"
+    ],
+    "excluded_dirty_paths": [
+      ".agents/skills/run-phase-bootstrap-review/**",
+      "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**",
+      "knowledge/**"
+    ],
+    "dirty_scope_hash": "sha256:3051ed7504ffe1956123ccd682daf01d9e3c318d6b0c4abed8925a459686bb20",
+    "untracked_manifest": [
+      {
+        "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+        "sha256": "sha256:3051ed7504ffe1956123ccd682daf01d9e3c318d6b0c4abed8925a459686bb20"
+      }
+    ]
+  },
+  "write_set": [
+    "docs/standards/skill-authoring-standard.md",
+    "docs/adr/ADR-0060-repository-skill-authoring-contract.md",
+    "docs/architecture/ADR_INDEX_PHASE.md",
+    "scripts/sc/config/skill-authoring-standard.v1.json",
+    "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+    "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+    "scripts/sc/validate_skill_quality.py",
+    "scripts/sc/skill_quality_examples.py",
+    "scripts/sc/tests/test_validate_skill_quality.py",
+    "scripts/sc/tests/test_skill_quality_examples.py",
+    "scripts/sc/tests/fixtures/skill-quality/**"
+  ],
+  "authorizes": []
+}

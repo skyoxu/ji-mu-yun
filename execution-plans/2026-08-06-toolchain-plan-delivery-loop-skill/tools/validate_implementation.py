@@ -154,7 +154,29 @@ def validate_slice(slice_id: str) -> list[str]:
     return sorted(set(errors))
 
 
+def check_lifecycle_entry(plan_dir: Path = PLAN_DIR) -> list[str]:
+    """Require the maintainer-owned implementation entry before terminal validation."""
+    try:
+        state = json.loads((plan_dir / "plan-state.v1.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return ["implementation-state-invalid"]
+    lifecycle_state = state.get("state")
+    owner = state.get("state_owner")
+    if lifecycle_state not in {"implementation-authorized", "implementation-complete"}:
+        return [f"implementation-authorization-required:{lifecycle_state}"]
+    expected_owner = {
+        "implementation-authorized": "maintainer",
+        "implementation-complete": "quick-dev-tdd-adapter",
+    }[lifecycle_state]
+    if owner != expected_owner:
+        return [f"implementation-state-owner-invalid:{lifecycle_state}"]
+    return []
+
+
 def validate_full() -> list[str]:
+    entry_errors = check_lifecycle_entry()
+    if entry_errors:
+        return entry_errors
     errors = validate_slice("RMAP-S3")
     if errors:
         return errors

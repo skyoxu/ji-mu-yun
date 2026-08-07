@@ -1,0 +1,12 @@
+{
+  "schema_version": "jimuyun.vdd-root-cause-callsite-inventory.v1",
+  "round": 3,
+  "finding_ids": ["BSR-2CCF3C796120E47B", "BSR-4328DC7A5835A76A"],
+  "matches": [
+    {"path": "resume-state.v1.json", "role": "reentry-projection", "disposition": "changed"},
+    {"path": "tools/validate_plan.py", "role": "plan-validator", "disposition": "changed"},
+    {"path": "tools/tests/test_validate_plan.py", "role": "validator-regression-consumer", "disposition": "changed"}
+  ],
+  "excluded_matches": [],
+  "authorizes": []
+}

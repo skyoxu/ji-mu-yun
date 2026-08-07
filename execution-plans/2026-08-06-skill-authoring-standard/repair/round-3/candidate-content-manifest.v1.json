@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "vdd-repair-content-manifest.v1",
+  "role": "candidate",
+  "files": [
+    {"path": "tools/validate_plan.py", "sha256": "sha256:d2ead4b4dc54c5c734f131107e31cba6acab6553a1d30007db176808e3b5a139"},
+    {"path": "tools/validate_implementation.py", "sha256": "sha256:5bd92d3ce4e79aecd82e09bef36d95c7711d6fb762edd2aa077cacc1cce170af"},
+    {"path": "tools/tests/test_validate_plan.py", "sha256": "sha256:aa3a6192376e7f5a2abf31a72e079882803bc6a0900f53c7396f1de3619de8ca"},
+    {"path": "tools/tests/test_validate_implementation.py", "sha256": "sha256:d75ebf2e23c0de53f603065db97aa0b60856d132ec9959394c7b7e810fb6be55"}
+  ],
+  "authorizes": []
+}

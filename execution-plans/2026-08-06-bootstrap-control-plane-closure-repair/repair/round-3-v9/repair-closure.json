@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/review/2026-08-07/bcpcr-v9-r2",
+  "predecessorInputHash": "sha256:cba5d1e166761548c46609db8880ee090e072ea32f19e9f455bc6cab7c1bed2c",
+  "predecessorResultHash": "sha256:6cf3f5ca907d0a782d27cea3d52bbecc57e5d0502622fbcb07c38186f701b63c",
+  "findingIds": [
+    "BSR-6C5D8FB484E3DCAF",
+    "BSR-AC31A1A4F5028B6F",
+    "BSR-D8254F8F418517CB"
+  ],
+  "items": [
+    {
+      "findingId": "BSR-6C5D8FB484E3DCAF",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "regression",
+      "reason": "The bootstrap skill-route inventory now includes the imported control-plane module and validates its required Artifact View and context mapping; the complete control-plane regression suite passes.",
+      "fixRefs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          "sha256": "sha256:d33a50bf33ea3646436b93c2fbaefe144b5588e7f80ef0eda4ddec72fb0980c4"
+        },
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+          "sha256": "sha256:699169b677c0b5ecd320278d637f675cf5c807b35ec27cbd12ce5de2015993e7"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-AC31A1A4F5028B6F",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "regression",
+      "reason": "The knowledge-context provenance validator and locator dependencies are now included in the route inventory and mapped into the frozen Artifact View; the complete control-plane regression suite passes.",
+      "fixRefs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          "sha256": "sha256:d33a50bf33ea3646436b93c2fbaefe144b5588e7f80ef0eda4ddec72fb0980c4"
+        },
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+          "sha256": "sha256:699169b677c0b5ecd320278d637f675cf5c807b35ec27cbd12ce5de2015993e7"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-D8254F8F418517CB",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "regression",
+      "reason": "The direct control-plane import is part of the deterministic runtime dependency inventory and its omission is rejected by the regression coverage; the complete control-plane regression suite passes.",
+      "fixRefs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          "sha256": "sha256:d33a50bf33ea3646436b93c2fbaefe144b5588e7f80ef0eda4ddec72fb0980c4"
+        },
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+          "sha256": "sha256:699169b677c0b5ecd320278d637f675cf5c807b35ec27cbd12ce5de2015993e7"
+        }
+      ]
+    }
+  ],
+  "currentBindings": {
+    "candidateHash": "sha256:9b2e99273f8cccdb148741f41d888e7623575e1b01e380a6c188bcbddf45b735",
+    "sourceHash": "sha256:38832ee11f1d1459fc23e2bceec37aa1e8daaeba8b0cdd1a1ab2a0df00e88551",
+    "validatorHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "gitIndexHash": "sha256:ecbf987189519e78bf5016ad5f6bc2e244b183528bee63d4ed26a601ee9630d3",
+  "writeSetHash": "sha256:8ee8fd7339fe519571ae4c0f84b1d21ac2fe73538b863e1c292967df6bd1cd3a",
+  "executionReadSetHash": "sha256:2b3ea1d3482c585be6511a07807d26ebb4b92ddaf02997ddf194aaa9dd9f7c28",
+  "dependencyClosureHash": "sha256:5ef9f3bc47bfde0d464bf3622147604e1ffa2639963cd8d1412e0ed694b84a7c"
+}

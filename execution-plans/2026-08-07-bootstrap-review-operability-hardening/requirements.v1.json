@@ -1,0 +1,30 @@
+{
+  "schema_version":"jimuyun.bootstrap-review-operability-hardening-requirements.v1",
+  "plan_id":"bootstrap-review-operability-hardening",
+  "profile":"self-hosted",
+  "requirements":[
+    {"id":"BROH-001","text":"Provide a non-authorizing dry-run that computes closure bindings and reports missing or mismatched scope, context, and hash inputs before model launch.","acceptance_ids":["BROH-A01","BROH-A02"],"slice_ids":["BROH-S0"]},
+    {"id":"BROH-002","text":"Diagnose missing context classes and classify planned-new files separately from existing dependency omissions.","acceptance_ids":["BROH-A03","BROH-A04"],"slice_ids":["BROH-S1"]},
+    {"id":"BROH-003","text":"Expose frozen review and repair windows without changing the prohibition on reviewed-file mutation.","acceptance_ids":["BROH-A05"],"slice_ids":["BROH-S1"]},
+    {"id":"BROH-004","text":"Recover dead or interrupted attempts through append-only stale/reconciliation events, use Windows-safe stdin/script transport instead of fragile multi-line py -c quoting, emit bounded no-progress heartbeat/timeout signals, and clearly distinguish retryable transport failures from semantic findings.","acceptance_ids":["BROH-A06","BROH-A07"],"slice_ids":["BROH-S2"]},
+    {"id":"BROH-005","text":"Preserve all existing authority, lineage, Artifact View, verifier, lifecycle, and envelope predicates.","acceptance_ids":["BROH-A08"],"slice_ids":["BROH-S0","BROH-S1","BROH-S2","BROH-S3"]},
+    {"id":"BROH-006","text":"Give Codex reviewers explicit read-only access to repository authority required by the frozen Artifact View while keeping the attempt directory as the only writable workspace and binding the exact access route in proof and launch evidence.","acceptance_ids":["BROH-A09","BROH-A10"],"slice_ids":["BROH-S3"]},
+    {"id":"BROH-007","text":"Generate and validate candidate exactEvidence from frozen Artifact View bytes and stop repeated identical malformed or stale-evidence retries at a bounded threshold without converting them into semantic findings.","acceptance_ids":["BROH-A11","BROH-A12"],"slice_ids":["BROH-S3"]}
+  ],
+  "acceptance":[
+    {"id":"BROH-A01","assertion":"Dry-run output contains computed candidate, source, validator, Git, write-set, execution-read-set, and dependency-closure hashes without authorizing a run."},
+    {"id":"BROH-A02","assertion":"Dry-run fails with actionable field-level diagnostics when closure or context inputs do not match prepare authority."},
+    {"id":"BROH-A03","assertion":"Missing required context classes identify the class and accepted scope needed to satisfy it."},
+    {"id":"BROH-A04","assertion":"A nonexistent allowed production output is reported as planned-new, while a missing dependency remains a closure error."},
+    {"id":"BROH-A05","assertion":"Inspect output identifies frozen and repair-required windows and never authorizes mutation of a frozen review."},
+    {"id":"BROH-A06","assertion":"Dead event-backed attempts append attempt-stale before lease reconstruction, with no manual evidence rewrite."},
+    {"id":"BROH-A07","assertion":"Transport, malformed-output, stale-evidence, and semantic blocker outcomes have distinct retry guidance; Windows command transport avoids multi-line py -c quoting hazards and no-progress attempts produce a bounded heartbeat/timeout outcome."},
+    {"id":"BROH-A08","assertion":"Existing reviewer isolation, exact coverage, independent verification, lineage hard limit, and non-authorizing envelope predicates remain unchanged."},
+    {"id":"BROH-A09","assertion":"The shared Codex command factory expresses repository read-only access explicitly; reviewed repository paths remain outside every child writable root and no ad hoc wrapper or global user configuration is required."},
+    {"id":"BROH-A10","assertion":"Access proof and launch authorization bind the executable, model, effort, sandbox, read permission, environment class, Artifact View manifest, and attempt-only write root, and reject any drift before reviewer launch."},
+    {"id":"BROH-A11","assertion":"Candidate line ranges and exactEvidence are derived from the cited frozen snapshot bytes with CRLF/LF-normalized inclusive-line semantics and are validated before formal publication."},
+    {"id":"BROH-A12","assertion":"Repeated identical malformed-output or stale-evidence fingerprints stop at a declared retry threshold with append-only evidence and actionable recovery guidance; they consume no semantic round and authorize nothing."}
+  ],
+  "terminal_validation":"py -3 -B execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_plan.py",
+  "authorizes":[]
+}

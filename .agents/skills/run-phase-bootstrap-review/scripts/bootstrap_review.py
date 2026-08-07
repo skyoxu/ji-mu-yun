@@ -16,6 +16,7 @@ import sys
 import importlib.util
 import tempfile
 import time
+import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
@@ -83,6 +84,16 @@ LINEAGE_ADOPTION_SCHEMA = "bootstrap-lineage-adoption.v1"
 HISTORICAL_POLICY_PATH = SKILL_ROOT / "references" / "historical-policy-revisions.v1.json"
 COST_CALIBRATION_PATH = SKILL_ROOT / "references" / "review-cost-calibration.v1.json"
 COST_CALIBRATION_HASH = "sha256:72b1b76b6de9bd73f5828e84efc28216080aa20a17e66c527d6a3965b9a5b601"
+BOOTSTRAP_ROUTE_PATH = ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+BOOTSTRAP_ROUTE_RUNTIME_DEPENDENCIES = (
+    ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+    ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py",
+    ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+    ".agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json",
+    ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+    "scripts/python/knowledge_context_validation.py",
+    "scripts/python/_knowledge_locator_core.py",
+)
 DELEGATED_BOOTSTRAP_AUTHORITY_PATHS = (
     ".agents/skills/run-phase-bootstrap-review/SKILL.md",
     "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
@@ -267,6 +278,10 @@ HARD_LIMIT_RECOVERY_SCHEMA = "bootstrap-hard-limit-focused-recovery.v1"
 HARD_LIMIT_AUTHORITY_SCHEMA = "bootstrap-hard-limit-protocol-repair-authority.v1"
 REPAIR_DELTA_SCHEMA = "bootstrap-repair-review-delta.v1"
 ARTIFACT_VIEW_READ_RECEIPT_SCHEMA = "bootstrap-artifact-view-read-receipt.v1"
+HARD_LIMIT_FOCUSED_PREDECESSOR_PROFILES = {
+    "bootstrap-skill-route",
+    "bootstrap-upstream-plan",
+}
 BOUNDED_SCOPE_PROFILES = {
     "bootstrap-implementation-conformance",
     "bootstrap-focused-repair-verification",
@@ -2506,7 +2521,7 @@ def validate_review_cycle(
             or (
                 hard_limit_recovery
                 and review_round == REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
-                and predecessor_profile == "bootstrap-skill-route"
+                and predecessor_profile in HARD_LIMIT_FOCUSED_PREDECESSOR_PROFILES
             )
         )
     )
@@ -2531,7 +2546,7 @@ def validate_review_cycle(
             or high_risk_boundaries
         ):
             raise BootstrapError(
-                "Hard-limit focused recovery requires a blocked Round 3 Skill-route predecessor"
+                "Hard-limit focused recovery requires a blocked eligible Round 3 predecessor"
             )
     if predecessor_is_p2_only:
         raise BootstrapError(
@@ -2613,14 +2628,29 @@ def process_lease_lock(run_dir: Path):
     lock_path = run_dir / ".process-leases.lock"
     deadline = time.monotonic() + 15
     descriptor: int | None = None
+    owner_token = uuid.uuid4().hex
     while descriptor is None:
         try:
             descriptor = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.write(descriptor, str(os.getpid()).encode("ascii"))
+            owner = {
+                "pid": os.getpid(),
+                "processIdentity": process_creation_identity(os.getpid()),
+                "token": owner_token,
+            }
+            os.write(descriptor, json.dumps(owner, sort_keys=True).encode("utf-8"))
         except FileExistsError:
             try:
-                stale = time.time() - lock_path.stat().st_mtime > 30
-            except OSError:
+                expired = time.time() - lock_path.stat().st_mtime > 30
+                owner = json.loads(lock_path.read_text(encoding="utf-8"))
+                pid = owner.get("pid") if isinstance(owner, dict) else None
+                identity = owner.get("processIdentity") if isinstance(owner, dict) else None
+                stale = (
+                    expired
+                    and isinstance(pid, int)
+                    and isinstance(identity, str)
+                    and (not pid_is_alive(pid) or process_creation_identity(pid) != identity)
+                )
+            except (OSError, UnicodeError, json.JSONDecodeError):
                 stale = False
             if stale:
                 try:
@@ -2635,10 +2665,21 @@ def process_lease_lock(run_dir: Path):
         yield
     finally:
         os.close(descriptor)
-        try:
-            lock_path.unlink()
-        except FileNotFoundError:
-            pass
+        # Windows can retain a transient sharing handle after close. Only remove
+        # the lock when its token still identifies this context manager.
+        for _ in range(20):
+            try:
+                current = json.loads(lock_path.read_text(encoding="utf-8"))
+                if not isinstance(current, dict) or current.get("token") != owner_token:
+                    break
+                lock_path.unlink()
+                break
+            except FileNotFoundError:
+                break
+            except PermissionError:
+                time.sleep(0.05)
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                break
 
 
 def load_process_leases(run_dir: Path, manifest: dict[str, Any]) -> dict[str, Any]:
@@ -2810,6 +2851,90 @@ def build_context_class_artifacts(
     return result
 
 
+def bootstrap_skill_route_runtime_dependencies(
+    repository_root: Path,
+    scopes: list[str],
+) -> list[str]:
+    """Return direct runtime dependencies when the real Bootstrap route is reviewed."""
+    route_path = ensure_within(repository_root / BOOTSTRAP_ROUTE_PATH, repository_root, "Bootstrap route")
+    for raw_scope in scopes:
+        candidate = Path(raw_scope)
+        if not candidate.is_absolute():
+            candidate = repository_root / candidate
+        candidate = ensure_within(candidate, repository_root, "Scope")
+        if candidate == route_path or (candidate.is_dir() and candidate in route_path.parents):
+            return list(BOOTSTRAP_ROUTE_RUNTIME_DEPENDENCIES)
+    return []
+
+
+def validate_bootstrap_skill_route_dependency_inventory(
+    repository_root: Path,
+    profile_name: str,
+    artifacts: list[dict[str, Any]],
+    mapping: dict[str, list[str]],
+    *,
+    allow_frozen_historical_policy_omission: bool = False,
+) -> None:
+    if profile_name != "bootstrap-skill-route":
+        return
+    artifact_names = {item["artifact"] for item in artifacts}
+    if BOOTSTRAP_ROUTE_PATH not in artifact_names:
+        return
+    required_dependencies = set(BOOTSTRAP_ROUTE_RUNTIME_DEPENDENCIES)
+    if allow_frozen_historical_policy_omission:
+        required_dependencies.discard(
+            ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json"
+        )
+    missing = [
+        path for path in BOOTSTRAP_ROUTE_RUNTIME_DEPENDENCIES
+        if path in required_dependencies and path not in artifact_names
+    ]
+    if missing:
+        raise BootstrapError(
+            "Bootstrap skill-route runtime dependency is outside the prepared Artifact View: "
+            + ", ".join(missing)
+        )
+    executable_dependencies = {
+        path for path in BOOTSTRAP_ROUTE_RUNTIME_DEPENDENCIES if path.endswith(".py")
+    }
+    if not executable_dependencies.issubset(set(mapping.get("route-or-cli", []))):
+        raise BootstrapError("Bootstrap skill-route executable dependency is not mapped to route-or-cli")
+    profile_dependencies = {
+        ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        ".agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json",
+        ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+    }
+    if allow_frozen_historical_policy_omission:
+        profile_dependencies.discard(
+            ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json"
+        )
+    if not profile_dependencies.issubset(set(mapping.get("profiles-and-config", []))):
+        raise BootstrapError("Bootstrap skill-route authority dependencies are not mapped to profiles-and-config")
+
+
+def augment_bootstrap_skill_route_dependency_context(
+    profile_name: str,
+    mapping: dict[str, list[str]],
+    dependencies: list[str],
+) -> dict[str, list[str]]:
+    if profile_name != "bootstrap-skill-route" or not dependencies:
+        return mapping
+    result = {name: list(values) for name, values in mapping.items()}
+    result["route-or-cli"] = sorted(
+        set(result["route-or-cli"])
+        | {path for path in dependencies if path.endswith(".py")}
+    )
+    result["profiles-and-config"] = sorted(
+        set(result["profiles-and-config"])
+        | {
+            ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+        }
+    )
+    return result
+
+
 def validate_profile_context_semantics(
     profile_name: str,
     mapping: dict[str, list[str]],
@@ -2855,7 +2980,43 @@ def validate_profile_context_semantics(
         )
 
 
-def validate_context_class_artifacts(manifest: dict[str, Any], profile: dict[str, Any]) -> None:
+def frozen_manifest_allows_historical_policy_omission(
+    manifest: dict[str, Any], repository_root: Path,
+) -> bool:
+    """Allow one known dependency addition while replaying an older frozen route."""
+    route_artifact = next(
+        (
+            item for item in manifest.get("artifacts", [])
+            if isinstance(item, dict) and item.get("artifact") == BOOTSTRAP_ROUTE_PATH
+        ),
+        None,
+    )
+    route_path = repository_root / BOOTSTRAP_ROUTE_PATH
+    return (
+        isinstance(route_artifact, dict)
+        and isinstance(route_artifact.get("sha256"), str)
+        and route_path.is_file()
+        and route_artifact["sha256"] != file_hash(route_path)
+    )
+
+
+def frozen_manifest_allows_stale_repair_closure(
+    manifest: dict[str, Any], repository_root: Path,
+) -> bool:
+    """Recognize the same old frozen route during blocked Round 3 replay."""
+    return (
+        manifest.get("profileName") == "bootstrap-skill-route"
+        and manifest.get("fullReviewRound") == REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
+        and frozen_manifest_allows_historical_policy_omission(manifest, repository_root)
+    )
+
+
+def validate_context_class_artifacts(
+    manifest: dict[str, Any],
+    profile: dict[str, Any],
+    *,
+    allow_frozen_historical_policy_omission: bool = False,
+) -> None:
     mapping = manifest.get("contextClassArtifacts")
     required_classes = profile["requiredContextClasses"]
     if not isinstance(mapping, dict) or set(mapping) != set(required_classes):
@@ -2871,6 +3032,13 @@ def validate_context_class_artifacts(manifest: dict[str, Any], profile: dict[str
         ):
             raise BootstrapError(f"review-input.json has invalid context artifacts for {name}")
     validate_profile_context_semantics(manifest.get("profileName", ""), mapping)
+    validate_bootstrap_skill_route_dependency_inventory(
+        Path(manifest["repositoryRoot"]),
+        manifest.get("profileName", ""),
+        manifest.get("artifacts", []),
+        mapping,
+        allow_frozen_historical_policy_omission=allow_frozen_historical_policy_omission,
+    )
 
 
 def prompt_text(layer: str, manifest: dict[str, Any], run_dir: Path) -> str:
@@ -3121,7 +3289,9 @@ def focused_repair_prompt_text(manifest: dict[str, Any]) -> str:
         "authority or high-risk scope requires a separate superseding acceptance target, not a "
         "new finding in this lineage. The repository is AI-native with one human maintainer; "
         "multi-maintainer concurrency and external requirement-injection assumptions are outside "
-        "this verification role. Do not grant acceptance, commit, release, or handoff authority.\n"
+        "this verification role. Do not run commands that mutate the frozen Artifact View, "
+        "including self-mutating validator or test suites; use their hash-bound receipts and "
+        "static evidence instead. Do not grant acceptance, commit, release, or handoff authority.\n"
     )
 
 
@@ -3477,7 +3647,7 @@ def validate_artifact_view_read_receipt(receipt: Any, manifest: dict[str, Any]) 
 
 
 def completed_reviewer_coverage(manifest: dict[str, Any]) -> dict[str, list[str]]:
-    required = [item["artifact"] for item in manifest["artifacts"]]
+    required = list(reviewable_artifact_map(manifest))
     return {
         "requiredArtifacts": required,
         "readArtifacts": required,
@@ -3694,9 +3864,15 @@ def repair_binding_hashes(
     artifacts: list[dict[str, Any]],
     context_classes: dict[str, list[str]],
     plan_bound_checks: list[dict[str, Any]],
+    authority_only_artifact: str | None = None,
 ) -> dict[str, str]:
+    """Bind candidate inputs while excluding the current closure authority itself."""
+    candidate_artifacts = [
+        item for item in artifacts
+        if item.get("artifact") != authority_only_artifact
+    ]
     return {
-        "candidateHash": value_hash(artifacts),
+        "candidateHash": value_hash(candidate_artifacts),
         "sourceHash": value_hash(context_classes),
         "validatorHash": value_hash(plan_bound_checks),
     }
@@ -3769,7 +3945,11 @@ def validate_repair_closure(
             for evidence in item.get("evidence", []):
                 if not isinstance(evidence, dict):
                     continue
-                evidence_path = ensure_within(repository_root / evidence.get("path", ""), repository_root, "Repair evidence")
+                raw_evidence_path = evidence.get("path")
+                if not isinstance(raw_evidence_path, str) or not raw_evidence_path:
+                    errors.append(f"repair evidence path is invalid: {item.get('findingId')}")
+                    continue
+                evidence_path = ensure_within(repository_root / raw_evidence_path, repository_root, "Repair evidence")
                 if not evidence_path.is_file() or file_hash(evidence_path) != evidence.get("sha256"):
                     errors.append(f"repair evidence is missing or stale: {evidence.get('path')}")
     if errors:
@@ -4124,7 +4304,7 @@ def validate_round3_deterministic_repair_closure(
             or saved_envelope.get("reviewId") != predecessor_manifest.get("reviewId")
             or saved_envelope.get("inputHash") != predecessor_manifest.get("inputHash")
             or saved_envelope.get("fullReviewRound") != REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
-            or saved_envelope.get("profileName") != "bootstrap-skill-route"
+            or saved_envelope.get("profileName") != predecessor_manifest.get("profileName")
             or saved_envelope.get("finalStatus") != "blocked"
             or saved_envelope.get("findingClosure", {}).get("unverifiedCount") != 0
             or saved_envelope.get("authorizes") != []
@@ -4201,7 +4381,7 @@ def validate_hard_limit_recovery_authorization(
         or authorization.get("authorizes") != []
         or predecessor_manifest.get("fullReviewRound")
         != REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
-        or predecessor_manifest.get("profileName") != "bootstrap-skill-route"
+        or predecessor_manifest.get("profileName") not in HARD_LIMIT_FOCUSED_PREDECESSOR_PROFILES
         or not isinstance(repair_binding, dict)
         or set(repair_binding) != {"path", "sha256"}
         or not repair_path.is_file()
@@ -4245,9 +4425,9 @@ def command_authorize_hard_limit_focused_recovery(args: argparse.Namespace) -> i
         effective_lineage_family(predecessor_manifest) != args.lineage_family_id
         or predecessor_manifest.get("fullReviewRound")
         != REVIEW_CYCLE_POLICY["hardFullReviewRoundLimit"]
-        or predecessor_manifest.get("profileName") != "bootstrap-skill-route"
+        or predecessor_manifest.get("profileName") not in HARD_LIMIT_FOCUSED_PREDECESSOR_PROFILES
     ):
-        raise BootstrapError("Hard-limit recovery requires the exact blocked Round 3 Skill-route predecessor")
+        raise BootstrapError("Hard-limit recovery requires an eligible blocked Round 3 predecessor profile")
     if not args.user_confirmed:
         raise BootstrapError("Hard-limit focused recovery requires explicit user confirmation")
     if not math.isfinite(args.confidence) or not 0 <= args.confidence <= 1:
@@ -4378,6 +4558,26 @@ def command_prepare(args: argparse.Namespace) -> int:
             )
         )
     scope_inputs = list(args.scope)
+    # Freeze dynamically loaded validator and schemas in the Artifact View.
+    runtime_authority_paths: list[str] = []
+    try:
+        runtime_authority_paths.append(PLAN_VALIDATOR_PATH.relative_to(repository_root).as_posix())
+        runtime_authority_paths.extend(
+            path.relative_to(repository_root).as_posix()
+            for path in sorted((PLAN_ROOT / "schemas").glob("*.schema.json"))
+        )
+    except ValueError:
+        # Isolated fixture repositories use the module's fallback schema loader.
+        runtime_authority_paths = []
+    for runtime_path in runtime_authority_paths:
+        if runtime_path not in scope_inputs:
+            scope_inputs.append(runtime_path)
+    route_runtime_dependencies = bootstrap_skill_route_runtime_dependencies(
+        repository_root, scope_inputs
+    )
+    for runtime_path in route_runtime_dependencies:
+        if runtime_path not in scope_inputs:
+            scope_inputs.append(runtime_path)
     if args.knowledge_context:
         # Reviewers receive the bound request/result/decision document itself,
         # not only the selected-candidate summary in review-input.json.
@@ -4403,8 +4603,14 @@ def command_prepare(args: argparse.Namespace) -> int:
         review_artifacts,
         args.profile,
     )
+    context_class_artifacts = augment_bootstrap_skill_route_dependency_context(
+        args.profile, context_class_artifacts, route_runtime_dependencies
+    )
     context_class_artifacts = augment_context_class_artifacts(
         context_class_artifacts, knowledge_context, profile["requiredContextClasses"]
+    )
+    validate_bootstrap_skill_route_dependency_inventory(
+        repository_root, args.profile, review_artifacts, context_class_artifacts
     )
     plan_bound_checks = build_plan_bound_required_checks(
         repository_root, args.required_check, review_artifacts, args.profile, profile
@@ -4430,6 +4636,7 @@ def command_prepare(args: argparse.Namespace) -> int:
             for artifact in check["authorityArtifacts"]
         }
     )
+    dependency_closure = sorted(set(dependency_closure) | set(route_runtime_dependencies))
     high_risk_boundaries = explicit_repository_paths(
         args.high_risk_boundary, repository_root, "High-risk boundary"
     )
@@ -4569,7 +4776,12 @@ def command_prepare(args: argparse.Namespace) -> int:
                 repository_root,
                 predecessor_dir,
                 predecessor_manifest,
-                repair_binding_hashes(artifacts, context_class_artifacts, plan_bound_checks),
+                repair_binding_hashes(
+                    artifacts,
+                    context_class_artifacts,
+                    plan_bound_checks,
+                    closure_path.relative_to(repository_root).as_posix(),
+                ),
                 current_git_index_hash,
                 write_set,
                 execution_read_set,
@@ -4671,6 +4883,13 @@ def command_prepare(args: argparse.Namespace) -> int:
         "manifestPath": "artifact-view/manifest.json",
         "manifestHash": file_hash(out_dir / "artifact-view" / "manifest.json"),
         "creationHash": view["creationHash"],
+        "requiredArtifacts": sorted({
+            item.get("artifact") for item in review_artifacts
+            if isinstance(item, dict) and isinstance(item.get("artifact"), str)
+        } | {
+            item.get("artifact") for item in removed_snapshot_sources
+            if isinstance(item, dict) and isinstance(item.get("artifact"), str)
+        }),
     }
     manifest["inputHash"] = value_hash(manifest)
     write_json(out_dir / "review-input.json", manifest)
@@ -4722,6 +4941,8 @@ def validate_manifest_controls(
         "reviewEntryDecision",
     }
     present_lineage_fields = lineage_fields & set(manifest)
+    if not baseline_only and present_lineage_fields != lineage_fields:
+        raise BootstrapError("review-input.json is missing the required lineage-family contract")
     if present_lineage_fields and present_lineage_fields != lineage_fields:
         raise BootstrapError("review-input.json has a partial lineage-family contract")
     if present_lineage_fields:
@@ -4782,6 +5003,8 @@ def validate_manifest_controls(
     finding_contract_present = any(
         key in manifest for key in ("maintenanceMode", "findingMode", "findingModePolicy")
     )
+    if not baseline_only and not finding_contract_present:
+        raise BootstrapError("review-input.json is missing the required finding-mode policy")
     if finding_contract_present:
         expected_mode = (
             "verification_only"
@@ -4951,7 +5174,14 @@ def load_run(
             raise BootstrapError(f"review-input.json has stale or substituted {field}")
     if manifest.get("authorityClass") != AUTHORITY_CLASS:
         raise BootstrapError("review-input.json has an invalid bootstrap authority class")
-    validate_context_class_artifacts(manifest, profile)
+    validate_context_class_artifacts(
+        manifest,
+        profile,
+        allow_frozen_historical_policy_omission=(
+            not require_fresh_artifacts
+            and frozen_manifest_allows_historical_policy_omission(manifest, repository_root)
+        ),
+    )
     validate_manifest_controls(
         manifest,
         profile,
@@ -5063,6 +5293,12 @@ def load_run(
             )
         except ControlPlaneError as exc:
             raise BootstrapError(str(exc)) from exc
+        required_artifacts = view_binding.get("requiredArtifacts")
+        if isinstance(required_artifacts, list):
+            view_entries = read_json(view_path).get("entries", [])
+            view_names = sorted(entry.get("originalPath") for entry in view_entries if isinstance(entry, dict))
+            if view_names != sorted(required_artifacts):
+                raise BootstrapError("Artifact View does not exactly cover prepared artifacts")
         if view_hash != view_binding["manifestHash"]:
             raise BootstrapError("Artifact View manifest hash is invalid")
     if manifest["fullReviewRound"] > 1:
@@ -5091,14 +5327,20 @@ def load_run(
             )
             if hard_limit_binding != expected_recovery or closure_binding != expected_closure:
                 raise BootstrapError("Hard-limit recovery manifest binding is stale")
-        else:
+        elif not (
+            not require_fresh_artifacts
+            and frozen_manifest_allows_stale_repair_closure(manifest, repository_root)
+        ):
             validate_repair_closure(
                 closure_path,
                 repository_root,
                 predecessor_dir,
                 predecessor_manifest,
                 repair_binding_hashes(
-                    manifest["artifacts"], manifest["contextClassArtifacts"], manifest["planBoundRequiredChecks"]
+                    manifest["artifacts"],
+                    manifest["contextClassArtifacts"],
+                    manifest["planBoundRequiredChecks"],
+                    closure_binding.get("path"),
                 ),
                 manifest["gitIndexHash"],
                 manifest["writeSet"],

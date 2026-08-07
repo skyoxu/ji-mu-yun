@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "bootstrap-round3-deterministic-repair-closure.v1",
+  "lineageFamilyId": "skill-authoring-standard",
+  "predecessorRun": "logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r3",
+  "predecessorEnvelope": {
+    "path": "logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r3/finalized-run-validation.v3.json",
+    "sha256": "sha256:4f6bca7918a1a2e158c46a1daf70b6ae5c8051679369ec6bde5298487db1b9c2",
+    "finalStatus": "blocked"
+  },
+  "findingIds": [
+    "BSR-1ADE171397A5118E",
+    "BSR-1F6D75E80E1DC954",
+    "BSR-21391CAB524855E5",
+    "BSR-3C5D8A6233470C7B",
+    "BSR-6553788757B886B5",
+    "BSR-7C1C402CE370CF0B",
+    "BSR-8B63B524ED53376F",
+    "BSR-929B06CA6870720F",
+    "BSR-B7CCBCB583CBA4F7",
+    "BSR-D631C746D61600DF",
+    "BSR-DB3124C18B728E7C",
+    "BSR-DD90EC54AC523D2C",
+    "BSR-E6D64A04D3575134",
+    "BSR-FE5426B30C6AA6B5"
+  ],
+  "repairs": [
+    {
+      "findingIds": [
+        "BSR-1ADE171397A5118E",
+        "BSR-1F6D75E80E1DC954",
+        "BSR-21391CAB524855E5",
+        "BSR-3C5D8A6233470C7B",
+        "BSR-6553788757B886B5",
+        "BSR-7C1C402CE370CF0B",
+        "BSR-8B63B524ED53376F",
+        "BSR-929B06CA6870720F",
+        "BSR-B7CCBCB583CBA4F7",
+        "BSR-D631C746D61600DF",
+        "BSR-DB3124C18B728E7C",
+        "BSR-DD90EC54AC523D2C",
+        "BSR-E6D64A04D3575134",
+        "BSR-FE5426B30C6AA6B5"
+      ],
+      "result": "fixed",
+      "reason": "Round 4 deterministic repair evidence fixes the exact Round 3 closure-protocol findings; no new semantic finding is proposed.",
+      "evidence": [
+        {
+          "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/validate_plan.py",
+          "sha256": "sha256:92d14b9f7bf98ce273131bb5cfc0cda10b0776be51621248434d35daa313caa2"
+        },
+        {
+          "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/tests/test_validate_plan.py",
+          "sha256": "sha256:3a7d6cbc91f39aa5c82eb8c36fc39566cdb22522a3bcb0f48b3ddc64092fcde2"
+        },
+        {
+          "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/validate_implementation.py",
+          "sha256": "sha256:471a5712c7127e66672996e09b9e2e82009d33dd4f5467b330e2aee4b66f1584"
+        },
+        {
+          "path": "execution-plans/2026-08-06-skill-authoring-standard/tools/tests/test_validate_implementation.py",
+          "sha256": "sha256:944668d359ee1db6c3010f272a2660cceea8f93a9ba76872d89cf73e9e0d6155"
+        }
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "name": "package-a-plan-validator",
+      "status": "passed",
+      "evidence": {
+        "path": "logs/tdd-adapter/skill-authoring-standard/repair-round-4/plan-validator-composition-receipt.v2.json",
+        "sha256": "sha256:abd2f2fe8c8290d7a66fa7b9608782632d25c749cca9bd0100db5ab8ae7f5852"
+      }
+    }
+  ],
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "round-4",
+    "finding-discovery",
+    "acceptance-passed",
+    "commit",
+    "release"
+  ]
+}

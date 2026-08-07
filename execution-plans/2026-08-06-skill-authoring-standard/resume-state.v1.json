@@ -1,0 +1,11 @@
+{
+  "schema_version": "vdd.resume-state.v1",
+  "plan_id": "skill-authoring-standard",
+  "profile": "self-hosted",
+  "state": "plan-ready",
+  "next_action": "Keep the Package A lineage in manual_pause. A hard-limit focused-repair recovery requires a control-plane recommendation and explicit maintainer confirmation before any verification-only route; implementation authorization remains separate.",
+  "completed_steps": ["source-read","scope-selected","slice-order-selected","authority-freeze","knowledge-preflight","plan-ready-publication","bootstrap-round-2-finalized","vdd-repair-round-3-closed","bootstrap-round-3-finalized-blocked","vdd-repair-round-4-deterministic-closure"],
+  "pending_steps": ["hard-limit-focused-repair-recovery-authorization","implementation-authorization","SAS-S0","SAS-S1","SAS-S2","SAS-S3","terminal-validation","acceptance"],
+  "slice_status": {"SAS-S0":"pending","SAS-S1":"pending","SAS-S2":"pending","SAS-S3":"pending"},
+  "authorizes": []
+}

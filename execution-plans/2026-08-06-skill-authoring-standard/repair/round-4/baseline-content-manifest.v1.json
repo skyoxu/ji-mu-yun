@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "vdd-repair-content-manifest.v1",
+  "role": "baseline",
+  "sourceManifest": {
+    "path": "repair/round-3/candidate-content-manifest.v1.json",
+    "sha256": "sha256:fb39ca7359086f94f6157dc458bcfb5a4e2612d416364512a321f56913f05470"
+  },
+  "files": [
+    {"path": "tools/validate_plan.py", "sha256": "sha256:d2ead4b4dc54c5c734f131107e31cba6acab6553a1d30007db176808e3b5a139"},
+    {"path": "tools/validate_implementation.py", "sha256": "sha256:5bd92d3ce4e79aecd82e09bef36d95c7711d6fb762edd2aa077cacc1cce170af"},
+    {"path": "tools/tests/test_validate_plan.py", "sha256": "sha256:aa3a6192376e7f5a2abf31a72e079882803bc6a0900f53c7396f1de3619de8ca"},
+    {"path": "tools/tests/test_validate_implementation.py", "sha256": "sha256:d75ebf2e23c0de53f603065db97aa0b60856d132ec9959394c7b7e810fb6be55"},
+    {"path": "00-index.md", "sha256": "sha256:97300f9c277c47b6cf99483ab4e23748b9164dd844f07ff25e666510ebffea42"},
+    {"path": "authority-manifest.v1.json", "sha256": "sha256:b4b0cd6cd7aef657b9bd6a490bee1817fbfe2c79339e81f12e6da19ccf0a1ee1"},
+    {"path": "implementation-contract.v1.json", "sha256": "sha256:53e7266a12c1c0e034d64b99e734ed8864d862a4b59abe28157f24b393115c4f"},
+    {"path": "resume-state.v1.json", "sha256": "sha256:2def22e3d61eeee98b5101dfd29617c6e6b72dbe5fc40b15ae7362ebd4fe28e3"}
+  ],
+  "snapshotSources": [
+    {"path":"00-index.md","snapshotPath":"logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r3/artifact-view/tree/execution-plans/2026-08-06-skill-authoring-standard/00-index.md","sha256":"sha256:97300f9c277c47b6cf99483ab4e23748b9164dd844f07ff25e666510ebffea42"},
+    {"path":"authority-manifest.v1.json","snapshotPath":"logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r3/artifact-view/tree/execution-plans/2026-08-06-skill-authoring-standard/authority-manifest.v1.json","sha256":"sha256:b4b0cd6cd7aef657b9bd6a490bee1817fbfe2c79339e81f12e6da19ccf0a1ee1"},
+    {"path":"implementation-contract.v1.json","snapshotPath":"logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r3/artifact-view/tree/execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json","sha256":"sha256:53e7266a12c1c0e034d64b99e734ed8864d862a4b59abe28157f24b393115c4f"},
+    {"path":"resume-state.v1.json","snapshotPath":"logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r3/artifact-view/tree/execution-plans/2026-08-06-skill-authoring-standard/resume-state.v1.json","sha256":"sha256:2def22e3d61eeee98b5101dfd29617c6e6b72dbe5fc40b15ae7362ebd4fe28e3"}
+  ],
+  "authorizes": []
+}

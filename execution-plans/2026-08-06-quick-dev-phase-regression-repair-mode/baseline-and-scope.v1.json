@@ -1,0 +1,48 @@
+{
+  "schema_version": "vdd.scoped-dirty-worktree-baseline.v1",
+  "plan_id": "quick-dev-phase-regression-repair-mode",
+  "captured_date": "2026-08-06",
+  "git": {
+    "head": "49c5cff216646cf82179d906db60426d5f1ef314",
+    "tree": "bb82574606412a36a235a9c8ab49a1cc1b2a246e",
+    "scoped_tracked_diff_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_index_diff_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scope_roots": [
+    ".agents/skills/quick-dev-tdd-adapter/",
+    ".agents/skills/bmad-quick-dev/",
+    "docs/standards/phase-service.md",
+    "docs/architecture/ADR_INDEX_PHASE.md",
+    "docs/adr/ADR-0060-quick-dev-phase-regression-repair-mode.md",
+    "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/",
+    "execution-plans/95-implementation-report-index.v1.json"
+  ],
+  "preexisting_dirty_paths": [
+    "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**",
+    "knowledge/catalogs/**",
+    "knowledge/indexes/**",
+    "knowledge/projections/**",
+    "knowledge/snapshots/**"
+  ],
+  "excluded_generated_or_unrelated": [
+    "logs/phase-a-innernet/**",
+    "logs/tdd-adapter/** except read-only historical evidence named below",
+    "PhaseA.Platform/**",
+    "PhaseA.Platform.Tests/**",
+    "runtime/phase-a/**",
+    "other unrelated worktree paths"
+  ],
+  "historical_error_evidence": [
+    {"path":"logs/tdd-adapter/repository-maintenance-tdd-adapter/run-state.v1.json","sha256":"sha256:ed5e98d88a4ecc2c4d99734e3ad9c7b5ebed99aa6f915a8c4b4804ca71a43c6f","observation":"failure_fingerprint is null and repeat_count is zero"},
+    {"path":"logs/tdd-adapter/repository-maintenance-tdd-adapter/RMAP-S2/RUN-20260804T055848-292694Z/red-result.json","sha256":"sha256:bd1c936cdbd6f3a11f2b20e4b46af6bf7eefb5f955a9b7bb4b00824d3ab52de6","observation":"expected_failure_ids are recorded but not proven against command output"},
+    {"path":"logs/tdd-adapter/repository-maintenance-tdd-adapter/verification/s7-lifecycle-r1-20260723/stderr.log","sha256":"sha256:743040caa913a97950316762ad88241cb598ea58b60ce68c82d9c164a0740e03","observation":"historical RED command unexpectedly passed failure exists"}
+  ],
+  "review_artifact_closure": {
+    "immutable_authority_sources": "authority-manifest.v1.json current_sources",
+    "historical_evidence_paths": "historical_error_evidence",
+    "bootstrap_scope_must_snapshot_all": true,
+    "missing_snapshot_is_blocking": true
+  },
+  "candidate_rule": "After implementation authorization, freeze a new complete scoped candidate identity. Historical logs and user-owned dirty paths remain read-only and non-authorizing.",
+  "authorizes": []
+}

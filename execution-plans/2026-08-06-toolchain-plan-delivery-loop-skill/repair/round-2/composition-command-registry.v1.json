@@ -1,0 +1,25 @@
+{
+  "schema_version": "jimuyun.vdd-repair-command-registry.v1",
+  "round": 2,
+  "commands": [
+    {
+      "id": "terminal-entry-red",
+      "argv": ["py", "-3", "-B", "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_implementation.py"],
+      "expected_exit": 1,
+      "expected_diagnostic": "implementation-authorization-required:plan-ready"
+    },
+    {
+      "id": "validator-consumer-composition",
+      "argv": ["py", "-3", "-B", "-m", "unittest", "discover", "-s", "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/tests", "-p", "test_validate_implementation.py"],
+      "expected_exit": 0,
+      "producer": "tools/validate_implementation.py",
+      "consumer": "tools/tests/test_validate_implementation.py"
+    },
+    {
+      "id": "plan-validator-regression",
+      "argv": ["py", "-3", "-B", "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_plan.py"],
+      "expected_exit": 0
+    }
+  ],
+  "authorizes": []
+}

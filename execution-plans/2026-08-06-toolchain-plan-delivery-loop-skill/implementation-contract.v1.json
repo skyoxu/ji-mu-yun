@@ -52,10 +52,49 @@
       "replay_before_dispatch": true,
       "authorizes": []
     },
+    "post_run_hook": {
+      "enabled": true,
+      "scope": "coordinator-only",
+      "installation": "explicit-project-local-entrypoint",
+      "trigger_on": ["controlled-completion", "controlled-failure", "timeout", "reported-poll-stop"],
+      "suppress_on": ["user-stop", "manual-pause"],
+      "child_skills_attach_hook": false,
+      "inputs": ["append-only-events", "current-state-projection", "owner-evidence", "hash-bound-checkpoint"],
+      "idempotency_key": "plan_id:run_id:stop_epoch",
+      "actions": ["inspect-owner-evidence", "emit-resume-needed", "invoke-fresh-session-launcher"],
+      "authorizes": [],
+      "forbidden": ["hidden-global-hook", "detached-controller", "process-name-liveness", "authorization-bypass"]
+    },
+    "loop": {
+      "stages": ["recover", "plan", "execute", "verify", "iterate"],
+      "state_authority": "filesystem-only",
+      "route_predicate": "typed-validator-and-owner-evidence-only",
+      "persist_before_dispatch": true,
+      "persist_after_verify": true,
+      "recovery_input": "schema-valid-append-only-events-with-cursor",
+      "early_convergence_forbidden": true,
+      "terminal_requires": ["typed-terminal-predicate", "declared-closure", "owner-published-terminal-state"]
+    },
+    "fresh_session_recovery": {
+      "mode": "explicit-project-local-launcher",
+      "trigger": "post-run-hook-resume-needed",
+      "requires_structured_input": true,
+      "inherits_conversation_context": false,
+      "assumes_global_new_command": false,
+      "launcher_authority": "project-local-explicit-launcher",
+      "authorizes": []
+    },
+    "effect_policy": {
+      "idempotency": "required",
+      "replay_key": "plan_id:run_id:stage_id:attempt_id",
+      "rollback": "journaled-or-owner-declared",
+      "historical_evidence": "append-only",
+      "early_convergence": "forbidden"
+    },
     "background_process": {
       "enabled": false,
       "forbidden": ["timer-poller","scheduled-task","service","detached-codex-launch","process-name-skill-detection"],
-      "recovery": "explicit-skill-reinvocation-plus-owner-inspection"
+      "recovery": "post-run-hook-plus-explicit-fresh-session-launcher"
     },
     "confirmation_boundaries": [
       "bootstrap-high-cost-estimate",
@@ -84,8 +123,8 @@
     {
       "slice_id": "RMAP-S0",
       "title": "Ownership ADR, package skeleton, schemas and RED fixtures",
-      "requirement_ids": ["PDL-008","PDL-010","PDL-011","PDL-012","PDL-013","PDL-014"],
-      "acceptance_ids": ["PDL-A12","PDL-A14","PDL-A15","PDL-A16","PDL-A17","PDL-A18"],
+      "requirement_ids": ["PDL-008","PDL-010","PDL-011","PDL-012","PDL-013","PDL-014","PDL-015"],
+      "acceptance_ids": ["PDL-A12","PDL-A14","PDL-A15","PDL-A16","PDL-A17","PDL-A18","PDL-A19","PDL-A21"],
       "source_refs": ["docs/tools.md#6-p2-skill-local-r3-core-operation-contract","docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md","system-skill:skill-creator"],
       "depends_on": [],
       "allowed_changes": {
@@ -109,8 +148,8 @@
     {
       "slice_id": "RMAP-S1",
       "title": "Target guard, owner evidence projection and compact recovery",
-      "requirement_ids": ["PDL-001","PDL-006","PDL-007","PDL-008","PDL-013"],
-      "acceptance_ids": ["PDL-A01","PDL-A02","PDL-A10","PDL-A11","PDL-A12","PDL-A17"],
+      "requirement_ids": ["PDL-001","PDL-006","PDL-007","PDL-008","PDL-013","PDL-015","PDL-016","PDL-017","PDL-018"],
+      "acceptance_ids": ["PDL-A01","PDL-A02","PDL-A10","PDL-A11","PDL-A12","PDL-A17","PDL-A20","PDL-A22","PDL-A25","PDL-A26"],
       "source_refs": ["workflow.md#61-recovery-state",".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"],
       "depends_on": ["RMAP-S0"],
       "allowed_changes": {
@@ -134,8 +173,8 @@
     {
       "slice_id": "RMAP-S2",
       "title": "Owner-preserving review, implementation and acceptance loop",
-      "requirement_ids": ["PDL-002","PDL-003","PDL-004","PDL-005","PDL-006","PDL-009","PDL-010","PDL-013"],
-      "acceptance_ids": ["PDL-A03","PDL-A04","PDL-A05","PDL-A06","PDL-A07","PDL-A08","PDL-A09","PDL-A10","PDL-A13","PDL-A14","PDL-A17"],
+      "requirement_ids": ["PDL-002","PDL-003","PDL-004","PDL-005","PDL-006","PDL-009","PDL-010","PDL-013","PDL-016","PDL-017","PDL-018"],
+      "acceptance_ids": ["PDL-A03","PDL-A04","PDL-A05","PDL-A06","PDL-A07","PDL-A08","PDL-A09","PDL-A10","PDL-A13","PDL-A14","PDL-A17","PDL-A23","PDL-A24","PDL-A25","PDL-A26","PDL-A27"],
       "source_refs": [".agents/skills/run-phase-bootstrap-review/SKILL.md",".agents/skills/quick-dev-tdd-adapter/SKILL.md",".agents/skills/run-refactor-implementation-acceptance/SKILL.md","docs/standards/bootstrap-review-control-plane.md"],
       "depends_on": ["RMAP-S0","RMAP-S1"],
       "allowed_changes": {
@@ -159,8 +198,8 @@
     {
       "slice_id": "RMAP-S3",
       "title": "Detached composition, forward tests, package validation and terminal closure",
-      "requirement_ids": ["PDL-005","PDL-008","PDL-010","PDL-011","PDL-012","PDL-013"],
-      "acceptance_ids": ["PDL-A08","PDL-A09","PDL-A12","PDL-A14","PDL-A15","PDL-A16","PDL-A17"],
+      "requirement_ids": ["PDL-005","PDL-008","PDL-010","PDL-011","PDL-012","PDL-013","PDL-015","PDL-016","PDL-017","PDL-018"],
+      "acceptance_ids": ["PDL-A08","PDL-A09","PDL-A12","PDL-A14","PDL-A15","PDL-A16","PDL-A17","PDL-A19","PDL-A20","PDL-A22","PDL-A24","PDL-A25","PDL-A26","PDL-A27"],
       "source_refs": ["system-skill:skill-creator","system-skill:skill-creator/references/openai_yaml.md","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_implementation.py"],
       "depends_on": ["RMAP-S0","RMAP-S1","RMAP-S2"],
       "allowed_changes": {

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "bootstrap-round3-deterministic-repair-closure.v1",
+  "lineageFamilyId": "toolchain-plan-delivery-loop-skill",
+  "predecessorRun": "logs/review/2026-08-06/tpdl-bsr3f",
+  "predecessorEnvelope": {
+    "path": "logs/review/2026-08-06/tpdl-bsr3f/finalized-validation.json",
+    "sha256": "sha256:a3e47d27ce5834823bf33caf822f8b5310b2f046f6fe66c478a809052d145934",
+    "finalStatus": "blocked"
+  },
+  "findingIds": ["BSR-AB97A516E875189A", "BSR-D1A6DE179E3E7564", "BSR-E5F890F4EC974863"],
+  "repairs": [
+    {"findingIds": ["BSR-AB97A516E875189A"], "result": "fixed", "reason": "The duplicate-slice validator guard and regression evidence are bound by the shared deterministic receipt.", "evidence": [{"path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/hard-limit-v4/deterministic-validation.v1.json", "sha256": "sha256:9b2c8f973156ae91132f00a76db656116a39abad62751138246fc3e8084d12ff"}]},
+    {"findingIds": ["BSR-D1A6DE179E3E7564"], "result": "fixed", "reason": "The current knowledge context and freeze receipt are bound by the shared deterministic receipt.", "evidence": [{"path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/hard-limit-v4/deterministic-validation.v1.json", "sha256": "sha256:9b2c8f973156ae91132f00a76db656116a39abad62751138246fc3e8084d12ff"}]},
+    {"findingIds": ["BSR-E5F890F4EC974863"], "result": "fixed", "reason": "The complete plan authority inputs are bound by the shared deterministic receipt.", "evidence": [{"path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/repair/hard-limit-v4/deterministic-validation.v1.json", "sha256": "sha256:9b2c8f973156ae91132f00a76db656116a39abad62751138246fc3e8084d12ff"}]}
+  ],
+  "validation": [
+    {"command": "py -3 execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_plan.py", "status": "passed"},
+    {"command": "py -3 -m unittest discover -s execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/tests -p test_validate_plan.py", "status": "passed"}
+  ],
+  "authorizes": [],
+  "doesNotAuthorize": ["acceptance-passed", "round-4", "finding-discovery", "commit", "release"]
+}

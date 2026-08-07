@@ -1,0 +1,23 @@
+{
+  "schema_version": "jimuyun.vdd-root-cause-callsite-inventory.v1",
+  "round": 2,
+  "finding_ids": ["BSR-021C56320E84F1EB"],
+  "source_roots": [
+    "tools/validate_implementation.py",
+    "tools/tests/test_validate_implementation.py"
+  ],
+  "matches": [
+    {
+      "path": "tools/validate_implementation.py",
+      "role": "terminal-implementation-validator",
+      "disposition": "changed"
+    },
+    {
+      "path": "tools/tests/test_validate_implementation.py",
+      "role": "direct-validator-consumer-and-regression-test",
+      "disposition": "changed"
+    }
+  ],
+  "excluded_matches": [],
+  "authorizes": []
+}

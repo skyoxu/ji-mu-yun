@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "vdd-repair-closure.v1",
+  "predecessorRun": "logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r2",
+  "predecessorValidationEnvelope": {
+    "path": "logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r2/finalized-run-validation.v3.json",
+    "sha256": "sha256:24c750f8baf7451ee01c824fad693b37d938e4324380da35aad89ec1567c8fb7"
+  },
+  "findingIds": [
+    "BSR-3C76AD52587A942F",
+    "BSR-809547CB18AB176F",
+    "BSR-98BBC8C293706327",
+    "BSR-A3AC745EF56E05A2",
+    "BSR-BEE19337EB199E40",
+    "BSR-F86E17F0A6F2F9A2"
+  ],
+  "items": [
+    {"findingId":"BSR-3C76AD52587A942F","disposition":"fixed","risk":"high","proofFamily":"negative-fixture","reason":"The validator now rejects the entire generic .agents/skills/** namespace, including non-BMAD Skills.","fixRefs":["tools/validate_plan.py","tools/tests/test_validate_plan.py"],"validationCommands":["package-a-plan-tests","package-a-plan-validator"],"evidence":[{"path":"tools/tests/test_validate_plan.py","sha256":"sha256:aa3a6192376e7f5a2abf31a72e079882803bc6a0900f53c7396f1de3619de8ca"}]},
+    {"findingId":"BSR-809547CB18AB176F","disposition":"fixed","risk":"high","proofFamily":"negative-fixture","reason":"The terminal predicate now requires the exact ordered SAS-A12 replay set, so a deleted required command blocks.","fixRefs":["tools/validate_implementation.py","tools/tests/test_validate_implementation.py"],"validationCommands":["package-a-plan-tests","terminal-predicate-negative"],"evidence":[{"path":"tools/tests/test_validate_implementation.py","sha256":"sha256:d75ebf2e23c0de53f603065db97aa0b60856d132ec9959394c7b7e810fb6be55"}]},
+    {"findingId":"BSR-98BBC8C293706327","disposition":"refuted","risk":"normal","proofFamily":"authority-predicate","reason":"The selected terminal replay commands use only string argv values; the typed plan_path descriptors are not selected by SAS-A12.","fixRefs":["command-registry.v1.json","tools/validate_implementation.py"],"validationCommands":["package-a-plan-tests","terminal-predicate-negative"],"evidence":[{"path":"logs/ci/2026-08-07/bootstrap-review-skill-authoring-standard-r2/verifier-output.json","sha256":"sha256:99e4b9abdf641ec06a97cd3b8b468e748e5bcdf6321566a4809721aad5847bf9"}]},
+    {"findingId":"BSR-A3AC745EF56E05A2","disposition":"fixed","risk":"high","proofFamily":"authority-predicate","reason":"The closure now binds generated callsite inventory, complete changed-path manifests, and a successful producer/consumer receipt.","fixRefs":["repair/round-3/repair-closure.json","repair/round-3/callsite-inventory.v1.json","repair/round-3/baseline-content-manifest.v1.json","repair/round-3/candidate-content-manifest.v1.json"],"validationCommands":["package-a-plan-validator","package-a-plan-tests"],"evidence":[{"path":"logs/tdd-adapter/skill-authoring-standard/repair-round-2/plan-validator-composition-receipt.v3.json","sha256":"sha256:ad07228c611c759808e172b358aaac7f2349a223549a10190bea30b4a7ba0c57"}]},
+    {"findingId":"BSR-BEE19337EB199E40","disposition":"fixed","risk":"high","proofFamily":"negative-fixture","reason":"Authority source paths are canonicalized and contained before file hashing, rejecting absolute and parent-traversal paths.","fixRefs":["tools/validate_plan.py","tools/tests/test_validate_plan.py"],"validationCommands":["package-a-plan-tests","package-a-plan-validator"],"evidence":[{"path":"tools/tests/test_validate_plan.py","sha256":"sha256:aa3a6192376e7f5a2abf31a72e079882803bc6a0900f53c7396f1de3619de8ca"}]},
+    {"findingId":"BSR-F86E17F0A6F2F9A2","disposition":"fixed","risk":"high","proofFamily":"authority-predicate","reason":"The VDD closure is machine-replayed against its complete manifests, inventory, consumer partition, and current input hashes.","fixRefs":["tools/validate_plan.py","repair/round-3/repair-closure.json"],"validationCommands":["package-a-plan-validator","package-a-plan-tests"],"evidence":[{"path":"repair/round-3/candidate-content-manifest.v1.json","sha256":"sha256:fb39ca7359086f94f6157dc458bcfb5a4e2612d416364512a321f56913f05470"}]}
+  ],
+  "repairPaths": [
+    "tools/validate_plan.py",
+    "tools/validate_implementation.py",
+    "tools/tests/test_validate_plan.py",
+    "tools/tests/test_validate_implementation.py"
+  ],
+  "baselineManifest": {"path":"repair/round-3/baseline-content-manifest.v1.json","sha256":"sha256:b87d44ae66d07360e2750fb8b401b2632b18535e9c99a7b21a266a144ac40c4b"},
+  "candidateManifest": {"path":"repair/round-3/candidate-content-manifest.v1.json","sha256":"sha256:fb39ca7359086f94f6157dc458bcfb5a4e2612d416364512a321f56913f05470"},
+  "callsiteInventory": {"path":"repair/round-3/callsite-inventory.v1.json","sha256":"sha256:e7405ac097bd648b3a486c013863b0a5c48d5e9fc5d1eab639d75f6657c423fc"},
+  "compositionReceipt": {"path":"logs/tdd-adapter/skill-authoring-standard/repair-round-2/plan-validator-composition-receipt.v3.json","sha256":"sha256:ad07228c611c759808e172b358aaac7f2349a223549a10190bea30b4a7ba0c57"},
+  "authorizes": []
+}

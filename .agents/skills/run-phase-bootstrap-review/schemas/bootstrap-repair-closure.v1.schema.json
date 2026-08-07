@@ -29,7 +29,10 @@
           "expiry": {"type": "string", "minLength": 1},
           "closureTest": {"type": "string", "minLength": 1}
         },
-        "allOf": [{"if": {"properties": {"disposition": {"const": "deferred"}}, "required": ["disposition"]}, "then": {"required": ["owner", "expiry", "closureTest"]}}]
+        "allOf": [
+          {"if": {"properties": {"disposition": {"enum": ["fixed", "refuted"]}}, "required": ["disposition"]}, "then": {"properties": {"fixRefs": {"minItems": 1}, "validationCommands": {"minItems": 1}, "evidence": {"minItems": 1}}}},
+          {"if": {"properties": {"disposition": {"const": "deferred"}}, "required": ["disposition"]}, "then": {"required": ["owner", "expiry", "closureTest"]}}
+        ]
       }
     },
     "currentBindings": {"type": "object", "additionalProperties": false, "required": ["candidateHash", "sourceHash", "validatorHash"], "properties": {"candidateHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "sourceHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "validatorHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}},

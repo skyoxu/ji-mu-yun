@@ -1,0 +1,13 @@
+{
+  "schema_version": "jimuyun.toolchain-plan-delivery-loop-repair-red.v1",
+  "status": "observed",
+  "predecessor": "initial-plan-contract",
+  "expected_failures": [
+    "missing-explicit-post-run-hook-contract",
+    "missing-five-stage-filesystem-loop-contract",
+    "missing-fresh-session-launcher-boundary",
+    "missing-idempotent-rollback-effect-policy",
+    "missing-user-stop-and-manual-pause-suppression"
+  ],
+  "authorizes": []
+}

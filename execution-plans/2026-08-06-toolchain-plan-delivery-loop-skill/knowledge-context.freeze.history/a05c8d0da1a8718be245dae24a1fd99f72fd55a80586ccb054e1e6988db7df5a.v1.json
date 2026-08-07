@@ -1,0 +1,43 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:a05c8d0da1a8718be245dae24a1fd99f72fd55a80586ccb054e1e6988db7df5a",
+  "canonical_context_sha256": "sha256:5c3315d30c3fee8579b87475867af0fc67c0e5eb1c45e5bfb2c8e6a39c3b23ca",
+  "request_sha256": "sha256:6dc8b77671f54988837e571a76336e3bafa15097a8979d84303e6f6b4ed13ade",
+  "result_sha256": "sha256:53bfa24e341426a6ae1af92ec4ffc712633cc373c03eae963950815fcef986d0",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "49c5cff216646cf82179d906db60426d5f1ef314"
+  },
+  "source_snapshot_id": "sha256:963510ed834bc7c3e96ff0fc2cacd775cbea4736386172ea59bd94d18b79b02d",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "source_sha256": "77bac69538b6c0818d492755edac01af35ff66cd507a097e9918409416635fc8",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "satisfies": [
+        "repository-rules"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+      "source_sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3",
+      "satisfies": [
+        "toolchain-consumer-authority"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:bb2a6310f99aa862dc5d328fb1e6752c367ec09b43c34966c13884fba6787796",
+    "freeze_receipt_path": "knowledge-context.freeze.history/bb2a6310f99aa862dc5d328fb1e6752c367ec09b43c34966c13884fba6787796.v1.json",
+    "reason": "exclude-dirty-review-target-from-external-knowledge-candidates"
+  }
+}

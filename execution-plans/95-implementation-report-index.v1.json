@@ -38,7 +38,19 @@
       "report_filename": "95-implementation-evolution-and-completion-report.md"
     },
     {
+      "plan_directory": "2026-08-06-quick-dev-phase-regression-repair-mode",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-08-06-skill-authoring-standard",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
       "plan_directory": "2026-08-06-toolchain-plan-delivery-loop-skill",
+      "report_filename": "95-implementation-evolution-and-completion-report.md"
+    },
+    {
+      "plan_directory": "2026-08-07-bootstrap-review-operability-hardening",
       "report_filename": "95-implementation-evolution-and-completion-report.md"
     }
   ]

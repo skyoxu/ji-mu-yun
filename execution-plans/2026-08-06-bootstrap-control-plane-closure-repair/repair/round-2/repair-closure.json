@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "bootstrap-repair-closure.v1",
+  "predecessorRun": "logs/review/2026-08-06/bcpcr-v7-r1",
+  "predecessorInputHash": "sha256:1f5fa0c44eae695b68b953cd7b56f689325f68d75bce1ca2faac35d9b3a421e0",
+  "predecessorResultHash": "sha256:182844ceac4f43b3464166563264f669a82915fbe4419faa59ca54589e5f8e3f",
+  "findingIds": [
+    "BSR-38C22995843D398E",
+    "BSR-48E53F10163DB104",
+    "BSR-7AE02ACEDA3E8C86",
+    "BSR-AE5C26FA27F85AF9",
+    "BSR-BB5DA179BE820BB0",
+    "BSR-C3CB60F66F087FEB"
+  ],
+  "items": [
+    {
+      "findingId": "BSR-38C22995843D398E",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "regression",
+      "reason": "Deterministic regression repair.",
+      "fixRefs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+          "sha256": "sha256:68a9003fb1f01959f432539967974db9f5015da942640d5e5fcd1a194fb3b6d3"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-48E53F10163DB104",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "regression",
+      "reason": "Deterministic regression repair.",
+      "fixRefs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+          "sha256": "sha256:68a9003fb1f01959f432539967974db9f5015da942640d5e5fcd1a194fb3b6d3"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-7AE02ACEDA3E8C86",
+      "disposition": "refuted",
+      "risk": "normal",
+      "proofFamily": "authority-predicate",
+      "reason": "Refuted by local sibling module and explicit import path binding.",
+      "fixRefs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py",
+          "sha256": "sha256:83a2d988df2e513eba4e9c299c5b5f4cd75e0869c67f200b8c6b80ae764a94e9"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-AE5C26FA27F85AF9",
+      "disposition": "fixed",
+      "risk": "normal",
+      "proofFamily": "regression",
+      "reason": "Deterministic regression repair.",
+      "fixRefs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+          "sha256": "sha256:68a9003fb1f01959f432539967974db9f5015da942640d5e5fcd1a194fb3b6d3"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-BB5DA179BE820BB0",
+      "disposition": "refuted",
+      "risk": "normal",
+      "proofFamily": "authority-predicate",
+      "reason": "Refuted by local sibling module and explicit import path binding.",
+      "fixRefs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py",
+          "sha256": "sha256:83a2d988df2e513eba4e9c299c5b5f4cd75e0869c67f200b8c6b80ae764a94e9"
+        }
+      ]
+    },
+    {
+      "findingId": "BSR-C3CB60F66F087FEB",
+      "disposition": "refuted",
+      "risk": "normal",
+      "proofFamily": "authority-predicate",
+      "reason": "Refuted by local sibling module and explicit import path binding.",
+      "fixRefs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py"
+      ],
+      "validationCommands": [
+        "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py",
+          "sha256": "sha256:83a2d988df2e513eba4e9c299c5b5f4cd75e0869c67f200b8c6b80ae764a94e9"
+        }
+      ]
+    }
+  ],
+  "currentBindings": {
+    "candidateHash": "sha256:acf0ae11b144cd622f0576b9efdbe77660cb1756b1ebde549ba95533761f147f",
+    "sourceHash": "sha256:d10bdcaa3197b54677029b7ff002058e31d7583235935cbea8279503b839f0c9",
+    "validatorHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "gitIndexHash": "sha256:ecbf987189519e78bf5016ad5f6bc2e244b183528bee63d4ed26a601ee9630d3",
+  "writeSetHash": "sha256:8ee8fd7339fe519571ae4c0f84b1d21ac2fe73538b863e1c292967df6bd1cd3a",
+  "executionReadSetHash": "sha256:2b3ea1d3482c585be6511a07807d26ebb4b92ddaf02997ddf194aaa9dd9f7c28",
+  "dependencyClosureHash": "sha256:cbbfae9c75fa75868af3c37eac61ee1f136efd63d61ee6192788f18f5459477c"
+}

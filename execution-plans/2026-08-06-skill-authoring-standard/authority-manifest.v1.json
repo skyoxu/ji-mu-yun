@@ -1,0 +1,78 @@
+{
+  "schema_version": "vdd.authority-manifest.v1",
+  "plan_id": "skill-authoring-standard",
+  "git": {
+    "commit": "49c5cff216646cf82179d906db60426d5f1ef314",
+    "tree": "bb82574606412a36a235a9c8ab49a1cc1b2a246e"
+  },
+  "source_files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "sha256:06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+    },
+    {
+      "path": "README.md",
+      "sha256": "sha256:56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6"
+    },
+    {
+      "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "sha256": "sha256:3051ed7504ffe1956123ccd682daf01d9e3c318d6b0c4abed8925a459686bb20"
+    },
+    {
+      "path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "sha256": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550"
+    },
+    {
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
+    },
+    {
+      "path": "docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md",
+      "sha256": "sha256:3532ee1870b33f2a5cd17fb6967a695dd0fe1c8e1cad73c166d411798b34ba43"
+    },
+    {
+      "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "sha256": "sha256:69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+    },
+    {
+      "path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+      "sha256": "sha256:1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "sha256": "sha256:26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/solo-maintainer-vdd-standard.md",
+      "sha256": "sha256:09de28c142b4957bac6f2c3495fe3716f1686687167a528775d152db97d2cbd7"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/clarification-gate.md",
+      "sha256": "sha256:f4265c931334ad2c6034bedde2e61f225da6e32e5fefe1813095abb5948e2350"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.md",
+      "sha256": "sha256:0b6b5a056dc72015ede28f71a0ae65484091356da617ba75e741c98a58c6c846"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+      "sha256": "sha256:af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+      "sha256": "sha256:b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a"
+    }
+  ],
+  "mutable_source_paths": [],
+  "validator_bindings": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+      "sha256": "sha256:28aed230c26b6520b375726571e9bf280f7b90dd304b5ed4a712f31799ae5c7e"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/validate_adapter_contract.py",
+      "sha256": "sha256:10db5add9abd7d354e65f43f88226bd43727e0957e09cd6ab631a62dcf4946a3"
+    }
+  ],
+  "authorizes": []
+}

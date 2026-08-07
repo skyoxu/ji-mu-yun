@@ -1,0 +1,43 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:02b8ef3204d76dcb806efebafdab20ba733537711577e10c4cad0b2a08650b04",
+  "canonical_context_sha256": "sha256:843dacfde39845105738b96102295a9d8af9bd9d492b4dd2b6b659e1e4138100",
+  "request_sha256": "sha256:980ca1d49f81a28e6095bf66dadf647b4d9c4db16be6c3840b1fadf645302e20",
+  "result_sha256": "sha256:7355845a871cdfd2b499be37204d6c7a6170d2ac3b49138f442610d3089289eb",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "49c5cff216646cf82179d906db60426d5f1ef314"
+  },
+  "source_snapshot_id": "sha256:963510ed834bc7c3e96ff0fc2cacd775cbea4736386172ea59bd94d18b79b02d",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "source_sha256": "2525e32a9acf16cd8156c4973b03277c199f8804c90c15826fc9a593f9a9c6e8",
+      "satisfies": [
+        "existing-workflow"
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "satisfies": [
+        "repository-rules"
+      ]
+    },
+    {
+      "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+      "source_sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3",
+      "satisfies": [
+        "toolchain-consumer-authority"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:2276778dde410329b3159299c45ab98a532736f638ef548338b660f6cdcc7bb5",
+    "freeze_receipt_path": "knowledge-context.freeze.history/2276778dde410329b3159299c45ab98a532736f638ef548338b660f6cdcc7bb5.v1.json",
+    "reason": "control-plane-authority-only-context-rebind-to-current-worktree-compatible-candidates"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "bootstrap-finding-mode-reentry-authorization.v1",
+  "lineageFamilyId": "bootstrap-control-plane-closure-repair-v9",
+  "nextReviewRound": 3,
+  "predecessorRun": "logs/review/2026-08-07/bcpcr-v9-r2",
+  "predecessorInputHash": "sha256:cba5d1e166761548c46609db8880ee090e072ea32f19e9f455bc6cab7c1bed2c",
+  "roundEntryReason": "authority_context_graph_changed",
+  "acceptanceRoute": null,
+  "recommendation": "recommend",
+  "confidence": 0.95,
+  "rationale": "The repaired deterministic dependency inventory changes the authority context graph and closes all three confirmed P1 findings; a final bounded discovery round is warranted.",
+  "userConfirmed": true,
+  "confirmedAt": "2026-08-07T03:29:10.954554Z",
+  "authorizes": [
+    "finding-mode-reentry"
+  ]
+}

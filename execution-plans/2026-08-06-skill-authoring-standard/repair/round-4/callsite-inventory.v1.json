@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "vdd-root-cause-callsite-inventory.v1",
+  "inventoryCommand": {
+    "argv": ["-l", "FORBIDDEN|terminal_replay_command_ids|authority.*source_files|validate_round4_repair|run_terminal_replay", "execution-plans/2026-08-06-skill-authoring-standard/tools"],
+    "shell": false,
+    "timeoutSeconds": 30
+  },
+  "sourceRoots": ["tools", "tools/tests"],
+  "callSites": [
+    {"path": "tools/validate_plan.py", "role": "producer", "disposition": "changed", "reason": "Replays the complete repair closure, source authority, baseline, inventory, and composition bindings."},
+    {"path": "tools/validate_implementation.py", "role": "producer", "disposition": "changed", "reason": "Binds each SAS-A12 command ID to its exact Package A argv."},
+    {"path": "tools/tests/test_validate_plan.py", "role": "consumer", "disposition": "changed", "reason": "Covers root scope, authority set, baseline set, and repair proof branches."},
+    {"path": "tools/tests/test_validate_implementation.py", "role": "consumer", "disposition": "changed", "reason": "Covers exact terminal command binding and transport failure branches."}
+  ],
+  "authorizes": []
+}

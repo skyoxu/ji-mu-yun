@@ -1,6 +1,6 @@
 # Toolchain Plan Delivery Loop Skill
 
-- Status: `plan-ready`
+- Status: `implementation-authorized`
 - Profile: `self-hosted`
 - Profile reason: this plan adds an opt-in Skill that coordinates three existing Toolchain control planes and therefore changes workflow-control behavior.
 - Plan ID: `toolchain-plan-delivery-loop-skill`
@@ -21,29 +21,39 @@ Create one repository-local Skill that accepts exactly one existing
 4. Refactor Acceptance orchestration, including its bounded Bootstrap and
    Quick Dev repair routes, until `acceptance-passed`.
 
-The coordinator is a same-session harness adapter. It computes one typed next
-action from current owner-produced evidence, invokes the owning Skill, then
-re-inspects. It does not replace VDD, Bootstrap, Quick Dev, or Acceptance and
-does not publish their lifecycle states.
+The coordinator is an opt-in harness adapter. It computes one typed next action
+from current owner-produced evidence, invokes the owning Skill, then
+re-inspects. Its normal loop may remain in the current session; hook-triggered
+recovery uses the explicit fresh-session launcher. It does not replace VDD,
+Bootstrap, Quick Dev, or Acceptance and does not publish their lifecycle states.
 
-## Background Watchdog Decision
+## Post-Run Hook And Recovery Decision
 
-Do not create the proposed three-minute background process. A detached process
-cannot safely revive a Codex conversation, infer Skill activity from process
-names, acknowledge an unknown high-cost estimate, or bypass Bootstrap's
-event-backed process ownership. It would also introduce a second controller and
-duplicate state authority.
+Do not create the proposed three-minute background process. The coordinator
+uses one explicit, project-local, auditable post-run hook. The hook belongs only
+to this coordinator; the Bootstrap, Quick Dev, and Acceptance Skills do not
+attach it.
 
-Use an invocation-driven recovery design instead:
+The hook runs for controlled completion, controlled failure, timeout, or a
+reported poll-stop. It is suppressed for an explicit user-stop and for
+manual-pause. It reads only schema-valid filesystem events, current state,
+owner evidence, and a hash-bound checkpoint. It has no lifecycle publication
+authority and is idempotent by `plan_id:run_id:stop_epoch`.
 
-- Rebuild current state from the target plan, owner-produced run evidence,
-  Bootstrap process events, Quick Dev run state, and Acceptance run state.
-- Persist only a compact, non-authorizing checkpoint under `logs/` for fast
-  context-compaction recovery.
-- Before dispatching any action, call the owning control plane's read-only
-  inspect/resume path and reject a live or conflicting controller.
-- If the Codex session or host process ends, the next explicit Skill invocation
-  resumes from evidence. No external daemon launches a model or mutates a plan.
+Hook recovery requests an explicit project-local fresh-session launcher. The
+launcher reads structured state and does not assume a global `/new` command or
+inherit the previous conversation. Process kill and machine power loss remain
+outside this plan's recovery guarantee.
+
+The coordinator loop is filesystem-backed and follows:
+
+`recover -> plan -> execute -> verify -> iterate`
+
+Each stage persists an append-only event and checkpoint. Route selection uses
+typed validator predicates and owner evidence only. Coordinator actions require
+stable idempotency keys and journaled or owner-declared rollback boundaries.
+Terminal exit requires typed terminal predicates, declared closure, and the
+owner-published terminal state; intermediate success never converges the loop.
 
 ## Authority Boundaries
 
@@ -84,7 +94,7 @@ The lifecycle remains:
 
 `draft -> plan-ready -> implementation-authorized -> implementation-complete -> acceptance-passed -> archived`
 
-This directory is `plan-ready`. Bootstrap review is required by this plan as
+This directory is `implementation-authorized`. Bootstrap review is required by this plan as
 supplemental evidence before the maintainer may authorize implementation, but
 Bootstrap does not publish that state.
 
@@ -103,8 +113,7 @@ separate post-implementation lifecycle owner.
 
 ## Validation
 
-- Plan-ready: `py -3 -B execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_plan.py`
+- Implementation-authorized: `py -3 -B execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_plan.py --implementation-state`
 - Plan validator tests: `py -3 -B -m unittest discover -s execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/tests -p test_validate_plan.py`
 - Current negative implementation predicate: `py -3 -B execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_implementation.py`
 - Future terminal implementation predicate: the same implementation command, after all slices and current full validation complete.
-

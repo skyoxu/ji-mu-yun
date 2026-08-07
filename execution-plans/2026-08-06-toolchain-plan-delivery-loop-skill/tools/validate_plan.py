@@ -55,6 +55,10 @@ def duplicates(values: list[str]) -> set[str]:
 
 
 def check_dependency_graph(slices: list[dict[str, Any]], errors: list[str]) -> None:
+    slice_ids = [item.get("slice_id") for item in slices]
+    if duplicates(slice_ids):
+        errors.append("duplicate-slice-id")
+        return
     graph = {item.get("slice_id"): item.get("depends_on", []) for item in slices}
     if list(graph) != SLICE_IDS:
         errors.append("slice-order-or-set-invalid")
@@ -132,7 +136,7 @@ def validate_plan(
         errors.append("duplicate-requirement-id")
     if duplicates(acceptance_ids):
         errors.append("duplicate-acceptance-id")
-    if len(req_ids) != 14 or len(acceptance_ids) != 18:
+    if len(req_ids) != 18 or len(acceptance_ids) != 27:
         errors.append("requirement-or-acceptance-count-invalid")
 
     slices = contract.get("slices", [])
@@ -208,6 +212,32 @@ def validate_plan(
         errors.append("confidence-source-invalid")
     if coordination.get("parallel_confidence_scoring_forbidden") is not True:
         errors.append("parallel-confidence-not-forbidden")
+    hook = coordination.get("post_run_hook", {})
+    if hook.get("enabled") is not True:
+        errors.append("post-run-hook-disabled")
+    if hook.get("scope") != "coordinator-only":
+        errors.append("post-run-hook-scope-invalid")
+    if hook.get("installation") != "explicit-project-local-entrypoint":
+        errors.append("post-run-hook-installation-invalid")
+    if set(hook.get("suppress_on", [])) != {"user-stop", "manual-pause"}:
+        errors.append("post-run-hook-suppression-invalid")
+    if hook.get("child_skills_attach_hook") is not False:
+        errors.append("child-skill-hook-attachment-invalid")
+    loop = coordination.get("loop", {})
+    if loop.get("stages") != ["recover", "plan", "execute", "verify", "iterate"]:
+        errors.append("loop-stage-order-invalid")
+    if loop.get("state_authority") != "filesystem-only":
+        errors.append("loop-state-authority-invalid")
+    if loop.get("early_convergence_forbidden") is not True:
+        errors.append("early-convergence-not-forbidden")
+    session = coordination.get("fresh_session_recovery", {})
+    if session.get("assumes_global_new_command") is not False:
+        errors.append("fresh-session-global-new-assumption")
+    if session.get("launcher_authority") != "project-local-explicit-launcher":
+        errors.append("fresh-session-launcher-authority-invalid")
+    effects = coordination.get("effect_policy", {})
+    if effects.get("idempotency") != "required" or effects.get("rollback") != "journaled-or-owner-declared":
+        errors.append("effect-policy-invalid")
     background = coordination.get("background_process", {})
     if background.get("enabled") is not False:
         errors.append("background-process-enabled")
@@ -240,6 +270,16 @@ def validate_plan(
         errors.append("resume-current-slice-invalid")
     if set(resume.get("slice_status", {})) != set(SLICE_IDS):
         errors.append("resume-slice-set-invalid")
+    repair = resume.get("repair", {})
+    if repair.get("status") == "closed" and isinstance(repair.get("current_round"), int) and repair["current_round"] >= 2:
+        closure = repair.get("closure")
+        expected_closure = f"repair/round-{repair['current_round']}/bootstrap-repair-closure.v1.json"
+        if closure != expected_closure:
+            errors.append("resume-bootstrap-repair-closure-path-invalid")
+        else:
+            closure_value = load_json(plan_dir / closure, errors)
+            if closure_value.get("schemaVersion") != "bootstrap-repair-closure.v1":
+                errors.append("resume-bootstrap-repair-closure-schema-invalid")
 
     if route.get("classification") != "self-hosted" or route.get("status") != "observe_only":
         errors.append("model-route-invalid")

@@ -1,0 +1,30 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:97a3a78763b11d9f969022eaab4a2b89e337665fad3774f49221ed42415112ad",
+  "canonical_context_sha256": "sha256:35713411c8e1694f3c698e677df947b495913dda89ee790e1574435c5dd9e48a",
+  "request_sha256": "sha256:eb66cbfad3ec946c294692d36930e284ac3f3a680e874546f404baaa0be82396",
+  "result_sha256": "sha256:957738e00ff2a2782dae4f3f8109bbb73af56b9a19c842f53b8ab55c13565a5a",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "49c5cff216646cf82179d906db60426d5f1ef314"
+  },
+  "source_snapshot_id": "sha256:963510ed834bc7c3e96ff0fc2cacd775cbea4736386172ea59bd94d18b79b02d",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "source_sha256": "3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "satisfies": [
+        "governance-context",
+        "repository-rules"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:8a25793edf5f95167daca20dd83b659bf3ec7b97b027d94b1d9a6cbc60228b6a",
+    "freeze_receipt_path": "knowledge-context.freeze.history/8a25793edf5f95167daca20dd83b659bf3ec7b97b027d94b1d9a6cbc60228b6a.v1.json",
+    "reason": "Bootstrap Round 1 repair changed plan validators and requires a current worktree-matched knowledge freeze."
+  }
+}

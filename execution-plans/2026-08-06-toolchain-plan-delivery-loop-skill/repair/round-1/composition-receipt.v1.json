@@ -1,0 +1,21 @@
+{
+  "schema_version": "jimuyun.vdd-repair-composition-receipt.v1",
+  "target_plan": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill",
+  "producer": "repair-plan-validator",
+  "consumer": "repair-plan-tests",
+  "changed_path_covered": "implementation-contract.v1.json",
+  "inputs": [
+    "requirements.v1.json",
+    "implementation-contract.v1.json",
+    "authority-manifest.v1.json",
+    "tools/validate_plan.py",
+    "tools/tests/test_validate_plan.py"
+  ],
+  "observed": {
+    "plan_validator": "pass",
+    "plan_tests": "pass",
+    "plan_tests_count": 4
+  },
+  "status": "pass",
+  "authorizes": []
+}

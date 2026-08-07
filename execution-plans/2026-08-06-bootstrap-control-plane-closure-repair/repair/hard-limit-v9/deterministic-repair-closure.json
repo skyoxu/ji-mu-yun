@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "bootstrap-round3-deterministic-repair-closure.v1",
+  "lineageFamilyId": "bootstrap-control-plane-closure-repair-v9",
+  "predecessorRun": "logs/review/2026-08-07/bcpcr-v9-r3-recovery",
+  "predecessorEnvelope": {
+    "path": "logs/review/2026-08-07/bcpcr-v9-r3-recovery/finalized-validation.json",
+    "sha256": "sha256:1c83d8a2cd2c6d5f2b632ad48fb3cc6eb4c4dad5bc76d015d0b907213bc2108d",
+    "finalStatus": "blocked"
+  },
+  "findingIds": [
+    "BSR-07D76F2FC448D8FB",
+    "BSR-7896A338FB11BE5C",
+    "BSR-91CF72623E8A3D1E",
+    "BSR-BF6DD27B341FE12D"
+  ],
+  "repairs": [
+    {
+      "findingIds": [
+        "BSR-07D76F2FC448D8FB",
+        "BSR-BF6DD27B341FE12D"
+      ],
+      "result": "fixed",
+      "reason": "The route dependency inventory and profiles-and-config mapping now include the historical policy registry. Frozen older routes receive only the narrow replay compatibility required to finalize their already-confirmed blocked result.",
+      "evidence": [
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          "sha256": "sha256:0114bbe0381912ee5e6395bc245d12617435b91236f527e356364d89828143ac"
+        },
+        {
+          "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+          "sha256": "sha256:d788099c779becd56d2c097bf2ed9b814c9fe17e0d03b7bca478338f9c6e6db5"
+        }
+      ]
+    },
+    {
+      "findingIds": [
+        "BSR-7896A338FB11BE5C",
+        "BSR-91CF72623E8A3D1E"
+      ],
+      "result": "fixed",
+      "reason": "Knowledge-context validation now rejects malformed snapshot commits deterministically and requires a read_set whenever a catalog entry has resources.",
+      "evidence": [
+        {
+          "path": "scripts/python/knowledge_context_validation.py",
+          "sha256": "sha256:5cebddc7c79c2524fa3ac584ca11d00d3e2ffc4619d19d3c9f0376bdfe7d9741"
+        },
+        {
+          "path": "scripts/python/tests/test_knowledge_context_validation.py",
+          "sha256": "sha256:a39fb217139c67fc476e6d1dc24aed6ce23425fc23b29def71eddaa2dec0f530"
+        }
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "command": "py -3 scripts/python/tests/test_knowledge_context_validation.py",
+      "status": "passed"
+    },
+    {
+      "command": "py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "status": "passed"
+    },
+    {
+      "command": "py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+      "status": "passed"
+    }
+  ],
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "acceptance-passed"
+  ]
+}
