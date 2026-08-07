@@ -8,10 +8,15 @@ import unittest
 from collections import Counter
 from pathlib import Path
 
+from scripts.python._knowledge_catalog_builder import build_layers
+from scripts.python._knowledge_locator_core import locate
+
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 SUITE_PATH = REPOSITORY_ROOT / "knowledge" / "evaluation" / "repository-knowledge-query-suite.v1.json"
 EVALUATOR_PATH = REPOSITORY_ROOT / "scripts" / "python" / "evaluate_knowledge_queries.py"
+POLICY_PATH = REPOSITORY_ROOT / "knowledge" / "policies" / "consumer-policies.v2.json"
+EXCLUSIONS_PATH = REPOSITORY_ROOT / "knowledge" / "policies" / "source-exclusions.v1.json"
 
 
 def _load_evaluator():
@@ -60,6 +65,41 @@ class KnowledgeQueryEvaluationTests(unittest.TestCase):
         self.assertEqual(7, len(modules["execution-plan"]))
         self.assertEqual(25, len(modules["architecture"]))
         self.assertEqual(6, len(modules["toolchain"]))
+
+    def test_canonical_toolchain_owner_queries_stay_within_rank_gate(self) -> None:
+        # ADR-0048 requires deterministic ranking evidence for workflow consumers.
+        policies = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+        exclusions = json.loads(EXCLUSIONS_PATH.read_text(encoding="utf-8"))
+        _, catalog, projections, _ = build_layers(
+            REPOSITORY_ROOT,
+            policy=policies,
+            exclusions=exclusions,
+            authority_ref="refs/heads/main",
+        )
+        policy_by_consumer = {item["consumer"]: item for item in policies["policies"]}
+        eligible_by_consumer = {
+            item["consumer"]: set(item["eligible_module_ids"])
+            for item in projections["projections"]
+        }
+        cases = {
+            case["case_id"]: case
+            for case in self.suite["cases"]
+            if case["case_id"] in {"TOOL-007", "TOOL-008", "TOOL-011"}
+        }
+
+        self.assertEqual({"TOOL-007", "TOOL-008", "TOOL-011"}, set(cases))
+        for case_id, case in cases.items():
+            consumer = case["consumer"]
+            result = locate(
+                {"query": case["query"]},
+                catalog,
+                policy=policy_by_consumer[consumer],
+                eligible_module_ids=eligible_by_consumer[consumer],
+            )
+            ranked_ids = [candidate.get("module_id") for candidate in result["candidates"]]
+            expected = case["expected"]
+            rank = ranked_ids.index(expected["module_id"]) + 1
+            self.assertLessEqual(rank, expected["max_rank"], case_id)
 
     def test_suite_validator_rejects_undercovered_category(self) -> None:
         evaluator = _load_evaluator()
