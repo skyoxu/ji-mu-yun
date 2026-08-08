@@ -1,6 +1,6 @@
 {
-  "after_snapshot_id": "1acfe86e3fed1b9b6794e05f935454b897377eaaf51bbbcae9f577c129cfe9d4",
-  "before_snapshot_id": "sha256:963510ed834bc7c3e96ff0fc2cacd775cbea4736386172ea59bd94d18b79b02d",
+  "after_snapshot_id": "8c8cd9ac7e1d4d84da591916a0cdaa06d861390b99b424bdce8f23785cef9d1d",
+  "before_snapshot_id": "sha256:e48805abf2d8152791c19eb46b54113ed503c9cbcd2456ce0424622d24f0dcd1",
   "catalog_source_snapshot_status": "stale",
   "entries": [
     {
@@ -34,9 +34,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167",
+      "after_sha256": "70955e4bd014d02933344cf5aa09c9f49004c1cf4bacbdda01f33f826c31022f",
       "authority_status": "main-backed",
-      "before_sha256": "f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167",
+      "before_sha256": "70955e4bd014d02933344cf5aa09c9f49004c1cf4bacbdda01f33f826c31022f",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.quick-dev-tdd-adapter.SKILL.md",
@@ -84,9 +84,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe",
+      "after_sha256": "5372633b77578057f6ddbaef4d1d9106b5c344b7359a155421ea86fcef1ce7da",
       "authority_status": "main-backed",
-      "before_sha256": "2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe",
+      "before_sha256": "5372633b77578057f6ddbaef4d1d9106b5c344b7359a155421ea86fcef1ce7da",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.quick-dev-tdd-adapter.tools.route_plan_directory.py",
@@ -94,9 +94,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "9721a632e0634ab77acc50a7b44c146ab3d71a52e3da5c3266430be31d0a4b0f",
+      "after_sha256": "8b2db75cdf6e17f01663db91a496b87de4ca67d7ccf2b5e3b3870ad22e504a28",
       "authority_status": "main-backed",
-      "before_sha256": "7710e9ffff3e27366df4297df0d492f4b746d71d693e3a3f80e04eff863ecbd5",
+      "before_sha256": "9721a632e0634ab77acc50a7b44c146ab3d71a52e3da5c3266430be31d0a4b0f",
       "changed_fields": [
         "source_sha256"
       ],
@@ -106,9 +106,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "c21e76d810baa52165ee0301c9d5a84805f2f9be770819a875b35104a23bd027",
+      "after_sha256": "43418fd7b9cf8b1437b6cf0e92150d4563e11736f8f36e76d04e9396d8b57a47",
       "authority_status": "main-backed",
-      "before_sha256": "c21e76d810baa52165ee0301c9d5a84805f2f9be770819a875b35104a23bd027",
+      "before_sha256": "43418fd7b9cf8b1437b6cf0e92150d4563e11736f8f36e76d04e9396d8b57a47",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-phase-bootstrap-review.references.review-profiles.v1.json",
@@ -116,9 +116,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "d3ce55e4f81ad9b6105efb94c18e017eba3912ce80cab71a27c8b2e19e06b1d6",
+      "after_sha256": "227a5ba015ee2ea3261260e432de8d9604043b45cc10fc45780feaace24cd9a1",
       "authority_status": "main-backed",
-      "before_sha256": "d3ce55e4f81ad9b6105efb94c18e017eba3912ce80cab71a27c8b2e19e06b1d6",
+      "before_sha256": "227a5ba015ee2ea3261260e432de8d9604043b45cc10fc45780feaace24cd9a1",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-phase-bootstrap-review.scripts._control_plane.py",
@@ -126,9 +126,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "0114bbe0381912ee5e6395bc245d12617435b91236f527e356364d89828143ac",
+      "after_sha256": "c43d23e29bea85649b40c973015da7679b6c5059bb74985ff9da016c2a5860a2",
       "authority_status": "main-backed",
-      "before_sha256": "aa717dc6bf1ab8e5bc9981ed8f425f5cb2aca5dcad1a68a80526d54297a82556",
+      "before_sha256": "9609de0ba490ebb82ac0551d50f8e1a8847f4ef7f43dd158bd461375f2a28211",
       "changed_fields": [
         "source_sha256"
       ],
@@ -138,9 +138,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68",
+      "after_sha256": "b8ffbe312ccef553fd9fd718c9b2250914618375145b3688d9d767177ae2183a",
       "authority_status": "main-backed",
-      "before_sha256": "5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68",
+      "before_sha256": "b8ffbe312ccef553fd9fd718c9b2250914618375145b3688d9d767177ae2183a",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-refactor-implementation-acceptance.SKILL.md",
@@ -188,9 +188,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "33d277763fd0fe6ffb9801bfcfbdf4e9bac2292489c9293c6257d076f134c51b",
+      "after_sha256": "4eec619f251a2d75740418f5ba0c4704ba600637a10f82ff7707d921dc7a6639",
       "authority_status": "main-backed",
-      "before_sha256": "33d277763fd0fe6ffb9801bfcfbdf4e9bac2292489c9293c6257d076f134c51b",
+      "before_sha256": "4eec619f251a2d75740418f5ba0c4704ba600637a10f82ff7707d921dc7a6639",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-refactor-implementation-acceptance.scripts.acceptance_cli.py",
@@ -1848,13 +1848,161 @@
       "source_snapshot_kind": "main"
     },
     {
+      "after_sha256": "ec170170c5e859f8180f12ae24242db1ea87ae08986c85ca8d180a8bde12587d",
+      "authority_status": "main-backed",
+      "before_sha256": "ec170170c5e859f8180f12ae24242db1ea87ae08986c85ca8d180a8bde12587d",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-bootstrap-control-plane-closure-repair.00-index.md",
+      "source_path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/00-index.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "0a21f7f2324b305db088d74e16c4ea2a4e64bc65fae7a5c35a40b12cd2f28d67",
+      "authority_status": "main-backed",
+      "before_sha256": "0a21f7f2324b305db088d74e16c4ea2a4e64bc65fae7a5c35a40b12cd2f28d67",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-bootstrap-control-plane-closure-repair.command-registry.v1.json",
+      "source_path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/command-registry.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "edad836baf2a26424bbb47badecaf177294afbe23f58b941fcf092995a28dd19",
+      "authority_status": "main-backed",
+      "before_sha256": "edad836baf2a26424bbb47badecaf177294afbe23f58b941fcf092995a28dd19",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-bootstrap-control-plane-closure-repair.implementation-contract.v1.json",
+      "source_path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/implementation-contract.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "e7e7ec2238f1f2058aded596a5abcaf1e93f9e3e698aa2a86919a14ae8370c12",
+      "authority_status": "main-backed",
+      "before_sha256": "e7e7ec2238f1f2058aded596a5abcaf1e93f9e3e698aa2a86919a14ae8370c12",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-bootstrap-control-plane-closure-repair.plan-state.v1.json",
+      "source_path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "eabcea026ab97c3e5ac159766585aa33aad6088830966d0f384b09a11ba29f48",
+      "authority_status": "main-backed",
+      "before_sha256": "eabcea026ab97c3e5ac159766585aa33aad6088830966d0f384b09a11ba29f48",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-bootstrap-control-plane-closure-repair.requirements.v1.json",
+      "source_path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/requirements.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "dee6815303ea2a14925d147a62aa9ec91f88f4876576df19907fcf774e7628a1",
+      "authority_status": "main-backed",
+      "before_sha256": "dee6815303ea2a14925d147a62aa9ec91f88f4876576df19907fcf774e7628a1",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-quick-dev-phase-regression-repair-mode.00-index.md",
+      "source_path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/00-index.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "5d7a59cbd2f5a730b4d8a9149c072ef0efc8dc071f0283c20a6333aab8d68a18",
+      "authority_status": "main-backed",
+      "before_sha256": "5d7a59cbd2f5a730b4d8a9149c072ef0efc8dc071f0283c20a6333aab8d68a18",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-quick-dev-phase-regression-repair-mode.command-registry.v1.json",
+      "source_path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/command-registry.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "1cb1fbe7e5234f4c75992c6e96f882ecd4dea9f744fa28304bf5bb7dc910dc2e",
+      "authority_status": "main-backed",
+      "before_sha256": "1cb1fbe7e5234f4c75992c6e96f882ecd4dea9f744fa28304bf5bb7dc910dc2e",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-quick-dev-phase-regression-repair-mode.implementation-contract.v1.json",
+      "source_path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/implementation-contract.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "1bf9c99f344c96bc29365cf4349bcfc5cbcf5822101dfe8ef44741af4bef5cb4",
+      "authority_status": "main-backed",
+      "before_sha256": "1bf9c99f344c96bc29365cf4349bcfc5cbcf5822101dfe8ef44741af4bef5cb4",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-quick-dev-phase-regression-repair-mode.plan-state.v1.json",
+      "source_path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "f8859746e57b023c22a056b5f710eb2e7a8de9b30efc028691977a61159227b6",
+      "authority_status": "main-backed",
+      "before_sha256": "f8859746e57b023c22a056b5f710eb2e7a8de9b30efc028691977a61159227b6",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-quick-dev-phase-regression-repair-mode.requirements.v1.json",
+      "source_path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/requirements.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110",
+      "authority_status": "main-backed",
+      "before_sha256": "4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-skill-authoring-standard.00-index.md",
+      "source_path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "authority_status": "main-backed",
+      "before_sha256": "5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-skill-authoring-standard.command-registry.v1.json",
+      "source_path": "execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a",
+      "authority_status": "main-backed",
+      "before_sha256": "b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-skill-authoring-standard.implementation-contract.v1.json",
+      "source_path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2",
+      "authority_status": "main-backed",
+      "before_sha256": "5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-skill-authoring-standard.plan-state.v1.json",
+      "source_path": "execution-plans/2026-08-06-skill-authoring-standard/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0",
+      "authority_status": "main-backed",
+      "before_sha256": "af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-skill-authoring-standard.requirements.v1.json",
+      "source_path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
       "after_sha256": "83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46",
       "authority_status": "main-backed",
-      "before_sha256": "326166295af2128e1c1e82869dea9d8a78c18cde406dc9916e828069af56bf98",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.00-index.md",
       "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/00-index.md",
       "source_snapshot_kind": "main"
@@ -1872,11 +2020,9 @@
     {
       "after_sha256": "5a786ddb321105fd7a9e95e4809c6a4fb412c48f4aec3054e00e6cb0bec1f7ee",
       "authority_status": "main-backed",
-      "before_sha256": "48b44e022c3d8a8506efb79e9bd0478845ee59b88b20a9b125567352dbe5e873",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "5a786ddb321105fd7a9e95e4809c6a4fb412c48f4aec3054e00e6cb0bec1f7ee",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.implementation-contract.v1.json",
       "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/implementation-contract.v1.json",
       "source_snapshot_kind": "main"
@@ -1884,11 +2030,9 @@
     {
       "after_sha256": "efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209",
       "authority_status": "main-backed",
-      "before_sha256": "e0f56b88d55ff6f6fa593bbba6a8b1291e8beeba49523761bb4c2ed1de5f3500",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.plan-state.v1.json",
       "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/plan-state.v1.json",
       "source_snapshot_kind": "main"
@@ -1896,13 +2040,63 @@
     {
       "after_sha256": "477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9",
       "authority_status": "main-backed",
-      "before_sha256": "e38229a35bdec07c8c4d9f011431862c6e2eab54bc9493b2cc3d1a985947d033",
+      "before_sha256": "477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.requirements.v1.json",
+      "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/requirements.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "e69b21d5776c2a8bfdaa3a9328764cf60aed84bdcc941028ee132883e339453b",
+      "authority_status": "main-backed",
+      "before_sha256": "aff4773cb176919010eab82069e4e59420751eb0755c3f0f523a0392fe0902bb",
       "changed_fields": [
         "source_sha256"
       ],
       "disposition": "updated",
-      "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.requirements.v1.json",
-      "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/requirements.v1.json",
+      "entry_id": "source.execution-plans.2026-08-07-bootstrap-review-operability-hardening.00-index.md",
+      "source_path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/00-index.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "a2ba864deba2a9b9490c7d6841b5503848aa76f44c3b6a112ace95e6c696c170",
+      "authority_status": "main-backed",
+      "before_sha256": "a2ba864deba2a9b9490c7d6841b5503848aa76f44c3b6a112ace95e6c696c170",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-07-bootstrap-review-operability-hardening.command-registry.v1.json",
+      "source_path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/command-registry.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "ffff0656aa608b0ce7a276f07b76b4c9aee2619e35153c1b6b6f560d77ed7459",
+      "authority_status": "main-backed",
+      "before_sha256": "ffff0656aa608b0ce7a276f07b76b4c9aee2619e35153c1b6b6f560d77ed7459",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-07-bootstrap-review-operability-hardening.implementation-contract.v1.json",
+      "source_path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/implementation-contract.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "b42f149de2acf7c3ce7daa7b253facd3b4560b4011000977fee361942dfaac9c",
+      "authority_status": "main-backed",
+      "before_sha256": "b42f149de2acf7c3ce7daa7b253facd3b4560b4011000977fee361942dfaac9c",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-07-bootstrap-review-operability-hardening.plan-state.v1.json",
+      "source_path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "86b120a23da4eea873ee67bc48d217fa4d3abf12423ef1c3a8c09c128361f385",
+      "authority_status": "main-backed",
+      "before_sha256": "86b120a23da4eea873ee67bc48d217fa4d3abf12423ef1c3a8c09c128361f385",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-07-bootstrap-review-operability-hardening.requirements.v1.json",
+      "source_path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/requirements.v1.json",
       "source_snapshot_kind": "main"
     },
     {
@@ -2018,11 +2212,9 @@
     {
       "after_sha256": "5d1b44a3da527ac39eb966099c6100daae7ae509651ae54bf10bec9d953437a0",
       "authority_status": "main-backed",
-      "before_sha256": "758ad3841098a3b5c0ecc330c01583f88c8901e4145662237ffce4f17385dcf8",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "5d1b44a3da527ac39eb966099c6100daae7ae509651ae54bf10bec9d953437a0",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source.knowledge.evaluation.repository-knowledge-query-suite.v1.json",
       "source_path": "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
       "source_snapshot_kind": "main"
@@ -2162,17 +2354,17 @@
   "log": {
     "append_only": true,
     "failure_code": null,
-    "log_ref": "logs/knowledge-context/2026-08-07/bootstrap-review-operability-hardening-maintenance-20260808-r2/result-190218882089.v1.json",
-    "main_commit": "23192841936e26fbb0e541aa0785cd2765ba5419"
+    "log_ref": "logs/knowledge-context/2026-08-08/bootstrap-review-operability-hardening-maintenance-20260808-r3/result-092250644364.v1.json",
+    "main_commit": "9946b77ecde9fc77aeff367c75e0b2091edddb6d"
   },
-  "main_commit": "23192841936e26fbb0e541aa0785cd2765ba5419",
+  "main_commit": "9946b77ecde9fc77aeff367c75e0b2091edddb6d",
   "mode": "existing-only",
-  "request_id": "bootstrap-review-operability-hardening-maintenance-20260808-r2",
+  "request_id": "bootstrap-review-operability-hardening-maintenance-20260808-r3",
   "schema_version": "jimuyun.knowledge-maintenance-result.v1",
   "source_mutation_count": 0,
   "status": "updated",
   "suggested_catalog_source_snapshot": {
-    "commit": "23192841936e26fbb0e541aa0785cd2765ba5419",
+    "commit": "9946b77ecde9fc77aeff367c75e0b2091edddb6d",
     "ref": "refs/heads/main",
     "sources": [
       {
@@ -2189,7 +2381,7 @@
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
-        "sha256": "f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167"
+        "sha256": "70955e4bd014d02933344cf5aa09c9f49004c1cf4bacbdda01f33f826c31022f"
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
@@ -2209,27 +2401,27 @@
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
-        "sha256": "2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
+        "sha256": "5372633b77578057f6ddbaef4d1d9106b5c344b7359a155421ea86fcef1ce7da"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
-        "sha256": "9721a632e0634ab77acc50a7b44c146ab3d71a52e3da5c3266430be31d0a4b0f"
+        "sha256": "8b2db75cdf6e17f01663db91a496b87de4ca67d7ccf2b5e3b3870ad22e504a28"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
-        "sha256": "c21e76d810baa52165ee0301c9d5a84805f2f9be770819a875b35104a23bd027"
+        "sha256": "43418fd7b9cf8b1437b6cf0e92150d4563e11736f8f36e76d04e9396d8b57a47"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
-        "sha256": "d3ce55e4f81ad9b6105efb94c18e017eba3912ce80cab71a27c8b2e19e06b1d6"
+        "sha256": "227a5ba015ee2ea3261260e432de8d9604043b45cc10fc45780feaace24cd9a1"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "sha256": "0114bbe0381912ee5e6395bc245d12617435b91236f527e356364d89828143ac"
+        "sha256": "c43d23e29bea85649b40c973015da7679b6c5059bb74985ff9da016c2a5860a2"
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
-        "sha256": "5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68"
+        "sha256": "b8ffbe312ccef553fd9fd718c9b2250914618375145b3688d9d767177ae2183a"
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
@@ -2249,7 +2441,7 @@
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
-        "sha256": "33d277763fd0fe6ffb9801bfcfbdf4e9bac2292489c9293c6257d076f134c51b"
+        "sha256": "4eec619f251a2d75740418f5ba0c4704ba600637a10f82ff7707d921dc7a6639"
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
@@ -2912,6 +3104,66 @@
         "sha256": "e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc"
       },
       {
+        "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/00-index.md",
+        "sha256": "ec170170c5e859f8180f12ae24242db1ea87ae08986c85ca8d180a8bde12587d"
+      },
+      {
+        "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/command-registry.v1.json",
+        "sha256": "0a21f7f2324b305db088d74e16c4ea2a4e64bc65fae7a5c35a40b12cd2f28d67"
+      },
+      {
+        "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/implementation-contract.v1.json",
+        "sha256": "edad836baf2a26424bbb47badecaf177294afbe23f58b941fcf092995a28dd19"
+      },
+      {
+        "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/plan-state.v1.json",
+        "sha256": "e7e7ec2238f1f2058aded596a5abcaf1e93f9e3e698aa2a86919a14ae8370c12"
+      },
+      {
+        "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/requirements.v1.json",
+        "sha256": "eabcea026ab97c3e5ac159766585aa33aad6088830966d0f384b09a11ba29f48"
+      },
+      {
+        "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/00-index.md",
+        "sha256": "dee6815303ea2a14925d147a62aa9ec91f88f4876576df19907fcf774e7628a1"
+      },
+      {
+        "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/command-registry.v1.json",
+        "sha256": "5d7a59cbd2f5a730b4d8a9149c072ef0efc8dc071f0283c20a6333aab8d68a18"
+      },
+      {
+        "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/implementation-contract.v1.json",
+        "sha256": "1cb1fbe7e5234f4c75992c6e96f882ecd4dea9f744fa28304bf5bb7dc910dc2e"
+      },
+      {
+        "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/plan-state.v1.json",
+        "sha256": "1bf9c99f344c96bc29365cf4349bcfc5cbcf5822101dfe8ef44741af4bef5cb4"
+      },
+      {
+        "path": "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/requirements.v1.json",
+        "sha256": "f8859746e57b023c22a056b5f710eb2e7a8de9b30efc028691977a61159227b6"
+      },
+      {
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+        "sha256": "4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110"
+      },
+      {
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+        "sha256": "5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514"
+      },
+      {
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+        "sha256": "b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a"
+      },
+      {
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/plan-state.v1.json",
+        "sha256": "5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2"
+      },
+      {
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+        "sha256": "af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0"
+      },
+      {
         "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/00-index.md",
         "sha256": "83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46"
       },
@@ -2930,6 +3182,26 @@
       {
         "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/requirements.v1.json",
         "sha256": "477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9"
+      },
+      {
+        "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/00-index.md",
+        "sha256": "e69b21d5776c2a8bfdaa3a9328764cf60aed84bdcc941028ee132883e339453b"
+      },
+      {
+        "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/command-registry.v1.json",
+        "sha256": "a2ba864deba2a9b9490c7d6841b5503848aa76f44c3b6a112ace95e6c696c170"
+      },
+      {
+        "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/implementation-contract.v1.json",
+        "sha256": "ffff0656aa608b0ce7a276f07b76b4c9aee2619e35153c1b6b6f560d77ed7459"
+      },
+      {
+        "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/plan-state.v1.json",
+        "sha256": "b42f149de2acf7c3ce7daa7b253facd3b4560b4011000977fee361942dfaac9c"
+      },
+      {
+        "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/requirements.v1.json",
+        "sha256": "86b120a23da4eea873ee67bc48d217fa4d3abf12423ef1c3a8c09c128361f385"
       },
       {
         "path": "knowledge/contracts/knowledge-consumer-context.v1.schema.json",

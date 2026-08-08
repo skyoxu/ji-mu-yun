@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-bootstrap-review-operability-hardening-20260808-r4",
+    "request_id": "vdd-bootstrap-review-operability-hardening-20260808-r3b",
     "consumer": "vdd",
     "query": "vdd-execution-plan",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "9946b77ecde9fc77aeff367c75e0b2091edddb6d"
+      "commit": "b4023b49e956faac432639dbe1e0febb948a8f18"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -706,13 +706,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-bootstrap-review-operability-hardening-20260808-r4",
+    "request_id": "vdd-bootstrap-review-operability-hardening-20260808-r3b",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "9946b77ecde9fc77aeff367c75e0b2091edddb6d",
+      "commit": "b4023b49e956faac432639dbe1e0febb948a8f18",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:71e3c276326494781ba897303e0e8610b4a80e9d9a7aaf1d37e1034651733bf2",
+    "source_snapshot_id": "sha256:e48805abf2d8152791c19eb46b54113ed503c9cbcd2456ce0424622d24f0dcd1",
     "status": "matched"
   },
   "required_modules": [
@@ -842,11 +842,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:fa66c329ba069242358e3a8e912ed0cdaf83067b149d5c51ce3f1e3b5bf991f0",
-  "result_sha256": "sha256:10bfad95fb5d4273b78062f21f05266316f2e42aaf8fe97edba9b261a3482da8",
+  "request_sha256": "sha256:970aa9a0a33f01abc94c37bdf250b6bd4f1060c4d058ce3e446695ddc25cd401",
+  "result_sha256": "sha256:276377822f6433026799395c2b2cb2553555a627242d50552e981bce58ea4f7c",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:cf7ff6dc085cb14f610791445f6b4e033a4af4edc0ccdb0e44fee317893d8e84"
+    "context_sha256": "sha256:f8a64751325b528c245474281054b66f34af5348edc3bfce68cfefe29e980269"
   }
 }
