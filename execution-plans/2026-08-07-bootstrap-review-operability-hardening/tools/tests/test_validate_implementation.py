@@ -44,6 +44,25 @@ class ValidateImplementationTests(unittest.TestCase):
         self.assertEqual([], MODULE.check_contract_consistency())
         self.assertEqual([], MODULE.check_composition_fixtures())
 
+    def test_composition_fixtures_require_declared_cross_skill_cases(self):
+        with tempfile.TemporaryDirectory() as temp:
+            plan = Path(temp)
+            fixtures = plan / "fixtures"
+            fixtures.mkdir()
+            (fixtures / "operability-cases.v1.json").write_text(
+                json.dumps({
+                    "cases": [{"case_id": "pre-review-skipped-maintainer-authorized", "authorizes": []}],
+                    "authorizes": [],
+                }),
+                encoding="utf-8",
+            )
+            with mock.patch.object(MODULE, "PLAN_DIR", plan):
+                errors = MODULE.check_composition_fixtures()
+            self.assertIn(
+                "composition-fixture-case-missing:discovery-wave-partial-transport-failure",
+                errors,
+            )
+
     def test_missing_stage_artifacts_fail_closed(self):
         with tempfile.TemporaryDirectory() as temp:
             run_dir = Path(temp) / "RUN-TEST"
@@ -89,6 +108,23 @@ class ValidateImplementationTests(unittest.TestCase):
                     "terminal-consumer-closure-missing:plan-validator-tests",
                 ],
                 MODULE.check_terminal_consumer_closure(),
+            )
+        with tempfile.TemporaryDirectory() as temp:
+            plan = Path(temp)
+            fixtures = plan / "fixtures"
+            fixtures.mkdir()
+            (fixtures / "operability-cases.v1.json").write_text(
+                json.dumps({
+                    "cases": [{"case_id": "pre-review-skipped-maintainer-authorized", "authorizes": []}],
+                    "authorizes": [],
+                }),
+                encoding="utf-8",
+            )
+            with mock.patch.object(MODULE, "PLAN_DIR", plan):
+                errors = MODULE.check_composition_fixtures()
+            self.assertIn(
+                "composition-fixture-case-missing:discovery-wave-partial-transport-failure",
+                errors,
             )
 
     def test_terminal_requires_current_s7_stage_evidence(self):

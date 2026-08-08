@@ -12,6 +12,7 @@ import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Any
 
 
@@ -262,8 +263,26 @@ def validate_artifact_view(
     if manifest.get("creationHash") != expected_creation:
         raise ControlPlaneError("Artifact View creationHash is invalid")
     for entry in entries:
-        original = repository_root / entry["originalPath"]
-        snapshot = run_dir / entry["snapshotPath"]
+        original_path = entry.get("originalPath")
+        snapshot_path = entry.get("snapshotPath")
+        if (
+            not isinstance(original_path, str)
+            or not isinstance(snapshot_path, str)
+            or "\\" in original_path
+            or "\\" in snapshot_path
+            or Path(original_path).is_absolute()
+            or Path(snapshot_path).is_absolute()
+            or ".." in PurePosixPath(original_path).parts
+            or ".." in PurePosixPath(snapshot_path).parts
+        ):
+            raise ControlPlaneError("Artifact View entry escapes its bound root")
+        original = (repository_root / original_path).resolve()
+        snapshot = (run_dir / snapshot_path).resolve()
+        try:
+            original.relative_to(repository_root.resolve())
+            snapshot.relative_to((run_dir / "artifact-view").resolve())
+        except ValueError as exc:
+            raise ControlPlaneError("Artifact View entry escapes its bound root") from exc
         if require_live_originals:
             if entry.get("sourceState") == "deleted":
                 if original.exists():

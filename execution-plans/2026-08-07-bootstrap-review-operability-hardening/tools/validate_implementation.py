@@ -18,6 +18,18 @@ TERMINAL_COMMAND_IDS = [
     "plan-validator-tests",
 ]
 REQUIRED_TERMINAL_CONSUMERS = frozenset(TERMINAL_COMMAND_IDS)
+REQUIRED_COMPOSITION_CASES = frozenset(
+    {
+        "pre-review-skipped-maintainer-authorized",
+        "low-risk-deterministic-only",
+        "current-target-post-implementation-review",
+        "bootstrap-clean-no-lifecycle-authority",
+        "repaired-p0-p1-focused-only",
+        "later-discovery-needs-user-confirmation",
+        "discovery-wave-partial-transport-failure",
+        "clean-discovery-zero-findings-valid",
+    }
+)
 FRESHNESS_ROOTS = (
     "candidate_hash", "predicate_input_root", "authority_root", "validator_root",
     "validator_version", "closure_definition_hash",
@@ -298,7 +310,11 @@ def check_composition_fixtures() -> list[str]:
         return ["composition-fixtures-invalid"]
     if any(not isinstance(item, dict) or not isinstance(item.get("case_id"), str) or item.get("authorizes", []) != [] for item in cases):
         return ["composition-fixture-authority-leak"]
-    return []
+    case_ids = {item["case_id"] for item in cases}
+    return [
+        f"composition-fixture-case-missing:{case_id}"
+        for case_id in sorted(REQUIRED_COMPOSITION_CASES - case_ids)
+    ]
 
 
 def check_terminal_consumer_closure() -> list[str]:

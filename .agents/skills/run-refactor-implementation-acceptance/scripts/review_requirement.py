@@ -72,7 +72,12 @@ def _require_repository_bound_inputs(inputs: dict[str, Any]) -> tuple[dict[str, 
 
 
 def _prefix_match(path: str, prefixes: list[Any]) -> bool:
-    return any(isinstance(prefix, str) and prefix and (path == prefix or path.startswith(prefix)) for prefix in prefixes)
+    return any(
+        isinstance(prefix, str)
+        and prefix
+        and (path.startswith(prefix) if prefix.endswith("/") else path == prefix)
+        for prefix in prefixes
+    )
 
 
 def _classify_changed_paths(paths: list[str], policy: dict[str, Any]) -> tuple[dict[str, list[str]], list[str]]:

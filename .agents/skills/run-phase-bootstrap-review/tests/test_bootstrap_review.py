@@ -587,6 +587,63 @@ class BootstrapReviewCliTests(unittest.TestCase):
             },
         )
 
+        class TimedOutProbeProcess:
+            def __init__(self) -> None:
+                self.pid = os.getpid()
+                self.returncode = None
+                self.killed = False
+
+            def communicate(self, prompt=None, timeout=None):
+                if timeout is not None:
+                    raise subprocess.TimeoutExpired(["codex", "exec"], timeout)
+                return "partial stdout", "partial stderr"
+
+            def kill(self) -> None:
+                self.killed = True
+
+        self.prepare(execution_mode="codex-exec")
+        self.complete_preflight()
+        probe = TimedOutProbeProcess()
+        real_popen = subprocess.Popen
+
+        def launch_process(argv, *args, **kwargs):
+            if argv and argv[0] == "codex":
+                return probe
+            return real_popen(argv, *args, **kwargs)
+
+        with (
+            mock.patch.object(
+                bootstrap.subprocess, "Popen", side_effect=launch_process
+            ),
+            mock.patch.object(
+                bootstrap, "process_creation_identity", return_value="test-process-identity"
+            ),
+            mock.patch.object(bootstrap, "rebuild_process_leases_from_events"),
+        ):
+            self.assertEqual(
+                1,
+                bootstrap.main(
+                    [
+                        "prove-access",
+                        "--run-dir",
+                        str(self.run_dir),
+                        "--codex-command",
+                        "codex",
+                    ]
+                ),
+            )
+        probe_attempts = list((self.run_dir / "attempts").glob("access-probe-*"))
+        self.assertEqual(len(probe_attempts), 1)
+        self.assertTrue(probe.killed)
+        process_result = json.loads(
+            (probe_attempts[0] / "process-result.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(process_result["failureClass"], "transport-timeout")
+        event_types = [item["eventType"] for item in bootstrap.read_process_events(self.run_dir)]
+        self.assertIn(bootstrap.HEARTBEAT_EVENT_TYPE, event_types)
+        self.assertIn(bootstrap.NO_PROGRESS_TIMEOUT_EVENT_TYPE, event_types)
+
+
     def test_broh_s3_read_boundary_and_exact_evidence(self) -> None:
         source = self.repo / "frozen.txt"
         source.write_bytes("one\r\ntwo\r\nthree\r\n".encode("utf-8"))
@@ -625,6 +682,28 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "stop-after-threshold",
         )
 
+        source_view = json.loads(
+            (run_dir / "artifact-view" / "manifest.json").read_text(encoding="utf-8")
+        )
+        escaped_entry = dict(source_view["entries"][0])
+        escaped_entry["originalPath"] = str(source.resolve())
+        escaped_entry["snapshotPath"] = str(snapshot.resolve())
+        escaped_view = {
+            "schemaVersion": "artifact-view.v1",
+            "authorityRevision": source_view.get("authorityRevision"),
+            "entries": [escaped_entry],
+        }
+        escaped_view["creationHash"] = bootstrap.value_hash(
+            {"authorityRevision": escaped_view.get("authorityRevision"), "entries": escaped_view["entries"]}
+        )
+        (run_dir / "artifact-view" / "manifest.json").write_text(
+            json.dumps(escaped_view) + "\n", encoding="utf-8", newline="\n"
+        )
+        with self.assertRaises(bootstrap.ControlPlaneError):
+            bootstrap.validate_artifact_view(run_dir, self.repo, escaped_view)
+
+
+
     def test_broh_s6_concurrent_discovery_wave(self) -> None:
         manifest = {
             "findingMode": "discovery",
@@ -639,6 +718,18 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertFalse(wave["transportFailureConsumesSemanticRound"])
         self.assertEqual("v6", wave["waveVersion"])
         self.assertEqual([], wave["authorizes"])
+
+        retry = bootstrap.discovery_wave_retry_plan(
+            manifest,
+            successful_roles=["blind_hunter", "edge_case_hunter"],
+            failed_roles=["acceptance_auditor"],
+        )
+        self.assertEqual(["acceptance_auditor"], retry["retryRoles"])
+        self.assertEqual(["blind_hunter", "edge_case_hunter"], retry["preservedRoles"])
+        self.assertEqual(1, retry["semanticRound"])
+        self.assertEqual(0, retry["semanticRoundsAdded"])
+        self.assertFalse(retry["newLineage"])
+        self.assertEqual([], retry["authorizes"])
 
     def test_round_one_acceptance_candidate_freezes_git_baseline_deletion(self) -> None:
         deleted = self.scope / "removed-schema.json"

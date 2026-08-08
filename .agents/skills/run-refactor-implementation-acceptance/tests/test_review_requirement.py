@@ -273,6 +273,19 @@ class ReviewRequirementTests(unittest.TestCase):
         self.assertRegex(low_risk["decisionHash"], r"^sha256:[0-9a-f]{64}$")
         self.assertEqual(low_risk["authorizes"], [])
 
+        near_miss = decide_review_requirement({
+            "candidateIdentity": {
+                "changedPaths": ["README.md.bak"],
+                "knowledgeArtifacts": [],
+            },
+            "deterministicEvidence": {"status": "passed", "hash": "sha256:" + "e" * 64},
+            "policy": POLICY,
+            "maintainerIntent": "default",
+        })
+        self.assertEqual("blocked", near_miss["decisionStatus"])
+        self.assertIsNone(near_miss["requirement"])
+        self.assertIn("risk_classification_unknown", near_miss["reasonCodes"])
+
 
 if __name__ == "__main__":
     unittest.main()

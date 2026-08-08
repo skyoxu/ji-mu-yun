@@ -1631,6 +1631,16 @@ class BootstrapIntegrationTests(unittest.TestCase):
         self.assertEqual("v6", focused["legacyCompatibilityVersion"])
         self.assertEqual("v6", deterministic["legacyCompatibilityVersion"])
 
+        with self.assertRaisesRegex(
+            bootstrap_integration.BootstrapBindingError, "decision status"
+        ):
+            bootstrap_integration.project_bounded_review_route(
+                {"requirement": "required", "decisionStatus": "stale"},
+                scope,
+                self.lineage_state(family, 0),
+                None,
+            )
+
     def test_required_route_rejects_an_omitted_or_tampered_lineage_projection(self) -> None:
         import bootstrap_integration
 

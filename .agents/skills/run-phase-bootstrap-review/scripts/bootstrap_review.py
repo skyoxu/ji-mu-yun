@@ -6012,6 +6012,37 @@ def discovery_wave_plan(manifest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def discovery_wave_retry_plan(
+    manifest: dict[str, Any],
+    *,
+    successful_roles: Any,
+    failed_roles: Any,
+) -> dict[str, Any]:
+    """Project a failed-role-only retry without opening a semantic round."""
+    wave = discovery_wave_plan(manifest)
+    if not isinstance(successful_roles, list) or not isinstance(failed_roles, list):
+        raise BootstrapError("Discovery wave retry roles must be lists")
+    all_roles = set(wave["reviewerRoles"])
+    successful = set(successful_roles)
+    failed = set(failed_roles)
+    if (
+        len(successful) != len(successful_roles)
+        or len(failed) != len(failed_roles)
+        or not successful.isdisjoint(failed)
+        or successful | failed != all_roles
+    ):
+        raise BootstrapError("Discovery wave retry roles must partition the required roles")
+    return {
+        "schemaVersion": "bootstrap-discovery-wave-retry.v1",
+        "semanticRound": wave["semanticRound"],
+        "retryRoles": [role for role in wave["reviewerRoles"] if role in failed],
+        "preservedRoles": [role for role in wave["reviewerRoles"] if role in successful],
+        "semanticRoundsAdded": 0,
+        "newLineage": False,
+        "authorizes": [],
+    }
+
+
 def access_proof_route(
     run_dir: Path, manifest: dict[str, Any], proof_role: str,
     reviewer_role: str | None = None,
@@ -6275,7 +6306,72 @@ def command_prove_access(args: argparse.Namespace) -> int:
         },
     )
     rebuild_process_leases_from_events(run_dir, manifest)
-    stdout, stderr = process.communicate(prompt)
+    append_process_event(
+        run_dir,
+        {
+            "eventType": HEARTBEAT_EVENT_TYPE,
+            "timestamp": utc_now(),
+            "attemptId": attempt_id,
+            "operationId": operation_id,
+            "role": "model_probe",
+            "pid": process.pid,
+            "processIdentity": identity,
+            "writeSet": [],
+            "state": "waiting-for-child-output",
+            "noProgressTimeoutSeconds": CODEX_NO_PROGRESS_TIMEOUT_SECONDS,
+        },
+    )
+    try:
+        stdout, stderr = communicate_with_no_progress_timeout(
+            process, prompt, CODEX_NO_PROGRESS_TIMEOUT_SECONDS
+        )
+    except NoProgressTimeout as exc:
+        write_text(attempt_dir / "stdout.log", exc.stdout)
+        write_text(attempt_dir / "stderr.log", exc.stderr)
+        write_json(
+            attempt_dir / "process-result.json",
+            {
+                "schemaVersion": "bootstrap-process-result.v1",
+                "attemptId": attempt_id,
+                "pid": process.pid,
+                "exitCode": None,
+                "completedAt": utc_now(),
+                "failureClass": "transport-timeout",
+            },
+        )
+        append_process_event(
+            run_dir,
+            {
+                "eventType": NO_PROGRESS_TIMEOUT_EVENT_TYPE,
+                "timestamp": utc_now(),
+                "attemptId": attempt_id,
+                "operationId": operation_id,
+                "role": "model_probe",
+                "pid": process.pid,
+                "processIdentity": identity,
+                "writeSet": [],
+                "timeoutSeconds": exc.timeout_seconds,
+                "retryGuidance": attempt_failure_guidance("transport"),
+            },
+        )
+        append_process_event(
+            run_dir,
+            {
+                "eventType": "attempt-failed",
+                "timestamp": utc_now(),
+                "attemptId": attempt_id,
+                "operationId": operation_id,
+                "role": "model_probe",
+                "pid": process.pid,
+                "processIdentity": identity,
+                "writeSet": [],
+                "failureClass": "transport",
+                "retryGuidance": attempt_failure_guidance("transport"),
+                "note": str(exc),
+            },
+        )
+        rebuild_process_leases_from_events(run_dir, manifest)
+        raise BootstrapError(str(exc)) from exc
     write_text(attempt_dir / "stdout.log", stdout)
     write_text(attempt_dir / "stderr.log", stderr)
     write_json(
