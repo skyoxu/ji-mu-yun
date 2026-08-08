@@ -110,7 +110,7 @@ binding, receipt, or source-hash mismatch routes to VDD repair.
 The shared context validator must byte-match current main, and every Locator
 read-set path must still match its hash in the worktree before RED.
 
-Use `tools/persistent_plan_loop.py` for unattended execution. It re-routes after every completed slice and consumes only the slice's explicit, no-wildcard `execution_snapshot_paths` declaration. The plan validator requires that declaration to name an existing repository file covered by that slice's allowed write set; a missing or invalid declaration fails closed. Its state file belongs under `logs/tdd-adapter/<plan-id>/controller/`.
+Use `tools/persistent_plan_loop.py` for unattended execution. It re-routes after every completed slice and consumes only the slice's explicit, no-wildcard `execution_snapshot_paths` declaration. The plan validator requires that declaration to name an existing repository file covered by that slice's allowed write set; a missing or invalid declaration fails closed. A plan-owned contract may explicitly declare `planned_new_files` for files intentionally created by its current-session bridge. Only those exact paths may be absent at preparation; the bridge must require test files before RED, production files before GREEN, and every planned path before REFACTOR. Its state file belongs under `logs/tdd-adapter/<plan-id>/controller/`.
 
 Use the bounded driver for one declared slice write set:
 

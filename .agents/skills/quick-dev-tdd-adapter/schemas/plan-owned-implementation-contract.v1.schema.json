@@ -106,6 +106,7 @@
         "source_refs": {"$ref": "#/$defs/stringArray"},
         "depends_on": {"$ref": "#/$defs/stringArray"},
         "allowed_changes": {"$ref": "#/$defs/writeSet"},
+        "planned_new_files": {"$ref": "#/$defs/stringArray"},
         "execution_snapshot_paths": {
           "type": "array",
           "minItems": 1,

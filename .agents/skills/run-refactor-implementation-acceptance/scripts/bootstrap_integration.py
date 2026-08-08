@@ -404,6 +404,7 @@ def project_bounded_review_route(
             "lineageStateHash": None,
             "repairCompletenessHash": None,
             "maintenanceMode": _MAINTENANCE_MODE,
+            "legacyCompatibilityVersion": "v6",
             "findingMode": "disabled",
             "findingModeReentry": "not_applicable",
             "findingSeverityPolicy": _FINDING_SEVERITY_POLICY,
@@ -484,6 +485,7 @@ def project_bounded_review_route(
         "lineageStateHash": lineage_state.get("lineageStateHash"),
         "repairCompletenessHash": repair_hash,
         "maintenanceMode": _MAINTENANCE_MODE,
+        "legacyCompatibilityVersion": "v6",
         "findingMode": finding_mode,
         "findingModeReentry": (
             "user_confirmation_required"
@@ -912,6 +914,7 @@ def _validate_bootstrap_route_binding(value: Any) -> None:
     }
     allowed_fields = required | {
         "repairCompletenessRequest", "repairCompletenessRequestHash",
+        "legacyCompatibilityVersion",
     }
     if (
         not isinstance(route, dict)

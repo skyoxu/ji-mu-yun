@@ -1,0 +1,137 @@
+不过在真正交给 VDD 之前，我建议再做 4 个小幅增强。它们不是架构变化，而是把方案进一步收紧。
+
+1. 增加“Semantic Review 只审确定性验证剩下的问题”
+
+当前方案已经规定 Acceptance 先跑 deterministic evidence，再决定是否 Bootstrap。但可以再明确一条：
+
+Bootstrap 不应重新承担：
+
+- 测试是否通过
+- schema 是否合法
+- hash 是否一致
+- 文件是否存在
+- requirement coverage 是否完整
+- changed path 是否漏报
+- command 是否成功
+- knowledge 是否 freshness
+
+这些 Acceptance 已经证明的事实，应作为 frozen facts 给 reviewer。
+
+Reviewer 真正负责：
+
+需求语义是否被错误实现
+跨组件是否存在机器规则难以表达的副作用
+架构假设是否被破坏
+边缘状态是否遗漏
+acceptance criteria 是否存在语义逃逸
+
+也就是进一步落实：
+
+Machine proves facts; reviewer challenges meaning.
+
+这会减少 reviewer 浪费 token 重复做静态检查。
+
+2. 给 Review 增加“风险 Lens”，但不能减少 Artifact View
+
+这点可以借 BMAD 的思想。
+
+例如 Acceptance 命中：
+
+workflow_control_plane_changed
+
+那么三个 reviewer 的重点不是无限开放搜索，而应该有一个 frozen review lens：
+
+authority ownership
+lifecycle transition
+recovery
+idempotency
+cross-Skill composition
+backward compatibility
+
+如果命中：
+
+security_or_permission_boundary_changed
+
+lens 则是：
+
+authorization
+privilege escalation
+secret exposure
+cross-account access
+sandbox escape
+audit integrity
+
+但需要特别保持你仓库现有原则：
+
+review lens ≠ sampling
+
+Artifact View 仍然完整读取。
+
+Lens 只是告诉 reviewer：
+
+哪些问题值得花推理预算。
+
+这可以显著减少“到处找 P2 nitpick”。
+
+3. 明确禁止“为了找到问题而找到问题”
+
+建议加成 Bootstrap invariant：
+
+Zero findings is a first-class valid outcome.
+No reviewer has a minimum finding quota.
+Finding count is not a quality metric.
+
+你现在 Bootstrap 本身其实已经接近这个原则，但我建议在此次 BROH 更新里把它作为明确 regression fixture 固定。
+
+例如新增：
+
+clean-discovery-zero-findings-valid
+
+验证：
+
+3 reviewers all return zero findings
+→ gate clean
+→ no retry
+→ no "insufficient review depth"
+→ no second round
+
+这个细节非常重要。
+
+否则 AI reviewer 很容易因为 prompt 中“adversarial”“hunter”等词，产生一种心理等价：
+
+没找到问题 = 我没做好工作
+
+于是开始制造 P2。
+
+4. 增加一个非常明确的“Review Stop Rule”
+
+虽然之前方案已经通过 route 间接表达了，我建议把它提升为第一等规则：
+
+Semantic Review stops as soon as its current question is answered.
+
+具体：
+
+Round 1 clean
+→ STOP semantic review
+
+Round 1 P2-only + closure passed
+→ STOP semantic review
+
+Round 1 P0/P1 repaired
+→ focused verifier
+
+focused verifier pass
+→ STOP semantic review
+
+focused verifier fail
+→ repair again
+→ focused verifier
+
+只有 typed escalation trigger
+→ 才有资格讨论 full Round 2
+
+特别注意最后一句：
+
+失败不等于应该重新 discovery。
+
+这是你未来避免 Review 再次膨胀最重要的规则之一。

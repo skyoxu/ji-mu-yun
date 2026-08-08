@@ -57,6 +57,7 @@ from bootstrap_integration import (
     project_bounded_review_route,
     replay_finalized_bootstrap_run,
 )
+from review_requirement import decide_review_requirement
 
 
 def _read_json(path: str) -> object:
@@ -536,7 +537,10 @@ def collect_evidence_command(request_path: str, output_path: str) -> dict:
 
 
 def decide_bootstrap_command(request_path: str, output_path: str) -> dict:
-    decision = _read_json(request_path)
+    request = _read_json(request_path)
+    decision = request
+    if isinstance(request, dict) and isinstance(request.get("reviewInputs"), dict):
+        decision = decide_review_requirement(request["reviewInputs"])
     if not isinstance(decision, dict) or decision.get("requirement") not in {"required", "not_required"} or not isinstance(decision.get("requirementSources"), list) or not decision["requirementSources"]:
         raise InputError("bootstrap requirement decision is invalid")
     if decision.get("authorizes", []) != []:

@@ -43,6 +43,14 @@ class ControlPlaneError(Exception):
     pass
 
 
+class NoProgressTimeout(ControlPlaneError):
+    def __init__(self, timeout_seconds: int, stdout: str, stderr: str) -> None:
+        super().__init__(f"Child process made no progress before {timeout_seconds}s timeout")
+        self.timeout_seconds = timeout_seconds
+        self.stdout = stdout
+        self.stderr = stderr
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -482,3 +490,25 @@ def render_codex_command(
     ]
     command.extend(["--json", "--output-last-message", str(output_path), "-"])
     return command
+
+
+def communicate_with_no_progress_timeout(
+    process: subprocess.Popen[str], prompt: str, timeout_seconds: int
+) -> tuple[str, str]:
+    if not isinstance(timeout_seconds, int) or isinstance(timeout_seconds, bool) or not (
+        1 <= timeout_seconds <= 3600
+    ):
+        raise ControlPlaneError("No-progress timeout must be between 1 and 3600 seconds")
+    try:
+        return process.communicate(prompt, timeout=timeout_seconds)
+    except TypeError as exc:
+        # Small deterministic process doubles may implement the pre-timeout
+        # communicate(prompt) contract; keep them usable without weakening the
+        # real subprocess timeout path.
+        if "timeout" not in str(exc):
+            raise
+        return process.communicate(prompt)
+    except subprocess.TimeoutExpired as exc:
+        process.kill()
+        stdout, stderr = process.communicate()
+        raise NoProgressTimeout(timeout_seconds, stdout or "", stderr or "") from exc

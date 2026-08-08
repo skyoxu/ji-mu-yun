@@ -189,6 +189,34 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             (run / "targeted-validation.v1.json").write_text("{}", encoding="utf-8")
             self.assertEqual("validate-terminal", ROUTER.route(root, plan)["next_action"])
 
+    def test_router_uses_global_snapshot_for_implementation_complete(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{
+                "slice_id": "S7",
+                "depends_on": [],
+                "exit_predicate": "implementation-complete",
+            }])
+            run = root / "logs/tdd-adapter/target/S7/current"
+            run.mkdir(parents=True)
+            current = {
+                "candidate_hash": "sha256:current",
+                "predicate_input_root": "sha256:current",
+                "authority_root": "sha256:authority",
+                "validator_root": "sha256:validator",
+                "validator_version": "validator-v1",
+                "closure_definition_hash": "sha256:closure",
+            }
+            result = dict(current, predicate="implementation-complete", status="pass")
+            (run / "implementation-complete-result.json").write_text(
+                json.dumps(result), encoding="utf-8"
+            )
+
+            with mock.patch.object(ROUTER, "_validation_snapshot", return_value=current) as snapshot:
+                self.assertEqual("validate-terminal", ROUTER.route(root, plan)["next_action"])
+
+            snapshot.assert_called_once_with(plan.resolve(), None)
+
     def test_router_replays_authority_stale_implementation_candidate_before_s7(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

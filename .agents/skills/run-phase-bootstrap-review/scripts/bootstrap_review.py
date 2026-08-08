@@ -30,12 +30,14 @@ if str(SCRIPT_ROOT) not in sys.path:
 from _control_plane import (  # noqa: E402
     ControlPlaneError,
     ENVIRONMENT_ALLOWLIST,
+    NoProgressTimeout,
     TYPED_PLACEHOLDERS,
     active_attempts,
     append_process_event,
     atomic_write_bytes,
     atomic_write_json,
     child_environment,
+    communicate_with_no_progress_timeout,
     create_artifact_view,
     git_index_hash,
     read_process_events,
@@ -65,6 +67,16 @@ LAYERS = ("blind_hunter", "edge_case_hunter", "acceptance_auditor")
 FOCUSED_REPAIR_ROLE = "focused_repair_verifier"
 REVIEWER_ROLES = (*LAYERS, FOCUSED_REPAIR_ROLE)
 HASH_PREFIX = "sha256:"
+CODEX_NO_PROGRESS_TIMEOUT_SECONDS = 900
+HEARTBEAT_EVENT_TYPE = "attempt-heartbeat"
+NO_PROGRESS_TIMEOUT_EVENT_TYPE = "attempt-no-progress-timeout-v10"
+ATTEMPT_FAILURE_GUIDANCE = {
+    "transport": "retry-same-role",
+    "malformed-output": "retry-same-role-with-preserved-rejection",
+    "stale-evidence": "refresh-frozen-binding-before-retry",
+    "semantic-blocker": "repair-finding-before-verification",
+}
+REPEATED_FAILURE_FINGERPRINT_THRESHOLD = 2
 AUTHORITY_CLASS = "supplemental_bootstrap"
 REVIEW_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]{2,63}")
 CHECK_ID_PATTERN = re.compile(r"[a-z][a-z0-9-]{2,63}")
@@ -399,6 +411,71 @@ class BootstrapError(Exception):
 
 class TransportAttemptError(BootstrapError):
     """A retryable child process or candidate transport failure."""
+
+
+def attempt_failure_guidance(failure_class: str) -> str:
+    try:
+        return ATTEMPT_FAILURE_GUIDANCE[failure_class]
+    except KeyError as exc:
+        raise BootstrapError(f"Unknown attempt failure class: {failure_class}") from exc
+
+
+def repository_read_contract(
+    repository_root: Path, attempt_write_root: Path, read_paths: list[str]
+) -> dict[str, Any]:
+    root = repository_root.resolve()
+    write_root = attempt_write_root.resolve()
+    return {
+        "readContractVersion": "v10",
+        "repositoryReadRoot": str(root),
+        "readMode": "sandbox-global-read-only",
+        "attemptWriteRoot": str(write_root),
+        "readPathsOutsideAttemptWriteRoot": sorted(set(read_paths)),
+    }
+
+
+def exact_evidence_from_frozen_view(
+    run_dir: Path, manifest: dict[str, Any], artifact: str, start_line: int, end_line: int
+) -> str:
+    if start_line < 1 or end_line < start_line:
+        raise BootstrapError("Frozen evidence line range is invalid")
+    view_binding = manifest.get("artifactView")
+    if not isinstance(view_binding, dict):
+        raise BootstrapError("Frozen Artifact View binding is missing")
+    view = read_json(run_dir / str(view_binding.get("manifestPath", "")))
+    entries = [
+        item for item in view.get("entries", [])
+        if isinstance(item, dict) and item.get("originalPath") == artifact
+    ]
+    if len(entries) != 1:
+        raise BootstrapError(f"Frozen Artifact View has no unique entry for {artifact}")
+    snapshot = ensure_within(
+        run_dir / str(entries[0].get("snapshotPath", "")),
+        run_dir / "artifact-view",
+        "Frozen evidence snapshot",
+    )
+    expected_hash = next(
+        (
+            item.get("sha256") for item in manifest.get("artifacts", [])
+            if isinstance(item, dict) and item.get("artifact") == artifact
+        ),
+        None,
+    )
+    if not snapshot.is_file() or not isinstance(expected_hash, str) or file_hash(snapshot) != expected_hash:
+        raise BootstrapError(f"Frozen evidence snapshot is stale: {artifact}")
+    lines = snapshot.read_text(encoding="utf-8").splitlines()
+    if end_line > len(lines):
+        raise BootstrapError(f"Frozen evidence line range exceeds {artifact}")
+    return "\n".join(lines[start_line - 1:end_line])
+
+
+def repeated_failure_fingerprint_status(history: list[str], fingerprint: str) -> str:
+    count = sum(item == fingerprint for item in history)
+    return (
+        "stop-after-threshold"
+        if count >= REPEATED_FAILURE_FINGERPRINT_THRESHOLD
+        else "retry-allowed"
+    )
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -4867,6 +4944,69 @@ def command_prepare(args: argparse.Namespace) -> int:
         raise BootstrapError(
             "Finding-mode re-entry authorization is valid only for later discovery rounds"
         )
+    if args.dry_run:
+        closure_bindings = repair_binding_hashes(
+            artifacts,
+            context_class_artifacts,
+            plan_bound_checks,
+        )
+        artifact_names = {
+            item["artifact"] for item in artifacts
+            if isinstance(item, dict) and isinstance(item.get("artifact"), str)
+        }
+        planned_new_files = sorted(
+            path for path in write_set
+            if path not in artifact_names and not (repository_root / path).exists()
+        )
+        closure_errors = [
+            {"code": "write-set-outside-prepared-scope", "path": path}
+            for path in write_set
+            if path not in artifact_names and path not in planned_new_files
+        ]
+        print(json.dumps({
+            "schemaVersion": "bootstrap-prepare-dry-run.v1",
+            "status": "dry-run",
+            "closureBindingVersion": "v12",
+            "runCreated": False,
+            "candidateHash": closure_bindings["candidateHash"],
+            "candidateBindingHash": candidate_binding_hash,
+            "sourceHash": closure_bindings["sourceHash"],
+            "validatorHash": closure_bindings["validatorHash"],
+            "gitIndexHash": current_git_index_hash,
+            "writeSetHash": value_hash(write_set),
+            "executionReadSetHash": value_hash(execution_read_set),
+            "dependencyClosureHash": value_hash(dependency_closure),
+            "contextDiagnostics": {
+                "status": "complete",
+                "requiredClasses": sorted(profile["requiredContextClasses"]),
+                "classes": sorted(context_class_artifacts),
+                "artifacts": context_class_artifacts,
+                "acceptedScopes": sorted(args.scope),
+                "acceptedScopesHash": value_hash(sorted(args.scope)),
+            },
+            "plannedNewFiles": planned_new_files,
+            "plannedNewFilesHash": value_hash(planned_new_files),
+            "plannedNewFilesHashVersion": "v8",
+            "closureErrors": closure_errors,
+            "freezeWindow": {
+                "state": "preparation",
+                "mutationAllowed": False,
+                "reviewedFilesImmutable": True,
+                "reviewMutationPolicy": "immutable",
+                "authorizes": [],
+            },
+            "authorizes": [],
+            "doesNotAuthorize": [
+                "review-run",
+                "artifact-view",
+                "reviewer-launch",
+                "semantic-review",
+                "acceptance-passed",
+                "commit",
+                "release",
+            ],
+        }, ensure_ascii=False, indent=2))
+        return 0
     try:
         view = create_artifact_view(
             repository_root,
@@ -5838,6 +5978,29 @@ def discovery_access_route_groups(
     return grouped
 
 
+def discovery_wave_plan(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Describe one owner-owned, isolated discovery wave without authorizing launch."""
+    if not isinstance(manifest, dict) or manifest.get("findingMode") != "discovery":
+        raise BootstrapError("Concurrent discovery requires discovery finding mode")
+    roles = manifest.get("requiredLayers")
+    if roles != list(LAYERS):
+        raise BootstrapError("Concurrent discovery requires the exact isolated reviewer roles")
+    round_number = manifest.get("fullReviewRound")
+    if not isinstance(round_number, int) or isinstance(round_number, bool) or round_number < 1:
+        raise BootstrapError("Concurrent discovery requires a positive semantic round")
+    return {
+        "schemaVersion": "bootstrap-discovery-wave.v1",
+        "waveVersion": "v6",
+        "semanticRound": round_number,
+        "reviewerRoles": list(LAYERS),
+        "concurrent": True,
+        "isolated": True,
+        "transportRetryPolicy": "failed-role-only",
+        "transportFailureConsumesSemanticRound": False,
+        "authorizes": [],
+    }
+
+
 def access_proof_route(
     run_dir: Path, manifest: dict[str, Any], proof_role: str,
     reviewer_role: str | None = None,
@@ -6048,6 +6211,9 @@ def command_prove_access(args: argparse.Namespace) -> int:
         "environmentEvidence": environment_evidence, "typedPlaceholders": TYPED_PLACEHOLDERS,
         "writeSet": [], "executionReadSet": manifest["executionReadSet"],
         "dependencyClosure": manifest["dependencyClosure"],
+        **repository_read_contract(
+            Path(manifest["repositoryRoot"]), attempt_dir, manifest["executionReadSet"]
+        ),
         "handshakeHelperPath": path_relative_to_existing_ancestor(
             helper_path, run_dir, "Handshake helper"
         ),
@@ -6890,7 +7056,72 @@ def run_codex_attempt(
             "requestHash": value_hash(request), "selectedModel": model,
         },
     )
-    stdout, stderr = process.communicate(prompt)
+    append_process_event(
+        run_dir,
+        {
+            "eventType": HEARTBEAT_EVENT_TYPE,
+            "timestamp": utc_now(),
+            "attemptId": attempt_id,
+            "operationId": operation_id,
+            "role": role,
+            "pid": process.pid,
+            "processIdentity": identity,
+            "writeSet": request["writeSet"],
+            "state": "waiting-for-child-output",
+            "noProgressTimeoutSeconds": CODEX_NO_PROGRESS_TIMEOUT_SECONDS,
+        },
+    )
+    try:
+        stdout, stderr = communicate_with_no_progress_timeout(
+            process, prompt, CODEX_NO_PROGRESS_TIMEOUT_SECONDS
+        )
+    except NoProgressTimeout as exc:
+        write_text(attempt_dir / "stdout.log", exc.stdout)
+        write_text(attempt_dir / "stderr.log", exc.stderr)
+        write_json(
+            attempt_dir / "process-result.json",
+            {
+                "schemaVersion": "bootstrap-process-result.v1",
+                "attemptId": attempt_id,
+                "pid": process.pid,
+                "exitCode": None,
+                "completedAt": utc_now(),
+                "failureClass": "transport-timeout",
+            },
+        )
+        append_process_event(
+            run_dir,
+            {
+                "eventType": NO_PROGRESS_TIMEOUT_EVENT_TYPE,
+                "timestamp": utc_now(),
+                "attemptId": attempt_id,
+                "operationId": operation_id,
+                "role": role,
+                "pid": process.pid,
+                "processIdentity": identity,
+                "writeSet": request["writeSet"],
+                "timeoutSeconds": exc.timeout_seconds,
+                "retryGuidance": attempt_failure_guidance("transport"),
+            },
+        )
+        append_attempt_event_and_rebuild(
+            run_dir,
+            manifest,
+            {
+                "eventType": "attempt-failed",
+                "timestamp": utc_now(),
+                "attemptId": attempt_id,
+                "operationId": operation_id,
+                "role": role,
+                "pid": process.pid,
+                "processIdentity": identity,
+                "writeSet": request["writeSet"],
+                "failureClass": "transport",
+                "retryGuidance": attempt_failure_guidance("transport"),
+                "note": str(exc),
+            },
+        )
+        raise TransportAttemptError(str(exc)) from exc
     write_text(attempt_dir / "stdout.log", stdout)
     write_text(attempt_dir / "stderr.log", stderr)
     write_json(
@@ -11010,6 +11241,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--semantic-review-exclusivity",
         required=True,
         choices=[SEMANTIC_REVIEW_POLICY["requiredExclusivityAttestation"]],
+    )
+    prepare.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate prepare inputs and print non-authorizing closure bindings without creating a run",
     )
     prepare.add_argument("--out-dir", required=True)
     prepare.set_defaults(handler=command_prepare)

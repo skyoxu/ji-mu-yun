@@ -1462,6 +1462,31 @@ class BootstrapIntegrationTests(unittest.TestCase):
         self.assertEqual("deterministic_only", deterministic["routeKind"])
         self.assertIsNone(deterministic["nextFullReviewRound"])
 
+    def test_broh_s5_bounded_reentry_compatibility(self) -> None:
+        import bootstrap_integration
+
+        decision = {"requirement": "required"}
+        scope = bootstrap_integration.build_minimal_review_scope(self.minimal_scope_inputs())
+        family = scope["lineageFamilyId"]
+        initial = bootstrap_integration.project_bounded_review_route(
+            decision, scope, self.lineage_state(family, 0), None
+        )
+        focused = bootstrap_integration.project_bounded_review_route(
+            decision,
+            scope,
+            self.lineage_state(family, 1),
+            self.repair_completeness(family, 1),
+        )
+        deterministic = bootstrap_integration.project_bounded_review_route(
+            decision,
+            scope,
+            self.lineage_state(family, 2),
+            self.repair_completeness(family, 2),
+        )
+        self.assertEqual("v6", initial["legacyCompatibilityVersion"])
+        self.assertEqual("v6", focused["legacyCompatibilityVersion"])
+        self.assertEqual("v6", deterministic["legacyCompatibilityVersion"])
+
     def test_required_route_rejects_an_omitted_or_tampered_lineage_projection(self) -> None:
         import bootstrap_integration
 

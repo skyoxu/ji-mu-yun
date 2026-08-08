@@ -4,6 +4,7 @@ import copy
 import importlib.util
 import concurrent.futures
 import hashlib
+import io
 import json
 import math
 import os
@@ -425,6 +426,202 @@ class BootstrapReviewCliTests(unittest.TestCase):
             ]
         )
         self.assertEqual(expected_result, result)
+
+    def test_broh_s0_prepare_dry_run_contract(self) -> None:
+        profile = "bootstrap-upstream-plan"
+        profile_contract = bootstrap.load_profile(profile)
+        context_args: list[str] = []
+        for context_class in profile_contract["requiredContextClasses"]:
+            context_args.extend(["--context-class", f"{context_class}={self.scope}"])
+        scope_policy_args = (
+            ["--directory-scope-attestation", bootstrap.DIRECTORY_SCOPE_ATTESTATION]
+            if profile in bootstrap.BOUNDED_SCOPE_PROFILES
+            else []
+        )
+        argv = [
+            "prepare",
+            "--dry-run",
+            "--repository-root", str(self.repo),
+            "--review-id", "dry-run-001",
+            "--change-id", "dry-run-change-001",
+            "--lineage-family-id", "dry-run-change-001",
+            "--review-round", "1",
+            "--profile", profile,
+            "--scope", str(self.scope),
+            *scope_policy_args,
+            *context_args,
+            "--execution-mode", "manual",
+            "--semantic-review-exclusivity", "no-other-semantic-review-in-cycle",
+            "--out-dir", str(self.run_dir),
+        ]
+        with mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+            result = bootstrap.main(argv)
+        self.assertEqual(result, 0)
+        diagnostic = json.loads(output.getvalue())
+        self.assertEqual(diagnostic["status"], "dry-run")
+        self.assertFalse(diagnostic["runCreated"])
+        self.assertEqual(diagnostic["closureBindingVersion"], "v12")
+        self.assertEqual(diagnostic["authorizes"], [])
+        for field in (
+            "candidateHash",
+            "candidateBindingHash",
+            "sourceHash",
+            "validatorHash",
+            "gitIndexHash",
+            "writeSetHash",
+            "executionReadSetHash",
+            "dependencyClosureHash",
+        ):
+            self.assertRegex(diagnostic[field], r"^sha256:[0-9a-f]{64}$")
+        self.assertFalse(self.run_dir.exists())
+
+    def test_broh_s1_context_and_planned_file_diagnostics(self) -> None:
+        profile = "bootstrap-upstream-plan"
+        profile_contract = bootstrap.load_profile(profile)
+        context_args: list[str] = []
+        for context_class in profile_contract["requiredContextClasses"]:
+            context_args.extend(["--context-class", f"{context_class}={self.scope}"])
+        scope_policy_args = (
+            ["--directory-scope-attestation", bootstrap.DIRECTORY_SCOPE_ATTESTATION]
+            if profile in bootstrap.BOUNDED_SCOPE_PROFILES
+            else []
+        )
+        argv = [
+            "prepare",
+            "--dry-run",
+            "--repository-root", str(self.repo),
+            "--review-id", "dry-run-s1-001",
+            "--change-id", "dry-run-s1-change-001",
+            "--lineage-family-id", "dry-run-s1-change-001",
+            "--review-round", "1",
+            "--profile", profile,
+            "--scope", str(self.scope),
+            "--write-set", "planned/new-output.json",
+            *scope_policy_args,
+            *context_args,
+            "--execution-mode", "manual",
+            "--semantic-review-exclusivity", "no-other-semantic-review-in-cycle",
+            "--out-dir", str(self.run_dir),
+        ]
+        with mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+            result = bootstrap.main(argv)
+        self.assertEqual(result, 0)
+        diagnostic = json.loads(output.getvalue())
+        self.assertEqual(diagnostic["contextDiagnostics"]["status"], "complete")
+        self.assertRegex(diagnostic["contextDiagnostics"]["acceptedScopesHash"], r"^sha256:[0-9a-f]{64}$")
+        self.assertEqual(
+            sorted(diagnostic["contextDiagnostics"]["requiredClasses"]),
+            sorted(profile_contract["requiredContextClasses"]),
+        )
+        self.assertEqual(
+            sorted(diagnostic["contextDiagnostics"]["classes"]),
+            sorted(profile_contract["requiredContextClasses"]),
+        )
+        self.assertEqual(diagnostic["plannedNewFiles"], ["planned/new-output.json"])
+        self.assertEqual(diagnostic["plannedNewFilesHashVersion"], "v8")
+        self.assertEqual(diagnostic["freezeWindow"]["state"], "preparation")
+        self.assertEqual(diagnostic["freezeWindow"]["reviewMutationPolicy"], "immutable")
+        self.assertFalse(diagnostic["freezeWindow"]["mutationAllowed"])
+        self.assertEqual(diagnostic["freezeWindow"]["authorizes"], [])
+        self.assertFalse(self.run_dir.exists())
+
+    def test_broh_s2_windows_transport_heartbeat_recovery(self) -> None:
+        class TimedOutProcess:
+            def __init__(self) -> None:
+                self.killed = False
+                self.calls = 0
+
+            def communicate(self, prompt=None, timeout=None):
+                self.calls += 1
+                if self.calls == 1:
+                    self.prompt = prompt
+                    self.timeout = timeout
+                    raise subprocess.TimeoutExpired(["codex", "exec"], timeout)
+                return "partial stdout", "partial stderr"
+
+            def kill(self) -> None:
+                self.killed = True
+
+        process = TimedOutProcess()
+        with self.assertRaisesRegex(bootstrap.NoProgressTimeout, "no progress") as captured:
+            bootstrap.communicate_with_no_progress_timeout(process, "prompt", 5)
+        self.assertTrue(process.killed)
+        self.assertEqual(bootstrap.HEARTBEAT_EVENT_TYPE, "attempt-heartbeat")
+        self.assertEqual(bootstrap.NO_PROGRESS_TIMEOUT_EVENT_TYPE, "attempt-no-progress-timeout-v10")
+        self.assertEqual(process.timeout, 5)
+        self.assertEqual(captured.exception.stdout, "partial stdout")
+        self.assertEqual(captured.exception.stderr, "partial stderr")
+        argv = bootstrap.render_codex_command(
+            "codex", "gpt-test", "high", "workspace-write", (self.repo / "out.json").resolve()
+        )
+        self.assertEqual(argv[-1], "-")
+        self.assertNotIn("py", argv)
+        self.assertNotIn("python", argv)
+        self.assertEqual(
+            {
+                bootstrap.attempt_failure_guidance(kind)
+                for kind in ("transport", "malformed-output", "stale-evidence", "semantic-blocker")
+            },
+            {
+                "retry-same-role",
+                "retry-same-role-with-preserved-rejection",
+                "refresh-frozen-binding-before-retry",
+                "repair-finding-before-verification",
+            },
+        )
+
+    def test_broh_s3_read_boundary_and_exact_evidence(self) -> None:
+        source = self.repo / "frozen.txt"
+        source.write_bytes("one\r\ntwo\r\nthree\r\n".encode("utf-8"))
+        run_dir = self.run_dir
+        artifact_view = run_dir / "artifact-view" / "tree"
+        artifact_view.mkdir(parents=True)
+        snapshot = artifact_view / "frozen.txt"
+        snapshot.write_bytes(source.read_bytes())
+        manifest = {
+            "artifactView": {"manifestPath": "artifact-view/manifest.json"},
+            "artifacts": [{
+                "artifact": "frozen.txt",
+                "sha256": bootstrap.file_hash(source),
+            }],
+        }
+        (run_dir / "artifact-view" / "manifest.json").write_text(
+            json.dumps({"entries": [{
+                "originalPath": "frozen.txt",
+                "snapshotPath": "artifact-view/tree/frozen.txt",
+                "originalSha256": bootstrap.file_hash(source),
+            }]}) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        contract = bootstrap.repository_read_contract(self.repo, run_dir / "attempts" / "a1", ["frozen.txt"])
+        self.assertEqual(contract["readMode"], "sandbox-global-read-only")
+        self.assertEqual(contract["readContractVersion"], "v10")
+        self.assertEqual(contract["repositoryReadRoot"], str(self.repo.resolve()))
+        self.assertTrue(contract["attemptWriteRoot"].endswith("attempts\\a1"))
+        self.assertEqual(
+            bootstrap.exact_evidence_from_frozen_view(run_dir, manifest, "frozen.txt", 2, 3),
+            "two\nthree",
+        )
+        self.assertEqual(
+            bootstrap.repeated_failure_fingerprint_status(["fp", "fp"], "fp"),
+            "stop-after-threshold",
+        )
+
+    def test_broh_s6_concurrent_discovery_wave(self) -> None:
+        manifest = {
+            "findingMode": "discovery",
+            "requiredLayers": list(bootstrap.LAYERS),
+            "fullReviewRound": 1,
+        }
+        wave = bootstrap.discovery_wave_plan(manifest)
+        self.assertEqual(list(bootstrap.LAYERS), wave["reviewerRoles"])
+        self.assertTrue(wave["concurrent"])
+        self.assertTrue(wave["isolated"])
+        self.assertEqual("failed-role-only", wave["transportRetryPolicy"])
+        self.assertFalse(wave["transportFailureConsumesSemanticRound"])
+        self.assertEqual("v6", wave["waveVersion"])
+        self.assertEqual([], wave["authorizes"])
 
     def test_round_one_acceptance_candidate_freezes_git_baseline_deletion(self) -> None:
         deleted = self.scope / "removed-schema.json"

@@ -186,7 +186,13 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
                 # freshness through current roots rather than contract_hash.
                 # Compare every root, not only the candidate hash, so a
                 # control-plane authority update cannot be skipped.
-                current = _implementation_candidate_current(result, _validation_snapshot(target, slice_id))
+                current = _implementation_candidate_current(
+                    result,
+                    _validation_snapshot(
+                        target,
+                        None if exit_predicate == "implementation-complete" else slice_id,
+                    ),
+                )
             if result.get("predicate") == exit_predicate and result.get("status") == "pass" and current and (required_artifact is None or required_artifact.is_file()):
                 completed.add(slice_id)
                 break

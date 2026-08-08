@@ -1,12 +1,12 @@
 {
-  "after_snapshot_id": "3bc5b6f587a552a9371bbbc8d6b88c8a206ecb883c9e9bdc97f401eb6f6566fa",
-  "before_snapshot_id": "sha256:e1bfe8b8dc5bed5ba9a3958d98dd167618e64eafb2f9423f4160e0274e7f106b",
+  "after_snapshot_id": "1acfe86e3fed1b9b6794e05f935454b897377eaaf51bbbcae9f577c129cfe9d4",
+  "before_snapshot_id": "sha256:963510ed834bc7c3e96ff0fc2cacd775cbea4736386172ea59bd94d18b79b02d",
   "catalog_source_snapshot_status": "stale",
   "entries": [
     {
-      "after_sha256": "4861b20c1033fac1fbb4ee639b915408a9dd3c6d2e6d21895cfcd77e0c443e3f",
+      "after_sha256": "8ac8a676efb291c170fe4b866882c9b697088a82708f01c651de205d1cb57d18",
       "authority_status": "main-backed",
-      "before_sha256": "4861b20c1033fac1fbb4ee639b915408a9dd3c6d2e6d21895cfcd77e0c443e3f",
+      "before_sha256": "8ac8a676efb291c170fe4b866882c9b697088a82708f01c651de205d1cb57d18",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.maintain-knowledge-base.SKILL.md",
@@ -14,9 +14,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "691e662370b58ead554da351b2abb296a74d8537d4f80aac5d0425279158db3e",
+      "after_sha256": "f6494ab206fc55f866b6ec0b0cf3e5039291755b1b90c35aa73995196129e486",
       "authority_status": "main-backed",
-      "before_sha256": "691e662370b58ead554da351b2abb296a74d8537d4f80aac5d0425279158db3e",
+      "before_sha256": "f6494ab206fc55f866b6ec0b0cf3e5039291755b1b90c35aa73995196129e486",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.maintain-knowledge-base.scripts.maintain_knowledge.py",
@@ -24,13 +24,21 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06",
+      "after_sha256": "d2f25a17bedb9975b891fa4ab638ccc900161bbd00e8baa710a93065760ec4dc",
       "authority_status": "main-backed",
-      "before_sha256": "83e394adaf984ee38f74cc3152723e81a642e7c92702374a3f345fd641e8044b",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "d2f25a17bedb9975b891fa4ab638ccc900161bbd00e8baa710a93065760ec4dc",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source..agents.skills.maintain-knowledge-base.scripts.prepare_publication_request.py",
+      "source_path": ".agents/skills/maintain-knowledge-base/scripts/prepare_publication_request.py",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167",
+      "authority_status": "main-backed",
+      "before_sha256": "f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source..agents.skills.quick-dev-tdd-adapter.SKILL.md",
       "source_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
       "source_snapshot_kind": "main"
@@ -76,9 +84,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b",
+      "after_sha256": "2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe",
       "authority_status": "main-backed",
-      "before_sha256": "0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b",
+      "before_sha256": "2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.quick-dev-tdd-adapter.tools.route_plan_directory.py",
@@ -86,9 +94,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "0292f716721b0b196ccf6c9d873faab7b75dba8160d141644155482185028170",
+      "after_sha256": "9721a632e0634ab77acc50a7b44c146ab3d71a52e3da5c3266430be31d0a4b0f",
       "authority_status": "main-backed",
-      "before_sha256": "eedfeda704fbcd2a56f204c89aa0e6c7c4d11776b54ff89401289330a803688c",
+      "before_sha256": "7710e9ffff3e27366df4297df0d492f4b746d71d693e3a3f80e04eff863ecbd5",
       "changed_fields": [
         "source_sha256"
       ],
@@ -98,33 +106,29 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "03751ff39c6253c34dabe137253acabe0e81963789698b852690cf0b10d79f00",
+      "after_sha256": "c21e76d810baa52165ee0301c9d5a84805f2f9be770819a875b35104a23bd027",
       "authority_status": "main-backed",
-      "before_sha256": "8eb99473854847d3126e72047e62180cda37f8b25c06e9cdacc8e5702d742f03",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "c21e76d810baa52165ee0301c9d5a84805f2f9be770819a875b35104a23bd027",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-phase-bootstrap-review.references.review-profiles.v1.json",
       "source_path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "50e8a2b32531b80ccd2683620eb4fccd98501040ccace45e321d3968b3c6c705",
+      "after_sha256": "d3ce55e4f81ad9b6105efb94c18e017eba3912ce80cab71a27c8b2e19e06b1d6",
       "authority_status": "main-backed",
-      "before_sha256": "d7ffcb190bc86dc0e95dbbcccd4faac322065dbe985a06ec1cc3b2642f06f454",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "d3ce55e4f81ad9b6105efb94c18e017eba3912ce80cab71a27c8b2e19e06b1d6",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-phase-bootstrap-review.scripts._control_plane.py",
       "source_path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "f1a41063d5234e42a409d6d99d74fd693f02a819591535a48df8ca42b3b9a18d",
+      "after_sha256": "0114bbe0381912ee5e6395bc245d12617435b91236f527e356364d89828143ac",
       "authority_status": "main-backed",
-      "before_sha256": "1f7b194f5ae312c4deb3a0b479b43c23c2c1cf84e67e150beca707af8154afdc",
+      "before_sha256": "aa717dc6bf1ab8e5bc9981ed8f425f5cb2aca5dcad1a68a80526d54297a82556",
       "changed_fields": [
         "source_sha256"
       ],
@@ -134,13 +138,11 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "14708433db121d1ef0bd726081727a786642432146da08d70e71e0941db44b4d",
+      "after_sha256": "5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68",
       "authority_status": "main-backed",
-      "before_sha256": "53fbb1955417e9dded4410266969caabecfb895f0bbaeac13cfea40bf12f37f1",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-refactor-implementation-acceptance.SKILL.md",
       "source_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
       "source_snapshot_kind": "main"
@@ -153,6 +155,16 @@
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-refactor-implementation-acceptance.policies.phase-service-code-review.v1.json",
       "source_path": ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "475d322f4ca92e91445fcea5277c3ad7f2000ee1d9bed92802dacf7db6efc45c",
+      "authority_status": "main-backed",
+      "before_sha256": "475d322f4ca92e91445fcea5277c3ad7f2000ee1d9bed92802dacf7db6efc45c",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source..agents.skills.run-refactor-implementation-acceptance.schemas.acceptance-knowledge-maintenance-route.v1.schema.json",
+      "source_path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
       "source_snapshot_kind": "main"
     },
     {
@@ -176,25 +188,21 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "938b6bca228422d24ada984f8aa3630a1062291d0c2bc8509bc9c28d5072273d",
+      "after_sha256": "33d277763fd0fe6ffb9801bfcfbdf4e9bac2292489c9293c6257d076f134c51b",
       "authority_status": "main-backed",
-      "before_sha256": "3e6d96b86462816003f7d6af306eea04e69b6afb8fc92f1541a94aa302d2416f",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "33d277763fd0fe6ffb9801bfcfbdf4e9bac2292489c9293c6257d076f134c51b",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-refactor-implementation-acceptance.scripts.acceptance_cli.py",
       "source_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "21dec62bae4c7ebd500bc6e0ac8d9999174e68e3e97b4b39945ceabe52004494",
+      "after_sha256": "dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
       "authority_status": "main-backed",
-      "before_sha256": "efe3fb6821a3936b6e28d0204b4bce101ea90c92aaae3560fcafcfaa9838badb",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-refactor-implementation-acceptance.scripts.acceptance_core.py",
       "source_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
       "source_snapshot_kind": "main"
@@ -210,9 +218,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "3076fac55c5c66fdfda70c4cc5d96a5b967332463a51d69e2c9cfa1841aae2de",
+      "after_sha256": "4192e3e7a3f5fbc5c8cbe84abf60c8a2b4733ddd82c27c5308374061ae06e48f",
       "authority_status": "main-backed",
-      "before_sha256": "3076fac55c5c66fdfda70c4cc5d96a5b967332463a51d69e2c9cfa1841aae2de",
+      "before_sha256": "4192e3e7a3f5fbc5c8cbe84abf60c8a2b4733ddd82c27c5308374061ae06e48f",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.run-refactor-implementation-acceptance.scripts.prepare_knowledge_context.py",
@@ -220,21 +228,19 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72",
+      "after_sha256": "26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef",
       "authority_status": "main-backed",
-      "before_sha256": "158d12ee26345eede4bc4226bbe83ea30d6745498b245ecaea248c913dfe3fba",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source..agents.skills.vdd-execution-plan.SKILL.md",
       "source_path": ".agents/skills/vdd-execution-plan/SKILL.md",
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "ec27ce244db1f55d3eab0e8331422f5888bb4cef668e9ee6e37dedab45b7a023",
+      "after_sha256": "8b3c0924a66cd584ae27df6d7f50bacab82c4270d79c3bea4afe70b2f8c99c9a",
       "authority_status": "main-backed",
-      "before_sha256": "ec27ce244db1f55d3eab0e8331422f5888bb4cef668e9ee6e37dedab45b7a023",
+      "before_sha256": "8b3c0924a66cd584ae27df6d7f50bacab82c4270d79c3bea4afe70b2f8c99c9a",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source..agents.skills.vdd-execution-plan.scripts.prepare_knowledge_context.py",
@@ -242,13 +248,11 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "efceb70237f8df7d9e56dca1d143a3c51f59932cfb076ce0eb82dddddebc7b3a",
+      "after_sha256": "48b6f5f68e2ae5ec1895050209ac3c0ec7483c855cbaae7fd19249f93c455c0c",
       "authority_status": "main-backed",
-      "before_sha256": "91e11064eeb3e034904b48c8f843f283781eb8c4907ddf2c579573ac7ff13811",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "48b6f5f68e2ae5ec1895050209ac3c0ec7483c855cbaae7fd19249f93c455c0c",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source..agents.skills.vdd-execution-plan.scripts.skill-contract.json",
       "source_path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
       "source_snapshot_kind": "main"
@@ -624,9 +628,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111",
+      "after_sha256": "c11097f51a38412c5672505e180a48c62fd52f10d999f0543e2a6946affe6f36",
       "authority_status": "main-backed",
-      "before_sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111",
+      "before_sha256": "c11097f51a38412c5672505e180a48c62fd52f10d999f0543e2a6946affe6f36",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.docs.adr.ADR-0037-phase-shared-llm-codex-entrypoints.md",
@@ -694,9 +698,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "f00a514bc41e1881f3a3f6a25226b9d757600b19412ab5233b9b6d819d2742fe",
+      "after_sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254",
       "authority_status": "main-backed",
-      "before_sha256": "f00a514bc41e1881f3a3f6a25226b9d757600b19412ab5233b9b6d819d2742fe",
+      "before_sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.docs.adr.ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
@@ -764,6 +768,76 @@
       "source_snapshot_kind": "main"
     },
     {
+      "after_sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc",
+      "authority_status": "main-backed",
+      "before_sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.docs.adr.ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "source_path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "fd45958417226ba0041b2bcbe7e3d997e6d30cb91632e43eada91df80f2b8186",
+      "authority_status": "main-backed",
+      "before_sha256": "fd45958417226ba0041b2bcbe7e3d997e6d30cb91632e43eada91df80f2b8186",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.docs.adr.ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+      "source_path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3",
+      "authority_status": "main-backed",
+      "before_sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.docs.adr.ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+      "source_path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "25d18279176a6a43a7c8b66ca14f516876ae4a15fba20b36f77c022f53d702fe",
+      "authority_status": "main-backed",
+      "before_sha256": "25d18279176a6a43a7c8b66ca14f516876ae4a15fba20b36f77c022f53d702fe",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.docs.adr.ADR-0054-refactor-acceptance-manual-pause-closure.md",
+      "source_path": "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "4b0c0eb1c24b45e445d672757631acc8f57f0dd8034e234d9608bf7fafea6476",
+      "authority_status": "main-backed",
+      "before_sha256": "4b0c0eb1c24b45e445d672757631acc8f57f0dd8034e234d9608bf7fafea6476",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.docs.adr.ADR-0055-focused-repair-verification-and-lightweight-closure.md",
+      "source_path": "docs/adr/ADR-0055-focused-repair-verification-and-lightweight-closure.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "3a58878f36f70e8cd5a2b48bc06776bdc627f666a29b9ba795c5e8217773d778",
+      "authority_status": "main-backed",
+      "before_sha256": "3a58878f36f70e8cd5a2b48bc06776bdc627f666a29b9ba795c5e8217773d778",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.docs.adr.ADR-0056-ai-native-single-maintainer-finding-mode.md",
+      "source_path": "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7",
+      "authority_status": "main-backed",
+      "before_sha256": "1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.docs.adr.ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+      "source_path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+      "source_snapshot_kind": "main"
+    },
+    {
       "after_sha256": "d63e1f1dd2588efb81fd95d06a8c22ca844054403ebfac1d6c0293200e0622e3",
       "authority_status": "main-backed",
       "before_sha256": "d63e1f1dd2588efb81fd95d06a8c22ca844054403ebfac1d6c0293200e0622e3",
@@ -804,13 +878,11 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415",
+      "after_sha256": "a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e",
       "authority_status": "main-backed",
-      "before_sha256": "04392e70c88ac49776e0c453f8d156d2e5541cfaf6179f0d7a59804f9ef7c8df",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source.docs.architecture.ADR_INDEX_PHASE.md",
       "source_path": "docs/architecture/ADR_INDEX_PHASE.md",
       "source_snapshot_kind": "main"
@@ -1166,9 +1238,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "83fec51044d4287038ade1a0f8462a905af792885322975c4dbce54e5f525aba",
+      "after_sha256": "644247f67c05dfbbf9fd8d44cb93da560ed21c0697172591dcfc6b1398808d20",
       "authority_status": "main-backed",
-      "before_sha256": "83fec51044d4287038ade1a0f8462a905af792885322975c4dbce54e5f525aba",
+      "before_sha256": "644247f67c05dfbbf9fd8d44cb93da560ed21c0697172591dcfc6b1398808d20",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.docs.architecture.phase-service.llm-codex-execution.md",
@@ -1236,13 +1308,11 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "8b3ac7c233bdf63cf040270f34aa21427bad062e0bcd625241ec8e9ee262becc",
+      "after_sha256": "2525e32a9acf16cd8156c4973b03277c199f8804c90c15826fc9a593f9a9c6e8",
       "authority_status": "main-backed",
-      "before_sha256": "ed4bc30e31babfb9caa3bfa283d1ce46a5d1ce1539407308cb42a7fe86f63321",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
+      "before_sha256": "2525e32a9acf16cd8156c4973b03277c199f8804c90c15826fc9a593f9a9c6e8",
+      "changed_fields": [],
+      "disposition": "unchanged",
       "entry_id": "source.docs.standards.bootstrap-review-control-plane.md",
       "source_path": "docs/standards/bootstrap-review-control-plane.md",
       "source_snapshot_kind": "main"
@@ -1318,9 +1388,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "94cffef015f48d32e6370fabb14f75367399d8cc3b55f15e083f2a3ad1900574",
+      "after_sha256": "3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
       "authority_status": "main-backed",
-      "before_sha256": "94cffef015f48d32e6370fabb14f75367399d8cc3b55f15e083f2a3ad1900574",
+      "before_sha256": "3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.docs.standards.repository-maintenance-agent-protocol.md",
@@ -1358,9 +1428,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "e8fbcfde1ea0adbfbe2999517f7c7dbef05c600980a11669b1d6a9194f43e5b4",
+      "after_sha256": "ac151783e7e1af5f5e0b3faa7984972aeb5836317d0e9b9f671fbb18e6485221",
       "authority_status": "main-backed",
-      "before_sha256": "e8fbcfde1ea0adbfbe2999517f7c7dbef05c600980a11669b1d6a9194f43e5b4",
+      "before_sha256": "ac151783e7e1af5f5e0b3faa7984972aeb5836317d0e9b9f671fbb18e6485221",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-07-11-phase-frontend-boundary-hardening-execution-plan.00-index.md",
@@ -1388,9 +1458,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "05787bfb5f4ece9da609121b1296186c572b0b2b0d878d8eda8adb85a45f63b3",
+      "after_sha256": "e9bc760ba595dd0fa79616de200d21c72f86589059e6e29f53a9bfea22ef3076",
       "authority_status": "main-backed",
-      "before_sha256": "05787bfb5f4ece9da609121b1296186c572b0b2b0d878d8eda8adb85a45f63b3",
+      "before_sha256": "e9bc760ba595dd0fa79616de200d21c72f86589059e6e29f53a9bfea22ef3076",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-07-12-llm-review-evidence-gate-hardening.00-index.md",
@@ -1398,23 +1468,43 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "a6d4444ddf8a73ac0319fcf5ae7cf997aa582b24a0bade63d09bb4bf5f36ab5a",
+      "after_sha256": "22c4c743343e2cc8a31bbaa7ffe915a9587593e5e081c29e2ce40d64bec31135",
       "authority_status": "main-backed",
-      "before_sha256": "a6d4444ddf8a73ac0319fcf5ae7cf997aa582b24a0bade63d09bb4bf5f36ab5a",
+      "before_sha256": "22c4c743343e2cc8a31bbaa7ffe915a9587593e5e081c29e2ce40d64bec31135",
       "changed_fields": [],
       "disposition": "unchanged",
-      "entry_id": "source.execution-plans.2026-07-12-llm-review-evidence-gate-hardening.97-plan-added-requirements-ledger.md",
-      "source_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/97-plan-added-requirements-ledger.md",
+      "entry_id": "source.execution-plans.2026-07-12-llm-review-evidence-gate-hardening.command-registry.v2.json",
+      "source_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/command-registry.v2.json",
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "0a91b110e1c84f50484b4a93820bc733ef501a65559646c5e4cbbabf8ca48f13",
+      "after_sha256": "b83f50c990e98959429d7d1f4a600a93bef12722410a6a8043179384d924f2d8",
       "authority_status": "main-backed",
-      "before_sha256": "0a91b110e1c84f50484b4a93820bc733ef501a65559646c5e4cbbabf8ca48f13",
+      "before_sha256": "b83f50c990e98959429d7d1f4a600a93bef12722410a6a8043179384d924f2d8",
       "changed_fields": [],
       "disposition": "unchanged",
-      "entry_id": "source.execution-plans.2026-07-12-llm-review-evidence-gate-hardening.implementation-contract.v1.json",
-      "source_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json",
+      "entry_id": "source.execution-plans.2026-07-12-llm-review-evidence-gate-hardening.implementation-contract.v2.json",
+      "source_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v2.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "0b58d98b97fc0d9882f6fc76a23f75564d224917c3a2393081592951624e014b",
+      "authority_status": "main-backed",
+      "before_sha256": "0b58d98b97fc0d9882f6fc76a23f75564d224917c3a2393081592951624e014b",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-07-12-llm-review-evidence-gate-hardening.plan-state.v1.json",
+      "source_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "13a25db148408f359b7c7810e6de33fd5973d81fe0c0927822a8efc94f35671a",
+      "authority_status": "main-backed",
+      "before_sha256": "13a25db148408f359b7c7810e6de33fd5973d81fe0c0927822a8efc94f35671a",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-07-12-llm-review-evidence-gate-hardening.requirements.v2.json",
+      "source_path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/requirements.v2.json",
       "source_snapshot_kind": "main"
     },
     {
@@ -1438,9 +1528,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "84306844c61390503ecc2d38fbc90a8fafbf540ba8905c66ad4dc11a2c90f84c",
+      "after_sha256": "9e92e90f72f9e13e557240b715102537eab1f470cec323335161cac349d090f5",
       "authority_status": "main-backed",
-      "before_sha256": "84306844c61390503ecc2d38fbc90a8fafbf540ba8905c66ad4dc11a2c90f84c",
+      "before_sha256": "9e92e90f72f9e13e557240b715102537eab1f470cec323335161cac349d090f5",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-07-15-repository-maintenance-tdd-adapter.implementation-contract.v1.json",
@@ -1518,16 +1608,6 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "c9ed402adcb6f72d56c7e66a68a20474207f025c37dcf530ce9cbf280011aa16",
-      "authority_status": "main-backed",
-      "before_sha256": "c9ed402adcb6f72d56c7e66a68a20474207f025c37dcf530ce9cbf280011aa16",
-      "changed_fields": [],
-      "disposition": "unchanged",
-      "entry_id": "source.execution-plans.2026-07-26-knowledge-locator-workflow-integration.authority-manifest.v1.json",
-      "source_path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/authority-manifest.v1.json",
-      "source_snapshot_kind": "main"
-    },
-    {
       "after_sha256": "227cf11070a1e3580d68483a49f31fb692785d006482f1fc6cca7e1f8bc94a5c",
       "authority_status": "main-backed",
       "before_sha256": "227cf11070a1e3580d68483a49f31fb692785d006482f1fc6cca7e1f8bc94a5c",
@@ -1538,9 +1618,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "d6fab3c0f3b77bde2ab2c0f3a4d5d337bf8789fa619ad01fa757a6916b64ff40",
+      "after_sha256": "84ea438a308e16ba70b33ed3b9156d1818633b7bcb2b9a6c61e625b1d3ac8ec7",
       "authority_status": "main-backed",
-      "before_sha256": "d6fab3c0f3b77bde2ab2c0f3a4d5d337bf8789fa619ad01fa757a6916b64ff40",
+      "before_sha256": "84ea438a308e16ba70b33ed3b9156d1818633b7bcb2b9a6c61e625b1d3ac8ec7",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-07-26-knowledge-locator-workflow-integration.implementation-contract.v1.json",
@@ -1558,9 +1638,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "74615b9e13f6fd6e614fc2ed5be3b3caf8250866e0ec1cdd893f9500d64705d6",
+      "after_sha256": "3296b59705ca13780032eb2a907c34b5101487dc5fef846ae98be83800c81c5d",
       "authority_status": "main-backed",
-      "before_sha256": "74615b9e13f6fd6e614fc2ed5be3b3caf8250866e0ec1cdd893f9500d64705d6",
+      "before_sha256": "3296b59705ca13780032eb2a907c34b5101487dc5fef846ae98be83800c81c5d",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-07-27-refactor-implementation-acceptance-skill.00-index.md",
@@ -1568,21 +1648,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "25e491daef9683346c9dd19aa866084fc0262e409833ad4c1e141db036f298ba",
+      "after_sha256": "724048bafd8b056aa43efbae1c31555302114e942ef1889a77f7976be7924462",
       "authority_status": "main-backed",
-      "before_sha256": "fcb8ab8367f7bc14416bfe7f9313d3f7803ae151ee1dbc22e4e6abc7f58c0cd4",
-      "changed_fields": [
-        "source_sha256"
-      ],
-      "disposition": "updated",
-      "entry_id": "source.execution-plans.2026-07-27-refactor-implementation-acceptance-skill.authority-manifest.v1.json",
-      "source_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
-      "source_snapshot_kind": "main"
-    },
-    {
-      "after_sha256": "fa6a1b4eb31ab9e0837ec4c87298c6ab476f6e7cde1f33253b1cc8e39db32620",
-      "authority_status": "main-backed",
-      "before_sha256": "fa6a1b4eb31ab9e0837ec4c87298c6ab476f6e7cde1f33253b1cc8e39db32620",
+      "before_sha256": "724048bafd8b056aa43efbae1c31555302114e942ef1889a77f7976be7924462",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-07-27-refactor-implementation-acceptance-skill.command-registry.v1.json",
@@ -1600,9 +1668,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "b60ba5896eec2be677514d8e7d8e3c308f767773c09fe333948265c1b1d233cf",
+      "after_sha256": "7a84d552774bcdecc6cce66f061fae3efd3fdcb5ced8942833dfaae15069135e",
       "authority_status": "main-backed",
-      "before_sha256": "b60ba5896eec2be677514d8e7d8e3c308f767773c09fe333948265c1b1d233cf",
+      "before_sha256": "7a84d552774bcdecc6cce66f061fae3efd3fdcb5ced8942833dfaae15069135e",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-07-27-refactor-implementation-acceptance-skill.plan-state.v1.json",
@@ -1617,6 +1685,224 @@
       "disposition": "unchanged",
       "entry_id": "source.execution-plans.2026-07-27-refactor-implementation-acceptance-skill.requirements-ledger.v1.json",
       "source_path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/requirements-ledger.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422",
+      "authority_status": "main-backed",
+      "before_sha256": "e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-07-31-toolchain-workflow-evidence-catalog-v1.00-index.md",
+      "source_path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/00-index.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "4990d198e2d39de2e0b2749d2754f4b6a0f665a57a27b60b037f5bef2828ffba",
+      "authority_status": "main-backed",
+      "before_sha256": "4990d198e2d39de2e0b2749d2754f4b6a0f665a57a27b60b037f5bef2828ffba",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-07-31-toolchain-workflow-evidence-catalog-v1.01-requirements-and-acceptance.md",
+      "source_path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/01-requirements-and-acceptance.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "67384623cbc1e4ad5795410e2e7458295820fb396a9f04ab1e4482d2d011e92c",
+      "authority_status": "main-backed",
+      "before_sha256": "67384623cbc1e4ad5795410e2e7458295820fb396a9f04ab1e4482d2d011e92c",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-07-31-toolchain-workflow-evidence-catalog-v1.command-registry.v1.json",
+      "source_path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/command-registry.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "339fd17df43948ae799ed5198d81e3ae03ec95eaacf48317f516a935cc63e046",
+      "authority_status": "main-backed",
+      "before_sha256": "339fd17df43948ae799ed5198d81e3ae03ec95eaacf48317f516a935cc63e046",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-07-31-toolchain-workflow-evidence-catalog-v1.implementation-contract.v1.json",
+      "source_path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/implementation-contract.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "789637687db8944015d3a7ad815bf8efd500a37a4e90c94d15fd8e0fb8d14076",
+      "authority_status": "main-backed",
+      "before_sha256": "789637687db8944015d3a7ad815bf8efd500a37a4e90c94d15fd8e0fb8d14076",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-07-31-toolchain-workflow-evidence-catalog-v1.plan-state.v1.json",
+      "source_path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "764c37e240d5e415ed687f7e4ceab4edb3eac53f6ff6652d12230d8917a46af4",
+      "authority_status": "main-backed",
+      "before_sha256": "764c37e240d5e415ed687f7e4ceab4edb3eac53f6ff6652d12230d8917a46af4",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-01-refactor-acceptance-toolchain-compact-vdd.00-index.md",
+      "source_path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/00-index.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "f0974f2a15fd28b9f56a2f6756f8a2a850594ad8f107fedd06806bb7cf0bf305",
+      "authority_status": "main-backed",
+      "before_sha256": "f0974f2a15fd28b9f56a2f6756f8a2a850594ad8f107fedd06806bb7cf0bf305",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-01-refactor-acceptance-toolchain-compact-vdd.plan-state.v1.json",
+      "source_path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "afc0f8079edd596eebf6bbfb7f93a666d29d7cb0445dc9405d563446bde31e3f",
+      "authority_status": "main-backed",
+      "before_sha256": "afc0f8079edd596eebf6bbfb7f93a666d29d7cb0445dc9405d563446bde31e3f",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-01-refactor-acceptance-toolchain-compact-vdd.requirements.v1.json",
+      "source_path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/requirements.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "ad15c77d8fc6992552d9a9e86aa594e48721ada8f14c771608f93555663b5c09",
+      "authority_status": "main-backed",
+      "before_sha256": "ad15c77d8fc6992552d9a9e86aa594e48721ada8f14c771608f93555663b5c09",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-01-workflow-model-routing-control-plane.00-index.md",
+      "source_path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/00-index.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "bcb26d2f7529be462f9fbca719d372eba1f5387a61cf6af44eb9865ea137c8de",
+      "authority_status": "main-backed",
+      "before_sha256": "bcb26d2f7529be462f9fbca719d372eba1f5387a61cf6af44eb9865ea137c8de",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-01-workflow-model-routing-control-plane.plan-state.v1.json",
+      "source_path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "fa304f7717acb951699015a1f8eed8c0a51ba4167792ae8a0b20b9cd7f81ff2d",
+      "authority_status": "main-backed",
+      "before_sha256": "fa304f7717acb951699015a1f8eed8c0a51ba4167792ae8a0b20b9cd7f81ff2d",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-01-workflow-model-routing-control-plane.requirements.v1.json",
+      "source_path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/requirements.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf",
+      "authority_status": "main-backed",
+      "before_sha256": "ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed.00-index.md",
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "authority_status": "main-backed",
+      "before_sha256": "2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed.command-registry.v1.json",
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "edef7d760ff1104be415a04c4c315632d58d1a22ce706ff435fd388db7f4e7f8",
+      "authority_status": "main-backed",
+      "before_sha256": "edef7d760ff1104be415a04c4c315632d58d1a22ce706ff435fd388db7f4e7f8",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed.implementation-contract.v1.json",
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "5aa495491d2954b53c8d65354faf701750967d40749fe080048f5aeb494d94bc",
+      "authority_status": "main-backed",
+      "before_sha256": "5aa495491d2954b53c8d65354faf701750967d40749fe080048f5aeb494d94bc",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed.plan-state.v1.json",
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+      "authority_status": "main-backed",
+      "before_sha256": "e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed.requirements.v1.json",
+      "source_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46",
+      "authority_status": "main-backed",
+      "before_sha256": "326166295af2128e1c1e82869dea9d8a78c18cde406dc9916e828069af56bf98",
+      "changed_fields": [
+        "source_sha256"
+      ],
+      "disposition": "updated",
+      "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.00-index.md",
+      "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/00-index.md",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "4b8b91ed79531266ebfcecba7a1e868dcade5c4d5ab548f0472e922895b0d0a0",
+      "authority_status": "main-backed",
+      "before_sha256": "4b8b91ed79531266ebfcecba7a1e868dcade5c4d5ab548f0472e922895b0d0a0",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.command-registry.v1.json",
+      "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/command-registry.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "5a786ddb321105fd7a9e95e4809c6a4fb412c48f4aec3054e00e6cb0bec1f7ee",
+      "authority_status": "main-backed",
+      "before_sha256": "48b44e022c3d8a8506efb79e9bd0478845ee59b88b20a9b125567352dbe5e873",
+      "changed_fields": [
+        "source_sha256"
+      ],
+      "disposition": "updated",
+      "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.implementation-contract.v1.json",
+      "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/implementation-contract.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209",
+      "authority_status": "main-backed",
+      "before_sha256": "e0f56b88d55ff6f6fa593bbba6a8b1291e8beeba49523761bb4c2ed1de5f3500",
+      "changed_fields": [
+        "source_sha256"
+      ],
+      "disposition": "updated",
+      "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.plan-state.v1.json",
+      "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/plan-state.v1.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9",
+      "authority_status": "main-backed",
+      "before_sha256": "e38229a35bdec07c8c4d9f011431862c6e2eab54bc9493b2cc3d1a985947d033",
+      "changed_fields": [
+        "source_sha256"
+      ],
+      "disposition": "updated",
+      "entry_id": "source.execution-plans.2026-08-06-toolchain-plan-delivery-loop-skill.requirements.v1.json",
+      "source_path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/requirements.v1.json",
       "source_snapshot_kind": "main"
     },
     {
@@ -1680,9 +1966,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "a091b8f20dd8f1bd8c90274f3f7168773d3850b4497e826bd4c1f94909447918",
+      "after_sha256": "f1c257db84edaea6788309aa24a6c9295e419d025d1376584d66714240a01c40",
       "authority_status": "main-backed",
-      "before_sha256": "a091b8f20dd8f1bd8c90274f3f7168773d3850b4497e826bd4c1f94909447918",
+      "before_sha256": "f1c257db84edaea6788309aa24a6c9295e419d025d1376584d66714240a01c40",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.knowledge.contracts.knowledge-publication-generation.v1.schema.json",
@@ -1690,13 +1976,23 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "87d0a311dd4eebe286e8583bca20034a22de61dcece0e82b5d8947e6d0f94414",
+      "after_sha256": "c329ac0f4df9236360fb5033c3d269334fb0ae18ed93fad7e3fef46d1270ddcb",
       "authority_status": "main-backed",
-      "before_sha256": "87d0a311dd4eebe286e8583bca20034a22de61dcece0e82b5d8947e6d0f94414",
+      "before_sha256": "c329ac0f4df9236360fb5033c3d269334fb0ae18ed93fad7e3fef46d1270ddcb",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.knowledge.contracts.knowledge-publication-report.v1.schema.json",
       "source_path": "knowledge/contracts/knowledge-publication-report.v1.schema.json",
+      "source_snapshot_kind": "main"
+    },
+    {
+      "after_sha256": "aa9dee923143c26baa71a0b8e824e96607fda6b0c72865989bef94cac0b85dc2",
+      "authority_status": "main-backed",
+      "before_sha256": "aa9dee923143c26baa71a0b8e824e96607fda6b0c72865989bef94cac0b85dc2",
+      "changed_fields": [],
+      "disposition": "unchanged",
+      "entry_id": "source.knowledge.contracts.knowledge-publication-request.v1.schema.json",
+      "source_path": "knowledge/contracts/knowledge-publication-request.v1.schema.json",
       "source_snapshot_kind": "main"
     },
     {
@@ -1720,11 +2016,13 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "806fcd0541a6fc4c8a2605293e553d196cb7c1162ec0cad2169b9ef604a70e31",
+      "after_sha256": "5d1b44a3da527ac39eb966099c6100daae7ae509651ae54bf10bec9d953437a0",
       "authority_status": "main-backed",
-      "before_sha256": "806fcd0541a6fc4c8a2605293e553d196cb7c1162ec0cad2169b9ef604a70e31",
-      "changed_fields": [],
-      "disposition": "unchanged",
+      "before_sha256": "758ad3841098a3b5c0ecc330c01583f88c8901e4145662237ffce4f17385dcf8",
+      "changed_fields": [
+        "source_sha256"
+      ],
+      "disposition": "updated",
       "entry_id": "source.knowledge.evaluation.repository-knowledge-query-suite.v1.json",
       "source_path": "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
       "source_snapshot_kind": "main"
@@ -1780,9 +2078,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "157ecbf43d5d015b53b617d82890a788995b50cbb99a017755ce973d5dcc1f98",
+      "after_sha256": "98287e3a63fe9933a941ff4029acec7b3b18c327706fd9225fb308cdb8efec8f",
       "authority_status": "main-backed",
-      "before_sha256": "157ecbf43d5d015b53b617d82890a788995b50cbb99a017755ce973d5dcc1f98",
+      "before_sha256": "98287e3a63fe9933a941ff4029acec7b3b18c327706fd9225fb308cdb8efec8f",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.scripts.python._knowledge_catalog_builder.py",
@@ -1800,9 +2098,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "25d98e4b3ac9dfa9a105e2cec387abd871717f9891ae4e50cf3a4b33cef4e52c",
+      "after_sha256": "a30e3f5d88df9bcce9751b2fd3a2eda473548b2c21174b2519073ac337dff47d",
       "authority_status": "main-backed",
-      "before_sha256": "25d98e4b3ac9dfa9a105e2cec387abd871717f9891ae4e50cf3a4b33cef4e52c",
+      "before_sha256": "a30e3f5d88df9bcce9751b2fd3a2eda473548b2c21174b2519073ac337dff47d",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.scripts.python.build_knowledge_catalog.py",
@@ -1820,9 +2118,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "8e927dfe170b8e2d8d1a82f6bee45c31499a19a964055711f0c0c9f21d4993ad",
+      "after_sha256": "c6ced4b4ad5f927bbb351be98768fb32fa043ce461071c021bb823a3007393b1",
       "authority_status": "main-backed",
-      "before_sha256": "8e927dfe170b8e2d8d1a82f6bee45c31499a19a964055711f0c0c9f21d4993ad",
+      "before_sha256": "c6ced4b4ad5f927bbb351be98768fb32fa043ce461071c021bb823a3007393b1",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.scripts.python.evaluate_knowledge_queries.py",
@@ -1850,9 +2148,9 @@
       "source_snapshot_kind": "main"
     },
     {
-      "after_sha256": "5faec98277e3d4200fe9c7c525d85c9b317c0f986a8450e316c72faeb7895da2",
+      "after_sha256": "7fd2255e23bc3adebc90f645b61c1dc041b187566f82c16c2ae4f6ba48af3d99",
       "authority_status": "main-backed",
-      "before_sha256": "5faec98277e3d4200fe9c7c525d85c9b317c0f986a8450e316c72faeb7895da2",
+      "before_sha256": "7fd2255e23bc3adebc90f645b61c1dc041b187566f82c16c2ae4f6ba48af3d99",
       "changed_fields": [],
       "disposition": "unchanged",
       "entry_id": "source.scripts.python.publish_knowledge_catalog.py",
@@ -1864,30 +2162,34 @@
   "log": {
     "append_only": true,
     "failure_code": null,
-    "log_ref": "logs/knowledge-context/2026-07-31/refresh-existing-catalog-20260731-1cd6a6d/result-060730114340.v1.json",
-    "main_commit": "1cd6a6ddfca700e0fff5735ec4526b1fca2e56f0"
+    "log_ref": "logs/knowledge-context/2026-08-07/bootstrap-review-operability-hardening-maintenance-20260808-r2/result-190218882089.v1.json",
+    "main_commit": "23192841936e26fbb0e541aa0785cd2765ba5419"
   },
-  "main_commit": "1cd6a6ddfca700e0fff5735ec4526b1fca2e56f0",
+  "main_commit": "23192841936e26fbb0e541aa0785cd2765ba5419",
   "mode": "existing-only",
-  "request_id": "refresh-existing-catalog-20260731-1cd6a6d",
+  "request_id": "bootstrap-review-operability-hardening-maintenance-20260808-r2",
   "schema_version": "jimuyun.knowledge-maintenance-result.v1",
   "source_mutation_count": 0,
   "status": "updated",
   "suggested_catalog_source_snapshot": {
-    "commit": "1cd6a6ddfca700e0fff5735ec4526b1fca2e56f0",
+    "commit": "23192841936e26fbb0e541aa0785cd2765ba5419",
     "ref": "refs/heads/main",
     "sources": [
       {
         "path": ".agents/skills/maintain-knowledge-base/SKILL.md",
-        "sha256": "4861b20c1033fac1fbb4ee639b915408a9dd3c6d2e6d21895cfcd77e0c443e3f"
+        "sha256": "8ac8a676efb291c170fe4b866882c9b697088a82708f01c651de205d1cb57d18"
       },
       {
         "path": ".agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
-        "sha256": "691e662370b58ead554da351b2abb296a74d8537d4f80aac5d0425279158db3e"
+        "sha256": "f6494ab206fc55f866b6ec0b0cf3e5039291755b1b90c35aa73995196129e486"
+      },
+      {
+        "path": ".agents/skills/maintain-knowledge-base/scripts/prepare_publication_request.py",
+        "sha256": "d2f25a17bedb9975b891fa4ab638ccc900161bbd00e8baa710a93065760ec4dc"
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
-        "sha256": "08ba4ebac9067f2e37c811458f04bfb834d9b0b2e1634894f94ab11976f49f06"
+        "sha256": "f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167"
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
@@ -1907,31 +2209,35 @@
       },
       {
         "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
-        "sha256": "0800d60f04377b656261ec73b4ddb3d110f48fb0a04db4297999597ab705371b"
+        "sha256": "2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
-        "sha256": "0292f716721b0b196ccf6c9d873faab7b75dba8160d141644155482185028170"
+        "sha256": "9721a632e0634ab77acc50a7b44c146ab3d71a52e3da5c3266430be31d0a4b0f"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
-        "sha256": "03751ff39c6253c34dabe137253acabe0e81963789698b852690cf0b10d79f00"
+        "sha256": "c21e76d810baa52165ee0301c9d5a84805f2f9be770819a875b35104a23bd027"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
-        "sha256": "50e8a2b32531b80ccd2683620eb4fccd98501040ccace45e321d3968b3c6c705"
+        "sha256": "d3ce55e4f81ad9b6105efb94c18e017eba3912ce80cab71a27c8b2e19e06b1d6"
       },
       {
         "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
-        "sha256": "f1a41063d5234e42a409d6d99d74fd693f02a819591535a48df8ca42b3b9a18d"
+        "sha256": "0114bbe0381912ee5e6395bc245d12617435b91236f527e356364d89828143ac"
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
-        "sha256": "14708433db121d1ef0bd726081727a786642432146da08d70e71e0941db44b4d"
+        "sha256": "5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68"
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
         "sha256": "e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80"
+      },
+      {
+        "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
+        "sha256": "475d322f4ca92e91445fcea5277c3ad7f2000ee1d9bed92802dacf7db6efc45c"
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
@@ -1943,11 +2249,11 @@
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
-        "sha256": "938b6bca228422d24ada984f8aa3630a1062291d0c2bc8509bc9c28d5072273d"
+        "sha256": "33d277763fd0fe6ffb9801bfcfbdf4e9bac2292489c9293c6257d076f134c51b"
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
-        "sha256": "21dec62bae4c7ebd500bc6e0ac8d9999174e68e3e97b4b39945ceabe52004494"
+        "sha256": "dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76"
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
@@ -1955,19 +2261,19 @@
       },
       {
         "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
-        "sha256": "3076fac55c5c66fdfda70c4cc5d96a5b967332463a51d69e2c9cfa1841aae2de"
+        "sha256": "4192e3e7a3f5fbc5c8cbe84abf60c8a2b4733ddd82c27c5308374061ae06e48f"
       },
       {
         "path": ".agents/skills/vdd-execution-plan/SKILL.md",
-        "sha256": "7b0f8d636778efbcaaf02c8c62a10ce2ebf8bee9be2a3ef4ed4b0c269b5fff72"
+        "sha256": "26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef"
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
-        "sha256": "ec27ce244db1f55d3eab0e8331422f5888bb4cef668e9ee6e37dedab45b7a023"
+        "sha256": "8b3c0924a66cd584ae27df6d7f50bacab82c4270d79c3bea4afe70b2f8c99c9a"
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
-        "sha256": "efceb70237f8df7d9e56dca1d143a3c51f59932cfb076ce0eb82dddddebc7b3a"
+        "sha256": "48b6f5f68e2ae5ec1895050209ac3c0ec7483c855cbaae7fd19249f93c455c0c"
       },
       {
         "path": ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
@@ -2119,7 +2425,7 @@
       },
       {
         "path": "docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md",
-        "sha256": "7f3720dd1c23c4d84121c49893f9d99a027b6061302997e42e01aea4b6e00111"
+        "sha256": "c11097f51a38412c5672505e180a48c62fd52f10d999f0543e2a6946affe6f36"
       },
       {
         "path": "docs/adr/ADR-0038-phase-evidence-sidecars-readback.md",
@@ -2147,7 +2453,7 @@
       },
       {
         "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
-        "sha256": "f00a514bc41e1881f3a3f6a25226b9d757600b19412ab5233b9b6d819d2742fe"
+        "sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254"
       },
       {
         "path": "docs/adr/ADR-0045-bootstrap-verifier-semantic-commit-and-recovery.md",
@@ -2174,6 +2480,34 @@
         "sha256": "6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
       },
       {
+        "path": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+        "sha256": "e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc"
+      },
+      {
+        "path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+        "sha256": "fd45958417226ba0041b2bcbe7e3d997e6d30cb91632e43eada91df80f2b8186"
+      },
+      {
+        "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+        "sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3"
+      },
+      {
+        "path": "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
+        "sha256": "25d18279176a6a43a7c8b66ca14f516876ae4a15fba20b36f77c022f53d702fe"
+      },
+      {
+        "path": "docs/adr/ADR-0055-focused-repair-verification-and-lightweight-closure.md",
+        "sha256": "4b0c0eb1c24b45e445d672757631acc8f57f0dd8034e234d9608bf7fafea6476"
+      },
+      {
+        "path": "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md",
+        "sha256": "3a58878f36f70e8cd5a2b48bc06776bdc627f666a29b9ba795c5e8217773d778"
+      },
+      {
+        "path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+        "sha256": "1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7"
+      },
+      {
         "path": "docs/adr/addenda/ADR-0005-godot-quality-gates-addendum.md",
         "sha256": "d63e1f1dd2588efb81fd95d06a8c22ca844054403ebfac1d6c0293200e0622e3"
       },
@@ -2191,7 +2525,7 @@
       },
       {
         "path": "docs/architecture/ADR_INDEX_PHASE.md",
-        "sha256": "ab8826b7da795d83fb1e3f23dfb3dac525b7bb3651a87db84931ebfe3159c415"
+        "sha256": "a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e"
       },
       {
         "path": "docs/architecture/acceptance/01-goals.feature",
@@ -2335,7 +2669,7 @@
       },
       {
         "path": "docs/architecture/phase-service/llm-codex-execution.md",
-        "sha256": "83fec51044d4287038ade1a0f8462a905af792885322975c4dbce54e5f525aba"
+        "sha256": "644247f67c05dfbbf9fd8d44cb93da560ed21c0697172591dcfc6b1398808d20"
       },
       {
         "path": "docs/architecture/phase-service/metadata-db.md",
@@ -2363,7 +2697,7 @@
       },
       {
         "path": "docs/standards/bootstrap-review-control-plane.md",
-        "sha256": "8b3ac7c233bdf63cf040270f34aa21427bad062e0bcd625241ec8e9ee262becc"
+        "sha256": "2525e32a9acf16cd8156c4973b03277c199f8804c90c15826fc9a593f9a9c6e8"
       },
       {
         "path": "docs/standards/godot-diagnostics-quality-gates.md",
@@ -2395,7 +2729,7 @@
       },
       {
         "path": "docs/standards/repository-maintenance-agent-protocol.md",
-        "sha256": "94cffef015f48d32e6370fabb14f75367399d8cc3b55f15e083f2a3ad1900574"
+        "sha256": "3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550"
       },
       {
         "path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md",
@@ -2411,7 +2745,7 @@
       },
       {
         "path": "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/00-index.md",
-        "sha256": "e8fbcfde1ea0adbfbe2999517f7c7dbef05c600980a11669b1d6a9194f43e5b4"
+        "sha256": "ac151783e7e1af5f5e0b3faa7984972aeb5836317d0e9b9f671fbb18e6485221"
       },
       {
         "path": "execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/97-post-split-requirements-ledger.md",
@@ -2423,15 +2757,23 @@
       },
       {
         "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/00-index.md",
-        "sha256": "05787bfb5f4ece9da609121b1296186c572b0b2b0d878d8eda8adb85a45f63b3"
+        "sha256": "e9bc760ba595dd0fa79616de200d21c72f86589059e6e29f53a9bfea22ef3076"
       },
       {
-        "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/97-plan-added-requirements-ledger.md",
-        "sha256": "a6d4444ddf8a73ac0319fcf5ae7cf997aa582b24a0bade63d09bb4bf5f36ab5a"
+        "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/command-registry.v2.json",
+        "sha256": "22c4c743343e2cc8a31bbaa7ffe915a9587593e5e081c29e2ce40d64bec31135"
       },
       {
-        "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v1.json",
-        "sha256": "0a91b110e1c84f50484b4a93820bc733ef501a65559646c5e4cbbabf8ca48f13"
+        "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/implementation-contract.v2.json",
+        "sha256": "b83f50c990e98959429d7d1f4a600a93bef12722410a6a8043179384d924f2d8"
+      },
+      {
+        "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/plan-state.v1.json",
+        "sha256": "0b58d98b97fc0d9882f6fc76a23f75564d224917c3a2393081592951624e014b"
+      },
+      {
+        "path": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/requirements.v2.json",
+        "sha256": "13a25db148408f359b7c7810e6de33fd5973d81fe0c0927822a8efc94f35671a"
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/00-index.md",
@@ -2443,7 +2785,7 @@
       },
       {
         "path": "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/implementation-contract.v1.json",
-        "sha256": "84306844c61390503ecc2d38fbc90a8fafbf540ba8905c66ad4dc11a2c90f84c"
+        "sha256": "9e92e90f72f9e13e557240b715102537eab1f470cec323335161cac349d090f5"
       },
       {
         "path": "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/00-index.md",
@@ -2474,16 +2816,12 @@
         "sha256": "8a45f6db7284bfe7e29fc6ae41b8a66b58bcf4949ab7725148cc6fc9365a9ba2"
       },
       {
-        "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/authority-manifest.v1.json",
-        "sha256": "c9ed402adcb6f72d56c7e66a68a20474207f025c37dcf530ce9cbf280011aa16"
-      },
-      {
         "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/command-registry.v1.json",
         "sha256": "227cf11070a1e3580d68483a49f31fb692785d006482f1fc6cca7e1f8bc94a5c"
       },
       {
         "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/implementation-contract.v1.json",
-        "sha256": "d6fab3c0f3b77bde2ab2c0f3a4d5d337bf8789fa619ad01fa757a6916b64ff40"
+        "sha256": "84ea438a308e16ba70b33ed3b9156d1818633b7bcb2b9a6c61e625b1d3ac8ec7"
       },
       {
         "path": "execution-plans/2026-07-26-knowledge-locator-workflow-integration/plan-state.v1.json",
@@ -2491,15 +2829,11 @@
       },
       {
         "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/00-index.md",
-        "sha256": "74615b9e13f6fd6e614fc2ed5be3b3caf8250866e0ec1cdd893f9500d64705d6"
-      },
-      {
-        "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/authority-manifest.v1.json",
-        "sha256": "25e491daef9683346c9dd19aa866084fc0262e409833ad4c1e141db036f298ba"
+        "sha256": "3296b59705ca13780032eb2a907c34b5101487dc5fef846ae98be83800c81c5d"
       },
       {
         "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/command-registry.v1.json",
-        "sha256": "fa6a1b4eb31ab9e0837ec4c87298c6ab476f6e7cde1f33253b1cc8e39db32620"
+        "sha256": "724048bafd8b056aa43efbae1c31555302114e942ef1889a77f7976be7924462"
       },
       {
         "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/implementation-contract.v1.json",
@@ -2507,11 +2841,95 @@
       },
       {
         "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/plan-state.v1.json",
-        "sha256": "b60ba5896eec2be677514d8e7d8e3c308f767773c09fe333948265c1b1d233cf"
+        "sha256": "7a84d552774bcdecc6cce66f061fae3efd3fdcb5ced8942833dfaae15069135e"
       },
       {
         "path": "execution-plans/2026-07-27-refactor-implementation-acceptance-skill/requirements-ledger.v1.json",
         "sha256": "a8dccbac7925ec6deedd06815f2cf6787cd80604f407c9d4c340228b3c859167"
+      },
+      {
+        "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/00-index.md",
+        "sha256": "e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422"
+      },
+      {
+        "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/01-requirements-and-acceptance.md",
+        "sha256": "4990d198e2d39de2e0b2749d2754f4b6a0f665a57a27b60b037f5bef2828ffba"
+      },
+      {
+        "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/command-registry.v1.json",
+        "sha256": "67384623cbc1e4ad5795410e2e7458295820fb396a9f04ab1e4482d2d011e92c"
+      },
+      {
+        "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/implementation-contract.v1.json",
+        "sha256": "339fd17df43948ae799ed5198d81e3ae03ec95eaacf48317f516a935cc63e046"
+      },
+      {
+        "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/plan-state.v1.json",
+        "sha256": "789637687db8944015d3a7ad815bf8efd500a37a4e90c94d15fd8e0fb8d14076"
+      },
+      {
+        "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/00-index.md",
+        "sha256": "764c37e240d5e415ed687f7e4ceab4edb3eac53f6ff6652d12230d8917a46af4"
+      },
+      {
+        "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/plan-state.v1.json",
+        "sha256": "f0974f2a15fd28b9f56a2f6756f8a2a850594ad8f107fedd06806bb7cf0bf305"
+      },
+      {
+        "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/requirements.v1.json",
+        "sha256": "afc0f8079edd596eebf6bbfb7f93a666d29d7cb0445dc9405d563446bde31e3f"
+      },
+      {
+        "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/00-index.md",
+        "sha256": "ad15c77d8fc6992552d9a9e86aa594e48721ada8f14c771608f93555663b5c09"
+      },
+      {
+        "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/plan-state.v1.json",
+        "sha256": "bcb26d2f7529be462f9fbca719d372eba1f5387a61cf6af44eb9865ea137c8de"
+      },
+      {
+        "path": "execution-plans/2026-08-01-workflow-model-routing-control-plane/requirements.v1.json",
+        "sha256": "fa304f7717acb951699015a1f8eed8c0a51ba4167792ae8a0b20b9cd7f81ff2d"
+      },
+      {
+        "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md",
+        "sha256": "ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf"
+      },
+      {
+        "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+        "sha256": "2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939"
+      },
+      {
+        "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+        "sha256": "edef7d760ff1104be415a04c4c315632d58d1a22ce706ff435fd388db7f4e7f8"
+      },
+      {
+        "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/plan-state.v1.json",
+        "sha256": "5aa495491d2954b53c8d65354faf701750967d40749fe080048f5aeb494d94bc"
+      },
+      {
+        "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+        "sha256": "e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc"
+      },
+      {
+        "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/00-index.md",
+        "sha256": "83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46"
+      },
+      {
+        "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/command-registry.v1.json",
+        "sha256": "4b8b91ed79531266ebfcecba7a1e868dcade5c4d5ab548f0472e922895b0d0a0"
+      },
+      {
+        "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/implementation-contract.v1.json",
+        "sha256": "5a786ddb321105fd7a9e95e4809c6a4fb412c48f4aec3054e00e6cb0bec1f7ee"
+      },
+      {
+        "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/plan-state.v1.json",
+        "sha256": "efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209"
+      },
+      {
+        "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/requirements.v1.json",
+        "sha256": "477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9"
       },
       {
         "path": "knowledge/contracts/knowledge-consumer-context.v1.schema.json",
@@ -2539,11 +2957,15 @@
       },
       {
         "path": "knowledge/contracts/knowledge-publication-generation.v1.schema.json",
-        "sha256": "a091b8f20dd8f1bd8c90274f3f7168773d3850b4497e826bd4c1f94909447918"
+        "sha256": "f1c257db84edaea6788309aa24a6c9295e419d025d1376584d66714240a01c40"
       },
       {
         "path": "knowledge/contracts/knowledge-publication-report.v1.schema.json",
-        "sha256": "87d0a311dd4eebe286e8583bca20034a22de61dcece0e82b5d8947e6d0f94414"
+        "sha256": "c329ac0f4df9236360fb5033c3d269334fb0ae18ed93fad7e3fef46d1270ddcb"
+      },
+      {
+        "path": "knowledge/contracts/knowledge-publication-request.v1.schema.json",
+        "sha256": "aa9dee923143c26baa71a0b8e824e96607fda6b0c72865989bef94cac0b85dc2"
       },
       {
         "path": "knowledge/contracts/repository-knowledge-catalog.v2.schema.json",
@@ -2555,7 +2977,7 @@
       },
       {
         "path": "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
-        "sha256": "806fcd0541a6fc4c8a2605293e553d196cb7c1162ec0cad2169b9ef604a70e31"
+        "sha256": "5d1b44a3da527ac39eb966099c6100daae7ae509651ae54bf10bec9d953437a0"
       },
       {
         "path": "knowledge/policies/consumer-policies.v1.json",
@@ -2579,7 +3001,7 @@
       },
       {
         "path": "scripts/python/_knowledge_catalog_builder.py",
-        "sha256": "157ecbf43d5d015b53b617d82890a788995b50cbb99a017755ce973d5dcc1f98"
+        "sha256": "98287e3a63fe9933a941ff4029acec7b3b18c327706fd9225fb308cdb8efec8f"
       },
       {
         "path": "scripts/python/_knowledge_locator_core.py",
@@ -2587,7 +3009,7 @@
       },
       {
         "path": "scripts/python/build_knowledge_catalog.py",
-        "sha256": "25d98e4b3ac9dfa9a105e2cec387abd871717f9891ae4e50cf3a4b33cef4e52c"
+        "sha256": "a30e3f5d88df9bcce9751b2fd3a2eda473548b2c21174b2519073ac337dff47d"
       },
       {
         "path": "scripts/python/build_knowledge_index.py",
@@ -2595,7 +3017,7 @@
       },
       {
         "path": "scripts/python/evaluate_knowledge_queries.py",
-        "sha256": "8e927dfe170b8e2d8d1a82f6bee45c31499a19a964055711f0c0c9f21d4993ad"
+        "sha256": "c6ced4b4ad5f927bbb351be98768fb32fa043ce461071c021bb823a3007393b1"
       },
       {
         "path": "scripts/python/knowledge_locator.py",
@@ -2607,7 +3029,7 @@
       },
       {
         "path": "scripts/python/publish_knowledge_catalog.py",
-        "sha256": "5faec98277e3d4200fe9c7c525d85c9b317c0f986a8450e316c72faeb7895da2"
+        "sha256": "7fd2255e23bc3adebc90f645b61c1dc041b187566f82c16c2ae4f6ba48af3d99"
       }
     ]
   }
