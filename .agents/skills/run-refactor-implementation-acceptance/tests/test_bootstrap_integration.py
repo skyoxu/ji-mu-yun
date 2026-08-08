@@ -14,6 +14,20 @@ sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 
 class BootstrapIntegrationTests(unittest.TestCase):
+    def current_decision(self) -> dict:
+        from review_requirement import decide_review_requirement
+
+        policy = json.loads((SKILL_ROOT / "policies" / "semantic-review-trigger-policy.v1.json").read_text(encoding="utf-8"))
+
+        return decide_review_requirement({
+            "candidateIdentity": {
+                "changedPaths": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
+                "knowledgeArtifacts": [],
+            },
+            "deterministicEvidence": {"status": "passed", "hash": "sha256:" + "a" * 64},
+            "policy": policy,
+        })
+
     def test_bootstrap_module_fails_when_requested_repository_has_no_control_plane(self) -> None:
         import bootstrap_integration
 
@@ -1608,7 +1622,8 @@ class BootstrapIntegrationTests(unittest.TestCase):
 
         request = {
             "repository_root": ".",
-            "decision": {"requirement": "required", "requiredCompanionCapabilityExpectations": []},
+            "decision": self.current_decision(),
+            "decision_request": {"repository_root": ".", "prepared_run_input": "prepared.json", "deterministic_evidence": {"path": "evidence.json", "sha256": "sha256:" + "a" * 64}, "maintainer_intent": "default"},
             "binding": None,
             "launch_authorization": None,
             "scope_inputs": self.minimal_scope_inputs(),
@@ -1624,6 +1639,10 @@ class BootstrapIntegrationTests(unittest.TestCase):
                 acceptance_cli,
                 "load_current_lineage_state",
                 return_value=request["lineage_state"],
+            ), mock.patch.object(
+                acceptance_cli,
+                "_derive_current_bootstrap_decision",
+                return_value=request["decision"],
             ):
                 route = acceptance_cli.prepare_bootstrap_command(str(request_path), str(output_path))
         self.assertEqual("minimal-complete-closure", route["reviewScope"]["strategy"])
@@ -1634,7 +1653,11 @@ class BootstrapIntegrationTests(unittest.TestCase):
             root = Path(directory)
             request_path = root / "request.json"
             request_path.write_text(json.dumps(request), encoding="utf-8")
-            with self.assertRaisesRegex(acceptance_cli.InputError, "minimal review scope"):
+            with mock.patch.object(
+                acceptance_cli,
+                "_derive_current_bootstrap_decision",
+                return_value=request["decision"],
+            ), self.assertRaisesRegex(acceptance_cli.InputError, "minimal review scope"):
                 acceptance_cli.prepare_bootstrap_command(
                     str(request_path), str(root / "route.json")
                 )
@@ -1644,7 +1667,8 @@ class BootstrapIntegrationTests(unittest.TestCase):
 
         request = {
             "repository_root": ".",
-            "decision": {"requirement": "required", "requiredCompanionCapabilityExpectations": []},
+            "decision": self.current_decision(),
+            "decision_request": {"repository_root": ".", "prepared_run_input": "prepared.json", "deterministic_evidence": {"path": "evidence.json", "sha256": "sha256:" + "a" * 64}, "maintainer_intent": "default"},
             "binding": None,
             "launch_authorization": None,
             "scope_inputs": self.minimal_scope_inputs(),
@@ -1658,6 +1682,8 @@ class BootstrapIntegrationTests(unittest.TestCase):
             request_path.write_text(json.dumps(request), encoding="utf-8")
             with mock.patch.object(
                 acceptance_cli, "load_current_lineage_state", return_value=current
+            ), mock.patch.object(
+                acceptance_cli, "_derive_current_bootstrap_decision", return_value=request["decision"]
             ), self.assertRaisesRegex(acceptance_cli.InputError, "repository-owned projection"):
                 acceptance_cli.prepare_bootstrap_command(
                     str(request_path), str(root / "route.json")
@@ -1671,7 +1697,8 @@ class BootstrapIntegrationTests(unittest.TestCase):
         projection = self.repair_completeness(family, 1)
         request = {
             "repository_root": ".",
-            "decision": {"requirement": "required", "requiredCompanionCapabilityExpectations": []},
+            "decision": self.current_decision(),
+            "decision_request": {"repository_root": ".", "prepared_run_input": "prepared.json", "deterministic_evidence": {"path": "evidence.json", "sha256": "sha256:" + "a" * 64}, "maintainer_intent": "default"},
             "binding": None,
             "launch_authorization": None,
             "scope_inputs": self.minimal_scope_inputs(),
@@ -1691,6 +1718,8 @@ class BootstrapIntegrationTests(unittest.TestCase):
                 return_value=request["lineage_state"],
             ), mock.patch.object(
                 acceptance_cli, "audit_repair_completeness", return_value=replayed
+            ), mock.patch.object(
+                acceptance_cli, "_derive_current_bootstrap_decision", return_value=request["decision"]
             ), self.assertRaisesRegex(acceptance_cli.InputError, "producer-reproducible"):
                 acceptance_cli.prepare_bootstrap_command(
                     str(request_path), str(root / "route.json")

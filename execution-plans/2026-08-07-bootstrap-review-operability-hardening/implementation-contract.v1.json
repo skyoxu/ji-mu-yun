@@ -417,7 +417,9 @@
           ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
           ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
           ".agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py",
-          ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json"
+          ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json",
+          ".agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json"
         ],
         "tests": [
           ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
@@ -434,6 +436,8 @@
         ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
         ".agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py",
         ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json",
+        ".agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json",
+        ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
         ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
         ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py",
         ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",

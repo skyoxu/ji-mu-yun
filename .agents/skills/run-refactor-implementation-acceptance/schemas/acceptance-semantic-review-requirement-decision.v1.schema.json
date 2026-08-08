@@ -1,15 +1,24 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["schemaVersion", "decisionVersion", "requirement", "reasonCodes", "requirementSources", "inputHashes", "authorizes"],
+  "required": ["schemaVersion", "decisionVersion", "producer", "decisionStatus", "requirement", "profile", "reasonCodes", "requirementSources", "inputHashes", "policyHash", "candidateIdentityHash", "deterministicEvidenceHash", "maintainerIntent", "requiredCompanionCapabilityExpectations", "authorizes", "decisionHash"],
   "properties": {
     "schemaVersion": {"const": "acceptance-semantic-review-requirement-decision.v1"},
-    "decisionVersion": {"const": "v6"},
-    "requirement": {"enum": ["required", "not_required"]},
+    "decisionVersion": {"const": "v10"},
+    "producer": {"const": "refactor-implementation-acceptance"},
+    "decisionStatus": {"enum": ["ready", "blocked"]},
+    "requirement": {"type": ["string", "null"], "enum": ["required", "not_required", null]},
+    "profile": {"type": ["string", "null"], "enum": ["bootstrap-implementation-conformance", "bootstrap-skill-route", null]},
     "reasonCodes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
     "requirementSources": {"type": "array", "minItems": 1, "items": {"type": "string"}},
-    "inputHashes": {"type": "object"},
-    "authorizes": {"const": []}
+    "inputHashes": {"type": "object", "additionalProperties": false, "required": ["candidateIdentity", "deterministicEvidence", "policy"], "properties": {"candidateIdentity": {"type": "string"}, "deterministicEvidence": {"type": "string"}, "policy": {"type": "string"}}},
+    "policyHash": {"type": "string"},
+    "candidateIdentityHash": {"type": "string"},
+    "deterministicEvidenceHash": {"type": "string"},
+    "maintainerIntent": {"enum": ["default", "request"]},
+    "requiredCompanionCapabilityExpectations": {"type": "array"},
+    "authorizes": {"const": []},
+    "decisionHash": {"type": "string"}
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

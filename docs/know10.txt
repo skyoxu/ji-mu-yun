@@ -1,0 +1,1231 @@
+我读了最新 `main`。当前 HEAD 是 `d9bec07def3f19e6da3d4672d671819954a9c470`，提交信息是 `Harden bootstrap review operability and TDD execution`。
+
+先说判断：**BROH 的主体方向已经落地，但我现在不能判定它“完全符合之前要求”**。Bootstrap 的并发/停止规则、Quick Dev terminal predicate、Acceptance 后续路由这些主体都已经有了；问题集中在 **BROH-S4：Acceptance 自主决定是否需要 Bootstrap 这部分只完成了一半**。
+
+### 对 BROH 当前状态的判断
+
+已经符合的部分比较明确。BROH requirements 已经扩展到 `BROH-001..024`，其中明确要求 Acceptance-owned decision、deterministic-only、并发 discovery、P2 current-run closure、P0/P1 focused verifier、zero-finding clean、semantic stop rule 等。 95 报告也记录 S0–S7 最终通过 `implementation-complete`，并把 Bootstrap、Acceptance 和 plan-local consumer suites 纳入 terminal closure。
+
+而且现在 Acceptance 后半段的路由已经相当好：
+
+```text
+not_required
+→ deterministic_only
+
+required + 0 rounds
+→ full_implementation_conformance
+
+Round 1 P0/P1 repaired + no escalation
+→ focused_repair_verification
+
+later novel P0/P1 / authority change / high-risk boundary change
+→ full discovery proposal
+
+3 rounds
+→ manual_pause
+```
+
+这已经写进 `project_bounded_review_route()`。 Acceptance Skill 本身也明确声明拥有 complete coordination loop，并按 typed `nextAction` 调用 Bootstrap，再 import 结果继续 Acceptance。
+
+所以**“Acceptance 调度 Bootstrap”现在基本已经具备**。
+
+但“Acceptance 自主决定要不要 Bootstrap”还有下面几个实质问题。
+
+第一，`decide_bootstrap_command()` 现在仍接受两种输入：
+
+```python
+request = _read_json(request_path)
+decision = request
+
+if reviewInputs:
+    decision = decide_review_requirement(reviewInputs)
+```
+
+也就是说，如果 caller 不传 `reviewInputs`，仍然可以直接提交一个已经写好的：
+
+```text
+requirement = required / not_required
+requirementSources = [...]
+```
+
+然后 Acceptance 会把它发布。
+
+这意味着 **caller-authored decision 仍然没有真正被封死**。
+
+第二，即使走新的 `reviewInputs`，当前 `review_requirement.py` 仍然让 caller 提供这些关键事实：
+
+```text
+candidate.workflowControlPlaneChange
+protectedFacts.highRiskBoundary
+deterministicEvidence.status
+maintainerIntent
+```
+
+Acceptance 只是根据这些布尔值做决定，没有自己从 candidate manifest、changed paths、repo rules、protected-path policy 等推导它们。
+
+所以理论上 caller 可以给：
+
+```text
+changedPaths =
+  .agents/skills/run-phase-bootstrap-review/SKILL.md
+
+workflowControlPlaneChange = false
+highRiskBoundary = false
+```
+
+那么当前 producer 可以得到 `not_required`。
+
+测试现在证明的只是：
+
+> caller 写 `callerRequirement=not_required` 不能覆盖 `workflowControlPlaneChange=true`。
+
+它没有证明：
+
+> caller 无法伪造 `workflowControlPlaneChange` 本身。
+
+第三，BROH-009 要求 closed、hash-bound trigger policy，并且 unknown/contradictory facts fail closed。当前 producer 实际只认识：
+
+```text
+workflow-control-plane-change
+protected-high-risk-boundary
+explicit-maintainer-request
+deterministic-facts-incomplete
+deterministic-low-risk
+```
+
+而且没有真正的 repository-owned trigger-policy artifact；未知字段基本会被忽略。
+
+第四，有一个很直接的 contract bug：新 schema 规定：
+
+```text
+decisionVersion = v6
+```
+
+而 producer 实际输出：
+
+```text
+decisionVersion = v9
+```
+
+第五，现在所有 `required` decision 都被映射成：
+
+```text
+bootstrap-implementation-conformance
+```
+
+即使是：
+
+```text
+workflowControlPlaneChange = true
+```
+
+也是如此。
+
+同时 Acceptance 当前的 scope builder 也是硬编码 `bootstrap-implementation-conformance`。
+
+这比我们之前设计的“Skill/control-plane 变更 → `bootstrap-skill-route`”弱了一层。它不一定违反 BROH-A23 的最窄解释，但**没有实现我们之前想要的 risk-specific profile selection**。
+
+最后还有一个治理一致性问题：95 报告已经声明 implementation-complete，但 `plan-state.v1.json` 仍是 `implementation-authorized`，S0–S7 都是 pending；`resume-state.v1.json` 也还让下一步从 S0 开始。
+
+这不一定代表 terminal evidence 无效，但**目录的 lifecycle projection 已经明显滞后于实际 execution evidence**。另外当前 HEAD 没有 GitHub commit status/check，所以我能确认的是 repo artifacts 和 95 中记录的本地 validation，不能把它说成有独立 CI 佐证。
+
+因此我的结论是：
+
+> **BROH 的 Bootstrap/Quick Dev/后半段 Acceptance routing 基本达到目标；Acceptance 自主 risk decision 还不能算完成。**
+
+而且这不是应该另起一个新 plan 的新需求——**BROH-008/009/012 本来就要求它**。所以我建议先把它作为当前 BROH 的 implementation repair 收掉，再做 Acceptance。
+
+下面是我建议的修复方案。
+
+# Acceptance 自主 Bootstrap 决策权收口方案
+
+## 1. 目标
+
+把当前：
+
+```text
+Caller
+  ↓
+提供 risk facts / 甚至直接提供 required|not_required
+  ↓
+Acceptance 验证并路由
+```
+
+改成：
+
+```text
+Caller
+  ↓
+只提供 target/candidate/evidence 的不可变引用
+  ↓
+Acceptance 自己读取并验证当前仓库事实
+  ↓
+Acceptance 自己生成 risk facts
+  ↓
+Acceptance 自己计算 review requirement
+  ↓
+Acceptance 自己选择 Bootstrap profile / lens
+  ↓
+Acceptance route-acceptance
+```
+
+最终原则：
+
+```text
+Caller describes identity.
+Acceptance derives facts.
+Policy classifies risk.
+Acceptance decides assurance.
+Bootstrap executes assurance.
+```
+
+Caller 永远不能直接决定：
+
+```text
+required / not_required
+risk category
+Bootstrap profile
+reasonCodes
+workflowControlPlaneChange
+highRiskBoundary
+```
+
+---
+
+# 2. 不新建 execution-plan
+
+优先作为现有：
+
+`execution-plans/2026-08-07-bootstrap-review-operability-hardening`
+
+的 implementation repair。
+
+理由：
+
+BROH-008 已要求 Acceptance 成为 deterministic review-requirement owner。
+
+BROH-009 已要求 closed/hash-bound trigger policy。
+
+BROH-012 已要求 hard-trigger semantic assurance 和 typed profile selection。
+
+因此当前发现的是实现没有完全满足既有 plan intent，而不是新的产品需求。
+
+不要创建新的 lifecycle target，也不要重置 Bootstrap lineage。
+
+---
+
+# 3. 保留当前已经正确的部分
+
+以下实现原则不应重写：
+
+```text
+project_bounded_review_route()
+Acceptance complete coordination loop
+deterministic_only
+full_implementation_conformance
+focused_repair_verification
+manual_pause
+inspect-lineage
+exact Bootstrap import
+P2 current-run closure
+Round 1 repair → focused verifier
+typed later discovery
+3-round hard limit
+high-cost acknowledgement
+```
+
+当前问题不在后半段 scheduler。
+
+本次 repair 应集中在：
+
+```text
+review-requirement fact derivation
+trigger policy
+profile selection
+current-decision provenance
+legacy compatibility
+```
+
+---
+
+# 4. 新增 Acceptance-owned Current Fact Projection
+
+当前 `review_requirement.py` 不应该直接接受：
+
+```json
+{
+  "workflowControlPlaneChange": true,
+  "highRiskBoundary": false
+}
+```
+
+这种 caller-authored semantic fact。
+
+建议产生新的中间 artifact：
+
+`acceptance-semantic-review-facts.v1`
+
+它必须由 Acceptance 从当前 bytes 自己构造。
+
+输入只允许是引用，例如：
+
+```text
+repositoryRoot
+targetPlan
+preparedAcceptanceRunInput
+implementationContract
+deterministicEvidenceRefs
+maintainerIntent
+```
+
+其中：
+
+`maintainerIntent` 只能是 upgrade：
+
+```text
+default
+request_semantic_review
+```
+
+不能存在：
+
+```text
+skip_review
+force_not_required
+```
+
+---
+
+# 5. Candidate facts 必须由 Acceptance 自己重放
+
+直接复用当前已经很强的：
+
+```text
+load_current_candidate_identity()
+```
+
+它已经可以验证：
+
+```text
+baseline manifest
+candidate manifest
+changed paths
+candidate custody
+knowledge context
+content hashes
+deleted/present bindings
+```
+
+因此 risk producer 应消费这个 current identity，而不是让 caller 再写一遍：
+
+```text
+changedPaths
+candidateHash
+workflowControlPlaneChange
+```
+
+基本结构：
+
+```text
+prepared-run-input
+      ↓
+load_current_candidate_identity
+      ↓
+candidateIdentity
+      ↓
+derive_semantic_review_facts
+```
+
+任何 candidate bytes 变化：
+
+```text
+→ old facts stale
+→ old decision stale
+→ 必须重新 derive
+```
+
+---
+
+# 6. 创建 repository-owned Closed Trigger Policy
+
+建议在 Acceptance Skill 内增加一个真正的 policy artifact，例如：
+
+`references/semantic-review-trigger-policy.v1.json`
+
+这是新文件建议，不声称当前存在。
+
+它应该是 authority input，而不是 caller input。
+
+建议 hard-trigger enum：
+
+```text
+workflow_control_plane_changed
+
+lifecycle_authority_changed
+
+protected_path_changed
+
+security_or_permission_boundary_changed
+
+shared_execution_entrypoint_changed
+
+public_api_contract_changed
+
+database_schema_or_migration_changed
+
+runtime_or_deployment_boundary_changed
+
+destructive_or_irreversible_change
+
+deterministic_evidence_incomplete
+
+unresolved_acceptance_blocker
+
+explicit_maintainer_review_request
+```
+
+不得接受自由文本 reason。
+
+Policy 自身进入：
+
+```text
+policyHash
+```
+
+并写入 decision。
+
+修改 policy bytes：
+
+```text
+→ decision invalid
+```
+
+---
+
+# 7. Hard trigger 的事实必须可证明
+
+例如：
+
+## workflow_control_plane_changed
+
+从 changed paths + repository-owned path classification 得出：
+
+```text
+.agents/skills/vdd-execution-plan/**
+.agents/skills/quick-dev-tdd-adapter/**
+.agents/skills/run-refactor-implementation-acceptance/**
+.agents/skills/run-phase-bootstrap-review/**
+shared workflow launchers
+controlling validators
+```
+
+不是：
+
+```text
+caller says true
+```
+
+## protected_path_changed
+
+由当前 repository protected-path authority 决定。
+
+## security_or_permission_boundary_changed
+
+来自当前 plan/contract + changed-path classification + Acceptance deterministic evidence。
+
+## database_schema_or_migration_changed
+
+由实际 changed paths / registered contracts 识别。
+
+如果某个风险事实需要额外 authority 才能确定：
+
+```text
+unknown
+```
+
+必须：
+
+```text
+decisionStatus = blocked
+```
+
+而不是：
+
+```text
+not_required
+```
+
+---
+
+# 8. 不要把“缺 deterministic evidence”变成 semantic review
+
+当前代码把：
+
+```text
+deterministicEvidence.status != passed
+```
+
+转成：
+
+```text
+required
+```
+
+我建议改掉。
+
+应该：
+
+```text
+deterministic evidence incomplete
+→ blocked
+```
+
+因为 Bootstrap 不应该替机器验证补课。
+
+正确顺序：
+
+```text
+deterministic evidence complete?
+  ├─ no  → blocked / repair evidence
+  └─ yes → evaluate semantic risk
+```
+
+只有确定性事实完整之后才允许：
+
+```text
+required
+not_required
+```
+
+---
+
+# 9. Decision contract 建议变成三态控制
+
+建议 decision 增加：
+
+```text
+decisionStatus:
+  ready
+  blocked
+```
+
+当：
+
+```text
+decisionStatus = ready
+```
+
+才允许：
+
+```text
+requirement:
+  required
+  not_required
+```
+
+当 blocked 时记录：
+
+```text
+blockingReasonCodes
+```
+
+但不产生 Bootstrap route。
+
+例如：
+
+```text
+unknown protected-path classification
+stale deterministic evidence
+candidate custody mismatch
+policy mismatch
+contradictory repository facts
+```
+
+全部：
+
+```text
+blocked
+```
+
+---
+
+# 10. Caller 不能再直接提交 decision
+
+当前：
+
+```text
+decide_bootstrap_command()
+```
+
+存在：
+
+```text
+decision = request
+```
+
+的 compatibility fallback。
+
+这个通路必须从“current write path”移除。
+
+新的 `decide-bootstrap` 只接受：
+
+```text
+Acceptance-owned fact derivation request
+```
+
+不得接受：
+
+```text
+requirement
+reasonCodes
+profile
+risk flags
+```
+
+作为 caller input。
+
+如果历史 evidence 确实需要兼容，可建立明确的：
+
+```text
+legacy decision reader
+```
+
+其能力只能是：
+
+```text
+read
+replay historical evidence
+explain
+```
+
+它不能：
+
+```text
+publish current decision
+route current candidate
+authorize Bootstrap
+satisfy exact reuse
+```
+
+即：
+
+```text
+legacy-read
+current-write-prohibited
+```
+
+---
+
+# 11. 修复 decision schema
+
+当前 schema：
+
+```text
+decisionVersion = v6
+```
+
+producer：
+
+```text
+decisionVersion = v9
+```
+
+必须统一。
+
+同时建议 schema 从宽松：
+
+```text
+additionalProperties: true
+```
+
+改为：
+
+```text
+additionalProperties: false
+```
+
+明确字段至少包括：
+
+```text
+schemaVersion
+decisionVersion
+decisionStatus
+requirement
+profile
+reasonCodes
+requirementSources
+policyHash
+candidateIdentityHash
+deterministicFactsHash
+authorityFactsHash
+knowledgeContextHash
+maintainerIntent
+inputHashes
+decisionHash
+authorizes
+```
+
+其中：
+
+```text
+authorizes = []
+```
+
+保持不变。
+
+---
+
+# 12. Profile 由 Acceptance 根据风险类型选择
+
+不要再：
+
+```text
+required
+→ 永远 bootstrap-implementation-conformance
+```
+
+建议：
+
+## 普通实现风险
+
+```text
+bootstrap-implementation-conformance
+```
+
+## Skill / workflow / route / control plane
+
+```text
+bootstrap-skill-route
+```
+
+## 后续 P0/P1 修复
+
+继续由现有 bounded route 决定：
+
+```text
+bootstrap-focused-repair-verification
+```
+
+不要由 initial risk decision 乱选 focused profile。
+
+---
+
+# 13. 当前 BROH 本身应该分类为 skill-route
+
+以目前这个 target 为例，它修改：
+
+```text
+Bootstrap Skill/control plane
+Acceptance Skill/routing
+Quick Dev control behavior
+```
+
+因此新 decision producer 在当前 candidate 上应该得到：
+
+```text
+decisionStatus = ready
+requirement = required
+profile = bootstrap-skill-route
+reasonCodes includes workflow_control_plane_changed
+```
+
+这可以作为核心 regression fixture。
+
+---
+
+# 14. Exact reuse 必须 profile-specific
+
+当前 Acceptance exact reuse 明确只绑定：
+
+```text
+bootstrap-implementation-conformance
+```
+
+所以不要简单把：
+
+```text
+bootstrap-skill-route
+```
+
+也塞进现有 reuse 判断。
+
+两种安全方案：
+
+### 第一阶段推荐
+
+```text
+bootstrap-skill-route
+→ 不支持 exact reuse
+→ 必须 current semantic execution
+```
+
+实现最简单、风险最低。
+
+### 后续如确有性能价值
+
+再单独建立：
+
+```text
+skill-route exact-reuse validator
+```
+
+并绑定：
+
+```text
+profile
+policy
+authority
+candidate
+Artifact View
+route
+decision
+```
+
+不要把现有 `_EXACT_REUSE_PROFILE` 扩成“任何 Bootstrap profile”。
+
+---
+
+# 15. Review Lens 与 trigger 一起确定
+
+Decision 同时输出：
+
+```text
+riskLens
+```
+
+例如 workflow control plane：
+
+```text
+authority ownership
+lifecycle transition
+cross-skill composition
+recovery/idempotency
+backward compatibility
+stop conditions
+authority leakage
+```
+
+Security：
+
+```text
+authorization
+privilege boundary
+secret exposure
+cross-account access
+audit integrity
+```
+
+Lens 只是 reasoning priority。
+
+必须继续保证：
+
+```text
+lens ≠ sampling
+```
+
+Bootstrap Artifact View coverage 不减少。
+
+---
+
+# 16. `route-acceptance` 必须验证 decision provenance
+
+目前 route 主要检查：
+
+```text
+requirement
+scope
+lineage
+repair completeness
+```
+
+建议增加：
+
+```text
+current Decision schema
+policyHash current
+candidateIdentityHash current
+deterministicFactsHash current
+knowledgeContextHash current
+decisionHash valid
+producer = Acceptance
+```
+
+任何 drift：
+
+```text
+→ reject before Bootstrap
+```
+
+这样即使有人手写 JSON：
+
+```text
+requirement=not_required
+```
+
+也无法进入：
+
+```text
+deterministic_only
+```
+
+---
+
+# 17. `not_required` 的定义必须非常严格
+
+只有同时满足：
+
+```text
+candidate custody current
+deterministic evidence complete
+knowledge context current
+authority facts complete
+no hard trigger
+no unresolved Acceptance blocker
+no maintainer review request
+policy current
+```
+
+才：
+
+```text
+requirement = not_required
+```
+
+然后：
+
+```text
+routeKind = deterministic_only
+semantic model launch = 0
+review lineage = none
+```
+
+当前 `project_bounded_review_route()` 的 deterministic-only 行为可以原样保留。
+
+---
+
+# 18. `required` 不等于立即 launch
+
+保持当前职责边界：
+
+```text
+Acceptance:
+  required
+  ↓
+  chooses profile
+  ↓
+  builds typed route
+
+Bootstrap:
+  validates route
+  ↓
+  high-cost acknowledgement
+  ↓
+  launch
+```
+
+Acceptance 不能吞掉 Bootstrap 的：
+
+```text
+model launch authority
+reviewer isolation
+Artifact View
+semantic gate
+finding lifecycle
+verifier
+high-cost acknowledgement
+```
+
+---
+
+# 19. 建议 repair slices
+
+## Repair R1 — Decision Contract Closure
+
+修改：
+
+```text
+review_requirement.py
+decision schema
+review requirement tests
+```
+
+完成：
+
+```text
+schema/producer version一致
+additionalProperties=false
+raw current decision path关闭
+decision provenance完整
+```
+
+RED：
+
+```text
+caller直接提交 not_required 仍能发布
+schema v6 / producer v9 mismatch
+```
+
+GREEN：
+
+```text
+两者全部拒绝/修正
+```
+
+---
+
+## Repair R2 — Repository-Derived Risk Facts
+
+实现：
+
+```text
+derive_review_facts()
+```
+
+从当前 Acceptance candidate、contract、repo policy 中自行计算事实。
+
+RED：
+
+```text
+caller把 Bootstrap Skill change 标为 low risk
+```
+
+必须证明旧实现错误放行。
+
+GREEN：
+
+```text
+changed path 自动得到 workflow_control_plane_changed
+```
+
+---
+
+## Repair R3 — Closed Trigger Policy
+
+增加 repository-owned policy artifact和 validator。
+
+验证：
+
+```text
+unknown trigger rejected
+policy drift invalidates decision
+contradictory facts block
+maintainer request only upgrades
+```
+
+---
+
+## Repair R4 — Profile / Lens Routing
+
+实现：
+
+```text
+ordinary hard-risk implementation
+→ bootstrap-implementation-conformance
+
+workflow/Skill/control-plane
+→ bootstrap-skill-route
+```
+
+以及 typed risk lens。
+
+保持 full Artifact View coverage。
+
+---
+
+## Repair R5 — Route Provenance Enforcement
+
+让：
+
+```text
+route-acceptance
+prepare-bootstrap
+```
+
+只接受 Acceptance 当前 producer 的 current decision。
+
+验证：
+
+```text
+handwritten decision
+stale decision
+wrong candidate
+wrong policy
+wrong knowledge context
+wrong profile
+```
+
+全部 fail closed。
+
+---
+
+## Repair R6 — Composition / Lifecycle Closure
+
+跑完整 composition：
+
+```text
+low risk
+→ deterministic_only
+→ no Bootstrap artifacts
+
+workflow control plane
+→ required
+→ bootstrap-skill-route
+
+P0/P1 repair
+→ focused verifier
+
+P2-only
+→ deterministic closure
+
+clean Round 1
+→ stop
+
+later discovery
+→ typed confirmation only
+```
+
+然后同步 target 的 lifecycle projection：
+
+```text
+plan-state
+resume-state
+95 report
+```
+
+避免：
+
+```text
+95 says implementation-complete
+plan-state says implementation-authorized
+resume says S0 pending
+```
+
+这种状态分裂。
+
+---
+
+# 20. 必须新增的核心测试
+
+至少覆盖：
+
+1. Caller 直接提交 `not_required` 被 current command 拒绝。
+2. Caller 直接提交 `required` 同样被拒绝。
+3. Caller 不能提交 `workflowControlPlaneChange=false`。
+4. Bootstrap Skill changed path 自动产生 workflow trigger。
+5. Acceptance Skill changed path自动产生 workflow trigger。
+6. 普通低风险代码 + 完整 deterministic evidence → not_required。
+7. deterministic evidence incomplete → blocked，不是 required。
+8. protected-path risk → required。
+9. security boundary → required。
+10. API contract → required。
+11. DB migration → required。
+12. runtime/deployment boundary → required。
+13. destructive operation → required。
+14. explicit maintainer request只能把 not_required 升级为 required。
+15. unknown/contradictory facts → blocked。
+16. policy hash drift → old decision invalid。
+17. candidate hash drift → old decision invalid。
+18. knowledge hash drift → old decision invalid。
+19. current workflow-control candidate → `bootstrap-skill-route`。
+20. skill-route 不能错误复用 implementation-conformance envelope。
+21. deterministic-only 不创建 lineage/access proof/launch authorization。
+22. required route仍保留 Bootstrap high-cost acknowledgement。
+23. Round 1 clean → stop。
+24. P2-only → stop。
+25. P0/P1 repaired → exactly one focused verifier。
+26. later full discovery仍要求 typed trigger + user confirmation。
+
+---
+
+# 21. 本次不要改的东西
+
+不要重写：
+
+```text
+Bootstrap reviewer protocol
+three-role isolation
+concurrent discovery implementation
+finding severity model
+round budget
+P2 closure
+focused verifier
+Quick Dev TDD adapter
+VDD lifecycle authority
+```
+
+本 repair 的核心只有：
+
+```text
+Who owns the facts?
+Who owns the decision?
+Can the caller spoof them?
+Which Bootstrap profile follows?
+```
+
+---
+
+# 22. Definition of Done
+
+只有下面全部成立，才能说：
+
+> Acceptance 已经真正拥有 Bootstrap 自主决策权。
+
+```text
+Caller cannot author required/not_required.
+
+Caller cannot author semantic risk booleans.
+
+Acceptance derives current facts from repository-bound evidence.
+
+Closed policy deterministically classifies those facts.
+
+Incomplete/unknown facts block instead of silently downgrading.
+
+Acceptance alone selects required/not_required.
+
+Acceptance alone selects Bootstrap profile/lens.
+
+not_required produces deterministic_only with zero semantic execution.
+
+required produces a typed Bootstrap route.
+
+Bootstrap alone retains semantic execution authority.
+
+Every decision is bound to current candidate, policy,
+deterministic evidence, knowledge and authority bytes.
+
+Legacy decisions are read-only compatibility evidence.
+
+Current route rejects handwritten/stale decisions.
+
+Profile-incompatible exact reuse is impossible.
+
+Existing bounded Round/P2/focused-verifier semantics remain unchanged.
+```
+
+最终职责模型：
+
+```text
+VDD
+  → plan intent
+
+Readiness Skill
+  → pre-implementation plan sanity
+
+Quick Dev
+  → implementation
+
+Acceptance
+  → deterministic truth
+  → semantic-risk classification
+  → Bootstrap requirement decision
+  → Bootstrap route scheduling
+  → final acceptance
+
+Bootstrap
+  → semantic assurance execution only
+```
+
+我的建议是：**先不要开始新的 Readiness Skill 实施。先把这个 BROH repair 收干净并跑一次真实 Acceptance。** 因为现在已经非常接近正确架构，缺的是 Acceptance decision ownership 的最后一道“防 caller 注入”边界，而不是再设计一套新的 Review 系统。
+
+等这个 repair 通过后，你的实施后链路基本就真正定型了。

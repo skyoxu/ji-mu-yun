@@ -69,3 +69,13 @@ Validation evidence for this repair: `validate_plan.py` PASS; plan-local tests `
 - Result: `implementation-complete` passed for BROH-S0 through BROH-S7 after current RED, GREEN, REFACTOR, projection, consumer-closure, and terminal validation.
 - Scope: the result is non-authorizing (`authorizes: []`) and does not publish `acceptance-passed`, commit, release, or archive authority.
 - Assurance: the terminal consumer closure includes the Bootstrap skill suite, Acceptance review-requirement tests, Acceptance Bootstrap integration tests, and plan-local validator tests. Bootstrap Review and Acceptance were not launched.
+
+## Round 1 Implementation Repair
+
+- Findings: current decision publication accepted caller-authored requirements and risk facts, deterministic evidence incompleteness was routed as `required`, the decision schema revision disagreed with its producer, and required profile selection was not risk-specific.
+- Repair: `decide-bootstrap` now accepts only repository-bound prepared-run and deterministic-evidence references; Acceptance replays candidate identity and the repository-owned semantic trigger policy. Current decisions carry producer, policy, candidate, evidence, and decision hashes. Unknown trigger policy input and blocked deterministic evidence fail closed. Workflow-control-plane changes select `bootstrap-skill-route`; ordinary hard triggers retain `bootstrap-implementation-conformance`.
+- Provenance closure: route preparation now re-derives the repository-owned decision from the supplied decision request and requires exact equality before routing. This closes the remaining self-hashed hand-authored decision bypass.
+- Projection-test closure: the plan-local stage-projection test now creates an isolated Git baseline and explicit candidate modification, rather than assuming the real repository worktree has no declared candidate effects.
+- Targeted validation: current Acceptance test suite `251/251` passed; current requirement, schema, package, and Bootstrap integration tests passed. `validate_plan.py` passes and `git diff --check` reports no whitespace errors.
+- Plan-local regression: `47/47` passed, including the isolated projection fixture.
+- Terminal gap: Quick Dev parent routing succeeds, but `loop_plan_directory.py` stops before slice execution with `KWI-QUICK-FROZEN-CONTEXT-STALE` because the repository knowledge catalog snapshot predates the current main. No new implementation-complete lifecycle state is published and the existing plan state remains unchanged until knowledge freshness is repaired and terminal validation is rerun.

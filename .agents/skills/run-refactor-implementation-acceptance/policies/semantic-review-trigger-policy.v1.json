@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "acceptance-semantic-review-trigger-policy.v1",
+  "policyId": "acceptance-semantic-review-trigger-policy",
+  "policyVersion": "v1",
+  "workflowControlPlanePrefixes": [
+    ".agents/skills/",
+    "scripts/sc/",
+    "execution-plans/",
+    "decision-logs/"
+  ],
+  "protectedHighRiskPrefixes": [
+    "PhaseA.Platform/Security/",
+    "PhaseA.Platform/Data/",
+    "runtime/phase-a/",
+    "PhaseA.Platform/Runs/",
+    "scripts/sc/_llm_backend.py"
+  ],
+  "hardTriggers": [
+    "workflow_control_plane_changed",
+    "protected_high_risk_boundary_changed",
+    "explicit_maintainer_review_request",
+    "deterministic_evidence_incomplete"
+  ],
+  "authorizes": []
+}

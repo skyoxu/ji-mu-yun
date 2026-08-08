@@ -389,6 +389,8 @@ def project_bounded_review_route(
         "required", "not_required",
     }:
         raise BootstrapBindingError("bootstrap requirement decision is invalid")
+    if decision.get("decisionStatus") == "blocked":
+        raise BootstrapBindingError("blocked bootstrap requirement decision cannot be routed")
     if decision["requirement"] == "not_required":
         if lineage_state is not None or repair_completeness is not None:
             raise BootstrapBindingError(

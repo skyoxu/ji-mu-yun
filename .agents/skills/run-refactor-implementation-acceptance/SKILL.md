@@ -100,7 +100,15 @@ Execute the orchestration in this order:
 4. Run the deterministic inventory, policy, matrix, checklist, scan, coverage,
    and evidence actions required by the target contract.
 5. Publish the immutable Bootstrap requirement decision and obtain a fresh
-   repository-owned `inspect-lineage` projection, including zero rounds.
+   repository-owned `inspect-lineage` projection, including zero rounds. The
+   current `decide-bootstrap` command accepts only a repository root, a
+   prepared Acceptance run-input reference, a hash-bound deterministic
+   evidence reference, and maintainer intent. It replays candidate custody,
+   changed paths, the repository-owned semantic trigger policy, and policy
+   hashes itself. Caller-authored requirements, profiles, risk booleans, and
+   reason codes are legacy-read-only inputs and cannot publish a current
+   decision. Incomplete deterministic evidence is `blocked` and cannot be
+   routed to Bootstrap.
 6. Produce the bounded route with `route-acceptance`, the thin public alias for
    `prepare-bootstrap`:
 

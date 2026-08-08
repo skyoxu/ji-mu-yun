@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -83,8 +84,25 @@ class PackageTests(unittest.TestCase):
         self.assertFalse(output.exists())
 
     def test_route_acceptance_is_the_prepare_bootstrap_thin_alias(self) -> None:
+        import acceptance_cli
+        from review_requirement import decide_review_requirement
+
+        policy = json.loads((SKILL_ROOT / "policies" / "semantic-review-trigger-policy.v1.json").read_text(encoding="utf-8"))
         request = {
-            "decision": {"requirement": "not_required"},
+            "decision": decide_review_requirement({
+                "candidateIdentity": {"changedPaths": ["docs/ordinary-note.md"], "knowledgeArtifacts": []},
+                "deterministicEvidence": {"status": "passed", "hash": "sha256:" + "a" * 64},
+                "policy": policy,
+            }),
+            "decision_request": {
+                "repository_root": ".",
+                "prepared_run_input": "prepared.json",
+                "deterministic_evidence": {
+                    "path": "evidence.json",
+                    "sha256": "sha256:" + "a" * 64,
+                },
+                "maintainer_intent": "default",
+            },
             "binding": None,
             "launch_authorization": None,
         }
@@ -93,14 +111,14 @@ class PackageTests(unittest.TestCase):
             request_path = root / "route.request.json"
             output_path = root / "route.v1.json"
             request_path.write_text(json.dumps(request), encoding="utf-8", newline="\n")
-            result = subprocess.run(
-                [
-                    sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
-                    "route-acceptance", "--request", str(request_path), "--out", str(output_path),
-                ],
-                capture_output=True, text=True, encoding="utf-8", check=False,
-            )
-            self.assertEqual(0, result.returncode, result.stderr)
+            with mock.patch.object(
+                acceptance_cli,
+                "_derive_current_bootstrap_decision",
+                return_value=request["decision"],
+            ):
+                route = acceptance_cli.prepare_bootstrap_command(
+                    str(request_path), str(output_path)
+                )
             route = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual("deterministic_only", route["routeKind"])
             self.assertEqual("deterministic-only-evaluation", route["nextAction"])

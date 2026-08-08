@@ -79,6 +79,40 @@ def _file_hash(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _validate_current_review_decision(decision: object) -> dict:
+    if not isinstance(decision, dict):
+        raise InputError("bootstrap requirement decision is invalid")
+    required = {
+        "schemaVersion", "decisionVersion", "producer", "decisionStatus", "requirement", "profile", "reasonCodes",
+        "requirementSources", "inputHashes", "policyHash", "candidateIdentityHash",
+        "deterministicEvidenceHash", "maintainerIntent", "requiredCompanionCapabilityExpectations",
+        "authorizes", "decisionHash",
+    }
+    if set(decision) != required | ({"profile"} if "profile" in decision else set()):
+        raise InputError("current decision contract is incomplete")
+    if decision.get("schemaVersion") != "acceptance-semantic-review-requirement-decision.v1" or decision.get("decisionVersion") != "v10" or decision.get("producer") != "refactor-implementation-acceptance":
+        raise InputError("current decision contract revision is invalid")
+    if decision.get("authorizes") != [] or decision.get("maintainerIntent") not in {"default", "request"}:
+        raise InputError("current decision provenance is invalid")
+    status = decision.get("decisionStatus")
+    requirement = decision.get("requirement")
+    if status == "blocked":
+        if requirement is not None or decision.get("profile") is not None:
+            raise InputError("blocked decision must not select a Bootstrap route")
+    elif status == "ready":
+        if requirement not in {"required", "not_required"}:
+            raise InputError("ready decision requirement is invalid")
+        if requirement == "required" and decision.get("profile") not in {"bootstrap-implementation-conformance", "bootstrap-skill-route"}:
+            raise InputError("ready decision profile is invalid")
+        if requirement == "not_required" and decision.get("profile") is not None:
+            raise InputError("deterministic-only decision cannot select a profile")
+    else:
+        raise InputError("current decision status is invalid")
+    if decision.get("decisionHash") != canonical_hash({key: value for key, value in decision.items() if key != "decisionHash"}):
+        raise InputError("current decision hash is stale")
+    return decision
+
+
 def load_current_candidate_identity(repository_root: Path, prepared_run_input: str) -> dict:
     root = repository_root.resolve()
     prepared = (root / prepared_run_input).resolve()
@@ -536,21 +570,55 @@ def collect_evidence_command(request_path: str, output_path: str) -> dict:
     return _publish_new_json(output_path, {"schemaVersion": "acceptance-evidence-record.v1", **request, "authorizes": []})
 
 
+def _derive_current_bootstrap_decision(request: object) -> dict:
+    required = {"repository_root", "prepared_run_input", "deterministic_evidence", "maintainer_intent"}
+    if not isinstance(request, dict) or set(request) != required:
+        raise InputError("current bootstrap decision requires repository-bound Acceptance references")
+    repository_root = Path(request["repository_root"]).resolve()
+    if not repository_root.is_dir():
+        raise InputError("repository root is invalid")
+    try:
+        candidate_identity = load_current_candidate_identity(
+            repository_root, request["prepared_run_input"]
+        )
+    except (OSError, ValueError, KeyError) as exc:
+        raise InputError("current candidate identity is unavailable") from exc
+    evidence_ref = request["deterministic_evidence"]
+    if (
+        not isinstance(evidence_ref, dict)
+        or set(evidence_ref) != {"path", "sha256"}
+        or not isinstance(evidence_ref["path"], str)
+        or not isinstance(evidence_ref["sha256"], str)
+    ):
+        raise InputError("deterministic evidence reference is invalid")
+    evidence_path = (repository_root / evidence_ref["path"]).resolve()
+    try:
+        evidence_path.relative_to(repository_root)
+    except ValueError as exc:
+        raise InputError("deterministic evidence escapes repository root") from exc
+    if not evidence_path.is_file() or _file_hash(evidence_path) != evidence_ref["sha256"]:
+        raise InputError("deterministic evidence is missing or stale")
+    evidence = _read_json(str(evidence_path))
+    policy_path = repository_root / ".agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json"
+    if not policy_path.is_file():
+        raise InputError("repository-owned semantic trigger policy is missing")
+    policy = _read_json(str(policy_path))
+    return decide_review_requirement({
+        "candidateIdentity": candidate_identity,
+        "deterministicEvidence": evidence,
+        "policy": policy,
+        "maintainerIntent": request["maintainer_intent"],
+    })
+
+
 def decide_bootstrap_command(request_path: str, output_path: str) -> dict:
-    request = _read_json(request_path)
-    decision = request
-    if isinstance(request, dict) and isinstance(request.get("reviewInputs"), dict):
-        decision = decide_review_requirement(request["reviewInputs"])
-    if not isinstance(decision, dict) or decision.get("requirement") not in {"required", "not_required"} or not isinstance(decision.get("requirementSources"), list) or not decision["requirementSources"]:
-        raise InputError("bootstrap requirement decision is invalid")
-    if decision.get("authorizes", []) != []:
-        raise InputError("bootstrap requirement decision cannot authorize")
+    decision = _derive_current_bootstrap_decision(_read_json(request_path))
     return _publish_new_json(output_path, decision)
 
 
 def prepare_bootstrap_command(request_path: str, output_path: str) -> dict:
     request = _read_json(request_path)
-    base_fields = {"decision", "binding", "launch_authorization"}
+    base_fields = {"decision", "decision_request", "binding", "launch_authorization"}
     optional_fields = {
         "repository_root", "scope_inputs", "lineage_state", "repair_completeness",
         "repair_completeness_request",
@@ -561,7 +629,12 @@ def prepare_bootstrap_command(request_path: str, output_path: str) -> dict:
         or set(request) - (base_fields | optional_fields)
     ):
         raise InputError("bootstrap preparation request fields are invalid")
-    required = request["decision"].get("requirement") == "required"
+    decision = _validate_current_review_decision(request["decision"])
+    if _derive_current_bootstrap_decision(request["decision_request"]) != decision:
+        raise InputError("current decision provenance does not replay")
+    if decision["decisionStatus"] == "blocked":
+        raise InputError("deterministic Acceptance facts are blocked")
+    required = decision.get("requirement") == "required"
     if required and (
         "scope_inputs" not in request
         or not isinstance(request.get("repository_root"), str)
@@ -570,6 +643,10 @@ def prepare_bootstrap_command(request_path: str, output_path: str) -> dict:
         raise InputError(
             "required bootstrap preparation needs repository root and minimal review scope inputs"
         )
+    if isinstance(request.get("repository_root"), str) and request["repository_root"].strip():
+        policy_path = Path(request["repository_root"]).resolve() / ".agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json"
+        if not policy_path.is_file() or decision.get("policyHash") != canonical_hash(_read_json(str(policy_path))):
+            raise InputError("current decision policy provenance is stale")
     try:
         review_scope = (
             build_minimal_review_scope(request["scope_inputs"])
