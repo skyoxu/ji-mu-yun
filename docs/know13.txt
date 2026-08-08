@@ -1,0 +1,206 @@
+不过还有一个日常使用层面的缺口
+
+这不是这次 Round 3 修复失败，而是下一阶段值得处理的问题：
+
+当前 policy 对“普通 production code”的覆盖还比较窄。
+
+例如：
+
+PhaseA.Platform/Foo.cs
+
+如果它既不是：
+
+Security
+Data
+Runs
+Browser
+Workflow
+runtime
+shared entrypoint
+
+又不在：
+
+knownLowRiskPrefixes
+
+那么现在会：
+
+risk_classification_unknown
+→ blocked
+
+而不是：
+
+not_required
+→ deterministic_only
+
+当前 review_requirement.py 确实明确把 unknown path 作为 blocked。这个策略安全上完全正确，比猜成 low-risk 好很多。
+
+但它意味着：
+
+现在 Acceptance 已经真正拥有自主权了，但它对普通业务代码的“自主判断能力”还比较保守。
+
+所以未来真实使用中可能出现：
+
+普通代码
+↓
+Acceptance
+↓
+risk_classification_unknown
+↓
+blocked
+
+次数偏多。
+
+这个问题我不建议继续塞进 BROH。
+
+BROH 已经扩张很多次了，而且现在 Quick Dev 又正在实际重跑 S0–S7。
+
+更健康的处理方式是以后根据真实 blocked telemetry，再单独优化：
+
+Acceptance semantic risk taxonomy
+
+逐步建立 repository-owned：
+
+ordinary implementation classes
+
+让明确的普通代码能够：
+
+deterministic evidence complete
++
+ordinary implementation classification
++
+no hard trigger
+↓
+not_required
+
+而不是简单把 PhaseA.Platform/** 全部设 low-risk。
+
+有一个很小的测试清洁项，不是 blocker
+
+test_review_requirement.py 顶部自己定义的本地 POLICY fixture 里目前仍然把：
+
+AGENTS.md
+
+放在 knownLowRiskPrefixes 中。
+
+但真正的 authority test 会读取 repository 真实 policy，所以生产行为和关键测试都是正确的。
+
+我把这个归类为：
+
+test fixture drift / cleanup
+
+不是架构问题，也不值得因此再开启 repair round。
+
+以后顺手让测试统一从真实 policy fixture 派生即可。
+
+现在最重要的是不要再改设计
+
+这一点我反而比较明确。
+
+最新提交已经开始真正实施：
+
+BROH-S0
+prepare --dry-run
+closureBindings
+acceptedScopesByClass
+
+也就是说现在应该进入：
+
+S0
+↓
+S1
+↓
+S2
+↓
+S3
+↓
+S4
+↓
+S5
+↓
+S6
+↓
+S7
+↓
+validate_implementation
+
+而不是再因为我发现一个小优化点重新修改 VDD / Acceptance architecture。
+
+我建议当前停止设计迭代
+
+除非 Quick Dev / terminal validator 真正暴露新的 P0/P1 contract bug。
+
+否则现在就：
+
+按现有 contract 把 BROH 实施完。
+
+等 BROH implementation-complete 后，再做第一次真正的 Acceptance 自测
+
+这是下一步最有价值的事情。
+
+BROH 本身刚好是：
+
+.agents/skills/**
+
+control-plane change。
+
+所以它应该成为新自主决策系统的第一个真实 dogfood target：
+
+BROH implementation-complete
+↓
+Acceptance deterministic checks
+↓
+真实 candidate identity
+↓
+workflow_control_plane_changed
+↓
+required
+↓
+profile = bootstrap-skill-route
+↓
+skill-route scope
+↓
+Bootstrap Round 1
+
+然后正常情况下：
+
+3 reviewers concurrent
+↓
+clean
+↓
+STOP
+↓
+Acceptance finalize
+
+如果有 P0/P1：
+
+repair
+↓
+focused verifier
+↓
+STOP
+
+而不是再自动 Full Round 2。
+
+如果这一条真实链路完整走通，我就会认为：
+
+Acceptance 自主 Bootstrap 决策 + Bootstrap 条件式 Semantic Review 这套架构可以正式封板。
+
+当前最终状态
+项目	判断
+Acceptance owns Bootstrap requirement	✅
+caller decision injection	✅ 已封死
+repo-relative candidate identity	✅
+real producer→decision composition	✅
+authority path classification	✅
+typed risk policy	✅ 初版
+profile → scope → binding	✅
+execution-plan metadata 默认不触发 Review	✅
+unknown risk fail closed	✅
+knowledge freshness	✅
+Quick Dev current implementation	🔄 正在重新执行
+current implementation-complete	❌ 尚未
+Acceptance real dogfood run	⏳ implementation-complete 后
+Bootstrap real Round 1	⏳ Acceptance 决定后
+GitHub 外部 CI status	当前没有可见 status
+
+所以这次我不建议你再做 Round 4 设计修复。继续把 S0–S7 跑完即可。 等它真正进入 implementation-complete，再让 Acceptance 自己决定是否启动 Bootstrap；那次运行本身就是这套新架构最重要的最终验收。
