@@ -46,6 +46,20 @@ _REVIEW_SCOPE_INPUTS = {
     "repository_rules": "repository-rules",
     "referenced_standards": "referenced-standards",
 }
+_SKILL_ROUTE_SCOPE_INPUTS = {
+    "skill_source": "skill-source",
+    "operator_guide": "operator-guide",
+    "route_or_cli": "route-or-cli",
+    "profiles_and_config": "profiles-and-config",
+    "schemas": "schemas",
+    "tests": "tests",
+    "usage_evidence": "usage-evidence",
+    "repository_rules": "repository-rules",
+}
+_SCOPE_INPUTS_BY_PROFILE = {
+    "bootstrap-implementation-conformance": _REVIEW_SCOPE_INPUTS,
+    "bootstrap-skill-route": _SKILL_ROUTE_SCOPE_INPUTS,
+}
 
 
 def _canonical_hash(value: Any) -> str:
@@ -166,19 +180,32 @@ def _normalize_review_paths(values: Any, label: str) -> list[str]:
     return sorted(normalized)
 
 
-def build_minimal_review_scope(scope_inputs: Any) -> dict[str, Any]:
-    """Build the exact Bootstrap implementation-conformance closure."""
-    if not isinstance(scope_inputs, dict) or set(scope_inputs) != set(_REVIEW_SCOPE_INPUTS):
+def build_minimal_review_scope(
+    scope_inputs: Any,
+    *,
+    profile: str = "bootstrap-implementation-conformance",
+    lineage_paths: Any = None,
+) -> dict[str, Any]:
+    """Build the exact closure required by the selected Bootstrap profile."""
+    input_contract = _SCOPE_INPUTS_BY_PROFILE.get(profile)
+    if input_contract is None:
+        raise BootstrapBindingError("bootstrap review scope profile is unsupported")
+    if not isinstance(scope_inputs, dict) or set(scope_inputs) != set(input_contract):
         raise BootstrapBindingError("bootstrap review scope inputs are incomplete")
     context_classes = {
         context_class: _normalize_review_paths(scope_inputs[source], context_class)
-        for source, context_class in _REVIEW_SCOPE_INPUTS.items()
+        for source, context_class in input_contract.items()
     }
-    lineage = derive_acceptance_lineage(context_classes["implementation-plan"])
+    lineage_source = (
+        context_classes["implementation-plan"]
+        if profile == "bootstrap-implementation-conformance"
+        else _normalize_review_paths(lineage_paths, "skill-route lineage")
+    )
+    lineage = derive_acceptance_lineage(lineage_source)
     scope = sorted({path for paths in context_classes.values() for path in paths})
     closure = {
         "schemaVersion": "implementation-acceptance-bootstrap-scope.v1",
-        "profile": "bootstrap-implementation-conformance",
+        "profile": profile,
         "strategy": "minimal-complete-closure",
         "scope": scope,
         "contextClasses": context_classes,
@@ -227,7 +254,7 @@ def _validate_minimal_review_scope(value: Any) -> None:
         not isinstance(value, dict)
         or set(value) != required
         or value.get("schemaVersion") != "implementation-acceptance-bootstrap-scope.v1"
-        or value.get("profile") != "bootstrap-implementation-conformance"
+        or value.get("profile") not in _SCOPE_INPUTS_BY_PROFILE
         or value.get("strategy") != "minimal-complete-closure"
         or value.get("directoryScopeAttestation") is not None
         or value.get("authorizes") != []
@@ -236,7 +263,11 @@ def _validate_minimal_review_scope(value: Any) -> None:
     ):
         raise BootstrapBindingError("bootstrap review scope is invalid")
     context = value.get("contextClasses")
-    if not isinstance(context, dict) or set(context) != set(_REVIEW_SCOPE_INPUTS.values()):
+    profile = value.get("profile")
+    input_contract = _SCOPE_INPUTS_BY_PROFILE.get(profile)
+    if input_contract is None:
+        raise BootstrapBindingError("bootstrap review scope profile is unsupported")
+    if not isinstance(context, dict) or set(context) != set(input_contract.values()):
         raise BootstrapBindingError("bootstrap review context classes are invalid")
     normalized_context: dict[str, list[str]] = {}
     for context_class, paths in context.items():
@@ -247,7 +278,12 @@ def _validate_minimal_review_scope(value: Any) -> None:
     expected_scope = sorted({path for paths in normalized_context.values() for path in paths})
     if value.get("scope") != expected_scope:
         raise BootstrapBindingError("bootstrap review scope does not match its context classes")
-    lineage = derive_acceptance_lineage(normalized_context["implementation-plan"])
+    lineage_source = (
+        normalized_context["implementation-plan"]
+        if profile == "bootstrap-implementation-conformance"
+        else [value.get("lineageAnchor")]
+    )
+    lineage = derive_acceptance_lineage(lineage_source)
     if any(value.get(key) != expected for key, expected in lineage.items()):
         raise BootstrapBindingError("bootstrap review scope lineage is invalid")
 
@@ -414,6 +450,11 @@ def project_bounded_review_route(
     if not isinstance(scope, dict):
         raise BootstrapBindingError("required Bootstrap route needs a review scope")
     _validate_minimal_review_scope(scope)
+    if (
+        decision.get("decisionStatus") == "ready"
+        and decision.get("profile") != scope.get("profile")
+    ):
+        raise BootstrapBindingError("decision and review scope profile do not match")
     family_id = scope.get("lineageFamilyId")
     anchor = scope.get("lineageAnchor")
     if not isinstance(family_id, str) or _LINEAGE_ID.fullmatch(family_id) is None:
@@ -530,6 +571,14 @@ def bind_capabilities(decision: Any, profile: Any) -> dict[str, Any]:
         return {"schemaVersion": "bootstrap-capability-binding.v1", "status": "not_applicable", "requiredCompanionCapabilities": [], "authorizes": []}
     if len(expected) != 1 or not isinstance(profile.get("companionCapabilities"), list):
         raise BootstrapBindingError("required companion capability is missing")
+    selected_review_profile = profile.get("reviewProfile")
+    if not isinstance(selected_review_profile, str) or not selected_review_profile.startswith(
+        "review-policy://"
+    ):
+        raise BootstrapBindingError("Bootstrap profile identity is invalid")
+    selected_profile = selected_review_profile.removeprefix("review-policy://").removesuffix("/v1")
+    if decision.get("profile") is not None and decision.get("profile") != selected_profile:
+        raise BootstrapBindingError("decision and Bootstrap profile identity do not match")
     wanted = expected[0]
     matches = [item for item in profile["companionCapabilities"] if isinstance(item, dict) and all(item.get(key) == wanted.get(key) for key in ("capabilityId", "capabilityVersion", "producerRole"))]
     if len(matches) != 1:

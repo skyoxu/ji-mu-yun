@@ -79,3 +79,10 @@ Validation evidence for this repair: `validate_plan.py` PASS; plan-local tests `
 - Targeted validation: current Acceptance test suite `251/251` passed; current requirement, schema, package, and Bootstrap integration tests passed. `validate_plan.py` passes and `git diff --check` reports no whitespace errors.
 - Plan-local regression: `47/47` passed, including the isolated projection fixture.
 - Terminal gap: Quick Dev parent routing succeeds, but `loop_plan_directory.py` stops before slice execution with `KWI-QUICK-FROZEN-CONTEXT-STALE` because the repository knowledge catalog snapshot predates the current main. No new implementation-complete lifecycle state is published and the existing plan state remains unchanged until knowledge freshness is repaired and terminal validation is rerun.
+
+## Round 2 Implementation Repair
+
+- Profile closure: `bootstrap-implementation-conformance` and `bootstrap-skill-route` now have distinct scope context contracts. Acceptance derives the skill-route lineage from the repository-bound prepared input, and current route/binding checks reject decision/profile drift.
+- Trigger closure: `execution-plans/` and `decision-logs/` are explicit known-low-risk metadata roots. Typed repository risk classes cover public API, database, runtime/deployment, and shared execution boundaries; an implementation path outside every repository-owned class blocks instead of becoming `not_required`.
+- Lifecycle closure: resume continuity now names `KWI-QUICK-FROZEN-CONTEXT-STALE`; `implementation-authorized` and pending slices remain unchanged because the lifecycle contract has no blocked implementation state and no current terminal predicate has passed.
+- Validation: Acceptance `256/256` passed; Bootstrap skill-route `2/2` passed; `validate_plan.py` passed; modified Acceptance sources compile; `git diff --check` reports no whitespace errors. No Bootstrap run or implementation-complete authority was created.

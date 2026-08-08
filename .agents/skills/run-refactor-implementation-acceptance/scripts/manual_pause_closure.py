@@ -138,7 +138,14 @@ def _replay_manual_pause_route(
     if request.get("decision", {}).get("requirement") != "required":
         raise InputError("manual-pause route requirement decision is invalid")
     try:
-        scope = build_minimal_review_scope(request["scope_inputs"])
+        decision_profile = request["decision"].get(
+            "profile", "bootstrap-implementation-conformance"
+        )
+        scope = build_minimal_review_scope(
+            request["scope_inputs"],
+            profile=decision_profile,
+            lineage_paths=[target] if decision_profile == "bootstrap-skill-route" else None,
+        )
         if scope.get("lineageAnchor") != target or scope.get("lineageFamilyId") != family:
             raise InputError("manual-pause route target lineage is invalid")
         if request.get("lineage_state") != lineage:

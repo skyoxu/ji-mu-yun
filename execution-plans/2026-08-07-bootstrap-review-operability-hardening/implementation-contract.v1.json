@@ -523,6 +523,7 @@
       "source_refs": [
         ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
         ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
         ".agents/skills/run-phase-bootstrap-review/SKILL.md"
       ],
       "depends_on": [
@@ -532,7 +533,8 @@
       "allowed_changes": {
         "production": [
           ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
-          ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py"
         ],
         "tests": [
           ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
@@ -546,6 +548,7 @@
       "execution_snapshot_paths": [
         ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
         ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
         ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
         ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_reentry_decline.py",
         ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
@@ -562,6 +565,7 @@
       ],
       "execution_read_set": [
         ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
         ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
         ".agents/skills/run-phase-bootstrap-review/SKILL.md",
         "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",

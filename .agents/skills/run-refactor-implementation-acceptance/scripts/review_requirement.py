@@ -13,8 +13,19 @@ IMPLEMENTATION_PROFILE = "bootstrap-implementation-conformance"
 TRIGGERS = {
     "workflow_control_plane_changed",
     "protected_high_risk_boundary_changed",
+    "public_api_contract_changed",
+    "database_schema_or_migration_changed",
+    "runtime_or_deployment_boundary_changed",
+    "shared_execution_entrypoint_changed",
     "explicit_maintainer_review_request",
     "deterministic_evidence_incomplete",
+    "risk_classification_unknown",
+}
+TYPED_PATH_TRIGGERS = {
+    "public_api_contract_changed",
+    "database_schema_or_migration_changed",
+    "runtime_or_deployment_boundary_changed",
+    "shared_execution_entrypoint_changed",
 }
 COMPANION_EXPECTATIONS = [{
     "capabilityId": "acceptance-inventory-attestation",
@@ -43,9 +54,20 @@ def _require_repository_bound_inputs(inputs: dict[str, Any]) -> tuple[dict[str, 
         raise ValueError("repository-owned trigger policy is invalid")
     if set(policy.get("hardTriggers", [])) != TRIGGERS:
         raise ValueError("repository-owned trigger policy enum is invalid")
-    for key in ("workflowControlPlanePrefixes", "protectedHighRiskPrefixes"):
+    for key in ("workflowControlPlanePrefixes", "protectedHighRiskPrefixes", "knownLowRiskPrefixes"):
         if not isinstance(policy.get(key), list) or any(not isinstance(item, str) or not item for item in policy[key]):
             raise ValueError("repository-owned trigger policy prefixes are invalid")
+    typed = policy.get("typedRiskPrefixes")
+    if (
+        not isinstance(typed, dict)
+        or set(typed) != TYPED_PATH_TRIGGERS
+        or any(
+            not isinstance(prefixes, list)
+            or any(not isinstance(item, str) or not item for item in prefixes)
+            for prefixes in typed.values()
+        )
+    ):
+        raise ValueError("repository-owned typed risk policy is invalid")
     return candidate, evidence, policy
 
 
@@ -53,12 +75,32 @@ def _prefix_match(path: str, prefixes: list[Any]) -> bool:
     return any(isinstance(prefix, str) and prefix and (path == prefix or path.startswith(prefix)) for prefix in prefixes)
 
 
+def _classify_changed_paths(paths: list[str], policy: dict[str, Any]) -> tuple[dict[str, list[str]], list[str]]:
+    hits = {trigger: [] for trigger in ("workflow_control_plane_changed", "protected_high_risk_boundary_changed", *sorted(TYPED_PATH_TRIGGERS))}
+    unknown: list[str] = []
+    for path in paths:
+        matched = False
+        if _prefix_match(path, policy["workflowControlPlanePrefixes"]):
+            hits["workflow_control_plane_changed"].append(path)
+            matched = True
+        if _prefix_match(path, policy["protectedHighRiskPrefixes"]):
+            hits["protected_high_risk_boundary_changed"].append(path)
+            matched = True
+        for trigger in sorted(TYPED_PATH_TRIGGERS):
+            if _prefix_match(path, policy["typedRiskPrefixes"][trigger]):
+                hits[trigger].append(path)
+                matched = True
+        if not matched and not _prefix_match(path, policy["knownLowRiskPrefixes"]):
+            unknown.append(path)
+    return hits, unknown
+
+
 def decide_review_requirement(inputs: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(inputs, dict):
         raise ValueError("review requirement inputs must be an object")
     candidate, evidence, policy = _require_repository_bound_inputs(inputs)
-    workflow_change = any(_prefix_match(path, policy["workflowControlPlanePrefixes"]) for path in candidate["changedPaths"])
-    high_risk = any(_prefix_match(path, policy["protectedHighRiskPrefixes"]) for path in candidate["changedPaths"])
+    path_hits, unknown_paths = _classify_changed_paths(candidate["changedPaths"], policy)
+    workflow_change = bool(path_hits["workflow_control_plane_changed"])
     intent = inputs.get("maintainerIntent", "default")
     if intent not in {"default", "request"}:
         raise ValueError("maintainerIntent is invalid")
@@ -68,11 +110,16 @@ def decide_review_requirement(inputs: dict[str, Any]) -> dict[str, Any]:
     if evidence_status != "passed":
         reason_codes.append("deterministic_evidence_incomplete")
         sources.append("deterministicEvidence.status")
-    if workflow_change:
-        reason_codes.append("workflow_control_plane_changed")
-        sources.append("candidateIdentity.changedPaths")
-    if high_risk:
-        reason_codes.append("protected_high_risk_boundary_changed")
+    for trigger in (
+        "workflow_control_plane_changed",
+        "protected_high_risk_boundary_changed",
+        *sorted(TYPED_PATH_TRIGGERS),
+    ):
+        if path_hits[trigger]:
+            reason_codes.append(trigger)
+            sources.append("candidateIdentity.changedPaths")
+    if unknown_paths:
+        reason_codes.append("risk_classification_unknown")
         sources.append("candidateIdentity.changedPaths")
     if intent == "request":
         reason_codes.append("explicit_maintainer_review_request")
@@ -81,7 +128,7 @@ def decide_review_requirement(inputs: dict[str, Any]) -> dict[str, Any]:
         reason_codes.append("deterministic_low_risk")
         sources.append("candidateIdentity.changedPaths")
 
-    blocked = evidence_status != "passed"
+    blocked = evidence_status != "passed" or bool(unknown_paths)
     requirement = None if blocked else ("required" if reason_codes != ["deterministic_low_risk"] else "not_required")
     profile = None if blocked or requirement == "not_required" else (WORKFLOW_PROFILE if workflow_change else IMPLEMENTATION_PROFILE)
     document: dict[str, Any] = {

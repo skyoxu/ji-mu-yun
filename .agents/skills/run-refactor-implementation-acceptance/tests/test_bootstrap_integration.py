@@ -21,7 +21,7 @@ class BootstrapIntegrationTests(unittest.TestCase):
 
         return decide_review_requirement({
             "candidateIdentity": {
-                "changedPaths": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
+                "changedPaths": ["runtime/phase-a/ensure-phasea.ps1"],
                 "knowledgeArtifacts": [],
             },
             "deterministicEvidence": {"status": "passed", "hash": "sha256:" + "a" * 64},
@@ -230,6 +230,18 @@ class BootstrapIntegrationTests(unittest.TestCase):
             ],
             "repository_rules": ["AGENTS.md"],
             "referenced_standards": ["docs/standards/phase-service.md"],
+        }
+
+    def skill_scope_inputs(self) -> dict[str, list[str]]:
+        return {
+            "skill_source": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
+            "operator_guide": ["docs/09-bootstrap-review-operator-guide.md"],
+            "route_or_cli": [".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"],
+            "profiles_and_config": [".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json"],
+            "schemas": [".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-input.v1.schema.json"],
+            "tests": [".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"],
+            "usage_evidence": ["logs/ci/example/bootstrap-self-audit.json"],
+            "repository_rules": ["AGENTS.md"],
         }
 
     def review_scope(self) -> dict:
@@ -1399,6 +1411,124 @@ class BootstrapIntegrationTests(unittest.TestCase):
         self.assertIsNone(result["directoryScopeAttestation"])
         self.assertEqual("execution-plans/example", result["lineageAnchor"])
         self.assertTrue(result["lineageFamilyId"].startswith("ria-"))
+
+    def test_skill_route_scope_binding_and_route_share_the_decision_profile(self) -> None:
+        import bootstrap_integration
+        from review_requirement import decide_review_requirement
+
+        policy = json.loads(
+            (SKILL_ROOT / "policies" / "semantic-review-trigger-policy.v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        decision = decide_review_requirement({
+            "candidateIdentity": {
+                "changedPaths": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
+                "knowledgeArtifacts": [],
+            },
+            "deterministicEvidence": {"status": "passed"},
+            "policy": policy,
+        })
+        scope = bootstrap_integration.build_minimal_review_scope(
+            self.skill_scope_inputs(),
+            profile="bootstrap-skill-route",
+            lineage_paths=["execution-plans/example/acceptance-run.json"],
+        )
+        self.assertEqual("bootstrap-skill-route", scope["profile"])
+        route = bootstrap_integration.project_bounded_review_route(
+            decision, scope, self.lineage_state(scope["lineageFamilyId"], 0), None
+        )
+        self.assertEqual("bootstrap-skill-route", scope["profile"])
+        profile = {
+            "controlPlaneRevision": "bootstrap-control-plane.v2",
+            "routeVersion": "bootstrap-review-route.v2",
+            "reviewProfile": "review-policy://bootstrap-skill-route/v1",
+            "policyRevision": "sha256:" + "a" * 64,
+            "companionCapabilities": [{
+                "capabilityId": "acceptance-inventory-attestation",
+                "capabilityVersion": "1.0",
+                "producerRole": "acceptance_auditor",
+                "schemaPath": "schema.json",
+                "schemaHash": "sha256:" + "b" * 64,
+            }],
+        }
+        binding = bootstrap_integration.bind_capabilities(decision, profile)
+        self.assertEqual("review-policy://bootstrap-skill-route/v1", binding["reviewProfile"])
+        self.assertEqual("full_implementation_conformance", route["routeKind"])
+        with self.assertRaisesRegex(bootstrap_integration.BootstrapBindingError, "profile"):
+            bootstrap_integration.bind_capabilities(
+                decision,
+                {**profile, "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1"},
+            )
+
+    def test_unclassified_changed_path_blocks_review_requirement(self) -> None:
+        from review_requirement import decide_review_requirement
+
+        policy = json.loads(
+            (SKILL_ROOT / "policies" / "semantic-review-trigger-policy.v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        decision = decide_review_requirement({
+            "candidateIdentity": {
+                "changedPaths": ["PhaseA.Platform/UnclassifiedContract.cs"],
+                "knowledgeArtifacts": [],
+            },
+            "deterministicEvidence": {"status": "passed"},
+            "policy": policy,
+        })
+        self.assertEqual("blocked", decision["decisionStatus"])
+        self.assertIsNone(decision["requirement"])
+
+    def test_prepare_bootstrap_projects_the_decision_profile_into_scope(self) -> None:
+        import acceptance_cli
+        from review_requirement import decide_review_requirement
+
+        policy = json.loads(
+            (SKILL_ROOT / "policies" / "semantic-review-trigger-policy.v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        decision = decide_review_requirement({
+            "candidateIdentity": {
+                "changedPaths": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
+                "knowledgeArtifacts": [],
+            },
+            "deterministicEvidence": {"status": "passed"},
+            "policy": policy,
+        })
+        scope = acceptance_cli.build_minimal_review_scope(
+            self.skill_scope_inputs(),
+            profile="bootstrap-skill-route",
+            lineage_paths=["execution-plans/example/prepared.json"],
+        )
+        request = {
+            "repository_root": ".",
+            "decision": decision,
+            "decision_request": {
+                "repository_root": ".",
+                "prepared_run_input": "execution-plans/example/prepared.json",
+                "deterministic_evidence": {"path": "evidence.json", "sha256": "sha256:" + "a" * 64},
+                "maintainer_intent": "default",
+            },
+            "binding": None,
+            "launch_authorization": None,
+            "scope_inputs": self.skill_scope_inputs(),
+            "lineage_state": self.lineage_state(scope["lineageFamilyId"], 0),
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "request.json"
+            path.write_text(json.dumps(request), encoding="utf-8")
+            with mock.patch.object(
+                acceptance_cli, "_derive_current_bootstrap_decision", return_value=decision
+            ), mock.patch.object(
+                acceptance_cli, "load_current_lineage_state", return_value=request["lineage_state"]
+            ):
+                route = acceptance_cli.prepare_bootstrap_command(
+                    str(path), str(root / "route.json")
+                )
+        self.assertEqual("bootstrap-skill-route", route["reviewScope"]["profile"])
 
     def test_lineage_family_is_stable_across_successor_files_in_one_plan(self) -> None:
         import bootstrap_integration

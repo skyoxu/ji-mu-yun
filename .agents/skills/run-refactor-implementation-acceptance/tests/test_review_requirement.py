@@ -13,13 +13,25 @@ from review_requirement import decide_review_requirement
 
 POLICY = {
     "schemaVersion": "acceptance-semantic-review-trigger-policy.v1",
-    "workflowControlPlanePrefixes": [".agents/skills/", "execution-plans/"],
+    "workflowControlPlanePrefixes": [".agents/skills/", "scripts/sc/"],
     "protectedHighRiskPrefixes": ["runtime/phase-a/"],
+    "typedRiskPrefixes": {
+        "public_api_contract_changed": ["PhaseA.Platform/Program.cs"],
+        "database_schema_or_migration_changed": ["PhaseA.Platform/Data/"],
+        "runtime_or_deployment_boundary_changed": ["runtime/phase-a/"],
+        "shared_execution_entrypoint_changed": ["scripts/sc/_llm_backend.py"],
+    },
+    "knownLowRiskPrefixes": ["docs/", "execution-plans/", "decision-logs/", "README.md", "AGENTS.md"],
     "hardTriggers": [
         "workflow_control_plane_changed",
         "protected_high_risk_boundary_changed",
+        "public_api_contract_changed",
+        "database_schema_or_migration_changed",
+        "runtime_or_deployment_boundary_changed",
+        "shared_execution_entrypoint_changed",
         "explicit_maintainer_review_request",
         "deterministic_evidence_incomplete",
+        "risk_classification_unknown",
     ],
     "authorizes": [],
 }
@@ -47,6 +59,8 @@ class ReviewRequirementTests(unittest.TestCase):
                 "schemaVersion": "acceptance-semantic-review-trigger-policy.v1",
                 "workflowControlPlanePrefixes": [".agents/skills/"],
                 "protectedHighRiskPrefixes": ["runtime/phase-a/"],
+                "typedRiskPrefixes": POLICY["typedRiskPrefixes"],
+                "knownLowRiskPrefixes": POLICY["knownLowRiskPrefixes"],
                 "hardTriggers": list(POLICY["hardTriggers"]),
                 "authorizes": [],
             }), encoding="utf-8")
@@ -130,6 +144,31 @@ class ReviewRequirementTests(unittest.TestCase):
         })
         self.assertEqual("required", decision["requirement"])
         self.assertEqual("bootstrap-skill-route", decision["profile"])
+
+    def test_execution_plan_metadata_is_known_low_risk(self) -> None:
+        decision = decide_review_requirement({
+            "candidateIdentity": {
+                "changedPaths": ["execution-plans/example/95-report.md"],
+                "knowledgeArtifacts": [],
+            },
+            "deterministicEvidence": {"status": "passed"},
+            "policy": POLICY,
+        })
+        self.assertEqual("ready", decision["decisionStatus"])
+        self.assertEqual("not_required", decision["requirement"])
+
+    def test_typed_public_api_boundary_requires_implementation_conformance(self) -> None:
+        decision = decide_review_requirement({
+            "candidateIdentity": {
+                "changedPaths": ["PhaseA.Platform/Program.cs"],
+                "knowledgeArtifacts": [],
+            },
+            "deterministicEvidence": {"status": "passed"},
+            "policy": POLICY,
+        })
+        self.assertEqual("required", decision["requirement"])
+        self.assertEqual("bootstrap-implementation-conformance", decision["profile"])
+        self.assertIn("public_api_contract_changed", decision["reasonCodes"])
 
     def test_broh_s4_acceptance_owns_review_requirement(self) -> None:
         required = decide_review_requirement({

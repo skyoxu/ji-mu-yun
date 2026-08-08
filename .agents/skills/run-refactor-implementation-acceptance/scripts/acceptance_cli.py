@@ -649,7 +649,15 @@ def prepare_bootstrap_command(request_path: str, output_path: str) -> dict:
             raise InputError("current decision policy provenance is stale")
     try:
         review_scope = (
-            build_minimal_review_scope(request["scope_inputs"])
+            build_minimal_review_scope(
+                request["scope_inputs"],
+                profile=decision["profile"],
+                lineage_paths=(
+                    [request["decision_request"]["prepared_run_input"]]
+                    if decision["profile"] == "bootstrap-skill-route"
+                    else None
+                ),
+            )
             if required
             else None
         )
