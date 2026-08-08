@@ -1,0 +1,24 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:41a64c99ce4f27279ac89df9d347327a277e64134df1817be58ff15867978f95",
+  "canonical_context_sha256": "sha256:5e2ca4bd4b456d85717fd38846ca4629f120ed5f894e80ccc211dab224b95381",
+  "request_sha256": "sha256:30edb65cb2d0d6c7eb21400f4df8e553683a467ed7e54deadcc937b4981677e9",
+  "result_sha256": "sha256:54e6218ff1fb3b9816952cf8d6faff63737347ce16dab04634eac38733d2ed04",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "23192841936e26fbb0e541aa0785cd2765ba5419"
+  },
+  "source_snapshot_id": "sha256:fa9a87b8c4518b75a8139999c34e440e35695bea8ba4d64db90826eebc424810",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "source_sha256": "26bf8bf7cc09f3a35f40271175de0651c2e4c3fe5f8ab21a5f34ebf84bfe56ef",
+      "satisfies": [
+        "governance.vdd-execution-plan"
+      ]
+    }
+  ],
+  "authorizes": []
+}

@@ -462,6 +462,19 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertFalse(diagnostic["runCreated"])
         self.assertEqual(diagnostic["closureBindingVersion"], "v12")
         self.assertEqual(diagnostic["authorizes"], [])
+        self.assertEqual(
+            diagnostic["closureBindings"],
+            {
+                "candidateHash": diagnostic["candidateHash"],
+                "candidateBindingHash": diagnostic["candidateBindingHash"],
+                "sourceHash": diagnostic["sourceHash"],
+                "validatorHash": diagnostic["validatorHash"],
+                "gitIndexHash": diagnostic["gitIndexHash"],
+                "writeSetHash": diagnostic["writeSetHash"],
+                "executionReadSetHash": diagnostic["executionReadSetHash"],
+                "dependencyClosureHash": diagnostic["dependencyClosureHash"],
+            },
+        )
         for field in (
             "candidateHash",
             "candidateBindingHash",
@@ -516,6 +529,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(
             sorted(diagnostic["contextDiagnostics"]["classes"]),
             sorted(profile_contract["requiredContextClasses"]),
+        )
+        self.assertEqual(
+            diagnostic["contextDiagnostics"]["acceptedScopesByClass"],
+            diagnostic["contextDiagnostics"]["artifacts"],
         )
         self.assertEqual(diagnostic["plannedNewFiles"], ["planned/new-output.json"])
         self.assertEqual(diagnostic["plannedNewFilesHashVersion"], "v8")

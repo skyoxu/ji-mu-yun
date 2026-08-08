@@ -117,6 +117,15 @@ multiple families.
 
 ## Prepare
 
+`prepare --dry-run` is a non-authorizing binding preview. Its
+`closureBindings` object mirrors the individual candidate, source, validator,
+Git, write-set, execution-read-set, and dependency-closure hashes in the
+diagnostic output. The preview must report `authorizes: []` and must not create
+a run directory; mismatched scope or context inputs remain field-level
+diagnostics and fail closed before any model launch. Context diagnostics also
+expose `acceptedScopesByClass` so each required class can be traced to the
+prepared artifacts that satisfy it.
+
 Create a new run with stable `reviewId`, `changeId`, `lineageFamilyId`, round, profile, scopes, context classes, execution mode, and exclusivity attestation. Derive the family from the original acceptance target and retain it for every in-place repair or successor that still evaluates that target. New runs require `--lineage-family-id`.
 
 Declare:

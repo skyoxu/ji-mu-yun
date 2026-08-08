@@ -94,3 +94,10 @@ Validation evidence for this repair: `validate_plan.py` PASS; plan-local tests `
 - Authority policy closure: `AGENTS.md`, `docs/adr/**`, and `docs/standards/**` now classify through the existing protected-high-risk trigger before the general documentation low-risk fallback. Ordinary documentation and execution-plan metadata remain deterministic low risk.
 - Validation: targeted RED observed the prefixed-path regression; Acceptance `258/258` passed, plan-local tests `47/47` passed, `validate_all.py` passed, modified Acceptance sources compile, and `git diff --check` reports no whitespace errors. No Bootstrap run or implementation-complete authority was created.
 - Terminal gap: the only remaining blocker is `KWI-QUICK-FROZEN-CONTEXT-STALE`; refresh the VDD knowledge catalog/context and rerun the Quick Dev terminal predicate before any implementation-complete publication.
+
+## 2026-08-08 Knowledge Freshness Recovery
+
+- VDD knowledge publication completed under maintainer authorization. The refreshed `knowledge-context.v1.json` and freeze receipt bind the current repository main and pass `vdd_knowledge_preflight.py` with status `ready`.
+- Quick Dev routing now resolves to `run-slice` for `BROH-S0`; the previous `KWI-QUICK-FROZEN-CONTEXT-STALE` blocker is closed.
+- `validate_implementation.py` was rerun and remains correctly fail-closed: current evidence is missing for `BROH-S0` through `BROH-S6`, while `BROH-S7` has invalid recovery/stage bindings. No implementation-complete lifecycle state, Bootstrap run, or Acceptance authority was created.
+- Next action is the declared single-maintainer Quick Dev TDD bridge in dependency order, beginning with `BROH-S0`, followed by terminal validation.
