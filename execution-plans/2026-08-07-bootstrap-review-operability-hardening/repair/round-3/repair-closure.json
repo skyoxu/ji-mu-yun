@@ -1,0 +1,23 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.repair-closure.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "round": 3,
+  "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+  "status": "blocked",
+  "finding_ids": ["BROH-R3-01", "BROH-R3-02", "BROH-R3-03"],
+  "slice_results": [
+    {
+      "id": "BROH-R3-01",
+      "status": "passed",
+      "evidence": [
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py"
+      ]
+    }
+  ],
+  "blocking_conditions": [
+    "KWI-QUICK-FROZEN-CONTEXT-STALE: refresh the VDD knowledge catalog and rerun Quick Dev terminal validation before publishing implementation-complete."
+  ],
+  "authorizes": []
+}

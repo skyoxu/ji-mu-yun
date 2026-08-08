@@ -81,6 +81,56 @@ class ReviewRequirementTests(unittest.TestCase):
                 decision = acceptance_cli.decide_bootstrap_command(str(request), str(root / "out.json"))
             self.assertEqual("bootstrap-skill-route", decision["profile"])
 
+    def test_real_candidate_manifest_preserves_repository_paths_for_skill_route_decision(self) -> None:
+        import acceptance_cli
+
+        repository_root = Path(__file__).resolve().parents[4]
+        prepared_relative = (
+            "execution-plans/2026-08-01-workflow-model-routing-control-plane/"
+            "acceptance-run-input.workflow-model-routing-ria-r4.v1.json"
+        )
+        prepared = json.loads(
+            (repository_root / prepared_relative).read_text(encoding="utf-8")
+        )
+        policy = json.loads(
+            (
+                repository_root
+                / ".agents/skills/run-refactor-implementation-acceptance/policies/"
+                "semantic-review-trigger-policy.v1.json"
+            ).read_text(encoding="utf-8")
+        )
+
+        # This historical fixture predates the current catalog; isolate that
+        # unrelated freshness blocker while exercising the real identity producer.
+        with mock.patch.object(
+            acceptance_cli,
+            "freeze_knowledge_context",
+            return_value=prepared["knowledgeContext"],
+        ):
+            identity = acceptance_cli.load_current_candidate_identity(
+                repository_root, prepared_relative
+            )
+
+        from review_requirement import decide_review_requirement
+
+        decision = decide_review_requirement({
+            "candidateIdentity": identity,
+            "deterministicEvidence": {"status": "passed"},
+            "policy": policy,
+        })
+        self.assertIn(
+            ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+            identity["changedPaths"],
+        )
+        self.assertNotIn(
+            "execution-plans/2026-08-01-workflow-model-routing-control-plane/"
+            ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+            identity["changedPaths"],
+        )
+        self.assertEqual("required", decision["requirement"])
+        self.assertEqual("bootstrap-skill-route", decision["profile"])
+        self.assertIn("workflow_control_plane_changed", decision["reasonCodes"])
+
     def test_prepare_route_rejects_handwritten_decision_when_replay_differs(self) -> None:
         import acceptance_cli
 
@@ -156,6 +206,28 @@ class ReviewRequirementTests(unittest.TestCase):
         })
         self.assertEqual("ready", decision["decisionStatus"])
         self.assertEqual("not_required", decision["requirement"])
+
+    def test_repository_authority_paths_require_review(self) -> None:
+        policy = json.loads(
+            (
+                Path(__file__).resolve().parents[1]
+                / "policies/semantic-review-trigger-policy.v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        for path in (
+            "AGENTS.md",
+            "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+            "docs/standards/bootstrap-review-control-plane.md",
+        ):
+            decision = decide_review_requirement({
+                "candidateIdentity": {"changedPaths": [path], "knowledgeArtifacts": []},
+                "deterministicEvidence": {"status": "passed"},
+                "policy": policy,
+            })
+            self.assertEqual("required", decision["requirement"])
+            self.assertIn(
+                "protected_high_risk_boundary_changed", decision["reasonCodes"]
+            )
 
     def test_typed_public_api_boundary_requires_implementation_conformance(self) -> None:
         decision = decide_review_requirement({

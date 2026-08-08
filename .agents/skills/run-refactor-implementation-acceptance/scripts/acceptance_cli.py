@@ -211,7 +211,9 @@ def load_current_candidate_identity(repository_root: Path, prepared_run_input: s
 
     def add_changed_binding(relative_path: str, state: str, digest: str) -> None:
         changed_path_bindings.append({
-            "path": (target_root / relative_path).resolve().relative_to(root).as_posix(),
+            # Candidate manifest paths are logical repository identities. The
+            # target and frozen snapshot are custody locations, not path roots.
+            "path": relative_path.replace("\\", "/"),
             "state": state,
             "sha256": digest,
         })
@@ -229,7 +231,7 @@ def load_current_candidate_identity(repository_root: Path, prepared_run_input: s
     changed_path_bindings.sort(key=lambda item: item["path"])
     changed_paths = [item["path"] for item in changed_path_bindings]
     if changed_paths != sorted(
-        (target_root / path).resolve().relative_to(root).as_posix()
+        path.replace("\\", "/")
         for path in candidate_changed_paths(candidate)
     ):
         raise InputError("candidate changed path bindings are incomplete")

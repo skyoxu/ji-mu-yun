@@ -708,7 +708,7 @@ class BootstrapIntegrationTests(unittest.TestCase):
                     [item["path"] for item in identity["knowledgeArtifacts"]],
                 )
                 self.assertEqual([{
-                    "path": "execution-plans/example/Feature.cs",
+                    "path": "Feature.cs",
                     "state": "present",
                     "sha256": "sha256:" + "2" * 64,
                 }], identity["changedPathBindings"])

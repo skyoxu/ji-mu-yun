@@ -86,3 +86,11 @@ Validation evidence for this repair: `validate_plan.py` PASS; plan-local tests `
 - Trigger closure: `execution-plans/` and `decision-logs/` are explicit known-low-risk metadata roots. Typed repository risk classes cover public API, database, runtime/deployment, and shared execution boundaries; an implementation path outside every repository-owned class blocks instead of becoming `not_required`.
 - Lifecycle closure: resume continuity now names `KWI-QUICK-FROZEN-CONTEXT-STALE`; `implementation-authorized` and pending slices remain unchanged because the lifecycle contract has no blocked implementation state and no current terminal predicate has passed.
 - Validation: Acceptance `256/256` passed; Bootstrap skill-route `2/2` passed; `validate_plan.py` passed; modified Acceptance sources compile; `git diff --check` reports no whitespace errors. No Bootstrap run or implementation-complete authority was created.
+
+## Round 3 Implementation Repair
+
+- Identity closure: Acceptance candidate identity now preserves the repository-relative paths carried by the complete candidate manifest. The physical target and frozen snapshot remain custody locations and are not projected back into `changedPaths`.
+- Composition closure: a real historical prepared run input and candidate manifest now exercise `load_current_candidate_identity` through `decide_review_requirement`, proving a `.agents/skills/**` path remains workflow-control-plane input and selects `required` plus `bootstrap-skill-route`.
+- Authority policy closure: `AGENTS.md`, `docs/adr/**`, and `docs/standards/**` now classify through the existing protected-high-risk trigger before the general documentation low-risk fallback. Ordinary documentation and execution-plan metadata remain deterministic low risk.
+- Validation: targeted RED observed the prefixed-path regression; Acceptance `258/258` passed, plan-local tests `47/47` passed, `validate_all.py` passed, modified Acceptance sources compile, and `git diff --check` reports no whitespace errors. No Bootstrap run or implementation-complete authority was created.
+- Terminal gap: the only remaining blocker is `KWI-QUICK-FROZEN-CONTEXT-STALE`; refresh the VDD knowledge catalog/context and rerun the Quick Dev terminal predicate before any implementation-complete publication.

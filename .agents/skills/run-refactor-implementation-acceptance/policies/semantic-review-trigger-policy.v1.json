@@ -7,6 +7,9 @@
     "scripts/sc/"
   ],
   "protectedHighRiskPrefixes": [
+    "AGENTS.md",
+    "docs/adr/",
+    "docs/standards/",
     "PhaseA.Platform/Security/",
     "PhaseA.Platform/Data/",
     "runtime/phase-a/",
@@ -35,8 +38,7 @@
     "docs/",
     "execution-plans/",
     "decision-logs/",
-    "README.md",
-    "AGENTS.md"
+    "README.md"
   ],
   "hardTriggers": [
     "workflow_control_plane_changed",
