@@ -124,6 +124,20 @@ Ready output is restricted to one `execution-plans/<plan>/` directory, stages
 complete bytes before publication, and can finish an identical orphan context
 by publishing its missing receipt after an interrupted first attempt.
 
+## Skill Input Gate
+
+After route selection and authority reads, load
+`references/skill-input-contract.v1.json` and run the shared adapter
+`scripts/python/prepare_skill_input_consumption.py` for `create` or `repair`.
+The adapter must receive the explicit requirements/target-plan/finding paths;
+it must not discover them from logs. Launch the typed semantic child only through
+`scripts/python/launch_skill_input_consumer.py`, then run
+`scripts/python/validate_skill_input_consumption.py --require-ready` before the
+knowledge freeze or any plan artifact is generated. A candidate or failed gate
+routes to clarification/repair and cannot be returned as raw source content.
+When using `vdd_knowledge_preflight.py`, pass the same receipt with
+`--skill-input-receipt` and `--skill-input-operation`.
+
 ## Candidate, Review, And Reports
 
 Use a declared Git baseline plus either a frozen commit range or a complete scoped worktree identity. A dirty identity binds `HEAD`, canonical scoped tracked/index diff hash, and a manifest of relevant untracked paths and content hashes. Bind current contracts, implementation, and validators; exclude append-only logs and explanatory reports from normative hashes. Preserve old evidence as historical after invalidation.

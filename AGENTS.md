@@ -33,6 +33,7 @@ Read only the row that matches the task, then follow its local links.
 | Hosted Godot behavior | the relevant entry in `docs/standards/_index.md` |
 | Hosted Godot kernel, contracts, or engine tests | `docs/architecture/ADR_INDEX_GODOT.md`, `docs/architecture/base/00-README.md`, `docs/testing-framework.md`, and the relevant Godot standard |
 | Repository delivery toolchain | `knowledge/toolchain-workflow-index.md` |
+| File tools and output limits | `docs/fastctx-file-operation-output-contract.md` |
 | Documentation discovery | `docs/PROJECT_DOCUMENTATION_INDEX.md` |
 | Plan- or decision-scoped work | the explicit target under `execution-plans/` or `decision-logs/` |
 
@@ -88,7 +89,11 @@ Ask before modifying:
 - generated evidence or failure history when the intent is to rewrite or
   delete it rather than append sidecar evidence.
 
-Never mutate the live Phase database manually or commit secret material.
+Never mutate the live Phase database manually or commit secret material. The
+user-sandbox layer must not leak user tokens or secrets into Phase service or
+toolchain context. Platform diagnostics may retain richer operational evidence
+when explicitly authorized and access-controlled, but actual credential values
+must still not be returned to the model, published, or committed.
 
 ## Phase Service Contract
 
@@ -100,7 +105,8 @@ Never mutate the live Phase database manually or commit secret material.
 - API changes cover the handler/DTO, browser caller, auth boundary, public
   behavior documentation, targeted platform tests, and the relevant smoke.
 - Auth changes verify denial, authorization, isolation, hashing, audit, and no
-  token leakage.
+  user-sandbox token leakage. Platform diagnostics may preserve non-user
+  operational evidence for troubleshooting under the same access boundary.
 - Runtime or proxy changes validate local Phase health before public health and
   append runtime evidence.
 - Hosted route changes validate workspace boundaries, safe readback, recovery,
@@ -165,8 +171,9 @@ flows, local Chapter 6 review recovery, or game-template release work.
 - Runtime or workflow evidence is appended under `logs/`; historical failures
   remain intact.
 - Documentation is updated only where public behavior or ownership changed.
-- No secret material, live database mutation, unsupported compatibility break,
-  or assistant-only completion claim was introduced.
+- No user-sandbox secret material, unapproved persistence or disclosure of
+  platform credential values, live database mutation, unsupported
+  compatibility break, or assistant-only completion claim was introduced.
 
 ## Maintenance Budget
 

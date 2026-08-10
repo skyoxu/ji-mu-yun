@@ -1,0 +1,22 @@
+{
+  "schema_version": "skill-input-contract.v1",
+  "consumer": "run-refactor-implementation-acceptance",
+  "mode": "strict",
+  "trigger": "after acceptance prerequisites, before start-or-resume",
+  "source_roles": {
+    "implementation_target": {"selector": "implementation_target", "required": true, "root": "repository", "allowed_kinds": ["file", "directory"], "reference_kinds": ["markdown-link", "json-path-field"]},
+    "acceptance_requirements": {"selector": "acceptance_requirements", "required": true, "root": "repository", "allowed_kinds": ["file", "directory"], "reference_kinds": ["markdown-link", "json-path-field"]}
+  },
+  "operations": {
+    "acceptance": {"required_inputs": ["implementation_target", "acceptance_requirements"]}
+  },
+  "reference_policy": "declared-in-root-and-contained",
+  "max_reference_depth": 8,
+  "max_sources": 128,
+  "max_context_bytes": 6000,
+  "budget_basis": {"path": "scripts/sc/fixtures/skill-input-budget.v1.json", "sha256": "sha256:89af7b2303bcfbe893a8265c7dbe6b78b7cc1a5d4dbcb16d5fd4aa68dc269143"},
+  "sensitivity_policy": "deny-credential-values",
+  "redaction_profile": "credential-values-v1",
+  "forbidden_sources": ["logs-as-recovery-source"],
+  "semantic_acceptance": "all-required-inputs-are-sufficient"
+}

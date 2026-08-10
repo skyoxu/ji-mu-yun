@@ -57,6 +57,18 @@ The 2026-07-12 CLI is a revision-bound compatibility adapter only. Do not add du
 
 Bind every required context class to real in-scope artifacts. For implementation conformance, bind every plan-mandated deterministic check with `--required-check`.
 
+## Skill Input Gate
+
+After closure selection and before Artifact View freeze or reviewer launch, load
+`references/skill-input-contract.v1.json` and prepare a `review` receipt with
+the explicit closure and authority paths. The semantic child may be launched
+only through `scripts/python/launch_skill_input_consumer.py`; validate the
+result with `scripts/python/validate_skill_input_consumption.py --require-ready`.
+If the gate is not ready, stop before freezing Artifact View and route the
+missing or stale input to the existing repair path. Logs remain evidence only,
+never recovery input. The `prepare` command accepts the validated receipt via
+`--skill-input-receipt` and `--skill-input-contract`.
+
 ## Inspect Before Starting
 
 When a run may already exist, use read-only recovery first:

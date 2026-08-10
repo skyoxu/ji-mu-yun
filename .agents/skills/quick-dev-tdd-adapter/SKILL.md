@@ -58,6 +58,20 @@ After the target plan's current declared terminal predicate passes, append its o
    Do not select an acceptance route, launch Bootstrap, create a review
    successor, or change the stable lineage family.
 
+## Skill Input Gate
+
+After the parent route and minimum target discovery, load
+`references/skill-input-contract.v1.json` and prepare a strict receipt with
+`scripts/python/prepare_skill_input_consumption.py --operation execute`.
+Pass the explicit plan directory and target file paths as source roles. Use
+`scripts/python/launch_skill_input_consumer.py` for the typed semantic child,
+then require `validate_skill_input_consumption.py --require-ready` before
+action selection, `prepare`, or RED. `ready=false`, source drift, or a missing
+sidecar is a hard stop and must route to plan repair; no raw snapshot or log is
+fallback input. In the Python adapter, use `tools/adapter.py`'s
+`prepare_with_skill_input` wrapper so the gate result and context artifact are
+bound into the prepared slice.
+
 ## Model Route Decision
 
 Before a slice backend is selected, derive the closed typed fact set consumed

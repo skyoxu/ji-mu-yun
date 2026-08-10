@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://godotgame.local/schemas/fastctx-summary.v1.schema.json",
+  "title": "FastCtx bounded summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "source",
+    "query",
+    "stats",
+    "findings",
+    "offsets",
+    "truncated",
+    "omitted_records",
+    "generated_at",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "fastctx-summary.v1"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["complete", "partial", "failed"]
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "query": {
+      "type": "object"
+    },
+    "stats": {
+      "$ref": "#/$defs/stats"
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "offsets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/offset"
+      }
+    },
+    "truncated": {
+      "type": "boolean"
+    },
+    "omitted_records": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 240
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {"const": "complete"}
+        }
+      },
+      "then": {
+        "properties": {
+          "truncated": {"const": false},
+          "omitted_records": {"const": 0},
+          "errors": {"maxItems": 0}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {"const": "partial"}
+        }
+      },
+      "then": {
+        "required": ["offsets"],
+        "properties": {
+          "truncated": {"const": true},
+          "offsets": {"minItems": 1}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {"const": "failed"}
+        }
+      },
+      "then": {
+        "required": ["errors"],
+        "properties": {
+          "errors": {"minItems": 1}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "kind", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "enum": ["jsonl", "log", "text"]},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["records", "bytes", "max_input_tokens"],
+      "properties": {
+        "records": {"type": "integer", "minimum": 0},
+        "bytes": {"type": "integer", "minimum": 0},
+        "max_input_tokens": {"type": "integer", "minimum": 0}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line", "kind"],
+      "properties": {
+        "line": {"type": "integer", "minimum": 1},
+        "kind": {"type": "string", "minLength": 1, "maxLength": 64},
+        "sample": {"type": "string", "maxLength": 240}
+      }
+    },
+    "offset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "next"],
+      "properties": {
+        "unit": {"type": "string", "enum": ["line", "record", "byte"]},
+        "next": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

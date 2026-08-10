@@ -1,0 +1,23 @@
+{
+  "schema_version": "skill-input-contract.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "mode": "strict",
+  "trigger": "after minimum target discovery, before action selection, prepare, or RED",
+  "source_roles": {
+    "plan_directory": {"selector": "plan_directory", "required": true, "root": "repository", "allowed_kinds": ["directory"], "reference_kinds": ["markdown-link", "json-path-field"]},
+    "target_files": {"selector": "target_files", "required": true, "root": "repository", "allowed_kinds": ["file", "directory"], "reference_kinds": ["markdown-link", "json-path-field"]},
+    "requirements": {"selector": "requirements", "required": false, "root": "repository", "allowed_kinds": ["file"], "reference_kinds": ["markdown-link", "json-path-field"]}
+  },
+  "operations": {
+    "execute": {"required_inputs": ["plan_directory", "target_files"]}
+  },
+  "reference_policy": "declared-in-root-and-contained",
+  "max_reference_depth": 8,
+  "max_sources": 128,
+  "max_context_bytes": 6000,
+  "budget_basis": {"path": "scripts/sc/fixtures/skill-input-budget.v1.json", "sha256": "sha256:89af7b2303bcfbe893a8265c7dbe6b78b7cc1a5d4dbcb16d5fd4aa68dc269143"},
+  "sensitivity_policy": "deny-credential-values",
+  "redaction_profile": "credential-values-v1",
+  "forbidden_sources": ["logs-as-recovery-source"],
+  "semantic_acceptance": "all-required-inputs-are-sufficient"
+}

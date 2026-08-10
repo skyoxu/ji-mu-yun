@@ -56,6 +56,8 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
 
+from skill_input_gate import require_ready_skill_input  # noqa: E402
+
 PLAN_ROOT = SKILL_ROOT
 PROFILE_PATH = SKILL_ROOT / "references" / "review-profiles.v1.json"
 AUTHORITY_ROOT_PATH = SKILL_ROOT / "references" / "authority-roots.v1.json"
@@ -4743,6 +4745,17 @@ def command_prepare(args: argparse.Namespace) -> int:
     repository_root = Path(args.repository_root).resolve()
     if not repository_root.is_dir():
         raise BootstrapError(f"Repository root does not exist: {repository_root}")
+    if args.skill_input_receipt:
+        try:
+            require_ready_skill_input(
+                receipt_path=Path(args.skill_input_receipt),
+                repository_root=repository_root,
+                contract_path=Path(args.skill_input_contract),
+                consumer="run-phase-bootstrap-review",
+                operation="review",
+            )
+        except (OSError, ValueError) as exc:
+            raise BootstrapError(f"Skill input gate is not ready: {exc}") from exc
     out_dir_candidate = Path(args.out_dir)
     if not out_dir_candidate.is_absolute():
         out_dir_candidate = repository_root / out_dir_candidate
@@ -12019,6 +12032,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Validate prepare inputs and print non-authorizing closure bindings without creating a run",
     )
     prepare.add_argument("--out-dir", required=True)
+    prepare.add_argument("--skill-input-receipt")
+    prepare.add_argument(
+        "--skill-input-contract",
+        default=str(REPOSITORY_ROOT / ".agents" / "skills" / "run-phase-bootstrap-review" / "references" / "skill-input-contract.v1.json"),
+    )
     prepare.set_defaults(handler=command_prepare)
     finding_reentry = subparsers.add_parser(
         "authorize-finding-mode-reentry",

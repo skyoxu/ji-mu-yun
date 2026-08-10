@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://godotgame.local/schemas/skill-semantic-decision.v1.schema.json",
+  "title": "Skill semantic decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "producer_role", "execution_identity", "source_manifest_hash", "context_artifact_hash", "source_statuses", "status", "rationale", "redaction_status", "redaction_profile_hash", "authorizes"],
+  "properties": {
+    "schema_version": {"const": "skill-semantic-decision.v1"},
+    "producer_role": {"type": "string", "minLength": 1},
+    "execution_identity": {"$ref": "#/$defs/sha256"},
+    "source_manifest_hash": {"$ref": "#/$defs/sha256"},
+    "context_artifact_hash": {"$ref": "#/$defs/sha256"},
+    "source_statuses": {
+      "type": "object",
+      "additionalProperties": {"enum": ["accepted", "insufficient", "not-evaluated"]}
+    },
+    "status": {"enum": ["accepted", "insufficient"]},
+    "rationale": {"type": "string", "maxLength": 2000},
+    "redaction_status": {"enum": ["not-required", "complete", "failed"]},
+    "redaction_profile_hash": {"$ref": "#/$defs/sha256"},
+    "authorizes": {"const": []}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

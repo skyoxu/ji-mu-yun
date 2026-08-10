@@ -3,8 +3,15 @@ from __future__ import annotations
 from copy import deepcopy
 import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
+
+from skill_input_gate import require_ready_skill_input  # noqa: E402
 
 
 def _blocked(run: dict[str, Any], rule_id: str, message: str) -> dict[str, Any]:
@@ -46,6 +53,31 @@ def prepare(contract: dict[str, Any], slice_id: str, identities: dict[str, str])
         "authorizes": [],
         "does_not_authorize": ["acceptance", "handoff", "release"],
     }
+
+
+def prepare_with_skill_input(
+    contract: dict[str, Any],
+    slice_id: str,
+    identities: dict[str, str],
+    *,
+    receipt_path: Path,
+    repository_root: Path = REPOSITORY_ROOT,
+    skill_contract_path: Path = REPOSITORY_ROOT / ".agents" / "skills" / "quick-dev-tdd-adapter" / "references" / "skill-input-contract.v1.json",
+) -> dict[str, Any]:
+    """Prepare a TDD slice only after the strict Skill input gate passes."""
+    gate = require_ready_skill_input(
+        receipt_path=receipt_path,
+        repository_root=repository_root,
+        contract_path=skill_contract_path,
+        consumer="quick-dev-tdd-adapter",
+        operation="execute",
+    )
+    result = prepare(contract, slice_id, identities)
+    result["skill_input"] = {
+        "context_artifact": gate["context_artifact"].as_posix(),
+        "binding_hash": gate["binding_hash"],
+    }
+    return result
 
 
 def transition(run: dict[str, Any], stage: str, event: dict[str, Any]) -> dict[str, Any]:

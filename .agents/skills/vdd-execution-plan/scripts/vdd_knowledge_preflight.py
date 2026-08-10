@@ -15,6 +15,7 @@ if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
 
 from knowledge_context_validation import canonical_hash, validate_context  # noqa: E402
+from skill_input_gate import require_ready_skill_input  # noqa: E402
 
 
 def _sha(value: Any) -> str:
@@ -71,7 +72,22 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
+    parser.add_argument("--skill-input-receipt", type=Path)
+    parser.add_argument("--skill-input-operation", choices=["create", "repair"], default="create")
+    parser.add_argument(
+        "--skill-input-contract",
+        type=Path,
+        default=REPOSITORY_ROOT / ".agents" / "skills" / "vdd-execution-plan" / "references" / "skill-input-contract.v1.json",
+    )
     args = parser.parse_args()
+    if args.skill_input_receipt:
+        require_ready_skill_input(
+            receipt_path=args.skill_input_receipt,
+            repository_root=args.repository_root,
+            contract_path=args.skill_input_contract,
+            consumer="vdd-execution-plan",
+            operation=args.skill_input_operation,
+        )
     payload = json.loads(args.input.read_text(encoding="utf-8"))
     result = evaluate_preflight(payload, repository_root=args.repository_root.resolve())
     result["schema_version"] = "jimuyun.vdd-knowledge-preflight.v1"

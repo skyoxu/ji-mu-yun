@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://godotgame.local/schemas/fastctx-ab-test.v1.schema.json",
+  "title": "FastCtx bounded transport A/B evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "measurement_kind", "limitations", "iterations", "fixture", "baseline", "fastctx_contract", "delta", "high_output_summary"],
+  "properties": {
+    "schema_version": {"const": "fastctx-ab-test.v1"},
+    "generated_at": {"type": "string", "minLength": 1},
+    "measurement_kind": {"const": "repository-controlled-transport-policy-benchmark"},
+    "limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "iterations": {"$ref": "#/$defs/counts"},
+    "fixture": {"type": "object", "additionalProperties": false, "required": ["bytes", "lines"], "properties": {"bytes": {"type": "integer", "minimum": 1}, "lines": {"type": "integer", "minimum": 1}}},
+    "baseline": {"$ref": "#/$defs/strategy"},
+    "fastctx_contract": {"$ref": "#/$defs/strategy"},
+    "delta": {"type": "object", "additionalProperties": false, "required": ["bytes", "estimated_tokens"], "properties": {"bytes": {"type": "integer"}, "estimated_tokens": {"type": "integer"}}},
+    "high_output_summary": {"type": "object", "additionalProperties": false, "required": ["status", "source_records", "summary_bytes", "summary_estimated_tokens", "truncated", "omitted_records", "redaction_verified"], "properties": {"status": {"enum": ["complete", "partial"]}, "source_records": {"type": "integer", "minimum": 1}, "summary_bytes": {"type": "integer", "minimum": 1, "maximum": 12000}, "summary_estimated_tokens": {"type": "integer", "minimum": 1}, "truncated": {"type": "boolean"}, "omitted_records": {"type": "integer", "minimum": 0}, "redaction_verified": {"const": true}}}
+  },
+  "$defs": {
+    "counts": {"type": "object", "additionalProperties": false, "required": ["reads", "writes"], "properties": {"reads": {"const": 5}, "writes": {"const": 5}}},
+    "strategy": {"type": "object", "additionalProperties": false, "required": ["strategy", "read_visible_bytes", "read_estimated_tokens", "operations"], "properties": {"strategy": {"type": "string", "minLength": 1}, "read_visible_bytes": {"type": "integer", "minimum": 0}, "read_estimated_tokens": {"type": "integer", "minimum": 0}, "operations": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"$ref": "#/$defs/operation"}}}},
+    "operation": {"type": "object", "additionalProperties": false, "required": ["write_status", "read_status", "read_bytes", "read_estimated_tokens", "read_truncated"], "properties": {"write_status": {"const": "written"}, "read_status": {"enum": ["complete", "partial"]}, "read_bytes": {"type": "integer", "minimum": 0}, "read_estimated_tokens": {"type": "integer", "minimum": 0}, "read_truncated": {"type": "boolean"}}}
+  }
+}

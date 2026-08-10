@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://godotgame.local/schemas/skill-input-child-output.v1.schema.json",
+  "title": "Skill input child output v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["context", "decision"],
+  "properties": {
+    "context": {"$ref": "skill-input-context.v1.schema.json"},
+    "decision": {"$ref": "skill-semantic-decision.v1.schema.json"}
+  }
+}

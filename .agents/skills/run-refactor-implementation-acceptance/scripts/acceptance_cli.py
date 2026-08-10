@@ -5,7 +5,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
+
+from skill_input_gate import require_ready_skill_input  # noqa: E402
 
 from acceptance_core import (
     InputError,
@@ -973,6 +980,11 @@ def main() -> int:
     start.add_argument("--contract-hash", required=True)
     start.add_argument("--knowledge-context-hash", required=True)
     start.add_argument("--run-id")
+    start.add_argument("--skill-input-receipt")
+    start.add_argument(
+        "--skill-input-contract",
+        default=str(REPOSITORY_ROOT / ".agents" / "skills" / "run-refactor-implementation-acceptance" / "references" / "skill-input-contract.v1.json"),
+    )
     inspect = subcommands.add_parser("inspect-run")
     inspect.add_argument("--actions", required=True)
     inspect.add_argument("--completed", required=True)
@@ -1086,6 +1098,14 @@ def main() -> int:
         print(json.dumps(prepare_bootstrap_command(args.request, args.out), sort_keys=True))
         return 0
     if args.command == "start-or-resume":
+        if args.skill_input_receipt:
+            require_ready_skill_input(
+                receipt_path=Path(args.skill_input_receipt),
+                repository_root=Path(args.repository_root),
+                contract_path=Path(args.skill_input_contract),
+                consumer="run-refactor-implementation-acceptance",
+                operation="acceptance",
+            )
         print(json.dumps(start_or_resume_target_run(
             Path(args.repository_root),
             args.target_plan,

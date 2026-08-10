@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://godotgame.local/schemas/skill-input-consumption.v1.schema.json",
+  "title": "Skill input consumption receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "consumer",
+    "operation",
+    "request_hash",
+    "target",
+    "route_identity",
+    "repository_identity",
+    "adapter_version",
+    "created_at",
+    "contract_hash",
+    "source_manifest",
+    "sources",
+    "missing_sources",
+    "changed_sources",
+    "semantic_decision",
+    "context_artifact",
+    "diagnostic_authorization",
+    "authorizes",
+    "binding_hash",
+    "ready"
+  ],
+  "properties": {
+    "schema_version": {"const": "skill-input-consumption.v1"},
+    "consumer": {"type": "string", "minLength": 1},
+    "operation": {"enum": ["create", "repair", "review", "execute", "acceptance"]},
+    "request_hash": {"$ref": "#/$defs/sha256"},
+    "target": {"type": "string", "minLength": 1},
+    "route_identity": {"type": "string", "minLength": 1},
+    "repository_identity": {"$ref": "#/$defs/repository_identity"},
+    "adapter_version": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "minLength": 1},
+    "contract_hash": {"$ref": "#/$defs/sha256"},
+    "source_manifest": {"$ref": "#/$defs/artifact"},
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/source"}
+    },
+    "missing_sources": {"type": "array", "items": {"type": "string"}},
+    "changed_sources": {"type": "array", "items": {"type": "string"}},
+    "semantic_decision": {"$ref": "#/$defs/decision_ref"},
+    "context_artifact": {"$ref": "#/$defs/artifact"},
+    "diagnostic_authorization": {
+      "anyOf": [{"type": "null"}, {"$ref": "#/$defs/diagnostic_authorization"}]
+    },
+    "authorizes": {"const": []},
+    "binding_hash": {"$ref": "#/$defs/sha256"},
+    "ready": {"type": "boolean"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "repository_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["head", "index_hash", "scoped_worktree_hash"],
+      "properties": {
+        "head": {"type": "string", "minLength": 1},
+        "index_hash": {"$ref": "#/$defs/sha256"},
+        "scoped_worktree_hash": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "required",
+        "sha256_before",
+        "sha256_after",
+        "size_bytes",
+        "line_count",
+        "sensitivity",
+        "semantic_snapshot_sha256",
+        "redaction_status",
+        "ranges_consumed",
+        "transport_status",
+        "semantic_status"
+      ],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "required": {"type": "boolean"},
+        "sha256_before": {"$ref": "#/$defs/sha256"},
+        "sha256_after": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "line_count": {"type": "integer", "minimum": 0},
+        "sensitivity": {"enum": ["normal", "restricted", "credential-bearing"]},
+        "semantic_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+        "redaction_status": {"enum": ["not-required", "complete", "failed"]},
+        "ranges_consumed": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/range"}
+        },
+        "transport_status": {"enum": ["complete", "partial", "failed", "changed"]},
+        "semantic_status": {"enum": ["accepted", "insufficient", "not-evaluated"]}
+      }
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "start", "end"],
+      "properties": {
+        "unit": {"const": "line"},
+        "start": {"type": "integer", "minimum": 1},
+        "end": {"type": "integer", "minimum": 1}
+      }
+    },
+    "decision_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "status": {"enum": ["accepted", "insufficient"]}
+      }
+    },
+    "diagnostic_authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority_path", "authority_sha256", "scope", "target", "issuer", "expires_at"],
+      "properties": {
+        "authority_path": {"type": "string", "minLength": 1},
+        "authority_sha256": {"$ref": "#/$defs/sha256"},
+        "scope": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "issuer": {"type": "string", "minLength": 1},
+        "expires_at": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

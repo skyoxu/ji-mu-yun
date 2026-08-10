@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://godotgame.local/schemas/skill-input-contract.v1.schema.json",
+  "title": "Skill input contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "consumer",
+    "mode",
+    "trigger",
+    "source_roles",
+    "operations",
+    "reference_policy",
+    "max_reference_depth",
+    "max_sources",
+    "max_context_bytes",
+    "budget_basis",
+    "sensitivity_policy",
+    "redaction_profile",
+    "forbidden_sources",
+    "semantic_acceptance"
+  ],
+  "properties": {
+    "schema_version": {"const": "skill-input-contract.v1"},
+    "consumer": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "mode": {"const": "strict"},
+    "trigger": {"type": "string", "minLength": 1},
+    "source_roles": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/source_role"}
+    },
+    "operations": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/operation"}
+    },
+    "reference_policy": {"const": "declared-in-root-and-contained"},
+    "max_reference_depth": {"type": "integer", "minimum": 1, "maximum": 64},
+    "max_sources": {"type": "integer", "minimum": 1, "maximum": 5000},
+    "max_context_bytes": {"type": "integer", "minimum": 512, "maximum": 12000},
+    "budget_basis": {"$ref": "#/$defs/budget_basis"},
+    "sensitivity_policy": {"const": "deny-credential-values"},
+    "redaction_profile": {"const": "credential-values-v1"},
+    "forbidden_sources": {
+      "type": "array",
+      "contains": {"const": "logs-as-recovery-source"},
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "semantic_acceptance": {"const": "all-required-inputs-are-sufficient"}
+  },
+  "$defs": {
+    "source_role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selector", "required", "root", "allowed_kinds", "reference_kinds"],
+      "properties": {
+        "selector": {"type": "string", "pattern": "^[a-z0-9_]{3,80}$"},
+        "required": {"type": "boolean"},
+        "root": {"type": "string", "minLength": 1},
+        "allowed_kinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["file", "directory"]}
+        },
+        "reference_kinds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"enum": ["markdown-link", "json-path-field"]}
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_inputs"],
+      "properties": {
+        "required_inputs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "budget_basis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

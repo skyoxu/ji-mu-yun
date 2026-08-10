@@ -47,6 +47,16 @@ guess scope, revisions, changed paths, commands, or acceptance actions. If a
 required source is missing or ambiguous, report `prerequisite_blocked` with the
 missing artifacts and stop before `start-or-resume`.
 
+Before `start-or-resume`, load
+`references/skill-input-contract.v1.json` and prepare an `acceptance` receipt
+with the explicit implementation-target and acceptance-requirements paths.
+Use the typed boundary in `scripts/python/launch_skill_input_consumer.py` for
+semantic consumption and require
+`scripts/python/validate_skill_input_consumption.py --require-ready`. A stale,
+partial, or unredacted input is `prerequisite_blocked`; it cannot be replaced
+with a log or historical summary. Pass the receipt to `start-or-resume` with
+`--skill-input-receipt` and `--skill-input-contract`.
+
 Create the knowledge context only through the canonical Locator and bind the
 adapter to exactly one explicit `--target-plan`. If it returns `catalog_stale`,
 the adapter emits a hash-bound `knowledge-maintenance-required` route with

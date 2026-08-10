@@ -1,0 +1,7 @@
+{
+  "schema_version": "skill-input-budget.v1",
+  "max_context_bytes": 6000,
+  "max_sources": 128,
+  "max_reference_depth": 8,
+  "basis": "shared-skill-input-consumption-v1"
+}
