@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "bootstrap-process-leases.v1",
+  "reviewId": "broh-acceptance-20260809-r1",
+  "inputHash": "sha256:e0785e76805d63f91c4fd4b38e07a4ec5839e7ba581f9a5822657375c2635b37",
+  "leases": [
+    {
+      "operationId": "model-probe:discovery:blind_hunter:gpt-5.6-terra",
+      "role": "model_probe",
+      "pid": 1192,
+      "processIdentity": "windows-filetime:134306797533909274",
+      "state": "completed",
+      "acquiredAt": "2026-08-08T16:22:33.387170Z",
+      "updatedAt": "2026-08-08T16:23:10.831304Z"
+    }
+  ]
+}

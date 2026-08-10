@@ -1,0 +1,207 @@
+{
+  "schemaVersion": "bootstrap-historical-policy-revisions.v1",
+  "revisions": [
+    {
+      "profileName": "bootstrap-skill-route",
+      "policyRevision": "sha256:32e696c080308ec215cfa51a6d95cebbe684271ea2b73c6d8baf15a1fcd65d18",
+      "replayScope": "baseline-only",
+      "authorityRootRegistry": null
+    },
+    {
+      "profileName": "bootstrap-upstream-plan",
+      "policyRevision": "sha256:2d5f9f1404d4d86307b66f9729b7c6f216aaef8bdd2f0f4062d763460673a5b8",
+      "replayScope": "baseline-only",
+      "authorityRootRegistry": null
+    },
+    {
+      "profileName": "bootstrap-upstream-plan",
+      "policyRevision": "sha256:d34de520d73bff5752253b1378f3dd38d5864faf2424648a4bf28d91df810f72",
+      "replayScope": "baseline-only",
+      "authorityRootRegistry": null
+    },
+    {
+      "profileName": "bootstrap-implementation-conformance",
+      "policyRevision": "sha256:1407f7bd3d4a57ae3e1d72f52424a7a739101b957d97c2855cc111b257884400",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-upstream-plan",
+      "policyRevision": "sha256:d4077a8c91b9b271ff3607548b3575d1616d14dc3c10733849856959ee6ebc0a",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-implementation-conformance",
+      "policyRevision": "sha256:cf2e6630699af9637bcd74c742d11103100ce189acda1c869d9c52768fade14e",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      },
+      "profileExtensions": {
+        "companionCapabilities": [
+          {
+            "capabilityId": "acceptance-inventory-attestation",
+            "capabilityVersion": "1.0",
+            "producerRole": "acceptance_auditor",
+            "schemaPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+            "schemaHash": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"
+          }
+        ]
+      }
+    },
+    {
+      "profileName": "bootstrap-skill-route",
+      "policyRevision": "sha256:d33980749bda33705cc8ca7dacdf48b2fe4c13184451fa6918bdfc7f4c57c957",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-focused-change",
+      "policyRevision": "sha256:b60c47999586523dd1cdd2b5a490899c4472e37005262efefdbefa5ade811899",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-upstream-plan",
+      "policyRevision": "sha256:5b6aa916dfd5ab0cf9e3b774beef5b5854e03bebca399744aa28222e7591c928",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-implementation-conformance",
+      "policyRevision": "sha256:958cdee6a99f285dc9a804e088d2d8731e26e7d162ab8789ae8fe5e01bc5a1d9",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      },
+      "profileExtensions": {
+        "companionCapabilities": [
+          {
+            "capabilityId": "acceptance-inventory-attestation",
+            "capabilityVersion": "1.0",
+            "producerRole": "acceptance_auditor",
+            "schemaPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+            "schemaHash": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"
+          }
+        ]
+      }
+    },
+    {
+      "profileName": "bootstrap-skill-route",
+      "policyRevision": "sha256:f99ba09ae34906fee842ef0594d4e913e5c3f0c8449291b38faaae9136eca168",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-focused-change",
+      "policyRevision": "sha256:bdb8bf81b47107d2ed8a44df8e3f447e055e342b6ea0100e1e7f4ad8407bd729",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-focused-repair-verification",
+      "policyRevision": "sha256:c45b0fb892993d2474d6571eaf17be093313d94a0f1c1f367e78773086836c63",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-upstream-plan",
+      "policyRevision": "sha256:4176d43a642fbee3d25bfd4e6b0ab9f2b7d54739c321471c1f2630e53cea012b",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-implementation-conformance",
+      "policyRevision": "sha256:177bbccd5905b4d644dea0e6a799075b6175f6a75e8582cfca89cfb85434d005",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      },
+      "profileExtensions": {
+        "companionCapabilities": [
+          {
+            "capabilityId": "acceptance-inventory-attestation",
+            "capabilityVersion": "1.0",
+            "producerRole": "acceptance_auditor",
+            "schemaPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+            "schemaHash": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"
+          }
+        ]
+      }
+    },
+    {
+      "profileName": "bootstrap-skill-route",
+      "policyRevision": "sha256:43e5c0bcc9408150e7c1059e494cbb466f5790426603c2fe7583e1b76b237c9f",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-focused-change",
+      "policyRevision": "sha256:a6ed31be4a093471268a6f02f5780260d03b2867f23162100e5d2fa488694402",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    },
+    {
+      "profileName": "bootstrap-focused-repair-verification",
+      "policyRevision": "sha256:339e0598bbf8bc39bfa0ece78859f2b67eba669fcc8be958d6a0ea659996eb85",
+      "replayScope": "baseline-and-successor",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      }
+    }
+  ],
+  "authorizes": []
+}

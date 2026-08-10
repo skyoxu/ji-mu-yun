@@ -1,0 +1,11 @@
+{
+  "schema_version": "jimuyun.vdd-repair-knowledge-context-binding.v1",
+  "acceptance_target": "execution-plans/2026-08-07-bootstrap-review-operability-hardening",
+  "context_path": "../../knowledge-context.v1.json",
+  "context_sha256": "sha256:27fff0541306d5f4567e50157c81685976e8a2c5313c8fa3a65e685bf8a28ca8",
+  "freeze_path": "../../knowledge-context.freeze.v1.json",
+  "freeze_sha256": "sha256:4b0f48d4dca101b23affb8daf47238a7ecd9b49cbbf089462f52be938fab969f",
+  "decision": "reuse-current-target-vdd-context",
+  "reason": "The in-place repair retains the original acceptance target and consumes its current hash-verified VDD knowledge publication.",
+  "authorizes": []
+}

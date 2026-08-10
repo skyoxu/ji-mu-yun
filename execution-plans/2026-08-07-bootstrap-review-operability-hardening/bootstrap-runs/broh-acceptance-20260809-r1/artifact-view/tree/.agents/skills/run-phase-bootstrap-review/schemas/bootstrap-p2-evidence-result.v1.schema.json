@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-p2-evidence-result.v1.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "resultId", "evidenceType", "findingId", "reviewId", "inputHash", "candidateHash", "authorityRevision", "scope", "result", "observedAt", "expiresAt", "processResultRef", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-p2-evidence-result.v1"}, "resultId": {"type": "string", "minLength": 1}, "evidenceType": {"enum": ["non-impact", "recheck"]}, "findingId": {"type": "string", "minLength": 1}, "reviewId": {"type": "string", "minLength": 1},
+    "inputHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "candidateHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "authorityRevision": {"type": "string", "minLength": 1}, "scope": {"type": "string", "minLength": 1}, "result": {"enum": ["bounded", "passed"]}, "observedAt": {"type": "string", "format": "date-time"}, "expiresAt": {"type": "string", "format": "date-time"},
+    "processResultRef": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/evidenceRef"}]},
+    "authorizes": {"type": "array", "maxItems": 0}, "doesNotAuthorize": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"enum": ["implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
+  },
+  "allOf": [
+    {"if": {"properties": {"evidenceType": {"const": "non-impact"}}}, "then": {"properties": {"result": {"const": "bounded"}, "processResultRef": {"type": "null"}}}},
+    {"if": {"properties": {"evidenceType": {"const": "recheck"}}}, "then": {"properties": {"result": {"const": "passed"}, "processResultRef": {"$ref": "#/$defs/evidenceRef"}}}}
+  ],
+  "$defs": {"evidenceRef": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}}}
+}

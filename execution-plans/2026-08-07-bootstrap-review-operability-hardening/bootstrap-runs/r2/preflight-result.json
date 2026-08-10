@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "bootstrap-preflight-result.v1",
+  "reviewId": "broh-acceptance-20260809-r2",
+  "routeVersion": "bootstrap-review-route.v2",
+  "policyRevision": "sha256:189d5eef49314aadfa639541b7029500061d47739ca2d8e244d2c740eceb665c",
+  "authorityRevision": "bdb9df4bd61def6f048cf4ad7cc427565228cb07",
+  "inputHash": "sha256:c51d91f71a125ae9b891e0cb1510c78c544671b1c812df308c5f0a3cc43bf8ac",
+  "status": "passed",
+  "checks": [
+    {
+      "checkId": "bootstrap-regression-tests",
+      "status": "passed",
+      "command": "[\"py\", \"-3\", \"-B\", \".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py\"]",
+      "exitCode": 0,
+      "evidencePath": "preflight/bootstrap-regression-tests.log",
+      "evidenceHash": "sha256:08ee40370fe80290021128877558f5a1e3025de3da19d69ed728de9f2aa1b82c"
+    },
+    {
+      "checkId": "whole-directory-validator",
+      "status": "passed",
+      "command": "[\"py\", \"-3\", \".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py\"]",
+      "exitCode": 0,
+      "evidencePath": "preflight/whole-directory-validator.log",
+      "evidenceHash": "sha256:0a5e041537ae559d729807bf6eb76d581e96d8074a3cedf952a86555b94927e7"
+    },
+    {
+      "checkId": "skill-quick-validation",
+      "status": "passed",
+      "command": "[\"py\", \"-3\", \"-B\", \".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py\"]",
+      "exitCode": 0,
+      "evidencePath": "preflight/skill-quick-validation.log",
+      "evidenceHash": "sha256:9e133a2a1fdd04a52d9b926b401baa9c2b096877d61ad43fc4ffdcc3b6be40ba"
+    }
+  ]
+}

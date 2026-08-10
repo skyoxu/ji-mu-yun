@@ -1,0 +1,33 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.repair-findings.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "round": 4,
+  "trigger": "runtime-transport-evidence",
+  "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+  "predecessor": {
+    "bootstrap_run": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/bootstrap-runs/r2",
+    "status": "abandoned",
+    "reason": "all required discovery roles ended as transport failures without formal reviewer output"
+  },
+  "findings": [
+    {
+      "id": "BROH-R4-01",
+      "severity": "P1",
+      "requirement_ids": ["BROH-004", "BROH-005", "BROH-014", "BROH-015", "BROH-022"],
+      "statement": "A single Codex reviewer attempt cannot complete the 63-artifact, 1.30 MB frozen Bootstrap skill-route closure. The current parent accepts only one all-or-nothing read receipt, so complete review cannot progress without either lowering coverage or adding parent-validated segmented coverage."
+    },
+    {
+      "id": "BROH-R4-02",
+      "severity": "P1",
+      "requirement_ids": ["BROH-004", "BROH-005", "BROH-015"],
+      "statement": "When an outer command/session ends while run-layer waits for Codex, the child process tree can outlive its controller and its no-progress timeout. The run requires operator tree termination before the existing append-only transport failure path can close the lease."
+    },
+    {
+      "id": "BROH-R4-03",
+      "severity": "P1",
+      "requirement_ids": ["BROH-016"],
+      "statement": "The profile declares fallback models, but an existing preferred access-proof sidecar is reused before the selected fallback model is resolved, so an explicit fallback action cannot produce or bind an identity-equivalent proof."
+    }
+  ],
+  "authorizes": []
+}

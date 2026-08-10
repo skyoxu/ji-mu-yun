@@ -1,0 +1,1180 @@
+COMMAND: ["py", "-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"]
+EXIT: 0
+STDOUT:
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpdod9mzt0\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpdod9mzt0\repo\bootstrap-run\review-launch-authorization.json
+Sealed Bootstrap Review run: abandoned
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpdod9mzt0\repo\bootstrap-run-replacement
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpc23ks3_i\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpzejd0hhl\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpzejd0hhl\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp1umsqa82\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp1umsqa82\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpqr8shf2g\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpqr8shf2g\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 5872
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 5692
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 4456
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Opened append-only verifier recovery: C:\Users\Administrator\AppData\Local\Temp\2\tmpqr8shf2g\repo\bootstrap-run\verifier-recoveries\verifier-recovery-20260808T161126-68209200\recovery.json
+Verifier recovery is already open: verifier-recovery-20260808T161126-68209200
+Completed repository-owned layer runner: independent_verifier
+Finalized manual bootstrap review: blocked
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpjajjv7x0\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpxtnu6wq9\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp5ks_sha7\repo\bootstrap-run
+Sealed Bootstrap Review run: abandoned
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpjtns49m4\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpgxzhtqxc\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpgxzhtqxc\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp5a429qwj\repo\bootstrap-run
+Authorized finding-mode re-entry at C:\Users\Administrator\AppData\Local\Temp\2\tmp5a429qwj\repo\finding-reentry-baseline-replay-round-two.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp5a429qwj\repo\bootstrap-run-round-2
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp1r9oczcd\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp5fq3brgj\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp5fq3brgj\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp5fq3brgj\repo\prepared-history-run
+{
+  "runCount": 2,
+  "eligibleRunCount": 1,
+  "costCohortCount": 0,
+  "outputDirectory": "logs/review-governance/baseline-test"
+}
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmphv1qp219\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmphv1qp219\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp9hs9svgk\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp9hs9svgk\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 5968
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 1724
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 5348
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Acquired process lease verifier for PID 3844
+Released process lease verifier: completed
+Finalized manual bootstrap review: blocked
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpu_f76qu0\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpu_f76qu0\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 3108
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 6848
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 4112
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: clean; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpt8l27f0a\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpt8l27f0a\repo\bootstrap-run-fresh
+sha256:c57ea6c6a2db965f70cfd1684de85e28bd292c964dee39ee1e45035cea5caa2f
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmptkpoy9_a\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmptkpoy9_a\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease model-probe:medium for PID 1284
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmptkpoy9_a\repo\bootstrap-run-after-probe
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpguqsh2uy\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpp1xmr5we\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpp3lkf659\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmphgatrt09\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmptv5ckhb0\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpodxcigh1\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp9b3zbxew\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmps68o7wzj\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmps68o7wzj\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 472
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 6800
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 6264
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpvwfupf0d\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpc_bwz1vw\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpc_bwz1vw\repo\bootstrap-run\review-launch-authorization.json
+{
+  "schemaVersion": "bootstrap-process-leases.v1",
+  "reviewId": "upstream-manual-001",
+  "inputHash": "sha256:a6f1f9e36d010732bdc5a6b6bfcf0c77239fe2c460414a894468bf61e50f2aae",
+  "leases": [
+    {
+      "operationId": "reviewer:blind_hunter",
+      "role": "blind_hunter",
+      "pid": 3604,
+      "processIdentity": "windows-filetime:134306791201529848",
+      "state": "stale",
+      "acquiredAt": "2026-08-08T16:12:00.149843Z",
+      "updatedAt": "2026-08-08T16:12:00.324628Z",
+      "note": "PID is no longer the acquired process; append-only event marked attempt stale"
+    }
+  ]
+}
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmppjpjzgg5\repo\bootstrap-run
+{
+  "schemaVersion": "bootstrap-process-leases.v1",
+  "reviewId": "upstream-manual-001",
+  "inputHash": "sha256:607fa15fbaa05e9cc9518aaa3aec3775daad41ade324ff1309be00c688d79635",
+  "leases": [
+    {
+      "operationId": "reviewer:blind_hunter",
+      "role": "blind_hunter",
+      "pid": 1132,
+      "processIdentity": "windows-filetime:134306791209816766",
+      "state": "stale",
+      "acquiredAt": "2026-08-08T16:12:00.978450Z",
+      "updatedAt": "2026-08-08T16:12:01.165353Z",
+      "note": "PID is no longer the acquired process; append-only event marked attempt stale"
+    }
+  ]
+}
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpyjpqrjeq\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpoufx_acn\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpoufx_acn\repo\bootstrap-run\review-launch-authorization.json
+Recorded lineage adoption at C:\Users\Administrator\AppData\Local\Temp\2\tmpsbnk_jmt\repo\decision-logs\legacy.lineage-adoption.v1.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpxnqgpr4o\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpxnqgpr4o\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpdhzh3evu\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpdhzh3evu\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpwqf62mrn\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpwqf62mrn\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 4328
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 6844
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 6204
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Acquired process lease verifier for PID 6384
+Released process lease verifier: completed
+Finalized manual bootstrap review: blocked
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpqhun4ed5\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpqhun4ed5\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Finalized manual bootstrap review: blocked
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmprgcu52iq\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmprgcu52iq\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp8clzj6sb\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp8clzj6sb\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpbvqb41ll\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpbvqb41ll\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpoy69u8m_\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpoy69u8m_\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmprc3_gnru\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmprc3_gnru\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp31h3xpqc\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp31h3xpqc\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Finalized manual bootstrap review: blocked
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmppfqm6h4w\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmppfqm6h4w\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Finalized manual bootstrap review: blocked
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpna2sk5by\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpna2sk5by\repo\bootstrap-focused-round-2
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpna2sk5by\repo\bootstrap-focused-round-2\review-launch-authorization.json
+Acquired process lease reviewer:focused_repair_verifier for PID 964
+Released process lease reviewer:focused_repair_verifier: completed
+Gated focused repair verification: passed
+Finalized focused repair verification: passed
+Validated focused repair verification: passed
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp_grja5sk\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp_grja5sk\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp0_ab3ro3\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp0_ab3ro3\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: incomplete; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpoopc9xj1\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpoopc9xj1\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpoiigmnvm\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpoiigmnvm\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpcq6cgy8o\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpcq6cgy8o\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpsh43fruq\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpsh43fruq\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpbk03b4da\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpbk03b4da\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: advisory; accepted=2 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp9h811d4b\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp9h811d4b\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=2 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpfbg19fqc\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpfbg19fqc\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: incomplete; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpzl82dwze\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpzl82dwze\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: incomplete; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp0n2xmwqs\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpejo6sjju\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpejo6sjju\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp2kk8y3pv\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp2kk8y3pv\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmps4iojdk3\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmps4iojdk3\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: incomplete; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpjgr8tfnt\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpjgr8tfnt\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: incomplete; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpb1devqpk\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpb1devqpk\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp0y1btqcp\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp0y1btqcp\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: incomplete; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpqm6hpy9i\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpqm6hpy9i\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: incomplete; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpyzggjy4z\repo\bootstrap-severityRationale
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpyzggjy4z\repo\bootstrap-severityRationale\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpyzggjy4z\repo\bootstrap-authorityOwner
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpyzggjy4z\repo\bootstrap-authorityOwner\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpyzggjy4z\repo\bootstrap-consumer
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpyzggjy4z\repo\bootstrap-consumer\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpyzggjy4z\repo\bootstrap-validatorRef
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpyzggjy4z\repo\bootstrap-validatorRef\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp9sus1ave\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp9sus1ave\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpek2elrlp\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpek2elrlp\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp3gwlexm1\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp3gwlexm1\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp4b5uoakv\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp4b5uoakv\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmply3bhslx\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmply3bhslx\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpzyo1qb6x\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpmbzdgro4\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpmbzdgro4\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp2v7jls9y\repo\bootstrap-run
+Authorized hard-limit focused recovery at C:\Users\Administrator\AppData\Local\Temp\2\tmpov8vyhcc\repo\hard-limit-recovery.json
+Authorized hard-limit focused recovery at C:\Users\Administrator\AppData\Local\Temp\2\tmpov8vyhcc\repo\hard-limit-upstream-plan-recovery.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpov8vyhcc\repo\hard-limit-focused-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpov8vyhcc\repo\hard-limit-focused-run\review-launch-authorization.json
+Acquired process lease reviewer:focused_repair_verifier for PID 2496
+Released process lease reviewer:focused_repair_verifier: completed
+Gated focused repair verification: passed
+Finalized focused repair verification: passed
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp_9menxzn\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp0j5logq2\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp0j5logq2\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpn6u8rs2c\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpn6u8rs2c\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 3604
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 5096
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 6360
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpnmeq2ta3\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpnmeq2ta3\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp2h4_whzz\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp2h4_whzz\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp03l15a9c\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmporu5w1le\repo\bootstrap-run
+Authorized finding-mode re-entry at C:\Users\Administrator\AppData\Local\Temp\2\tmporu5w1le\repo\finding-reentry-authorization.json
+Authorized finding-mode re-entry at C:\Users\Administrator\AppData\Local\Temp\2\tmporu5w1le\repo\finding-reentry-implementation-round-two.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmporu5w1le\repo\bootstrap-implementation-round-2
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpseyr0usf\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpseyr0usf\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpr77o_f30\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpr77o_f30\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: incomplete; accepted=0 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpaywjvf5r\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpdea_uq73\repo\bootstrap-run
+Authorized finding-mode re-entry at C:\Users\Administrator\AppData\Local\Temp\2\tmpdea_uq73\repo\finding-reentry-advisory.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpk18x6hcg\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpk18x6hcg\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpk18x6hcg\repo\bootstrap-run-restarted
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpms0xlt5v\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpms0xlt5v\repo\bootstrap-run\review-launch-authorization.json
+Marked semantic review round started
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpw6xf5_3v\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpw6xf5_3v\repo\bootstrap-run\review-launch-authorization.json
+Marked semantic review round started
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpvzaabhpa\repo\bootstrap-run
+{
+  "schemaVersion": "bootstrap-run-index.v1",
+  "repositoryRoot": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\2\\tmpvzaabhpa\\repo",
+  "changeId": null,
+  "lineageFamilyId": null,
+  "runCount": 1,
+  "runs": [
+    {
+      "runDirectory": "C:/Users/Administrator/AppData/Local/Temp/2/tmpvzaabhpa/repo/bootstrap-run",
+      "reviewId": "upstream-manual-001",
+      "changeId": "upstream-change-001",
+      "lineageFamilyId": "upstream-change-001",
+      "fullReviewRound": 1,
+      "runExecutionState": "prepared",
+      "runRelationship": "active",
+      "changeCycleState": "review-required",
+      "finalStatus": null,
+      "activeAttempts": [],
+      "acquiredLeases": [],
+      "nextAction": "complete-preflight",
+      "verifierRecoveryState": "none"
+    }
+  ]
+}
+Sealed Bootstrap Review run: abandoned
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpllrsiw7r\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp7bn695j0\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp7bn695j0\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 7156
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 5008
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 1956
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpdxxjap9f\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp4esfk6vd\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpadld92ob\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp25d2s9_f\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp25d2s9_f\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: advisory; accepted=2 rejected=0
+C:\Users\Administrator\AppData\Local\Temp\2\tmp25d2s9_f\repo\bootstrap-run\p2-process-events\p2-closure-command-1786205601986671000\process-result.json
+C:\Users\Administrator\AppData\Local\Temp\2\tmp25d2s9_f\repo\bootstrap-run\p2-process-events\p2-closure-command-1786205602177676400\process-result.json
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp7i75nukp\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpra8gamqz\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpp1emjc58\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpnsn6s8el\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpnsn6s8el\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: advisory; accepted=1 rejected=0
+C:\Users\Administrator\AppData\Local\Temp\2\tmpnsn6s8el\repo\bootstrap-run\p2-process-events\p2-closure-command-1786205606416082300\process-result.json
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp6xmamgdc\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp6xmamgdc\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: advisory; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpisrq_0_9\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpisrq_0_9\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: advisory; accepted=1 rejected=0
+C:\Users\Administrator\AppData\Local\Temp\2\tmpisrq_0_9\repo\bootstrap-run\p2-process-events\p2-recheck-command-1786205610072201600\process-result.json
+C:\Users\Administrator\AppData\Local\Temp\2\tmpisrq_0_9\repo\bootstrap-run\p2-process-events\p2-closure-command-1786205611087945900\process-result.json
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpew3hdknb\repo\bootstrap-run
+Acquired process lease model-probe:parallel-a for PID 1284
+Acquired process lease model-probe:parallel-b for PID 1284
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp7ydzmfd7\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp6mhslord\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmppaigt4ed\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmppaigt4ed\repo\bootstrap-run\review-launch-authorization.json
+Completed repository-owned layer runner: blind_hunter
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp1c3xsxc4\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpbuj0zxcv\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp5rzp7ovj\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpv0nx33bw\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmplcwxfcob\repo\profile-run-1
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmplcwxfcob\repo\profile-run-2
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmplcwxfcob\repo\profile-run-3
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmplcwxfcob\repo\profile-run-4
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpeuvlkddv\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpz9a5tujg\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpu33w590o\repo\bootstrap-run
+Acquired process lease model-probe:exited for PID 1868
+Released process lease model-probe:exited: completed
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpbwe1gzf0\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp4znm25qr\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpopvh5icb\repo\bootstrap-run
+Acquired process lease preflight:targeted-tests for PID 4032
+Released process lease preflight:targeted-tests: completed
+Acquired process lease model-probe:blind for PID 1284
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpguzz2wto\repo\bootstrap-run
+Acquired process lease model-probe:identity for PID 1284
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp787bw0xy\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp787bw0xy\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 6728
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 3892
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 5480
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp44p7cis6\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpzh5kq9ft\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmptsdczvoa\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmptsdczvoa\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp69a0sug8\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpajtenfw1\repo\bootstrap-run
+Authorized finding-mode re-entry at C:\Users\Administrator\AppData\Local\Temp\2\tmpajtenfw1\repo\finding-reentry-boundary-round-two.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpajtenfw1\repo\bootstrap-boundary-round-2
+Authorized finding-mode re-entry at C:\Users\Administrator\AppData\Local\Temp\2\tmpajtenfw1\repo\finding-reentry-boundary-round-three.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpajtenfw1\repo\bootstrap-boundary-round-3
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpqbqjx4hy\repo\bootstrap-run
+Authorized finding-mode re-entry at C:\Users\Administrator\AppData\Local\Temp\2\tmpqbqjx4hy\repo\finding-reentry-stable-round-two.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpqbqjx4hy\repo\bootstrap-stable-round-2
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp07eah_ci\repo\bootstrap-run
+Authorized finding-mode re-entry at C:\Users\Administrator\AppData\Local\Temp\2\tmp07eah_ci\repo\finding-reentry-upstream-round-two.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp07eah_ci\repo\bootstrap-run-round-2-success
+Authorized finding-mode re-entry at C:\Users\Administrator\AppData\Local\Temp\2\tmp07eah_ci\repo\finding-reentry-upstream-round-three.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp07eah_ci\repo\bootstrap-run-round-3-success
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp4nsmbtp2\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpu0pd4hef\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpyw8uk7i5\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpcyk5c_nb\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpcyk5c_nb\repo\bootstrap-run-reprepared
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpit67aw76\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpit67aw76\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Validated finalized Bootstrap run: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp309ggmby\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp309ggmby\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmppddnmg0x\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmppddnmg0x\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp9rzprk44\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp9rzprk44\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmplcqgwpl5\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmplcqgwpl5\repo\bootstrap-run\review-launch-authorization.json
+Gated manual outputs: clean; accepted=0 rejected=0
+Finalized manual bootstrap review: clean
+Validated finalized Bootstrap run: clean
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmp9ceuy3rg\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmp9ceuy3rg\repo\bootstrap-run\review-launch-authorization.json
+Validated reviewer output: acceptance_auditor
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpsxmvs0vp\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpsxmvs0vp\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpmnlwkp80\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpmnlwkp80\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpdzbzicm5\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpdzbzicm5\repo\bootstrap-run\review-launch-authorization.json
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpcvcueqo3\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpcvcueqo3\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 4284
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 6660
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 480
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmptgi5b1la\repo\bootstrap-run
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpnpqzv3cq\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpnpqzv3cq\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 3148
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 2220
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 5336
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmpco5im6yl\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmpco5im6yl\repo\bootstrap-run\review-launch-authorization.json
+Acquired process lease reviewer:blind_hunter for PID 4228
+Released process lease reviewer:blind_hunter: completed
+Acquired process lease reviewer:edge_case_hunter for PID 3984
+Released process lease reviewer:edge_case_hunter: completed
+Acquired process lease reviewer:acceptance_auditor for PID 7124
+Released process lease reviewer:acceptance_auditor: completed
+Gated manual outputs: awaiting_verification; accepted=1 rejected=0
+Prepared manual bootstrap review at C:\Users\Administrator\AppData\Local\Temp\2\tmplmscno1p\repo\bootstrap-run
+Authorized reviewer launch: C:\Users\Administrator\AppData\Local\Temp\2\tmplmscno1p\repo\bootstrap-run\review-launch-authorization.json
+
+STDERR:
+....warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: A run with an active attempt or acquired lease cannot be sealed; inspect or recover it first
+ERROR: Lineage family upstream-change-001 already has full review round 1
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Concurrent write-set overlap with attempt existing-attempt
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Prepared input artifact is stale: upstream-plan/plan.md
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Prepared scope file inventory changed after prepare
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: New reviews require --lineage-family-id
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Child process made no progress before 900s timeout
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Review baseline outputs are append-only
+ERROR: Review baseline output directory is outside repository root: C:\Users\Administrator\AppData\Local\Temp\2\tmp5fq3brgj\repo\baseline-outside-logs
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: A clean predecessor does not trigger another full semantic review
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Required Codex process leases are not completed: verifier/independent_verifier
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Required Codex process leases are not completed: reviewer:acceptance_auditor/acceptance_auditor, reviewer:blind_hunter/blind_hunter, reviewer:edge_case_hunter/edge_case_hunter
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Prepared input artifact is stale: upstream-plan/plan.md
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/SKILL.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/SKILL.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/standards/bootstrap-review-control-plane.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Codex reviewer reported failure: Assigned context is unavailable
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Refusing to finalize an already finalized review; create a new review run instead
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Required independent_verifier access proof is missing: C:\Users\Administrator\AppData\Local\Temp\2\tmpwqf62mrn\repo\bootstrap-run\verifier-access-proof.json
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Refusing to finalize an already finalized review; create a new review run instead
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: review-candidates.json changed after gate
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: preflight-result.json changed after gate
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Reviewer outputs no longer reproduce review-candidates.json
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Verifier evidence does not cover finding evidence for BSR-717548ED8685C4FC
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Verifier evidence is invalid for BSR-D82E389D590FE30B: evidenceChecked references an artifact outside prepared scope: README.md
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Verifier decisions are missing for: BSR-78F6CD25797E5872
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Verifier evidence does not cover finding context for BSR-1548CE02CC9EC788: upstream-plan/plan.md
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Refusing to gate an already finalized review; create a new review run instead
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Prepared input artifact is stale: upstream-plan/plan.md
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Refusing to rerun gate because verifier-output.json contains saved decisions; create a new review run instead
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Refusing to gate an already finalized review; create a new review run instead
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Review launch authorization is invalid: Deterministic preflight is incomplete: preflight evidence is missing or stale for scope-structure-and-links
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Cannot read valid UTF-8 JSON from C:\Users\Administrator\AppData\Local\Temp\2\tmpzyo1qb6x\repo\bootstrap-run\review-launch-authorization.json: [Errno 2] No such file or directory: 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\2\\tmpzyo1qb6x\\repo\\bootstrap-run\\review-launch-authorization.json'
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'index-drift.txt', LF will be replaced by CRLF the next time Git touches it
+ERROR: Git index changed after prepare
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Hard-limit recovery requires an eligible blocked Round 3 predecessor profile
+ERROR: Hard-limit deterministic repair closure is invalid: deterministic repair closure identity is invalid
+ERROR: Hard-limit recovery requires an eligible blocked Round 3 predecessor profile
+ERROR: stop-before-process
+ERROR: Repair closure is missing or stale
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: High-cost review requires --ack-high-cost before the access probe (tokenP50=25000, tokenP90=50000, wallMinutesP50=5, wallMinutesP90=10, retryRisk=medium, samples=17, confidence=low)
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: High-cost review requires --ack-high-cost before reviewer launch (artifacts=50, bytes=561, relativeWorkUnits=250)
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Implementation-conformance repair rounds require Acceptance route bindings
+ERROR: Discovery after Round 1 requires --finding-mode-reentry-authorization
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: New reviews require --lineage-family-id
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Finding-mode re-entry requires explicit user confirmation
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Lineage family stable-acceptance-target already has full review round 1
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Run seal is immutable and already exists
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: A clean predecessor does not trigger another full semantic review
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: P2 disposition evidence is invalid: P2 owner authority for BSR-68D713AF96C2FCBA is missing or stale; P2 closure command registry for BSR-68D713AF96C2FCBA is missing or stale; P2 non-impact evidence for BSR-68D713AF96C2FCBA is missing or stale; P2 recheck evidence for BSR-68D713AF96C2FCBA is missing or stale
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Cannot read valid UTF-8 JSON from C:\Users\Administrator\AppData\Local\Temp\2\tmpisrq_0_9\repo\bootstrap-run\p2-dispositions.json: [Errno 2] No such file or directory: 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\2\\tmpisrq_0_9\\repo\\bootstrap-run\\p2-dispositions.json'
+ERROR: P2 disposition evidence is invalid: high-risk P2 cannot be deferred: BSR-1FB1BF0CDFA31417
+ERROR: P2 disposition evidence is invalid: deferred P2 has expired and is blocking: BSR-1FB1BF0CDFA31417
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: New reviews require --lineage-family-id
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: New reviews require --lineage-family-id
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: New reviews require --lineage-family-id
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Review ID must be 3-64 lowercase letters, digits, dot, underscore, or hyphen
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Operation preflight:targeted-tests already has live PID 4032; reattach/poll it instead of restarting
+ERROR: Process lease preflight:targeted-tests cannot be released while PID 4032 is still alive; reattach or poll until it exits
+ERROR: process-lease acquire requires a currently live --pid with a readable identity
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: process-lease release requires a positive --pid
+ERROR: PID does not own process lease model-probe:identity
+ERROR: PID identity does not own process lease model-probe:identity
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Verifier output passes semantic validation; a valid completed operation cannot be reopened
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/artifact-view/manifest.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/artifact-view/tree/upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/artifact-view/tree/upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/preflight-result.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/process-leases.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/review-input.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/reviewer-outputs/acceptance_auditor.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/reviewer-outputs/blind_hunter.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/reviewer-outputs/edge_case_hunter.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/reviewer-prompts/acceptance_auditor.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/reviewer-prompts/blind_hunter.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'imported-review/reviewer-prompts/edge_case_hunter.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Review round must be within the configured full-review hard limit
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Frozen authority changed before publication
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/removed-schema.json', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Round 3 novel_p0_p1 requires a new predecessor P0/P1 finding
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Round 3 requires --round-entry-reason with an allowed typed reason
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: review-metrics.json does not reproduce finalized evidence
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: review-input.json has stale or substituted controlPlaneRevision
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Verifier output violates bootstrap-verifier-output.v1: $: missing required schemaVersion; $: missing required reviewId; $: missing required routeVersion; $: missing required authorityRevision; $: missing required inputHash; $: missing required decisions
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Reviewer output is invalid for acceptance_auditor: coverage_invalid: readArtifacts and missingArtifacts must partition requiredArtifacts; coverage_invalid: completed readArtifacts must exactly match prepared manifest order
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Reviewer output is invalid for acceptance_auditor: status_invalid: validate-layer requires a completed reviewer output
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Independent verifier access proof requires a completed gate
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Frozen authority changed before publication
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Required independent_verifier access proof is missing: C:\Users\Administrator\AppData\Local\Temp\2\tmpnpqzv3cq\repo\bootstrap-run\verifier-access-proof.json
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Verifier evidence does not cover finding evidence for BSR-35452565D1F19E2E
+.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it
+ERROR: Codex Artifact View read receipt is invalid: receipt does not match the frozen Artifact View
+.
+----------------------------------------------------------------------
+Ran 191 tests in 185.359s
+
+OK

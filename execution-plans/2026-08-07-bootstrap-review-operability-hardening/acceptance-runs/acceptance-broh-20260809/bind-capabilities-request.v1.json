@@ -1,0 +1,31 @@
+{
+  "decision": {
+    "schemaVersion": "acceptance-semantic-review-requirement-decision.v1",
+    "decisionVersion": "v10",
+    "producer": "refactor-implementation-acceptance",
+    "decisionStatus": "ready",
+    "requirement": "required",
+    "profile": "bootstrap-skill-route",
+    "reasonCodes": ["workflow_control_plane_changed"],
+    "requirementSources": ["candidateIdentity.changedPaths"],
+    "inputHashes": {
+      "candidateIdentity": "sha256:e6520af33c05d48a23e864643b8d3e598fa03e54c2625e2e7b2157428390f222",
+      "deterministicEvidence": "sha256:23d04f67745e252ff834f3549a17312d9244bd506d1e4c4a247e564e91cc788f",
+      "policy": "sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868"
+    },
+    "policyHash": "sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868",
+    "candidateIdentityHash": "sha256:e6520af33c05d48a23e864643b8d3e598fa03e54c2625e2e7b2157428390f222",
+    "deterministicEvidenceHash": "sha256:23d04f67745e252ff834f3549a17312d9244bd506d1e4c4a247e564e91cc788f",
+    "maintainerIntent": "default",
+    "requiredCompanionCapabilityExpectations": [{"capabilityId":"acceptance-inventory-attestation","capabilityVersion":"1.0","producerRole":"acceptance_auditor"}],
+    "authorizes": [],
+    "decisionHash": "sha256:2b5dd8706861493545b8818d94853b3e5b6e2a998ab5a9209a721172d7496fb9"
+  },
+  "profile": {
+    "controlPlaneRevision": "bootstrap-control-plane.v2",
+    "routeVersion": "bootstrap-review-route.v2",
+    "reviewProfile": "review-policy://bootstrap-skill-route/v1",
+    "policyRevision": "sha256:189d5eef49314aadfa639541b7029500061d47739ca2d8e244d2c740eceb665c",
+    "companionCapabilities": [{"capabilityId":"acceptance-inventory-attestation","capabilityVersion":"1.0","producerRole":"acceptance_auditor","schemaPath":".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json","schemaHash":"sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"}]
+  }
+}

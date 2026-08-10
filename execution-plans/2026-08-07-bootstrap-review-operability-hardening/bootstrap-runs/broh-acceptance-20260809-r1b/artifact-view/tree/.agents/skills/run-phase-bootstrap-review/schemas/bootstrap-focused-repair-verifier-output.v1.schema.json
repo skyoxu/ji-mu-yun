@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-focused-repair-verifier-output.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewId", "inputHash", "policyRevision", "authorityRevision", "role", "repairClosureHash", "repairCompletenessHash", "status", "coverage", "decisions", "newBlockers", "escalation", "authorizes"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-focused-repair-verifier-output.v1"},
+    "reviewId": {"type": "string", "minLength": 1},
+    "inputHash": {"$ref": "#/$defs/hash"},
+    "policyRevision": {"$ref": "#/$defs/hash"},
+    "authorityRevision": {"type": "string", "minLength": 1},
+    "role": {"const": "focused_repair_verifier"},
+    "repairClosureHash": {"$ref": "#/$defs/hash"},
+    "repairCompletenessHash": {"$ref": "#/$defs/hash"},
+    "status": {"enum": ["pending", "completed", "failed"]},
+    "coverage": {"$ref": "#/$defs/coverage"},
+    "decisions": {"type": "array", "items": {"$ref": "#/$defs/decision"}},
+    "newBlockers": {"type": "array", "items": {"$ref": "#/$defs/blocker"}},
+    "escalation": {"$ref": "#/$defs/escalation"},
+    "failureReason": {"type": "string", "minLength": 1},
+    "attemptId": {"type": "string", "minLength": 1},
+    "authorizes": {"type": "array", "maxItems": 0}
+  },
+  "allOf": [
+    {"if": {"properties": {"status": {"const": "completed"}}}, "then": {"not": {"required": ["failureReason"]}}},
+    {"if": {"properties": {"status": {"const": "failed"}}}, "then": {"required": ["failureReason"], "properties": {"decisions": {"maxItems": 0}, "newBlockers": {"maxItems": 0}}}}
+  ],
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"},
+    "coverage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["requiredArtifacts", "readArtifacts", "missingArtifacts"],
+      "properties": {
+        "requiredArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+        "readArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+        "missingArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}}
+      }
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["findingId", "status", "evidenceChecked"],
+      "properties": {
+        "findingId": {"type": "string", "minLength": 1},
+        "status": {"enum": ["verified_fixed", "blocking"]},
+        "evidenceChecked": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/path"}}
+      }
+    },
+    "blocker": {
+      "type": "object", "additionalProperties": false,
+      "required": ["findingId", "severity", "dimension", "artifact", "startLine", "endLine", "exactEvidence"],
+      "properties": {
+        "findingId": {"type": "string", "minLength": 1},
+        "severity": {"enum": ["P0", "P1"]},
+        "dimension": {"enum": ["code", "document", "plan", "security", "acceptance", "edge-case"]},
+        "artifact": {"$ref": "#/$defs/path"},
+        "startLine": {"type": "integer", "minimum": 1},
+        "endLine": {"type": "integer", "minimum": 1},
+        "exactEvidence": {"type": "string", "minLength": 1}
+      }
+    },
+    "escalation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["novelP0P1FindingIds", "authorityGraphChanged", "authorityGraphArtifacts", "highRiskBoundaryChanged", "highRiskBoundaryArtifacts"],
+      "properties": {
+        "novelP0P1FindingIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "authorityGraphChanged": {"type": "boolean"},
+        "authorityGraphArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+        "highRiskBoundaryChanged": {"type": "boolean"},
+        "highRiskBoundaryArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}}
+      }
+    }
+  }
+}

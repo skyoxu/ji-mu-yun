@@ -1,0 +1,74 @@
+{
+  "authorizes": [],
+  "commandId": "broh-r4-segment-composition",
+  "commandRegistryHash": "sha256:c212b387d0c20da93304f4d69cad712a1ee4be935841e39fc945664abf6cbb6f",
+  "environmentIdentity": {
+    "hash": "sha256:dbbf520d5b62af18e0dae108606b40fa9f587abcd7b19c6a06552fc9c20cf44f",
+    "names": [
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "PATH",
+      "PATHEXT",
+      "SYSTEMROOT",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "sha256": "sha256:0c94a60d9d7b4a5ec8eaec2ab7b9cb2d4204860f5344f71d2f3f175b2b805bf8"
+    },
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/tools/validate_segment_composition.py",
+      "sha256": "sha256:a19237248aef698d00c1de057d5499d5ccb78bb758f2dc9125d9245b0f749d19"
+    }
+  ],
+  "inputBindingsHash": "sha256:65ff535802a038d85e5a283f0b18ee882fec545dd3ca6637f15c8b54133a7399",
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/tools/validate_segment_composition.py"
+    ],
+    "commandId": "broh-r4-segment-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "PATH",
+      "PATHEXT",
+      "SYSTEMROOT",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 240
+  },
+  "invocationHash": "sha256:85feb13d4dd494a4d7ad2469f17d060413f9d5ed0f0e3fe5cca947851fdab4b8",
+  "processResult": {
+    "commandId": "broh-r4-segment-composition",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:541c9fe4a613e3a1dff128a59b06d5d62d5f6600e599bb85b0d3dc8cf13daf22",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

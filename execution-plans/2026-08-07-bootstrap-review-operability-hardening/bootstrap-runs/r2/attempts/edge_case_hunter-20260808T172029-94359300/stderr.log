@@ -1,0 +1,46 @@
+2026-08-08T17:22:00.355977Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.2 seconds
+Output:
+At line:2 char:11
++ python - <<'PY'
++           ~
+Missing file specification after redirection operator.
+At line:2 char:10
++ python - <<'PY'
++          ~
+The '<' operator is reserved for future use.
+At line:2 char:11
++ python - <<'PY'
++           ~
+The '<' operator is reserved for future use.
+At line:3 char:1
++ from pathlib import Path
++ ~~~~
+The 'from' keyword is not supported in this version of the language.
+At line:5 char:4
++ for p in sorted(root.glob('*.json')):
++    ~
+Missing opening '(' after keyword 'for'.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingFileSpecification
+ 
+
+2026-08-08T17:22:32.145578Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.2 seconds
+Output:
+At line:2 char:11
++ python - <<'PY'
++           ~
+Missing file specification after redirection operator.
+At line:2 char:10
++ python - <<'PY'
++          ~
+The '<' operator is reserved for future use.
+At line:2 char:11
++ python - <<'PY'
++           ~
+The '<' operator is reserved for future use.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingFileSpecification
+ 
+

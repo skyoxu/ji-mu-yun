@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-finalized-run-validation.v2.schema.json",
+  "title": "Bootstrap Finalized Run Validation v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "validationStatus", "reviewId", "changeId", "lineageFamilyId",
+    "fullReviewRound", "profileName", "reviewProfile", "routeVersion",
+    "controlPlaneRevision", "policyRevision", "profileHash", "authorityRevision",
+    "inputHash", "authorityContextHash", "reviewEntryDecisionHash",
+    "repairReviewDeltaHash", "artifactHashes", "finalStatus", "findingClosure",
+    "validatorRevision", "validatorHash", "authorizes", "doesNotAuthorize", "generatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-finalized-run-validation.v2"},
+    "validationStatus": {"const": "passed"},
+    "reviewId": {"type": "string", "minLength": 1},
+    "changeId": {"type": "string", "minLength": 1},
+    "lineageFamilyId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "fullReviewRound": {"type": "integer", "minimum": 1, "maximum": 3},
+    "profileName": {"type": "string", "minLength": 1},
+    "reviewProfile": {"type": "string", "pattern": "^review-policy://[a-z0-9-]+/v[0-9]+$"},
+    "routeVersion": {"type": "string", "minLength": 1},
+    "controlPlaneRevision": {"const": "bootstrap-control-plane.v2"},
+    "policyRevision": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "profileHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorityRevision": {"type": "string", "minLength": 1},
+    "inputHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorityContextHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "reviewEntryDecisionHash": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"},
+    "repairReviewDeltaHash": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"},
+    "artifactHashes": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reviewInput", "preflightResult", "gateState", "candidates", "rejections", "finalResult", "dispositions", "metrics", "verifierOutput", "p2Dispositions"],
+      "properties": {
+        "reviewInput": {"$ref": "#/$defs/hash"}, "preflightResult": {"$ref": "#/$defs/hash"},
+        "gateState": {"$ref": "#/$defs/hash"}, "candidates": {"$ref": "#/$defs/hash"},
+        "rejections": {"$ref": "#/$defs/hash"}, "finalResult": {"$ref": "#/$defs/hash"},
+        "dispositions": {"$ref": "#/$defs/hash"}, "metrics": {"$ref": "#/$defs/hash"},
+        "verifierOutput": {"$ref": "#/$defs/hash"},
+        "p2Dispositions": {"oneOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]}
+      }
+    },
+    "finalStatus": {"enum": ["clean", "blocked", "advisory", "incomplete"]},
+    "findingClosure": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidateCount", "visibleFindingCount", "confirmedCount", "advisoryCount", "unverifiedCount", "refutedCount", "p2FixedCount", "p2DeferredCount", "p2RefutedCount"],
+      "properties": {
+        "candidateCount": {"type": "integer", "minimum": 0}, "visibleFindingCount": {"type": "integer", "minimum": 0},
+        "confirmedCount": {"type": "integer", "minimum": 0}, "advisoryCount": {"type": "integer", "minimum": 0},
+        "unverifiedCount": {"type": "integer", "minimum": 0}, "refutedCount": {"type": "integer", "minimum": 0},
+        "p2FixedCount": {"type": "integer", "minimum": 0}, "p2DeferredCount": {"type": "integer", "minimum": 0},
+        "p2RefutedCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "validatorRevision": {"const": "bootstrap-finalized-run-validator.v3"},
+    "validatorHash": {"$ref": "#/$defs/hash"},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {
+      "type": "array", "minItems": 3, "uniqueItems": true,
+      "items": {"enum": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"]}
+    },
+    "generatedAt": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.repair-plan.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "round": 5,
+  "profile": "self-hosted",
+  "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+  "depends_on_round": 4,
+  "decision_inputs": [
+    {"path": "decision-logs/2026-08-09-bootstrap-review-context-window-repair.md", "sha256": "sha256:f790f0d8533acaf0f637ba875d2f97ae0730129ea882c9b1cebfed74458cd886"},
+    {"path": "_bmad-output/implementation-artifacts/investigations/bootstrap-review-context-overflow-remediation-investigation.md", "sha256": "sha256:09643c2a9b7bccf40fef9a794dab64f13f4ff202ea7a4eb4069394bd5d489abb"},
+    {"path": "source-reconciliation.v1.json", "role": "conflict-disposition"},
+    {"path": "control-contract.v1.json", "sha256": "sha256:ca5f8bf72bb438fda2144af9e75bdf11fcb36f26d9e9f0b5be4434754fa88ac0", "role": "self-contained-quick-dev-consumer-contract"}
+  ],
+  "slices": [
+    {
+      "id": "BROH-R5-01",
+      "depends_on": [],
+      "scope": [".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/schemas/**", ".agents/skills/run-phase-bootstrap-review/SKILL.md", "docs/standards/bootstrap-review-control-plane.md"],
+      "red": "A segmented reviewer attempt has no frozen schema-valid byte budget for fixed prompt, capsule, packet, tool results, candidate output, or required headroom.",
+      "green": "The parent freezes bootstrap-context-budget.v1 before launch, computes every declared byte budget, rejects over-budget input before Popen, and binds budget revision to request, receipt, cache, and final validation.",
+      "regression": "Run the targeted context-budget tests, complete Bootstrap regression suite, whole-directory validation, and Skill validation.",
+      "composition": {"producer": "bootstrap_review.validate_context_budget", "consumer": "bootstrap_review.run_codex_attempt", "receipt": "pre-launch budget validation receipt"}
+    },
+    {
+      "id": "BROH-R5-02",
+      "depends_on": ["BROH-R5-01"],
+      "scope": [".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/schemas/**", ".agents/skills/run-phase-bootstrap-review/SKILL.md", "docs/standards/bootstrap-review-control-plane.md"],
+      "red": "A segmented child still needs raw delegated authority text or can infer authority from the complete repository control-plane closure.",
+      "green": "The parent compiles a deterministic role-specific bootstrap-review-policy-capsule.v1 from the fully validated authority, binds its hash into the request and receipt, and the child receives capsule-only authority.",
+      "regression": "Run capsule schema/producer/consumer tests and all Bootstrap regression checks.",
+      "composition": {"producer": "bootstrap_review.build_policy_capsule", "consumer": "bootstrap_review.run_codex_attempt", "receipt": "hash-bound capsule composition receipt"}
+    },
+    {
+      "id": "BROH-R5-03",
+      "depends_on": ["BROH-R5-01", "BROH-R5-02"],
+      "scope": [".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/schemas/**", ".agents/skills/run-phase-bootstrap-review/SKILL.md", "docs/standards/bootstrap-review-control-plane.md"],
+      "red": "A child can use ambient repository or full-run paths to expand beyond its assigned segment and produce tool output outside the declared packet.",
+      "green": "The parent materializes bootstrap-review-packet.v1, starts the child outside the repository Git root with only packet/capsule/handshake/schema inputs, and rejects packet-external access before formal publication.",
+      "regression": "Run fake-child isolation, packet schema, path containment, and complete Bootstrap regression tests.",
+      "composition": {"producer": "bootstrap_review.materialize_review_packet", "consumer": "bootstrap_review.run_codex_attempt", "receipt": "packet/workspace containment receipt"}
+    },
+    {
+      "id": "BROH-R5-04",
+      "depends_on": ["BROH-R5-03"],
+      "scope": [".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py", ".agents/skills/run-refactor-implementation-acceptance/SKILL.md", ".agents/skills/run-phase-bootstrap-review/schemas/**", ".agents/skills/run-phase-bootstrap-review/SKILL.md", "docs/standards/bootstrap-review-control-plane.md"],
+      "red": "Acceptance and Bootstrap callers can expose raw stdout, manifests, and validator output instead of a fixed-size lifecycle/result projection.",
+      "green": "Bootstrap and Acceptance publish bootstrap-parent-projection.v1 only for parent-facing status; raw process material remains attempt evidence and final import consumes the validation envelope by path/hash.",
+      "regression": "Run Acceptance integration/projection tests, Bootstrap regression suite, whole-directory validation, and Skill validation.",
+      "composition": {"producer": "bootstrap_review.build_parent_projection", "consumer": "acceptance_cli.import_bootstrap", "receipt": "bounded cross-skill projection receipt"}
+    },
+    {
+      "id": "BROH-R5-05",
+      "depends_on": ["BROH-R5-01", "BROH-R5-02", "BROH-R5-03", "BROH-R5-04"],
+      "scope": [".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py", ".agents/skills/run-phase-bootstrap-review/schemas/**", ".agents/skills/run-phase-bootstrap-review/SKILL.md", "docs/standards/bootstrap-review-control-plane.md"],
+      "red": "The control plane has no deterministic two-times-scope fixture proving packet, capsule, tool, candidate, projection, and retry bounds without model launch.",
+      "green": "A synthetic two-times-current-scope fixture passes all boundedness and no-unchanged-retry predicates; a real canary is a separate fresh-run operator action and never acceptance authority.",
+      "regression": "Run deterministic stress and all registered Bootstrap/Acceptance regression checks.",
+      "composition": {"producer": "bootstrap_review.materialize_review_packet", "consumer": "acceptance_cli.import_bootstrap", "receipt": "no-model deterministic stress receipt"}
+    }
+  ],
+  "authorizes": []
+}

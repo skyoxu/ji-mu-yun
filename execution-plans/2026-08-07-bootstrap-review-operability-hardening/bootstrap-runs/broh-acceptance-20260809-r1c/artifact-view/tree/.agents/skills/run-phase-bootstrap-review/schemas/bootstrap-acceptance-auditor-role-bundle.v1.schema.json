@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bootstrap Acceptance Auditor Role Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewId", "attemptId", "inputHash", "reviewerOutput", "inventoryAttestation", "authorizes"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-acceptance-auditor-role-bundle.v1"},
+    "reviewId": {"type": "string", "minLength": 1},
+    "attemptId": {"type": "string", "minLength": 1},
+    "inputHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "reviewerOutput": {"type": "object"},
+    "inventoryAttestation": {"type": "object"},
+    "authorizes": {"const": []}
+  }
+}

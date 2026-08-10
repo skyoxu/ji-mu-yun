@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "bootstrap-preflight-result.v1",
+  "reviewId": "broh-acceptance-20260809-r1-short",
+  "routeVersion": "bootstrap-review-route.v2",
+  "policyRevision": "sha256:189d5eef49314aadfa639541b7029500061d47739ca2d8e244d2c740eceb665c",
+  "authorityRevision": "bdb9df4bd61def6f048cf4ad7cc427565228cb07",
+  "inputHash": "sha256:1eff9403a47556f8bd6aa04e0b8058d9273f90f8c794bd8ff6d8e98220a8621b",
+  "status": "pending",
+  "checks": [
+    {
+      "checkId": "bootstrap-regression-tests",
+      "status": "pending"
+    },
+    {
+      "checkId": "whole-directory-validator",
+      "status": "pending"
+    },
+    {
+      "checkId": "skill-quick-validation",
+      "status": "pending"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "bootstrap-access-handshake-request.v1",
+  "reviewId": "broh-acceptance-20260809-r2",
+  "inputHash": "sha256:c51d91f71a125ae9b891e0cb1510c78c544671b1c812df308c5f0a3cc43bf8ac",
+  "role": "blind_hunter",
+  "runDirectory": "C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2",
+  "artifactViewManifestPath": "artifact-view/manifest.json",
+  "artifactViewManifestHash": "sha256:9e3eb3765e5596667f7ca270c7d25dd180eb2a925a624d503042e2d3e4180e50"
+}

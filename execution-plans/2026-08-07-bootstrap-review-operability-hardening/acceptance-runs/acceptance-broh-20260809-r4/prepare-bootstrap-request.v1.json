@@ -1,0 +1,80 @@
+{
+  "decision": {
+    "schemaVersion": "acceptance-semantic-review-requirement-decision.v1",
+    "decisionVersion": "v10",
+    "producer": "refactor-implementation-acceptance",
+    "decisionStatus": "ready",
+    "requirement": "required",
+    "profile": "bootstrap-skill-route",
+    "reasonCodes": ["workflow_control_plane_changed"],
+    "requirementSources": ["candidateIdentity.changedPaths"],
+    "inputHashes": {
+      "candidateIdentity": "sha256:d651dd9619844d10a1c44b97bf980f6cd7d158777bffd6e66746983d8cfa0662",
+      "deterministicEvidence": "sha256:782df8ea171d60adebb946e99d0b4b4b8c558a8b1333b454451e5d1661665f0d",
+      "policy": "sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868"
+    },
+    "policyHash": "sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868",
+    "candidateIdentityHash": "sha256:d651dd9619844d10a1c44b97bf980f6cd7d158777bffd6e66746983d8cfa0662",
+    "deterministicEvidenceHash": "sha256:782df8ea171d60adebb946e99d0b4b4b8c558a8b1333b454451e5d1661665f0d",
+    "maintainerIntent": "default",
+    "requiredCompanionCapabilityExpectations": [{"capabilityId":"acceptance-inventory-attestation","capabilityVersion":"1.0","producerRole":"acceptance_auditor"}],
+    "authorizes": [],
+    "decisionHash": "sha256:9f334ec734044a92270b732c559f00c60aa0448e2469a4172ea2ba4339e72e49"
+  },
+  "decision_request": {
+    "repository_root": "C:/jimuyun",
+    "prepared_run_input": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/acceptance-runs/acceptance-broh-20260809-r4/prepared-run-input.v1.json",
+    "deterministic_evidence": {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/acceptance-runs/acceptance-broh-20260809-r4/deterministic-result.v1.json",
+      "sha256": "sha256:151a7edcbff410b0e979a09f1f81c696915c548f37b028319861be32aba04bc0"
+    },
+    "maintainer_intent": "default"
+  },
+  "binding": {
+    "schemaVersion": "bootstrap-capability-binding.v1",
+    "status": "bound",
+    "controlPlaneRevision": "bootstrap-control-plane.v2",
+    "routeVersion": "bootstrap-review-route.v2",
+    "reviewProfile": "review-policy://bootstrap-skill-route/v1",
+    "policyRevision": "sha256:189d5eef49314aadfa639541b7029500061d47739ca2d8e244d2c740eceb665c",
+    "requiredCompanionCapabilities": [{"capabilityId":"acceptance-inventory-attestation","capabilityVersion":"1.0","producerRole":"acceptance_auditor","schemaPath":".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json","schemaHash":"sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"}],
+    "authorizes": []
+  },
+  "launch_authorization": null,
+  "repository_root": "C:/jimuyun",
+  "scope_inputs": {
+    "skill_source": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
+    "operator_guide": [
+      "docs/standards/bootstrap-review-control-plane.md",
+      "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md"
+    ],
+    "route_or_cli": [
+      ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+    ],
+    "profiles_and_config": [
+      ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+      ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json"
+    ],
+    "schemas": [
+      ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json",
+      ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json"
+    ],
+    "tests": [".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"],
+    "usage_evidence": ["execution-plans/2026-08-07-bootstrap-review-operability-hardening/95-implementation-evolution-and-completion-report.md"],
+    "repository_rules": ["AGENTS.md"]
+  },
+  "lineage_state": {
+    "schemaVersion": "bootstrap-review-lineage-state.v1",
+    "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+    "semanticRoundsConsumed": 0,
+    "consumedRoundNumbers": [],
+    "defaultFullReviewRoundLimit": 2,
+    "hardFullReviewRoundLimit": 3,
+    "nextFullReviewRound": 1,
+    "state": "available",
+    "runs": [],
+    "authorizes": [],
+    "lineageStateHash": "sha256:e88838411d06d24f37ae2e94f02f648f3c3a488d8fdc8ca4b5069cc6962dfb61"
+  }
+}

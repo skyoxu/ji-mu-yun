@@ -1,0 +1,19 @@
+{
+  "schema_version": "jimuyun.vdd-repair-command-registry.v1",
+  "commands": [
+    {"id": "broh-r5-s1-tests", "executable": "py", "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", "-k", "test_round5_context_budget_and_capsule"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "broh-r5-s2-tests", "executable": "py", "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", "-k", "test_round5_packet_workspace_isolation"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "broh-r5-s3-tests", "executable": "py", "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", "-k", "test_round5_tool_output_boundary_and_repartition"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "broh-r5-s4-tests", "executable": "py", "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", "-k", "test_round5_compact_bootstrap_acceptance_projection"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "broh-r5-s5-tests", "executable": "py", "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", "-k", "test_round5_two_x_scope_stress_and_canary_boundary"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "acceptance-bootstrap-tests", "executable": "py", "argv": ["-3", "-B", ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 600, "shell": false},
+    {"id": "bootstrap-skill-tests", "executable": "py", "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 1200, "shell": false},
+    {"id": "broh-r5-s1-validation", "executable": "py", "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_repair_plan.py"}, "--slice", "BROH-R5-S1"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "broh-r5-s2-validation", "executable": "py", "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_repair_plan.py"}, "--slice", "BROH-R5-S2"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "broh-r5-s3-validation", "executable": "py", "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_repair_plan.py"}, "--slice", "BROH-R5-S3"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "broh-r5-s4-validation", "executable": "py", "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_repair_plan.py"}, "--slice", "BROH-R5-S4"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "broh-r5-s5-validation", "executable": "py", "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_repair_plan.py"}, "--slice", "BROH-R5-S5"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false},
+    {"id": "round5-terminal-validation", "executable": "py", "argv": ["-3", "-B", "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py"], "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 300, "shell": false}
+  ],
+  "authorizes": []
+}

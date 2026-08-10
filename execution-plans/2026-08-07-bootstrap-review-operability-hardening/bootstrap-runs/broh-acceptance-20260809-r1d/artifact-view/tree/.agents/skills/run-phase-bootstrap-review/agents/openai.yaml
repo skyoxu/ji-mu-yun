@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run Phase Bootstrap Review"
+  short_description: "Evidence-gated Bootstrap Review control plane"
+  default_prompt: "Use the repository-owned Bootstrap Review protocol for this request."

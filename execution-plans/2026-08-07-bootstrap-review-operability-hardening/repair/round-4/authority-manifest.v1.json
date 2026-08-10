@@ -1,0 +1,20 @@
+{
+  "schema_version": "jimuyun.vdd-repair-authority-manifest.v1",
+  "plan_id": "bootstrap-review-operability-hardening-round-4-repair",
+  "acceptance_target": "execution-plans/2026-08-07-bootstrap-review-operability-hardening",
+  "current_sources": [
+    {"path": "AGENTS.md", "role": "repository-governance"},
+    {"path": "README.md", "role": "repository-toolchain-overview"},
+    {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "role": "repair-planning-authority"},
+    {"path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md", "role": "implementation-consumer"},
+    {"path": ".agents/skills/run-phase-bootstrap-review/SKILL.md", "role": "changed-workflow-authority"},
+    {"path": "docs/standards/bootstrap-review-control-plane.md", "role": "control-plane-standard"},
+    {"path": "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md", "role": "accepted-design-decision"}
+  ],
+  "historical_sources": [
+    {"path": "../../bootstrap-runs/r2", "role": "immutable-predecessor-review"},
+    {"path": "repair-findings.v1.json", "role": "finalized-repair-finding-set"}
+  ],
+  "knowledge_context_binding": "knowledge-context-binding.v1.json",
+  "authorizes": []
+}

@@ -1,0 +1,63 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json",
+      "candidate_sha256": "sha256:bff22ea5ff1887b532085124f5959b7c6f8d5048137767505cc699df0327f09f",
+      "change_type": "untracked",
+      "inclusion_reason": "Round 4 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "baseline_sha256": "sha256:431d7082f9116b3fd685c2c9e8dc0a06d2f5cecc6aca207cb67bd13e8b8d2493",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "candidate_sha256": "sha256:b83cf494b1d2172083d2f0818fb3de6d6b06d92d79b43c678762ff53445c2cac",
+      "change_type": "modified",
+      "inclusion_reason": "Round 4 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "baseline_sha256": "sha256:cddd21dc33253b53de079223fc96d302d16ce47fd4ea61e2a3829fcd1e81e546",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "candidate_sha256": "sha256:3d6d58ab5ddc089d40c1d788e53eee7053a47d1816277fbb2f0920534b394a3b",
+      "change_type": "modified",
+      "inclusion_reason": "Round 4 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "baseline_sha256": "sha256:1c370e91ee201f32799b12d246419862ce47dcb9f2addff052f32e1f97db45d5",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "candidate_sha256": "sha256:f6d9d80b1c61e7f76c33dc04eb7295bb06b4ff8220f66a2d3dec2f69c776a3a4",
+      "change_type": "modified",
+      "inclusion_reason": "Round 4 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "docs/standards/bootstrap-review-control-plane.md",
+      "baseline_sha256": "sha256:5da9a35706778bcbe942363c8186e6c1e9a58efe25ebe0fe4dc4058fbb3b6032",
+      "candidate_path": "docs/standards/bootstrap-review-control-plane.md",
+      "candidate_sha256": "sha256:23964abbb4abed5fc871fcd73b9f410eb629f7ede390ddb42f059d1044109d88",
+      "change_type": "modified",
+      "inclusion_reason": "Round 4 repair candidate",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

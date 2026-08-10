@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-p2-closure.v2.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewId", "inputHash", "candidateHash", "policyRevision", "authorityRevision", "findingIds", "closures", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-p2-closure.v2"},
+    "reviewId": {"type": "string", "minLength": 1},
+    "inputHash": {"$ref": "#/$defs/hash"},
+    "candidateHash": {"$ref": "#/$defs/hash"},
+    "policyRevision": {"$ref": "#/$defs/hash"},
+    "authorityRevision": {"type": "string", "minLength": 1},
+    "findingIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "closures": {"type": "array", "items": {"$ref": "#/$defs/closure"}},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {"type": "array", "minItems": 6, "uniqueItems": true, "items": {"enum": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"},
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "schemaVersion", "reviewId", "inputHash", "candidateHash", "authorityRevision", "producedAt", "successField", "successValue"],
+      "properties": {
+        "path": {"$ref": "#/$defs/path"},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "schemaVersion": {"type": "string", "minLength": 1},
+        "reviewId": {"type": "string", "minLength": 1},
+        "inputHash": {"$ref": "#/$defs/hash"},
+        "candidateHash": {"$ref": "#/$defs/hash"},
+        "authorityRevision": {"type": "string", "minLength": 1},
+        "producedAt": {"type": "string", "format": "date-time"},
+        "successField": {"enum": ["status", "ok", "success", "exitCode"]},
+        "successValue": {"type": ["string", "number", "boolean"]}
+      },
+      "anyOf": [
+        {"properties": {"successField": {"const": "status"}, "successValue": {"const": "passed"}}},
+        {"properties": {"successField": {"const": "ok"}, "successValue": {"const": true}}},
+        {"properties": {"successField": {"const": "success"}, "successValue": {"const": true}}},
+        {"properties": {"successField": {"const": "exitCode"}, "successValue": {"const": 0}}}
+      ]
+    },
+    "closure": {
+      "type": "object", "additionalProperties": false,
+      "required": ["findingId", "status", "risk", "reason", "evidence"],
+      "properties": {
+        "findingId": {"type": "string", "minLength": 1},
+        "status": {"enum": ["fixed", "refuted", "deferred"]},
+        "risk": {"enum": ["normal", "high"]},
+        "reason": {"type": "string", "minLength": 1},
+        "evidence": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/evidence"}},
+        "owner": {"type": "string", "minLength": 1},
+        "expiry": {"type": "string", "format": "date-time"},
+        "recheckTrigger": {"type": "string", "minLength": 1},
+        "nonImpactEvidence": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/evidence"}},
+        "recheckEvidence": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/evidence"}}
+      },
+      "allOf": [{
+        "if": {"properties": {"status": {"const": "deferred"}}},
+        "then": {"required": ["owner", "expiry", "recheckTrigger", "nonImpactEvidence", "recheckEvidence"]},
+        "else": {"not": {"anyOf": [{"required": ["owner"]}, {"required": ["expiry"]}, {"required": ["recheckTrigger"]}, {"required": ["nonImpactEvidence"]}, {"required": ["recheckEvidence"]}]}}
+      }]
+    }
+  }
+}

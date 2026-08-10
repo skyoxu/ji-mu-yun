@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-hard-limit-focused-recovery.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "maintenanceMode", "lineageFamilyId", "predecessorRun", "predecessorInputHash", "predecessorEnvelope", "findingIds", "deterministicRepairClosure", "recommendation", "confidence", "rationale", "userConfirmed", "confirmedAt", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-hard-limit-focused-recovery.v1"},
+    "maintenanceMode": {"const": "ai-native-single-maintainer"},
+    "lineageFamilyId": {"type": "string", "minLength": 3},
+    "predecessorRun": {"$ref": "#/$defs/path"},
+    "predecessorInputHash": {"$ref": "#/$defs/hash"},
+    "predecessorEnvelope": {"$ref": "#/$defs/fileBindingWithStatus"},
+    "findingIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "deterministicRepairClosure": {"$ref": "#/$defs/fileBinding"},
+    "recommendation": {"enum": ["recommend", "do_not_recommend"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "rationale": {"type": "string", "minLength": 1},
+    "userConfirmed": {"const": true},
+    "confirmedAt": {"type": "string", "format": "date-time"},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {"const": ["round-4", "finding-discovery", "acceptance-passed", "commit", "release"]}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"},
+    "fileBinding": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"$ref": "#/$defs/path"}, "sha256": {"$ref": "#/$defs/hash"}}},
+    "fileBindingWithStatus": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "finalStatus"], "properties": {"path": {"$ref": "#/$defs/path"}, "sha256": {"$ref": "#/$defs/hash"}, "finalStatus": {"const": "blocked"}}}
+  }
+}

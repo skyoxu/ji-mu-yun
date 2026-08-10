@@ -1,0 +1,20 @@
+{
+  "actionId": "terminal-implementation-validation",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "terminal-implementation-validation",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:123284bcfb22c54de333bf0805f556e903e208ded4f0aaaaaa86b014d7115584",
+    "knowledgeContextHash": "sha256:5cd32e786685c49c020449944ef44e31ab58333fd3614f2dbaad7e79319cce23",
+    "runInputHash": "sha256:8138a7eea594a4a1d8f6fb9cd0f09112afb4d76e9982f22205be6cec66f4efe5"
+  },
+  "ownerToken": "owner-acceptance-broh-20260809-r5",
+  "processId": 8392,
+  "recordedUtc": "2026-08-09T11:11:44.858630Z",
+  "runId": "acceptance-broh-20260809-r5",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 1
+}

@@ -1,0 +1,57 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.repair-findings.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "round": 5,
+  "profile": "self-hosted",
+  "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+  "trigger": "context-window-remediation-follow-up",
+  "predecessor": {
+    "implementation_repair": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4",
+    "related_review_run": "logs/reviews/broh-acceptance-20260809-r4",
+    "status": "abandoned",
+    "reuse": "forbidden"
+  },
+  "decision_inputs": [
+    {
+      "path": "decision-logs/2026-08-09-bootstrap-review-context-window-repair.md",
+      "sha256": "sha256:f790f0d8533acaf0f637ba875d2f97ae0730129ea882c9b1cebfed74458cd886",
+      "status": "accepted",
+      "role": "observed-root-cause-and-p0-boundary"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/investigations/bootstrap-review-context-overflow-remediation-investigation.md",
+      "sha256": "sha256:09643c2a9b7bccf40fef9a794dab64f13f4ff202ea7a4eb4069394bd5d489abb",
+      "status": "concluded-remediation-proposed",
+      "role": "systemic-p1-p4-remediation-design"
+    }
+  ],
+  "source_reconciliation": {
+    "path": "source-reconciliation.v1.json",
+    "resolution": "capsule-only-child-authority",
+    "authorizes": []
+  },
+  "control_contract": {
+    "path": "control-contract.v1.json",
+    "role": "self-contained-quick-dev-consumer-contract"
+  },
+  "findings": [
+    {
+      "id": "BROH-R5-01",
+      "severity": "P1",
+      "requirement_ids": ["BROH-004", "BROH-005", "BROH-022"],
+      "statement": "The P0 segmented prompt fix prevents repeated authority-mapping traversal, but a reviewer child still receives an ambient repository execution context. It can expand tool reads beyond its assigned segment, so prompt byte gating alone cannot bound runtime context growth."
+    },
+    {
+      "id": "BROH-R5-02",
+      "severity": "P1",
+      "requirement_ids": ["BROH-004", "BROH-005", "BROH-015", "BROH-022"],
+      "statement": "The parent retains raw child process material in the review-control path. Formal review state needs only validated structured candidate data and compact lifecycle projection; unbounded stdout, prompt material, and authority manifests must stay in attempt evidence and outside parent-facing status projection."
+    }
+  ],
+  "non_goals": [
+    "Do not restore, mutate, or reuse logs/reviews/broh-acceptance-20260809-r4.",
+    "Do not weaken complete Artifact View coverage or permit sampling.",
+    "Do not launch a reviewer or Acceptance run under this repair contract."
+  ],
+  "authorizes": []
+}

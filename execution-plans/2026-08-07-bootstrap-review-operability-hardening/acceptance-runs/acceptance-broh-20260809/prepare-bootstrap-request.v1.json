@@ -1,0 +1,61 @@
+{
+  "decision": {
+    "schemaVersion": "acceptance-semantic-review-requirement-decision.v1",
+    "decisionVersion": "v10",
+    "producer": "refactor-implementation-acceptance",
+    "decisionStatus": "ready",
+    "requirement": "required",
+    "profile": "bootstrap-skill-route",
+    "reasonCodes": ["workflow_control_plane_changed"],
+    "requirementSources": ["candidateIdentity.changedPaths"],
+    "inputHashes": {"candidateIdentity":"sha256:e6520af33c05d48a23e864643b8d3e598fa03e54c2625e2e7b2157428390f222","deterministicEvidence":"sha256:23d04f67745e252ff834f3549a17312d9244bd506d1e4c4a247e564e91cc788f","policy":"sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868"},
+    "policyHash": "sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868",
+    "candidateIdentityHash": "sha256:e6520af33c05d48a23e864643b8d3e598fa03e54c2625e2e7b2157428390f222",
+    "deterministicEvidenceHash": "sha256:23d04f67745e252ff834f3549a17312d9244bd506d1e4c4a247e564e91cc788f",
+    "maintainerIntent": "default",
+    "requiredCompanionCapabilityExpectations": [{"capabilityId":"acceptance-inventory-attestation","capabilityVersion":"1.0","producerRole":"acceptance_auditor"}],
+    "authorizes": [],
+    "decisionHash": "sha256:2b5dd8706861493545b8818d94853b3e5b6e2a998ab5a9209a721172d7496fb9"
+  },
+  "decision_request": {
+    "repository_root": "C:/jimuyun",
+    "prepared_run_input": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/acceptance-runs/acceptance-broh-20260809/prepared-run-input.v1.json",
+    "deterministic_evidence": {"path":"execution-plans/2026-08-07-bootstrap-review-operability-hardening/acceptance-runs/acceptance-broh-20260809/deterministic-result.v1.json","sha256":"sha256:27554f4fe0e24a5294352992834c795c40e2dd972fc388ed26a6263561520332"},
+    "maintainer_intent": "default"
+  },
+  "binding": {
+    "schemaVersion":"bootstrap-capability-binding.v1",
+    "status":"bound",
+    "controlPlaneRevision":"bootstrap-control-plane.v2",
+    "routeVersion":"bootstrap-review-route.v2",
+    "reviewProfile":"review-policy://bootstrap-skill-route/v1",
+    "policyRevision":"sha256:189d5eef49314aadfa639541b7029500061d47739ca2d8e244d2c740eceb665c",
+    "requiredCompanionCapabilities":[{"capabilityId":"acceptance-inventory-attestation","capabilityVersion":"1.0","producerRole":"acceptance_auditor","schemaPath":".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json","schemaHash":"sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"}],
+    "authorizes":[]
+  },
+  "launch_authorization": null,
+  "repository_root": "C:/jimuyun",
+  "scope_inputs": {
+    "skill_source": [".agents/skills/run-phase-bootstrap-review/SKILL.md"],
+    "operator_guide": ["docs/standards/bootstrap-review-control-plane.md"],
+    "route_or_cli": [".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"],
+    "profiles_and_config": [".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json"],
+    "schemas": [".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-closure.v1.schema.json"],
+    "tests": [".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"],
+    "usage_evidence": ["execution-plans/2026-08-07-bootstrap-review-operability-hardening/95-implementation-evolution-and-completion-report.md"],
+    "repository_rules": ["AGENTS.md"]
+  },
+  "lineage_state": {
+    "schemaVersion":"bootstrap-review-lineage-state.v1",
+    "lineageFamilyId":"ria-1dd445581b0a69b5a1432c671bd99844",
+    "semanticRoundsConsumed":0,
+    "consumedRoundNumbers":[],
+    "defaultFullReviewRoundLimit":2,
+    "hardFullReviewRoundLimit":3,
+    "nextFullReviewRound":1,
+    "state":"available",
+    "runs":[],
+    "authorizes":[],
+    "lineageStateHash":"sha256:e88838411d06d24f37ae2e94f02f648f3c3a488d8fdc8ca4b5069cc6962dfb61"
+  }
+}

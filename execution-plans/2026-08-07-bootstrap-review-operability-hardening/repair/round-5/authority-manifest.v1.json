@@ -1,0 +1,28 @@
+{
+  "schema_version": "jimuyun.vdd-repair-authority-manifest.v1",
+  "plan_id": "bootstrap-review-operability-hardening-round-5-repair",
+  "acceptance_target": "execution-plans/2026-08-07-bootstrap-review-operability-hardening",
+  "current_sources": [
+    {"path": "AGENTS.md", "role": "repository-governance"},
+    {"path": "README.md", "role": "repository-toolchain-overview"},
+    {"path": ".agents/skills/vdd-execution-plan/SKILL.md", "role": "repair-planning-authority"},
+    {"path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md", "role": "implementation-consumer"},
+    {"path": ".agents/skills/run-phase-bootstrap-review/SKILL.md", "role": "changed-workflow-authority"},
+    {"path": "docs/standards/bootstrap-review-control-plane.md", "role": "control-plane-standard"},
+    {"path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md", "role": "execution-boundary-decision"},
+    {"path": "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md", "role": "coverage-and-retry-decision"},
+    {"path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md", "role": "compact-parent-consumer-authority"},
+    {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", "role": "acceptance-projection-consumer"},
+    {"path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py", "role": "bootstrap-import-consumer"},
+    {"path": "control-contract.v1.json", "role": "self-contained-round5-control-contract"}
+  ],
+  "historical_sources": [
+    {"path": "../round-4/repair-closure.json", "role": "immutable-predecessor-repair"},
+    {"path": "decision-logs/2026-08-09-bootstrap-review-context-window-repair.md", "role": "accepted-p0-repair-decision", "sha256": "sha256:f790f0d8533acaf0f637ba875d2f97ae0730129ea882c9b1cebfed74458cd886"},
+    {"path": "_bmad-output/implementation-artifacts/investigations/bootstrap-review-context-overflow-remediation-investigation.md", "role": "systemic-p1-p4-remediation-design", "sha256": "sha256:09643c2a9b7bccf40fef9a794dab64f13f4ff202ea7a4eb4069394bd5d489abb"},
+    {"path": "repair-findings.v1.json", "role": "finalized-repair-finding-set"},
+    {"path": "source-reconciliation.v1.json", "role": "hash-bound-conflict-disposition"}
+  ],
+  "knowledge_context_binding": "knowledge-context-binding.v1.json",
+  "authorizes": []
+}

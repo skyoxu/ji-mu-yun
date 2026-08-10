@@ -1,0 +1,16 @@
+{
+  "schema_version": "jimuyun.vdd-repair-requirements.v1",
+  "plan_id": "bootstrap-review-operability-hardening-round-4-repair",
+  "findings": ["BROH-R4-01", "BROH-R4-02", "BROH-R4-03"],
+  "acceptance": [
+    {"id": "BROH-R4-A01", "observable": "The parent deterministically partitions the frozen Artifact View into stable file and line-range segments with content hashes."},
+    {"id": "BROH-R4-A02", "observable": "Every segment receipt is bound to the reviewer role, frozen Artifact View identity, exact range, and segment hash."},
+    {"id": "BROH-R4-A03", "observable": "The parent rejects missing, overlapping, duplicated, reordered, or hash-mismatched aggregate coverage before formal reviewer publication."},
+    {"id": "BROH-R4-A04", "observable": "A transport failure retries only the failed segment for the same role and does not consume another semantic round."},
+    {"id": "BROH-R4-A05", "observable": "An expired identity-verified orphan tree is terminated and closed with append-only timeout and attempt-failed events."},
+    {"id": "BROH-R4-A06", "observable": "Execution-plane drift between access proof, launch authorization, run-layer, and lease inspection fails closed."},
+    {"id": "BROH-R4-A07", "observable": "A selected fallback model creates and validates its own model-bound proof sidecar instead of reusing preferred-model proof."}
+  ],
+  "terminal_observable": "All three repair slices pass, the complete Bootstrap regression suite passes, and hash-bound inventory, changed-set, composition, review-scope, and repair closure artifacts are current.",
+  "authorizes": []
+}

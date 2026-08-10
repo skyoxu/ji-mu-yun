@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-focused-repair-gate-result.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewId", "inputHash", "policyRevision", "authorityRevision", "status", "nextAction", "outputHash", "blockingFindingIds", "escalation", "authorizes"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-focused-repair-gate-result.v1"},
+    "reviewId": {"type": "string", "minLength": 1},
+    "inputHash": {"$ref": "#/$defs/hash"},
+    "policyRevision": {"$ref": "#/$defs/hash"},
+    "authorityRevision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["passed", "blocking", "escalation_required", "incomplete"]},
+    "nextAction": {"enum": ["deterministic-closure", "repair-required", "full-implementation-conformance", "retry-focused-verifier"]},
+    "outputHash": {"$ref": "#/$defs/hash"},
+    "blockingFindingIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "escalation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["novelP0P1FindingIds", "authorityGraphChanged", "authorityGraphArtifacts", "highRiskBoundaryChanged", "highRiskBoundaryArtifacts"],
+      "properties": {
+        "novelP0P1FindingIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "authorityGraphChanged": {"type": "boolean"},
+        "authorityGraphArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+        "highRiskBoundaryChanged": {"type": "boolean"},
+        "highRiskBoundaryArtifacts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}}
+      }
+    },
+    "authorizes": {"type": "array", "maxItems": 0}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"}
+  }
+}

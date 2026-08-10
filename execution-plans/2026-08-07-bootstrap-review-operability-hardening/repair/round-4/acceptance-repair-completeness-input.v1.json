@@ -1,0 +1,60 @@
+{
+  "acceptanceTarget": "execution-plans/2026-08-07-bootstrap-review-operability-hardening",
+  "authorityGraphChanged": true,
+  "authorizes": [],
+  "baselineManifestHash": "sha256:97e2c90de360b4c45c78e1c0909d686b9431553df760e2396366e2eee80d2315",
+  "baselineManifestPath": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/baseline-content-manifest.v1.json",
+  "candidateManifestHash": "sha256:c370c8834ea298b4371dd6669536a7c81f7bc69a148c63bbdeba6a9b29cccd2f",
+  "candidateManifestPath": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/candidate-content-manifest.v1.json",
+  "changedFiles": [
+    ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+    ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json",
+    ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+    ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+    "docs/standards/bootstrap-review-control-plane.md"
+  ],
+  "compositionChecks": [
+    {
+      "checkId": "broh-r4-segment-composition",
+      "commandRegistryPath": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/acceptance-composition-command-registry.v4.json",
+      "consumerPaths": [
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "producerPaths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+      ],
+      "receiptPath": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/composition-receipt.v5.json"
+    }
+  ],
+  "directConsumers": [
+    ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+  ],
+  "highRiskBoundaryChanged": true,
+  "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+  "novelP0P1FindingIds": [],
+  "predecessorRun": null,
+  "repositoryRoot": "C:\\jimuyun",
+  "rootCauseInventories": [
+    {
+      "addressedPaths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "bootstrap-artifact-view-segment-callsites",
+      "searchRoots": [
+        ".agents/skills/run-phase-bootstrap-review"
+      ],
+      "searchTerm": "artifact_view_segment"
+    }
+  ],
+  "schemaVersion": "quick-dev-repair-review-handoff-input.v1",
+  "semanticRoundsConsumed": 0,
+  "targetedTests": [
+    ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+  ],
+  "validationRefs": [
+    "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/composition-receipt.v5.json",
+    "logs/tdd-adapter/bootstrap-review-operability-hardening-round-4-repair/BROH-R4-S1/RUN-20260809T034917-916691Z/slice-ready-result.json"
+  ]
+}

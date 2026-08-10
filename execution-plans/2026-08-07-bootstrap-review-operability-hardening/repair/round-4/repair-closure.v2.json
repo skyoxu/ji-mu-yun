@@ -1,0 +1,41 @@
+{
+  "acceptance_repair_completeness": {
+    "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/repair-completeness.v3.json",
+    "sha256": "sha256:43e4c745d6207677ff93b56ddc8a1596cfada7840cccc1b2a8f31fa39e1c2e82",
+    "status": "passed"
+  },
+  "artifacts": [
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/root-cause-callsite-inventory.v2.json",
+      "sha256": "sha256:de09b1d5f9c2722016304735eb62884d0e08dea402f455003aad3b79125f0f44"
+    },
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/composition-receipt.v7.json",
+      "sha256": "sha256:8b7a21be1ebd0aac816a73b6b71d6338c6c63a7852a59474bfa2d69f568381b0"
+    },
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/changed-set-manifest.v2.json",
+      "sha256": "sha256:d6dd0ce6d42166b8949a82cb0226010f781fda45f950d4a6fabd0f3f8448d86f"
+    },
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/review-scope.v2.json",
+      "sha256": "sha256:5b26748c9e4d4bf646b6207c38e6cffbbc1fcbe550975174dd7ef742d719bd89"
+    },
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/acceptance-composition-command-registry.v5.json",
+      "sha256": "sha256:cf880884e85d9ca6d14d435de18a51e32bc3e6dca6e72aca494b85c1f7383413"
+    },
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/acceptance-repair-completeness-request.v3.json",
+      "sha256": "sha256:7fcb2641178d11fc2508253c0a866deb1ba3415ba67727ade29fe5f531433d60"
+    },
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/repair/round-4/repair-completeness.v3.json",
+      "sha256": "sha256:43e4c745d6207677ff93b56ddc8a1596cfada7840cccc1b2a8f31fa39e1c2e82"
+    }
+  ],
+  "authorizes": [],
+  "contract_sha256": "sha256:c7a69dc4c6499e56d87fe8edc63cd56b318ffde06c36fe1b5a8d7bbac39c3f47",
+  "schema_version": "jimuyun.vdd-repair-closure.v1",
+  "status": "pass"
+}

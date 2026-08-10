@@ -1,0 +1,76 @@
+{
+  "authorizes": [],
+  "commandId": "broh-r4-segment-composition",
+  "commandRegistryHash": "sha256:5d57e822bcc0311c33c676d29efda0b71cfb23f1624130aa663a72a31c217beb",
+  "environmentIdentity": {
+    "hash": "sha256:dbbf520d5b62af18e0dae108606b40fa9f587abcd7b19c6a06552fc9c20cf44f",
+    "names": [
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "PATH",
+      "PATHEXT",
+      "SYSTEMROOT",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "sha256": "sha256:0c94a60d9d7b4a5ec8eaec2ab7b9cb2d4204860f5344f71d2f3f175b2b805bf8"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "sha256": "sha256:e0c111bed38124e23bbb1c07f893f216e8c19c98d25d459ac84f911c7a00717f"
+    }
+  ],
+  "inputBindingsHash": "sha256:b265cffab9e73655731466e81fed52a451bba23c1e3248053bb376f02b0f5153",
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "-k",
+      "test_round4_segment"
+    ],
+    "commandId": "broh-r4-segment-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "PATH",
+      "PATHEXT",
+      "SYSTEMROOT",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 240
+  },
+  "invocationHash": "sha256:f59af3df98441851396bcb88ca0ff450c33b770e68f90d5c0503bd9b7b8f1c6f",
+  "processResult": {
+    "commandId": "broh-r4-segment-composition",
+    "exitCode": 0,
+    "stderr": "warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it\n.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it\n.warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it\n.\r\n----------------------------------------------------------------------\r\nRan 3 tests in 1.778s\r\n\r\nOK\r\n",
+    "stderrSha256": "sha256:3352bb46f3d4c6340167a5911574f68068c0648585fcea796ad5ee0484e25809",
+    "stdout": "Prepared manual bootstrap review at C:\\Users\\Administrator\\AppData\\Local\\Temp\\2\\tmp16lad1xr\\repo\\bootstrap-run\r\nPrepared manual bootstrap review at C:\\Users\\Administrator\\AppData\\Local\\Temp\\2\\tmpaa5i_xtr\\repo\\bootstrap-run\r\nPrepared manual bootstrap review at C:\\Users\\Administrator\\AppData\\Local\\Temp\\2\\tmpop7_zzc9\\repo\\bootstrap-run\r\n",
+    "stdoutSha256": "sha256:0e1b33fd5aedf5175658d9d5fc06b2727d9d4cca01a959c88686c3d3cce025c5"
+  },
+  "processResultHash": "sha256:b36889a680f6d60918e9a10fd7ed8212e8b8f0279e27c5f67db0c75ef02cdf25",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

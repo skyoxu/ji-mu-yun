@@ -1,0 +1,1043 @@
+{
+  "schemaVersion": "artifact-view.v1",
+  "authorityRevision": "bdb9df4bd61def6f048cf4ad7cc427565228cb07",
+  "createdAt": "2026-08-08T16:02:53.927350Z",
+  "entries": [
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "originalSha256": "sha256:8b2db75cdf6e17f01663db91a496b87de4ca67d7ccf2b5e3b3870ad22e504a28",
+      "snapshotSha256": "sha256:8b2db75cdf6e17f01663db91a496b87de4ca67d7ccf2b5e3b3870ad22e504a28",
+      "sizeBytes": 32157,
+      "encoding": "utf-8",
+      "lineCount": 427,
+      "fileType": ".md",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/skill.md",
+      "contextClasses": [
+        "skill-source"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/agents/openai.yaml",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/agents/openai.yaml",
+      "originalSha256": "sha256:e0c049a7223bb6e44d3024ecaafdb7021bbcc3dd2a1680a98c44bbe678ae6fec",
+      "snapshotSha256": "sha256:e0c049a7223bb6e44d3024ecaafdb7021bbcc3dd2a1680a98c44bbe678ae6fec",
+      "sizeBytes": 218,
+      "encoding": "utf-8",
+      "lineCount": 4,
+      "fileType": ".yaml",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/agents/openai.yaml",
+      "contextClasses": [
+        "profiles-and-config"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/agents/openai.yaml"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+      "originalSha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+      "snapshotSha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+      "sizeBytes": 1299,
+      "encoding": "utf-8",
+      "lineCount": 35,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+      "contextClasses": [
+        "profiles-and-config"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+      "originalSha256": "sha256:618e818f3a54bb291f442cb0d417b268f3b65ca9ffd94a5b2096207dc63f106d",
+      "snapshotSha256": "sha256:618e818f3a54bb291f442cb0d417b268f3b65ca9ffd94a5b2096207dc63f106d",
+      "sizeBytes": 9728,
+      "encoding": "utf-8",
+      "lineCount": 207,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+      "contextClasses": [
+        "profiles-and-config"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json",
+      "originalSha256": "sha256:72b1b76b6de9bd73f5828e84efc28216080aa20a17e66c527d6a3965b9a5b601",
+      "snapshotSha256": "sha256:72b1b76b6de9bd73f5828e84efc28216080aa20a17e66c527d6a3965b9a5b601",
+      "sizeBytes": 843,
+      "encoding": "utf-8",
+      "lineCount": 36,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json",
+      "contextClasses": [
+        "profiles-and-config"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "originalSha256": "sha256:43418fd7b9cf8b1437b6cf0e92150d4563e11736f8f36e76d04e9396d8b57a47",
+      "snapshotSha256": "sha256:43418fd7b9cf8b1437b6cf0e92150d4563e11736f8f36e76d04e9396d8b57a47",
+      "sizeBytes": 37105,
+      "encoding": "utf-8",
+      "lineCount": 930,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "contextClasses": [
+        "profiles-and-config"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-auditor-role-bundle.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-auditor-role-bundle.v1.schema.json",
+      "originalSha256": "sha256:1c9a12fc3da8f3e8085b88b7f4e558cb975f0a05b48b40cb0cc57730a06a124e",
+      "snapshotSha256": "sha256:1c9a12fc3da8f3e8085b88b7f4e558cb975f0a05b48b40cb0cc57730a06a124e",
+      "sizeBytes": 701,
+      "encoding": "utf-8",
+      "lineCount": 16,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-auditor-role-bundle.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-auditor-role-bundle.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+      "originalSha256": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018",
+      "snapshotSha256": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018",
+      "sizeBytes": 966,
+      "encoding": "utf-8",
+      "lineCount": 19,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json",
+      "originalSha256": "sha256:d5145862fd4d4b01ab2f96aebdd8d1c417c33f46e8017469110b1630eafe174b",
+      "snapshotSha256": "sha256:d5145862fd4d4b01ab2f96aebdd8d1c417c33f46e8017469110b1630eafe174b",
+      "sizeBytes": 637,
+      "encoding": "utf-8",
+      "lineCount": 14,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-authority-root-registry.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-authority-root-registry.v1.schema.json",
+      "originalSha256": "sha256:35e6de7b0a1f2473b81e601afc2ce32da3010c874d5d88ffba823c21a5497899",
+      "snapshotSha256": "sha256:35e6de7b0a1f2473b81e601afc2ce32da3010c874d5d88ffba823c21a5497899",
+      "sizeBytes": 1803,
+      "encoding": "utf-8",
+      "lineCount": 35,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-authority-root-registry.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-authority-root-registry.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+      "originalSha256": "sha256:55b75323c95daae0532a06b06c95de3ef0389746d8456901f26b7ef1c6ef908a",
+      "snapshotSha256": "sha256:55b75323c95daae0532a06b06c95de3ef0389746d8456901f26b7ef1c6ef908a",
+      "sizeBytes": 4483,
+      "encoding": "utf-8",
+      "lineCount": 121,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v2.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v2.schema.json",
+      "originalSha256": "sha256:a263b2b00619632d810e8d6af80ae22f65f9d96e50eb5dacb230ddb65e225b34",
+      "snapshotSha256": "sha256:a263b2b00619632d810e8d6af80ae22f65f9d96e50eb5dacb230ddb65e225b34",
+      "sizeBytes": 4198,
+      "encoding": "utf-8",
+      "lineCount": 67,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v2.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v2.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v3.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v3.schema.json",
+      "originalSha256": "sha256:3f02b206969874e8b9d245fdc52872aba295f17438ab5ff28d665b0de5b90735",
+      "snapshotSha256": "sha256:3f02b206969874e8b9d245fdc52872aba295f17438ab5ff28d665b0de5b90735",
+      "sizeBytes": 4184,
+      "encoding": "utf-8",
+      "lineCount": 68,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v3.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v3.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-gate-result.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-gate-result.v1.schema.json",
+      "originalSha256": "sha256:f30a1c3752a4987c4325ba8927b24c1e88b747613f2737601ce9979d128fc908",
+      "snapshotSha256": "sha256:f30a1c3752a4987c4325ba8927b24c1e88b747613f2737601ce9979d128fc908",
+      "sizeBytes": 2030,
+      "encoding": "utf-8",
+      "lineCount": 34,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-gate-result.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-gate-result.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-validation-envelope.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-validation-envelope.v1.schema.json",
+      "originalSha256": "sha256:d3bbe13cea6f4a8a5b53ccec9457c2fb5b7a1f341cec48d114acad617b72180c",
+      "snapshotSha256": "sha256:d3bbe13cea6f4a8a5b53ccec9457c2fb5b7a1f341cec48d114acad617b72180c",
+      "sizeBytes": 1980,
+      "encoding": "utf-8",
+      "lineCount": 31,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-validation-envelope.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-validation-envelope.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-verifier-output.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-verifier-output.v1.schema.json",
+      "originalSha256": "sha256:8e82faf5c70e8ced9e8481b4c305c3b4685c6093f80fe1eba4b46b001d41ed87",
+      "snapshotSha256": "sha256:8e82faf5c70e8ced9e8481b4c305c3b4685c6093f80fe1eba4b46b001d41ed87",
+      "sizeBytes": 4129,
+      "encoding": "utf-8",
+      "lineCount": 75,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-verifier-output.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-verifier-output.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-recovery.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-recovery.v1.schema.json",
+      "originalSha256": "sha256:f5610b917f4c7966aee5f79407a8306709552e2a03ce1d014911c9a2ceb87788",
+      "snapshotSha256": "sha256:f5610b917f4c7966aee5f79407a8306709552e2a03ce1d014911c9a2ceb87788",
+      "sizeBytes": 2165,
+      "encoding": "utf-8",
+      "lineCount": 30,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-recovery.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-recovery.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-repair-validation-envelope.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-repair-validation-envelope.v1.schema.json",
+      "originalSha256": "sha256:76c50cc7783a4d3089a08b7ed23ac056c01b36529ddffb9e72f99754ab6aaaab",
+      "snapshotSha256": "sha256:76c50cc7783a4d3089a08b7ed23ac056c01b36529ddffb9e72f99754ab6aaaab",
+      "sizeBytes": 2188,
+      "encoding": "utf-8",
+      "lineCount": 33,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-repair-validation-envelope.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-repair-validation-envelope.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-protocol-repair-authority.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-protocol-repair-authority.v1.schema.json",
+      "originalSha256": "sha256:31fd1563803250b0b8999672a8aa96a2a861cc0334d9f8522ac5c2ce4c13cba6",
+      "snapshotSha256": "sha256:31fd1563803250b0b8999672a8aa96a2a861cc0334d9f8522ac5c2ce4c13cba6",
+      "sizeBytes": 2455,
+      "encoding": "utf-8",
+      "lineCount": 34,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-protocol-repair-authority.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-protocol-repair-authority.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-historical-policy-revisions.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-historical-policy-revisions.v1.schema.json",
+      "originalSha256": "sha256:0219798574497b7be1693e04b8ab935a8ad26a59bb025d27abf336cd224531a3",
+      "snapshotSha256": "sha256:0219798574497b7be1693e04b8ab935a8ad26a59bb025d27abf336cd224531a3",
+      "sizeBytes": 1657,
+      "encoding": "utf-8",
+      "lineCount": 46,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-historical-policy-revisions.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-historical-policy-revisions.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-knowledge-context.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-knowledge-context.v1.schema.json",
+      "originalSha256": "sha256:838b4eb87d44bfe69bdecf3378425960e29ca35490f609714ab8fa8c8cf7fe5d",
+      "snapshotSha256": "sha256:838b4eb87d44bfe69bdecf3378425960e29ca35490f609714ab8fa8c8cf7fe5d",
+      "sizeBytes": 300,
+      "encoding": "utf-8",
+      "lineCount": 11,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-knowledge-context.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-knowledge-context.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-lineage-adoption.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-lineage-adoption.v1.schema.json",
+      "originalSha256": "sha256:dc7693db6ae8f298499b916034765343c9d135eaa8201e48e0bab40be8cdca10",
+      "snapshotSha256": "sha256:dc7693db6ae8f298499b916034765343c9d135eaa8201e48e0bab40be8cdca10",
+      "sizeBytes": 1775,
+      "encoding": "utf-8",
+      "lineCount": 53,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-lineage-adoption.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-lineage-adoption.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-closure.v2.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-closure.v2.schema.json",
+      "originalSha256": "sha256:339dc911aaa3a77a9842fff6600ab1fe2af576c5063e624bb4f4aa4cf01be3ab",
+      "snapshotSha256": "sha256:339dc911aaa3a77a9842fff6600ab1fe2af576c5063e624bb4f4aa4cf01be3ab",
+      "sizeBytes": 3866,
+      "encoding": "utf-8",
+      "lineCount": 66,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-closure.v2.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-closure.v2.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json",
+      "originalSha256": "sha256:bc70aea141a5786aafcdceac6cba727bc2b6b2dfbdecde5a682779fa8d4fee85",
+      "snapshotSha256": "sha256:bc70aea141a5786aafcdceac6cba727bc2b6b2dfbdecde5a682779fa8d4fee85",
+      "sizeBytes": 2139,
+      "encoding": "utf-8",
+      "lineCount": 13,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+      "originalSha256": "sha256:728686cfce18033461900754e2929cb9ca2298b234471feb3c26257825f39bac",
+      "snapshotSha256": "sha256:728686cfce18033461900754e2929cb9ca2298b234471feb3c26257825f39bac",
+      "sizeBytes": 2739,
+      "encoding": "utf-8",
+      "lineCount": 54,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-evidence-result.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-evidence-result.v1.schema.json",
+      "originalSha256": "sha256:2fe318306075e0a57168bddc20b4b8c87d51a8ee3c26b59a0397e99156770639",
+      "snapshotSha256": "sha256:2fe318306075e0a57168bddc20b4b8c87d51a8ee3c26b59a0397e99156770639",
+      "sizeBytes": 2043,
+      "encoding": "utf-8",
+      "lineCount": 17,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-evidence-result.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-evidence-result.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-owner-authority.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-owner-authority.v1.schema.json",
+      "originalSha256": "sha256:1f7fb210ed667e6050826e6020c06c0f12cee19b37c7541021df2f3355f4c372",
+      "snapshotSha256": "sha256:1f7fb210ed667e6050826e6020c06c0f12cee19b37c7541021df2f3355f4c372",
+      "sizeBytes": 2013,
+      "encoding": "utf-8",
+      "lineCount": 15,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-owner-authority.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-owner-authority.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json",
+      "originalSha256": "sha256:77636808f229d7829cdaee60b2d244e494baf32de1731f1744080da971644eea",
+      "snapshotSha256": "sha256:77636808f229d7829cdaee60b2d244e494baf32de1731f1744080da971644eea",
+      "sizeBytes": 2007,
+      "encoding": "utf-8",
+      "lineCount": 16,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+      "originalSha256": "sha256:0ea76af452ea9e07d3e4dc8ff5b4d1d8bad5b1421d1447b5ca86ebb34b633405",
+      "snapshotSha256": "sha256:0ea76af452ea9e07d3e4dc8ff5b4d1d8bad5b1421d1447b5ca86ebb34b633405",
+      "sizeBytes": 2410,
+      "encoding": "utf-8",
+      "lineCount": 21,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-preflight-result.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-preflight-result.v1.schema.json",
+      "originalSha256": "sha256:fe3b0b9d41386949143460f17eefe36ae25b945f320005716cf54194ed68b7ff",
+      "snapshotSha256": "sha256:fe3b0b9d41386949143460f17eefe36ae25b945f320005716cf54194ed68b7ff",
+      "sizeBytes": 1646,
+      "encoding": "utf-8",
+      "lineCount": 39,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-preflight-result.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-preflight-result.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-process-leases.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-process-leases.v1.schema.json",
+      "originalSha256": "sha256:c50775abbd1acc7529032be6f71cd9ce4ede9ae2880a09ac0ef16704f4fd8f65",
+      "snapshotSha256": "sha256:c50775abbd1acc7529032be6f71cd9ce4ede9ae2880a09ac0ef16704f4fd8f65",
+      "sizeBytes": 1582,
+      "encoding": "utf-8",
+      "lineCount": 41,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-process-leases.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-process-leases.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-closure.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-closure.v1.schema.json",
+      "originalSha256": "sha256:b2b2cce937a94598f5ff24f44ef800c505d73a4c52ed0e655aed991b49d26c47",
+      "snapshotSha256": "sha256:b2b2cce937a94598f5ff24f44ef800c505d73a4c52ed0e655aed991b49d26c47",
+      "sizeBytes": 3233,
+      "encoding": "utf-8",
+      "lineCount": 44,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-closure.v1.schema.json",
+      "contextClasses": [
+        "schemas"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-closure.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-review-delta.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-review-delta.v1.schema.json",
+      "originalSha256": "sha256:c249161e334668f30b891c23a5e6b209311e19fe4d8f8106e7f5e1f46691b8c4",
+      "snapshotSha256": "sha256:c249161e334668f30b891c23a5e6b209311e19fe4d8f8106e7f5e1f46691b8c4",
+      "sizeBytes": 1905,
+      "encoding": "utf-8",
+      "lineCount": 53,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-review-delta.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-review-delta.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-calibration-corpus.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-calibration-corpus.v1.schema.json",
+      "originalSha256": "sha256:061e3b21853613c86c55c6bbd45a754d5c68b01280492845c97735a8cd9b19d6",
+      "snapshotSha256": "sha256:061e3b21853613c86c55c6bbd45a754d5c68b01280492845c97735a8cd9b19d6",
+      "sizeBytes": 1844,
+      "encoding": "utf-8",
+      "lineCount": 41,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-calibration-corpus.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-calibration-corpus.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-cost-calibration.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-cost-calibration.v1.schema.json",
+      "originalSha256": "sha256:07ae60d910d0cc07f7ee2eddffb9a137783b80b2524831bc20471ab860f6c29b",
+      "snapshotSha256": "sha256:07ae60d910d0cc07f7ee2eddffb9a137783b80b2524831bc20471ab860f6c29b",
+      "sizeBytes": 4078,
+      "encoding": "utf-8",
+      "lineCount": 78,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-cost-calibration.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-cost-calibration.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-gate-result.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-gate-result.v1.schema.json",
+      "originalSha256": "sha256:a4213789258edd8a932ea5a68ec82ef7491335593646afb0f620c290c2ac8395",
+      "snapshotSha256": "sha256:a4213789258edd8a932ea5a68ec82ef7491335593646afb0f620c290c2ac8395",
+      "sizeBytes": 3934,
+      "encoding": "utf-8",
+      "lineCount": 118,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-gate-result.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-gate-result.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-history-index.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-history-index.v1.schema.json",
+      "originalSha256": "sha256:a0c61d7415f5c975939b45ab8007184f9aad091e65fbda795907dd3e624c1428",
+      "snapshotSha256": "sha256:a0c61d7415f5c975939b45ab8007184f9aad091e65fbda795907dd3e624c1428",
+      "sizeBytes": 6053,
+      "encoding": "utf-8",
+      "lineCount": 107,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-history-index.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-history-index.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-launch-authorization.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-launch-authorization.v1.schema.json",
+      "originalSha256": "sha256:b92f0667f6e96ab4a125cf3a930f8be6d7da8b569bfcd435ffaea55c836480ac",
+      "snapshotSha256": "sha256:b92f0667f6e96ab4a125cf3a930f8be6d7da8b569bfcd435ffaea55c836480ac",
+      "sizeBytes": 2596,
+      "encoding": "utf-8",
+      "lineCount": 57,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-launch-authorization.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-launch-authorization.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-lineage-state.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-lineage-state.v1.schema.json",
+      "originalSha256": "sha256:b99d6f1e5413de578c25452ba91d601b0c5d80a71b0151016e1f0e46d2244864",
+      "snapshotSha256": "sha256:b99d6f1e5413de578c25452ba91d601b0c5d80a71b0151016e1f0e46d2244864",
+      "sizeBytes": 2144,
+      "encoding": "utf-8",
+      "lineCount": 62,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-lineage-state.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-lineage-state.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-round-entry-decision.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-round-entry-decision.v1.schema.json",
+      "originalSha256": "sha256:075a23c4b8b6e2dcf1425af6b1fd08768a375a44a1bd2d06ee27036853fec383",
+      "snapshotSha256": "sha256:075a23c4b8b6e2dcf1425af6b1fd08768a375a44a1bd2d06ee27036853fec383",
+      "sizeBytes": 1889,
+      "encoding": "utf-8",
+      "lineCount": 59,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-round-entry-decision.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-round-entry-decision.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "originalSha256": "sha256:ec05b3b805a86655d45cf9ba12c0bf6732c2e308db075422e866a71d1f0dc0d1",
+      "snapshotSha256": "sha256:ec05b3b805a86655d45cf9ba12c0bf6732c2e308db075422e866a71d1f0dc0d1",
+      "sizeBytes": 4778,
+      "encoding": "utf-8",
+      "lineCount": 121,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+      "originalSha256": "sha256:3ae132fd7c6dc6688e3ab37e221208f56ee9bf1aec79dad9cc531fd081c06494",
+      "snapshotSha256": "sha256:3ae132fd7c6dc6688e3ab37e221208f56ee9bf1aec79dad9cc531fd081c06494",
+      "sizeBytes": 2391,
+      "encoding": "utf-8",
+      "lineCount": 39,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+      "originalSha256": "sha256:f85709cc2d6b4c9731d40e0ccd56a5bfb78defe187b049baf8acbd770fce8821",
+      "snapshotSha256": "sha256:f85709cc2d6b4c9731d40e0ccd56a5bfb78defe187b049baf8acbd770fce8821",
+      "sizeBytes": 2289,
+      "encoding": "utf-8",
+      "lineCount": 33,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+      "originalSha256": "sha256:ed47c887684f2f94f6ef46dbee9755474450109ce5523804e7fcd9b02d67cb95",
+      "snapshotSha256": "sha256:ed47c887684f2f94f6ef46dbee9755474450109ce5523804e7fcd9b02d67cb95",
+      "sizeBytes": 1953,
+      "encoding": "utf-8",
+      "lineCount": 36,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json",
+      "originalSha256": "sha256:ff9db3aea54c0b9f7600a200db8e56e76c339cfeb8d70f8490ac4b04e167aa57",
+      "snapshotSha256": "sha256:ff9db3aea54c0b9f7600a200db8e56e76c339cfeb8d70f8490ac4b04e167aa57",
+      "sizeBytes": 1705,
+      "encoding": "utf-8",
+      "lineCount": 40,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-recovery.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-recovery.v1.schema.json",
+      "originalSha256": "sha256:d36d50cfa059b631fe878227c8a94ad219c8800f0e74a83ed40fe6ac4418a6a3",
+      "snapshotSha256": "sha256:d36d50cfa059b631fe878227c8a94ad219c8800f0e74a83ed40fe6ac4418a6a3",
+      "sizeBytes": 2468,
+      "encoding": "utf-8",
+      "lineCount": 71,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-recovery.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-recovery.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/review-finding.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/review-finding.v1.schema.json",
+      "originalSha256": "sha256:62b9ee4446d37c5c514007ec598956f6c7a049dd3839b3ec1ad56de487f93d31",
+      "snapshotSha256": "sha256:62b9ee4446d37c5c514007ec598956f6c7a049dd3839b3ec1ad56de487f93d31",
+      "sizeBytes": 4913,
+      "encoding": "utf-8",
+      "lineCount": 138,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/review-finding.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/review-finding.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/review-rejection.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/review-rejection.v1.schema.json",
+      "originalSha256": "sha256:620096107af352b89a5f02767bece5c8d591fd0557d01124a12c33b98536de12",
+      "snapshotSha256": "sha256:620096107af352b89a5f02767bece5c8d591fd0557d01124a12c33b98536de12",
+      "sizeBytes": 1559,
+      "encoding": "utf-8",
+      "lineCount": 53,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/review-rejection.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/review-rejection.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/review-result.v1.schema.json",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/schemas/review-result.v1.schema.json",
+      "originalSha256": "sha256:4bd2755e72b7c02861c4e31f82d236e82528ab1589891e04ced8539777418286",
+      "snapshotSha256": "sha256:4bd2755e72b7c02861c4e31f82d236e82528ab1589891e04ced8539777418286",
+      "sizeBytes": 6077,
+      "encoding": "utf-8",
+      "lineCount": 208,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/schemas/review-result.v1.schema.json",
+      "contextClasses": [],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/review-result.v1.schema.json"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "originalSha256": "sha256:85df88251352cf30f3d61bd68d6f4d90ea065bb212c31efbab11732605592ce6",
+      "snapshotSha256": "sha256:85df88251352cf30f3d61bd68d6f4d90ea065bb212c31efbab11732605592ce6",
+      "sizeBytes": 21114,
+      "encoding": "utf-8",
+      "lineCount": 533,
+      "fileType": ".py",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "contextClasses": [
+        "route-or-cli"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "originalSha256": "sha256:10e3937fa26b500b13ced297eff8602d2a59b32b6222983d0a99eb3b90abd65b",
+      "snapshotSha256": "sha256:10e3937fa26b500b13ced297eff8602d2a59b32b6222983d0a99eb3b90abd65b",
+      "sizeBytes": 547073,
+      "encoding": "utf-8",
+      "lineCount": 11542,
+      "fileType": ".py",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "contextClasses": [
+        "route-or-cli"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py",
+      "originalSha256": "sha256:83a2d988df2e513eba4e9c299c5b5f4cd75e0869c67f200b8c6b80ae764a94e9",
+      "snapshotSha256": "sha256:83a2d988df2e513eba4e9c299c5b5f4cd75e0869c67f200b8c6b80ae764a94e9",
+      "sizeBytes": 895,
+      "encoding": "utf-8",
+      "lineCount": 20,
+      "fileType": ".py",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py",
+      "contextClasses": [
+        "route-or-cli"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py"
+      ]
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "snapshotPath": "artifact-view/tree/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "originalSha256": "sha256:6567de9b68ba71def35fe74df804fba3d20eef2b2901e590c91e372e76e08ddf",
+      "snapshotSha256": "sha256:6567de9b68ba71def35fe74df804fba3d20eef2b2901e590c91e372e76e08ddf",
+      "sizeBytes": 342562,
+      "encoding": "utf-8",
+      "lineCount": 7109,
+      "fileType": ".py",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "contextClasses": [
+        "tests"
+      ],
+      "sourceScopes": [
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ]
+    },
+    {
+      "originalPath": "AGENTS.md",
+      "snapshotPath": "artifact-view/tree/AGENTS.md",
+      "originalSha256": "sha256:06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "snapshotSha256": "sha256:06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "sizeBytes": 22127,
+      "encoding": "utf-8",
+      "lineCount": 260,
+      "fileType": ".md",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": "agents.md",
+      "contextClasses": [
+        "repository-rules"
+      ],
+      "sourceScopes": [
+        "AGENTS.md"
+      ]
+    },
+    {
+      "originalPath": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "snapshotPath": "artifact-view/tree/execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "originalSha256": "sha256:ec7fd93eb970bc97be54f7db9cd20d7bc2f346481e611bf2a0b117447b953c5e",
+      "snapshotSha256": "sha256:ec7fd93eb970bc97be54f7db9cd20d7bc2f346481e611bf2a0b117447b953c5e",
+      "sizeBytes": 37079,
+      "encoding": "utf-8",
+      "lineCount": 376,
+      "fileType": ".md",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "contextClasses": [
+        "operator-guide"
+      ],
+      "sourceScopes": [
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md"
+      ]
+    },
+    {
+      "originalPath": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+      "snapshotPath": "artifact-view/tree/execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+      "originalSha256": "sha256:dd13664a46625953797ff4316bf120c479c1ae6f7a13ab4f7300ba2a0eda9177",
+      "snapshotSha256": "sha256:dd13664a46625953797ff4316bf120c479c1ae6f7a13ab4f7300ba2a0eda9177",
+      "sizeBytes": 50199,
+      "encoding": "utf-8",
+      "lineCount": 972,
+      "fileType": ".py",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+      "contextClasses": [],
+      "sourceScopes": [
+        "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py"
+      ]
+    },
+    {
+      "originalPath": "logs/ci/2026-07-16/review-gateway-bootstrap-bootstrap-control-plane-v2-r1-20260716/run-summary.json",
+      "snapshotPath": "artifact-view/tree/logs/ci/2026-07-16/review-gateway-bootstrap-bootstrap-control-plane-v2-r1-20260716/run-summary.json",
+      "originalSha256": "sha256:e9235d1df2ed9ccc0e99d02a0e249c0340c70cf9f76d1d3418de66f89c819367",
+      "snapshotSha256": "sha256:e9235d1df2ed9ccc0e99d02a0e249c0340c70cf9f76d1d3418de66f89c819367",
+      "sizeBytes": 1540,
+      "encoding": "utf-8",
+      "lineCount": 54,
+      "fileType": ".json",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": "logs/ci/2026-07-16/review-gateway-bootstrap-bootstrap-control-plane-v2-r1-20260716/run-summary.json",
+      "contextClasses": [
+        "usage-evidence"
+      ],
+      "sourceScopes": [
+        "logs/ci/2026-07-16/review-gateway-bootstrap-bootstrap-control-plane-v2-r1-20260716/run-summary.json"
+      ]
+    },
+    {
+      "originalPath": "scripts/python/_knowledge_locator_core.py",
+      "snapshotPath": "artifact-view/tree/scripts/python/_knowledge_locator_core.py",
+      "originalSha256": "sha256:41cd902ff272468eb97129a13ea6b578dea9d54f5381cb5389590ae138e0e934",
+      "snapshotSha256": "sha256:41cd902ff272468eb97129a13ea6b578dea9d54f5381cb5389590ae138e0e934",
+      "sizeBytes": 18965,
+      "encoding": "utf-8",
+      "lineCount": 415,
+      "fileType": ".py",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": "scripts/python/_knowledge_locator_core.py",
+      "contextClasses": [
+        "route-or-cli"
+      ],
+      "sourceScopes": [
+        "scripts/python/_knowledge_locator_core.py"
+      ]
+    },
+    {
+      "originalPath": "scripts/python/knowledge_context_validation.py",
+      "snapshotPath": "artifact-view/tree/scripts/python/knowledge_context_validation.py",
+      "originalSha256": "sha256:5cebddc7c79c2524fa3ac584ca11d00d3e2ffc4619d19d3c9f0376bdfe7d9741",
+      "snapshotSha256": "sha256:5cebddc7c79c2524fa3ac584ca11d00d3e2ffc4619d19d3c9f0376bdfe7d9741",
+      "sizeBytes": 18394,
+      "encoding": "utf-8",
+      "lineCount": 384,
+      "fileType": ".py",
+      "contentKind": "text",
+      "reparsePoint": false,
+      "windowsCaseIdentity": "scripts/python/knowledge_context_validation.py",
+      "contextClasses": [
+        "route-or-cli"
+      ],
+      "sourceScopes": [
+        "scripts/python/knowledge_context_validation.py"
+      ]
+    }
+  ],
+  "creationHash": "sha256:f4a3165b39a0657792297edc59a19027360912f080eb6066831fb0bb27f01b24"
+}

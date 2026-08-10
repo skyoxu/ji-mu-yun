@@ -1,0 +1,80 @@
+{
+  "authorizes": [],
+  "commandId": "terminal-implementation-validation",
+  "commandRegistryHash": "sha256:b4c6322d490c3e25f3b617d4085ed39ec86acf11d993e6b505b3ac7930228e85",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py"
+    ],
+    "commandId": "terminal-implementation-validation",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 1800
+  },
+  "invocationHash": "sha256:502b19fd63d5d27732831a82f0b5598b3e1732d71bc9ce74633c5de884f681b1",
+  "processResult": {
+    "commandId": "terminal-implementation-validation",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"authority_root\": \"sha256:b696183b263ef990e2cd339a1120294804b052636a7c5959e08793e272e44e79\", \"authorizes\": [], \"candidate_hash\": \"sha256:0c24a40a6d74dcabdad6049d03e454d339593993906b6e77654e1e7590efb412\", \"closure_definition_hash\": \"sha256:530f9f4c9d04b6ca0cbcb36ef645a5e395a366eacdbc8702d0b9ad28e1fbee3e\", \"contract_hash\": \"sha256:123284bcfb22c54de333bf0805f556e903e208ded4f0aaaaaa86b014d7115584\", \"does_not_authorize\": [\"acceptance-passed\", \"commit\", \"release\", \"archived\"], \"errors\": [], \"predicate\": \"implementation-complete\", \"predicate_input_root\": \"sha256:0c24a40a6d74dcabdad6049d03e454d339593993906b6e77654e1e7590efb412\", \"schema_version\": \"jimuyun.bootstrap-review-operability-hardening.implementation-validation.v1\", \"slice_id\": \"BROH-S7\", \"status\": \"pass\", \"terminalPredicateVersion\": \"v6\", \"validation_snapshot\": {\"authority_root\": \"sha256:b696183b263ef990e2cd339a1120294804b052636a7c5959e08793e272e44e79\", \"candidate_hash\": \"sha256:0c24a40a6d74dcabdad6049d03e454d339593993906b6e77654e1e7590efb412\", \"closure_definition_hash\": \"sha256:530f9f4c9d04b6ca0cbcb36ef645a5e395a366eacdbc8702d0b9ad28e1fbee3e\", \"predicate_input_root\": \"sha256:0c24a40a6d74dcabdad6049d03e454d339593993906b6e77654e1e7590efb412\", \"validator_root\": \"sha256:ecfb3aff62fbfd44ce3cc433b562f61f38f1a19836dce075116ff31b70261c81\", \"validator_version\": \"broh-validator-v1\"}, \"validator_root\": \"sha256:ecfb3aff62fbfd44ce3cc433b562f61f38f1a19836dce075116ff31b70261c81\", \"validator_version\": \"broh-validator-v1\"}\r\n",
+    "stdoutSha256": "sha256:04f34ae743dc90019a2ebe5844dedd87dddc83690d4c77d53f69ae3735ecea24"
+  },
+  "processResultHash": "sha256:11a39c4ffa6dc2c32bcfb24b41e7ac2ce29083ef78a2ab5e51b266661ebfb109",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

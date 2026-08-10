@@ -1,0 +1,68 @@
+{
+  "authorizes": [],
+  "commandId": "broh-r4-segment-composition",
+  "commandRegistryHash": "sha256:3e084df51778f9561d24ce0e7a767a945d6bbaa276e4ac644e10f7db685869b7",
+  "environmentIdentity": {
+    "hash": "sha256:b7ffb1d8f23b3be214b4ce21bbcf33722989fa42e57783e2b113d8100f6cd141",
+    "names": [
+      "PATH",
+      "PATHEXT",
+      "SYSTEMROOT",
+      "TEMP",
+      "TMP",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 1,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "sha256": "sha256:0c94a60d9d7b4a5ec8eaec2ab7b9cb2d4204860f5344f71d2f3f175b2b805bf8"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "sha256": "sha256:e0c111bed38124e23bbb1c07f893f216e8c19c98d25d459ac84f911c7a00717f"
+    }
+  ],
+  "inputBindingsHash": "sha256:b265cffab9e73655731466e81fed52a451bba23c1e3248053bb376f02b0f5153",
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "-k",
+      "test_round4_segment"
+    ],
+    "commandId": "broh-r4-segment-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SYSTEMROOT",
+      "TEMP",
+      "TMP",
+      "WINDIR"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 240
+  },
+  "invocationHash": "sha256:e213c3bc471ca22321f330ea5fa15ca832a6aaed9c3c579c0cb41c5f39c22007",
+  "processResult": {
+    "commandId": "broh-r4-segment-composition",
+    "exitCode": 1,
+    "stderr": "warning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it\nEwarning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it\nEwarning: in the working copy of '.agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/plan.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'upstream-plan/zz-unrelated.md', LF will be replaced by CRLF the next time Git touches it\nE\r\n======================================================================\r\nERROR: test_round4_segmented_artifact_view_requires_exact_parent_aggregate (__main__.BootstrapReviewCliTests.test_round4_segmented_artifact_view_requires_exact_parent_aggregate)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 742, in test_round4_segmented_artifact_view_requires_exact_parent_aggregate\r\n    self.prepare(execution_mode=\"codex-exec\")\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 399, in prepare\r\n    result = bootstrap.main(\r\n             ^^^^^^^^^^^^^^^\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 12024, in main\r\n    return args.handler(args)\r\n           ^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 5188, in command_prepare\r\n    write_json(out_dir / \"preflight-result.json\", preflight_template(manifest), grant_modify=True)\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 529, in write_json\r\n    grant_current_user_modify(path)\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 514, in grant_current_user_modify\r\n    [\"icacls\", str(path), \"/grant:r\", f\"{getpass.getuser()}:(M)\"],\r\n                                         ^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Program Files\\Python312\\Lib\\getpass.py\", line 168, in getuser\r\n    import pwd\r\nModuleNotFoundError: No module named 'pwd'\r\n\r\n======================================================================\r\nERROR: test_round4_segmented_artifact_view_retries_only_failed_segment (__main__.BootstrapReviewCliTests.test_round4_segmented_artifact_view_retries_only_failed_segment)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 855, in test_round4_segmented_artifact_view_retries_only_failed_segment\r\n    self.prepare(execution_mode=\"codex-exec\")\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 399, in prepare\r\n    result = bootstrap.main(\r\n             ^^^^^^^^^^^^^^^\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 12024, in main\r\n    return args.handler(args)\r\n           ^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 5188, in command_prepare\r\n    write_json(out_dir / \"preflight-result.json\", preflight_template(manifest), grant_modify=True)\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 529, in write_json\r\n    grant_current_user_modify(path)\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 514, in grant_current_user_modify\r\n    [\"icacls\", str(path), \"/grant:r\", f\"{getpass.getuser()}:(M)\"],\r\n                                         ^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Program Files\\Python312\\Lib\\getpass.py\", line 168, in getuser\r\n    import pwd\r\nModuleNotFoundError: No module named 'pwd'\r\n\r\n======================================================================\r\nERROR: test_round4_segmented_attempts_merge_only_after_all_receipts_pass (__main__.BootstrapReviewCliTests.test_round4_segmented_attempts_merge_only_after_all_receipts_pass)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 804, in test_round4_segmented_attempts_merge_only_after_all_receipts_pass\r\n    self.prepare(execution_mode=\"codex-exec\")\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 399, in prepare\r\n    result = bootstrap.main(\r\n             ^^^^^^^^^^^^^^^\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 12024, in main\r\n    return args.handler(args)\r\n           ^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 5188, in command_prepare\r\n    write_json(out_dir / \"preflight-result.json\", preflight_template(manifest), grant_modify=True)\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 529, in write_json\r\n    grant_current_user_modify(path)\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\scripts\\bootstrap_review.py\", line 514, in grant_current_user_modify\r\n    [\"icacls\", str(path), \"/grant:r\", f\"{getpass.getuser()}:(M)\"],\r\n                                         ^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Program Files\\Python312\\Lib\\getpass.py\", line 168, in getuser\r\n    import pwd\r\nModuleNotFoundError: No module named 'pwd'\r\n\r\n----------------------------------------------------------------------\r\nRan 3 tests in 1.200s\r\n\r\nFAILED (errors=3)\r\n",
+    "stderrSha256": "sha256:f588a67b5fa8f45d7b50e52b2b2b8fc889f9fcc64941c90b8e7f7273777125df",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:91e40030008e743ff1d5d3a1ba13e18585709ae30f125e984e6e1b023c4ee627",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

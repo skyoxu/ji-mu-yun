@@ -1,0 +1,9 @@
+[
+  {
+    "actionId": "terminal-implementation-validation",
+    "activation": true,
+    "commandId": "terminal-implementation-validation",
+    "dependsOn": [],
+    "order": 1
+  }
+]

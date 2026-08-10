@@ -1,0 +1,375 @@
+{
+  "authorizes": [],
+  "requirements": [
+    {
+      "id": "RA-SKILL-001",
+      "sourceLine": 1958,
+      "title": "\u62bd\u53d6\u53ef\u4fe1\u5ea6"
+    },
+    {
+      "id": "RA-SKILL-002",
+      "sourceLine": 1962,
+      "title": "\u77e9\u9635\u5b57\u6bb5\u548c\u8bcd\u6c47"
+    },
+    {
+      "id": "RA-SKILL-003",
+      "sourceLine": 1966,
+      "title": "\u4f2a verified"
+    },
+    {
+      "id": "RA-SKILL-004",
+      "sourceLine": 1970,
+      "title": "\u9636\u6bb5\u987a\u5e8f"
+    },
+    {
+      "id": "RA-SKILL-005",
+      "sourceLine": 1974,
+      "title": "\u6309\u9700 Phase 0B"
+    },
+    {
+      "id": "RA-SKILL-006",
+      "sourceLine": 1978,
+      "title": "97\u95ed\u5408"
+    },
+    {
+      "id": "RA-SKILL-007",
+      "sourceLine": 1982,
+      "title": "09/10\u6743\u9650\u8fb9\u754c"
+    },
+    {
+      "id": "RA-SKILL-008",
+      "sourceLine": 1986,
+      "title": "\u4e09\u5c42DoD"
+    },
+    {
+      "id": "RA-SKILL-009",
+      "sourceLine": 1990,
+      "title": "findings\u95ed\u5408"
+    },
+    {
+      "id": "RA-SKILL-010",
+      "sourceLine": 1994,
+      "title": "\u65b0\u9c9c\u8bc1\u636e"
+    },
+    {
+      "id": "RA-SKILL-011",
+      "sourceLine": 1998,
+      "title": "\u53ea\u8bfb\u8fb9\u754c"
+    },
+    {
+      "id": "RA-SKILL-012",
+      "sourceLine": 2002,
+      "title": "Bootstrap\u8fb9\u754c"
+    },
+    {
+      "id": "RA-SKILL-013",
+      "sourceLine": 2006,
+      "title": "\u539f\u5b50\u5316\u548cID\u7a33\u5b9a\u6027"
+    },
+    {
+      "id": "RA-SKILL-014",
+      "sourceLine": 2010,
+      "title": "\u72b6\u6001\u6b63\u4ea4\u6027"
+    },
+    {
+      "id": "RA-SKILL-015",
+      "sourceLine": 2014,
+      "title": "\u8bc1\u636e\u7ed1\u5b9a"
+    },
+    {
+      "id": "RA-SKILL-016",
+      "sourceLine": 2018,
+      "title": "Dirty worktree"
+    },
+    {
+      "id": "RA-SKILL-017",
+      "sourceLine": 2022,
+      "title": "\u4e25\u91cd\u7b49\u7ea7\u7b56\u7565"
+    },
+    {
+      "id": "RA-SKILL-018",
+      "sourceLine": 2026,
+      "title": "\u975e\u7ebf\u6027\u9636\u6bb5"
+    },
+    {
+      "id": "RA-SKILL-019",
+      "sourceLine": 2030,
+      "title": "\u8fd0\u884c\u5199\u8fb9\u754c"
+    },
+    {
+      "id": "RA-SKILL-020",
+      "sourceLine": 2034,
+      "title": "Bootstrap\u7ed3\u679c\u7ed1\u5b9a"
+    },
+    {
+      "id": "RA-SKILL-021",
+      "sourceLine": 2038,
+      "title": "\u89e6\u53d1\u51b2\u7a81"
+    },
+    {
+      "id": "RA-SKILL-022",
+      "sourceLine": 2042,
+      "title": "Fresh-context\u884c\u4e3a\u9a8c\u8bc1"
+    },
+    {
+      "id": "RA-SKILL-023",
+      "sourceLine": 2046,
+      "title": "\u6df7\u5408\u6765\u6e90\u5206\u533a"
+    },
+    {
+      "id": "RA-SKILL-024",
+      "sourceLine": 2050,
+      "title": "\u6b63\u5411\u5b8c\u6574\u6027\u8bc1\u660e"
+    },
+    {
+      "id": "RA-SKILL-025",
+      "sourceLine": 2054,
+      "title": "Bootstrap finding\u6620\u5c04"
+    },
+    {
+      "id": "RA-SKILL-026",
+      "sourceLine": 2058,
+      "title": "\u9002\u7528\u6027\u552f\u4e00\u6743\u5a01"
+    },
+    {
+      "id": "RA-SKILL-027",
+      "sourceLine": 2062,
+      "title": "\u9010check\u8bc1\u636e\u5408\u540c"
+    },
+    {
+      "id": "RA-SKILL-028",
+      "sourceLine": 2066,
+      "title": "\u5185\u5bb9manifest\u53ef\u91cd\u653e\u6027"
+    },
+    {
+      "id": "RA-SKILL-029",
+      "sourceLine": 2070,
+      "title": "Gate\u548cDoD\u72b6\u6001\u8bcd\u6c47"
+    },
+    {
+      "id": "RA-SKILL-030",
+      "sourceLine": 2074,
+      "title": "Attestation\u51bb\u7ed3\u65f6\u5e8f"
+    },
+    {
+      "id": "RA-SKILL-031",
+      "sourceLine": 2078,
+      "title": "Action\u6062\u590d\u534f\u8bae"
+    },
+    {
+      "id": "RA-SKILL-032",
+      "sourceLine": 2082,
+      "title": "\u5b89\u5168Command Registry"
+    },
+    {
+      "id": "RA-SKILL-033",
+      "sourceLine": 2086,
+      "title": "Adapter Schema"
+    },
+    {
+      "id": "RA-SKILL-034",
+      "sourceLine": 2090,
+      "title": "Check ID Lineage"
+    },
+    {
+      "id": "RA-SKILL-035",
+      "sourceLine": 2094,
+      "title": "Bootstrap\u51b3\u7b56\u72b6\u6001"
+    },
+    {
+      "id": "RA-SKILL-036",
+      "sourceLine": 2098,
+      "title": "Bootstrap Import Envelope"
+    },
+    {
+      "id": "RA-SKILL-037",
+      "sourceLine": 2102,
+      "title": "\u4eba\u5de5Mapping Approval"
+    },
+    {
+      "id": "RA-SKILL-038",
+      "sourceLine": 2106,
+      "title": "\u5355\u4e00\u8bed\u4e49\u6743\u5a01"
+    },
+    {
+      "id": "RA-SKILL-039",
+      "sourceLine": 2110,
+      "title": "Deterministic-only\u6700\u7ec8\u6388\u6743"
+    },
+    {
+      "id": "RA-SKILL-040",
+      "sourceLine": 2114,
+      "title": "Required\u6765\u6e90\u5426\u51b3\u4f18\u5148\u7ea7"
+    },
+    {
+      "id": "RA-SKILL-041",
+      "sourceLine": 2118,
+      "title": "Companion capability\u8eab\u4efd"
+    },
+    {
+      "id": "RA-SKILL-042",
+      "sourceLine": 2122,
+      "title": "Acceptance Auditor\u539f\u5b50Role Bundle"
+    },
+    {
+      "id": "RA-SKILL-043",
+      "sourceLine": 2126,
+      "title": "Mapping Approval\u6b63\u5f0f\u5bfc\u5165"
+    },
+    {
+      "id": "RA-SKILL-044",
+      "sourceLine": 2130,
+      "title": "\u76ee\u6807Finding Policy\u9694\u79bb"
+    },
+    {
+      "id": "RA-SKILL-045",
+      "sourceLine": 2134,
+      "title": "Deterministic Next Action"
+    },
+    {
+      "id": "RA-SKILL-046",
+      "sourceLine": 2138,
+      "title": "Change Set\u6388\u6743\u8fb9\u754c"
+    },
+    {
+      "id": "RA-SKILL-047",
+      "sourceLine": 2142,
+      "title": "Evidence-only\u6388\u6743\u8fb9\u754c"
+    },
+    {
+      "id": "RA-SKILL-048",
+      "sourceLine": 2146,
+      "title": "\u6761\u4ef6\u5de5\u4ef6\u95ed\u5305"
+    },
+    {
+      "id": "RA-SKILL-049",
+      "sourceLine": 2150,
+      "title": "\u6761\u4ef6Capability Binding"
+    },
+    {
+      "id": "RA-SKILL-050",
+      "sourceLine": 2154,
+      "title": "S0 Durable Authority Projection"
+    },
+    {
+      "id": "RA-SKILL-051",
+      "sourceLine": 2158,
+      "title": "Bootstrap Action\u987a\u5e8f"
+    },
+    {
+      "id": "RA-SKILL-052",
+      "sourceLine": 2162,
+      "title": "Immutable Bootstrap\u5de5\u4ef6\u5206\u6743"
+    },
+    {
+      "id": "RA-SKILL-053",
+      "sourceLine": 2166,
+      "title": "Reviewer Launch Authorization"
+    },
+    {
+      "id": "RA-SKILL-054",
+      "sourceLine": 2170,
+      "title": "Base Matrix\u4e0eImpact Projection"
+    },
+    {
+      "id": "RA-SKILL-055",
+      "sourceLine": 2174,
+      "title": "Candidate\u4e0eFinal Result\u4fdd\u7ba1"
+    },
+    {
+      "id": "RA-SKILL-056",
+      "sourceLine": 2178,
+      "title": "Manifest\u53ef\u7528\u6027\u72b6\u6001"
+    },
+    {
+      "id": "RA-SKILL-057",
+      "sourceLine": 2182,
+      "title": "Approval Lineage\u4e0eReceipt"
+    },
+    {
+      "id": "RA-SKILL-058",
+      "sourceLine": 2186,
+      "title": "Evidence Invocation Identity"
+    },
+    {
+      "id": "RA-SKILL-059",
+      "sourceLine": 2190,
+      "title": "Conditional Branch Closure"
+    },
+    {
+      "id": "RA-SKILL-060",
+      "sourceLine": 2194,
+      "title": "Semantic Completeness Projection"
+    },
+    {
+      "id": "RA-SKILL-061",
+      "sourceLine": 2198,
+      "title": "\u5355\u5411Bootstrap\u542f\u52a8\u6743\u5a01"
+    },
+    {
+      "id": "RA-SKILL-062",
+      "sourceLine": 2202,
+      "title": "Deterministic Gate\u6240\u6709\u6743"
+    },
+    {
+      "id": "RA-SKILL-063",
+      "sourceLine": 2206,
+      "title": "Dependency Closure\u8bed\u4e49"
+    },
+    {
+      "id": "RA-SKILL-064",
+      "sourceLine": 2210,
+      "title": "Typed External/Protected Gates"
+    },
+    {
+      "id": "RA-SKILL-065",
+      "sourceLine": 2214,
+      "title": "Phase Policy\u6fc0\u6d3b\u4e0e\u57df\u9694\u79bb"
+    },
+    {
+      "id": "RA-SKILL-066",
+      "sourceLine": 2218,
+      "title": "Policy Check Exact Coverage"
+    },
+    {
+      "id": "RA-SKILL-067",
+      "sourceLine": 2222,
+      "title": "\u786e\u5b9a\u6027\u4e0eReview Gate\u5206\u6743"
+    },
+    {
+      "id": "RA-SKILL-068",
+      "sourceLine": 2226,
+      "title": "Phase\u4ee3\u7801\u5ba1\u6838\u95ed\u5305"
+    },
+    {
+      "id": "RA-SKILL-069",
+      "sourceLine": 2230,
+      "title": "Commit\u4e0e\u53d8\u66f4\u8c31\u7cfb\u6743\u9650"
+    },
+    {
+      "id": "RA-SKILL-070",
+      "sourceLine": 2234,
+      "title": "85%\u589e\u91cfDiff\u8986\u76d6\u7387"
+    },
+    {
+      "id": "RA-SKILL-071",
+      "sourceLine": 2238,
+      "title": "\u4efb\u52a1\u6e05\u5355\u52fe\u9009\u4e0e\u8bc1\u636e\u95ed\u5305"
+    },
+    {
+      "id": "RA-SKILL-072",
+      "sourceLine": 2242,
+      "title": "Phase\u9759\u6001\u68c0\u67e5Scope\u95ed\u5305"
+    },
+    {
+      "id": "RA-SKILL-073",
+      "sourceLine": 2246,
+      "title": "Phase\u5b89\u5168\u626b\u63cfScope\u95ed\u5305"
+    }
+  ],
+  "schemaVersion": "refactor-acceptance.requirement-inventory.v1",
+  "source": {
+    "path": "execution-plans/2026-07-15-refactor-implementation-acceptance-skill-requirements.md",
+    "sha256": "sha256:be6a7c00bff4e78b55014341839cfe1a2f98ccf02de01d72c44da73a8ec71456"
+  }
+}

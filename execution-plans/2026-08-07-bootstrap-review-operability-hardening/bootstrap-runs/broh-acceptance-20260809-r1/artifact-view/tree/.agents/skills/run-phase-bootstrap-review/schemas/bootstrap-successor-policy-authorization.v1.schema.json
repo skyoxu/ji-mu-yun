@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+  "title": "Bootstrap Successor Policy Authorization v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "decisionId", "actorId", "authoritySourceRef", "supersededReviewId", "supersededChangeId", "successorChangeId", "policyRevision", "authorityRevision", "consumer", "scope", "status", "issuedAt", "expiresAt", "predecessorEventRef", "revocationEventRef", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-successor-policy-authorization.v1"},
+    "eventId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "decisionId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "actorId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "authoritySourceRef": {"$ref": "#/$defs/evidenceRef"},
+    "supersededReviewId": {"type": "string", "minLength": 1},
+    "supersededChangeId": {"type": "string", "minLength": 1},
+    "successorChangeId": {"type": "string", "minLength": 1},
+    "policyRevision": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorityRevision": {"type": "string", "minLength": 1},
+    "consumer": {"const": "repository-maintenance-tdd-adapter-plan-reentry"},
+    "scope": {"const": "plan-reentry"},
+    "status": {"const": "active"},
+    "issuedAt": {"type": "string", "format": "date-time"},
+    "expiresAt": {"type": "string", "format": "date-time"},
+    "predecessorEventRef": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/evidenceRef"}]},
+    "revocationEventRef": {"type": "null"},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {"$ref": "#/$defs/exclusions"}
+  },
+  "$defs": {
+    "evidenceRef": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}},
+    "exclusions": {"type": "array", "uniqueItems": true, "minItems": 6, "items": {"enum": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]}}
+  }
+}

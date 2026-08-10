@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-repair-review-delta.v1.schema.json",
+  "title": "Bootstrap Repair Review Delta v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "strategy",
+    "predecessorRun",
+    "addedArtifacts",
+    "changedArtifacts",
+    "removedArtifacts",
+    "removedArtifactSnapshots",
+    "supportArtifacts",
+    "candidateBindingHash",
+    "authorizes"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-repair-review-delta.v1"},
+    "strategy": {"const": "repair_delta_closure"},
+    "predecessorRun": {"type": "string", "minLength": 1},
+    "addedArtifacts": {"$ref": "#/$defs/pathArray"},
+    "changedArtifacts": {"$ref": "#/$defs/pathArray"},
+    "removedArtifacts": {"$ref": "#/$defs/pathArray"},
+    "removedArtifactSnapshots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifact", "sha256", "snapshotPath", "predecessorRun", "textEncoding", "lineCount"],
+        "properties": {
+          "artifact": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "snapshotPath": {"type": "string", "pattern": "^artifact-view/deleted-tree/.+"},
+          "predecessorRun": {"type": "string", "minLength": 1},
+          "textEncoding": {"type": ["string", "null"]},
+          "lineCount": {"type": ["integer", "null"], "minimum": 0}
+        }
+      }
+    },
+    "supportArtifacts": {"$ref": "#/$defs/pathArray"},
+    "candidateBindingHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorizes": {"type": "array", "maxItems": 0}
+  },
+  "$defs": {
+    "pathArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

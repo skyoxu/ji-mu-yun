@@ -1,0 +1,60 @@
+{
+  "authorizes": [],
+  "inventories": [
+    {
+      "addressedPaths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "exclusions": [],
+      "inventoryId": "bootstrap-artifact-view-segment-callsites",
+      "matches": [
+        {
+          "lineNumbers": [
+            3712,
+            3794,
+            3809,
+            3835,
+            7257,
+            7581,
+            7591,
+            7667,
+            7682,
+            7694,
+            10379
+          ],
+          "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          "sha256": "sha256:0c94a60d9d7b4a5ec8eaec2ab7b9cb2d4204860f5344f71d2f3f175b2b805bf8"
+        },
+        {
+          "lineNumbers": [
+            744,
+            756,
+            758,
+            767,
+            776,
+            785,
+            795,
+            799,
+            806,
+            820,
+            827,
+            857,
+            874,
+            880,
+            890,
+            928
+          ],
+          "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+          "sha256": "sha256:e0c111bed38124e23bbb1c07f893f216e8c19c98d25d459ac84f911c7a00717f"
+        }
+      ],
+      "searchRoots": [
+        ".agents/skills/run-phase-bootstrap-review"
+      ],
+      "searchTerm": "artifact_view_segment"
+    }
+  ],
+  "request_hash": "sha256:5c6924118bfd46b9c344e174656d8b24dc1ed52f8bd9eec7f43684bb3459e2ea",
+  "schema_version": "jimuyun.root-cause-callsite-inventory.v1"
+}

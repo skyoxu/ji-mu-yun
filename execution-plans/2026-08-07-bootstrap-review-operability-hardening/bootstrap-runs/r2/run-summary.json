@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "bootstrap-run-summary.v1",
+  "runDirectory": "C:/jimuyun/execution-plans/2026-08-07-bootstrap-review-operability-hardening/bootstrap-runs/r2",
+  "reviewId": "broh-acceptance-20260809-r2",
+  "changeId": "bootstrap-review-operability-hardening",
+  "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+  "fullReviewRound": 1,
+  "runExecutionState": "abandoned",
+  "runRelationship": "active",
+  "changeCycleState": "closed",
+  "finalStatus": null,
+  "activeAttempts": [],
+  "acquiredLeases": [],
+  "nextAction": "use-successor-or-create-fresh-run",
+  "verifierRecoveryState": "none",
+  "profileName": "bootstrap-skill-route",
+  "artifactCount": 63,
+  "reviewCostEstimate": {
+    "artifactCount": 63,
+    "totalBytes": 1302434,
+    "reviewerReasoningUnits": 6,
+    "relativeWorkUnits": 378,
+    "workloadBucket": "large",
+    "highCost": true,
+    "estimatedInputTokens": {
+      "low": 244206,
+      "high": 407010
+    },
+    "estimatedTotalTokens": {
+      "p50": 1562918,
+      "p90": 3125836
+    },
+    "estimatedWallMinutes": {
+      "p50": 104,
+      "p90": 208
+    },
+    "verifierLikelihood": "medium",
+    "retryRisk": "medium",
+    "basisSampleCount": 17,
+    "confidence": "low",
+    "costCalibration": {
+      "path": ".agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json",
+      "sha256": "sha256:72b1b76b6de9bd73f5828e84efc28216080aa20a17e66c527d6a3965b9a5b601",
+      "calibrationId": "bootstrap-cost-calibration-legacy-v1"
+    },
+    "costCalibrationCohortId": "conservative-fallback"
+  },
+  "processEventCount": 30,
+  "tokenUsage": {
+    "recordCount": 3,
+    "total": 6004806
+  },
+  "signals": {
+    "retry": 6,
+    "stale": 0,
+    "verifierRecovery": 0,
+    "accessProof": true,
+    "verifierAccessProof": false
+  },
+  "evidenceHashes": {
+    "run-seal.json": "sha256:2ed753fd506d46fa96b1aa8b68185c594b581e780281d8338e0d41c91e0b07b5",
+    "process-events.jsonl": "sha256:13dd66583d24095e3f447e68fda5b5ade2786a9c669678615dd019a08b851ff6"
+  },
+  "generatedAt": "2026-08-08T17:31:50.458254Z"
+}

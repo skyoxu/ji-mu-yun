@@ -2,6 +2,10 @@
 
 Purpose: keep [AGENTS.md](../../AGENTS.md) short and move durable guidance here.
 
+Repository delivery workflow access is deny-by-default. Use
+[../../knowledge/toolchain-workflow-index.md](../../knowledge/toolchain-workflow-index.md)
+before reading `workflow.md`; load only the allowlisted chapter or skill.
+
 ## Read Order After Context Reset
 
 1. [01-session-recovery.md](01-session-recovery.md)

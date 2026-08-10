@@ -221,7 +221,19 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prov
   [--ack-high-cost]
 ```
 
-The discovery route is round-bound. Every Round 1-2 profile, including Skill/route review, uses Terra at its profile-declared effort; every valid Round 3 uses Sol/high. Ordinary focused repair verification also uses Terra/high. A focused repair whose frozen predecessor contains P0, `security`, or a structured high-risk verifier class uses the same escalation policy as independent verification. The probe must use the same executable identity, exact resolved model/reasoning route, sandbox, environment class, and Artifact View contract intended for reviewers. When reviewer roles resolve to different routes, one `prove-access --role discovery` command creates one proof per distinct route; roles with an identical route share a proof, and launch authorization binds the complete proof set. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
+The discovery route is round-bound. Every Round 1-2 profile, including Skill/route review, uses Terra at its profile-declared effort; every valid Round 3 uses Sol/high. Ordinary focused repair verification also uses Terra/high. A focused repair whose frozen predecessor contains P0, `security`, or a structured high-risk verifier class uses the same escalation policy as independent verification. The probe must use the same executable identity, exact resolved model/reasoning route, sandbox, environment class, and Artifact View contract intended for reviewers. When reviewer roles resolve to different routes, one `prove-access --role discovery` command creates one proof per distinct route; roles with an identical route share a proof, and launch authorization binds the complete proof set. An explicitly selected allowed fallback model creates a separate model-bound proof sidecar; the preferred proof is never silently reused for a fallback. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
+
+## Execution-Plane Continuity
+
+Choose one command execution plane before `prove-access`. For a Codex Exec run,
+the same plane must execute `prove-access`, `authorize-launch`, every
+`run-layer`, and `process-lease --action inspect`. FastCtx is the repository
+default for this sequence; a PowerShell session must not take over a run that
+was proven from FastCtx, or vice versa. The access proof binds the allowlisted
+environment evidence hash, user identity, platform, executable, model, and
+sandbox. A drift fails before child launch. Preserve that failed evidence and
+prepare a new run from the intended plane; do not overwrite a proof or bypass
+the drift check.
 
 The runner materializes the deterministic handshake helper inside each attempt directory so the sandboxed child does not need to read the repository `.agents` entrypoint. The parent revalidates the complete Artifact View coverage and handshake hash; a child-produced hash alone is never access proof.
 
@@ -245,6 +257,8 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py run-
 
 Each child must execute its same-session Artifact View handshake before semantic work and return only a structured candidate response. A completed Codex discovery payload returns semantic candidates and `bootstrap-artifact-view-read-receipt.v1`; it never reproduces coverage path arrays. The parent validates the receipt and handshake, constructs exact ordered formal coverage from the frozen manifest, validates the complete formal output, and writes it atomically. Manual and specialized-agent modes still fill and validate explicit coverage arrays because their reads occur outside the parent-owned Codex boundary. Every completed reviewer or verifier payload receives one final frozen-authority validation immediately before publication; a failure at that boundary leaves the prior formal bytes unchanged and records a failed attempt. Verifier output additionally requires exact blocker evidence and complete `contextRead` coverage against the frozen gate before publication. The verifier runtime prompt derives and re-emits every full inclusive blocker range and all `contextRead` references from the hash-bound candidate sidecar; it must not rely on a start-line-only summary in a saved prompt. Failed attempts remain under `attempts/<attempt-id>/` and never replace completed formal evidence.
 
+When the frozen reviewable bytes exceed the controller threshold, the parent creates a stable ordered file/line segment plan and launches isolated attempts for the same reviewer role. Each attempt is bound to one segment and returns `bootstrap-artifact-view-segment-receipt.v1`, including the assigned reviewer role; it cannot claim whole-view coverage. The parent persists each validated segment result, rejects missing, duplicate, reordered, overlapping, role-drifted, or hash-mismatched receipts, retries only the failed transport segment inside the same semantic round, and publishes one formal role output only after every expected receipt passes. Discovery candidates remain independent. Verifier partial decisions are folded once per finding: independent-verifier verdict conflicts fail closed, while focused-repair `blocking` takes precedence over `verified_fixed`; evidence references are unioned deterministically. Segmentation does not shrink the Artifact View, create another reviewer identity, or consume another semantic round.
+
 If a discovery or verifier formal output was validly published but interruption prevented
 the immediately following `attempt-completed` append, retry the same role. The
 reservation path first requires the original controller identity to be dead,
@@ -259,11 +273,20 @@ They append `attempt-failed`, keep formal output bytes unchanged, and retry the
 same role in the same run. Do not create a new semantic round, review ID, or
 successor lineage for a transport failure.
 
+Codex children launch in a controller-owned process group. A no-progress
+timeout terminates that child tree before the controller records the timeout
+and terminal transport event. If the controller is interrupted first, a later
+`process-lease --action inspect` verifies the recorded PID identity, terminates
+an expired no-progress tree, then appends the timeout and `attempt-failed`
+events. It never treats the absence of controller output as a semantic result.
+
 For Codex Exec, the child reads every artifact from the frozen Artifact View `snapshotPath` and cites `originalPath`. The runtime prompt names the absolute run directory and manifest. The child must not read live originals, edit formal reviewer/verifier outputs, or invoke `validate-layer`; those are parent control-plane responsibilities.
 
 Only overlapping formal write sets block concurrency. Non-overlapping reviewer roles may run concurrently while Git index and authority freshness remain frozen.
 
 Manual and specialized-agent modes remain external execution boundaries. Their operators own process launch and must preserve the same reviewer independence and output contracts.
+
+Segmented Codex children are bounded to their assigned file/line segment plus a compact parent validation attestation. The parent validates the complete delegated Bootstrap authority before launch, but segmented children must not receive or read the authority snapshot mappings again. Their runtime prompt must not instruct full Artifact View manifest traversal; the parent owns whole-view completeness through validated receipt aggregation. Before launch, the parent records `promptBytes` and rejects a segmented prompt above `SEGMENT_PROMPT_MAX_BYTES`; a child-reported context-window failure is classified as `context-budget` and requires repartition before retry, never an unchanged retry. Segment result cache identity includes the selected model, and legacy cache records are reusable only when their recorded model matches.
 
 ## Gate And Verify
 

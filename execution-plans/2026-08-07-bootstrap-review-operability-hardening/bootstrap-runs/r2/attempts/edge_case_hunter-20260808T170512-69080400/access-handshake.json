@@ -1,0 +1,263 @@
+{
+  "schemaVersion": "bootstrap-access-handshake.v1",
+  "reviewId": "broh-acceptance-20260809-r2",
+  "inputHash": "sha256:c51d91f71a125ae9b891e0cb1510c78c544671b1c812df308c5f0a3cc43bf8ac",
+  "role": "edge_case_hunter",
+  "artifactViewManifestHash": "sha256:9e3eb3765e5596667f7ca270c7d25dd180eb2a925a624d503042e2d3e4180e50",
+  "checkedArtifacts": [
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "snapshotSha256": "sha256:8b2db75cdf6e17f01663db91a496b87de4ca67d7ccf2b5e3b3870ad22e504a28"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/agents/openai.yaml",
+      "snapshotSha256": "sha256:e0c049a7223bb6e44d3024ecaafdb7021bbcc3dd2a1680a98c44bbe678ae6fec"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+      "snapshotSha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/references/historical-policy-revisions.v1.json",
+      "snapshotSha256": "sha256:618e818f3a54bb291f442cb0d417b268f3b65ca9ffd94a5b2096207dc63f106d"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/references/review-cost-calibration.v1.json",
+      "snapshotSha256": "sha256:72b1b76b6de9bd73f5828e84efc28216080aa20a17e66c527d6a3965b9a5b601"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "snapshotSha256": "sha256:43418fd7b9cf8b1437b6cf0e92150d4563e11736f8f36e76d04e9396d8b57a47"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-auditor-role-bundle.v1.schema.json",
+      "snapshotSha256": "sha256:1c9a12fc3da8f3e8085b88b7f4e558cb975f0a05b48b40cb0cc57730a06a124e"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json",
+      "snapshotSha256": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json",
+      "snapshotSha256": "sha256:d5145862fd4d4b01ab2f96aebdd8d1c417c33f46e8017469110b1630eafe174b"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-authority-root-registry.v1.schema.json",
+      "snapshotSha256": "sha256:35e6de7b0a1f2473b81e601afc2ce32da3010c874d5d88ffba823c21a5497899"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v1.schema.json",
+      "snapshotSha256": "sha256:55b75323c95daae0532a06b06c95de3ef0389746d8456901f26b7ef1c6ef908a"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v2.schema.json",
+      "snapshotSha256": "sha256:a263b2b00619632d810e8d6af80ae22f65f9d96e50eb5dacb230ddb65e225b34"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-finalized-run-validation.v3.schema.json",
+      "snapshotSha256": "sha256:3f02b206969874e8b9d245fdc52872aba295f17438ab5ff28d665b0de5b90735"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-gate-result.v1.schema.json",
+      "snapshotSha256": "sha256:f30a1c3752a4987c4325ba8927b24c1e88b747613f2737601ce9979d128fc908"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-validation-envelope.v1.schema.json",
+      "snapshotSha256": "sha256:d3bbe13cea6f4a8a5b53ccec9457c2fb5b7a1f341cec48d114acad617b72180c"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-focused-repair-verifier-output.v1.schema.json",
+      "snapshotSha256": "sha256:8e82faf5c70e8ced9e8481b4c305c3b4685c6093f80fe1eba4b46b001d41ed87"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-recovery.v1.schema.json",
+      "snapshotSha256": "sha256:f5610b917f4c7966aee5f79407a8306709552e2a03ce1d014911c9a2ceb87788"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-focused-repair-validation-envelope.v1.schema.json",
+      "snapshotSha256": "sha256:76c50cc7783a4d3089a08b7ed23ac056c01b36529ddffb9e72f99754ab6aaaab"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-hard-limit-protocol-repair-authority.v1.schema.json",
+      "snapshotSha256": "sha256:31fd1563803250b0b8999672a8aa96a2a861cc0334d9f8522ac5c2ce4c13cba6"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-historical-policy-revisions.v1.schema.json",
+      "snapshotSha256": "sha256:0219798574497b7be1693e04b8ab935a8ad26a59bb025d27abf336cd224531a3"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-knowledge-context.v1.schema.json",
+      "snapshotSha256": "sha256:838b4eb87d44bfe69bdecf3378425960e29ca35490f609714ab8fa8c8cf7fe5d"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-lineage-adoption.v1.schema.json",
+      "snapshotSha256": "sha256:dc7693db6ae8f298499b916034765343c9d135eaa8201e48e0bab40be8cdca10"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-closure.v2.schema.json",
+      "snapshotSha256": "sha256:339dc911aaa3a77a9842fff6600ab1fe2af576c5063e624bb4f4aa4cf01be3ab"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-command-registry.v1.schema.json",
+      "snapshotSha256": "sha256:bc70aea141a5786aafcdceac6cba727bc2b6b2dfbdecde5a682779fa8d4fee85"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-dispositions.v1.schema.json",
+      "snapshotSha256": "sha256:728686cfce18033461900754e2929cb9ca2298b234471feb3c26257825f39bac"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-evidence-result.v1.schema.json",
+      "snapshotSha256": "sha256:2fe318306075e0a57168bddc20b4b8c87d51a8ee3c26b59a0397e99156770639"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-owner-authority.v1.schema.json",
+      "snapshotSha256": "sha256:1f7fb210ed667e6050826e6020c06c0f12cee19b37c7541021df2f3355f4c372"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-event.v1.schema.json",
+      "snapshotSha256": "sha256:77636808f229d7829cdaee60b2d244e494baf32de1731f1744080da971644eea"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-p2-process-result.v1.schema.json",
+      "snapshotSha256": "sha256:0ea76af452ea9e07d3e4dc8ff5b4d1d8bad5b1421d1447b5ca86ebb34b633405"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-preflight-result.v1.schema.json",
+      "snapshotSha256": "sha256:fe3b0b9d41386949143460f17eefe36ae25b945f320005716cf54194ed68b7ff"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-process-leases.v1.schema.json",
+      "snapshotSha256": "sha256:c50775abbd1acc7529032be6f71cd9ce4ede9ae2880a09ac0ef16704f4fd8f65"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-closure.v1.schema.json",
+      "snapshotSha256": "sha256:b2b2cce937a94598f5ff24f44ef800c505d73a4c52ed0e655aed991b49d26c47"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-review-delta.v1.schema.json",
+      "snapshotSha256": "sha256:c249161e334668f30b891c23a5e6b209311e19fe4d8f8106e7f5e1f46691b8c4"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-calibration-corpus.v1.schema.json",
+      "snapshotSha256": "sha256:061e3b21853613c86c55c6bbd45a754d5c68b01280492845c97735a8cd9b19d6"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-cost-calibration.v1.schema.json",
+      "snapshotSha256": "sha256:07ae60d910d0cc07f7ee2eddffb9a137783b80b2524831bc20471ab860f6c29b"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-gate-result.v1.schema.json",
+      "snapshotSha256": "sha256:a4213789258edd8a932ea5a68ec82ef7491335593646afb0f620c290c2ac8395"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-history-index.v1.schema.json",
+      "snapshotSha256": "sha256:a0c61d7415f5c975939b45ab8007184f9aad091e65fbda795907dd3e624c1428"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-launch-authorization.v1.schema.json",
+      "snapshotSha256": "sha256:b92f0667f6e96ab4a125cf3a930f8be6d7da8b569bfcd435ffaea55c836480ac"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-lineage-state.v1.schema.json",
+      "snapshotSha256": "sha256:b99d6f1e5413de578c25452ba91d601b0c5d80a71b0151016e1f0e46d2244864"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-review-round-entry-decision.v1.schema.json",
+      "snapshotSha256": "sha256:075a23c4b8b6e2dcf1425af6b1fd08768a375a44a1bd2d06ee27036853fec383"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-reviewer-output.v1.schema.json",
+      "snapshotSha256": "sha256:ec05b3b805a86655d45cf9ba12c0bf6732c2e308db075422e866a71d1f0dc0d1"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authority.v1.schema.json",
+      "snapshotSha256": "sha256:3ae132fd7c6dc6688e3ab37e221208f56ee9bf1aec79dad9cc531fd081c06494"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-authorization.v1.schema.json",
+      "snapshotSha256": "sha256:f85709cc2d6b4c9731d40e0ccd56a5bfb78defe187b049baf8acbd770fce8821"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-successor-policy-decision.v1.schema.json",
+      "snapshotSha256": "sha256:ed47c887684f2f94f6ef46dbee9755474450109ce5523804e7fcd9b02d67cb95"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-output.v1.schema.json",
+      "snapshotSha256": "sha256:ff9db3aea54c0b9f7600a200db8e56e76c339cfeb8d70f8490ac4b04e167aa57"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-verifier-recovery.v1.schema.json",
+      "snapshotSha256": "sha256:d36d50cfa059b631fe878227c8a94ad219c8800f0e74a83ed40fe6ac4418a6a3"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/review-finding.v1.schema.json",
+      "snapshotSha256": "sha256:62b9ee4446d37c5c514007ec598956f6c7a049dd3839b3ec1ad56de487f93d31"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/review-rejection.v1.schema.json",
+      "snapshotSha256": "sha256:620096107af352b89a5f02767bece5c8d591fd0557d01124a12c33b98536de12"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/schemas/review-result.v1.schema.json",
+      "snapshotSha256": "sha256:4bd2755e72b7c02861c4e31f82d236e82528ab1589891e04ced8539777418286"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "snapshotSha256": "sha256:85df88251352cf30f3d61bd68d6f4d90ea065bb212c31efbab11732605592ce6"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "snapshotSha256": "sha256:10e3937fa26b500b13ced297eff8602d2a59b32b6222983d0a99eb3b90abd65b"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/scripts/knowledge_context.py",
+      "snapshotSha256": "sha256:83a2d988df2e513eba4e9c299c5b5f4cd75e0869c67f200b8c6b80ae764a94e9"
+    },
+    {
+      "originalPath": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "snapshotSha256": "sha256:42ebcaad903586312d0c5339a963dc5edb5e9f584ae0d194ac96fd6eb6d30cf4"
+    },
+    {
+      "originalPath": "AGENTS.md",
+      "snapshotSha256": "sha256:06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+    },
+    {
+      "originalPath": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "snapshotSha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3"
+    },
+    {
+      "originalPath": "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+      "snapshotSha256": "sha256:e7a7cdb00fbee9f7e4e2493157002f93bd9b42aa9221a9aa8bf40988ca1df0fc"
+    },
+    {
+      "originalPath": "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md",
+      "snapshotSha256": "sha256:3a58878f36f70e8cd5a2b48bc06776bdc627f666a29b9ba795c5e8217773d778"
+    },
+    {
+      "originalPath": "docs/standards/bootstrap-review-control-plane.md",
+      "snapshotSha256": "sha256:2525e32a9acf16cd8156c4973b03277c199f8804c90c15826fc9a593f9a9c6e8"
+    },
+    {
+      "originalPath": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/09-bootstrap-review-operator-guide.md",
+      "snapshotSha256": "sha256:ec7fd93eb970bc97be54f7db9cd20d7bc2f346481e611bf2a0b117447b953c5e"
+    },
+    {
+      "originalPath": "execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py",
+      "snapshotSha256": "sha256:dd13664a46625953797ff4316bf120c479c1ae6f7a13ab4f7300ba2a0eda9177"
+    },
+    {
+      "originalPath": "logs/ci/2026-07-16/review-gateway-bootstrap-bootstrap-control-plane-v2-r1-20260716/run-summary.json",
+      "snapshotSha256": "sha256:e9235d1df2ed9ccc0e99d02a0e249c0340c70cf9f76d1d3418de66f89c819367"
+    },
+    {
+      "originalPath": "scripts/python/_knowledge_locator_core.py",
+      "snapshotSha256": "sha256:41cd902ff272468eb97129a13ea6b578dea9d54f5381cb5389590ae138e0e934"
+    },
+    {
+      "originalPath": "scripts/python/knowledge_context_validation.py",
+      "snapshotSha256": "sha256:5cebddc7c79c2524fa3ac584ca11d00d3e2ffc4619d19d3c9f0376bdfe7d9741"
+    }
+  ],
+  "checkedAt": "2026-08-08T17:05:29.974309Z",
+  "handshakeHash": "sha256:d551c219076a8ce25277a3d0e8413aa01725af3c8927400b630a86ca672cb78e"
+}

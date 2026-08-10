@@ -1,0 +1,54 @@
+{
+  "authorizes": [],
+  "commandId": "broh-r4-segment-composition",
+  "commandRegistryHash": "sha256:5233abe809946d5e38daaea192cf814c3137cf95a604293ab66ba0707aca4a72",
+  "environmentIdentity": {
+    "hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "names": []
+  },
+  "exitCode": 1,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "sha256": "sha256:0c94a60d9d7b4a5ec8eaec2ab7b9cb2d4204860f5344f71d2f3f175b2b805bf8"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "sha256": "sha256:e0c111bed38124e23bbb1c07f893f216e8c19c98d25d459ac84f911c7a00717f"
+    }
+  ],
+  "inputBindingsHash": "sha256:b265cffab9e73655731466e81fed52a451bba23c1e3248053bb376f02b0f5153",
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "-k",
+      "test_round4_segment"
+    ],
+    "commandId": "broh-r4-segment-composition",
+    "cwd": ".",
+    "environmentAllowlist": [],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 240
+  },
+  "invocationHash": "sha256:fb2034648f513568931f540051a25014a40e954d751ff8119df3df9ec3f6bb98",
+  "processResult": {
+    "commandId": "broh-r4-segment-composition",
+    "exitCode": 1,
+    "stderr": "Traceback (most recent call last):\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 20, in <module>\r\n    from unittest import mock\r\n  File \"C:\\Program Files\\Python312\\Lib\\unittest\\mock.py\", line 26, in <module>\r\n    import asyncio\r\n  File \"C:\\Program Files\\Python312\\Lib\\asyncio\\__init__.py\", line 43, in <module>\r\n    from .windows_events import *\r\n  File \"C:\\Program Files\\Python312\\Lib\\asyncio\\windows_events.py\", line 8, in <module>\r\n    import _overlapped\r\nOSError: [WinError 10106] �޷����ػ��ʼ������ķ����ṩ����\r\n",
+    "stderrSha256": "sha256:ff0abd27346f08d8e3f486e0d42116121dd2a0a822878fae06bfe4a5c44298fe",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:753a9f8f7d34809cbacd5323746be0c43cfe1bdb6bdc1ca74a303dcce32eb26f",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "acceptance-deterministic-evidence.v1",
+  "status": "passed",
+  "predicate": "implementation-complete",
+  "terminalValidation": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py",
+  "controlledReceipt": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/acceptance-runs/acceptance-broh-20260809-r5/terminal-command-receipt.v1.json",
+  "controlledReceiptHash": "sha256:16d72e31929a846d607ec85030071d4dbe47dc67702c0fa1b29c4bca155e172f",
+  "authorizes": []
+}

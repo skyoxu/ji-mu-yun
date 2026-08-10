@@ -1,0 +1,33 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.source-reconciliation.v1",
+  "acceptance_target": "execution-plans/2026-08-07-bootstrap-review-operability-hardening",
+  "round": 5,
+  "sources": [
+    {
+      "path": "decision-logs/2026-08-09-bootstrap-review-context-window-repair.md",
+      "sha256": "sha256:f790f0d8533acaf0f637ba875d2f97ae0730129ea882c9b1cebfed74458cd886",
+      "authority": "accepted-p0-decision"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/investigations/bootstrap-review-context-overflow-remediation-investigation.md",
+      "sha256": "sha256:09643c2a9b7bccf40fef9a794dab64f13f4ff202ea7a4eb4069394bd5d489abb",
+      "authority": "systemic-remediation-design"
+    }
+  ],
+  "reconciliations": [
+    {
+      "topic": "segmented-child-authority-input",
+      "older_or_broader_text": "The accepted P0 decision permits a child to read parent-mapped delegated Bootstrap authority snapshots.",
+      "effective_round5_interpretation": "The parent still validates the complete authority order once, but a segmented child receives only a deterministic role-specific Policy Capsule and must not receive or read raw authority mappings or authority snapshots.",
+      "reason": "The systemic investigation records the observed over-read and defines capsule-only child authority as the stricter compatible transport boundary. Parent-owned whole-view coverage, receipt aggregation, model-bound cache identity, and abandoned-r4 handling remain unchanged."
+    },
+    {
+      "topic": "follow-up-phases",
+      "older_or_broader_text": "The accepted P0 decision closes the immediate prompt/cache/lifecycle defect.",
+      "effective_round5_interpretation": "Round 5 absorbs the investigation's P1-P3 deterministic controls: context budget, policy capsule, bounded packet, child isolation, tool-output boundary, retry classification, and compact Acceptance projection. P4 is only fresh-run canary preparation and never acceptance authority.",
+      "reason": "The P0 decision explicitly records residual risk and future parent-side closure work; this round makes that follow-up executable without reopening or modifying historical evidence."
+    }
+  ],
+  "unresolved": [],
+  "authorizes": []
+}

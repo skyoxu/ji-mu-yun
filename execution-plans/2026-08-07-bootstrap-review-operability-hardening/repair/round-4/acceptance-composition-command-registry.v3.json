@@ -1,0 +1,33 @@
+{
+  "commands": [
+    {
+      "allowed_write_roots": [],
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "-k",
+        "test_round4_segment"
+      ],
+      "cwd": ".",
+      "environment_allowlist": [
+        "PATH",
+        "PATHEXT",
+        "SYSTEMROOT",
+        "TEMP",
+        "TMP",
+        "WINDIR"
+      ],
+      "executable": "py",
+      "forbidden_write_roots": [],
+      "id": "broh-r4-segment-composition",
+      "placeholder_values": {},
+      "registry_hash": "sha256:3e084df51778f9561d24ce0e7a767a945d6bbaa276e4ac644e10f7db685869b7",
+      "shell": false,
+      "timeout_seconds": 240,
+      "typed_placeholders": {}
+    }
+  ],
+  "registryHash": "sha256:3e084df51778f9561d24ce0e7a767a945d6bbaa276e4ac644e10f7db685869b7",
+  "schemaVersion": "acceptance-command-registry.v1"
+}

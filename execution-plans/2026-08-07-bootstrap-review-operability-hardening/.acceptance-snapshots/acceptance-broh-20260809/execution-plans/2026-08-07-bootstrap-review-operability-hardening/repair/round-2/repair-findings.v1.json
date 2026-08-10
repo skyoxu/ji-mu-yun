@@ -1,0 +1,30 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.repair-findings.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "round": 2,
+  "predecessor": {
+    "commit": "07bf2603fe072983adb77522e3c41059d24cf48e",
+    "report": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/95-implementation-evolution-and-completion-report.md"
+  },
+  "findings": [
+    {
+      "id": "BROH-R2-01",
+      "source": "know11",
+      "requirement_ids": ["BROH-012", "BROH-A23"],
+      "statement": "Acceptance decision.profile was not propagated into the scope, route, and Bootstrap capability identity."
+    },
+    {
+      "id": "BROH-R2-02",
+      "source": "know11",
+      "requirement_ids": ["BROH-009", "BROH-A16", "BROH-A17", "BROH-A22"],
+      "statement": "The workflow trigger policy classified execution-plan metadata as control-plane risk and defaulted unclassified implementation paths to low risk."
+    },
+    {
+      "id": "BROH-R2-03",
+      "source": "know11",
+      "requirement_ids": ["BROH-018", "BROH-A35", "BROH-A36"],
+      "statement": "Resume continuity stated that knowledge context was current although the current Quick Dev terminal remained blocked by stale frozen context."
+    }
+  ],
+  "authorizes": []
+}

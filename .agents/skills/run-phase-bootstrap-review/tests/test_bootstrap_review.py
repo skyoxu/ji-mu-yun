@@ -52,7 +52,6 @@ class BootstrapReviewCliTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temp.cleanup()
-
     def read_json(self, relative: str) -> dict:
         return json.loads((self.run_dir / relative).read_text(encoding="utf-8"))
 
@@ -568,6 +567,40 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertEqual(process.timeout, 5)
         self.assertEqual(captured.exception.stdout, "partial stdout")
         self.assertEqual(captured.exception.stderr, "partial stderr")
+
+        class TreeProcess:
+            pid = 4321
+
+            def __init__(self) -> None:
+                self.killed = False
+
+            def kill(self) -> None:
+                self.killed = True
+
+        tree_process = TreeProcess()
+        completed = mock.Mock(returncode=0)
+        with (
+            mock.patch.object(bootstrap.os, "name", "nt"),
+            mock.patch.object(bootstrap.subprocess, "run", return_value=completed) as taskkill,
+        ):
+            bootstrap.terminate_process_tree(tree_process)
+        taskkill.assert_called_once_with(
+            ["taskkill", "/PID", "4321", "/T", "/F"],
+            stdin=bootstrap.subprocess.DEVNULL,
+            stdout=bootstrap.subprocess.DEVNULL,
+            stderr=bootstrap.subprocess.DEVNULL,
+            check=False,
+            timeout=30,
+        )
+        self.assertFalse(tree_process.killed)
+        process_group = bootstrap.child_process_group_kwargs()
+        if os.name == "nt":
+            self.assertEqual(
+                {"creationflags": bootstrap.subprocess.CREATE_NEW_PROCESS_GROUP},
+                process_group,
+            )
+        else:
+            self.assertEqual({"start_new_session": True}, process_group)
         argv = bootstrap.render_codex_command(
             "codex", "gpt-test", "high", "workspace-write", (self.repo / "out.json").resolve()
         )
@@ -618,6 +651,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
             mock.patch.object(
                 bootstrap, "process_creation_identity", return_value="test-process-identity"
             ),
+            mock.patch.dict(
+                bootstrap.communicate_with_no_progress_timeout.__globals__,
+                {"terminate_process_tree": lambda _process: probe.kill()},
+            ),
             mock.patch.object(bootstrap, "rebuild_process_leases_from_events"),
         ):
             self.assertEqual(
@@ -643,6 +680,301 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn(bootstrap.HEARTBEAT_EVENT_TYPE, event_types)
         self.assertIn(bootstrap.NO_PROGRESS_TIMEOUT_EVENT_TYPE, event_types)
 
+        manifest = self.read_json("review-input.json")
+        formal = (
+            self.run_dir / "reviewer-outputs" / "blind_hunter.json"
+        ).relative_to(self.repo).as_posix()
+        orphan_attempt = "orphaned-no-progress-attempt"
+        orphan_event = {
+            "attemptId": orphan_attempt,
+            "operationId": "reviewer:blind_hunter",
+            "role": "blind_hunter",
+            "pid": 4242,
+            "processIdentity": "live-orphan-identity",
+            "writeSet": [formal],
+        }
+        bootstrap.append_process_event(self.run_dir, {
+            "eventType": "attempt-reserved", "timestamp": "2000-01-01T00:00:00Z",
+            **orphan_event,
+        })
+        bootstrap.append_process_event(self.run_dir, {
+            "eventType": "attempt-started", "timestamp": "2000-01-01T00:00:01Z",
+            "requestHash": "sha256:" + "1" * 64,
+            "selectedModel": manifest["codexExecPolicy"]["preferredModel"],
+            **orphan_event,
+        })
+        bootstrap.append_process_event(self.run_dir, {
+            "eventType": bootstrap.HEARTBEAT_EVENT_TYPE,
+            "timestamp": "2000-01-01T00:00:02Z",
+            "state": "waiting-for-child-output",
+            "noProgressTimeoutSeconds": 1,
+            **orphan_event,
+        })
+        bootstrap.rebuild_process_leases_from_events(self.run_dir, manifest)
+        terminated: list[int] = []
+        with (
+            mock.patch.object(
+                bootstrap, "process_creation_identity", return_value="live-orphan-identity"
+            ),
+            mock.patch.object(bootstrap, "terminate_process_tree_by_pid", side_effect=terminated.append),
+        ):
+            self.assertEqual(
+                0,
+                bootstrap.main(
+                    ["process-lease", "--run-dir", str(self.run_dir), "--action", "inspect"]
+                ),
+            )
+        self.assertEqual([4242], terminated)
+        orphan_events = [
+            event for event in bootstrap.read_process_events(self.run_dir)
+            if event.get("attemptId") == orphan_attempt
+        ]
+        self.assertEqual(
+            [
+                "attempt-reserved", "attempt-started", bootstrap.HEARTBEAT_EVENT_TYPE,
+                bootstrap.NO_PROGRESS_TIMEOUT_EVENT_TYPE, "attempt-failed",
+            ],
+            [event["eventType"] for event in orphan_events],
+        )
+
+
+    def test_round4_segmented_artifact_view_requires_exact_parent_aggregate(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        segments = bootstrap.artifact_view_segment_plan(
+            self.run_dir,
+            manifest,
+            max_segment_bytes=512,
+        )
+        self.assertGreaterEqual(len(segments), len(bootstrap.reviewable_artifact_map(manifest)))
+        self.assertEqual(
+            list(range(1, len(segments) + 1)),
+            [segment["ordinal"] for segment in segments],
+        )
+        self.assertEqual(len(segments), len({segment["segmentId"] for segment in segments}))
+        role = "blind_hunter"
+        receipts = [bootstrap.artifact_view_segment_receipt(segment, manifest, role) for segment in segments]
+        self.assertTrue(all(receipt["reviewerRole"] == role for receipt in receipts))
+        aggregate = bootstrap.validate_artifact_view_segment_receipts(
+            receipts,
+            segments,
+            manifest,
+            role,
+        )
+        self.assertEqual(aggregate, bootstrap.artifact_view_read_receipt(manifest))
+
+        with self.assertRaisesRegex(bootstrap.TransportAttemptError, "missing"):
+            bootstrap.validate_artifact_view_segment_receipts(
+                receipts[:-1],
+                segments,
+                manifest,
+                role,
+            )
+        drifted = json.loads(json.dumps(receipts))
+        drifted[0]["contentSha256"] = "sha256:" + "0" * 64
+        with self.assertRaisesRegex(bootstrap.TransportAttemptError, "mismatch"):
+            bootstrap.validate_artifact_view_segment_receipts(
+                drifted,
+                segments,
+                manifest,
+                role,
+            )
+        wrong_role = json.loads(json.dumps(receipts))
+        wrong_role[0]["reviewerRole"] = "edge_case_hunter"
+        with self.assertRaisesRegex(bootstrap.TransportAttemptError, "mismatch"):
+            bootstrap.validate_artifact_view_segment_receipts(
+                wrong_role, segments, manifest, role
+            )
+        duplicated_segments = json.loads(json.dumps(segments))
+        duplicated_segments[1] = {
+            **duplicated_segments[0],
+            "ordinal": 2,
+            "totalSegments": len(duplicated_segments),
+        }
+        duplicated_receipts = [
+            bootstrap.artifact_view_segment_receipt(segment, manifest, role)
+            for segment in duplicated_segments
+        ]
+        with self.assertRaisesRegex(bootstrap.TransportAttemptError, "duplicate or overlap"):
+            bootstrap.validate_artifact_view_segment_receipts(
+                duplicated_receipts, duplicated_segments, manifest, role
+            )
+
+    def test_segment_result_paths_are_isolated_by_model(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        segment = bootstrap.artifact_view_segment_plan(
+            self.run_dir,
+            manifest,
+            max_segment_bytes=bootstrap.ARTIFACT_VIEW_SEGMENT_BYTES,
+        )[0]
+
+        preferred = bootstrap.segment_result_path(
+            self.run_dir, "blind_hunter", "gpt-5.6-terra", segment
+        )
+        fallback = bootstrap.segment_result_path(
+            self.run_dir, "blind_hunter", "gpt-5.5", segment
+        )
+
+        self.assertNotEqual(preferred, fallback)
+        self.assertEqual(preferred.parent.parent.name, "blind_hunter")
+        self.assertEqual(fallback.parent.parent.name, "blind_hunter")
+
+    def test_round4_segmented_attempts_merge_only_after_all_receipts_pass(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        segments = bootstrap.artifact_view_segment_plan(
+            self.run_dir, manifest, max_segment_bytes=bootstrap.ARTIFACT_VIEW_SEGMENT_BYTES
+        )
+        attempt_dirs = []
+        candidates = []
+        payloads = []
+        for index, segment in enumerate(segments, start=1):
+            attempt_dir = self.run_dir / "attempts" / f"segment-{index}"
+            attempt_dir.mkdir(parents=True)
+            attempt_dirs.append(attempt_dir)
+            candidates.append({"attemptId": attempt_dir.name})
+            payloads.append({
+                "status": "completed",
+                "candidates": [{"segment": index}],
+                "segmentReceipt": bootstrap.artifact_view_segment_receipt(
+                    segment, manifest, "blind_hunter"
+                ),
+            })
+        with (
+            mock.patch.object(
+                bootstrap,
+                "artifact_view_segment_plan",
+                return_value=segments,
+            ),
+            mock.patch.object(
+                bootstrap,
+                "run_codex_attempt",
+                side_effect=list(zip(candidates, attempt_dirs)),
+            ) as run_attempt,
+            mock.patch.object(
+                bootstrap,
+                "validate_child_candidate",
+                side_effect=payloads,
+            ),
+            mock.patch.object(bootstrap, "complete_intermediate_segment_attempt"),
+        ):
+            candidate, last_attempt = bootstrap.run_segmented_codex_attempts(
+                self.run_dir, manifest, "blind_hunter", "codex", "gpt-test"
+            )
+        self.assertEqual(len(segments), run_attempt.call_count)
+        self.assertEqual(attempt_dirs[-1], last_attempt)
+        self.assertEqual(len(segments), len(candidate["payload"]["candidates"]))
+        self.assertEqual(
+            bootstrap.artifact_view_read_receipt(manifest),
+            candidate["payload"]["artifactViewReadReceipt"],
+        )
+        self.assertTrue((self.run_dir / "segment-coverage" / "blind_hunter.json").is_file())
+
+    def test_round4_segmented_artifact_view_retries_only_failed_segment(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        segments = bootstrap.artifact_view_segment_plan(
+            self.run_dir, manifest, max_segment_bytes=bootstrap.ARTIFACT_VIEW_SEGMENT_BYTES
+        )[:2]
+        self.assertEqual(2, len(segments))
+        segments = [
+            {**segment, "ordinal": index, "totalSegments": 2}
+            for index, segment in enumerate(segments, start=1)
+        ]
+        first_dir = self.run_dir / "attempts" / "segment-one"
+        failed_dir = self.run_dir / "attempts" / "segment-two-failed"
+        retry_dir = self.run_dir / "attempts" / "segment-two-retry"
+        for path in (first_dir, failed_dir, retry_dir):
+            path.mkdir(parents=True)
+        first_candidate = {"attemptId": first_dir.name}
+        retry_candidate = {"attemptId": retry_dir.name}
+        first_payload = {
+            "status": "completed", "candidates": [{"segment": 1}],
+            "segmentReceipt": bootstrap.artifact_view_segment_receipt(
+                segments[0], manifest, "blind_hunter"
+            ),
+        }
+        retry_payload = {
+            "status": "completed", "candidates": [{"segment": 2}],
+            "segmentReceipt": bootstrap.artifact_view_segment_receipt(
+                segments[1], manifest, "blind_hunter"
+            ),
+        }
+        run_attempt = mock.Mock(side_effect=[
+            (first_candidate, first_dir),
+            bootstrap.TransportAttemptError("segment transport failed"),
+            (retry_candidate, retry_dir),
+        ])
+        with (
+            mock.patch.object(bootstrap, "artifact_view_segment_plan", return_value=segments),
+            mock.patch.object(bootstrap, "run_codex_attempt", run_attempt),
+            mock.patch.object(
+                bootstrap, "validate_child_candidate", side_effect=[first_payload, retry_payload]
+            ),
+            mock.patch.object(bootstrap, "complete_intermediate_segment_attempt"),
+            mock.patch.object(
+                bootstrap,
+                "load_segment_result",
+                side_effect=[None, None],
+            ),
+        ):
+            with self.assertRaisesRegex(bootstrap.TransportAttemptError, "transport failed"):
+                bootstrap.run_segmented_codex_attempts(
+                    self.run_dir, manifest, "blind_hunter", "codex", "gpt-test"
+                )
+        self.assertTrue(bootstrap.segment_result_path(
+            self.run_dir, "blind_hunter", "gpt-test", segments[0]
+        ).is_file())
+        segment_event = {
+            "attemptId": first_dir.name,
+            "operationId": "reviewer:blind_hunter",
+            "role": "blind_hunter",
+            "pid": 4242,
+            "processIdentity": "segment-process",
+            "writeSet": ["reviewer-output.json"],
+        }
+        bootstrap.append_process_event(self.run_dir, {
+            "eventType": "attempt-started", "timestamp": bootstrap.utc_now(),
+            "requestHash": "sha256:" + "1" * 64, "selectedModel": "gpt-test",
+            **segment_event,
+        })
+        bootstrap.append_process_event(self.run_dir, {
+            "eventType": "attempt-process-completed", "timestamp": bootstrap.utc_now(),
+            **segment_event,
+        })
+
+        with (
+            mock.patch.object(bootstrap, "artifact_view_segment_plan", return_value=segments),
+            mock.patch.object(bootstrap, "run_codex_attempt", run_attempt),
+            mock.patch.object(bootstrap, "validate_child_candidate", return_value=retry_payload),
+            mock.patch.object(bootstrap, "complete_intermediate_segment_attempt"),
+        ):
+            candidate, _attempt_dir = bootstrap.run_segmented_codex_attempts(
+                self.run_dir, manifest, "blind_hunter", "codex", "gpt-test"
+            )
+        self.assertEqual(3, run_attempt.call_count)
+        self.assertEqual(2, len(candidate["payload"]["candidates"]))
+
+    def test_round4_segment_decisions_merge_once_per_finding(self) -> None:
+        independent = bootstrap.merge_segment_results(
+            "independent_verifier",
+            [
+                {"findingId": "BSR-SEGMENT-ONE", "decision": "confirmed", "reason": "first range", "evidenceChecked": ["a.py:1-2"]},
+                {"findingId": "BSR-SEGMENT-ONE", "decision": "confirmed", "reason": "second range", "evidenceChecked": ["b.py:3-4"]},
+            ],
+        )
+        self.assertEqual(1, len(independent))
+        self.assertEqual(["a.py:1-2", "b.py:3-4"], independent[0]["evidenceChecked"])
+        focused = bootstrap.merge_segment_results(
+            bootstrap.FOCUSED_REPAIR_ROLE,
+            [
+                {"findingId": "BROH-SEGMENT-ONE", "status": "verified_fixed", "evidenceChecked": ["a.py"]},
+                {"findingId": "BROH-SEGMENT-ONE", "status": "blocking", "evidenceChecked": ["b.py"]},
+            ],
+        )
+        self.assertEqual("blocking", focused[0]["status"])
+        self.assertEqual(["a.py", "b.py"], focused[0]["evidenceChecked"])
 
     def test_broh_s3_read_boundary_and_exact_evidence(self) -> None:
         source = self.repo / "frozen.txt"
@@ -1550,6 +1882,25 @@ class BootstrapReviewCliTests(unittest.TestCase):
             )
             proof = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(route["reasoningEffort"], proof["reasoningEffort"])
+
+    def test_fallback_model_uses_a_distinct_role_access_proof_path(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+
+        preferred_path, _route, _gate_hash = bootstrap.access_proof_route(
+            self.run_dir, manifest, "discovery", reviewer_role="blind_hunter"
+        )
+        fallback_path, fallback_route, _gate_hash = bootstrap.access_proof_route(
+            self.run_dir,
+            manifest,
+            "discovery",
+            reviewer_role="blind_hunter",
+            selected_model="gpt-5.5",
+        )
+
+        self.assertIn("gpt-5.5", fallback_route["allowedModels"])
+        self.assertNotEqual(preferred_path, fallback_path)
+        self.assertIn("gpt-5.5", fallback_path.name)
 
     def test_focused_route_uses_frozen_predecessor_policy_and_complete_candidates(self) -> None:
         predecessor = self.repo / "focused-route-predecessor"
@@ -4624,6 +4975,41 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertIn("Do not edit formal output files", prompt)
         self.assertNotIn("fill\n`reviewer-outputs/blind_hunter.json`", prompt)
 
+    def test_segmented_codex_runner_prompt_forbids_full_view_traversal(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+        segment = bootstrap.artifact_view_segment_plan(
+            self.run_dir,
+            manifest,
+            max_segment_bytes=512,
+        )[0]
+        attempt_dir = self.run_dir / "attempts" / "segment-prompt-contract"
+        attempt_dir.mkdir(parents=True)
+        helper_path, request_path, output_path = bootstrap.materialize_access_handshake_helper(
+            self.run_dir, manifest, "blind_hunter", attempt_dir
+        )
+
+        prompt = bootstrap.runner_prompt(
+            self.run_dir,
+            manifest,
+            "blind_hunter",
+            "segment-prompt-contract",
+            helper_path,
+            request_path,
+            output_path,
+            segment,
+        )
+
+        self.assertIn("# Parent-Bounded Artifact View Segment", prompt)
+        self.assertIn("Do not open or traverse the full Artifact View manifest", prompt)
+        self.assertIn(segment["snapshotPath"], prompt)
+        self.assertIn(f'"startLine": {segment["startLine"]}', prompt)
+        self.assertIn(f'"endLine": {segment["endLine"]}', prompt)
+        self.assertNotIn("Read every required artifact through", prompt)
+        self.assertNotIn("After reading every Artifact View entry", prompt)
+        self.assertNotIn("Read every artifact from its Artifact View snapshotPath", prompt)
+        self.assertNotIn("completed` requires every required artifact to be read", prompt)
+
     def test_codex_runner_prompt_maps_mandatory_skill_authority_to_snapshots(self) -> None:
         authority_scopes = []
         for relative in bootstrap.DELEGATED_BOOTSTRAP_AUTHORITY_PATHS:
@@ -4660,6 +5046,68 @@ class BootstrapReviewCliTests(unittest.TestCase):
             )
             self.assertIn(json.dumps(str(snapshot)), prompt)
         self.assertIn("do not fail merely because a live `.agents` path is inaccessible", prompt)
+
+    def test_segmented_runner_prompt_does_not_repeat_delegated_authority_reads(self) -> None:
+        authority_scopes = []
+        for relative in bootstrap.DELEGATED_BOOTSTRAP_AUTHORITY_PATHS:
+            target = self.repo / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(f"authority for {relative}\n", encoding="utf-8", newline="\n")
+            authority_scopes.append(target)
+        subprocess.run(["git", "add", "."], cwd=self.repo, check=True)
+        subprocess.run(["git", "commit", "-qm", "add segmented authority"], cwd=self.repo, check=True)
+        self.prepare(execution_mode="codex-exec", extra_scopes=authority_scopes)
+        manifest = self.read_json("review-input.json")
+        segment = bootstrap.artifact_view_segment_plan(
+            self.run_dir, manifest, max_segment_bytes=512,
+        )[0]
+        attempt_dir = self.run_dir / "attempts" / "segmented-delegated-authority-prompt"
+        attempt_dir.mkdir(parents=True)
+        helper_path, request_path, output_path = bootstrap.materialize_access_handshake_helper(
+            self.run_dir, manifest, "blind_hunter", attempt_dir
+        )
+
+        prompt = bootstrap.runner_prompt(
+            self.run_dir, manifest, "blind_hunter", "segmented-delegated-authority-prompt",
+            helper_path, request_path, output_path, segment,
+        )
+
+        self.assertIn("The parent has already validated the frozen Bootstrap authority", prompt)
+        self.assertNotIn("# Frozen Delegated Bootstrap Authority", prompt)
+        self.assertNotIn("Read every mapped snapshot before semantic review", prompt)
+        for relative in bootstrap.DELEGATED_BOOTSTRAP_AUTHORITY_PATHS:
+            if relative != segment["originalPath"]:
+                self.assertNotIn(f'"originalPath": "{relative}"', prompt)
+
+    def test_segmented_prompt_budget_is_enforced_before_launch(self) -> None:
+        with self.assertRaisesRegex(bootstrap.BootstrapError, "prompt exceeds"):
+            bootstrap.validate_codex_prompt_budget(
+                "x" * (bootstrap.SEGMENT_PROMPT_MAX_BYTES + 1),
+                segmented=True,
+            )
+        self.assertEqual(
+            bootstrap.SEGMENT_PROMPT_MAX_BYTES,
+            bootstrap.validate_codex_prompt_budget(
+                "x" * bootstrap.SEGMENT_PROMPT_MAX_BYTES,
+                segmented=True,
+            ),
+        )
+
+    def test_context_window_failure_requires_repartition(self) -> None:
+        self.assertEqual(
+            "context-budget",
+            bootstrap.classify_attempt_failure(
+                "Codex ran out of room in the model's context window"
+            ),
+        )
+        self.assertEqual(
+            "transport",
+            bootstrap.classify_attempt_failure("process exited with code 1"),
+        )
+        self.assertEqual(
+            "repartition-segment-before-retry",
+            bootstrap.attempt_failure_guidance("context-budget"),
+        )
 
     def test_codex_runner_prompt_fails_before_launch_when_skill_authority_is_incomplete(self) -> None:
         skill = self.repo / bootstrap.DELEGATED_BOOTSTRAP_AUTHORITY_PATHS[0]
@@ -4913,6 +5361,34 @@ class BootstrapReviewCliTests(unittest.TestCase):
         failed_event = bootstrap.read_process_events(self.run_dir)[-1]
         self.assertEqual("attempt-failed", failed_event["eventType"])
         self.assertEqual("transport", failed_event["failureClass"])
+
+    def test_context_window_child_failure_requires_repartition(self) -> None:
+        self.prepare(execution_mode="codex-exec")
+        manifest = self.read_json("review-input.json")
+
+        class ContextWindowProcess:
+            pid = os.getpid()
+            returncode = 0
+
+            def communicate(self, _prompt: str) -> tuple[str, str]:
+                return "Codex ran out of room in the model's context window", ""
+
+        with mock.patch.object(bootstrap.subprocess, "Popen", return_value=ContextWindowProcess()):
+            with self.assertRaisesRegex(bootstrap.TransportAttemptError, "repartition"):
+                bootstrap.run_codex_attempt(
+                    self.run_dir,
+                    manifest,
+                    "blind_hunter",
+                    "codex",
+                    manifest["codexExecPolicy"]["preferredModel"],
+                )
+
+        failed_event = bootstrap.read_process_events(self.run_dir)[-1]
+        self.assertEqual("attempt-failed", failed_event["eventType"])
+        self.assertEqual("context-budget", failed_event["failureClass"])
+        self.assertEqual(
+            "repartition-segment-before-retry", failed_event["retryGuidance"]
+        )
 
     def test_non_utf8_child_json_records_retryable_transport_failure(self) -> None:
         self.prepare(execution_mode="codex-exec")
@@ -5996,6 +6472,18 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 bootstrap.BootstrapError, "environment identity has drifted"
             ):
                 bootstrap.validate_launch_authorization(self.run_dir, manifest)
+            with mock.patch.object(bootstrap, "run_codex_attempt") as run_attempt:
+                self.assertEqual(
+                    1,
+                    bootstrap.main(
+                        [
+                            "run-layer", "--run-dir", str(self.run_dir),
+                            "--role", "blind_hunter",
+                            "--codex-command", "test-codex-command",
+                        ]
+                    ),
+                )
+                run_attempt.assert_not_called()
             bootstrap.validate_launch_authorization(
                 self.run_dir, manifest, historical_replay=True
             )

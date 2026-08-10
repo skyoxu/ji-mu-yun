@@ -1,0 +1,46 @@
+{
+  "schema_version": "jimuyun.vdd-repair-command-registry.v1",
+  "commands": [
+    {
+      "id": "broh-r4-s1-target-test", "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", "-k", "test_round4_segment"],
+      "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false
+    },
+    {
+      "id": "broh-r4-s2-regression", "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", "-k", "test_broh_s2_windows_transport_heartbeat_recovery"],
+      "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false
+    },
+    {
+      "id": "broh-r4-s3-regression", "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py", "-k", "test_fallback_model_uses_a_distinct_role_access_proof_path"],
+      "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false
+    },
+    {
+      "id": "bootstrap-skill-tests", "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"],
+      "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 1200, "shell": false
+    },
+    {
+      "id": "round4-s1-validation", "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_repair_plan.py"}, "--slice", "BROH-R4-S1"],
+      "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false
+    },
+    {
+      "id": "round4-s2-validation", "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_repair_plan.py"}, "--slice", "BROH-R4-S2"],
+      "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false
+    },
+    {
+      "id": "round4-s3-validation", "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_repair_plan.py"}, "--slice", "BROH-R4-S3"],
+      "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 180, "shell": false
+    },
+    {
+      "id": "round4-terminal-validation", "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_repair_plan.py"}, "--terminal"],
+      "cwd": {"type": "repo_path", "value": "."}, "timeout_seconds": 1800, "shell": false
+    }
+  ],
+  "authorizes": []
+}

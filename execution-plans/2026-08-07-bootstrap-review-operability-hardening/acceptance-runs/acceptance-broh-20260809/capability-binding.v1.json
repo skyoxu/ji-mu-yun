@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "controlPlaneRevision": "bootstrap-control-plane.v2",
+  "policyRevision": "sha256:189d5eef49314aadfa639541b7029500061d47739ca2d8e244d2c740eceb665c",
+  "requiredCompanionCapabilities": [
+    {
+      "capabilityId": "acceptance-inventory-attestation",
+      "capabilityVersion": "1.0",
+      "producerRole": "acceptance_auditor",
+      "schemaHash": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018",
+      "schemaPath": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-acceptance-inventory-attestation.v1.schema.json"
+    }
+  ],
+  "reviewProfile": "review-policy://bootstrap-skill-route/v1",
+  "routeVersion": "bootstrap-review-route.v2",
+  "schemaVersion": "bootstrap-capability-binding.v1",
+  "status": "bound"
+}

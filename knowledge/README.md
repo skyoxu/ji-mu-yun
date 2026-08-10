@@ -4,6 +4,10 @@ The repository knowledge base is a derived, main-pinned location service. It
 does not replace repository source, Accepted ADRs, runtime facts, or current
 acceptance evidence. ADR-0044, ADR-0048, and ADR-0057 govern this boundary.
 
+Repository workflow access is deny-by-default. Before consulting
+`workflow.md`, use [toolchain-workflow-index.md](toolchain-workflow-index.md)
+to confirm an explicit allowlisted trigger and select the narrowest entrypoint.
+
 ## Three Layers
 
 1. `snapshots/repository-source-snapshot.v1.json` records eligible committed

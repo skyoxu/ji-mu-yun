@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json",
+  "title": "Bootstrap Artifact View Read Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "artifactViewManifestHash", "artifactCount", "complete"],
+  "properties": {
+    "schemaVersion": { "const": "bootstrap-artifact-view-read-receipt.v1" },
+    "artifactViewManifestHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "artifactCount": { "type": "integer", "minimum": 1 },
+    "complete": { "const": true }
+  }
+}

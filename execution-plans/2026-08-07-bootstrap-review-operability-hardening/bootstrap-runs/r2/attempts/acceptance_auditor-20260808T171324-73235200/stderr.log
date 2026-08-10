@@ -1,0 +1,1256 @@
+2026-08-08T17:16:03.374080Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+true : The term 'true' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the
+ spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ true
++ ~~~~
+    + CategoryInfo          : ObjectNotFound: (true:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+
+2026-08-08T17:16:14.429003Z ERROR codex_core::tools::router: error=resources/read failed: unknown MCP server 'x'
+2026-08-08T17:16:58.842899Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 1.2 seconds
+Total output lines: 9640
+Output:
+.EE.EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+======================================================================
+ERROR: test_prepare_freezes_only_hash_bound_accepted_context (__main__.BootstrapKnowledgeContextTests.test_prepare_freezes_only_hash_bound_accepted_context)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 7048, in test_prepare_freezes_only_hash_bound_accepted_context
+    source.write_text("rules\n", encoding="utf-8", newline="\n")
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1047, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp54rv33xg\\AGENTS.md'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp54rv33xg'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 7045, in test_prepare_freezes_only_hash_bound_accepted_context
+    with tempfile.TemporaryDirectory() as raw:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 950, in __exit__
+    self.cleanup()
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 954, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp54rv33xg'
+
+======================================================================
+ERROR: test_prepare_rejects_context_that_fails_shared_provenance_validation (__main__.BootstrapKnowledgeContextTests.test_prepare_rejects_context_that_fails_shared_provenance_validation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 7091, in test_prepare_rejects_context_that_fails_shared_provenance_validation
+    context.write_text(json.dumps({"decisions": []}), encoding="utf-8", newline="\n")
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1047, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpsmf0pkfo\\knowledge-context.v1.json'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpsmf0pkfo'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 7088, in test_prepare_rejects_context_that_fails_shared_provenance_validation
+    with tempfile.TemporaryDirectory() as raw:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 950, in __exit__
+    self.cleanup()
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 954, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpsmf0pkfo'
+
+======================================================================
+ERROR: test_abandoned_incomplete_codex_run_can_be_replaced_same_round (__main__.BootstrapReviewCliTests.test_abandoned_incomplete_codex_run_can_be_replaced_same_round)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmppr7n9fa1\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmppr7n9fa1\\repo'
+
+======================================================================
+ERROR: test_acceptance_auditor_prompt_contains_exact_inventory_attestation_contract (__main__.BootstrapReviewCliTests.test_acceptance_auditor_prompt_contains_exact_inventory_attestation_contract)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp2fa5lwuh\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp2fa5lwuh\\repo'
+
+======================================================================
+ERROR: test_acceptance_repair_route_binds_replayed_completeness (__main__.BootstrapReviewCliTests.test_acceptance_repair_route_binds_replayed_completeness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp602r5ev5\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp602r5ev5\\repo'
+
+======================================================================
+ERROR: test_active_attempt_blocks_abandon_and_same_round_replacement (__main__.BootstrapReviewCliTests.test_active_attempt_blocks_abandon_and_same_round_replacement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpc335vodc\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpc335vodc\\repo'
+
+======================================================================
+ERROR: test_active_attempt_blocks_only_overlapping_formal_write_set (__main__.BootstrapReviewCliTests.test_active_attempt_blocks_only_overlapping_formal_write_set)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpkbbgsx92\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpkbbgsx92\\repo'
+
+======================================================================
+ERROR: test_all_review_object_profiles_are_complete_and_role_specific (__main__.BootstrapReviewCliTests.test_all_review_object_profiles_are_complete_and_role_specific)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpokth9my8\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpokth9my8\\repo'
+
+======================================================================
+ERROR: test_append_only_verifier_recovery_reopens_retry_and_finalizes (__main__.BootstrapReviewCliTests.test_append_only_verifier_recovery_reopens_retry_and_finalizes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp43knfh4n\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp43knfh4n\\repo'
+
+======================================================================
+ERROR: test_atomic_write_uses_short_temp_name_for_deep_windows_paths (__main__.BootstrapReviewCliTests.test_atomic_write_uses_short_temp_name_for_deep_windows_paths)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp9q31ihes\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp9q31ihes\\repo'
+
+======================================================================
+ERROR: test_authorize_launch_rejects_authority_drift_without_sidecar (__main__.BootstrapReviewCliTests.test_authorize_launch_rejects_authority_drift_without_sidecar)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpesfi2r5k\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpesfi2r5k\\repo'
+
+======================================================================
+ERROR: test_authorize_launch_rejects_new_file_added_to_prepared_directory_scope (__main__.BootstrapReviewCliTests.test_authorize_launch_rejects_new_file_added_to_prepared_directory_scope)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp6qd17a0t\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp6qd17a0t\\repo'
+
+======================================================================
+ERROR: test_baseline_accepts_historical_access_proof_and_run_seal (__main__.BootstrapReviewCliTests.test_baselin…133668 tokens truncated…exc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpqwypc5zq'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpnrmedj_6'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpnrmedj_6'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp6qd17a0t'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp6qd17a0t'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpesfi2r5k'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpesfi2r5k'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp9q31ihes'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp9q31ihes'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp43knfh4n'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp43knfh4n'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpokth9my8'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpokth9my8'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpkbbgsx92'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpkbbgsx92'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpc335vodc'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmpc335vodc'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp602r5ev5'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp602r5ev5'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp2fa5lwuh'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmp2fa5lwuh'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmppr7n9fa1'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\2\\tmppr7n9fa1'
+
+2026-08-08T17:17:17.557374Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 1.2 seconds
+Total output lines: 9640
+Output:
+.EE.EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+======================================================================
+ERROR: test_prepare_freezes_only_hash_bound_accepted_context (__main__.BootstrapKnowledgeContextTests.test_prepare_freezes_only_hash_bound_accepted_context)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 7048, in test_prepare_freezes_only_hash_bound_accepted_context
+    source.write_text("rules\n", encoding="utf-8", newline="\n")
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1047, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpm2ys1tbr\\AGENTS.md'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpm2ys1tbr'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 7045, in test_prepare_freezes_only_hash_bound_accepted_context
+    with tempfile.TemporaryDirectory() as raw:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 950, in __exit__
+    self.cleanup()
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 954, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpm2ys1tbr'
+
+======================================================================
+ERROR: test_prepare_rejects_context_that_fails_shared_provenance_validation (__main__.BootstrapKnowledgeContextTests.test_prepare_rejects_context_that_fails_shared_provenance_validation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 7091, in test_prepare_rejects_context_that_fails_shared_provenance_validation
+    context.write_text(json.dumps({"decisions": []}), encoding="utf-8", newline="\n")
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1047, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp01su4ypi\\knowledge-context.v1.json'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp01su4ypi'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 7088, in test_prepare_rejects_context_that_fails_shared_provenance_validation
+    with tempfile.TemporaryDirectory() as raw:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 950, in __exit__
+    self.cleanup()
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 954, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp01su4ypi'
+
+======================================================================
+ERROR: test_abandoned_incomplete_codex_run_can_be_replaced_same_round (__main__.BootstrapReviewCliTests.test_abandoned_incomplete_codex_run_can_be_replaced_same_round)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp7422t444\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp7422t444\\repo'
+
+======================================================================
+ERROR: test_acceptance_auditor_prompt_contains_exact_inventory_attestation_contract (__main__.BootstrapReviewCliTests.test_acceptance_auditor_prompt_contains_exact_inventory_attestation_contract)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmps8ys06uq\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmps8ys06uq\\repo'
+
+======================================================================
+ERROR: test_acceptance_repair_route_binds_replayed_completeness (__main__.BootstrapReviewCliTests.test_acceptance_repair_route_binds_replayed_completeness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpxrcm0d_e\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpxrcm0d_e\\repo'
+
+======================================================================
+ERROR: test_active_attempt_blocks_abandon_and_same_round_replacement (__main__.BootstrapReviewCliTests.test_active_attempt_blocks_abandon_and_same_round_replacement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpzi9xidho\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpzi9xidho\\repo'
+
+======================================================================
+ERROR: test_active_attempt_blocks_only_overlapping_formal_write_set (__main__.BootstrapReviewCliTests.test_active_attempt_blocks_only_overlapping_formal_write_set)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpbfvhx36s\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpbfvhx36s\\repo'
+
+======================================================================
+ERROR: test_all_review_object_profiles_are_complete_and_role_specific (__main__.BootstrapReviewCliTests.test_all_review_object_profiles_are_complete_and_role_specific)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpczjli_t0\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpczjli_t0\\repo'
+
+======================================================================
+ERROR: test_append_only_verifier_recovery_reopens_retry_and_finalizes (__main__.BootstrapReviewCliTests.test_append_only_verifier_recovery_reopens_retry_and_finalizes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmplon_ltkq\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmplon_ltkq\\repo'
+
+======================================================================
+ERROR: test_atomic_write_uses_short_temp_name_for_deep_windows_paths (__main__.BootstrapReviewCliTests.test_atomic_write_uses_short_temp_name_for_deep_windows_paths)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpomjh4px8\\repo\\upstream-plan'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\jimuyun\execution-plans\2026-08-07-bootstrap-review-operability-hardening\bootstrap-runs\r2\artifact-view\tree\.agents\skills\run-phase-bootstrap-review\tests\test_bootstrap_review.py", line 37, in setUp
+    self.scope.mkdir(parents=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1315, in mkdir
+    self.parent.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\Python312\Lib\pathlib.py", line 1311, in mkdir
+    os.mkdir(self, mode)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpomjh4px8\\repo'
+
+======================================================================
+ERROR: test_authorize_launch_rejects_authority_drift_without_sidecar (__main__.BootstrapReviewCliTests.test_authorize_launch_rejects_authority_drift_without_sidecar)
+-----------------------------…155346 tokens truncated… _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp09zmgzla'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpdrypgsxc'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpdrypgsxc'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp5tdphhx_'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp5tdphhx_'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpomjh4px8'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpomjh4px8'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmplon_ltkq'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmplon_ltkq'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpczjli_t0'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpczjli_t0'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpbfvhx36s'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpbfvhx36s'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpzi9xidho'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpzi9xidho'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpxrcm0d_e'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmpxrcm0d_e'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmps8ys06uq'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmps8ys06uq'
+Traceback (most recent call last):
+  File "<frozen os>", line 366, in walk
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp7422t444'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\weakref.py", line 666, in _exitfunc
+    f()
+  File "C:\Program Files\Python312\Lib\weakref.py", line 590, in __call__
+    return info.func(*info.args, **(info.kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 939, in _cleanup
+    cls._rmtree(name, ignore_errors=ignore_errors)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 623, in _rmtree_unsafe
+    for dirpath, dirnames, filenames in results:
+                                        ^^^^^^^
+  File "<frozen os>", line 369, in walk
+  File "C:\Program Files\Python312\Lib\shutil.py", line 621, in onerror
+    onexc(os.scandir, err.filename, err)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+  File "C:\Program Files\Python312\Lib\tempfile.py", line 277, in _dont_follow_symlinks
+    func(path, *args)
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\jimuyun\\execution-plans\\2026-08-07-bootstrap-review-operability-hardening\\bootstrap-runs\\r2\\attempts\\acceptance_auditor-20260808T171324-73235200\\tmp\\tmp7422t444'
+

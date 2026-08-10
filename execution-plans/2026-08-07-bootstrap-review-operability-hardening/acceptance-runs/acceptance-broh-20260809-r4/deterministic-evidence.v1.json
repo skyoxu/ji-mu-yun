@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "acceptance-evidence-record.v1",
+  "commandId": "terminal-implementation-validation",
+  "commandRegistryHash": "sha256:b4c6322d490c3e25f3b617d4085ed39ec86acf11d993e6b505b3ac7930228e85",
+  "invocationHash": "sha256:502b19fd63d5d27732831a82f0b5598b3e1732d71bc9ce74633c5de884f681b1",
+  "origin": "controlled",
+  "processResultPath": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/acceptance-runs/acceptance-broh-20260809-r4/terminal-command-receipt.v1.json",
+  "processResultHash": "sha256:0d80b6a31f074517e8f3f95b7b5083d1139d570b0f4b7d279ef077788925cba7",
+  "authorizes": []
+}

@@ -1,0 +1,37 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/acceptance-broh-20260809-r4/action-dag.v1.json",
+    "sha256": "sha256:f2973e13241ed734a7b3dba8607b6346a8cd3c480caa9d41009746b58d353951"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/acceptance-broh-20260809-r4/baseline-content-manifest.v1.json",
+    "sha256": "sha256:c2d0147861eaab9c3b75d12430a13974801a508391973c311e7adbd8e34ef247"
+  },
+  "bundleHash": "sha256:e5aa8383f5dbf2914f5fd27e2103c55c12a84def924205ef226789555b8f1df0",
+  "candidateManifest": {
+    "path": "acceptance-inputs/acceptance-broh-20260809-r4/candidate-content-manifest.v1.json",
+    "sha256": "sha256:b0c222485d1ba6c5d10f1388984a6b7016c596bbb63e5729b459341a680c2bbb"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/acceptance-broh-20260809-r4",
+  "commandRegistry": {
+    "path": "acceptance-inputs/acceptance-broh-20260809-r4/command-registry.v1.json",
+    "sha256": "sha256:6237c8302ca54e91dd0b4ffcc3efb062c8949f0666746532cec6ecbe5b145561"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance.v1.json",
+    "sha256": "sha256:a5387bdd1b8eeee6276c642e1b1a2957fdbeffe63b2291385a962f663e55b8f1"
+  },
+  "planStateHash": "sha256:9f04e4fe7acaf5110b16aa5e980374d2c5a648b923d9938a6d761e2758553b61",
+  "policy": {
+    "path": "acceptance-inputs/acceptance-broh-20260809-r4/toolchain-code-review.v1.json",
+    "sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"
+  },
+  "runId": "acceptance-broh-20260809-r4",
+  "runRequest": {
+    "path": "acceptance-run-request.acceptance-broh-20260809-r4.v1.json",
+    "sha256": "sha256:04ef03e27985fa0f3f4487e08e5d773c773da7fbffc396e6e230802c64b1dc50"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-07-bootstrap-review-operability-hardening"
+}

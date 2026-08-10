@@ -36,12 +36,15 @@ from _control_plane import (  # noqa: E402
     append_process_event,
     atomic_write_bytes,
     atomic_write_json,
+    child_process_group_kwargs,
     child_environment,
     communicate_with_no_progress_timeout,
     create_artifact_view,
     git_index_hash,
     read_process_events,
     render_codex_command,
+    terminate_process_tree,
+    terminate_process_tree_by_pid,
     validate_artifact_view,
 )
 from knowledge_context import select_context  # noqa: E402
@@ -68,6 +71,9 @@ FOCUSED_REPAIR_ROLE = "focused_repair_verifier"
 REVIEWER_ROLES = (*LAYERS, FOCUSED_REPAIR_ROLE)
 HASH_PREFIX = "sha256:"
 CODEX_NO_PROGRESS_TIMEOUT_SECONDS = 900
+SEGMENTED_ARTIFACT_VIEW_THRESHOLD_BYTES = 256 * 1024
+ARTIFACT_VIEW_SEGMENT_BYTES = 64 * 1024
+SEGMENT_PROMPT_MAX_BYTES = 96 * 1024
 HEARTBEAT_EVENT_TYPE = "attempt-heartbeat"
 NO_PROGRESS_TIMEOUT_EVENT_TYPE = "attempt-no-progress-timeout-v10"
 ATTEMPT_FAILURE_GUIDANCE = {
@@ -75,6 +81,7 @@ ATTEMPT_FAILURE_GUIDANCE = {
     "malformed-output": "retry-same-role-with-preserved-rejection",
     "stale-evidence": "refresh-frozen-binding-before-retry",
     "semantic-blocker": "repair-finding-before-verification",
+    "context-budget": "repartition-segment-before-retry",
 }
 REPEATED_FAILURE_FINGERPRINT_THRESHOLD = 2
 AUTHORITY_CLASS = "supplemental_bootstrap"
@@ -418,6 +425,28 @@ def attempt_failure_guidance(failure_class: str) -> str:
         return ATTEMPT_FAILURE_GUIDANCE[failure_class]
     except KeyError as exc:
         raise BootstrapError(f"Unknown attempt failure class: {failure_class}") from exc
+
+
+def classify_attempt_failure(output: str) -> str:
+    """Classify an observable child failure without treating it as a semantic finding."""
+    normalized = output.casefold()
+    if (
+        "ran out of room in the model's context window" in normalized
+        or "context window" in normalized and "exceed" in normalized
+        or "context length" in normalized and "exceed" in normalized
+    ):
+        return "context-budget"
+    return "transport"
+
+
+def validate_codex_prompt_budget(prompt: str, *, segmented: bool) -> int:
+    """Reject oversized segmented input before a model process is launched."""
+    prompt_bytes = len(prompt.encode("utf-8"))
+    if segmented and prompt_bytes > SEGMENT_PROMPT_MAX_BYTES:
+        raise BootstrapError(
+            f"Segment Codex prompt exceeds {SEGMENT_PROMPT_MAX_BYTES} bytes: {prompt_bytes}"
+        )
+    return prompt_bytes
 
 
 def repository_read_contract(
@@ -3118,9 +3147,19 @@ def validate_context_class_artifacts(
     )
 
 
-def prompt_text(layer: str, manifest: dict[str, Any], run_dir: Path) -> str:
+def prompt_text(
+    layer: str,
+    manifest: dict[str, Any],
+    run_dir: Path,
+    *,
+    segmented: bool = False,
+) -> str:
     context_lines = "\n".join(
-        f"- `{name}`: {', '.join(f'`{artifact}`' for artifact in artifacts)}"
+        (
+            f"- `{name}`: parent-frozen; inspect only when present in the assigned segment"
+            if segmented
+            else f"- `{name}`: {', '.join(f'`{artifact}`' for artifact in artifacts)}"
+        )
         for name, artifacts in manifest["contextClassArtifacts"].items()
     )
     instruction_policy = manifest["reviewerInstructionPolicy"]
@@ -3152,7 +3191,15 @@ def prompt_text(layer: str, manifest: dict[str, Any], run_dir: Path) -> str:
         )
     else:
         repair_guidance = "Initial review: no predecessor repair delta applies."
-    if manifest["executionMode"] == "codex-exec":
+    if manifest["executionMode"] == "codex-exec" and segmented:
+        execution_contract = f"""The controller has already validated launch authorization and assigned one bounded
+Artifact View segment for `reviewer:{layer}`. Do not open or traverse the full Artifact View manifest.
+Read only the exact snapshot path and inclusive line range supplied by the runtime wrapper. The parent
+owns whole-view completeness and aggregates validated segment receipts before formal publication.
+Do not modify controller-owned formal output and do not run `validate-layer`; return only the structured
+segment payload requested by the Codex Exec runtime wrapper. A failed payload requires a concrete
+`failureReason`."""
+    elif manifest["executionMode"] == "codex-exec":
         execution_contract = f"""The controller has already validated launch authorization and owns the live process event for
 `reviewer:{layer}`. Process events are execution authority; `process-leases.json` is only a derived
 compatibility view and may lag while this process is running.
@@ -3197,6 +3244,18 @@ Do not report success until it exits zero."""
         "`standard|authority_control|lifecycle_control|protected_path|shared_entrypoint`."
         if verifier_risk_enabled else ""
     )
+    completion_contract = (
+        "For a completed segment payload, cover the exact assigned snapshot range and return its exact "
+        "`segmentReceipt`. Do not claim whole-view coverage; the parent validates and aggregates all "
+        "segment receipts before formal publication."
+        if segmented
+        else """For a completed payload, derive the coverage arrays from the frozen Artifact View manifest instead
+of manually transcribing paths: `requiredArtifacts` and `readArtifacts` must be the same ordered
+manifest list, and `missingArtifacts` must be empty. If required role context is absent from the manifest, set `status` to `failed`,
+write a concrete `failureReason`, keep candidates empty, and never read outside the manifest.
+In particular, `completed` requires every required artifact to be read;
+`missingArtifacts=[]` and exact set equality between `requiredArtifacts` and `readArtifacts`."""
+    )
     return f"""# Isolated Bootstrap Review: {layer}
 
 Review ID: `{manifest['reviewId']}`
@@ -3240,13 +3299,8 @@ deterministic implementation checks may run, but they must not emit semantic fin
 
 {execution_contract}
 
-Zero candidates are valid. Set `status` to `completed` only after the layer is actually reviewed.
-For a completed payload, derive the coverage arrays from the frozen Artifact View manifest instead
-of manually transcribing paths: `requiredArtifacts` and `readArtifacts` must be the same ordered
-manifest list, and `missingArtifacts` must be empty. If required role context is absent from the manifest, set `status` to `failed`,
-write a concrete `failureReason`, keep candidates empty, and never read outside the manifest.
-In particular, `completed` requires every required artifact to be read;
-`missingArtifacts=[]` and exact set equality between `requiredArtifacts` and `readArtifacts`.
+Zero candidates are valid. Set `status` to `completed` only after the assigned work is actually reviewed.
+{completion_contract}
 There is no minimum finding quota. A fixed-count instruction is nonbinding first-pass exploration
 only; never save a candidate merely to satisfy a requested count.
 Every candidate must cite the current repository-relative artifact, its manifest `artifactHash`,
@@ -3702,6 +3756,142 @@ def hard_limit_protocol_repair_authority(
             "Hard-limit protocol repair authority is invalid: " + "; ".join(errors)
         )
     return authority
+
+
+def artifact_view_segment_plan(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    *,
+    max_segment_bytes: int = 64 * 1024,
+) -> list[dict[str, Any]]:
+    if max_segment_bytes < 1:
+        raise BootstrapError("Artifact View segment size must be positive")
+    view_binding = manifest.get("artifactView")
+    if not isinstance(view_binding, dict):
+        raise BootstrapError("Artifact View binding is missing")
+    view_path = run_dir / str(view_binding.get("manifestPath", ""))
+    if not view_path.is_file() or file_hash(view_path) != view_binding.get("manifestHash"):
+        raise BootstrapError("Artifact View manifest is missing or stale")
+    view = read_json(view_path)
+    required = set(reviewable_artifact_map(manifest))
+    entries = {
+        entry.get("originalPath"): entry
+        for entry in view.get("entries", [])
+        if isinstance(entry, dict) and entry.get("originalPath") in required
+    }
+    if set(entries) != required:
+        raise BootstrapError("Artifact View segment plan is missing reviewable artifacts")
+
+    pending: list[dict[str, Any]] = []
+    artifact_root = (run_dir / "artifact-view").resolve()
+    for original_path in sorted(required, key=str.casefold):
+        entry = entries[original_path]
+        snapshot = ensure_within(
+            run_dir / str(entry.get("snapshotPath", "")), artifact_root,
+            "Artifact View segment snapshot",
+        )
+        if not snapshot.is_file() or file_hash(snapshot) != entry.get("snapshotSha256"):
+            raise BootstrapError(f"Artifact View segment snapshot is stale: {original_path}")
+        raw = snapshot.read_bytes()
+        if entry.get("contentKind") == "text":
+            lines = raw.splitlines(keepends=True)
+            if not lines:
+                chunks = [(0, 0, b"")]
+            else:
+                chunks: list[tuple[int, int, bytes]] = []
+                start = 1
+                content = bytearray()
+                for line_number, line in enumerate(lines, start=1):
+                    if content and len(content) + len(line) > max_segment_bytes:
+                        chunks.append((start, line_number - 1, bytes(content)))
+                        start = line_number
+                        content = bytearray()
+                    content.extend(line)
+                chunks.append((start, len(lines), bytes(content)))
+        else:
+            chunks = [(0, 0, raw)]
+        for start_line, end_line, content in chunks:
+            core = {
+                "originalPath": original_path,
+                "snapshotPath": entry["snapshotPath"],
+                "artifactSha256": entry["snapshotSha256"],
+                "startLine": start_line,
+                "endLine": end_line,
+                "sizeBytes": len(content),
+                "contentSha256": HASH_PREFIX + hashlib.sha256(content).hexdigest(),
+            }
+            pending.append({**core, "segmentId": value_hash(core)})
+    total = len(pending)
+    return [
+        {**segment, "ordinal": ordinal, "totalSegments": total}
+        for ordinal, segment in enumerate(pending, start=1)
+    ]
+
+
+def artifact_view_total_bytes(run_dir: Path, manifest: dict[str, Any]) -> int:
+    view = read_json(run_dir / manifest["artifactView"]["manifestPath"])
+    required = set(reviewable_artifact_map(manifest))
+    return sum(
+        entry.get("sizeBytes", 0)
+        for entry in view.get("entries", [])
+        if isinstance(entry, dict)
+        and entry.get("originalPath") in required
+        and isinstance(entry.get("sizeBytes"), int)
+    )
+
+
+def artifact_view_segment_receipt(
+    segment: dict[str, Any], manifest: dict[str, Any], role: str
+) -> dict[str, Any]:
+    return {
+        "schemaVersion": "bootstrap-artifact-view-segment-receipt.v1",
+        "reviewerRole": role,
+        "artifactViewManifestHash": manifest["artifactView"]["manifestHash"],
+        **{key: segment[key] for key in (
+            "segmentId", "ordinal", "totalSegments", "originalPath", "snapshotPath",
+            "artifactSha256", "startLine", "endLine", "sizeBytes", "contentSha256",
+        )},
+        "complete": True,
+    }
+
+
+def validate_artifact_view_segment_receipts(
+    receipts: Any,
+    segments: list[dict[str, Any]],
+    manifest: dict[str, Any],
+    role: str,
+) -> dict[str, Any]:
+    if not isinstance(receipts, list):
+        raise TransportAttemptError("Codex Artifact View segment receipts are missing")
+    if len(receipts) != len(segments):
+        raise TransportAttemptError("Codex Artifact View segment receipts have missing segments")
+    if (
+        [segment.get("ordinal") for segment in segments] != list(range(1, len(segments) + 1))
+        or any(segment.get("totalSegments") != len(segments) for segment in segments)
+        or len({segment.get("segmentId") for segment in segments}) != len(segments)
+    ):
+        raise TransportAttemptError("Artifact View segment plan has a duplicate or overlap")
+    previous_by_path: dict[str, tuple[int, int]] = {}
+    for segment in segments:
+        path = segment.get("originalPath")
+        start, end = segment.get("startLine"), segment.get("endLine")
+        if not isinstance(path, str) or not isinstance(start, int) or not isinstance(end, int):
+            raise TransportAttemptError("Artifact View segment plan has a duplicate or overlap")
+        previous = previous_by_path.get(path)
+        if previous is not None and (start == 0 or start <= previous[1]):
+            raise TransportAttemptError("Artifact View segment plan has a duplicate or overlap")
+        previous_by_path[path] = (start, end)
+    expected = [artifact_view_segment_receipt(segment, manifest, role) for segment in segments]
+    for index, (receipt, expected_receipt) in enumerate(zip(receipts, expected), start=1):
+        errors = schema_validation_errors(
+            "bootstrap-artifact-view-segment-receipt.v1.schema.json", receipt
+        )
+        if errors or receipt != expected_receipt:
+            detail = "; ".join(errors) if errors else "segment receipt mismatch"
+            raise TransportAttemptError(
+                f"Codex Artifact View segment receipt {index} mismatch: {detail}"
+            )
+    return artifact_view_read_receipt(manifest)
 
 
 def artifact_view_read_receipt(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -5722,13 +5912,41 @@ def command_authorize_launch(args: argparse.Namespace) -> int:
     return 0
 
 
+def active_attempt_no_progress_timeout(
+    events: list[dict[str, Any]], attempt_id: str
+) -> int | None:
+    """Return an expired no-progress bound recorded for an active attempt."""
+    for event in reversed(events):
+        if (
+            event.get("eventType") != HEARTBEAT_EVENT_TYPE
+            or event.get("attemptId") != attempt_id
+        ):
+            continue
+        timeout = event.get("noProgressTimeoutSeconds")
+        timestamp = event.get("timestamp")
+        if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout < 1:
+            return None
+        if not isinstance(timestamp, str):
+            return None
+        try:
+            observed_at = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        if observed_at.tzinfo is None:
+            return None
+        elapsed = (datetime.now(timezone.utc) - observed_at.astimezone(timezone.utc)).total_seconds()
+        return timeout if elapsed >= timeout else None
+    return None
+
+
 def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manifest: dict[str, Any]) -> int:
     state = load_process_leases(run_dir, manifest)
     changed = False
     event_state_changed = False
+    process_events = read_process_events(run_dir)
     active_by_operation = {
         event.get("operationId"): event
-        for event in active_attempts(read_process_events(run_dir)).values()
+        for event in active_attempts(process_events).values()
         if isinstance(event.get("operationId"), str)
     }
     if args.action != "release":
@@ -5757,6 +5975,51 @@ def command_process_lease_locked(args: argparse.Namespace, run_dir: Path, manife
                     lease["updatedAt"] = utc_now()
                     lease["note"] = "PID is no longer the acquired process; lease marked stale"
                     changed = True
+                continue
+            if lease.get("state") != "acquired" or current_identity != lease.get("processIdentity"):
+                continue
+            active_event = active_by_operation.get(lease.get("operationId"))
+            if active_event is None:
+                continue
+            timeout_seconds = active_attempt_no_progress_timeout(
+                process_events, active_event["attemptId"]
+            )
+            if timeout_seconds is None:
+                continue
+            terminate_process_tree_by_pid(lease["pid"])
+            append_process_event(
+                run_dir,
+                {
+                    "eventType": NO_PROGRESS_TIMEOUT_EVENT_TYPE,
+                    "timestamp": utc_now(),
+                    "attemptId": active_event["attemptId"],
+                    "operationId": active_event["operationId"],
+                    "role": active_event["role"],
+                    "pid": active_event["pid"],
+                    "processIdentity": active_event["processIdentity"],
+                    "writeSet": active_event.get("writeSet", []),
+                    "timeoutSeconds": timeout_seconds,
+                    "retryGuidance": attempt_failure_guidance("transport"),
+                    "note": "Lease inspection terminated a no-progress child tree",
+                },
+            )
+            append_process_event(
+                run_dir,
+                {
+                    "eventType": "attempt-failed",
+                    "timestamp": utc_now(),
+                    "attemptId": active_event["attemptId"],
+                    "operationId": active_event["operationId"],
+                    "role": active_event["role"],
+                    "pid": active_event["pid"],
+                    "processIdentity": active_event["processIdentity"],
+                    "writeSet": active_event.get("writeSet", []),
+                    "failureClass": "transport",
+                    "retryGuidance": attempt_failure_guidance("transport"),
+                    "note": "No-progress timeout expired; child tree terminated during lease inspection",
+                },
+            )
+            event_state_changed = True
     if event_state_changed:
         rebuild_process_leases_from_events(run_dir, manifest)
         state = load_process_leases(run_dir, manifest)
@@ -5964,7 +6227,10 @@ def command_access_handshake(args: argparse.Namespace) -> int:
 def discovery_access_route_groups(
     run_dir: Path, manifest: dict[str, Any],
 ) -> list[tuple[list[str], Path, dict[str, Any]]]:
-    policy = manifest["accessProbePolicy"]
+    # Historical manifests may predate the explicit access-probe policy.
+    # Keep inspection read-only and fail closed on the proof itself, rather than
+    # crashing the run index before it can report the next action.
+    policy = manifest.get("accessProbePolicy", ACCESS_PROBE_POLICY)
     layers = manifest.get("requiredLayers")
     if not isinstance(layers, list) or not layers:
         raise BootstrapError("Discovery access requires at least one reviewer role")
@@ -6045,9 +6311,17 @@ def discovery_wave_retry_plan(
 
 def access_proof_route(
     run_dir: Path, manifest: dict[str, Any], proof_role: str,
-    reviewer_role: str | None = None,
+    reviewer_role: str | None = None, selected_model: str | None = None,
 ) -> tuple[Path, dict[str, Any], str | None]:
-    policy = manifest["accessProbePolicy"]
+    def for_model(path: Path, route: dict[str, Any]) -> Path:
+        if selected_model is None or selected_model == route["model"]:
+            return path
+        if selected_model not in route["allowedModels"]:
+            raise BootstrapError(f"Model is not allowed by the review profile: {selected_model}")
+        model_suffix = re.sub(r"[^A-Za-z0-9._-]+", "_", selected_model)
+        return path.with_name(f"{path.stem}.fallback-{model_suffix}{path.suffix}")
+
+    policy = manifest.get("accessProbePolicy", ACCESS_PROBE_POLICY)
     if proof_role in {"discovery", FOCUSED_REPAIR_ROLE}:
         if proof_role == "discovery" and manifest.get("findingMode") == "verification_only":
             raise BootstrapError("Discovery access is forbidden after the lineage finding round")
@@ -6064,9 +6338,12 @@ def access_proof_route(
                         f"Discovery access route does not cover reviewer role: {reviewer_role}"
                     )
                 roles, path, route = matches[0]
-            return path, route, None
+            return for_model(path, route), route, None
         return (
-            run_dir / policy["discoverySidecar"],
+            for_model(
+                run_dir / policy["discoverySidecar"],
+                reviewer_execution_route(manifest, FOCUSED_REPAIR_ROLE),
+            ),
             reviewer_execution_route(manifest, FOCUSED_REPAIR_ROLE),
             None,
         )
@@ -6079,16 +6356,13 @@ def access_proof_route(
     blockers = load_gate_blockers(run_dir, manifest)
     if not blockers:
         raise BootstrapError("Independent verifier access proof requires a gated P0/P1 blocker")
-    return (
-        run_dir / policy["verifierSidecar"],
-        verifier_execution_route(manifest, blockers),
-        file_hash(gate_state_path),
-    )
+    route = verifier_execution_route(manifest, blockers)
+    return (for_model(run_dir / policy["verifierSidecar"], route), route, file_hash(gate_state_path))
 
 
 def validate_access_proof(
     run_dir: Path, manifest: dict[str, Any], proof_role: str = "discovery",
-    reviewer_role: str | None = None,
+    reviewer_role: str | None = None, selected_model: str | None = None,
 ) -> str | None:
     if manifest["executionMode"] != "codex-exec":
         return None
@@ -6099,14 +6373,16 @@ def validate_access_proof(
                 "reviewerRoles": roles,
                 "path": path.relative_to(run_dir).as_posix(),
                 "sha256": validate_access_proof(
-                    run_dir, manifest, proof_role, reviewer_role=roles[0]
+                    run_dir, manifest, proof_role, reviewer_role=roles[0],
+                    selected_model=selected_model,
                 ),
             }
             for roles, path, _route in groups
         ]
         return hashes[0]["sha256"] if len(hashes) == 1 else value_hash(hashes)
     path, route, gate_hash = access_proof_route(
-        run_dir, manifest, proof_role, reviewer_role=reviewer_role
+        run_dir, manifest, proof_role, reviewer_role=reviewer_role,
+        selected_model=selected_model,
     )
     if not path.is_file():
         raise BootstrapError(f"Required {proof_role} access proof is missing: {path}")
@@ -6131,6 +6407,7 @@ def validate_access_proof(
     if (
         proof.get("model") not in route["allowedModels"]
         or proof.get("model") in manifest["codexExecPolicy"]["forbiddenModels"]
+        or (selected_model is not None and proof.get("model") != selected_model)
     ):
         raise BootstrapError("Access proof used a model outside the role-specific route")
     if manifest["reviewCostEstimate"]["highCost"] and proof.get("highCostAcknowledged") is not True:
@@ -6207,16 +6484,21 @@ def command_prove_access(args: argparse.Namespace) -> int:
             f"retryRisk={estimate['retryRisk']}, samples={estimate['basisSampleCount']}, "
             f"confidence={estimate['confidence']})"
         )
-    proof_path, route, gate_hash = access_proof_route(
+    _default_proof_path, default_route, gate_hash = access_proof_route(
         run_dir, manifest, proof_role, reviewer_role=reviewer_role
+    )
+    model = args.model or default_route["model"]
+    proof_path, route, gate_hash = access_proof_route(
+        run_dir, manifest, proof_role, reviewer_role=reviewer_role,
+        selected_model=model,
     )
     if proof_path.exists():
         validate_access_proof(
-            run_dir, manifest, proof_role, reviewer_role=reviewer_role
+            run_dir, manifest, proof_role, reviewer_role=reviewer_role,
+            selected_model=model,
         )
         print(f"Artifact access is already proven: {proof_path}")
         return 0
-    model = args.model or route["model"]
     if model not in route["allowedModels"] or model in manifest["codexExecPolicy"]["forbiddenModels"]:
         raise BootstrapError(f"Model is not allowed by the review profile: {model}")
     attempt_id = f"access-probe-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}-{time.time_ns() % 100000000:08d}"
@@ -6277,7 +6559,7 @@ def command_prove_access(args: argparse.Namespace) -> int:
         process = subprocess.Popen(
             argv, cwd=manifest["repositoryRoot"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace",
-            env=child_env, shell=False,
+            env=child_env, shell=False, **child_process_group_kwargs(),
         )
     except OSError as exc:
         write_json(
@@ -6688,6 +6970,8 @@ def reserve_codex_attempt(
     operation_id: str,
     formal_path: Path,
     formal_write_set: list[str],
+    *,
+    segmented: bool = False,
 ) -> tuple[int, str]:
     controller_pid = os.getpid()
     controller_identity = process_creation_identity(controller_pid)
@@ -6707,7 +6991,7 @@ def reserve_codex_attempt(
             and event.get("operationId") == operation_id
             for event in events
         )
-        if operation_completed and not recovery["open"]:
+        if operation_completed and not recovery["open"] and not segmented:
             raise BootstrapError(f"Operation {operation_id} is already completed and cannot be rerun")
         if formal_output_is_completed(formal_path, role) and not recovery["open"]:
             process_completed = [
@@ -6881,7 +7165,9 @@ def verifier_evidence_requirements(blockers: list[dict[str, Any]]) -> str:
     return "\n\n".join(sections)
 
 
-def delegated_bootstrap_authority_contract(run_dir: Path, manifest: dict[str, Any]) -> str:
+def delegated_bootstrap_authority_contract(
+    run_dir: Path, manifest: dict[str, Any], *, segmented: bool = False
+) -> str:
     """Route mandatory nested Skill authority reads through frozen Artifact View bytes."""
     view_binding = manifest.get("artifactView")
     if not isinstance(view_binding, dict):
@@ -6914,6 +7200,12 @@ def delegated_bootstrap_authority_contract(run_dir: Path, manifest: dict[str, An
         if not snapshot_path.is_file() or file_hash(snapshot_path) != entry.get("snapshotSha256"):
             raise BootstrapError(f"Delegated authority snapshot is stale: {original_path}")
         mappings.append({"originalPath": original_path, "snapshotPath": str(snapshot_path)})
+    if segmented:
+        return (
+            "The parent has already validated the frozen Bootstrap authority and retained its "
+            "hash-bound mapping. Do not read delegated authority snapshots in this segment child; "
+            "the role policy and assigned packet below are the complete child input.\n\n"
+        )
     return (
         "# Frozen Delegated Bootstrap Authority\n\n"
         "A selected global Skill or thin route may require the repository Bootstrap Skill and its "
@@ -6934,6 +7226,7 @@ def runner_prompt(
     helper_path: Path,
     handshake_request_path: Path,
     handshake_path: Path,
+    segment: dict[str, Any] | None = None,
 ) -> str:
     prompt_path = (
         run_dir / "verification-prompt.md"
@@ -6942,7 +7235,12 @@ def runner_prompt(
     )
     if not prompt_path.is_file():
         raise BootstrapError(f"Role prompt is missing: {prompt_path}")
-    delegated_authority_contract = delegated_bootstrap_authority_contract(run_dir, manifest)
+    delegated_authority_contract = delegated_bootstrap_authority_contract(
+        run_dir, manifest, segmented=segment is not None
+    )
+    role_prompt = prompt_path.read_text(encoding="utf-8")
+    if segment is not None and role not in {FOCUSED_REPAIR_ROLE, "independent_verifier"}:
+        role_prompt = prompt_text(role, manifest, run_dir, segmented=True)
     verifier_requirements = ""
     if role == "independent_verifier":
         blockers = list(load_gate_blockers(run_dir, manifest).values())
@@ -6980,7 +7278,21 @@ def runner_prompt(
         "py", "-3", str(helper_path),
         "--request", str(handshake_request_path), "--out", str(handshake_path),
     ]
-    if role == FOCUSED_REPAIR_ROLE:
+    if segment is not None:
+        result_key = "decisions" if role in {FOCUSED_REPAIR_ROLE, "independent_verifier"} else "candidates"
+        payload_contract = (
+            f"For this bounded segment, payload contains status=completed, {result_key} as a list, "
+            "and segmentReceipt exactly matching the segment contract below. Do not claim the full "
+            "Artifact View receipt and do not read outside this segment. "
+            + (
+                "Return at most one partial decision per finding whose required evidence intersects "
+                "this segment. Bind only evidence checked in this segment; the parent will merge "
+                "consistent partial decisions by finding after all receipts pass. "
+                if role in {FOCUSED_REPAIR_ROLE, "independent_verifier"} else ""
+            )
+        )
+        inventory_attestation_contract = ""
+    elif role == FOCUSED_REPAIR_ROLE:
         payload_contract = (
             "For the focused repair verifier, payload contains status, decisions, newBlockers, "
             "escalation, failureReason when failed, and artifactViewReadReceipt when completed. "
@@ -6996,18 +7308,42 @@ def runner_prompt(
             "the parent owns formal coverage. "
         )
     return (
-        prompt_path.read_text(encoding="utf-8")
+        role_prompt
         + "\n\n# Codex Exec Runtime Contract\n\n"
         + f"Assigned run directory: {run_dir}\n"
-        + f"Artifact View manifest: {run_dir / manifest['artifactView']['manifestPath']}\n"
+        + (
+            "The full Artifact View manifest is parent-owned and must not be opened or traversed by "
+            "this segment child.\n"
+            if segment is not None
+            else f"Artifact View manifest: {run_dir / manifest['artifactView']['manifestPath']}\n"
+        )
         + f"Attempt directory: {handshake_path.parent}\n"
         + "The controller owns formal reviewer/verifier output. Do not edit formal output files or "
         "invoke validate-layer. Process events are lease authority; the derived process-leases view "
-        "may lag during this process. Read every artifact from its Artifact View snapshotPath, never "
-        "from a live original path, and cite originalPath in evidence. Resolve every relative "
-        "snapshotPath against the assigned run directory, never against the attempt workspace or "
-        "current working directory.\n\n"
+        "may lag during this process. "
+        + (
+            "Read only the parent-assigned segment below. Do not inspect any other Artifact View entry. Resolve the assigned "
+            "relative snapshotPath against the run directory and cite originalPath in evidence.\n\n"
+            if segment is not None
+            else "Read every artifact from its Artifact View snapshotPath, never from a live original "
+            "path, and cite originalPath in evidence. Resolve every relative snapshotPath against the "
+            "assigned run directory, never against the attempt workspace or current working directory.\n\n"
+        )
         + delegated_authority_contract
+        + (
+            "# Parent-Bounded Artifact View Segment\n\n"
+            + json.dumps(segment, ensure_ascii=False, indent=2)
+            + "\nExpected segmentReceipt:\n"
+            + json.dumps(
+                artifact_view_segment_receipt(segment, manifest, role),
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
+            + "\nDo not open or traverse the full Artifact View manifest. Read only the inclusive "
+            "line range from the named snapshotPath. "
+            "For binary segments, startLine=endLine=0 means the complete artifact bytes.\n\n"
+            if segment is not None else ""
+        )
         + "Execute this access handshake command before semantic review:\n"
         + json.dumps(handshake_command, ensure_ascii=False)
         + "\nRead the resulting JSON and preserve its handshakeHash in your final response. "
@@ -7027,6 +7363,8 @@ def run_codex_attempt(
     role: str,
     codex_command: str,
     model: str,
+    *,
+    segment: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], Path]:
     policy = manifest["codexExecPolicy"]
     route = (
@@ -7060,8 +7398,10 @@ def run_codex_attempt(
         run_dir, manifest, role, attempt_dir
     )
     prompt = runner_prompt(
-        run_dir, manifest, role, attempt_id, helper_path, handshake_request_path, handshake_path
+        run_dir, manifest, role, attempt_id, helper_path, handshake_request_path,
+        handshake_path, segment,
     )
+    prompt_bytes = validate_codex_prompt_budget(prompt, segmented=segment is not None)
     try:
         argv = render_codex_command(codex_command, model, reasoning, "workspace-write", candidate_path)
     except ControlPlaneError as exc:
@@ -7083,6 +7423,12 @@ def run_codex_attempt(
         "writeSet": formal_write_set,
         "executionReadSet": manifest["executionReadSet"],
         "dependencyClosure": manifest["dependencyClosure"],
+        "promptBytes": prompt_bytes,
+        "promptBudget": {
+            "segmented": segment is not None,
+            "maxPromptBytes": SEGMENT_PROMPT_MAX_BYTES if segment is not None else None,
+        },
+        **({"artifactViewSegment": segment} if segment is not None else {}),
         "handshakeHelperPath": path_relative_to_existing_ancestor(
             helper_path, run_dir, "Handshake helper"
         ),
@@ -7104,6 +7450,7 @@ def run_codex_attempt(
             operation_id,
             formal_path,
             formal_write_set,
+            segmented=segment is not None,
         )
     except BootstrapError as exc:
         record_attempt_rejection(
@@ -7121,7 +7468,7 @@ def run_codex_attempt(
         process = subprocess.Popen(
             argv, cwd=manifest["repositoryRoot"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace",
-            env=child_env, shell=False,
+            env=child_env, shell=False, **child_process_group_kwargs(),
         )
     except OSError as exc:
         write_json(
@@ -7242,8 +7589,10 @@ def run_codex_attempt(
         attempt_dir / "token-usage.json",
         {"schemaVersion": "bootstrap-token-usage.v1", "tokens": codex_token_usage(stdout)},
     )
+    failure_class = classify_attempt_failure(stdout + "\n" + stderr)
+    process_failed = process.returncode != 0 or failure_class == "context-budget"
     process_event = {
-        "eventType": "attempt-process-completed" if process.returncode == 0 else "attempt-failed",
+        "eventType": "attempt-failed" if process_failed else "attempt-process-completed",
         "timestamp": utc_now(),
         "attemptId": attempt_id,
         "operationId": operation_id,
@@ -7251,11 +7600,16 @@ def run_codex_attempt(
         "pid": process.pid,
         "processIdentity": identity,
         "writeSet": request["writeSet"],
-        "note": stderr[-500:] if process.returncode else "",
+        "note": stderr[-500:] if process_failed else "",
     }
-    if process.returncode != 0:
-        process_event["failureClass"] = "transport"
+    if process_failed:
+        process_event["failureClass"] = failure_class
+        process_event["retryGuidance"] = attempt_failure_guidance(failure_class)
         append_attempt_event_and_rebuild(run_dir, manifest, process_event)
+        if failure_class == "context-budget":
+            raise TransportAttemptError(
+                "Codex child exhausted its context budget; repartition the segment before retry"
+            )
         raise TransportAttemptError(f"Codex child failed with exit code {process.returncode}")
     append_process_event(run_dir, process_event)
     try:
@@ -7270,6 +7624,294 @@ def run_codex_attempt(
         )
         raise
     return candidate, attempt_dir
+
+
+def validate_segment_candidate_payload(
+    payload: dict[str, Any],
+    role: str,
+    expected_receipt: dict[str, Any],
+) -> None:
+    result_key = "decisions" if role in {FOCUSED_REPAIR_ROLE, "independent_verifier"} else "candidates"
+    if (
+        set(payload) != {"status", result_key, "segmentReceipt"}
+        or payload.get("status") != "completed"
+        or not isinstance(payload.get(result_key), list)
+        or payload.get("segmentReceipt") != expected_receipt
+    ):
+        raise TransportAttemptError("Codex Artifact View segment payload mismatch")
+
+
+def merge_segment_results(role: str, values: list[Any]) -> list[Any]:
+    if role not in {FOCUSED_REPAIR_ROLE, "independent_verifier"}:
+        return values
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for value in values:
+        if not isinstance(value, dict) or not isinstance(value.get("findingId"), str):
+            raise TransportAttemptError("Segment verifier decision is invalid")
+        grouped.setdefault(value["findingId"], []).append(value)
+    merged: list[dict[str, Any]] = []
+    for finding_id in sorted(grouped):
+        decisions = grouped[finding_id]
+        evidence = sorted({
+            item
+            for decision in decisions
+            for item in decision.get("evidenceChecked", [])
+            if isinstance(item, str) and item
+        })
+        if not evidence:
+            raise TransportAttemptError("Segment verifier decision has no evidence")
+        if role == FOCUSED_REPAIR_ROLE:
+            if any(
+                set(decision) != {"findingId", "status", "evidenceChecked"}
+                or decision.get("status") not in {"verified_fixed", "blocking"}
+                for decision in decisions
+            ):
+                raise TransportAttemptError("Focused segment verifier decision is invalid")
+            merged.append({
+                "findingId": finding_id,
+                "status": (
+                    "blocking"
+                    if any(decision["status"] == "blocking" for decision in decisions)
+                    else "verified_fixed"
+                ),
+                "evidenceChecked": evidence,
+            })
+            continue
+        allowed = {"findingId", "decision", "reason", "evidenceChecked", "unverifiedClass"}
+        if any(
+            set(decision) - allowed
+            or decision.get("decision") not in {"confirmed", "refuted", "unverified"}
+            or not isinstance(decision.get("reason"), str)
+            or not decision["reason"].strip()
+            for decision in decisions
+        ):
+            raise TransportAttemptError("Independent segment verifier decision is invalid")
+        verdicts = {decision["decision"] for decision in decisions}
+        if len(verdicts) != 1:
+            raise TransportAttemptError("Independent segment verifier decisions conflict")
+        verdict = next(iter(verdicts))
+        result = {
+            "findingId": finding_id,
+            "decision": verdict,
+            "reason": " | ".join(sorted({decision["reason"].strip() for decision in decisions})),
+            "evidenceChecked": evidence,
+        }
+        classes = {decision.get("unverifiedClass") for decision in decisions}
+        if verdict == "unverified":
+            if len(classes) != 1 or next(iter(classes)) not in {"security", "data_loss", "other"}:
+                raise TransportAttemptError("Independent unverified segment classes conflict")
+            result["unverifiedClass"] = next(iter(classes))
+        elif classes != {None}:
+            raise TransportAttemptError("Verified segment decision has unverifiedClass")
+        merged.append(result)
+    return merged
+
+
+def segment_result_path(
+    run_dir: Path, role: str, model: str, segment: dict[str, Any]
+) -> Path:
+    model_key = hashlib.sha256(model.encode("utf-8")).hexdigest()
+    return (
+        run_dir / "segment-coverage" / role / model_key
+        / f"{segment['ordinal']:05d}-{segment['segmentId'].removeprefix(HASH_PREFIX)}.json"
+    )
+
+
+def legacy_segment_result_path(run_dir: Path, role: str, segment: dict[str, Any]) -> Path:
+    return (
+        run_dir / "segment-coverage" / role
+        / f"{segment['ordinal']:05d}-{segment['segmentId'].removeprefix(HASH_PREFIX)}.json"
+    )
+
+
+def load_segment_result(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    role: str,
+    model: str,
+    segment: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any], Path] | None:
+    path = segment_result_path(run_dir, role, model, segment)
+    if not path.is_file():
+        path = legacy_segment_result_path(run_dir, role, segment)
+        if not path.is_file():
+            return None
+    record = read_json(path)
+    if record.get("model") != model:
+        return None
+    required = {
+        "schemaVersion", "reviewId", "inputHash", "artifactViewManifestHash",
+        "reviewerRole", "model", "segment", "segmentReceipt", "candidate",
+        "candidateHash", "payload", "payloadHash", "attemptId", "authorizes",
+    }
+    if (
+        set(record) != required
+        or record.get("schemaVersion") != "bootstrap-artifact-view-segment-result.v1"
+        or record.get("reviewId") != manifest["reviewId"]
+        or record.get("inputHash") != manifest["inputHash"]
+        or record.get("artifactViewManifestHash") != manifest["artifactView"]["manifestHash"]
+        or record.get("reviewerRole") != role
+        or record.get("model") != model
+        or record.get("segment") != segment
+        or record.get("segmentReceipt") != artifact_view_segment_receipt(segment, manifest, role)
+        or not isinstance(record.get("candidate"), dict)
+        or record.get("candidateHash") != value_hash(record.get("candidate"))
+        or not isinstance(record.get("payload"), dict)
+        or record.get("payloadHash") != value_hash(record.get("payload"))
+        or record.get("authorizes") != []
+        or record.get("attemptId") != record.get("candidate", {}).get("attemptId")
+    ):
+        raise TransportAttemptError("Persisted Artifact View segment result is stale")
+    validate_segment_candidate_payload(
+        record["payload"], role, artifact_view_segment_receipt(segment, manifest, role)
+    )
+    attempt_dir = run_dir / "attempts" / str(record["attemptId"])
+    if not attempt_dir.is_dir():
+        raise TransportAttemptError("Persisted Artifact View segment attempt is missing")
+    events = [
+        event for event in read_process_events(run_dir)
+        if event.get("attemptId") == record["attemptId"]
+    ]
+    if (
+        not any(event.get("eventType") == "attempt-started" for event in events)
+        or not any(event.get("eventType") == "attempt-process-completed" for event in events)
+        or any(event.get("eventType") in {"attempt-failed", "attempt-rejected", "attempt-stale"} for event in events)
+    ):
+        raise TransportAttemptError("Persisted Artifact View segment attempt is not reusable")
+    return record["candidate"], record["payload"], attempt_dir
+
+
+def persist_segment_result(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    role: str,
+    model: str,
+    segment: dict[str, Any],
+    candidate: dict[str, Any],
+    payload: dict[str, Any],
+) -> Path:
+    record = {
+        "schemaVersion": "bootstrap-artifact-view-segment-result.v1",
+        "reviewId": manifest["reviewId"],
+        "inputHash": manifest["inputHash"],
+        "artifactViewManifestHash": manifest["artifactView"]["manifestHash"],
+        "reviewerRole": role,
+        "model": model,
+        "segment": segment,
+        "segmentReceipt": payload["segmentReceipt"],
+        "candidate": candidate,
+        "candidateHash": value_hash(candidate),
+        "payload": payload,
+        "payloadHash": value_hash(payload),
+        "attemptId": candidate["attemptId"],
+        "authorizes": [],
+    }
+    path = segment_result_path(run_dir, role, model, segment)
+    if path.is_file() and read_json(path) != record:
+        raise TransportAttemptError("Artifact View segment result is immutable")
+    write_json(path, record)
+    return path
+
+
+def complete_intermediate_segment_attempt(
+    run_dir: Path, manifest: dict[str, Any], role: str, attempt_dir: Path
+) -> None:
+    events = read_process_events(run_dir)
+    started = next(
+        (event for event in reversed(events) if event.get("attemptId") == attempt_dir.name and event.get("eventType") == "attempt-started"),
+        None,
+    )
+    process_result = read_json(attempt_dir / "process-result.json")
+    if not isinstance(started, dict) or process_result.get("exitCode") != 0:
+        raise TransportAttemptError("Successful Artifact View segment lacks process evidence")
+    append_attempt_event_and_rebuild(run_dir, manifest, {
+        "eventType": "attempt-completed", "timestamp": utc_now(),
+        "attemptId": attempt_dir.name, "operationId": started["operationId"],
+        "role": role, "pid": process_result["pid"],
+        "processIdentity": started["processIdentity"], "writeSet": started["writeSet"],
+    })
+
+
+def run_segmented_codex_attempts(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    role: str,
+    codex_command: str,
+    model: str,
+) -> tuple[dict[str, Any], Path]:
+    segments = artifact_view_segment_plan(
+        run_dir, manifest, max_segment_bytes=ARTIFACT_VIEW_SEGMENT_BYTES
+    )
+    receipts: list[dict[str, Any]] = []
+    combined: list[Any] = []
+    last_candidate: dict[str, Any] | None = None
+    last_attempt_dir: Path | None = None
+    result_key = "decisions" if role in {FOCUSED_REPAIR_ROLE, "independent_verifier"} else "candidates"
+    for segment in segments:
+        cached = load_segment_result(run_dir, manifest, role, model, segment)
+        if cached is None:
+            candidate, attempt_dir = run_codex_attempt(
+                run_dir, manifest, role, codex_command, model, segment=segment
+            )
+            payload = validate_child_candidate(candidate, run_dir, attempt_dir, manifest, role)
+            expected_receipt = artifact_view_segment_receipt(segment, manifest, role)
+            validate_segment_candidate_payload(payload, role, expected_receipt)
+            persist_segment_result(
+                run_dir, manifest, role, model, segment, candidate, payload
+            )
+            if segment["ordinal"] < segment["totalSegments"]:
+                complete_intermediate_segment_attempt(run_dir, manifest, role, attempt_dir)
+        else:
+            candidate, payload, attempt_dir = cached
+        receipts.append(payload["segmentReceipt"])
+        combined.extend(payload[result_key])
+        last_candidate, last_attempt_dir = candidate, attempt_dir
+    aggregate_receipt = validate_artifact_view_segment_receipts(receipts, segments, manifest, role)
+    if last_candidate is None or last_attempt_dir is None:
+        raise TransportAttemptError("Artifact View segment plan produced no attempts")
+    aggregate_payload: dict[str, Any] = {
+        "status": "completed",
+        result_key: merge_segment_results(role, combined),
+        "artifactViewReadReceipt": aggregate_receipt,
+    }
+    if role == FOCUSED_REPAIR_ROLE:
+        aggregate_payload.update({
+            "newBlockers": [],
+            "escalation": {
+                "novelP0P1FindingIds": [], "authorityGraphChanged": False,
+                "authorityGraphArtifacts": [], "highRiskBoundaryChanged": False,
+                "highRiskBoundaryArtifacts": [],
+            },
+        })
+    if role == "acceptance_auditor" and requires_acceptance_inventory_attestation(manifest):
+        aggregate_payload["inventoryAttestation"] = {
+            "schemaVersion": "bootstrap-acceptance-inventory-attestation.v1",
+            "reviewId": manifest["reviewId"],
+            "attemptId": last_attempt_dir.name,
+            "inputHash": manifest["inputHash"],
+            "capabilityId": "acceptance-inventory-attestation",
+            "capabilityVersion": "1.0",
+            "producerRole": "acceptance_auditor",
+            "status": "complete",
+            "scopeHash": acceptance_attestation_scope_hash(manifest),
+            "coverage": [],
+        }
+    coverage_path = run_dir / "segment-coverage" / f"{role}.json"
+    write_json(coverage_path, {
+        "schemaVersion": "bootstrap-segmented-artifact-view-coverage.v1",
+        "reviewId": manifest["reviewId"], "role": role,
+        "artifactViewManifestHash": manifest["artifactView"]["manifestHash"],
+        "segments": segments, "receipts": receipts,
+        "segmentResults": [
+            {"path": path_relative_to_existing_ancestor(segment_result_path(run_dir, role, model, segment), run_dir, "Segment result"),
+             "sha256": file_hash(segment_result_path(run_dir, role, model, segment))}
+            for segment in segments
+        ],
+        "aggregateReceipt": aggregate_receipt, "authorizes": [],
+    })
+    aggregate = dict(last_candidate)
+    aggregate["payload"] = aggregate_payload
+    return aggregate, last_attempt_dir
 
 
 def validate_child_candidate(
@@ -7372,21 +8014,31 @@ def command_run_layer(args: argparse.Namespace) -> int:
         else primary_access_proof_role(manifest)
     )
     reviewer_role = args.role if proof_role == "discovery" else None
-    proof_path, route, _gate_hash = access_proof_route(
-        run_dir, manifest, proof_role, reviewer_role=reviewer_role
-    )
-    validate_access_proof(
+    _proof_path, route, _gate_hash = access_proof_route(
         run_dir, manifest, proof_role, reviewer_role=reviewer_role
     )
     selected_model = args.model or route["model"]
+    proof_path, route, _gate_hash = access_proof_route(
+        run_dir, manifest, proof_role, reviewer_role=reviewer_role,
+        selected_model=selected_model,
+    )
+    validate_access_proof(
+        run_dir, manifest, proof_role, reviewer_role=reviewer_role,
+        selected_model=selected_model,
+    )
     proof = read_json(proof_path)
     command_path = Path(args.codex_command)
     command_identity = file_hash(command_path) if command_path.is_file() else value_hash(args.codex_command)
     if proof.get("model") != selected_model or proof.get("commandIdentity") != command_identity:
         raise BootstrapError("run-layer executable/model does not match the authorized access proof")
-    candidate, attempt_dir = run_codex_attempt(
-        run_dir, manifest, args.role, args.codex_command, selected_model,
-    )
+    if artifact_view_total_bytes(run_dir, manifest) > SEGMENTED_ARTIFACT_VIEW_THRESHOLD_BYTES:
+        candidate, attempt_dir = run_segmented_codex_attempts(
+            run_dir, manifest, args.role, args.codex_command, selected_model,
+        )
+    else:
+        candidate, attempt_dir = run_codex_attempt(
+            run_dir, manifest, args.role, args.codex_command, selected_model,
+        )
     operation_id = "verifier" if args.role == "independent_verifier" else f"reviewer:{args.role}"
     process_result = read_json(attempt_dir / "process-result.json")
     event_write_set = [repository_relative_path(
@@ -9849,6 +10501,8 @@ def structured_run_cost_evidence(
         expected_request_fields = common_request_fields | (
             semantic_request_fields if role in semantic_roles else set()
         )
+        if "artifactViewSegment" in request:
+            expected_request_fields.add("artifactViewSegment")
         request_write_set = request.get("writeSet")
         environment_evidence = request.get("environmentEvidence")
         manifest_execution_read_set = (
@@ -9894,6 +10548,16 @@ def structured_run_cost_evidence(
             or request.get("artifactViewManifestHash") != artifact_view.get("manifestHash")
         ):
             attempt_reasons.add(f"invalid-request-binding:{attempt_dir.name}")
+        request_segment = request.get("artifactViewSegment")
+        if request_segment is not None:
+            try:
+                expected_segments = artifact_view_segment_plan(
+                    run_dir, manifest, max_segment_bytes=ARTIFACT_VIEW_SEGMENT_BYTES
+                )
+            except BootstrapError:
+                expected_segments = []
+            if request_segment not in expected_segments:
+                attempt_reasons.add(f"invalid-segment-request-binding:{attempt_dir.name}")
 
         argv = request.get("argv")
         selected_model: str | None = None

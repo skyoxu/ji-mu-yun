@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "bootstrap-run-seal.v1",
+  "reviewId": "broh-acceptance-20260809-r1-short",
+  "inputHash": "sha256:1eff9403a47556f8bd6aa04e0b8058d9273f90f8c794bd8ff6d8e98220a8621b",
+  "state": "superseded",
+  "reason": "git-index-drift-after-prepare",
+  "successor": "C:/jimuyun/execution-plans/2026-08-07-bootstrap-review-operability-hardening/bootstrap-runs/r2",
+  "sealedAt": "2026-08-08T16:47:22.690537Z"
+}

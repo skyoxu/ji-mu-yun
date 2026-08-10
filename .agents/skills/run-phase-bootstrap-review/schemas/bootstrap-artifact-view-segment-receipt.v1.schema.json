@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json",
+  "title": "Bootstrap Artifact View Segment Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewerRole", "artifactViewManifestHash", "segmentId", "ordinal", "totalSegments", "originalPath", "snapshotPath", "artifactSha256", "startLine", "endLine", "sizeBytes", "contentSha256", "complete"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-artifact-view-segment-receipt.v1"},
+    "reviewerRole": {"type": "string", "minLength": 1},
+    "artifactViewManifestHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "segmentId": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "ordinal": {"type": "integer", "minimum": 1},
+    "totalSegments": {"type": "integer", "minimum": 1},
+    "originalPath": {"type": "string", "minLength": 1},
+    "snapshotPath": {"type": "string", "minLength": 1},
+    "artifactSha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "startLine": {"type": "integer", "minimum": 0},
+    "endLine": {"type": "integer", "minimum": 0},
+    "sizeBytes": {"type": "integer", "minimum": 0},
+    "contentSha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "complete": {"const": true}
+  }
+}

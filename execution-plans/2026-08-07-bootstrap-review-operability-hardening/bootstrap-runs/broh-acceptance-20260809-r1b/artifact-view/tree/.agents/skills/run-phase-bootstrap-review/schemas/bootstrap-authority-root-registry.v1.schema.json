@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-authority-root-registry.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "registryId", "roots", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-authority-root-registry.v1"},
+    "registryId": {"const": "bootstrap-authority-roots.v1"},
+    "roots": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rootId", "authorityKind", "authorizedSubjects", "allowedConsumers", "allowedScopes", "runnerIdentity", "allowedExecutables"],
+        "properties": {
+          "rootId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+          "authorityKind": {"enum": ["successor-policy", "p2-owner", "p2-command"]},
+          "authorizedSubjects": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "allowedConsumers": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "allowedScopes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "runnerIdentity": {"type": ["string", "null"], "minLength": 1},
+          "allowedExecutables": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {
+      "type": "array", "uniqueItems": true, "minItems": 6,
+      "items": {"enum": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]}
+    }
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.plan-owned-implementation-contract.v1",
+  "title": "Ji Mu Yun Plan-Owned Implementation Contract",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "plan_id",
+    "profile",
+    "command_registry",
+    "backend",
+    "protocol_artifacts",
+    "authority",
+    "slices"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]*\\.implementation-contract\\.v1$"
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]+$"
+    },
+    "profile": {
+      "enum": ["standard", "resumable", "self-hosted"]
+    },
+    "command_registry": {
+      "type": "string",
+      "minLength": 1
+    },
+    "backend": {
+      "type": "object",
+      "required": ["hidden_state"],
+      "properties": {
+        "hidden_state": {"const": false}
+      }
+    },
+    "protocol_artifacts": {
+      "type": "object",
+      "required": ["context_layout", "attempt_layout"],
+      "properties": {
+        "context_layout": {"const": "context/<capsule-id>"},
+        "attempt_layout": {"const": "attempts/<attempt-id>"}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "required": ["authority_manifest"],
+      "properties": {
+        "authority_manifest": {"type": "string", "minLength": 1}
+      }
+    },
+    "slices": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/slice"}
+    }
+  },
+  "$defs": {
+    "stringArray": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "commandExpectation": {
+      "type": "object",
+      "required": ["command_id", "expected_exit"],
+      "properties": {
+        "command_id": {"type": "string", "minLength": 1},
+        "expected_exit": {"enum": ["zero", "nonzero"]}
+      }
+    },
+    "writeSet": {
+      "type": "object",
+      "required": ["production", "tests", "documentation"],
+      "properties": {
+        "production": {"$ref": "#/$defs/stringArray"},
+        "tests": {"$ref": "#/$defs/stringArray"},
+        "documentation": {"$ref": "#/$defs/stringArray"}
+      }
+    },
+    "slice": {
+      "type": "object",
+      "required": [
+        "slice_id",
+        "title",
+        "requirement_ids",
+        "acceptance_ids",
+        "source_refs",
+        "depends_on",
+        "allowed_changes",
+        "execution_snapshot_paths",
+        "forbidden_changes",
+        "execution_read_set",
+        "dependency_closure",
+        "tdd",
+        "post_refactor_command_id",
+        "exit_predicate",
+        "recovery"
+      ],
+      "properties": {
+        "slice_id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "requirement_ids": {"$ref": "#/$defs/stringArray"},
+        "acceptance_ids": {"$ref": "#/$defs/stringArray"},
+        "source_refs": {"$ref": "#/$defs/stringArray"},
+        "depends_on": {"$ref": "#/$defs/stringArray"},
+        "allowed_changes": {"$ref": "#/$defs/writeSet"},
+        "planned_new_files": {"$ref": "#/$defs/stringArray"},
+        "execution_snapshot_paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "forbidden_changes": {"$ref": "#/$defs/stringArray"},
+        "execution_read_set": {"$ref": "#/$defs/stringArray"},
+        "dependency_closure": {"$ref": "#/$defs/stringArray"},
+        "tdd": {
+          "type": "object",
+          "required": ["red", "green", "refactor"],
+          "properties": {
+            "red": {
+              "type": "object",
+              "required": [
+                "command_id",
+                "test_selector",
+                "expected_exit",
+                "expected_failure_family",
+                "expected_failure_ids"
+              ],
+              "properties": {
+                "command_id": {"type": "string", "minLength": 1},
+                "test_selector": {"type": "string", "minLength": 1},
+                "expected_exit": {"enum": ["zero", "nonzero"]},
+                "expected_failure_family": {"type": "string", "minLength": 1},
+                "expected_failure_ids": {"$ref": "#/$defs/stringArray"}
+              }
+            },
+            "green": {"$ref": "#/$defs/commandExpectation"},
+            "refactor": {
+              "type": "object",
+              "required": ["invocations"],
+              "properties": {
+                "invocations": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {"$ref": "#/$defs/commandExpectation"}
+                }
+              }
+            }
+          }
+        },
+        "post_refactor_command_id": {"type": "string", "minLength": 1},
+        "exit_predicate": {
+          "enum": ["slice-ready", "implementation-candidate", "implementation-complete"]
+        },
+        "recovery": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

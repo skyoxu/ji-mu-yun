@@ -1,0 +1,38 @@
+2026-08-08T17:05:57.468469Z ERROR codex_core::tools::router: error=server must be provided
+2026-08-08T17:06:15.940091Z ERROR codex_core::tools::router: error=resources/read failed: unknown MCP server 'x'
+2026-08-08T17:07:00.676785Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.2 seconds
+Output:
+At line:2 char:10
++ py -3 - <<'PY'
++          ~
+Missing file specification after redirection operator.
+At line:2 char:9
++ py -3 - <<'PY'
++         ~
+The '<' operator is reserved for future use.
+At line:2 char:10
++ py -3 - <<'PY'
++          ~
+The '<' operator is reserved for future use.
+At line:5 char:12
++ with open(p,encoding='utf-8') as f: d=json.load(f)
++            ~
+Missing argument in parameter list.
+At line:6 char:4
++ for i,e in enumerate(d['entries']): print(i, e['originalPath'], e['sn ...
++    ~
+Missing opening '(' after keyword 'for'.
+At line:6 char:6
++ for i,e in enumerate(d['entries']): print(i, e['originalPath'], e['sn ...
++      ~
+Missing argument in parameter list.
+At line:6 char:44
++ for i,e in enumerate(d['entries']): print(i, e['originalPath'], e['sn ...
++                                            ~
+Missing argument in parameter list.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingFileSpecification
+ 
+
+2026-08-08T17:07:16.103355Z ERROR codex_core::tools::router: error=server must be provided

@@ -1,0 +1,824 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.implementation-contract.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "source_revision": "sha256:b4a3368866b29b8e037f065049fbfc009c4ca9cd99585e3108de82a3b8aad404",
+  "profile": "self-hosted",
+  "command_registry": "command-registry.v1.json",
+  "backend": {
+    "hidden_state": false
+  },
+  "adapter_bridge": {
+    "runner": "tools/single_maintainer_tdd_bridge.py",
+    "mode": "current-session-four-phase",
+    "parallel_owners": false,
+    "external_requirement_injection": false
+  },
+  "protocol_artifacts": {
+    "context_layout": "context/<capsule-id>",
+    "attempt_layout": "attempts/<attempt-id>"
+  },
+  "authority": {
+    "authority_manifest": "authority-manifest.v1.json"
+  },
+  "slices": [
+    {
+      "slice_id": "BROH-S0",
+      "title": "Prepare dry-run and binding preview",
+      "requirement_ids": [
+        "BROH-001",
+        "BROH-005"
+      ],
+      "acceptance_ids": [
+        "BROH-A01",
+        "BROH-A02",
+        "BROH-A08"
+      ],
+      "source_refs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+      ],
+      "depends_on": [],
+      "planned_new_files": [],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+        ],
+        "tests": [
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "documentation": [
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+      ],
+      "forbidden_changes": [
+        "PhaseA.Platform/**",
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**",
+        "logs/reviews/**",
+        "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"
+      ],
+      "execution_read_set": [
+        "AGENTS.md",
+        "README.md",
+        "authority-manifest.v1.json",
+        "baseline-and-scope.v1.json",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "dependency_closure": [
+        ".agents/skills/run-phase-bootstrap-review/**",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "broh-s0-target-test",
+        "test_selector": "test_broh_s0_prepare_dry_run_contract",
+          "expected_exit": "nonzero",
+          "expected_failure_family": "prepare-diagnostic-predicate-absent",
+          "expected_failure_ids": [
+            "BROH-A01"
+          ]
+        },
+        "green": {
+          "command_id": "broh-s0-target-test",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "plan-validator-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "post_refactor_command_id": "broh-s0-slice-validation",
+      "exit_predicate": "slice-ready",
+      "recovery": "Preserve failed slice evidence, repair only the declared Bootstrap files, and rerun the slice predicate before routing onward."
+    },
+    {
+      "slice_id": "BROH-S1",
+      "title": "Context, planned-file, and freeze-window diagnostics",
+      "requirement_ids": [
+        "BROH-002",
+        "BROH-003",
+        "BROH-005"
+      ],
+      "acceptance_ids": [
+        "BROH-A03",
+        "BROH-A04",
+        "BROH-A05",
+        "BROH-A08"
+      ],
+      "source_refs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+      ],
+      "depends_on": [
+        "BROH-S0"
+      ],
+      "planned_new_files": [],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+        ],
+        "tests": [
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "documentation": [
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+      ],
+      "forbidden_changes": [
+        "PhaseA.Platform/**",
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**",
+        "logs/reviews/**",
+        "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"
+      ],
+      "execution_read_set": [
+        "AGENTS.md",
+        "README.md",
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "dependency_closure": [
+        ".agents/skills/run-phase-bootstrap-review/**",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "broh-s1-target-test",
+        "test_selector": "test_broh_s1_context_and_planned_file_diagnostics",
+          "expected_exit": "nonzero",
+          "expected_failure_family": "context-window-diagnostic-absent",
+          "expected_failure_ids": [
+            "BROH-A03",
+            "BROH-A05"
+          ]
+        },
+        "green": {
+          "command_id": "broh-s1-target-test",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "plan-validator-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "post_refactor_command_id": "broh-s1-slice-validation",
+      "exit_predicate": "slice-ready",
+      "recovery": "Preserve diagnostic failures and repair only the declared context and freeze-window behavior."
+    },
+    {
+      "slice_id": "BROH-S2",
+      "title": "Transport, stale-attempt, and Windows heartbeat recovery",
+      "requirement_ids": [
+        "BROH-004",
+        "BROH-005"
+      ],
+      "acceptance_ids": [
+        "BROH-A06",
+        "BROH-A07",
+        "BROH-A08"
+      ],
+      "source_refs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py"
+      ],
+      "depends_on": [
+        "BROH-S0",
+        "BROH-S1"
+      ],
+      "planned_new_files": [],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py"
+        ],
+        "tests": [
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "documentation": [
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          "docs/standards/bootstrap-review-control-plane.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "forbidden_changes": [
+        "PhaseA.Platform/**",
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**",
+        "logs/reviews/**",
+        "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"
+      ],
+      "execution_read_set": [
+        "AGENTS.md",
+        "README.md",
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md"
+      ],
+      "dependency_closure": [
+        ".agents/skills/run-phase-bootstrap-review/**",
+        "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "broh-s2-target-test",
+        "test_selector": "test_broh_s2_windows_transport_heartbeat_recovery",
+          "expected_exit": "nonzero",
+          "expected_failure_family": "transport-heartbeat-stop-loss-absent",
+          "expected_failure_ids": [
+            "BROH-A07"
+          ]
+        },
+        "green": {
+          "command_id": "broh-s2-target-test",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "plan-validator-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "post_refactor_command_id": "broh-s2-slice-validation",
+      "exit_predicate": "slice-ready",
+      "recovery": "Preserve process events and failed attempts, use append-only recovery evidence, and never rewrite historical review output."
+    },
+    {
+      "slice_id": "BROH-S3",
+      "title": "Reviewer read boundary and exact evidence reliability",
+      "requirement_ids": [
+        "BROH-005",
+        "BROH-006",
+        "BROH-007"
+      ],
+      "acceptance_ids": [
+        "BROH-A08",
+        "BROH-A09",
+        "BROH-A10",
+        "BROH-A11",
+        "BROH-A12"
+      ],
+      "source_refs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "depends_on": [
+        "BROH-S0",
+        "BROH-S2"
+      ],
+      "planned_new_files": [],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+        ],
+        "tests": [
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "documentation": [
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          "docs/standards/bootstrap-review-control-plane.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "forbidden_changes": [
+        "PhaseA.Platform/**",
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**",
+        "logs/reviews/**",
+        "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"
+      ],
+      "execution_read_set": [
+        "AGENTS.md",
+        "README.md",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md"
+      ],
+      "dependency_closure": [
+        ".agents/skills/run-phase-bootstrap-review/**",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "broh-s3-target-test",
+        "test_selector": "test_broh_s3_read_boundary_and_exact_evidence",
+          "expected_exit": "nonzero",
+          "expected_failure_family": "reviewer-boundary-evidence-absent",
+          "expected_failure_ids": [
+            "BROH-A09",
+            "BROH-A11"
+          ]
+        },
+        "green": {
+          "command_id": "broh-s3-target-test",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "plan-validator-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "post_refactor_command_id": "broh-s3-slice-validation",
+      "exit_predicate": "slice-ready",
+      "recovery": "Preserve rejected evidence bytes and retry only the affected transport or validation path."
+    },
+    {
+      "slice_id": "BROH-S4",
+      "title": "Acceptance-owned review requirement and risk routing",
+      "requirement_ids": [
+        "BROH-008",
+        "BROH-009",
+        "BROH-010",
+        "BROH-011",
+        "BROH-012",
+        "BROH-016",
+        "BROH-021"
+      ],
+      "acceptance_ids": [
+        "BROH-A13",
+        "BROH-A14",
+        "BROH-A15",
+        "BROH-A16",
+        "BROH-A17",
+        "BROH-A18",
+        "BROH-A19",
+        "BROH-A20",
+        "BROH-A21",
+        "BROH-A22",
+        "BROH-A23",
+        "BROH-A24",
+        "BROH-A31",
+        "BROH-A32",
+        "BROH-A40",
+        "BROH-A41"
+      ],
+      "source_refs": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md"
+      ],
+      "depends_on": [
+        "BROH-S0",
+        "BROH-S1",
+        "BROH-S2",
+        "BROH-S3"
+      ],
+      "planned_new_files": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py",
+        ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py"
+      ],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py",
+          ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json",
+          ".agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json"
+        ],
+        "tests": [
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py"
+        ],
+        "documentation": [
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          "docs/standards/bootstrap-review-control-plane.md",
+          "docs/architecture/ADR_INDEX_PHASE.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/review_requirement.py",
+        ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-semantic-review-requirement-decision.v1.schema.json",
+        ".agents/skills/run-refactor-implementation-acceptance/policies/semantic-review-trigger-policy.v1.json",
+        ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+        "docs/standards/bootstrap-review-control-plane.md",
+        "docs/architecture/ADR_INDEX_PHASE.md"
+      ],
+      "forbidden_changes": [
+        "PhaseA.Platform/**",
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**",
+        "logs/reviews/**",
+        "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**",
+        "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/**"
+      ],
+      "execution_read_set": [
+        "AGENTS.md",
+        "README.md",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md"
+      ],
+      "dependency_closure": [
+        ".agents/skills/run-refactor-implementation-acceptance/**",
+        ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "broh-s4-target-test",
+        "test_selector": "test_broh_s4_acceptance_owns_review_requirement",
+          "expected_exit": "nonzero",
+          "expected_failure_family": "acceptance-review-requirement-absent",
+          "expected_failure_ids": [
+            "BROH-A13",
+            "BROH-A16"
+          ]
+        },
+        "green": {
+          "command_id": "broh-s4-target-test",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "acceptance-bootstrap-integration-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "plan-validator-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "post_refactor_command_id": "broh-s4-slice-validation",
+      "exit_predicate": "slice-ready",
+      "recovery": "Preserve legacy decision evidence, add new producer outputs, and route profile/schema drift to VDD repair."
+    },
+    {
+      "slice_id": "BROH-S5",
+      "title": "Bounded re-entry and legacy compatibility",
+      "requirement_ids": [
+        "BROH-013",
+        "BROH-016",
+        "BROH-017",
+        "BROH-024"
+      ],
+      "acceptance_ids": [
+        "BROH-A25",
+        "BROH-A26",
+        "BROH-A31",
+        "BROH-A32",
+        "BROH-A33",
+        "BROH-A34",
+        "BROH-A45",
+        "BROH-A46"
+      ],
+      "source_refs": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+      ],
+      "depends_on": [
+        "BROH-S4"
+      ],
+      "planned_new_files": [],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py"
+        ],
+        "tests": [
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_reentry_decline.py"
+        ],
+        "documentation": [
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_reentry_decline.py",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md"
+      ],
+      "forbidden_changes": [
+        "PhaseA.Platform/**",
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**",
+        "logs/reviews/**",
+        "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**",
+        "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/**"
+      ],
+      "execution_read_set": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+        "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md"
+      ],
+      "dependency_closure": [
+        ".agents/skills/run-refactor-implementation-acceptance/**",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md",
+        "docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "broh-s5-target-test",
+        "test_selector": "test_broh_s5_bounded_reentry_compatibility",
+          "expected_exit": "nonzero",
+          "expected_failure_family": "bounded-reentry-compatibility-absent",
+          "expected_failure_ids": [
+            "BROH-A25",
+            "BROH-A33"
+          ]
+        },
+        "green": {
+          "command_id": "broh-s5-target-test",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "acceptance-review-requirement-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "plan-validator-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "post_refactor_command_id": "broh-s5-slice-validation",
+      "exit_predicate": "slice-ready",
+      "recovery": "Keep historical bytes immutable, add legacy adapters only, and stop on lineage or profile drift."
+    },
+    {
+      "slice_id": "BROH-S6",
+      "title": "Bootstrap-owned concurrent discovery wave and telemetry",
+      "requirement_ids": [
+        "BROH-014",
+        "BROH-015",
+        "BROH-016",
+        "BROH-020",
+        "BROH-021",
+        "BROH-022",
+        "BROH-023",
+        "BROH-024"
+      ],
+      "acceptance_ids": [
+        "BROH-A27",
+        "BROH-A28",
+        "BROH-A29",
+        "BROH-A30",
+        "BROH-A31",
+        "BROH-A32",
+        "BROH-A39",
+        "BROH-A40",
+        "BROH-A41",
+        "BROH-A42",
+        "BROH-A43",
+        "BROH-A44",
+        "BROH-A45",
+        "BROH-A46"
+      ],
+      "source_refs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "depends_on": [
+        "BROH-S4",
+        "BROH-S5"
+      ],
+      "planned_new_files": [],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py"
+        ],
+        "tests": [
+          ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+        ],
+        "documentation": [
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          "docs/standards/bootstrap-review-control-plane.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "forbidden_changes": [
+        "PhaseA.Platform/**",
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**",
+        "logs/reviews/**",
+        "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"
+      ],
+      "execution_read_set": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md"
+      ],
+      "dependency_closure": [
+        ".agents/skills/run-phase-bootstrap-review/**",
+        "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+        "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "broh-s6-target-test",
+        "test_selector": "test_broh_s6_concurrent_discovery_wave",
+          "expected_exit": "nonzero",
+          "expected_failure_family": "discovery-wave-absent",
+          "expected_failure_ids": [
+            "BROH-A27",
+            "BROH-A29"
+          ]
+        },
+        "green": {
+          "command_id": "broh-s6-target-test",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "skill-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "plan-validator-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "post_refactor_command_id": "broh-s6-slice-validation",
+      "exit_predicate": "slice-ready",
+      "recovery": "Retry only failed transport roles, preserve successful outputs, and stop on isolation, round, or high-cost boundary drift."
+    },
+    {
+      "slice_id": "BROH-S7",
+      "title": "Implementation terminal predicate and cross-skill composition",
+      "requirement_ids": [
+        "BROH-018",
+        "BROH-019"
+      ],
+      "acceptance_ids": [
+        "BROH-A35",
+        "BROH-A36",
+        "BROH-A37",
+        "BROH-A38"
+      ],
+      "source_refs": [
+        ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py"
+      ],
+      "depends_on": [
+        "BROH-S4",
+        "BROH-S5",
+        "BROH-S6"
+      ],
+      "planned_new_files": [],
+      "allowed_changes": {
+        "production": [
+          "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py"
+        ],
+        "tests": [
+          "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/tests/test_validate_implementation.py"
+        ],
+        "documentation": [
+          "execution-plans/2026-08-07-bootstrap-review-operability-hardening/95-implementation-evolution-and-completion-report.md",
+          ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md"
+        ]
+      },
+      "execution_snapshot_paths": [
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py",
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/tests/test_validate_implementation.py",
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/95-implementation-evolution-and-completion-report.md",
+        ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md"
+      ],
+      "forbidden_changes": [
+        "PhaseA.Platform/**",
+        "runtime/phase-a/**",
+        "logs/phase-a-innernet/**",
+        "knowledge/**",
+        "logs/reviews/**",
+        "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**",
+        "execution-plans/2026-08-06-quick-dev-phase-regression-repair-mode/**"
+      ],
+      "execution_read_set": [
+        "AGENTS.md",
+        "README.md",
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/implementation-contract.v1.json",
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_plan.py",
+        ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md"
+      ],
+      "dependency_closure": [
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/**",
+        ".agents/skills/quick-dev-tdd-adapter/**",
+        ".agents/skills/run-refactor-implementation-acceptance/**"
+      ],
+      "tdd": {
+        "red": {
+          "command_id": "broh-s7-target-test",
+        "test_selector": "test_terminal_rejects_incomplete_consumer_closure",
+          "expected_exit": "nonzero",
+          "expected_failure_family": "implementation-terminal-predicate-absent",
+          "expected_failure_ids": [
+            "BROH-A35",
+            "BROH-A36"
+          ]
+        },
+        "green": {
+          "command_id": "broh-s7-target-test",
+          "expected_exit": "zero"
+        },
+        "refactor": {
+          "invocations": [
+            {
+              "command_id": "plan-validator-tests",
+              "expected_exit": "zero"
+            },
+            {
+              "command_id": "composition-fixtures-tests",
+              "expected_exit": "zero"
+            }
+          ]
+        }
+      },
+      "post_refactor_command_id": "terminal-implementation-validation",
+      "exit_predicate": "implementation-complete",
+      "recovery": "Keep implementation-complete separate from acceptance-passed, preserve failed composition evidence, and route contract drift to VDD repair."
+    }
+  ],
+  "terminal_validation": "py -3 -B execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py",
+  "authorizes": []
+}

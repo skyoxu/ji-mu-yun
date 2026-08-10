@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "bootstrap-process-result.v1",
+  "attemptId": "access-probe-20260808T161809-79964300",
+  "pid": null,
+  "exitCode": null,
+  "completedAt": "2026-08-08T16:18:10.011305Z",
+  "launchError": "[WinError 2] 系统找不到指定的文件。"
+}

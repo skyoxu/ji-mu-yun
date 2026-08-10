@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/review-finding.v1.schema.json",
+  "title": "Review Finding v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "findingId",
+    "sourceReviewers",
+    "routeVersion",
+    "artifactKind",
+    "artifact",
+    "startLine",
+    "endLine",
+    "exactEvidence",
+    "triggerInput",
+    "requiredState",
+    "badOutcome",
+    "contextRead",
+    "existingGuardAnalysis",
+    "proposedSeverity",
+    "severityRationale",
+    "confidence",
+    "dimension",
+    "authorityRevision",
+    "evidenceFingerprint",
+    "status"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "review-finding.v1" },
+    "findingId": { "type": "string", "pattern": "^[A-Z][A-Z0-9-]{4,63}$" },
+    "sourceReviewers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "blind_hunter",
+          "edge_case_hunter",
+          "acceptance_auditor",
+          "document_reviewer",
+          "security_reviewer",
+          "manual_reviewer"
+        ]
+      }
+    },
+    "routeVersion": { "type": "string", "minLength": 1 },
+    "artifactKind": { "enum": ["code", "document", "plan", "schema", "fixture"] },
+    "artifact": { "type": "string", "minLength": 1 },
+    "startLine": { "type": "integer", "minimum": 1 },
+    "endLine": { "type": "integer", "minimum": 1 },
+    "exactEvidence": { "type": "string", "minLength": 1 },
+    "triggerInput": { "type": "string", "minLength": 1 },
+    "requiredState": { "type": "string", "minLength": 1 },
+    "badOutcome": { "type": "string", "minLength": 1 },
+    "contextRead": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "existingGuardAnalysis": { "type": "string", "minLength": 1 },
+    "maintenanceRiskClass": {
+      "enum": [
+        "runtime_product_risk",
+        "multi_maintainer_concurrency",
+        "external_requirement_injection"
+      ]
+    },
+    "verifierRiskClass": {
+      "enum": [
+        "standard",
+        "authority_control",
+        "lifecycle_control",
+        "protected_path",
+        "shared_entrypoint"
+      ]
+    },
+    "proposedSeverity": { "enum": ["P0", "P1", "P2"] },
+    "reportedSeverity": { "enum": ["P0", "P1", "P2"] },
+    "severityAdjustment": {
+      "enum": ["unchanged", "P0_to_P1", "P1_to_P2"]
+    },
+    "severityRationale": { "type": "string", "minLength": 1 },
+    "confidence": { "type": "number", "minimum": 0.8, "maximum": 1 },
+    "dimension": { "enum": ["code", "document", "plan", "security", "acceptance", "edge-case"] },
+    "authorityRevision": { "type": "string", "minLength": 1 },
+    "evidenceFingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "status": { "enum": ["candidate", "confirmed", "advisory", "refuted", "unverified"] },
+    "unverifiedClass": { "enum": ["security", "data_loss", "other"] },
+    "unverifiedDisposition": { "enum": ["blocking", "manual_pause"] },
+    "authorityOwner": { "type": "string", "minLength": 1 },
+    "consumer": { "type": "string", "minLength": 1 },
+    "validatorRef": { "type": "string", "minLength": 1 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "artifactKind": { "enum": ["document", "plan", "schema", "fixture"] } } },
+      "then": { "required": ["authorityOwner", "consumer", "validatorRef"] }
+    },
+    {
+      "if": { "properties": { "proposedSeverity": { "enum": ["P0", "P1"] } } },
+      "then": { "properties": { "status": { "enum": ["candidate", "confirmed", "refuted", "unverified"] } } }
+    },
+    {
+      "if": { "properties": { "proposedSeverity": { "const": "P2" } } },
+      "then": { "properties": { "status": { "enum": ["candidate", "advisory", "refuted"] } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "unverified" } }, "required": ["status"] },
+      "then": { "required": ["unverifiedClass", "unverifiedDisposition"] },
+      "else": {
+        "not": {
+          "anyOf": [
+            { "required": ["unverifiedClass"] },
+            { "required": ["unverifiedDisposition"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "unverifiedClass": { "enum": ["security", "data_loss"] } }, "required": ["unverifiedClass"] },
+      "then": { "properties": { "unverifiedDisposition": { "const": "blocking" } } }
+    },
+    {
+      "if": { "properties": { "unverifiedClass": { "const": "other" } }, "required": ["unverifiedClass"] },
+      "then": { "properties": { "unverifiedDisposition": { "const": "manual_pause" } } }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "unverified" }, "dimension": { "const": "security" } },
+        "required": ["status", "dimension"]
+      },
+      "then": { "properties": { "unverifiedClass": { "const": "security" } } }
+    }
+  ]
+}

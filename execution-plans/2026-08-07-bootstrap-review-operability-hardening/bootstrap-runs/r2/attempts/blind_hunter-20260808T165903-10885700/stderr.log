@@ -1,0 +1,12 @@
+2026-08-08T17:01:19.875925Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.5 seconds
+Output:
+true : The term 'true' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the
+ spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ true
++ ~~~~
+    + CategoryInfo          : ObjectNotFound: (true:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+

@@ -1,0 +1,32 @@
+{
+  "authorizes": [],
+  "candidateIdentityHash": "sha256:e6520af33c05d48a23e864643b8d3e598fa03e54c2625e2e7b2157428390f222",
+  "decisionHash": "sha256:2b5dd8706861493545b8818d94853b3e5b6e2a998ab5a9209a721172d7496fb9",
+  "decisionStatus": "ready",
+  "decisionVersion": "v10",
+  "deterministicEvidenceHash": "sha256:23d04f67745e252ff834f3549a17312d9244bd506d1e4c4a247e564e91cc788f",
+  "inputHashes": {
+    "candidateIdentity": "sha256:e6520af33c05d48a23e864643b8d3e598fa03e54c2625e2e7b2157428390f222",
+    "deterministicEvidence": "sha256:23d04f67745e252ff834f3549a17312d9244bd506d1e4c4a247e564e91cc788f",
+    "policy": "sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868"
+  },
+  "maintainerIntent": "default",
+  "policyHash": "sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868",
+  "producer": "refactor-implementation-acceptance",
+  "profile": "bootstrap-skill-route",
+  "reasonCodes": [
+    "workflow_control_plane_changed"
+  ],
+  "requiredCompanionCapabilityExpectations": [
+    {
+      "capabilityId": "acceptance-inventory-attestation",
+      "capabilityVersion": "1.0",
+      "producerRole": "acceptance_auditor"
+    }
+  ],
+  "requirement": "required",
+  "requirementSources": [
+    "candidateIdentity.changedPaths"
+  ],
+  "schemaVersion": "acceptance-semantic-review-requirement-decision.v1"
+}

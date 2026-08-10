@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "bootstrap-review-cost-calibration.v1",
+  "calibrationId": "bootstrap-cost-calibration-legacy-v1",
+  "status": "promoted",
+  "sourceHistoryIndex": null,
+  "cohortDimensions": [
+    "reviewProfile",
+    "policyRevision",
+    "routeVersion",
+    "controlPlaneRevision",
+    "model",
+    "reasoningProfile",
+    "fullReviewRound",
+    "workloadBucket"
+  ],
+  "conservativeFallback": {
+    "basisSampleCount": 17,
+    "confidence": "low",
+    "tokenMultiplierP50": 0.8,
+    "tokenMultiplierP90": 1.6,
+    "minimumTotalTokensP50": 25000,
+    "minimumTotalTokensP90": 50000,
+    "tokensPerWallMinute": 15000,
+    "retryRisk": "medium"
+  },
+  "cohorts": [],
+  "authorizes": [],
+  "doesNotAuthorize": [
+    "plan-acceptance",
+    "implementation-acceptance",
+    "protected-handoff",
+    "release",
+    "commit",
+    "done"
+  ]
+}

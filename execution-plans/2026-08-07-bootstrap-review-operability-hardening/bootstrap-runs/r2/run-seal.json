@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "bootstrap-run-seal.v1",
+  "reviewId": "broh-acceptance-20260809-r2",
+  "inputHash": "sha256:c51d91f71a125ae9b891e0cb1510c78c544671b1c812df308c5f0a3cc43bf8ac",
+  "state": "abandoned",
+  "reason": "transport-capacity-and-orphan-controller-recovery-required",
+  "successor": null,
+  "sealedAt": "2026-08-08T17:31:50.410720Z"
+}

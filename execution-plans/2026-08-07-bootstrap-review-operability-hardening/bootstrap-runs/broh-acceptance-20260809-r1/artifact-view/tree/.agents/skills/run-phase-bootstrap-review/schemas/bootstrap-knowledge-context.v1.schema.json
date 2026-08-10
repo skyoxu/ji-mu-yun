@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.bootstrap-knowledge-context.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["accepted", "rejected"],
+  "properties": {
+    "accepted": {"type": "array"},
+    "rejected": {"type": "array"}
+  }
+}

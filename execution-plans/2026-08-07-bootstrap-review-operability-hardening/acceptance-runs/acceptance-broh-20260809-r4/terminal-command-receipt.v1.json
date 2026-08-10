@@ -1,0 +1,91 @@
+{
+  "authorizes": [],
+  "commandId": "terminal-implementation-validation",
+  "commandRegistryHash": "sha256:b4c6322d490c3e25f3b617d4085ed39ec86acf11d993e6b505b3ac7930228e85",
+  "environmentIdentity": {
+    "hash": "sha256:71b369fabe6f80ee505ec903075478930904d459966d1b1b44d1987a03fa0115",
+    "names": [
+      "APPDATA",
+      "DOTNET_ROOT",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOCALAPPDATA",
+      "PATH",
+      "PATHEXT",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 0,
+  "inputBindings": [
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/plan-state.v1.json",
+      "sha256": "sha256:9f04e4fe7acaf5110b16aa5e980374d2c5a648b923d9938a6d761e2758553b61"
+    },
+    {
+      "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/resume-state.v1.json",
+      "sha256": "sha256:97ba9f9c88221b8565dcdc14591ee2fea5e1bc7ac93c8d674abbaf97e61e58cd"
+    }
+  ],
+  "inputBindingsHash": "sha256:eaf3dceafcb3b78a8db4bb49e3fc8603cee21d47b3df8a34a1faaa856568f876",
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py"
+    ],
+    "commandId": "terminal-implementation-validation",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 1800
+  },
+  "invocationHash": "sha256:502b19fd63d5d27732831a82f0b5598b3e1732d71bc9ce74633c5de884f681b1",
+  "processResult": {
+    "commandId": "terminal-implementation-validation",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"authority_root\": \"sha256:b696183b263ef990e2cd339a1120294804b052636a7c5959e08793e272e44e79\", \"authorizes\": [], \"candidate_hash\": \"sha256:8a236ae9228c13d68a25991b7ec66ffa0cbc5ce36ac8bd2d27964be79b9b61ef\", \"closure_definition_hash\": \"sha256:530f9f4c9d04b6ca0cbcb36ef645a5e395a366eacdbc8702d0b9ad28e1fbee3e\", \"contract_hash\": \"sha256:123284bcfb22c54de333bf0805f556e903e208ded4f0aaaaaa86b014d7115584\", \"does_not_authorize\": [\"acceptance-passed\", \"commit\", \"release\", \"archived\"], \"errors\": [], \"predicate\": \"implementation-complete\", \"predicate_input_root\": \"sha256:8a236ae9228c13d68a25991b7ec66ffa0cbc5ce36ac8bd2d27964be79b9b61ef\", \"schema_version\": \"jimuyun.bootstrap-review-operability-hardening.implementation-validation.v1\", \"slice_id\": \"BROH-S7\", \"status\": \"pass\", \"terminalPredicateVersion\": \"v6\", \"validation_snapshot\": {\"authority_root\": \"sha256:b696183b263ef990e2cd339a1120294804b052636a7c5959e08793e272e44e79\", \"candidate_hash\": \"sha256:8a236ae9228c13d68a25991b7ec66ffa0cbc5ce36ac8bd2d27964be79b9b61ef\", \"closure_definition_hash\": \"sha256:530f9f4c9d04b6ca0cbcb36ef645a5e395a366eacdbc8702d0b9ad28e1fbee3e\", \"predicate_input_root\": \"sha256:8a236ae9228c13d68a25991b7ec66ffa0cbc5ce36ac8bd2d27964be79b9b61ef\", \"validator_root\": \"sha256:87fec39a49b97e8fc3fcc4dbee225b6646aa5c7d4c0149611625800c78c2102f\", \"validator_version\": \"broh-validator-v1\"}, \"validator_root\": \"sha256:87fec39a49b97e8fc3fcc4dbee225b6646aa5c7d4c0149611625800c78c2102f\", \"validator_version\": \"broh-validator-v1\"}\r\n",
+    "stdoutSha256": "sha256:da0a6f87e3f89942007e1efdc5170b6673682a946ada337a6a839a75e9771151"
+  },
+  "processResultHash": "sha256:0d80b6a31f074517e8f3f95b7b5083d1139d570b0f4b7d279ef077788925cba7",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

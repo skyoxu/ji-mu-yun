@@ -1,0 +1,17 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "-3",
+        "-B",
+        "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py"
+      ],
+      "cwd": ".",
+      "executable": "py",
+      "id": "terminal-implementation-validation",
+      "shell": false,
+      "timeout_seconds": 1800
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}

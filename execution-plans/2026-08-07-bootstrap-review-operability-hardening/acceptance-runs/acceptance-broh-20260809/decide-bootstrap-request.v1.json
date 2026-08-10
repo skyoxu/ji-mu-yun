@@ -1,0 +1,9 @@
+{
+  "repository_root": "C:/jimuyun",
+  "prepared_run_input": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/acceptance-runs/acceptance-broh-20260809/prepared-run-input.v1.json",
+  "deterministic_evidence": {
+    "path": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/acceptance-runs/acceptance-broh-20260809/deterministic-result.v1.json",
+    "sha256": "sha256:27554f4fe0e24a5294352992834c795c40e2dd972fc388ed26a6263561520332"
+  },
+  "maintainer_intent": "default"
+}

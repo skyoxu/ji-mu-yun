@@ -1,0 +1,40 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "Round 4 repair baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:431d7082f9116b3fd685c2c9e8dc0a06d2f5cecc6aca207cb67bd13e8b8d2493"
+    },
+    {
+      "inclusion_reason": "Round 4 repair baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:cddd21dc33253b53de079223fc96d302d16ce47fd4ea61e2a3829fcd1e81e546"
+    },
+    {
+      "inclusion_reason": "Round 4 repair baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:1c370e91ee201f32799b12d246419862ce47dcb9f2addff052f32e1f97db45d5"
+    },
+    {
+      "inclusion_reason": "Round 4 repair baseline",
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5da9a35706778bcbe942363c8186e6c1e9a58efe25ebe0fe4dc4058fbb3b6032"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

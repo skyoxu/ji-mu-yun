@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-review-round-entry-decision.v1.schema.json",
+  "title": "Bootstrap Review Round Entry Decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "lineageFamilyId",
+    "entryRound",
+    "reason",
+    "predecessorRun",
+    "predecessorInputHash",
+    "triggerFindingIds",
+    "scopeDelta",
+    "highRiskBoundaryArtifacts",
+    "candidateBindingHash",
+    "authorizes"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-review-round-entry-decision.v1"},
+    "lineageFamilyId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "entryRound": {"const": 3},
+    "reason": {
+      "enum": [
+        "novel_p0_p1",
+        "authority_context_graph_changed",
+        "high_risk_boundary_changed"
+      ]
+    },
+    "predecessorRun": {"type": "string", "minLength": 1},
+    "predecessorInputHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "triggerFindingIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "scopeDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["addedArtifacts", "changedArtifacts", "removedArtifacts"],
+      "properties": {
+        "addedArtifacts": {"$ref": "#/$defs/pathArray"},
+        "changedArtifacts": {"$ref": "#/$defs/pathArray"},
+        "removedArtifacts": {"$ref": "#/$defs/pathArray"}
+      }
+    },
+    "highRiskBoundaryArtifacts": {"$ref": "#/$defs/pathArray"},
+    "candidateBindingHash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorizes": {"type": "array", "maxItems": 0}
+  },
+  "$defs": {
+    "pathArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

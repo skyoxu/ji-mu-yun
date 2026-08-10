@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "bootstrap-process-leases.v1",
+  "reviewId": "broh-acceptance-20260809-r2",
+  "inputHash": "sha256:c51d91f71a125ae9b891e0cb1510c78c544671b1c812df308c5f0a3cc43bf8ac",
+  "leases": [
+    {
+      "operationId": "model-probe:discovery:blind_hunter:gpt-5.6-terra",
+      "role": "model_probe",
+      "pid": 908,
+      "processIdentity": "windows-filetime:134306818973969904",
+      "state": "completed",
+      "acquiredAt": "2026-08-08T16:58:17.398006Z",
+      "updatedAt": "2026-08-08T16:58:49.038279Z"
+    },
+    {
+      "operationId": "reviewer:blind_hunter",
+      "role": "blind_hunter",
+      "pid": 6636,
+      "processIdentity": "windows-filetime:134306831816402871",
+      "state": "failed",
+      "acquiredAt": "2026-08-08T17:19:41.634549Z",
+      "updatedAt": "2026-08-08T17:21:47.015230Z"
+    },
+    {
+      "operationId": "reviewer:edge_case_hunter",
+      "role": "edge_case_hunter",
+      "pid": 6708,
+      "processIdentity": "windows-filetime:134306832298592103",
+      "state": "failed",
+      "acquiredAt": "2026-08-08T17:20:29.856942Z",
+      "updatedAt": "2026-08-08T17:27:42.687973Z",
+      "note": "Codex reviewer reported failure: The required Artifact View review could not be completed because not every one of the 63 frozen snapshot artifacts was read before the review session ended."
+    },
+    {
+      "operationId": "reviewer:acceptance_auditor",
+      "role": "acceptance_auditor",
+      "pid": 5064,
+      "processIdentity": "windows-filetime:134306832299491305",
+      "state": "failed",
+      "acquiredAt": "2026-08-08T17:20:29.950949Z",
+      "updatedAt": "2026-08-08T17:20:52.388387Z"
+    }
+  ]
+}

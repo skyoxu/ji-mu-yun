@@ -1,0 +1,28 @@
+{
+  "authorizes": [],
+  "candidateIdentityHash": "sha256:d651dd9619844d10a1c44b97bf980f6cd7d158777bffd6e66746983d8cfa0662",
+  "decisionHash": "sha256:261da5eeb79096b927a369f175cff080fc5cded0a7279cb5c34f446f9be977aa",
+  "decisionStatus": "blocked",
+  "decisionVersion": "v10",
+  "deterministicEvidenceHash": "sha256:f5d11769e8ee61681d29930ef24789bac36731b4c86d096fd05ef625823269e6",
+  "inputHashes": {
+    "candidateIdentity": "sha256:d651dd9619844d10a1c44b97bf980f6cd7d158777bffd6e66746983d8cfa0662",
+    "deterministicEvidence": "sha256:f5d11769e8ee61681d29930ef24789bac36731b4c86d096fd05ef625823269e6",
+    "policy": "sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868"
+  },
+  "maintainerIntent": "default",
+  "policyHash": "sha256:9409c688b1823dcfbcdec2d760f0f7448b9d8e72e826ce03f28c83ee123f8868",
+  "producer": "refactor-implementation-acceptance",
+  "profile": null,
+  "reasonCodes": [
+    "deterministic_evidence_incomplete",
+    "workflow_control_plane_changed"
+  ],
+  "requiredCompanionCapabilityExpectations": [],
+  "requirement": null,
+  "requirementSources": [
+    "deterministicEvidence.status",
+    "candidateIdentity.changedPaths"
+  ],
+  "schemaVersion": "acceptance-semantic-review-requirement-decision.v1"
+}

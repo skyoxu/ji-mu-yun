@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "bootstrap-authority-root-registry.v1",
+  "registryId": "bootstrap-authority-roots.v1",
+  "roots": [
+    {
+      "rootId": "successor-policy-root.v1",
+      "authorityKind": "successor-policy",
+      "authorizedSubjects": ["repository-operator"],
+      "allowedConsumers": ["repository-maintenance-tdd-adapter-plan-reentry"],
+      "allowedScopes": ["plan-reentry"],
+      "runnerIdentity": null,
+      "allowedExecutables": []
+    },
+    {
+      "rootId": "p2-owner-root.v1",
+      "authorityKind": "p2-owner",
+      "authorizedSubjects": ["bootstrap-operator"],
+      "allowedConsumers": ["bootstrap-p2-disposition"],
+      "allowedScopes": ["expiry-or-authority-change", "manual-review"],
+      "runnerIdentity": null,
+      "allowedExecutables": []
+    },
+    {
+      "rootId": "p2-command-root.v1",
+      "authorityKind": "p2-command",
+      "authorizedSubjects": ["bootstrap-operator"],
+      "allowedConsumers": ["bootstrap-p2-disposition"],
+      "allowedScopes": ["p2-recheck", "p2-closure"],
+      "runnerIdentity": "bootstrap-p2-runner.v1",
+      "allowedExecutables": ["py", "python", "python3"]
+    }
+  ],
+  "authorizes": [],
+  "doesNotAuthorize": ["plan-ready", "slice-ready", "bootstrap-review", "implementation-accepted", "protected-handoff", "release-ready"]
+}

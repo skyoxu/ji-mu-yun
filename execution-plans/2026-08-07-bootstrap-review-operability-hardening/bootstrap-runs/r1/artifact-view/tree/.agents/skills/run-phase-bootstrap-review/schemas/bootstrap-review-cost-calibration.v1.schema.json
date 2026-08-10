@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-review-cost-calibration.v1.schema.json",
+  "title": "Bootstrap Review Cost Calibration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "calibrationId", "status", "sourceHistoryIndex", "cohortDimensions", "conservativeFallback", "cohorts", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-review-cost-calibration.v1"},
+    "calibrationId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "status": {"enum": ["candidate", "promoted"]},
+    "sourceHistoryIndex": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/hash"}}
+    },
+    "cohortDimensions": {
+      "type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true,
+      "items": {"enum": ["reviewProfile", "policyRevision", "routeVersion", "controlPlaneRevision", "model", "reasoningProfile", "fullReviewRound", "workloadBucket"]}
+    },
+    "conservativeFallback": {"$ref": "#/$defs/statistics"},
+    "cohorts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["cohortId", "match", "statistics"],
+        "properties": {
+          "cohortId": {"type": "string", "minLength": 1},
+          "match": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reviewProfile", "policyRevision", "routeVersion", "controlPlaneRevision", "model", "reasoningProfile", "fullReviewRound", "workloadBucket"],
+            "properties": {
+              "reviewProfile": {"type": "string", "pattern": "^review-policy://[a-z0-9-]+/v[0-9]+$"},
+              "policyRevision": {"$ref": "#/$defs/hash"},
+              "routeVersion": {"type": "string", "minLength": 1},
+              "controlPlaneRevision": {"type": "string", "minLength": 1},
+              "model": {"type": "string", "minLength": 1},
+              "reasoningProfile": {"$ref": "#/$defs/hash"},
+              "fullReviewRound": {"type": "integer", "minimum": 1, "maximum": 3},
+              "workloadBucket": {"enum": ["small", "medium", "large"]}
+            }
+          },
+          "statistics": {"$ref": "#/$defs/statistics"}
+        }
+      }
+    },
+    "eligibleSampleCount": {"type": "integer", "minimum": 0},
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {"$ref": "#/$defs/exclusions"},
+    "generatedAt": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "statistics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basisSampleCount", "confidence", "tokenMultiplierP50", "tokenMultiplierP90", "minimumTotalTokensP50", "minimumTotalTokensP90", "tokensPerWallMinute", "retryRisk"],
+      "properties": {
+        "basisSampleCount": {"type": "integer", "minimum": 0},
+        "confidence": {"enum": ["low", "medium", "high"]},
+        "tokenMultiplierP50": {"type": "number", "exclusiveMinimum": 0},
+        "tokenMultiplierP90": {"type": "number", "exclusiveMinimum": 0},
+        "minimumTotalTokensP50": {"type": "integer", "minimum": 1},
+        "minimumTotalTokensP90": {"type": "integer", "minimum": 1},
+        "tokensPerWallMinute": {"type": "integer", "minimum": 1},
+        "retryRisk": {"enum": ["low", "medium", "high"]},
+        "observedTotalTokensP50": {"type": "integer", "minimum": 0},
+        "observedTotalTokensP90": {"type": "integer", "minimum": 0},
+        "observedWallSecondsP50": {"type": "number", "minimum": 0},
+        "observedWallSecondsP90": {"type": "number", "minimum": 0}
+      }
+    },
+    "exclusions": {"type": "array", "minItems": 6, "uniqueItems": true, "items": {"enum": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
+  }
+}

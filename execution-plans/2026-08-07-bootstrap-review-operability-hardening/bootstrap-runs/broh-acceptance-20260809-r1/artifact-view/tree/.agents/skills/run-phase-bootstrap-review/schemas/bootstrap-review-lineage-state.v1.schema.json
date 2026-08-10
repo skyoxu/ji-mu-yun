@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-review-lineage-state.v1.schema.json",
+  "title": "Bootstrap Review Lineage State v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "lineageFamilyId",
+    "semanticRoundsConsumed",
+    "consumedRoundNumbers",
+    "defaultFullReviewRoundLimit",
+    "hardFullReviewRoundLimit",
+    "nextFullReviewRound",
+    "state",
+    "runs",
+    "authorizes",
+    "lineageStateHash"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-review-lineage-state.v1"},
+    "lineageFamilyId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "semanticRoundsConsumed": {"type": "integer", "minimum": 0, "maximum": 3},
+    "consumedRoundNumbers": {
+      "type": "array",
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {"type": "integer", "minimum": 1, "maximum": 3}
+    },
+    "defaultFullReviewRoundLimit": {"const": 2},
+    "hardFullReviewRoundLimit": {"const": 3},
+    "nextFullReviewRound": {"type": ["integer", "null"], "minimum": 1, "maximum": 3},
+    "state": {"enum": ["available", "manual_pause"]},
+    "runs": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["runDirectory", "reviewId", "changeId", "fullReviewRound", "inputHash"],
+        "properties": {
+          "runDirectory": {"$ref": "#/$defs/path"},
+          "reviewId": {"$ref": "#/$defs/id"},
+          "changeId": {"$ref": "#/$defs/id"},
+          "fullReviewRound": {"type": "integer", "minimum": 1, "maximum": 3},
+          "inputHash": {"$ref": "#/$defs/hash"}
+        }
+      }
+    },
+    "authorizes": {"type": "array", "maxItems": 0},
+    "lineageStateHash": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    }
+  }
+}

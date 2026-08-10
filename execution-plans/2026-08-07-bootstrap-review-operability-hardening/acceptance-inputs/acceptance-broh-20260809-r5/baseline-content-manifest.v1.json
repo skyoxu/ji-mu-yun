@@ -1,0 +1,160 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f61e3d7f930989e3671713c2696658266e14ba0823bf81b297fbcabd105be167"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/schemas/plan-owned-implementation-contract.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ff22e3f57868ea4cb208cee4d2ab2b3ae30fc96b464dd2a791f78d361a78ea93"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:2cd47a11de61103f9d223cfc931ae182ceb882acf7181ce85b5f53db48aee8fe"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_artifact_composer.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:68c7f5883cd41ca4055fb60d94c8b77c9b203628b90c741f1a97f35eedfe5f72"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:4e6cd3354f4e6f4d35ec48310d1e6bde58f0640f7fa1e54b82dc3dd97f55b026"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:2d5e56647d1e1717e9e5d3fb50337f45df092a3dae3a19367aae22d143e1aab2"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7710e9ffff3e27366df4297df0d492f4b746d71d693e3a3f80e04eff863ecbd5"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/references/review-profiles.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:c21e76d810baa52165ee0301c9d5a84805f2f9be770819a875b35104a23bd027"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-repair-closure.v1.schema.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:be2b25a24e57465807f6c6f642b01376c6cec8fdf18db90ae4a3c171a86ad899"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d3ce55e4f81ad9b6105efb94c18e017eba3912ce80cab71a27c8b2e19e06b1d6"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:aa717dc6bf1ab8e5bc9981ed8f425f5cb2aca5dcad1a68a80526d54297a82556"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f872f61593f595209f706630865654820c06d78efae6edc83690ce8d8683d959"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5473774addf52017ffaf2ac28e560a51d63a0a29726a5afb320285e617a34c68"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:33d277763fd0fe6ffb9801bfcfbdf4e9bac2292489c9293c6257d076f134c51b"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/bootstrap_integration.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:0c143fced19c6f89c43bdf4a50d1c2a19adb1b347781a18cd2d10bfcee3e1548"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/manual_pause_closure.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ed7ac833edef0fbeab395a8493ee02f1a9fd5882a87fc41eb46fb200abd4aa05"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:094642ccbe2983bbb4d61f2b3d1d0253bdd31788e5b03049603e17f1bfd09426"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_package.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:e24a0a73ffc7c51b6730670e547898aa32151233214f2c9ea4e2654b2bb465c3"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:2525e32a9acf16cd8156c4973b03277c199f8804c90c15826fc9a593f9a9c6e8"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

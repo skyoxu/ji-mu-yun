@@ -1,0 +1,464 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening-command-registry.v1",
+  "commands": [
+    {
+      "id": "plan-validator",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_plan.py"
+        }
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "plan-validator-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        {
+          "type": "plan_path",
+          "value": "tools/tests"
+        },
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "skill-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "skill-whole-directory-validator",
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "acceptance-review-requirement-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 900,
+      "shell": false,
+      "planned_output": ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py"
+    },
+    {
+      "id": "acceptance-bootstrap-integration-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "bootstrap-wave-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "broh-s0-slice-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_slice.py"
+        },
+        "--slice",
+        "BROH-S0"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "broh-s1-slice-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_slice.py"
+        },
+        "--slice",
+        "BROH-S1"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "broh-s2-slice-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_slice.py"
+        },
+        "--slice",
+        "BROH-S2"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "broh-s3-slice-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_slice.py"
+        },
+        "--slice",
+        "BROH-S3"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "broh-s4-slice-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_slice.py"
+        },
+        "--slice",
+        "BROH-S4"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "broh-s5-slice-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_slice.py"
+        },
+        "--slice",
+        "BROH-S5"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "broh-s6-slice-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_slice.py"
+        },
+        "--slice",
+        "BROH-S6"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1200,
+      "shell": false
+    },
+    {
+      "id": "composition-fixtures-tests",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        {
+          "type": "plan_path",
+          "value": "tools/tests"
+        },
+        "-p",
+        "test_*.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "terminal-implementation-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_implementation.py"
+        }
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1800,
+      "shell": false,
+      "planned_output": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py"
+    },
+    {
+      "id": "terminal-validation",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/validate_implementation.py"
+        }
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 1800,
+      "shell": false,
+      "planned_output": "execution-plans/2026-08-07-bootstrap-review-operability-hardening/tools/validate_implementation.py"
+    },
+    {
+      "id": "broh-s0-target-test",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "-k",
+        "test_broh_s0_prepare_dry_run_contract"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60,
+      "shell": false
+    },
+    {
+      "id": "broh-s1-target-test",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "-k",
+        "test_broh_s1_context_and_planned_file_diagnostics"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60,
+      "shell": false
+    },
+    {
+      "id": "broh-s2-target-test",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "-k",
+        "test_broh_s2_windows_transport_heartbeat_recovery"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60,
+      "shell": false
+    },
+    {
+      "id": "broh-s3-target-test",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "-k",
+        "test_broh_s3_read_boundary_and_exact_evidence"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60,
+      "shell": false
+    },
+    {
+      "id": "broh-s4-target-test",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_review_requirement.py",
+        "-k",
+        "test_broh_s4_acceptance_owns_review_requirement"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60,
+      "shell": false
+    },
+    {
+      "id": "broh-s5-target-test",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_bootstrap_integration.py",
+        "-k",
+        "test_broh_s5_bounded_reentry_compatibility"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60,
+      "shell": false
+    },
+    {
+      "id": "broh-s6-target-test",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "-k",
+        "test_broh_s6_concurrent_discovery_wave"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60,
+      "shell": false
+    },
+    {
+      "id": "broh-s7-target-test",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-B",
+        {
+          "type": "plan_path",
+          "value": "tools/tests/test_validate_implementation.py"
+        },
+        "-k",
+        "test_terminal_rejects_incomplete_consumer_closure"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 60,
+      "shell": false
+    }
+  ],
+  "authorizes": []
+}

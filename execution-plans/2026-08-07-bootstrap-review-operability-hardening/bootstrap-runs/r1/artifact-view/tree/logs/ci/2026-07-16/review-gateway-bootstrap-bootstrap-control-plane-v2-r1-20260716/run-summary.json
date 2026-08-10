@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "bootstrap-run-summary.v1",
+  "runDirectory": "C:/jimuyun/logs/ci/2026-07-16/review-gateway-bootstrap-bootstrap-control-plane-v2-r1-20260716",
+  "reviewId": "bootstrap-control-plane-v2-r1-20260716",
+  "changeId": "bootstrap-control-plane-v2-hardening",
+  "fullReviewRound": 1,
+  "runExecutionState": "abandoned",
+  "runRelationship": "active",
+  "changeCycleState": "review-required",
+  "finalStatus": null,
+  "activeAttempts": [],
+  "acquiredLeases": [],
+  "nextAction": "use-successor-or-create-fresh-run",
+  "profileName": "bootstrap-skill-route",
+  "artifactCount": 43,
+  "reviewCostEstimate": {
+    "artifactCount": 43,
+    "totalBytes": 533862,
+    "reviewerReasoningUnits": 5,
+    "relativeWorkUnits": 215,
+    "highCost": true,
+    "estimatedInputTokens": {
+      "low": 100098,
+      "high": 166831
+    },
+    "estimatedTotalTokens": {
+      "p50": 533860,
+      "p90": 1067720
+    },
+    "estimatedWallMinutes": {
+      "p50": 35,
+      "p90": 71
+    },
+    "verifierLikelihood": "medium",
+    "retryRisk": "high",
+    "basisSampleCount": 17,
+    "confidence": "low"
+  },
+  "processEventCount": 0,
+  "tokenUsage": {
+    "recordCount": 0,
+    "total": 0
+  },
+  "signals": {
+    "retry": 0,
+    "stale": 0,
+    "accessProof": false
+  },
+  "evidenceHashes": {
+    "run-seal.json": "sha256:2d38daa12b9f45140a7c136497b1e26a4b30e92f6638288a85c7e9eb2ceca428",
+    "process-events.jsonl": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "generatedAt": "2026-07-16T14:14:43.358013Z"
+}

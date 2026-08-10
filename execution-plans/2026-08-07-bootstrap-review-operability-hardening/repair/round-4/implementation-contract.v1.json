@@ -1,0 +1,121 @@
+{
+  "schema_version": "jimuyun.vdd-repair.implementation-contract.v1",
+  "plan_id": "bootstrap-review-operability-hardening-round-4-repair",
+  "acceptance_target": "execution-plans/2026-08-07-bootstrap-review-operability-hardening",
+  "profile": "self-hosted",
+  "round": 4,
+  "test_revision": "round4-segment-receipt-v3",
+  "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+  "finding_set": "repair-findings.v1.json",
+  "predecessor_review": "../../bootstrap-runs/r2",
+  "command_registry": "command-registry.v1.json",
+  "backend": {"hidden_state": false},
+  "protocol_artifacts": {
+    "context_layout": "context/<capsule-id>",
+    "attempt_layout": "attempts/<attempt-id>"
+  },
+  "adapter_bridge": {
+    "runner": "tools/single_maintainer_tdd_bridge.py",
+    "mode": "current-session-four-phase",
+    "parallel_owners": false,
+    "external_requirement_injection": false
+  },
+  "authority": {
+    "authority_manifest": "authority-manifest.v1.json"
+  },
+  "slices": [
+    {
+      "slice_id": "BROH-R4-S1",
+      "title": "Parent-validated segmented Artifact View coverage",
+      "finding_ids": ["BROH-R4-01", "BROH-R4-02", "BROH-R4-03"],
+      "requirement_ids": ["BROH-004", "BROH-005", "BROH-014", "BROH-015", "BROH-016", "BROH-022"],
+      "acceptance_ids": ["BROH-R4-A01", "BROH-R4-A02", "BROH-R4-A03", "BROH-R4-A04", "BROH-R4-A05", "BROH-R4-A06", "BROH-R4-A07"],
+      "source_refs": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"
+      ],
+      "depends_on": [],
+      "allowed_changes": {
+        "production": [
+          ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+          ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json"
+        ],
+        "tests": [".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py"],
+        "documentation": [
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          "docs/standards/bootstrap-review-control-plane.md"
+        ]
+      },
+      "planned_new_files": [
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json"
+      ],
+      "execution_snapshot_paths": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-segment-receipt.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "forbidden_changes": [
+        "PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**",
+        "logs/reviews/**", "execution-plans/2026-08-07-bootstrap-review-operability-hardening/bootstrap-runs/**"
+      ],
+      "execution_read_set": [
+        "AGENTS.md", "README.md",
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/schemas/bootstrap-artifact-view-read-receipt.v1.schema.json",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md"
+      ],
+      "dependency_closure": [
+        ".agents/skills/run-phase-bootstrap-review/**",
+        "docs/standards/bootstrap-review-control-plane.md",
+        "docs/adr/ADR-0049-bootstrap-controller-owned-coverage-and-attempt-retry.md"
+      ],
+      "tdd_mode": "red-green-refactor",
+      "tdd": {
+        "red": {
+          "command_id": "broh-r4-s1-target-test",
+          "test_selector": "test_round4_segment",
+          "expected_exit": "nonzero",
+          "expected_failure_family": "segmented-artifact-view-coverage-absent",
+          "expected_failure_ids": ["BROH-R4-A01"]
+        },
+        "green": {"command_id": "broh-r4-s1-target-test", "expected_exit": "zero"},
+        "refactor": {
+          "invocations": [
+            {"command_id": "broh-r4-s2-regression", "expected_exit": "zero"},
+            {"command_id": "broh-r4-s3-regression", "expected_exit": "zero"},
+            {"command_id": "bootstrap-skill-tests", "expected_exit": "zero"}
+          ]
+        }
+      },
+      "post_refactor_command_id": "round4-s1-validation",
+      "exit_predicate": "slice-ready",
+      "recovery": "Preserve successful segment receipts, retry only the failed segment for the same reviewer role, and publish no formal reviewer output until exact aggregate coverage passes."
+    }
+  ],
+  "legacy_regressions": [
+    {
+      "finding_id": "BROH-R4-02",
+      "command_id": "broh-r4-s2-regression",
+      "reason": "The implementation predates this repair contract; no historical RED is asserted."
+    },
+    {
+      "finding_id": "BROH-R4-03",
+      "command_id": "broh-r4-s3-regression",
+      "reason": "The implementation predates this repair contract; no historical RED is asserted."
+    }
+  ],
+  "terminal_validation_command_id": "round4-terminal-validation",
+  "closure_requirements": {
+    "root_cause_callsite_inventory": "root-cause-callsite-inventory.v2.json",
+    "composition_receipt": "composition-receipt.v7.json",
+    "changed_set_manifest": "changed-set-manifest.v2.json",
+    "review_scope": "review-scope.v2.json",
+    "require_current_hash_bindings": true,
+    "require_all_inventory_matches_disposed": true
+  },
+  "closure_output": "repair-closure.v2.json",
+  "authorizes": []
+}

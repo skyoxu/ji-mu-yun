@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>PRD Validation: VDD Conformance Exact-Cover Skill 需求规格</title>
+<style>
+:root { --bg:#fafaf9; --surface:#fff; --border:#e7e5e4; --text:#1c1917; --muted:#78716c; --strong:#16a34a; --adequate:#65a30d; --thin:#d97706; --broken:#dc2626; --critical:#dc2626; --high:#ea580c; --medium:#ca8a04; --low:#64748b; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+.container { max-width:960px; margin:auto; padding:32px 24px 64px; }
+.report-header { display:flex; justify-content:space-between; gap:24px; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:24px; }
+h1 { margin:0; font-size:22px; } .subtitle,.source,footer { color:var(--muted); font:12px ui-monospace,monospace; }
+.grade { background:var(--broken); color:#fff; padding:10px 18px; border-radius:8px; font-weight:600; height:max-content; }
+.synthesis,.gate-table,.mechanical { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:18px 22px; margin-bottom:24px; }
+.synthesis { border-left:3px solid var(--broken); }
+table { width:100%; border-collapse:collapse; } th,td { text-align:left; vertical-align:top; border-bottom:1px solid var(--border); padding:9px; } th { color:var(--muted); }
+.fail { color:var(--broken); font-weight:700; }
+.dimension-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-bottom:24px; }
+.dim-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; }
+.dim-name { color:var(--muted); font-size:13px; } .verdict { font-weight:600; }
+section { margin-bottom:14px; } details { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+summary { cursor:pointer; padding:14px 20px; display:flex; gap:12px; align-items:center; } summary h2 { margin:0; font-size:16px; flex:1; }
+.pill,.badge { color:#fff; border-radius:4px; padding:3px 9px; font-size:11px; font-weight:700; text-transform:uppercase; }
+.pill.thin,.badge.medium { background:var(--thin); } .pill.adequate { background:var(--adequate); } .pill.broken,.badge.critical { background:var(--broken); } .badge.high { background:var(--high); } .badge.low { background:var(--low); }
+.body { padding:0 20px 18px; } .finding { border-top:1px solid var(--border); padding:13px 0; } .finding:first-child { border-top:0; }
+.finding h3 { display:inline; font-size:15px; margin-left:8px; } .fix { margin-top:5px; color:var(--muted); }
+footer { border-top:1px solid var(--border); margin-top:36px; padding-top:16px; }
+</style>
+</head>
+<body><div class="container">
+<header class="report-header"><div><h1>VDD Conformance Exact-Cover Skill 需求规格</h1><div class="subtitle">execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md</div></div><div class="grade">Poor</div></header>
+<div class="synthesis"><p>四项用户门禁均为 <strong>FAIL</strong>。现稿具备确定性检查、LLM 非授权、hash/current evidence 和 fail-closed 的正确方向，但 authority 闭包、know14 规范合同、Chapter 5 完整运行思想与 VDD round-trip consumer contract 均未闭合。</p><p>当前设计可能对 caller 漏传后的不完整输入集合得出 PASS；compact receipt 也不是现行 VDD 支持的输入类型，因此不应以 <code>requirements-ready</code> 状态进入实现。</p></div>
+<div class="gate-table"><table><thead><tr><th>门禁</th><th>结论</th><th>核心原因</th></tr></thead><tbody>
+<tr><td>1. AGENTS.md + README.md</td><td class="fail">FAIL</td><td>共享 LLM、Locator、编码/平台、logs evidence、ADR/docs closure 未需求化。</td></tr>
+<tr><td>2. know14.txt 全吸收</td><td class="fail">FAIL</td><td>34 个主题仅 7 完整、23 部分、4 遗漏，关键 schema/lifecycle/consumer 合同缺失。</td></tr>
+<tr><td>3. Chapter 5 核心思想</td><td class="fail">FAIL</td><td>缺 conditional lane、align、semantic gate、resume identity 与 failure-family 止损。</td></tr>
+<tr><td>4. VDD 再消费</td><td class="fail">FAIL</td><td>无 VDD 可识别 handoff、adapter、显式 route 与跨进程 composition test。</td></tr>
+</tbody></table></div>
+<div class="dimension-summary">
+<div class="dim-card"><div class="dim-name">Decision-readiness</div><div class="verdict" style="color:var(--thin)">thin</div></div>
+<div class="dim-card"><div class="dim-name">Substance over theater</div><div class="verdict" style="color:var(--adequate)">adequate</div></div>
+<div class="dim-card"><div class="dim-name">Strategic coherence</div><div class="verdict" style="color:var(--adequate)">adequate</div></div>
+<div class="dim-card"><div class="dim-name">Done-ness clarity</div><div class="verdict" style="color:var(--thin)">thin</div></div>
+<div class="dim-card"><div class="dim-name">Scope honesty</div><div class="verdict" style="color:var(--thin)">thin</div></div>
+<div class="dim-card"><div class="dim-name">Downstream usability</div><div class="verdict" style="color:var(--broken)">broken</div></div>
+<div class="dim-card"><div class="dim-name">Shape fit</div><div class="verdict" style="color:var(--adequate)">adequate</div></div>
+</div>
+<section class="dimension"><details open><summary><h2>Decision-readiness</h2><span class="pill thin">thin</span></summary><div class="body">
+<div class="finding"><span class="badge critical">critical</span><h3>Authority universe 没有可证明闭包</h3><p><code>vdd_sources</code> 依赖 caller；缺独立 source-role discovery、manifest/hash 与缺源 oracle。</p><div class="fix"><strong>Fix:</strong> caller 只能增加候选，不能缩减必需角色；漏掉任何适用 authority 必须 blocked。</div></div>
+<div class="finding"><span class="badge high">high</span><h3>Risk route 不是确定性契约</h3><p>风险枚举、predicate、优先级、unknown 默认值与唯一 owner 未定义。</p></div>
+</div></details></section>
+<section class="dimension"><details><summary><h2>Substance over theater</h2><span class="pill adequate">adequate</span></summary><div class="body"><p>负例、hash/current evidence 与非授权边界具有实质内容；但 stable、normalized、current、bounded 等词仍需规范算法和阈值。</p></div></details></section>
+<section class="dimension"><details><summary><h2>Strategic coherence</h2><span class="pill adequate">adequate</span></summary><div class="body"><p>主线一致，但缺 false PASS、omission detection、false-block、运行预算和 counter-metrics。</p></div></details></section>
+<section class="dimension"><details open><summary><h2>Done-ness clarity</h2><span class="pill thin">thin</span></summary><div class="body">
+<div class="finding"><span class="badge critical">critical</span><h3>know14 生命周期合同被弱化</h3><p>Quick Dev gate、slice exact-cover hash、implementation-complete、typed matrix/tombstone/test/run identity 未完整需求化。</p></div>
+<div class="finding"><span class="badge high">high</span><h3>缺稳定 FR/NFR/AC ID 与双向映射</h3><p>规格自身无法 dogfood exact-cover。</p></div>
+<div class="finding"><span class="badge high">high</span><h3>Schema/CLI/error/atomic publish 不完整</h3><p>缺 versioned artifact、canonical JSON、机器输出、稳定错误族、预算和恢复合同。</p></div>
+</div></details></section>
+<section class="dimension"><details open><summary><h2>Scope honesty</h2><span class="pill thin">thin</span></summary><div class="body"><p><code>requirements-ready</code> 掩盖 source completeness、risk policy、legacy、current evidence 与 VDD re-entry 的未决假设。应关闭 blocker 或降回 draft。</p></div></details></section>
+<section class="dimension"><details open><summary><h2>Downstream usability</h2><span class="pill broken">broken</span></summary><div class="body">
+<div class="finding"><span class="badge critical">critical</span><h3>没有 VDD 可识别 round-trip artifact</h3><p>Compact receipt 是证据，不是现行 VDD 输入。</p><div class="fix"><strong>Fix:</strong> 定义 <code>vdd-source-bundle.v1</code> 与显式 create/repair adapter，或选择完整 plan repair 路径。</div></div>
+<div class="finding"><span class="badge high">high</span><h3>缺 producer -> VDD 真实组合测试</h3><p>需跨进程验证 omitted/stale/tampered/implicit-route 均 fail closed。</p></div>
+<div class="finding"><span class="badge high">high</span><h3>Coverage 集合语义不唯一</h3><p>需形式化 U/R/A/S、关系、overlap、alias/merge 与 typed deferred。</p></div>
+</div></details></section>
+<section class="dimension"><details><summary><h2>Shape fit</h2><span class="pill adequate">adequate</span></summary><div class="body"><p>技术能力规格形状基本合适，但应优先补 operator/owner handoff 与状态转换；脚本文件树可后移到设计附录。</p></div></details></section>
+<section class="reviewer-section"><details><summary><h2>Source exact-cover reviewer</h2><span class="source">review-source-exact-cover.md</span></summary><div class="body"><p>条件 1、2 均 FAIL。除生命周期合同外，重点缺失 full drift vector、typed disposition、consumer closure、observability counters、repository governance 与 accepted ADR/docs closure。完整的 34 项映射见 reviewer 文件。</p></div></details></section>
+<section class="reviewer-section"><details><summary><h2>VDD consumability reviewer</h2><span class="source">review-vdd-consumability.md</span></summary><div class="body">
+<div class="finding"><span class="badge critical">critical</span><h3>Chapter 5 被误述且控制面缺失</h3><p>必须恢复 conditional -> preflight -> extract -> align -> coverage -> semantic gate -> resume/stop-loss 的完整思想。</p></div>
+<div class="finding"><span class="badge high">high</span><h3>VDD adapter 与显式 route 缺失</h3><p>单 Markdown 会走 direct implementation，receipt 也不会自动触发 create/repair。</p></div>
+</div></details></section>
+<div class="mechanical"><h3>Mechanical notes</h3><ul><li><code>implementation-complete</code> 与 Quick Dev lifecycle state 发生术语碰撞。</li><li><code>stable</code>、<code>current</code>、<code>legitimate</code>、<code>bounded</code> 缺可测试定义。</li><li>最低放行条件：source closure、版本化接口、Chapter 5 控制面、VDD adapter、跨进程组合测试。</li></ul></div>
+<footer>Rubric: .agents/skills/bmad-prd/assets/prd-validation-checklist.md<br>Generated: 2026-08-10T01:05:04+08:00</footer>
+</div></body></html>

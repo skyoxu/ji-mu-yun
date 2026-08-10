@@ -1,0 +1,1858 @@
+# `vdd-conformance-exact-cover` 完整实现需求
+
+## 1. 需求名称
+
+`vdd-conformance-exact-cover`
+
+建议目录：
+
+`execution-plans/2026-08-10-vdd-conformance-exact-cover`
+
+---
+
+## 2. 背景
+
+当前 Toolchain 已经形成基本生命周期：
+
+```text
+VDD
+→ plan-ready
+→ implementation-authorized
+→ Quick Dev
+→ implementation-complete
+→ Refactor Acceptance
+→ optional Bootstrap semantic assurance
+→ acceptance-passed
+```
+
+当前各控制面已经分别能够证明：
+
+* VDD 计划本身具有结构化 requirements、acceptance criteria 和 implementation contract；
+* Quick Dev 可以按照 implementation slices 执行严格 RED → GREEN → REFACTOR；
+* `implementation-complete` 可以证明 implementation contract 中声明的实施工作已经完成；
+* Acceptance 可以执行 deterministic inventory、matrix、coverage、evidence validation；
+* Acceptance 可以自主判断是否需要 Bootstrap semantic review；
+* Bootstrap 可以在必要时执行独立 semantic assurance。
+
+但目前仍存在一个横跨 VDD、Quick Dev 与 Acceptance 的完整性缺口：
+
+```text
+VDD requirement universe
+        ↓
+implementation contract
+        ↓
+Quick Dev slices
+        ↓
+implementation-complete
+        ↓
+Acceptance matrix
+```
+
+目前缺少一个统一、通用、机器强制执行的 **Exact-Cover invariant**，用于证明：
+
+1. VDD 中的所有 requirement 都被 implementation contract 消费；
+2. VDD 中的所有 acceptance criterion 都被 implementation contract 消费；
+3. implementation contract 不得引用不存在的 requirement 或 acceptance ID；
+4. requirement 与 acceptance criterion 之间不能错绑；
+5. Quick Dev 不得仅因为所有声明 slice 已完成，就掩盖 VDD requirement 在生成 implementation contract 时已经被遗漏；
+6. Acceptance 必须独立从 VDD authority 重建 requirement conformance，而不能只相信 Quick Dev 或 implementation contract 的自我声明；
+7. 每一条需要验收的 requirement 最终都必须对应当前 candidate implementation、test definition 和 current run evidence；
+8. requirement、contract、candidate 或 evidence 任意发生 drift 后，旧 exact-cover / conformance evidence 必须自动失效。
+
+因此，本需求建立一个 repository-owned、deterministic、fail-closed 的：
+
+**VDD → Implementation Contract → Quick Dev → Acceptance Exact-Cover Chain**
+
+---
+
+# 3. 核心目标
+
+本需求完成后，对于任意符合 VDD contract 的 `execution-plans/<target>`，系统必须可以机器证明：
+
+```text
+原始需求全集
+=
+实施合同声明消费的需求全集
+=
+Acceptance 最终检查的需求全集
+```
+
+以及：
+
+```text
+原始 acceptance criteria 全集
+=
+implementation slices 声明消费的 acceptance 全集
+=
+Acceptance 最终 conformance matrix 的 required 全集
+```
+
+并保证任意遗漏、未知引用、错误映射、stale binding、未测试实现或无当前证据的 requirement 都不能静默通过。
+
+最终目标：
+
+```text
+VDD
+“定义了什么”
+
+        ↓ exact-cover
+
+Implementation Contract
+“每一条需求在哪里实施”
+
+        ↓ strict TDD
+
+Quick Dev
+“声明的实施工作是否真的完成”
+
+        ↓ independent exact-cover
+
+Acceptance
+“原始需求是否逐条落实到当前实现、测试和证据”
+
+        ↓ optional semantic assurance
+
+Bootstrap
+“机器证明通过以后，语义上是否仍存在深层偏差”
+```
+
+---
+
+# 4. 非目标
+
+本需求不得：
+
+* 把 Bootstrap 变成 requirement completeness checker；
+* 使用 LLM semantic review 来发现机械可证明的 requirement omission；
+* 把 Acceptance 的 semantic-review decision authority 移回 caller；
+* 让 Quick Dev 成为 VDD plan reviewer；
+* 让 Quick Dev 自己重新定义 requirement universe；
+* 让 Acceptance 信任 caller 提交的 requirement-complete boolean；
+* 让 implementation contract 自己证明自己完整；
+* 自动修改需求内容；
+* 自动推断缺失 requirement 的意图；
+* 自动新增未由 VDD authority 定义的 requirement；
+* 改变 `implementation-authorized` 的 maintainer ownership；
+* 改变 `implementation-complete` 的 Quick Dev ownership；
+* 改变 `acceptance-passed` 的 Acceptance ownership；
+* 改变 Bootstrap 的 model launch、高成本确认、review lifecycle ownership；
+* 把普通 semantic disagreement 强行编码为 deterministic equality；
+* 引入新的 universal preimplementation Bootstrap requirement。
+
+---
+
+# 5. Authority Ownership
+
+必须保持：
+
+```text
+VDD
+owns:
+  requirement universe
+  acceptance universe
+  requirement → acceptance mapping
+  implementation contract production
+  plan-ready
+
+Maintainer
+owns:
+  implementation-authorized
+
+Quick Dev
+owns:
+  implementation execution
+  slice RED/GREEN/REFACTOR evidence
+  implementation-complete
+
+Acceptance
+owns:
+  independent requirement conformance reconstruction
+  deterministic acceptance
+  Bootstrap requirement decision
+  acceptance-passed
+
+Bootstrap
+owns:
+  semantic assurance execution
+```
+
+Exact-cover artifact 本身不得授权：
+
+```text
+implementation-authorized
+implementation-complete
+acceptance-passed
+commit
+release
+deploy
+archive
+```
+
+所有 exact-cover / conformance intermediate outputs：
+
+```json
+"authorizes": []
+```
+
+---
+
+# 6. Canonical Sets
+
+每一个 target plan 必须能够确定性地产生以下 canonical sets。
+
+定义：
+
+```text
+R = VDD requirement IDs
+A = VDD acceptance criterion IDs
+S = implementation slices
+SR = union(S[*].requirement_ids)
+SA = union(S[*].acceptance_ids)
+M = Acceptance required conformance IDs
+```
+
+核心 invariant：
+
+```text
+SR == R
+SA == A
+M  == A
+```
+
+同时要求：
+
+```text
+SR - R == ∅
+R - SR == ∅
+
+SA - A == ∅
+A - SA == ∅
+```
+
+即：
+
+* 不能漏；
+* 不能多；
+* 不能引用不存在的 ID。
+
+---
+
+# 7. Requirement-to-Acceptance Mapping Invariant
+
+仅保证集合相等还不够。
+
+例如：
+
+```text
+REQ-001 → AC-001
+REQ-002 → AC-002
+```
+
+错误 implementation contract：
+
+```text
+Slice A:
+  REQ-001
+  AC-002
+
+Slice B:
+  REQ-002
+  AC-001
+```
+
+此时 requirement 集合与 acceptance 集合仍然完全相等，但发生了错绑。
+
+因此系统必须验证：
+
+对于每一个 requirement `r`：
+
+```text
+DeclaredAcceptance(r)
+```
+
+必须与所有消费 `r` 的 implementation slice 所声明的 acceptance coverage 保持合法关系。
+
+至少要求：
+
+```text
+slice.requirement_ids contains r
+
+→
+
+slice.acceptance_ids
+必须覆盖 r 在 VDD authority 中声明的 applicable acceptance_ids
+```
+
+不得出现：
+
+```text
+REQ-001
+→ slice
+→ 只验证 REQ-002 的 acceptance criteria
+```
+
+---
+
+# 8. Requirement Coverage Rules
+
+## 8.1 每个 requirement 必须被消费
+
+所有 active/applicable requirement：
+
+```text
+coverage_count(requirement) >= 1
+```
+
+否则：
+
+```text
+requirement_uncovered
+```
+
+并 fail closed。
+
+---
+
+## 8.2 每个 acceptance criterion 必须被消费
+
+所有 active/applicable acceptance：
+
+```text
+coverage_count(acceptance) >= 1
+```
+
+否则：
+
+```text
+acceptance_uncovered
+```
+
+并 fail closed。
+
+---
+
+## 8.3 Unknown ID 禁止
+
+若 implementation contract 引用：
+
+```text
+REQ-999
+```
+
+但 VDD authority 中不存在：
+
+```text
+unknown_requirement_reference
+```
+
+若引用不存在 acceptance：
+
+```text
+unknown_acceptance_reference
+```
+
+均 fail closed。
+
+---
+
+## 8.4 Duplicate consumption 可允许但必须显式
+
+一个 requirement 可以跨多个 slices：
+
+```text
+REQ-010
+→ S1
+→ S4
+```
+
+这是允许的，但 exact-cover result 必须记录：
+
+```text
+coverage_count = 2
+consumer_slices = [...]
+```
+
+不能把 duplicate consumption 当错误。
+
+但不得出现互相冲突的 ownership / acceptance mapping。
+
+---
+
+# 9. Applicability / Deferred Requirements
+
+如果 repository 已经存在：
+
+```text
+applicable
+not_applicable
+deferred
+```
+
+等 typed disposition，则必须保持 typed、explicit、authority-bound。
+
+不得通过“不放进 implementation contract”隐式表示 deferred。
+
+例如：
+
+```json
+{
+  "requirement_id": "REQ-017",
+  "disposition": "deferred",
+  "authority_reference": "...",
+  "reason": "...",
+  "target_plan": "..."
+}
+```
+
+只有被 VDD authority 显式 disposition 的 requirement 才可以不进入当前 implementation exact-cover。
+
+因此实际 canonical set 应定义为：
+
+```text
+R_active =
+requirements where disposition == applicable
+```
+
+而不是简单把所有历史 requirement 都强制本轮实现。
+
+---
+
+# 10. VDD Exact-Cover Producer
+
+VDD 必须增加一个 repository-owned deterministic exact-cover producer。
+
+建议产物：
+
+```text
+exact-cover.v1.json
+```
+
+至少包含：
+
+```json
+{
+  "schemaVersion": "vdd-exact-cover.v1",
+  "planId": "...",
+
+  "requirementUniverse": [...],
+  "acceptanceUniverse": [...],
+
+  "sliceRequirementUnion": [...],
+  "sliceAcceptanceUnion": [...],
+
+  "requirementCoverage": {},
+  "acceptanceCoverage": {},
+
+  "unknownRequirementReferences": [],
+  "unknownAcceptanceReferences": [],
+  "uncoveredRequirements": [],
+  "uncoveredAcceptance": [],
+  "mappingViolations": [],
+
+  "sourceBindings": {},
+  "contractHash": "sha256:...",
+  "requirementsHash": "sha256:...",
+  "decision": "exact_cover_passed",
+  "authorizes": []
+}
+```
+
+---
+
+# 11. Exact-Cover Receipt Binding
+
+Exact-cover 不能只是一个 PASS boolean。
+
+它必须绑定：
+
+```text
+requirements.v1.json bytes
+implementation-contract.v1.json bytes
+authority-manifest
+relevant schemas
+validator identity
+target plan identity
+```
+
+至少产生：
+
+```text
+requirementsHash
+implementationContractHash
+authorityHash
+validatorHash
+exactCoverHash
+```
+
+任意 source bytes 修改后：
+
+```text
+old exact-cover receipt
+→ stale
+→ unusable
+```
+
+不得根据：
+
+```text
+same filename
+same requirement count
+same plan ID
+```
+
+继续复用。
+
+---
+
+# 12. VDD Plan Validator 强制 Exact Cover
+
+`validate_plan.py` 或其通用 owner 必须检查：
+
+```text
+Union(slice.requirement_ids)
+==
+active requirement universe
+```
+
+以及：
+
+```text
+Union(slice.acceptance_ids)
+==
+active acceptance universe
+```
+
+同时验证 mapping correctness。
+
+以下情况 plan-ready 必须失败：
+
+```text
+requirement_missing_from_all_slices
+acceptance_missing_from_all_slices
+unknown_requirement_id
+unknown_acceptance_id
+requirement_acceptance_mapping_mismatch
+stale_exact_cover
+invalid_exact_cover_hash
+```
+
+---
+
+# 13. Quick Dev Entry Gate
+
+Quick Dev 不负责重新解释 requirement。
+
+Quick Dev 只验证：
+
+```text
+exact-cover receipt exists
++
+schema valid
++
+hash current
++
+decision == exact_cover_passed
+```
+
+若失败：
+
+```text
+route = vdd_repair_required
+```
+
+而不是：
+
+```text
+Quick Dev 自己补 requirement
+Quick Dev 自己改 implementation contract
+Quick Dev 自己决定遗漏不重要
+```
+
+---
+
+# 14. Quick Dev Slice Evidence Binding
+
+每个 slice evidence 必须继续绑定：
+
+```text
+slice_id
+requirement_ids
+acceptance_ids
+contract hash
+exact-cover hash
+```
+
+这样如果 VDD 修改：
+
+```text
+REQ-007 → acceptance mapping
+```
+
+旧 slice evidence 即使代码和 tests 没变，也不能继续自动满足新的 plan。
+
+---
+
+# 15. `implementation-complete` 的精确定义
+
+本需求必须正式明确：
+
+`implementation-complete` 表示：
+
+> 当前 implementation contract 中全部 required slices 已完成严格 TDD，并且该 implementation contract 在执行入口时已由 current VDD exact-cover receipt 证明完整。
+
+因此：
+
+```text
+implementation-complete
+```
+
+不再只表示：
+
+```text
+所有声明 slice 完成
+```
+
+而表示：
+
+```text
+VDD exact-cover current
++
+所有声明 slice 完成
++
+slice evidence current
+```
+
+但仍然不等于：
+
+```text
+acceptance-passed
+```
+
+---
+
+# 16. Acceptance Independent Reconstruction
+
+这是本需求最重要的第二道防线。
+
+Acceptance 不得简单消费：
+
+```text
+exact-cover.v1.json:
+decision = passed
+```
+
+然后直接信任。
+
+Acceptance 必须从当前 frozen sources 独立重新计算：
+
+```text
+VDD requirement universe
+VDD acceptance universe
+implementation contract
+candidate identity
+implementation evidence
+test definitions
+test-run evidence
+```
+
+产生：
+
+```text
+requirement-conformance-matrix.v1.json
+```
+
+---
+
+# 17. Acceptance Conformance Matrix
+
+建议每条 requirement 至少包含：
+
+```json
+{
+  "requirementId": "REQ-001",
+
+  "acceptanceIds": [
+    "AC-001",
+    "AC-002"
+  ],
+
+  "sliceIds": [
+    "S0"
+  ],
+
+  "implementationRefs": [
+    "path/to/file.py"
+  ],
+
+  "testDefinitionRefs": [
+    "path/to/test_file.py::test_case"
+  ],
+
+  "testRunEvidenceIds": [
+    "..."
+  ],
+
+  "candidateBindingHash": "sha256:...",
+
+  "status": "verified"
+}
+```
+
+---
+
+# 18. Acceptance Requirement Status
+
+Requirement 状态必须 typed。
+
+至少：
+
+```text
+verified
+missing
+partial
+blocked
+explicitly_deferred
+not_applicable
+```
+
+不得使用模糊状态：
+
+```text
+probably_done
+looks_good
+covered_by_tests
+assumed
+```
+
+---
+
+# 19. `verified` 最低条件
+
+一条 active requirement 只有满足以下条件才能成为：
+
+```text
+verified
+```
+
+必须至少存在：
+
+```text
+implementation_refs != ∅
+test_definition_refs != ∅
+test_run_evidence_ids != ∅
+```
+
+并且所有 evidence 必须：
+
+```text
+current
+candidate-bound
+hash-valid
+```
+
+---
+
+# 20. Implementation Reference Validation
+
+Acceptance 必须验证 implementation ref：
+
+* 属于当前 candidate；
+* path 是 repository-relative logical path；
+* 不得使用 frozen snapshot custody path 冒充 repository identity；
+* deleted file 使用 typed tombstone；
+* implementation ref 必须能映射到 requirement/slice；
+* 不得仅靠 implementation contract 自报存在。
+
+---
+
+# 21. Test Definition Validation
+
+Acceptance 必须证明：
+
+```text
+requirement
+→ acceptance
+→ test definition
+```
+
+而不是只证明某个 unrelated test suite PASS。
+
+测试 evidence 必须能够至少通过：
+
+```text
+registered command
+test selector
+test definition reference
+```
+
+与对应 acceptance criterion 建立确定性关联。
+
+---
+
+# 22. Current Run Evidence
+
+历史 test pass 不得自动满足当前 candidate。
+
+必须绑定：
+
+```text
+candidate hash
+command identity
+test definition identity
+run result
+timestamp / run identity
+```
+
+如果 candidate 修改后未重新运行相关 test：
+
+```text
+stale_test_evidence
+```
+
+不得 `verified`。
+
+---
+
+# 23. Acceptance Exact-Cover Invariant
+
+Acceptance 最终必须独立证明：
+
+```text
+matrix.required_requirement_ids
+==
+VDD active requirement IDs
+```
+
+以及：
+
+```text
+matrix.required_acceptance_ids
+==
+VDD active acceptance IDs
+```
+
+并要求：
+
+```text
+every active requirement has one matrix row
+every active acceptance criterion is covered
+```
+
+否则 deterministic Acceptance fail。
+
+---
+
+# 24. Silent Disappearance 禁止
+
+任何 requirement 从：
+
+```text
+VDD
+→ implementation contract
+→ Quick Dev
+→ Acceptance
+```
+
+链条中的任意节点消失，都必须变成明确错误。
+
+例如：
+
+```text
+REQ-042
+```
+
+存在于 VDD，但 implementation contract 没有：
+
+```text
+VDD validator:
+requirement_uncovered
+```
+
+如果 contract 有，但 Acceptance matrix 没有：
+
+```text
+Acceptance:
+requirement_matrix_incomplete
+```
+
+不得通过没有 entry 来隐式忽略。
+
+---
+
+# 25. Candidate Drift Detection
+
+以下任意改变必须使旧 conformance evidence stale：
+
+```text
+requirements
+acceptance criteria
+implementation contract
+changed paths
+implementation bytes
+test definitions
+test commands
+validator
+policy
+knowledge context
+```
+
+不得：
+
+```text
+implementation-complete from candidate A
++
+Acceptance against candidate B
+```
+
+继续通过。
+
+---
+
+# 26. Semantic Review Boundary
+
+所有下面的问题都属于 deterministic conformance：
+
+```text
+requirement missing
+acceptance missing
+unknown ID
+wrong mapping
+missing implementation ref
+missing test
+missing run evidence
+stale evidence
+candidate mismatch
+hash mismatch
+```
+
+这些问题：
+
+```text
+不得启动 Bootstrap 来“帮忙判断”
+```
+
+必须：
+
+```text
+Acceptance → blocked / repair
+```
+
+只有 deterministic conformance 完整以后，Acceptance 才进入 semantic-review requirement decision。
+
+---
+
+# 27. Bootstrap 的职责保持不变
+
+Bootstrap 处理的问题例如：
+
+```text
+虽然 REQ-010 有实现、有测试、有当前 evidence，
+但实现是否误解了 requirement 的语义？
+
+虽然所有 acceptance criteria 形式上满足，
+是否破坏了未编码成 deterministic contract 的架构 invariant？
+
+是否存在跨模块副作用或深层消费者语义问题？
+```
+
+即：
+
+```text
+deterministic correctness
+        ↓
+semantic challenge
+```
+
+而不是反过来。
+
+---
+
+# 28. Acceptance Routing Order
+
+新的 Acceptance 顺序必须是：
+
+```text
+1. resolve target/candidate
+2. reconstruct VDD requirement universe
+3. reconstruct acceptance universe
+4. validate implementation-contract exact cover
+5. build requirement conformance matrix
+6. validate implementation refs
+7. validate test definitions
+8. validate current run evidence
+9. deterministic conformance result
+10. semantic review requirement decision
+11. optional Bootstrap
+12. final acceptance
+```
+
+不得：
+
+```text
+先 Bootstrap
+→ 再发现 requirement 漏了
+```
+
+---
+
+# 29. Fail-Closed Rules
+
+以下任何情况必须停止：
+
+```text
+requirements source missing
+implementation contract missing
+exact-cover receipt missing
+receipt stale
+unknown requirement ID
+unknown acceptance ID
+uncovered requirement
+uncovered acceptance
+mapping mismatch
+missing slice evidence
+missing implementation evidence
+missing test definition
+missing current run evidence
+candidate mismatch
+validator drift
+ambiguous applicability
+```
+
+不得猜测。
+
+---
+
+# 30. Legacy Compatibility
+
+旧 execution-plan 可能没有：
+
+```text
+exact-cover.v1.json
+```
+
+因此必须定义明确兼容策略。
+
+建议：
+
+```text
+legacy plan
+↓
+read-only compatibility
+↓
+Acceptance 可以从旧 artifacts deterministic reconstruct
+↓
+但不得伪造新 exact-cover receipt
+```
+
+新计划：
+
+```text
+new-write
+→ exact-cover mandatory
+```
+
+即：
+
+```text
+legacy-read
+new-write
+```
+
+---
+
+# 31. 不允许自动迁移历史证据
+
+不得改写历史：
+
+```text
+implementation-complete evidence
+Acceptance runs
+Bootstrap runs
+old implementation contracts
+```
+
+来假装它们原本就支持 exact-cover。
+
+历史计划保持 immutable。
+
+如需重验：
+
+```text
+new conformance replay
+```
+
+---
+
+# 32. Generic Capability
+
+本需求不得只为 BROH 写死：
+
+```text
+BROH-001
+BROH-A01
+```
+
+必须实现 generic capability，能够处理：
+
+```text
+任意 execution-plans/<target>
+```
+
+只要其 requirement/acceptance contract 符合 schema。
+
+不得再出现：
+
+```python
+EXPECTED_REQUIREMENTS = {
+    "BROH-001",
+    ...
+}
+```
+
+作为通用 Acceptance correctness 的核心机制。
+
+---
+
+# 33. Schema
+
+建议至少新增：
+
+```text
+scripts/sc/schemas/
+  vdd-exact-cover.v1.schema.json
+
+.agents/skills/run-refactor-implementation-acceptance/schemas/
+  requirement-conformance-matrix.v1.schema.json
+```
+
+具体路径可由实现时根据现有 repository ownership 调整。
+
+---
+
+# 34. Deterministic CLI / Capability
+
+建议形成一个 repository-owned shared capability，例如：
+
+```text
+scripts/sc/validate_vdd_exact_cover.py
+```
+
+或者归属 VDD Skill 的等价入口。
+
+至少支持：
+
+```text
+validate
+inspect
+```
+
+并输出机器 JSON。
+
+Acceptance 可以复用公共 primitive，但必须自己重新计算输入，而不是直接信任 VDD producer 输出。
+
+---
+
+# 35. Error Codes
+
+建议至少定义：
+
+```text
+VDD-EXACT-001 requirement-uncovered
+VDD-EXACT-002 acceptance-uncovered
+VDD-EXACT-003 unknown-requirement-reference
+VDD-EXACT-004 unknown-acceptance-reference
+VDD-EXACT-005 requirement-acceptance-mapping-mismatch
+VDD-EXACT-006 exact-cover-stale
+VDD-EXACT-007 source-binding-mismatch
+
+ACC-CONF-001 requirement-matrix-incomplete
+ACC-CONF-002 acceptance-matrix-incomplete
+ACC-CONF-003 implementation-ref-missing
+ACC-CONF-004 test-definition-missing
+ACC-CONF-005 current-run-evidence-missing
+ACC-CONF-006 candidate-binding-mismatch
+ACC-CONF-007 conformance-source-drift
+```
+
+实际命名可遵循 repository 现有 conventions。
+
+---
+
+# 36. Implementation Slices
+
+建议控制为四个主要 slice。
+
+## VCEC-S0 — Canonical Requirement Universe
+
+目标：
+
+建立 generic VDD requirement / acceptance inventory。
+
+实现：
+
+* canonical requirement IDs；
+* canonical acceptance IDs；
+* applicability disposition；
+* requirement → acceptance mapping；
+* deterministic sorting；
+* duplicate validation；
+* unknown ID validation；
+* schema；
+* tests。
+
+完成条件：
+
+```text
+同样输入永远产生同样 canonical universe
+```
+
+---
+
+## VCEC-S1 — VDD → Implementation Contract Exact Cover
+
+目标：
+
+机器证明 implementation contract 对 VDD authority 无遗漏、无未知引用、无错绑。
+
+实现：
+
+```text
+Union(slice.requirement_ids) == R_active
+Union(slice.acceptance_ids) == A_active
+```
+
+并检查 mapping correctness。
+
+产出：
+
+```text
+exact-cover.v1.json
+```
+
+绑定 requirements、contract、authority、validator hashes。
+
+---
+
+## VCEC-S2 — Quick Dev Exact-Cover Entry Binding
+
+目标：
+
+Quick Dev 只执行已经 exact-cover 的 implementation contract。
+
+实现：
+
+* Quick Dev entry gate；
+* exact-cover hash binding；
+* slice evidence 绑定 exact-cover identity；
+* requirements/contract drift 后旧 evidence invalid；
+* missing/stale exact-cover → `vdd_repair_required`；
+* 不让 Quick Dev 自行修计划。
+
+---
+
+## VCEC-S3 — Acceptance Independent Requirement Conformance
+
+目标：
+
+Acceptance 从原始 VDD authority 独立重建 requirement implementation conformance。
+
+实现：
+
+```text
+requirement
+→ acceptance
+→ slice
+→ implementation ref
+→ test definition
+→ current test evidence
+```
+
+产出：
+
+```text
+requirement-conformance-matrix.v1.json
+```
+
+并把 deterministic conformance 放在 Bootstrap decision 之前。
+
+---
+
+# 37. Required Fixtures
+
+至少必须覆盖以下 positive / negative cases。
+
+## Case 1 — Clean Exact Cover
+
+```text
+REQ-001
+REQ-002
+
+AC-001
+AC-002
+
+S0 → REQ-001 / AC-001
+S1 → REQ-002 / AC-002
+```
+
+结果：
+
+```text
+exact_cover_passed
+```
+
+---
+
+## Case 2 — Requirement 被漏掉
+
+```text
+REQ-001
+REQ-002
+
+contract only consumes REQ-001
+```
+
+必须：
+
+```text
+requirement_uncovered: REQ-002
+```
+
+---
+
+## Case 3 — Acceptance 被漏掉
+
+VDD：
+
+```text
+REQ-001 → AC-001, AC-002
+```
+
+contract：
+
+```text
+REQ-001 → AC-001
+```
+
+必须失败。
+
+---
+
+## Case 4 — Unknown Requirement
+
+contract：
+
+```text
+REQ-999
+```
+
+必须失败。
+
+---
+
+## Case 5 — Unknown Acceptance
+
+contract：
+
+```text
+AC-999
+```
+
+必须失败。
+
+---
+
+## Case 6 — Set 相等但 Mapping 错位
+
+VDD：
+
+```text
+REQ-001 → AC-001
+REQ-002 → AC-002
+```
+
+contract：
+
+```text
+REQ-001 → AC-002
+REQ-002 → AC-001
+```
+
+必须失败。
+
+---
+
+## Case 7 — Requirement 有 slice 但无 implementation ref
+
+必须 Acceptance fail。
+
+---
+
+## Case 8 — 有 implementation 但无 test definition
+
+必须 Acceptance fail。
+
+---
+
+## Case 9 — Test 存在但没有 current run evidence
+
+必须 Acceptance fail。
+
+---
+
+## Case 10 — Old Test Evidence
+
+candidate 修改以后仍使用旧 run。
+
+必须：
+
+```text
+stale_test_evidence
+```
+
+---
+
+## Case 11 — Requirement 修改
+
+修改：
+
+```text
+requirements.v1.json
+```
+
+旧 exact-cover receipt 必须失效。
+
+---
+
+## Case 12 — Implementation Contract 修改
+
+旧 receipt 和旧 Quick Dev slice evidence 必须失效。
+
+---
+
+## Case 13 — Acceptance Independent Reconstruction Detects Tampering
+
+即使 caller 提供：
+
+```text
+exactCoverPassed = true
+```
+
+或伪造 matrix，Acceptance 必须从 repository sources 重算并发现问题。
+
+---
+
+## Case 14 — Duplicate Legitimate Coverage
+
+一个 requirement 被两个 slices 合法消费。
+
+应 PASS，并记录多个 consumers。
+
+---
+
+## Case 15 — Explicit Deferred Requirement
+
+被 VDD typed deferred 的 requirement 不进入 active exact-cover universe。
+
+应 PASS，但 disposition 必须出现在结果中。
+
+---
+
+## Case 16 — Silent Omission Cannot Trigger Bootstrap
+
+如果有 deterministic omission：
+
+```text
+Acceptance
+→ blocked
+```
+
+必须证明：
+
+```text
+Bootstrap launch count = 0
+```
+
+---
+
+## Case 17 — Clean Deterministic Low-Risk Candidate
+
+exact-cover PASS：
+
+```text
+Acceptance deterministic conformance PASS
+→ review requirement = not_required
+→ deterministic_only
+```
+
+---
+
+## Case 18 — Clean Workflow-Control Candidate
+
+exact-cover PASS：
+
+```text
+Acceptance deterministic conformance PASS
+→ workflow_control_plane_changed
+→ required
+→ bootstrap-skill-route
+```
+
+证明 exact-cover 与现有 BROH semantic routing 能正确组合。
+
+---
+
+# 38. Composition Tests
+
+必须有真实 producer → consumer composition，而不只是 unit mocks。
+
+至少覆盖：
+
+```text
+VDD exact-cover producer
+→ Quick Dev entry consumer
+```
+
+以及：
+
+```text
+VDD requirements
+→ implementation contract
+→ Acceptance independent conformance
+```
+
+以及：
+
+```text
+Acceptance deterministic conformance
+→ review requirement decision
+```
+
+不能只分别证明三个模块自己的 unit test PASS。
+
+---
+
+# 39. Consumer Closure
+
+本计划 terminal validation 至少应重放：
+
+```text
+VDD validator tests
+Quick Dev adapter tests
+Acceptance conformance tests
+Acceptance review requirement tests
+cross-skill composition tests
+```
+
+若修改 shared schema / CLI，还应重放其所有 direct consumers。
+
+---
+
+# 40. Acceptance-Passed 新语义
+
+完成本需求后，`acceptance-passed` 应至少意味着：
+
+```text
+current candidate
++
+VDD exact-cover valid
++
+Quick Dev implementation-complete valid
++
+Acceptance requirement conformance exact-cover valid
++
+required deterministic evidence valid
++
+required semantic assurance satisfied
+```
+
+而不是仅仅：
+
+```text
+tests passed
++
+review clean
+```
+
+---
+
+# 41. Terminal Success Predicate
+
+本需求自身的 `implementation-complete` 只有在以下全部成立时才能产生：
+
+```text
+VCEC-S0 complete
+VCEC-S1 complete
+VCEC-S2 complete
+VCEC-S3 complete
+
+all registered tests pass
+cross-skill fixtures pass
+schemas pass
+consumer closure pass
+candidate bindings current
+no undeclared write
+authorizes == []
+```
+
+---
+
+# 42. Dogfood Requirement
+
+本需求实现完成后，必须选择至少一个真实 execution-plan 进行 dogfood。
+
+优先建议：
+
+```text
+2026-08-07-bootstrap-review-operability-hardening
+```
+
+或一个后续新建、结构清晰的 control-plane plan。
+
+Dogfood 必须证明：
+
+```text
+requirements
+→ exact-cover
+→ implementation-complete
+→ Acceptance conformance matrix
+→ Bootstrap decision
+→ acceptance result
+```
+
+全部从真实 repository artifacts 推导。
+
+---
+
+# 43. Performance Requirement
+
+Exact-cover 必须 deterministic-first。
+
+不得因为增加本能力导致：
+
+```text
+每次 requirement coverage
+→ LLM semantic pass
+```
+
+正常成本应主要是：
+
+```text
+JSON/schema parsing
+set equality
+hashing
+mapping validation
+candidate/test evidence lookup
+```
+
+Semantic review 仍由 Acceptance policy 条件触发。
+
+---
+
+# 44. Observability
+
+建议 deterministic result 至少输出：
+
+```text
+requirements_total
+requirements_covered
+acceptance_total
+acceptance_covered
+duplicate_requirement_consumers
+duplicate_acceptance_consumers
+unknown_requirement_refs
+unknown_acceptance_refs
+mapping_violations
+stale_bindings
+verified_requirements
+partial_requirements
+missing_requirements
+```
+
+这些仅用于 diagnostics，不参与自行授权。
+
+---
+
+# 45. Security / Integrity
+
+所有 path：
+
+```text
+repository-relative
+normalized
+no absolute path
+no ..
+no custody-path substitution
+```
+
+所有 receipt：
+
+```text
+hash-bound
+schema-valid
+non-authorizing
+```
+
+不得让 caller 用：
+
+```text
+coverage=true
+complete=true
+verified=true
+```
+
+绕过 repository reconstruction。
+
+---
+
+# 46. Migration Strategy
+
+推荐：
+
+```text
+Phase 1
+新 execution-plan mandatory exact-cover
+
+Phase 2
+Acceptance 支持 legacy deterministic reconstruction
+
+Phase 3
+活跃旧计划按需显式迁移
+```
+
+不得对所有历史计划批量重写。
+
+---
+
+# 47. Documentation Requirements
+
+至少更新：
+
+```text
+VDD Skill
+Quick Dev Skill / adapter contract
+Refactor Acceptance Skill
+相关 repository standard
+ADR index
+```
+
+必须明确写出：
+
+```text
+implementation-complete ≠ acceptance-passed
+```
+
+以及：
+
+```text
+Exact Cover checks completeness.
+Bootstrap checks semantics.
+```
+
+---
+
+# 48. ADR
+
+本需求建议增加一份 accepted ADR，例如：
+
+`ADR-006X-vdd-implementation-acceptance-exact-cover.md`
+
+核心 decision：
+
+> Repository requirements must preserve deterministic bidirectional exact-cover from VDD authority through implementation contract and independent Acceptance conformance. Semantic review may challenge meaning only after deterministic completeness has passed.
+
+---
+
+# 49. Completion Criteria
+
+本需求只有在以下条件全部成立时才算完成：
+
+1. 任意新 VDD target 可确定性构建 canonical requirement universe；
+2. implementation contract 必须 exact-cover active requirements；
+3. implementation contract 必须 exact-cover active acceptance criteria；
+4. unknown requirement/acceptance reference fail closed；
+5. requirement→acceptance 错绑 fail closed；
+6. Quick Dev 拒绝 missing/stale exact-cover contract；
+7. Quick Dev evidence 与 exact-cover hash 绑定；
+8. requirement/contract 修改自动使旧 implementation evidence stale；
+9. Acceptance 不信任 caller exact-cover conclusion；
+10. Acceptance 独立从 VDD authority 重建 requirement universe；
+11. Acceptance matrix 精确覆盖全部 active requirements；
+12. Acceptance matrix 精确覆盖全部 active acceptance criteria；
+13. `verified` 必须绑定 implementation + test definition + current run evidence；
+14. candidate drift 使旧 conformance evidence stale；
+15. deterministic completeness failure 不启动 Bootstrap；
+16. deterministic conformance PASS 后才允许 semantic-review decision；
+17. low-risk candidate 可走 `deterministic_only`；
+18. workflow-control candidate 可走 `required → bootstrap-skill-route`；
+19. legacy evidence 不被改写；
+20. 所有新 intermediate evidence `authorizes=[]`；
+21. lifecycle ownership 不发生变化；
+22. 至少一次真实 execution-plan dogfood 成功。
+
+---
+
+# 50. 最终目标状态
+
+完成后，整个 Toolchain 应形成：
+
+```text
+VDD
+│
+│  canonical requirements
+│  canonical acceptance criteria
+│
+├──────────────┐
+│ exact-cover  │
+└──────┬───────┘
+       ↓
+Implementation Contract
+       │
+       │ exact requirement / acceptance coverage
+       ↓
+Quick Dev
+       │
+       │ strict RED → GREEN → REFACTOR
+       ↓
+implementation-complete
+       │
+       ↓
+Acceptance
+       │
+       ├─ independently rebuild requirement universe
+       ├─ exact-cover matrix
+       ├─ implementation refs
+       ├─ tests
+       ├─ current evidence
+       │
+       ↓
+deterministic conformance
+       │
+       ├─ incomplete → repair / blocked
+       │
+       └─ complete
+             ↓
+      semantic-risk decision
+             │
+       ┌─────┴─────┐
+       │           │
+not_required    required
+       │           │
+deterministic   Bootstrap
+only            semantic assurance
+       │           │
+       └─────┬─────┘
+             ↓
+      acceptance-passed
+```
+
+最终必须实现的核心原则：
+
+> **任何 VDD requirement 都不能静默消失。**
+
+> **任何 implementation slice 都不能引用不存在的需求。**
+
+> **任何 requirement 都不能因为“所有 slice 都完成”而在遗漏状态下进入 `implementation-complete`。**
+
+> **Acceptance 必须独立证明原始需求已经落实到当前实现、测试和证据。**
+
+> **机器能够确定的问题由 deterministic exact-cover 解决；Bootstrap 只处理机器无法证明的语义问题。**

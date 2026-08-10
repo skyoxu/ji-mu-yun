@@ -1,0 +1,67 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.repair-plan.v1",
+  "plan_id": "bootstrap-review-operability-hardening",
+  "round": 4,
+  "profile": "self-hosted",
+  "lineageFamilyId": "ria-1dd445581b0a69b5a1432c671bd99844",
+  "depends_on_round": 3,
+  "slices": [
+    {
+      "id": "BROH-R4-01",
+      "depends_on": [],
+      "scope": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "red": "A frozen closure above one Codex context window can only produce a failed reviewer payload or exhaust context; no parent-owned segmented coverage path exists.",
+      "green": "One reviewer role can execute isolated bounded segments, each with hash-bound Artifact View range coverage, and parent publication requires the exact aggregate coverage before formal output exists.",
+      "regression": "Run the focused Bootstrap regression tests, whole-directory compatibility validator, and skill quick validation.",
+      "composition": {
+        "producer": "bootstrap_review.run_codex_attempt",
+        "consumer": "bootstrap_review.command_run_layer",
+        "receipt": "parent-validated aggregate segment coverage and one formal reviewer output"
+      }
+    },
+    {
+      "id": "BROH-R4-03",
+      "depends_on": ["BROH-R4-01"],
+      "scope": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "red": "An existing preferred proof is returned when run-layer requests an allowed fallback model, so no model-bound fallback proof exists.",
+      "green": "An explicit fallback action creates and validates a distinct model-bound proof sidecar without silently reusing the preferred proof.",
+      "regression": "Run the focused fallback proof test and the complete Bootstrap regression suite.",
+      "composition": {
+        "producer": "bootstrap_review.command_prove_access",
+        "consumer": "bootstrap_review.command_run_layer",
+        "receipt": "fallback proof sidecar hash and selected-model validation receipt"
+      }
+    },
+    {
+      "id": "BROH-R4-02",
+      "depends_on": ["BROH-R4-01"],
+      "scope": [
+        ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/scripts/_control_plane.py",
+        ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+        ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+        "docs/standards/bootstrap-review-control-plane.md"
+      ],
+      "red": "A controller interruption can leave an event-backed live descendant past the no-progress bound without a controller-owned terminal transport event.",
+      "green": "The controller launches the complete child tree in a recoverable process group and a bounded watchdog emits the terminal append-only transport event after tree termination.",
+      "regression": "Run the focused Bootstrap regression tests, whole-directory compatibility validator, and skill quick validation.",
+      "composition": {
+        "producer": "bootstrap_review.run_codex_attempt",
+        "consumer": "bootstrap_review.process_lease",
+        "receipt": "event-backed no-progress terminal state and reconstructed non-acquired lease"
+      }
+    }
+  ],
+  "authorizes": []
+}

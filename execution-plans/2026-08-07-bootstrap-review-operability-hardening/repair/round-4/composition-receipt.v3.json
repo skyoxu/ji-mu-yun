@@ -1,0 +1,60 @@
+{
+  "authorizes": [],
+  "commandId": "broh-r4-segment-composition",
+  "commandRegistryHash": "sha256:67817dce82db9a383cbb6de5eb358435365372c8d80563a647c53f3c8e6c42d0",
+  "environmentIdentity": {
+    "hash": "sha256:f1e6b01b0162859df92a8c31d77be9fd645daea23bf98a47310f8cbba3d938ea",
+    "names": [
+      "SYSTEMROOT",
+      "WINDIR"
+    ]
+  },
+  "exitCode": 1,
+  "inputBindings": [
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "sha256": "sha256:0c94a60d9d7b4a5ec8eaec2ab7b9cb2d4204860f5344f71d2f3f175b2b805bf8"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "sha256": "sha256:e0c111bed38124e23bbb1c07f893f216e8c19c98d25d459ac84f911c7a00717f"
+    }
+  ],
+  "inputBindingsHash": "sha256:b265cffab9e73655731466e81fed52a451bba23c1e3248053bb376f02b0f5153",
+  "invocation": {
+    "argv": [
+      "-3",
+      "-B",
+      ".agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "-k",
+      "test_round4_segment"
+    ],
+    "commandId": "broh-r4-segment-composition",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "SYSTEMROOT",
+      "WINDIR"
+    ],
+    "executable": "py",
+    "shell": false,
+    "timeoutSeconds": 240
+  },
+  "invocationHash": "sha256:cf145fd7f4858b05520e0a38c6635ac072bf90b8e139e9004189b3f633d93524",
+  "processResult": {
+    "commandId": "broh-r4-segment-composition",
+    "exitCode": 1,
+    "stderr": "EEE\r\n======================================================================\r\nERROR: test_round4_segmented_artifact_view_requires_exact_parent_aggregate (__main__.BootstrapReviewCliTests.test_round4_segmented_artifact_view_requires_exact_parent_aggregate)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 46, in setUp\r\n    subprocess.run([\"git\", \"init\", \"-q\"], cwd=self.repo, check=True)\r\n  File \"C:\\Program Files\\Python312\\Lib\\subprocess.py\", line 548, in run\r\n    with Popen(*popenargs, **kwargs) as process:\r\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Program Files\\Python312\\Lib\\subprocess.py\", line 1026, in __init__\r\n    self._execute_child(args, executable, preexec_fn, close_fds,\r\n  File \"C:\\Program Files\\Python312\\Lib\\subprocess.py\", line 1538, in _execute_child\r\n    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,\r\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nFileNotFoundError: [WinError 2] ϵͳ�Ҳ���ָ�����ļ���\r\n\r\n======================================================================\r\nERROR: test_round4_segmented_artifact_view_retries_only_failed_segment (__main__.BootstrapReviewCliTests.test_round4_segmented_artifact_view_retries_only_failed_segment)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 46, in setUp\r\n    subprocess.run([\"git\", \"init\", \"-q\"], cwd=self.repo, check=True)\r\n  File \"C:\\Program Files\\Python312\\Lib\\subprocess.py\", line 548, in run\r\n    with Popen(*popenargs, **kwargs) as process:\r\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Program Files\\Python312\\Lib\\subprocess.py\", line 1026, in __init__\r\n    self._execute_child(args, executable, preexec_fn, close_fds,\r\n  File \"C:\\Program Files\\Python312\\Lib\\subprocess.py\", line 1538, in _execute_child\r\n    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,\r\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nFileNotFoundError: [WinError 2] ϵͳ�Ҳ���ָ�����ļ���\r\n\r\n======================================================================\r\nERROR: test_round4_segmented_attempts_merge_only_after_all_receipts_pass (__main__.BootstrapReviewCliTests.test_round4_segmented_attempts_merge_only_after_all_receipts_pass)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"C:\\jimuyun\\.agents\\skills\\run-phase-bootstrap-review\\tests\\test_bootstrap_review.py\", line 46, in setUp\r\n    subprocess.run([\"git\", \"init\", \"-q\"], cwd=self.repo, check=True)\r\n  File \"C:\\Program Files\\Python312\\Lib\\subprocess.py\", line 548, in run\r\n    with Popen(*popenargs, **kwargs) as process:\r\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Program Files\\Python312\\Lib\\subprocess.py\", line 1026, in __init__\r\n    self._execute_child(args, executable, preexec_fn, close_fds,\r\n  File \"C:\\Program Files\\Python312\\Lib\\subprocess.py\", line 1538, in _execute_child\r\n    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,\r\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nFileNotFoundError: [WinError 2] ϵͳ�Ҳ���ָ�����ļ���\r\n\r\n----------------------------------------------------------------------\r\nRan 3 tests in 0.017s\r\n\r\nFAILED (errors=3)\r\n",
+    "stderrSha256": "sha256:3f0712e613f2d713833c0181942b9b6d11d7e04247ac61ac75f36ab05e47d7d5",
+    "stdout": "",
+    "stdoutSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processResultHash": "sha256:e19c513ea3ef104d384aa2114f4543e5caa2deef4f7e3cfb078f34cc1e7ad9bc",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

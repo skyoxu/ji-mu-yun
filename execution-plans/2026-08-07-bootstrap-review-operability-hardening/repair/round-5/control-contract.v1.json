@@ -1,0 +1,107 @@
+{
+  "schema_version": "jimuyun.bootstrap-review-operability-hardening.control-contract.v1",
+  "acceptance_target": "execution-plans/2026-08-07-bootstrap-review-operability-hardening",
+  "round": 5,
+  "source_bindings": [
+    {
+      "path": "decision-logs/2026-08-09-bootstrap-review-context-window-repair.md",
+      "sha256": "sha256:f790f0d8533acaf0f637ba875d2f97ae0730129ea882c9b1cebfed74458cd886"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/investigations/bootstrap-review-context-overflow-remediation-investigation.md",
+      "sha256": "sha256:09643c2a9b7bccf40fef9a794dab64f13f4ff202ea7a4eb4069394bd5d489abb"
+    },
+    {
+      "path": "source-reconciliation.v1.json",
+      "role": "conflict-disposition"
+    }
+  ],
+  "authority_interpretation": {
+    "parent_validates_complete_authority": true,
+    "segmented_child_authority_mode": "policy-capsule-only",
+    "raw_authority_mapping_to_child": false,
+    "raw_artifact_view_manifest_to_child": false,
+    "non_segmented_child_authority_mode": "full-frozen-artifact-view",
+    "sampling_allowed": false,
+    "artifact_coverage": "all"
+  },
+  "context_budget": {
+    "schema_version": "bootstrap-context-budget.v1",
+    "maxFixedPromptBytes": 12288,
+    "maxPolicyCapsuleBytes": 16384,
+    "maxPacketBytes": 49152,
+    "maxSingleToolResultBytes": 16384,
+    "maxAttemptToolResultBytes": 65536,
+    "maxCandidateBytes": 16384,
+    "minimumHeadroomRatio": 0.4,
+    "overflowAction": "repartition-no-unchanged-retry",
+    "enforcement_point": "before-Popen",
+    "telemetry_required": ["promptBytes", "packetBytes", "capsuleBytes", "maxToolResultBytes", "totalToolResultBytes", "candidateBytes"]
+  },
+  "policy_capsule": {
+    "schema_version": "bootstrap-review-policy-capsule.v1",
+    "producer": "bootstrap_review.build_policy_capsule",
+    "llm_summary_allowed": false,
+    "required_bindings": ["role", "authorityRevision", "sourceHashes", "rules", "outputContract", "capsuleHash", "authorizes"],
+    "authorizes": []
+  },
+  "review_packet": {
+    "schema_version": "bootstrap-review-packet.v1",
+    "producer": "bootstrap_review.materialize_review_packet",
+    "required_fields": ["packetId", "role", "primaryArtifact", "inclusiveLineRange", "directContextRanges", "requirementIds", "findingIds", "artifactViewSourceHashes", "policyCapsuleHash", "packetBytes", "budgetRevision", "authorityRevision", "authorizes"],
+    "allowed_child_inputs": ["packet", "policyCapsule", "handshakeHelper", "candidateSchema"],
+    "forbidden_child_inputs": ["repositoryRoot", "fullRunDirectory", "artifactViewManifest", "rawAuthoritySnapshots"],
+    "authorizes": []
+  },
+  "tool_output_boundary": {
+    "allowed_operations": ["read_packet", "search_packet"],
+    "maxSingleToolResultBytes": 16384,
+    "maxAttemptToolResultBytes": 65536,
+    "packet_external_path_action": "contract-violation",
+    "formal_publication_on_violation": false,
+    "fastctx_and_native_share_budget": true
+  },
+  "retry_boundary": {
+    "repartition_required_for": ["context-window-exceeded", "budget-exceeded", "packet-external-read", "tool-result-overflow"],
+    "unchanged_retry_allowed": false,
+    "retry_unit": "failed-packet-only",
+    "cache_identity_fields": ["role", "model", "reasoningEffort", "packetHash", "capsuleHash", "budgetRevision", "authorityRevision"]
+  },
+  "parent_projection": {
+    "schema_version": "bootstrap-parent-projection.v1",
+    "fixed_fields": ["status", "nextAction", "completedPackets", "remainingPackets", "acceptedFindings", "evidencePath", "authorizes"],
+    "raw_attempt_material_to_parent_session": false,
+    "raw_material_storage": "attempt-evidence-only",
+    "authorizes": []
+  },
+  "candidate_closure": {
+    "owner": "bootstrap-parent-control-plane",
+    "input": "validated-local-candidate-and-segment-receipt-only",
+    "merge_after": "all-expected-segment-receipts-pass",
+    "operation": "deterministic-cross-segment-evidence-union-and-validation",
+    "raw_child_stdout_as_candidate": false,
+    "formal_publication_before_complete_coverage": false
+  },
+  "lifecycle_boundary": {
+    "historical_runs": ["logs/reviews/broh-acceptance-20260809-r4", "logs/reviews/broh-acceptance-20260809-r4b", "logs/reviews/broh-acceptance-20260809-r4c"],
+    "historical_action": "abandoned-and-immutable",
+    "restore_or_reuse_historical_run": false,
+    "seal_action": "append-only-seal-run-after-no-active-event-backed-attempt",
+    "fresh_run_required_for_canary": true,
+    "fresh_artifact_view_snapshot_required": true
+  },
+  "parent_session_boundary": {
+    "context_window_marker_action": "stop-current-codex-resume-and-start-new-thread",
+    "raw_stdout_in_new_thread": false,
+    "handoff_fields": ["repositoryPath", "historicalRunState", "currentPlanAction", "deterministicValidationSummary", "nextAction"],
+    "handoff_authorizes": []
+  },
+  "stress_and_canary": {
+    "synthetic_scope_multiplier": 2,
+    "model_launch_in_deterministic_stress": false,
+    "canary_requires_fresh_run_id": true,
+    "canary_is_acceptance_authority": false,
+    "historical_r4_reuse": false
+  },
+  "authorizes": []
+}

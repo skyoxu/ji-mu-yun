@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bootstrap Acceptance Inventory Attestation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewId", "attemptId", "inputHash", "capabilityId", "capabilityVersion", "producerRole", "status", "scopeHash", "coverage"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-acceptance-inventory-attestation.v1"},
+    "reviewId": {"type": "string", "minLength": 1},
+    "attemptId": {"type": "string", "minLength": 1},
+    "inputHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "capabilityId": {"const": "acceptance-inventory-attestation"},
+    "capabilityVersion": {"const": "1.0"},
+    "producerRole": {"const": "acceptance_auditor"},
+    "status": {"enum": ["complete", "incomplete"]},
+    "scopeHash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "coverage": {"type": "array", "items": {"type": "object"}}
+  }
+}

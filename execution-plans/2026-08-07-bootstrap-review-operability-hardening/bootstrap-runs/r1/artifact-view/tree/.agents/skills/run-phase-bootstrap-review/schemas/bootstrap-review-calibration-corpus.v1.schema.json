@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/bootstrap-review-calibration-corpus.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "syntheticOnly", "runtimePromptConsumption", "pairs", "authorizes", "doesNotAuthorize"],
+  "properties": {
+    "schemaVersion": {"const": "bootstrap-review-calibration-corpus.v1"},
+    "syntheticOnly": {"const": true},
+    "runtimePromptConsumption": {"const": "forbidden"},
+    "pairs": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["pairId", "defectFamily", "confirmed", "refuted"],
+        "properties": {
+          "pairId": {"type": "string", "minLength": 1},
+          "defectFamily": {"type": "string", "minLength": 1},
+          "confirmed": {"$ref": "#/$defs/case"},
+          "refuted": {"$ref": "#/$defs/case"}
+        }
+      }
+    },
+    "authorizes": {"type": "array", "maxItems": 0},
+    "doesNotAuthorize": {"type": "array", "minItems": 6, "uniqueItems": true, "items": {"enum": ["plan-acceptance", "implementation-acceptance", "protected-handoff", "release", "commit", "done"]}}
+  },
+  "$defs": {
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["syntheticArtifact", "trigger", "guardState", "badOutcome", "verifierDecision", "expectedDisposition"],
+      "properties": {
+        "syntheticArtifact": {"type": "string", "minLength": 1},
+        "trigger": {"type": "string", "minLength": 1},
+        "guardState": {"type": "string", "minLength": 1},
+        "badOutcome": {"type": "string", "minLength": 1},
+        "verifierDecision": {"enum": ["confirmed", "refuted"]},
+        "expectedDisposition": {"enum": ["confirmed", "refuted"]}
+      }
+    }
+  }
+}
