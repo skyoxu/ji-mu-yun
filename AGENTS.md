@@ -31,6 +31,7 @@ Read only the row that matches the task, then follow its local links.
 | Phase architecture or ADR decisions | `docs/architecture/phase-service/_index.md` and `docs/architecture/ADR_INDEX_PHASE.md` |
 | API, DB, security, errors, logs, tests, or status | `docs/standards/phase-service.md` |
 | Hosted Godot behavior | the relevant entry in `docs/standards/_index.md` |
+| Hosted Godot kernel, contracts, or engine tests | `docs/architecture/ADR_INDEX_GODOT.md`, `docs/architecture/base/00-README.md`, `docs/testing-framework.md`, and the relevant Godot standard |
 | Repository delivery toolchain | `knowledge/toolchain-workflow-index.md` |
 | Documentation discovery | `docs/PROJECT_DOCUMENTATION_INDEX.md` |
 | Plan- or decision-scoped work | the explicit target under `execution-plans/` or `decision-logs/` |
@@ -38,10 +39,12 @@ Read only the row that matches the task, then follow its local links.
 Before modifying a subtree, follow its nearest `AGENTS.md`. Do not preload
 unrelated indexes or document trees.
 
-`AGENTS.md` files inside `logs/`, `backup/`, acceptance snapshots, or
-`artifact-view/tree/` are frozen evidence or imported payloads, not active
-repository instructions. Do not use those directories as a general session
-working root.
+`AGENTS.md` files inside `logs/**/artifact-view/tree/`, acceptance snapshots,
+backups, or historical log bundles are frozen evidence or imported payloads,
+not active repository instructions. The server-selected project entry at
+`logs/phase-a-innernet/workspaces/**/repo/AGENTS.md` is active user-sandbox
+guidance for that workspace only; it must not widen the server route or tool
+ceiling. Do not use other log or evidence directories as a session root.
 
 ## Non-Negotiable Rules
 
@@ -60,10 +63,11 @@ working root.
 
 ## Highest Encoding Rule
 
-- Read and write Chinese text only with Python and explicit UTF-8, for example
-  `Path(path).read_text(encoding="utf-8")` and
-  `Path(path).write_text(text, encoding="utf-8", newline="\n")`.
-- Never use PowerShell or Windows-native text commands for Chinese content.
+- Write Chinese text, and scripts containing Chinese literals, with Python and
+  explicit UTF-8, for example `Path(path).write_text(text, encoding="utf-8", newline="\n")`.
+- FastCtx `read`, `grep`, and encoding-preserving `replace` may inspect or
+  mechanically update Chinese UTF-8 text. Never use PowerShell or Windows-native
+  text commands to write Chinese content.
 - If a command script needs Chinese literals, use a Python file or ASCII-only
   Python source with Unicode escapes.
 - This applies to guidance, Markdown, skills, prototype records, and
@@ -114,7 +118,10 @@ Detailed matrices and conventions belong to the Phase standard and local
 
 For file-changing Hosted routes, follow
 `docs/architecture/phase-service/prototype-routes-and-recovery.md`.
-Consume its project-local sources in order. Missing sources fail closed;
+Its canonical recovery order has eight sources: parsed game-type route profile,
+selected route Skill prompt block, project execution guide, prototype contract,
+current route state, current goal/session state, repair/diagnostic evidence, and
+the latest live platform blocker. Consume them in order. Missing sources fail closed;
 current live blockers beat historical summaries and route memory.
 
 ### Shared LLM And Codex

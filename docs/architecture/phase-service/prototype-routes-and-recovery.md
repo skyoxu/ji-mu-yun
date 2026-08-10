@@ -34,13 +34,14 @@ Out of scope:
 
 For file-changing hosted game-project routes, consume project-level recovery sources before editing:
 
-1. Parsed game-type route profile and selected route skill prompt block.
-2. `meta/project-execution-guide.md`.
-3. `routes/prototype-contract/latest.json`.
-4. Current route latest state, such as `meta/routes/prototype/latest.json`, `meta/routes/iteration-plan/latest.json`, or `meta/routes/execute-next-goal/latest.json`.
-5. Current goal, step, repair step, or session state.
-6. Repair ledger and failing acceptance or Godot diagnostic evidence for repair routes.
-7. Latest live platform acceptance blocker.
+1. Parsed game-type route profile.
+2. Selected route skill prompt block.
+3. `meta/project-execution-guide.md`.
+4. `routes/prototype-contract/latest.json`.
+5. Current route latest state, such as `meta/routes/prototype/latest.json`, `meta/routes/iteration-plan/latest.json`, or `meta/routes/execute-next-goal/latest.json`.
+6. Current goal, step, repair step, or session state.
+7. Repair ledger and failing acceptance or Godot diagnostic evidence for repair routes.
+8. Latest live platform acceptance blocker.
 
 Missing required recovery sources must fail closed.
 

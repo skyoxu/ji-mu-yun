@@ -22,13 +22,14 @@ account administration, and other projects are outside this workspace scope.
 Before a file-changing Hosted route executes, consume and validate the
 applicable sources in this order:
 
-1. Parsed game-type route profile and selected route Skill prompt block.
-2. `meta/project-execution-guide.md`.
-3. `routes/prototype-contract/latest.json`.
-4. Current route latest state under `meta/routes/**`.
-5. Current goal, step, repair step, or session state.
-6. Repair ledger and failing acceptance or Godot diagnostics when applicable.
-7. Latest live platform acceptance blocker, which overrides stale summaries,
+1. Parsed game-type route profile.
+2. Selected route Skill prompt block.
+3. `meta/project-execution-guide.md`.
+4. `routes/prototype-contract/latest.json`.
+5. Current route latest state under `meta/routes/**`.
+6. Current goal, step, repair step, or session state.
+7. Repair ledger and failing acceptance or Godot diagnostics when applicable.
+8. Latest live platform acceptance blocker, which overrides stale summaries,
    route memory, and old repair state.
 
 The server-owned recovery contract is authoritative if it evolves. Missing
@@ -37,7 +38,10 @@ required sources fail closed. Assistant prose never completes a step.
 ## Workspace Non-Negotiables
 
 - Use Windows-compatible paths and keep code, tests, scripts, and logs in
-  English; read and write Chinese text with explicit UTF-8.
+  English. Write Chinese text, and scripts containing Chinese literals, with
+  Python and explicit UTF-8. FastCtx read/grep and encoding-preserving replace
+  may inspect or mechanically update UTF-8 text; do not use PowerShell or
+  Windows-native text commands to write Chinese content.
 - Preserve user changes and structured evidence. Never perform destructive Git
   or filesystem operations, expose secrets, or manually edit live state.
 - Ask before changing anything outside the server-selected workspace or using
