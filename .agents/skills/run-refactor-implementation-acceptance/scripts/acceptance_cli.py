@@ -980,7 +980,7 @@ def main() -> int:
     start.add_argument("--contract-hash", required=True)
     start.add_argument("--knowledge-context-hash", required=True)
     start.add_argument("--run-id")
-    start.add_argument("--skill-input-receipt")
+    start.add_argument("--skill-input-receipt", required=True)
     start.add_argument(
         "--skill-input-contract",
         default=str(REPOSITORY_ROOT / ".agents" / "skills" / "run-refactor-implementation-acceptance" / "references" / "skill-input-contract.v1.json"),
@@ -1098,14 +1098,13 @@ def main() -> int:
         print(json.dumps(prepare_bootstrap_command(args.request, args.out), sort_keys=True))
         return 0
     if args.command == "start-or-resume":
-        if args.skill_input_receipt:
-            require_ready_skill_input(
-                receipt_path=Path(args.skill_input_receipt),
-                repository_root=Path(args.repository_root),
-                contract_path=Path(args.skill_input_contract),
-                consumer="run-refactor-implementation-acceptance",
-                operation="acceptance",
-            )
+        require_ready_skill_input(
+            receipt_path=Path(args.skill_input_receipt),
+            repository_root=Path(args.repository_root),
+            contract_path=Path(args.skill_input_contract),
+            consumer="run-refactor-implementation-acceptance",
+            operation="acceptance",
+        )
         print(json.dumps(start_or_resume_target_run(
             Path(args.repository_root),
             args.target_plan,

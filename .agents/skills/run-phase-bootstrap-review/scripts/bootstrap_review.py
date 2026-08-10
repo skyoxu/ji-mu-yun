@@ -4745,17 +4745,18 @@ def command_prepare(args: argparse.Namespace) -> int:
     repository_root = Path(args.repository_root).resolve()
     if not repository_root.is_dir():
         raise BootstrapError(f"Repository root does not exist: {repository_root}")
-    if args.skill_input_receipt:
-        try:
-            require_ready_skill_input(
-                receipt_path=Path(args.skill_input_receipt),
-                repository_root=repository_root,
-                contract_path=Path(args.skill_input_contract),
-                consumer="run-phase-bootstrap-review",
-                operation="review",
-            )
-        except (OSError, ValueError) as exc:
-            raise BootstrapError(f"Skill input gate is not ready: {exc}") from exc
+    if not args.skill_input_receipt:
+        raise BootstrapError("Skill input gate is required: provide --skill-input-receipt")
+    try:
+        require_ready_skill_input(
+            receipt_path=Path(args.skill_input_receipt),
+            repository_root=repository_root,
+            contract_path=Path(args.skill_input_contract),
+            consumer="run-phase-bootstrap-review",
+            operation="review",
+        )
+    except (OSError, ValueError) as exc:
+        raise BootstrapError(f"Skill input gate is not ready: {exc}") from exc
     out_dir_candidate = Path(args.out_dir)
     if not out_dir_candidate.is_absolute():
         out_dir_candidate = repository_root / out_dir_candidate

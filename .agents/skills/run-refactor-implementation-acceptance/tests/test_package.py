@@ -150,7 +150,7 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(0, help_result.returncode, help_result.stderr)
             self.assertIn("route-acceptance", help_result.stdout)
 
-    def test_start_or_resume_cli_allocates_and_reuses_the_bound_run(self) -> None:
+    def test_start_or_resume_cli_requires_skill_input_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory) / "repo"
             (repository / "execution-plans" / "feature-a").mkdir(parents=True)
@@ -165,42 +165,9 @@ class PackageTests(unittest.TestCase):
             created = subprocess.run(
                 command, capture_output=True, text=True, encoding="utf-8", check=False
             )
-            self.assertEqual(0, created.returncode, created.stderr)
-            created_value = json.loads(created.stdout)
-            self.assertEqual("created", created_value["disposition"])
-            run_dir = repository / created_value["runDirectory"]
-            self.assertTrue((run_dir / "run-state.json").is_file())
-
-            resumed = subprocess.run(
-                command, capture_output=True, text=True, encoding="utf-8", check=False
-            )
-            self.assertEqual(0, resumed.returncode, resumed.stderr)
-            self.assertEqual("resumed", json.loads(resumed.stdout)["disposition"])
-
-            actions = Path(directory) / "actions.json"
-            actions.write_text(
-                json.dumps([{
-                    "actionId": "validate", "dependsOn": [], "order": 1,
-                    "commandId": "validate", "activation": True,
-                }]),
-                encoding="utf-8",
-                newline="\n",
-            )
-            inspect_command = [
-                sys.executable, "-B", str(SKILL_ROOT / "scripts" / "acceptance_cli.py"),
-                "inspect-persisted-run", "--run-dir", str(run_dir),
-                "--actions", str(actions), "--run-input-hash", "sha256:" + "a" * 64,
-                "--contract-hash", "sha256:" + "b" * 64,
-            ]
-            missing_context = subprocess.run(
-                inspect_command, capture_output=True, text=True, encoding="utf-8", check=False
-            )
-            self.assertNotEqual(0, missing_context.returncode)
-            inspected = subprocess.run(
-                inspect_command + ["--knowledge-context-hash", "sha256:" + "c" * 64],
-                capture_output=True, text=True, encoding="utf-8", check=False,
-            )
-            self.assertEqual(0, inspected.returncode, inspected.stderr)
+            self.assertNotEqual(0, created.returncode)
+            self.assertIn("--skill-input-receipt", created.stderr)
+            self.assertFalse((repository / "execution-plans" / "feature-a" / "acceptance-runs").exists())
 
 
 if __name__ == "__main__":

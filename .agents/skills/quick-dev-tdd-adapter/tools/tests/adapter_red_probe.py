@@ -18,7 +18,7 @@ def main() -> int:
         "command_registry": "schemas/command-registry.v1.json",
         "slices": [{"slice_id": "RMAP-S2", "allowed_changes": {"production": [], "tests": [], "documentation": []}}],
     }
-    prepared = ADAPTER.prepare(contract, "RMAP-S2", {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"})
+    prepared = ADAPTER._prepare_core(contract, "RMAP-S2", {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"})
     result = ADAPTER.transition(prepared, "green", {"exit_code": 0, "changed_paths": []})
     rule_id = result.get("diagnostic", {}).get("rule_id")
     print(rule_id or "RMAP-ADAPTER-RED-PROBE-UNEXPECTED")

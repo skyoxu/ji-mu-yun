@@ -37,6 +37,14 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.scope.mkdir(parents=True)
         self.target = self.scope / "plan.md"
         self.target.write_text("# Plan\n\nUnsafe authority rule.\n", encoding="utf-8", newline="\n")
+        self.skill_input_receipt = self.repo / "skill-input-receipt.json"
+        self.skill_input_gate_patcher = mock.patch.object(
+            bootstrap,
+            "require_ready_skill_input",
+            return_value={"context_artifact": self.target, "binding_hash": "sha256:" + "a" * 64},
+        )
+        self.skill_input_gate_patcher.start()
+        self.addCleanup(self.skill_input_gate_patcher.stop)
         self.unrelated = self.scope / "zz-unrelated.md"
         self.unrelated.write_text("# Unrelated\n", encoding="utf-8", newline="\n")
         root_relative = Path(".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json")
@@ -396,9 +404,15 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 json.dumps(closure, indent=2) + "\n", encoding="utf-8", newline="\n"
             )
             repair_closure_args = ["--repair-closure", str(closure_path)]
-        result = bootstrap.main(
-            [
-                "prepare",
+        skill_input_receipt = self.repo / "skill-input-receipt.json"
+        with mock.patch.object(
+            bootstrap,
+            "require_ready_skill_input",
+            return_value={"context_artifact": self.target, "binding_hash": "sha256:" + "a" * 64},
+        ):
+            result = bootstrap.main(
+                [
+                    "prepare",
                 "--repository-root", str(self.repo),
                 "--review-id", review_id,
                 "--change-id", change_id,
@@ -421,9 +435,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 *required_check_args,
                 "--execution-mode", execution_mode,
                 "--semantic-review-exclusivity", "no-other-semantic-review-in-cycle",
+                "--skill-input-receipt", str(skill_input_receipt),
                 "--out-dir", str(self.run_dir),
-            ]
-        )
+                ]
+            )
         self.assertEqual(expected_result, result)
 
     def test_broh_s0_prepare_dry_run_contract(self) -> None:
@@ -451,6 +466,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             *context_args,
             "--execution-mode", "manual",
             "--semantic-review-exclusivity", "no-other-semantic-review-in-cycle",
+            "--skill-input-receipt", str(self.skill_input_receipt),
             "--out-dir", str(self.run_dir),
         ]
         with mock.patch("sys.stdout", new_callable=io.StringIO) as output:
@@ -513,6 +529,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             *context_args,
             "--execution-mode", "manual",
             "--semantic-review-exclusivity", "no-other-semantic-review-in-cycle",
+            "--skill-input-receipt", str(self.skill_input_receipt),
             "--out-dir", str(self.run_dir),
         ]
         with mock.patch("sys.stdout", new_callable=io.StringIO) as output:
@@ -2000,6 +2017,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                         ),
                         "--execution-mode", "manual",
                         "--semantic-review-exclusivity", "no-other-semantic-review-in-cycle",
+                        "--skill-input-receipt", str(self.skill_input_receipt),
                         "--out-dir", str(run_dir),
                     ]
                 )

@@ -72,7 +72,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
-    parser.add_argument("--skill-input-receipt", type=Path)
+    parser.add_argument("--skill-input-receipt", type=Path, required=True)
     parser.add_argument("--skill-input-operation", choices=["create", "repair"], default="create")
     parser.add_argument(
         "--skill-input-contract",
@@ -80,14 +80,13 @@ def main() -> int:
         default=REPOSITORY_ROOT / ".agents" / "skills" / "vdd-execution-plan" / "references" / "skill-input-contract.v1.json",
     )
     args = parser.parse_args()
-    if args.skill_input_receipt:
-        require_ready_skill_input(
-            receipt_path=args.skill_input_receipt,
-            repository_root=args.repository_root,
-            contract_path=args.skill_input_contract,
-            consumer="vdd-execution-plan",
-            operation=args.skill_input_operation,
-        )
+    require_ready_skill_input(
+        receipt_path=args.skill_input_receipt,
+        repository_root=args.repository_root,
+        contract_path=args.skill_input_contract,
+        consumer="vdd-execution-plan",
+        operation=args.skill_input_operation,
+    )
     payload = json.loads(args.input.read_text(encoding="utf-8"))
     result = evaluate_preflight(payload, repository_root=args.repository_root.resolve())
     result["schema_version"] = "jimuyun.vdd-knowledge-preflight.v1"

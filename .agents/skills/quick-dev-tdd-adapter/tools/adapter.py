@@ -32,7 +32,7 @@ def _within(paths: list[str], allowed: list[str]) -> bool:
     return all(any(path.startswith(prefix) for prefix in prefixes) for path in normalized)
 
 
-def prepare(contract: dict[str, Any], slice_id: str, identities: dict[str, str]) -> dict[str, Any]:
+def _prepare_core(contract: dict[str, Any], slice_id: str, identities: dict[str, str]) -> dict[str, Any]:
     if contract.get("backend", {}).get("hidden_state") is not False:
         return _blocked({}, "RMAP-PREPARE-INVALID", "adapter must not own hidden state")
     command_registry = contract.get("command_registry")
@@ -72,12 +72,32 @@ def prepare_with_skill_input(
         consumer="quick-dev-tdd-adapter",
         operation="execute",
     )
-    result = prepare(contract, slice_id, identities)
+    result = _prepare_core(contract, slice_id, identities)
     result["skill_input"] = {
         "context_artifact": gate["context_artifact"].as_posix(),
         "binding_hash": gate["binding_hash"],
     }
     return result
+
+
+def prepare(
+    contract: dict[str, Any],
+    slice_id: str,
+    identities: dict[str, str],
+    *,
+    receipt_path: Path,
+    repository_root: Path = REPOSITORY_ROOT,
+    skill_contract_path: Path = REPOSITORY_ROOT / ".agents" / "skills" / "quick-dev-tdd-adapter" / "references" / "skill-input-contract.v1.json",
+) -> dict[str, Any]:
+    """Prepare one slice through the mandatory Skill input gate."""
+    return prepare_with_skill_input(
+        contract,
+        slice_id,
+        identities,
+        receipt_path=receipt_path,
+        repository_root=repository_root,
+        skill_contract_path=skill_contract_path,
+    )
 
 
 def transition(run: dict[str, Any], stage: str, event: dict[str, Any]) -> dict[str, Any]:
@@ -265,6 +285,9 @@ def execute(
     identities: dict[str, str],
     events: list[dict[str, Any]],
     *,
+    receipt_path: Path,
+    repository_root: Path = REPOSITORY_ROOT,
+    skill_contract_path: Path = REPOSITORY_ROOT / ".agents" / "skills" / "quick-dev-tdd-adapter" / "references" / "skill-input-contract.v1.json",
     protocol_bundle: dict[str, Any] | None = None,
     artifact_store: dict[tuple[str, str], bytes] | None = None,
 ) -> dict[str, Any]:
@@ -275,7 +298,14 @@ def execute(
     state_path = run_dir / "recovery-state.json"
     if state_path.exists():
         return _blocked({}, "RMAP-RECOVERY-NEW-RUN-STATE", "existing run requires an explicit successor")
-    run = prepare(contract, slice_id, identities)
+    run = prepare_with_skill_input(
+        contract,
+        slice_id,
+        identities,
+        receipt_path=receipt_path,
+        repository_root=repository_root,
+        skill_contract_path=skill_contract_path,
+    )
     for event in events:
         stage = event.get("stage")
         if not isinstance(stage, str):

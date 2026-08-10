@@ -1,6 +1,6 @@
 # Skill Input Consumption Contract
 
-Status: Draft
+Status: Implemented (repository scope; declared strict Skills are fail-closed)
 
 This document is the repository-level contract for determining whether a Skill
 has consumed the complete and stable input required for its next authoritative

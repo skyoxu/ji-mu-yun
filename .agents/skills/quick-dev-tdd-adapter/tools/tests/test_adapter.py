@@ -52,10 +52,23 @@ class AdapterTests(unittest.TestCase):
         }
 
     def _prepared(self) -> dict:
-        return ADAPTER.prepare(self._contract(), "RMAP-S2", {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"})
+        return ADAPTER._prepare_core(self._contract(), "RMAP-S2", {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"})
+
+    def _execute(self, run_dir: Path, events: list[dict], **kwargs):
+        gate = {"context_artifact": Path("context.json"), "binding_hash": "sha256:" + "a" * 64}
+        with mock.patch.object(ADAPTER, "require_ready_skill_input", return_value=gate):
+            return ADAPTER.execute(
+                run_dir,
+                self._contract(),
+                "RMAP-S2",
+                {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"},
+                events,
+                receipt_path=Path("receipt.json"),
+                **kwargs,
+            )
 
     def test_prepare_requires_current_hashes(self) -> None:
-        result = ADAPTER.prepare(self._contract(), "RMAP-S2", {"contract_hash": ""})
+        result = ADAPTER._prepare_core(self._contract(), "RMAP-S2", {"contract_hash": ""})
         self.assertEqual("RMAP-HASH-AUTHORITY", result["diagnostic"]["rule_id"])
 
     def test_implementation_before_red_is_rejected(self) -> None:
@@ -94,7 +107,7 @@ class AdapterTests(unittest.TestCase):
             {"stage": "refactor", "exit_code": 0, "changed_paths": [".agents/skills/quick-dev-tdd-adapter/tools/adapter.py"]},
         ]
         with tempfile.TemporaryDirectory() as tmp:
-            result = ADAPTER.execute(Path(tmp) / "run-001", self._contract(), "RMAP-S2", {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"}, events)
+            result = self._execute(Path(tmp) / "run-001", events)
             recovery = json.loads((Path(tmp) / "run-001" / "recovery-state.json").read_text(encoding="utf-8"))
         self.assertEqual("refactor-verified", result["state"])
         self.assertEqual(["red", "green", "refactor"], recovery["stages"])
@@ -104,7 +117,7 @@ class AdapterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "run-001"
             run_dir.mkdir()
-            result = ADAPTER.execute(run_dir, self._contract(), "RMAP-S2", {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"}, [])
+            result = self._execute(run_dir, [])
         self.assertEqual("RMAP-RECOVERY-NEW-RUN-STATE", result["diagnostic"]["rule_id"])
 
     def test_execute_persists_immutable_protocol_artifacts(self) -> None:
@@ -117,11 +130,7 @@ class AdapterTests(unittest.TestCase):
         ]
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "RUN-001"
-            result = ADAPTER.execute(
-                run_dir, self._contract(), "RMAP-S2",
-                {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"}, events,
-                protocol_bundle=bundle, artifact_store=store,
-            )
+            result = self._execute(run_dir, events, protocol_bundle=bundle, artifact_store=store)
             persisted, findings = load_protocol_run(PLAN_ROOT, run_dir)
         self.assertEqual("refactor-verified", result["state"])
         self.assertFalse(any(item["rule_id"] == "RMAP-ATTEMPT-PARTIAL" for item in findings))

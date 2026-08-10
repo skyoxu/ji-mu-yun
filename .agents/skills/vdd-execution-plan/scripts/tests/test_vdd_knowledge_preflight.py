@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import hashlib
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -47,6 +48,21 @@ def bound_payload(module, payload: dict) -> dict:
 
 
 class VddKnowledgePreflightTests(unittest.TestCase):
+    def test_cli_requires_skill_input_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            payload = root / "input.json"
+            payload.write_text("{}\n", encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(PREFLIGHT_PATH), "--input", str(payload), "--repository-root", str(root)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn("--skill-input-receipt", result.stderr)
+
     def test_all_rejected_candidates_block_plan_ready(self) -> None:
         try:
             module = load_preflight()
