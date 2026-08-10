@@ -34,6 +34,15 @@ applicable sources in this order:
 The server-owned recovery contract is authoritative if it evolves. Missing
 required sources fail closed. Assistant prose never completes a step.
 
+## Workspace Non-Negotiables
+
+- Use Windows-compatible paths and keep code, tests, scripts, and logs in
+  English; read and write Chinese text with explicit UTF-8.
+- Preserve user changes and structured evidence. Never perform destructive Git
+  or filesystem operations, expose secrets, or manually edit live state.
+- Ask before changing anything outside the server-selected workspace or using
+  an unapproved tool, provider, network, or process path.
+
 ## Skill And Knowledge Context
 
 - Use only the route-selected, server-published Skill and capability set.

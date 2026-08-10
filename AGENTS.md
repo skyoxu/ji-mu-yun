@@ -38,6 +38,11 @@ Read only the row that matches the task, then follow its local links.
 Before modifying a subtree, follow its nearest `AGENTS.md`. Do not preload
 unrelated indexes or document trees.
 
+`AGENTS.md` files inside `logs/`, `backup/`, acceptance snapshots, or
+`artifact-view/tree/` are frozen evidence or imported payloads, not active
+repository instructions. Do not use those directories as a general session
+working root.
+
 ## Non-Negotiable Rules
 
 - Communicate with the user in Chinese.
@@ -158,7 +163,7 @@ flows, local Chapter 6 review recovery, or game-template release work.
 
 ## Maintenance Budget
 
-Keep this file between 6,000 and 8,000 characters and below 10,000 characters.
+Target 6,000-8,000 characters; use 10,000 as the hard ceiling.
 Do not add command catalogs, repeated path maps, workflow chapters, detailed
 test matrices, or status narratives here. Add or update the owning source and
 link it through one existing routing entry.

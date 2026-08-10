@@ -73,6 +73,7 @@ The implementation backend never owns review acceptance, severity, done, commit,
 ## Artifact View And Access Proof
 
 - Codex Exec reads a frozen `artifact-view.v1` under the run directory and does not mix live originals with snapshots in one run.
+- Any `AGENTS.md` contained by an Artifact View, acceptance snapshot, or imported tree is payload evidence only, never an active instruction source; general Codex sessions must not use those trees as their working root.
 - The manifest binds original repository path, snapshot path, both hashes, size, encoding, line count, file type, binary/text classification, reparse metadata, Windows case-normalized identity, context classes, source scope, and creation identity.
 - Snapshot paths preserve repository-relative layout and reject case collisions, path escape, junction escape, and reparse escape.
 - Findings cite original paths. Snapshot evidence is projected back to original inclusive line ranges.

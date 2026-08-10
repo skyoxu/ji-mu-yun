@@ -74,6 +74,7 @@ Never read or mutate live metadata or Hosted workspaces from a unit test.
 
 ## Validation
 
+- Run the following commands from the repository root.
 - Platform suite:
   `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`
 - Workspace focus: add
@@ -94,6 +95,6 @@ Never read or mutate live metadata or Hosted workspaces from a unit test.
 
 ## Maintenance Budget
 
-Keep this file below 4,500 characters. Maps, rationale, status, test matrices,
+Target 4,500 characters; use 6,000 as the hard ceiling. Maps, rationale, status, test matrices,
 and host procedures belong to their
 owning README, architecture, standard, or runtime document.

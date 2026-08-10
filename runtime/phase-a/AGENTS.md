@@ -52,6 +52,8 @@ Never:
 
 After an authorized change, validate in this order:
 
+Run these commands from the repository root.
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1
 py -3 scripts/python/phase_a_ops_check.py

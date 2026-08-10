@@ -28,11 +28,16 @@ protected review, or releasing artifacts.
 | Close formal UI wiring after Chapter 6 | `workflow-chapter7-ui-wiring-closure` |
 | Create or repair a complete VDD execution-plan directory | `vdd-execution-plan` |
 | Maintain `workflow.md`, its validators, or its chapter skills | Read only the affected heading plus the controlling ADR/plan |
+| Maintain template-derived business-repository onboarding | `workflow.example.md` and the `workflow-chapter2-repository-bootstrap` entry |
+| Select or change the formal delivery profile | `DELIVERY_PROFILE.md` before the selected chapter entrypoint |
 | User explicitly asks to inspect or review the whole workflow | Full read is allowed for that review only |
 
 Skill names above are routing identifiers. Invoke them only when the user
 explicitly requests the corresponding formal workflow outcome or the active
 plan explicitly binds that entrypoint.
+
+`DELIVERY_PROFILE` is limited to `playable-ea`, `fast-ship`, and `standard`;
+the hosted-workflow default is `fast-ship`.
 
 ## Denied By Default
 
