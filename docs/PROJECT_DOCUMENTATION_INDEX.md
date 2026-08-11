@@ -1,4 +1,4 @@
-# Project Documentation Index (godotgame)
+# Project Documentation Index (Ji Mu Yun Phase A/B Platform)
 
 This file is the top-level navigation for project docs.
 
@@ -37,6 +37,11 @@ This file is the top-level navigation for project docs.
 
 ## Workflow Docs
 
+- Model-visible tool round contract: `docs/model-visible-tool-round-contract.md`
+- Model-visible round summary schema: `scripts/sc/schemas/model-visible-tool-round-summary.v1.schema.json`
+- Model-visible preflight schema: `scripts/sc/schemas/model-visible-tool-preflight.v1.schema.json`
+- Model-visible measurement schema: `scripts/sc/schemas/model-visible-tool-measurement.v1.schema.json`
+- Model-visible round validator/producer: `scripts/python/validate_model_visible_tool_round_summary.py`, `scripts/python/build_model_visible_tool_round_summary.py`
 - Daily workflow (authoritative execution order): `workflow.md`
 - Example bootstrap workflow: `workflow.example.md`
 - Chapter 6 optimization guide: `docs/workflows/chapter-6-t56-optimization-guide.md`

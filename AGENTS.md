@@ -33,7 +33,7 @@ Read only the row that matches the task, then follow its local links.
 | Hosted Godot behavior | the relevant entry in `docs/standards/_index.md` |
 | Hosted Godot kernel, contracts, or engine tests | `docs/architecture/ADR_INDEX_GODOT.md`, `docs/architecture/base/00-README.md`, `docs/testing-framework.md`, and the relevant Godot standard |
 | Repository delivery toolchain | `knowledge/toolchain-workflow-index.md` |
-| File tools and output limits | `docs/fastctx-file-operation-output-contract.md` |
+| File tools, model-visible rounds, and output limits | `docs/model-visible-tool-round-contract.md` and `docs/fastctx-file-operation-output-contract.md` |
 | Documentation discovery | `docs/PROJECT_DOCUMENTATION_INDEX.md` |
 | Plan- or decision-scoped work | the explicit target under `execution-plans/` or `decision-logs/` |
 

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/model-visible-tool-preflight.v1.schema.json",
+  "$comment": "Repository-scope authorization binding under Accepted ADR-0038.",
+  "title": "Model-visible tool parallelization preflight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "turn_id",
+    "scope",
+    "operation_ids",
+    "operation_manifest_sha256",
+    "checks",
+    "authority",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_version": {"const": "model-visible-tool-preflight.v1"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+    "turn_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope_kind", "scope_ref"],
+      "properties": {
+        "scope_kind": {"const": "repository"},
+        "scope_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*://)[^\\r\\n]+$"
+        }
+      }
+    },
+    "operation_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"}
+    },
+    "operation_manifest_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "same_scope_verified",
+        "authorization_verified",
+        "secret_redaction_verified",
+        "read_only_verified"
+      ],
+      "properties": {
+        "same_scope_verified": {"const": true},
+        "authorization_verified": {"const": true},
+        "secret_redaction_verified": {"const": true},
+        "read_only_verified": {"const": true}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "source_path", "sha256", "adapter_id"],
+      "properties": {
+        "kind": {"const": "repository-agent-contract"},
+        "source_path": {"const": "AGENTS.md"},
+        "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "adapter_id": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"}
+      }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    }
+  }
+}

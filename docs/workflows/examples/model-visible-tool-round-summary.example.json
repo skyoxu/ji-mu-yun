@@ -1,0 +1,120 @@
+{
+  "schema_version": "model-visible-tool-round-summary.v1",
+  "status": "complete",
+  "run_id": "round-example-001",
+  "turn_id": "turn-example-001",
+  "parent_turn_id": null,
+  "scope": {
+    "scope_kind": "repository",
+    "scope_ref": "repo"
+  },
+  "timing": {
+    "started_at": "2026-08-11T00:00:00Z",
+    "finished_at": "2026-08-11T00:00:01Z"
+  },
+  "measurement": {
+    "rounds": "observed",
+    "tokens": "estimated",
+    "rounds_evidence_ref": "ev-measurement",
+    "tokens_evidence_ref": "ev-measurement"
+  },
+  "metrics": {
+    "model_visible_rounds": 2,
+    "underlying_tool_calls": 2,
+    "parallel_groups": 0,
+    "sequential_calls": 2,
+    "background_calls": 0,
+    "retries": 0,
+    "visible_result_bytes": 1200,
+    "visible_result_tokens": 300,
+    "persisted_output_bytes": 0,
+    "partial_results": 0,
+    "failed_calls": 0,
+    "interrupted_calls": 0,
+    "blocked_calls": 0
+  },
+  "preflight": {
+    "same_scope_verified": false,
+    "authorization_verified": false,
+    "secret_redaction_verified": false,
+    "parallelization_allowed": false,
+    "block_reason": null,
+    "evidence_ref": null
+  },
+  "round_events": [
+    {
+      "round_id": "round-001",
+      "turn_id": "turn-example-001",
+      "result_blocks": 1,
+      "observed": true
+    },
+    {
+      "round_id": "round-002",
+      "turn_id": "turn-example-001",
+      "result_blocks": 1,
+      "observed": true
+    }
+  ],
+  "operations": [
+    {
+      "operation_id": "read-a",
+      "tool_call_id": "call:read-a",
+      "parent_tool_call_id": null,
+      "round_id": "round-001",
+      "scope": {
+        "scope_kind": "repository",
+        "scope_ref": "repo"
+      },
+      "tool_family": "fastctx",
+      "access_mode": "read-only",
+      "execution_mode": "sequential",
+      "status": "complete",
+      "attempts": 1,
+      "group_id": null,
+      "visible_result_bytes": 600,
+      "persisted_output_bytes": 0,
+      "evidence_ref": null,
+      "background_lifecycle": null
+    },
+    {
+      "operation_id": "read-b",
+      "tool_call_id": "call:read-b",
+      "parent_tool_call_id": "call:read-a",
+      "round_id": "round-002",
+      "scope": {
+        "scope_kind": "repository",
+        "scope_ref": "repo"
+      },
+      "tool_family": "codex-shell",
+      "access_mode": "read-only",
+      "execution_mode": "sequential",
+      "status": "complete",
+      "attempts": 1,
+      "group_id": null,
+      "visible_result_bytes": 600,
+      "persisted_output_bytes": 0,
+      "evidence_ref": null,
+      "background_lifecycle": null
+    }
+  ],
+  "continuation": {
+    "has_more": false,
+    "offsets": []
+  },
+  "evidence_refs": [
+    {
+      "ref_id": "ev-measurement",
+      "kind": "sidecar",
+      "path": "docs/workflows/examples/model-visible-tool-round-evidence.example.json",
+      "sha256": "sha256:a0301a6b83fd1035e0f7c90cc78aaaea8fdca8d3b2ffb333410d5d6d50d6266a",
+      "hash_status": "verified",
+      "run_id": "round-example-001",
+      "turn_id": "turn-example-001",
+      "scope_kind": "repository",
+      "scope_ref": "repo",
+      "owner": "docs-example"
+    }
+  ],
+  "external_boundaries": [],
+  "errors": []
+}

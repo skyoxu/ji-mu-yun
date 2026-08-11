@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/model-visible-tool-round-summary.v1.schema.json",
+  "$comment": "Evidence and redaction boundary: Accepted ADR-0038.",
+  "title": "Model-visible tool round summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "run_id",
+    "turn_id",
+    "scope",
+    "timing",
+    "measurement",
+    "metrics",
+    "preflight",
+    "round_events",
+    "operations",
+    "continuation",
+    "evidence_refs",
+    "external_boundaries",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": {"const": "model-visible-tool-round-summary.v1"},
+    "status": {"type": "string", "enum": ["complete", "partial", "failed", "interrupted", "blocked"]},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+    "turn_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+    "parent_turn_id": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+    "scope": {"$ref": "#/$defs/scope"},
+    "timing": {"$ref": "#/$defs/timing"},
+    "measurement": {"$ref": "#/$defs/measurement"},
+    "metrics": {"$ref": "#/$defs/metrics"},
+    "preflight": {"$ref": "#/$defs/preflight"},
+    "round_events": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/round_event"}
+    },
+    "operations": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/operation"}
+    },
+    "continuation": {"$ref": "#/$defs/continuation"},
+    "evidence_refs": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/evidence_ref"}
+    },
+    "external_boundaries": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {"$ref": "#/$defs/external_boundary"}
+    },
+    "errors": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {"$ref": "#/$defs/error"}
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+    "tool_call_id": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,160}$"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope_kind", "scope_ref"],
+      "properties": {
+        "scope_kind": {"type": "string", "enum": ["repository", "phase", "project", "workspace"]},
+        "scope_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*://)[^\\r\\n]+$"
+        }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started_at", "finished_at"],
+      "properties": {
+        "started_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "finished_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+        }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rounds", "tokens", "rounds_evidence_ref", "tokens_evidence_ref"],
+      "properties": {
+        "rounds": {"type": "string", "enum": ["observed", "estimated", "unknown"]},
+        "tokens": {"type": "string", "enum": ["observed", "estimated", "unknown"]},
+        "rounds_evidence_ref": {"type": ["string", "null"], "maxLength": 128},
+        "tokens_evidence_ref": {"type": ["string", "null"], "maxLength": 128}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_visible_rounds",
+        "underlying_tool_calls",
+        "parallel_groups",
+        "sequential_calls",
+        "background_calls",
+        "retries",
+        "visible_result_bytes",
+        "visible_result_tokens",
+        "persisted_output_bytes",
+        "partial_results",
+        "failed_calls",
+        "interrupted_calls",
+        "blocked_calls"
+      ],
+      "properties": {
+        "model_visible_rounds": {"type": "integer", "minimum": 0},
+        "underlying_tool_calls": {"type": "integer", "minimum": 0},
+        "parallel_groups": {"type": "integer", "minimum": 0},
+        "sequential_calls": {"type": "integer", "minimum": 0},
+        "background_calls": {"type": "integer", "minimum": 0},
+        "retries": {"type": "integer", "minimum": 0},
+        "visible_result_bytes": {"type": "integer", "minimum": 0, "maximum": 12000},
+        "visible_result_tokens": {"type": "integer", "minimum": 0},
+        "persisted_output_bytes": {"type": "integer", "minimum": 0},
+        "partial_results": {"type": "integer", "minimum": 0},
+        "failed_calls": {"type": "integer", "minimum": 0},
+        "interrupted_calls": {"type": "integer", "minimum": 0},
+        "blocked_calls": {"type": "integer", "minimum": 0}
+      }
+    },
+    "preflight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "same_scope_verified",
+        "authorization_verified",
+        "secret_redaction_verified",
+        "parallelization_allowed",
+        "block_reason",
+        "evidence_ref"
+      ],
+      "properties": {
+        "same_scope_verified": {"type": "boolean"},
+        "authorization_verified": {"type": "boolean"},
+        "secret_redaction_verified": {"type": "boolean"},
+        "parallelization_allowed": {"type": "boolean"},
+        "block_reason": {"type": ["string", "null"], "maxLength": 240},
+        "evidence_ref": {"type": ["string", "null"], "maxLength": 128}
+      }
+    },
+    "round_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["round_id", "turn_id", "result_blocks", "observed"],
+      "properties": {
+        "round_id": {"$ref": "#/$defs/id"},
+        "turn_id": {"$ref": "#/$defs/id"},
+        "result_blocks": {"type": "integer", "minimum": 1},
+        "observed": {"type": "boolean"}
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_id",
+        "tool_call_id",
+        "parent_tool_call_id",
+        "round_id",
+        "scope",
+        "tool_family",
+        "access_mode",
+        "execution_mode",
+        "status",
+        "attempts",
+        "visible_result_bytes",
+        "persisted_output_bytes",
+        "evidence_ref",
+        "background_lifecycle"
+      ],
+      "properties": {
+        "operation_id": {"$ref": "#/$defs/id"},
+        "tool_call_id": {"$ref": "#/$defs/tool_call_id"},
+        "parent_tool_call_id": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9._:-]{1,160}$"},
+        "round_id": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+        "scope": {"$ref": "#/$defs/scope"},
+        "tool_family": {"type": "string", "enum": ["fastctx", "codex-shell", "mcp", "functions-exec", "browser", "image", "other"]},
+        "access_mode": {"type": "string", "enum": ["read-only", "side-effecting"]},
+        "execution_mode": {"type": "string", "enum": ["parallel", "sequential", "background"]},
+        "status": {"type": "string", "enum": ["complete", "partial", "failed", "interrupted", "blocked"]},
+        "attempts": {"type": "integer", "minimum": 0},
+        "group_id": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+        "visible_result_bytes": {"type": "integer", "minimum": 0},
+        "persisted_output_bytes": {"type": "integer", "minimum": 0},
+        "evidence_ref": {"type": ["string", "null"], "maxLength": 256},
+        "background_lifecycle": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/background_lifecycle"}
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["status", "attempts"],
+            "properties": {
+              "status": {"const": "blocked"},
+              "attempts": {"const": 0}
+            }
+          },
+          "then": {
+            "properties": {
+              "round_id": {"type": "null"},
+              "visible_result_bytes": {"const": 0},
+              "persisted_output_bytes": {"const": 0},
+              "evidence_ref": {"type": "null"},
+              "background_lifecycle": {"type": "null"}
+            }
+          }
+        }
+      ]
+    },
+    "background_lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapter",
+        "job_id",
+        "terminal_state",
+        "exit_code",
+        "log_evidence_ref",
+        "log_unit",
+        "log_start",
+        "log_end",
+        "poll_count",
+        "stop_reason"
+      ],
+      "properties": {
+        "adapter": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,64}$"},
+        "job_id": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,160}$"},
+        "terminal_state": {"type": "string", "enum": ["running", "complete", "failed", "interrupted", "cancelled"]},
+        "exit_code": {"type": ["integer", "null"]},
+        "log_evidence_ref": {"type": ["string", "null"], "maxLength": 128},
+        "log_unit": {"const": "byte"},
+        "log_start": {"type": "integer", "minimum": 0},
+        "log_end": {"type": "integer", "minimum": 0},
+        "poll_count": {"type": "integer", "minimum": 0, "maximum": 64},
+        "stop_reason": {"type": ["string", "null"], "minLength": 1, "maxLength": 240}
+      }
+    },
+    "continuation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["has_more", "offsets"],
+      "properties": {
+        "has_more": {"type": "boolean"},
+        "offsets": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["operation_id", "unit", "next"],
+            "properties": {
+              "operation_id": {"$ref": "#/$defs/id"},
+              "unit": {"type": "string", "enum": ["line", "record", "byte", "page", "cursor"]},
+              "next": {
+                "oneOf": [
+                  {"type": "integer", "minimum": 0},
+                  {"type": "string", "pattern": "^[A-Za-z0-9._~:-]{1,256}$"}
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "evidence_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref_id", "kind", "sha256", "hash_status", "run_id", "turn_id", "scope_kind", "scope_ref", "owner"],
+      "properties": {
+        "ref_id": {"$ref": "#/$defs/id"},
+        "kind": {"type": "string", "enum": ["log", "summary", "artifact", "sidecar"]},
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*://)[^\\r\\n]+$"
+        },
+        "artifact_id": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,256}$"},
+        "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "hash_status": {"type": "string", "enum": ["verified", "external-unverified"]},
+        "run_id": {"$ref": "#/$defs/id"},
+        "turn_id": {"$ref": "#/$defs/id"},
+        "scope_kind": {"type": "string", "enum": ["repository", "phase", "project", "workspace"]},
+        "scope_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*://)[^\\r\\n]+$"
+        },
+        "owner": {"type": "string", "pattern": "^(?!unknown$)[A-Za-z0-9._:-]{1,128}$"},
+        "attestation_ref": {"type": ["string", "null"], "maxLength": 128}
+      },
+      "oneOf": [{"required": ["path"]}, {"required": ["artifact_id"]}]
+    },
+    "external_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundary", "observed", "reason"],
+      "properties": {
+        "boundary": {"type": "string", "enum": ["functions.exec", "codex-service", "mcp-provider", "browser-provider", "image-provider", "token-accounting", "other"]},
+        "observed": {"type": "boolean"},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 240}
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "family", "severity", "message", "operation_id"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^[a-z0-9._-]{1,96}$"},
+        "family": {"type": "string", "enum": ["contract", "authorization", "scope", "redaction", "timeout", "tool", "evidence", "external", "unknown"]},
+        "severity": {"type": "string", "enum": ["warning", "error", "fatal"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 240},
+        "operation_id": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9._-]{1,128}$"}
+      }
+    }
+  }
+}

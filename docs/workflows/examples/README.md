@@ -48,6 +48,11 @@ This directory stores golden examples for stable workflow contracts.
 - `sc-project-health-doctor-project.example.json`
 - `sc-project-health-check-directory-boundaries.example.json`
 
+## Tool Context
+
+- `model-visible-tool-round-summary.example.json`
+- `model-visible-tool-round-evidence.example.json` (`model-visible-tool-measurement.v1`)
+
 ## Notes
 
 - All files are UTF-8.

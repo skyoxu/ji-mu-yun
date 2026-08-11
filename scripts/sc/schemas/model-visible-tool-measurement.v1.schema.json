@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jimuyun.local/schemas/model-visible-tool-measurement.v1.schema.json",
+  "$comment": "Machine-readable round and token measurement evidence under Accepted ADR-0038.",
+  "title": "Model-visible tool measurement evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "turn_id",
+    "scope",
+    "round_measurement",
+    "round_events",
+    "visible_result_bytes",
+    "token_measurement",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {"const": "model-visible-tool-measurement.v1"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+    "turn_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope_kind", "scope_ref"],
+      "properties": {
+        "scope_kind": {"type": "string", "enum": ["repository", "phase", "project", "workspace"]},
+        "scope_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*://)[^\\r\\n]+$"
+        }
+      }
+    },
+    "round_measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "model_visible_rounds"],
+      "properties": {
+        "mode": {"type": "string", "enum": ["observed", "estimated"]},
+        "model_visible_rounds": {"type": "integer", "minimum": 0}
+      }
+    },
+    "round_events": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["round_id", "turn_id", "result_blocks", "observed"],
+        "properties": {
+          "round_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+          "turn_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"},
+          "result_blocks": {"type": "integer", "minimum": 1},
+          "observed": {"type": "boolean"}
+        }
+      }
+    },
+    "visible_result_bytes": {"type": "integer", "minimum": 0, "maximum": 12000},
+    "token_measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "visible_result_tokens", "method"],
+      "properties": {
+        "mode": {"type": "string", "enum": ["observed", "estimated"]},
+        "visible_result_tokens": {"type": "integer", "minimum": 0},
+        "method": {"type": "string", "enum": ["provider", "utf8-bytes-ceil-div-4"]}
+      }
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    }
+  }
+}
