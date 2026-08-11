@@ -15,8 +15,11 @@
     "output_root": {"type": "string", "minLength": 1, "pattern": "^(?![A-Za-z]:)(?!/)(?!\\\\)"},
     "execution_identity": {"$ref": "#/$defs/sha256"},
     "max_context_bytes": {"type": "integer", "minimum": 512, "maximum": 12000},
+    "max_snapshot_bytes": {"type": "integer", "minimum": 65536, "maximum": 4194304},
     "allowed_capabilities": {
       "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
       "uniqueItems": true,
       "items": {"enum": ["read-frozen-snapshot", "write-context-output"]}
     },

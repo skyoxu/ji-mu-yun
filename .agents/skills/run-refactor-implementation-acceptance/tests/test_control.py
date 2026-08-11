@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import sys
 import unittest
 from pathlib import Path
@@ -716,6 +717,11 @@ class ExecutionControlTests(unittest.TestCase):
             repository = Path(directory) / "repo"
             (repository / "execution-plans" / "feature-a").mkdir(parents=True)
             hashes = ["sha256:" + character * 64 for character in "abcde"]
+            context_name = "skill-input-context-\u4e2d\u6587.v1.json"
+            source_relative = f"execution-plans/feature-a/{context_name}"
+            context_path = repository / "execution-plans" / "feature-a" / context_name
+            context_path.write_text('{"context":"accepted"}\n', encoding="utf-8", newline="\n")
+            hashes[4] = "sha256:" + hashlib.sha256(context_path.read_bytes()).hexdigest()
             created = execution_control.start_or_resume_target_run(
                 repository,
                 "execution-plans/feature-a",
@@ -724,11 +730,31 @@ class ExecutionControlTests(unittest.TestCase):
                 hashes[2],
                 skill_input_binding_hash=hashes[3],
                 skill_input_context_hash=hashes[4],
+                skill_input_context_path=source_relative,
             )
             run_dir = repository / created["runDirectory"]
             state = json.loads((run_dir / "run-state.json").read_text(encoding="utf-8"))
             self.assertEqual(hashes[3], state["skillInputBindingHash"])
             self.assertEqual(hashes[4], state["skillInputContextHash"])
+            self.assertEqual("skill-input/skill-input-context.v1.json", state["skillInputContextPath"])
+            self.assertEqual(
+                source_relative,
+                state["skillInputContextSourcePath"],
+            )
+            custody = run_dir / state["skillInputContextPath"]
+            self.assertEqual(context_path.read_bytes(), custody.read_bytes())
+            context_path.unlink()
+            resumed = execution_control.start_or_resume_target_run(
+                repository,
+                "execution-plans/feature-a",
+                hashes[0],
+                hashes[1],
+                hashes[2],
+                skill_input_binding_hash=hashes[3],
+                skill_input_context_hash=hashes[4],
+                skill_input_context_path=source_relative,
+            )
+            self.assertEqual("resumed", resumed["disposition"])
             inspection = execution_control.inspect_persisted_run(
                 run_dir,
                 [{"actionId": "validate", "dependsOn": [], "order": 1, "commandId": "validate", "activation": True}],
@@ -745,6 +771,55 @@ class ExecutionControlTests(unittest.TestCase):
                     hashes[1],
                     hashes[2],
                     run_id=created["runId"],
+                )
+
+            custody.write_text('{"context":"tampered"}\n', encoding="utf-8", newline="\n")
+            with self.assertRaisesRegex(execution_control.ControlError, "custody artifact is stale"):
+                execution_control.start_or_resume_target_run(
+                    repository,
+                    "execution-plans/feature-a",
+                    hashes[0],
+                    hashes[1],
+                    hashes[2],
+                    skill_input_binding_hash=hashes[3],
+                    skill_input_context_hash=hashes[4],
+                    skill_input_context_path=source_relative,
+                )
+
+    def test_direct_persisted_run_validates_and_copies_skill_input_context(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repo"
+            run_root = repository / "runs"
+            unicode_segment = "\u4e0a\u4e0b\u6587"
+            source = repository / unicode_segment / "context.json"
+            source.parent.mkdir(parents=True)
+            run_root.mkdir()
+            source.write_text('{"summary":"ok"}\n', encoding="utf-8", newline="\n")
+            context_hash = "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
+            run = execution_control.create_persisted_run(
+                run_root,
+                "run-context",
+                "sha256:" + "a" * 64,
+                "sha256:" + "b" * 64,
+                skill_input_binding_hash="sha256:" + "c" * 64,
+                skill_input_context_hash=context_hash,
+                skill_input_context_path=f"{unicode_segment}/context.json",
+                repository_root=repository,
+            )
+            state = json.loads((run / "run-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(source.read_bytes(), (run / state["skillInputContextPath"]).read_bytes())
+            with self.assertRaisesRegex(execution_control.ControlError, "repository root is required"):
+                execution_control.create_persisted_run(
+                    run_root,
+                    "run-invalid-context",
+                    "sha256:" + "a" * 64,
+                    "sha256:" + "b" * 64,
+                    skill_input_binding_hash="sha256:" + "c" * 64,
+                    skill_input_context_hash=context_hash,
+                    skill_input_context_path=f"{unicode_segment}/context.json",
                 )
 
     def test_target_run_entry_does_not_migrate_legacy_artifact_only_run(self) -> None:
@@ -798,6 +873,50 @@ class ExecutionControlTests(unittest.TestCase):
             self.assertEqual(
                 knowledge_context_hash, event["inputHashes"]["knowledgeContextHash"]
             )
+
+    def test_stale_successor_revalidates_and_recopies_skill_input_custody(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "context.json"
+            source.write_text('{"context":"accepted"}\n', encoding="utf-8", newline="\n")
+            context_hash = "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
+            predecessor = execution_control.create_persisted_run(
+                root,
+                "run-context-bound",
+                "sha256:" + "a" * 64,
+                "sha256:" + "b" * 64,
+                skill_input_binding_hash="sha256:" + "c" * 64,
+                skill_input_context_hash=context_hash,
+                skill_input_context_path="context.json",
+                repository_root=root,
+            )
+            successor = execution_control.create_stale_linked_successor(
+                root,
+                "run-context-successor",
+                predecessor,
+                "sha256:" + "d" * 64,
+                "sha256:" + "e" * 64,
+            )
+            predecessor_state = json.loads((predecessor / "run-state.json").read_text(encoding="utf-8"))
+            successor_state = json.loads((successor / "run-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                (predecessor / predecessor_state["skillInputContextPath"]).read_bytes(),
+                (successor / successor_state["skillInputContextPath"]).read_bytes(),
+            )
+            (predecessor / predecessor_state["skillInputContextPath"]).write_text(
+                '{"context":"tampered"}\n', encoding="utf-8", newline="\n"
+            )
+            with self.assertRaisesRegex(execution_control.ControlError, "custody artifact is stale"):
+                execution_control.create_stale_linked_successor(
+                    root,
+                    "run-context-rejected",
+                    predecessor,
+                    "sha256:" + "f" * 64,
+                    "sha256:" + "1" * 64,
+                )
 
     def test_target_run_entry_rejects_non_plan_directories(self) -> None:
         import tempfile

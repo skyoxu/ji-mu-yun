@@ -41,6 +41,7 @@
     "max_reference_depth": {"type": "integer", "minimum": 1, "maximum": 64},
     "max_sources": {"type": "integer", "minimum": 1, "maximum": 5000},
     "max_context_bytes": {"type": "integer", "minimum": 512, "maximum": 12000},
+    "max_snapshot_bytes": {"type": "integer", "minimum": 65536, "maximum": 4194304},
     "budget_basis": {"$ref": "#/$defs/budget_basis"},
     "sensitivity_policy": {"const": "deny-credential-values"},
     "redaction_profile": {"const": "credential-values-v1"},

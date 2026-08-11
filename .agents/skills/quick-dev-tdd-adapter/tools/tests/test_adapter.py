@@ -31,12 +31,90 @@ LIFECYCLE_SPEC.loader.exec_module(LIFECYCLE)
 PLAN_ROOT = Path(__file__).resolve().parents[5] / "execution-plans" / "2026-07-15-repository-maintenance-tdd-adapter"
 if str(PLAN_ROOT / "tools") not in sys.path:
     sys.path.insert(0, str(PLAN_ROOT / "tools"))
+TEST_SUPPORT = Path(__file__).resolve().parents[5] / "scripts" / "python" / "tests"
+if str(TEST_SUPPORT) not in sys.path:
+    sys.path.insert(0, str(TEST_SUPPORT))
 
 from protocol_fixture_support import hydrate_protocol_fixture, load_protocol_run  # noqa: E402
 from protocol_validation_guards import validate_protocol_bundle  # noqa: E402
+from skill_input_composition_support import publish_ready_receipt  # noqa: E402
 
 
 class AdapterTests(unittest.TestCase):
+    def test_prepare_consumes_real_ready_skill_input_context(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repo"
+            plan = repository / "execution-plans" / "feature-a"
+            plan.mkdir(parents=True)
+            target = plan / "implementation-contract.v1.json"
+            target.write_text("{}\n", encoding="utf-8", newline="\n")
+            artifacts = publish_ready_receipt(
+                repository,
+                consumer="quick-dev-tdd-adapter",
+                operation="execute",
+                target="execution-plans/feature-a",
+                role_paths={
+                    "plan_directory": ["execution-plans/feature-a"],
+                    "target_files": ["execution-plans/feature-a/implementation-contract.v1.json"],
+                },
+            )
+            prepared = ADAPTER.prepare_with_skill_input(
+                self._contract(),
+                "RMAP-S2",
+                {"contract_hash": "sha256:" + "a" * 64, "validator_hash": "sha256:" + "b" * 64},
+                receipt_path=artifacts["receipt"],
+                repository_root=repository,
+                skill_contract_path=artifacts["contract"],
+            )
+            self.assertEqual("prepared", prepared["state"])
+            self.assertEqual(artifacts["context"].as_posix(), prepared["skill_input"]["context_artifact"])
+
+    def test_prepare_blocks_missing_wrong_and_stale_ready_receipts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repo"
+            plan = repository / "execution-plans" / "feature-a"
+            plan.mkdir(parents=True)
+            target = plan / "implementation-contract.v1.json"
+            target.write_text("{}\n", encoding="utf-8", newline="\n")
+            artifacts = publish_ready_receipt(
+                repository,
+                consumer="quick-dev-tdd-adapter",
+                operation="execute",
+                target="execution-plans/feature-a",
+                role_paths={
+                    "plan_directory": ["execution-plans/feature-a"],
+                    "target_files": ["execution-plans/feature-a/implementation-contract.v1.json"],
+                },
+            )
+            call = lambda receipt_path, contract_path: ADAPTER.prepare_with_skill_input(
+                self._contract(),
+                "RMAP-S2",
+                {"contract_hash": "sha256:" + "a" * 64, "validator_hash": "sha256:" + "b" * 64},
+                receipt_path=receipt_path,
+                repository_root=repository,
+                skill_contract_path=contract_path,
+            )
+            with self.assertRaises(ValueError):
+                call(repository / "missing-receipt.json", artifacts["contract"])
+            with self.assertRaises(ValueError):
+                call(artifacts["candidate_receipt"], artifacts["contract"])
+            wrong = publish_ready_receipt(
+                repository,
+                consumer="wrong-quick-dev-consumer",
+                operation="execute",
+                target="execution-plans/feature-a",
+                role_paths={
+                    "plan_directory": ["execution-plans/feature-a"],
+                    "target_files": ["execution-plans/feature-a/implementation-contract.v1.json"],
+                },
+                protocol_name=".skill-input-composition-wrong",
+            )
+            with self.assertRaises(ValueError):
+                call(wrong["receipt"], wrong["contract"])
+            target.write_text('{"stale":true}\n', encoding="utf-8", newline="\n")
+            with self.assertRaises(ValueError):
+                call(artifacts["receipt"], artifacts["contract"])
+
     def _contract(self) -> dict:
         return {
             "backend": {"hidden_state": False},

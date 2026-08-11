@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from skill_input_consumption import (
+    DEFAULT_MAX_SNAPSHOT_BYTES,
     SkillInputError,
     canonical_hash,
     contained_path,
@@ -20,12 +21,15 @@ from skill_input_consumption import (
     expand_source_graph,
     forbidden_repository_path,
     line_ranges,
+    is_reparse_point,
     read_json,
     redact_bytes,
+    redaction_profile_hash,
     repository_identity,
     sha256_bytes,
     validate_contract,
     validate_request_payload,
+    write_bytes_atomic,
     write_json_atomic,
 )
 
@@ -39,6 +43,19 @@ class ReceiptValidationError(ValueError):
     pass
 
 
+def _reject_symlink_components(path: Path, label: str, *, stop: Path | None = None) -> None:
+    current = path.absolute()
+    boundary = stop.absolute() if stop is not None else None
+    while True:
+        if is_reparse_point(current):
+            raise ReceiptValidationError(f"{label}.path may not contain a symlink")
+        if boundary is not None and current == boundary:
+            return
+        if current.parent == current:
+            return
+        current = current.parent
+
+
 def _artifact(root: Path, value: Any, label: str) -> tuple[Path, str]:
     if not isinstance(value, dict) or not isinstance(value.get("path"), str) or not isinstance(value.get("sha256"), str):
         raise ReceiptValidationError(f"{label} must contain path and sha256")
@@ -47,12 +64,14 @@ def _artifact(root: Path, value: Any, label: str) -> tuple[Path, str]:
     raw = Path(value["path"])
     if raw.is_absolute():
         raise ReceiptValidationError(f"{label}.path must be relative")
-    resolved = (root / raw).resolve()
+    joined = root / raw
+    _reject_symlink_components(joined, label, stop=root)
+    resolved = joined.resolve()
     try:
         rel = resolved.relative_to(root.resolve()).as_posix()
     except ValueError as exc:
         raise ReceiptValidationError(f"{label}.path escapes receipt root") from exc
-    if rel.startswith("logs/") or resolved.is_symlink():
+    if rel.startswith("logs/"):
         raise ReceiptValidationError(f"{label}.path is forbidden")
     return resolved, rel
 
@@ -60,6 +79,16 @@ def _artifact(root: Path, value: Any, label: str) -> tuple[Path, str]:
 def _check_sha(value: Any, label: str) -> None:
     if not isinstance(value, str) or not SHA256_RE.fullmatch(value):
         raise ReceiptValidationError(f"{label} is not sha256:<64 lowercase hex>")
+
+
+def _validate_model_safe_payload(payload: Any, label: str) -> None:
+    raw = (json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+    try:
+        redacted, _sensitivity, _status = redact_bytes(raw)
+    except SkillInputError as exc:
+        raise ReceiptValidationError(f"{label} is not model-safe UTF-8") from exc
+    if redacted != raw:
+        raise ReceiptValidationError(f"{label} contains credential-like output")
 
 
 def _validate_context(payload: Any, manifest_hash: str, *, max_context_bytes: int | None = None, serialized_size: int | None = None) -> None:
@@ -79,6 +108,7 @@ def _validate_context(payload: Any, manifest_hash: str, *, max_context_bytes: in
         raise ReceiptValidationError("context truncation fields are invalid")
     if not isinstance(payload["generated_at"], str) or not payload["generated_at"]:
         raise ReceiptValidationError("context generated_at is invalid")
+    _validate_model_safe_payload(payload, "context artifact")
     if max_context_bytes is not None:
         if serialized_size is None:
             serialized_size = len((json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
@@ -98,6 +128,8 @@ def _validate_decision(payload: Any, manifest_hash: str, context_hash: str, sour
         raise ReceiptValidationError("semantic decision producer role is invalid")
     _check_sha(payload["execution_identity"], "semantic decision execution_identity")
     _check_sha(payload["redaction_profile_hash"], "semantic decision redaction_profile_hash")
+    if payload["redaction_profile_hash"] != redaction_profile_hash():
+        raise ReceiptValidationError("semantic decision redaction profile is stale")
     if payload["status"] not in {"accepted", "insufficient"} or not isinstance(payload["rationale"], str) or len(payload["rationale"].encode("utf-8")) > 2000:
         raise ReceiptValidationError("semantic decision status or rationale is invalid")
     if (
@@ -115,6 +147,7 @@ def _validate_decision(payload: Any, manifest_hash: str, context_hash: str, sour
         raise ReceiptValidationError("semantic decision source statuses do not match receipt")
     if payload["redaction_status"] not in {"not-required", "complete", "failed"}:
         raise ReceiptValidationError("semantic decision redaction status is invalid")
+    _validate_model_safe_payload(payload, "semantic decision")
 
 
 def _validate_child_request_binding(
@@ -132,7 +165,7 @@ def _validate_child_request_binding(
         "snapshot_root", "output_root", "execution_identity", "max_context_bytes",
         "allowed_capabilities", "authorizes",
     }
-    if not isinstance(payload, dict) or set(payload) != required:
+    if not isinstance(payload, dict) or not required.issubset(payload) or set(payload) - required - {"max_snapshot_bytes"}:
         raise ReceiptValidationError("child request fields do not match schema")
     if (
         payload["schema_version"] != "skill-input-child-request.v1"
@@ -141,6 +174,8 @@ def _validate_child_request_binding(
         or payload["contract_hash"] != receipt["contract_hash"]
         or payload["source_manifest_hash"] != receipt["source_manifest"]["sha256"]
         or payload["max_context_bytes"] != contract["max_context_bytes"]
+        or payload.get("max_snapshot_bytes", DEFAULT_MAX_SNAPSHOT_BYTES)
+        != contract.get("max_snapshot_bytes", DEFAULT_MAX_SNAPSHOT_BYTES)
         or payload["authorizes"] != []
         or payload["execution_identity"] != decision.get("execution_identity")
     ):
@@ -171,6 +206,7 @@ def _validate_child_request_binding(
 
 
 def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: Path, require_ready: bool = False) -> dict[str, Any]:
+    _reject_symlink_components(receipt_path, "receipt")
     try:
         receipt_path.resolve().relative_to((repository_root.resolve() / "logs").resolve())
     except ValueError:
@@ -218,7 +254,7 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
         validate_request_payload(receipt["route_identity"], path="route_identity")
     except SkillInputError as exc:
         raise ReceiptValidationError(str(exc)) from exc
-    if target_relative != receipt["target"] or forbidden_repository_path(target_relative) or target_path.is_symlink():
+    if target_relative != receipt["target"] or forbidden_repository_path(target_relative) or is_reparse_point(target_path):
         raise ReceiptValidationError("receipt target is forbidden")
     request_binding = receipt.get("request_binding")
     if not isinstance(request_binding, dict) or set(request_binding) != {"request", "consumer", "operation", "target", "route_identity", "source_roles"}:
@@ -337,6 +373,8 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
         ):
             raise ReceiptValidationError(f"source manifest mismatch: {source['path']}")
         source_statuses[source["path"]] = source.get("semantic_status", "not-evaluated")
+    if not isinstance(receipt.get("missing_sources"), list) or not isinstance(receipt.get("changed_sources"), list):
+        raise ReceiptValidationError("receipt missing or changed source fields are invalid")
     if receipt.get("missing_sources") or receipt.get("changed_sources"):
         raise ReceiptValidationError("receipt has missing or changed sources")
     decision_ref = receipt.get("semantic_decision")
@@ -381,7 +419,16 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
             decision_path,
             decision,
         )
-        if decision["status"] != "accepted" or context["truncated"] or any(status != "accepted" for status in source_statuses.values()):
+        credential_sources = any(
+            source.get("sensitivity") == "credential-bearing" for source in receipt["sources"]
+        )
+        if (
+            decision["status"] != "accepted"
+            or decision["redaction_status"] == "failed"
+            or credential_sources and decision["redaction_status"] != "complete"
+            or context["truncated"]
+            or any(status != "accepted" for status in source_statuses.values())
+        ):
             raise ReceiptValidationError("ready receipt has insufficient semantic input")
     diagnostic = receipt.get("diagnostic_authorization")
     if diagnostic is not None:
@@ -453,31 +500,51 @@ def publish_ready(
             proposed_path.unlink()
         except FileNotFoundError:
             pass
-    write_json_atomic(receipt_path, receipt, expected_bytes=previous_receipt_bytes)
     manifest_path, _ = _artifact(root, receipt["source_manifest"], "source_manifest")
-    _remove_model_snapshot_payload(root, manifest_path, receipt.get("sources", []))
+    removed_payload = _remove_model_snapshot_payload(root, manifest_path, receipt.get("sources", []))
+    try:
+        write_json_atomic(receipt_path, receipt, expected_bytes=previous_receipt_bytes)
+    except Exception:
+        _restore_model_snapshot_payload(removed_payload)
+        raise
 
 
-def _remove_model_snapshot_payload(root: Path, manifest_path: Path, sources: list[Any]) -> None:
-    """Remove copied source bytes while retaining the hash-bound manifest."""
+def _remove_model_snapshot_payload(root: Path, manifest_path: Path, sources: list[Any]) -> list[tuple[Path, bytes]]:
+    """Remove copied source bytes with an in-memory rollback image."""
     snapshot_root = manifest_path.parent.resolve()
-    if snapshot_root == root or manifest_path.is_symlink() or not snapshot_root.is_dir():
-        return
+    if snapshot_root == root or is_reparse_point(manifest_path) or not snapshot_root.is_dir():
+        return []
+    payload: list[tuple[Path, bytes]] = []
     for source in sources:
         if not isinstance(source, dict) or not isinstance(source.get("path"), str):
             continue
-        candidate = (snapshot_root / source["path"]).resolve()
+        candidate = snapshot_root / source["path"]
+        _reject_symlink_components(candidate, "snapshot payload", stop=snapshot_root)
         try:
-            candidate.relative_to(snapshot_root)
+            candidate.resolve().relative_to(snapshot_root)
         except ValueError:
-            continue
-        if candidate.is_file() and not candidate.is_symlink():
+            raise ReceiptValidationError("snapshot payload escapes snapshot root")
+        if candidate.is_file() and not is_reparse_point(candidate):
+            payload.append((candidate, candidate.read_bytes()))
+    try:
+        for candidate, _content in payload:
             candidate.unlink()
+    except Exception:
+        _restore_model_snapshot_payload(payload)
+        raise
     for directory in sorted((item for item in snapshot_root.rglob("*") if item.is_dir()), key=lambda item: len(item.parts), reverse=True):
         try:
             directory.rmdir()
         except OSError:
             pass
+    return payload
+
+
+def _restore_model_snapshot_payload(payload: list[tuple[Path, bytes]]) -> None:
+    """Restore removed payload bytes after cleanup or ready CAS failure."""
+    for target, content in payload:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        write_bytes_atomic(target, content)
 
 
 def main() -> int:

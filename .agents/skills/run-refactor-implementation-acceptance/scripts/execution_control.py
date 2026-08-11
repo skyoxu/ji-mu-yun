@@ -68,6 +68,90 @@ def create_run_directory(root: Path, run_id: str) -> Path:
     return path
 
 
+def _normalize_repository_artifact_path(repository_root: Path, raw_path: str) -> tuple[Path, str]:
+    if not isinstance(raw_path, str) or not raw_path or "\\" in raw_path:
+        raise ControlError("Skill input context path is invalid")
+    supplied = PurePosixPath(raw_path)
+    if supplied.is_absolute() or ".." in supplied.parts:
+        raise ControlError("Skill input context path must be repository-relative")
+    root = repository_root.resolve()
+    if not root.is_dir():
+        raise ControlError("Skill input context repository root is invalid")
+    joined = root.joinpath(*supplied.parts)
+    current = joined
+    while current != root and current != current.parent:
+        if current.is_symlink():
+            raise ControlError("Skill input context artifact may not use symlinks")
+        current = current.parent
+    resolved = joined.resolve()
+    try:
+        normalized = resolved.relative_to(root).as_posix()
+    except ValueError as exc:
+        raise ControlError("Skill input context path escapes repository") from exc
+    return resolved, normalized
+
+
+def _read_repository_artifact(
+    repository_root: Path,
+    raw_path: str,
+    expected_hash: str,
+) -> tuple[bytes, str]:
+    resolved, normalized = _normalize_repository_artifact_path(repository_root, raw_path)
+    if resolved.is_symlink() or not resolved.is_file():
+        raise ControlError("Skill input context artifact is missing")
+    try:
+        payload = resolved.read_bytes()
+    except OSError as exc:
+        raise ControlError("Skill input context artifact is unreadable") from exc
+    actual_hash = "sha256:" + hashlib.sha256(payload).hexdigest()
+    if actual_hash != expected_hash:
+        raise ControlError("Skill input context artifact hash is stale")
+    return payload, normalized
+
+
+def _verify_skill_input_custody(run_dir: Path, state: dict[str, Any]) -> Path | None:
+    binding = state.get("skillInputBindingHash")
+    context_hash = state.get("skillInputContextHash")
+    custody_path = state.get("skillInputContextPath")
+    source_path = state.get("skillInputContextSourcePath")
+    values = (binding, context_hash, custody_path, source_path)
+    if all(value is None for value in values):
+        return None
+    if any(value is None for value in values):
+        raise ControlError("persisted run Skill input custody is incomplete")
+    if not isinstance(binding, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", binding):
+        raise ControlError("persisted run Skill input binding hash is invalid")
+    if not isinstance(context_hash, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", context_hash):
+        raise ControlError("persisted run Skill input context hash is invalid")
+    if not isinstance(source_path, str) or not source_path or "\\" in source_path:
+        raise ControlError("persisted run Skill input source path is invalid")
+    source_relative = PurePosixPath(source_path)
+    if source_relative.is_absolute() or ".." in source_relative.parts:
+        raise ControlError("persisted run Skill input source path is invalid")
+    if not isinstance(custody_path, str) or not custody_path or "\\" in custody_path:
+        raise ControlError("persisted run Skill input custody path is invalid")
+    relative = PurePosixPath(custody_path)
+    if relative.is_absolute() or ".." in relative.parts:
+        raise ControlError("persisted run Skill input custody path is invalid")
+    artifact = run_dir.joinpath(*relative.parts)
+    current = artifact
+    while current != run_dir and current != current.parent:
+        if current.is_symlink():
+            raise ControlError("persisted run Skill input custody path uses a symlink")
+        current = current.parent
+    resolved_artifact = artifact.resolve()
+    try:
+        resolved_artifact.relative_to(run_dir.resolve())
+    except ValueError as exc:
+        raise ControlError("persisted run Skill input custody path escapes run") from exc
+    if artifact.is_symlink() or not artifact.is_file():
+        raise ControlError("persisted run Skill input custody artifact is missing")
+    actual_hash = "sha256:" + hashlib.sha256(artifact.read_bytes()).hexdigest()
+    if actual_hash != context_hash:
+        raise ControlError("persisted run Skill input custody artifact is stale")
+    return artifact
+
+
 def create_persisted_run(
     root: Path,
     run_id: str,
@@ -78,6 +162,8 @@ def create_persisted_run(
     knowledge_context_hash: str | None = None,
     skill_input_binding_hash: str | None = None,
     skill_input_context_hash: str | None = None,
+    skill_input_context_path: str | None = None,
+    repository_root: Path | None = None,
 ) -> Path:
     """Create one append-only run root with hash-bound non-authorizing state."""
     for value, label in ((run_input_hash, "run input"), (contract_hash, "contract")):
@@ -94,8 +180,19 @@ def create_persisted_run(
     ):
         if value is not None and (not isinstance(value, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", value)):
             raise ControlError(label + " hash is invalid")
-    if (skill_input_binding_hash is None) != (skill_input_context_hash is None):
-        raise ControlError("Skill input binding and context hashes must be supplied together")
+    supplied_skill_input = (skill_input_binding_hash, skill_input_context_hash, skill_input_context_path)
+    if any(value is None for value in supplied_skill_input) and any(value is not None for value in supplied_skill_input):
+        raise ControlError("Skill input binding, context hash, and context path must be supplied together")
+    context_payload: bytes | None = None
+    normalized_context_source: str | None = None
+    if skill_input_context_path is not None:
+        if repository_root is None:
+            raise ControlError("Skill input context repository root is required")
+        context_payload, normalized_context_source = _read_repository_artifact(
+            repository_root,
+            skill_input_context_path,
+            skill_input_context_hash,
+        )
     run_dir = create_run_directory(root, run_id)
     state: dict[str, Any] = {
         "schemaVersion": "acceptance-execution-run.v1", "runId": run_id,
@@ -108,6 +205,16 @@ def create_persisted_run(
         state["skillInputBindingHash"] = skill_input_binding_hash
     if skill_input_context_hash is not None:
         state["skillInputContextHash"] = skill_input_context_hash
+    if context_payload is not None and normalized_context_source is not None:
+        custody_relative = "skill-input/skill-input-context.v1.json"
+        custody_path = run_dir / "skill-input" / "skill-input-context.v1.json"
+        custody_path.parent.mkdir()
+        with custody_path.open("xb") as handle:
+            handle.write(context_payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        state["skillInputContextPath"] = custody_relative
+        state["skillInputContextSourcePath"] = normalized_context_source
     if predecessor_run_id is not None:
         if not isinstance(predecessor_run_id, str) or _RUN_ID.fullmatch(predecessor_run_id) is None:
             raise ControlError("predecessor run identity is invalid")
@@ -129,6 +236,7 @@ def start_or_resume_target_run(
     run_id: str | None = None,
     skill_input_binding_hash: str | None = None,
     skill_input_context_hash: str | None = None,
+    skill_input_context_path: str | None = None,
 ) -> dict[str, Any]:
     """Create or resume one target-owned run without inventing a second lifecycle."""
     for value, label in (
@@ -144,8 +252,9 @@ def start_or_resume_target_run(
     ):
         if value is not None and (not isinstance(value, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", value)):
             raise ControlError(label + " hash is invalid")
-    if (skill_input_binding_hash is None) != (skill_input_context_hash is None):
-        raise ControlError("Skill input binding and context hashes must be supplied together")
+    supplied_skill_input = (skill_input_binding_hash, skill_input_context_hash, skill_input_context_path)
+    if any(value is None for value in supplied_skill_input) and any(value is not None for value in supplied_skill_input):
+        raise ControlError("Skill input binding, context hash, and context path must be supplied together")
     root = repository_root.resolve()
     if not root.is_dir() or not isinstance(target_plan, str) or not target_plan.strip():
         raise ControlError("target plan is invalid")
@@ -164,12 +273,23 @@ def start_or_resume_target_run(
     ):
         raise ControlError("target plan must be an execution-plans directory")
 
+    normalized_context_path: str | None = None
+    if skill_input_context_path is not None:
+        supplied_context = Path(skill_input_context_path)
+        if supplied_context.is_absolute():
+            raise ControlError("Skill input context path must be repository-relative")
+        _context_artifact, normalized_context_path = _normalize_repository_artifact_path(
+            root, supplied_context.as_posix()
+        )
+
     binding_parts = [run_input_hash, contract_hash, knowledge_context_hash]
     if skill_input_binding_hash is not None:
         binding_parts.append(skill_input_binding_hash)
     if skill_input_context_hash is not None:
         binding_parts.append(skill_input_context_hash)
-    binding_id = hashlib.sha256("\0".join(binding_parts).encode("ascii")).hexdigest()[:16]
+    if normalized_context_path is not None:
+        binding_parts.append(normalized_context_path)
+    binding_id = hashlib.sha256("\0".join(binding_parts).encode("utf-8")).hexdigest()[:16]
     selected_run_id = run_id or "acceptance-" + binding_id
     if _RUN_ID.fullmatch(selected_run_id) is None:
         raise ControlError("run identity is invalid")
@@ -202,6 +322,7 @@ def start_or_resume_target_run(
             knowledge_context_hash,
             skill_input_binding_hash,
             skill_input_context_hash,
+            normalized_context_path,
             require_skill_input_binding=True,
         )
         state, _events_path = _load_persisted_run(run_dir)
@@ -218,6 +339,8 @@ def start_or_resume_target_run(
             knowledge_context_hash=knowledge_context_hash,
             skill_input_binding_hash=skill_input_binding_hash,
             skill_input_context_hash=skill_input_context_hash,
+            skill_input_context_path=normalized_context_path,
+            repository_root=root,
         )
         disposition = "created"
     result = {
@@ -234,6 +357,12 @@ def start_or_resume_target_run(
         result["skillInputBindingHash"] = skill_input_binding_hash
     if skill_input_context_hash is not None:
         result["skillInputContextHash"] = skill_input_context_hash
+    if normalized_context_path is not None:
+        state, _ = _load_persisted_run(run_dir)
+        custody = _verify_skill_input_custody(run_dir, state)
+        assert custody is not None
+        result["skillInputContextPath"] = custody.relative_to(root).as_posix()
+        result["skillInputContextSourcePath"] = normalized_context_path
     return result
 
 
@@ -251,6 +380,7 @@ def create_stale_linked_successor(
     predecessor_id = predecessor_state.get("runId")
     if not isinstance(predecessor_id, str) or _RUN_ID.fullmatch(predecessor_id) is None:
         raise ControlError("predecessor run identity is invalid")
+    predecessor_context = _verify_skill_input_custody(predecessor_run_dir, predecessor_state)
     successor = create_persisted_run(
         root,
         run_id,
@@ -264,6 +394,12 @@ def create_stale_linked_successor(
         ),
         skill_input_binding_hash=predecessor_state.get("skillInputBindingHash"),
         skill_input_context_hash=predecessor_state.get("skillInputContextHash"),
+        skill_input_context_path=(
+            predecessor_context.relative_to(predecessor_run_dir).as_posix()
+            if predecessor_context is not None
+            else None
+        ),
+        repository_root=predecessor_run_dir if predecessor_context is not None else None,
     )
     state, _ = _load_persisted_run(successor)
     lifecycle_inputs = {
@@ -422,10 +558,12 @@ def _verify_persisted_binding(
     knowledge_context_hash: str | None = None,
     skill_input_binding_hash: str | None = None,
     skill_input_context_hash: str | None = None,
+    skill_input_context_path: str | None = None,
     *,
     require_skill_input_binding: bool = False,
 ) -> None:
     state, _ = _load_persisted_run(run_dir)
+    _verify_skill_input_custody(run_dir, state)
     if state.get("runInputHash") != run_input_hash or state.get("contractHash") != contract_hash:
         raise ControlError("persisted run binding is stale")
     persisted_context_hash = state.get("knowledgeContextHash")
@@ -436,6 +574,7 @@ def _verify_persisted_binding(
     for field, supplied, label in (
         ("skillInputBindingHash", skill_input_binding_hash, "Skill input binding"),
         ("skillInputContextHash", skill_input_context_hash, "Skill input context"),
+        ("skillInputContextSourcePath", skill_input_context_path, "Skill input context source path"),
     ):
         persisted = state.get(field)
         if require_skill_input_binding and persisted is not None and supplied is None:

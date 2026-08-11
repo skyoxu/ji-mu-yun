@@ -61,6 +61,19 @@ class SkillContractCompositionTests(unittest.TestCase):
         prepare = inspect.signature(adapter.prepare).parameters["receipt_path"]
         self.assertIs(inspect.Parameter.empty, prepare.default)
 
+    def test_each_initial_consumer_has_a_real_ready_context_composition_test(self):
+        composition_tests = {
+            "vdd-execution-plan": ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts" / "tests" / "test_vdd_knowledge_preflight.py",
+            "quick-dev-tdd-adapter": ROOT / ".agents" / "skills" / "quick-dev-tdd-adapter" / "tools" / "tests" / "test_adapter.py",
+            "run-phase-bootstrap-review": ROOT / ".agents" / "skills" / "run-phase-bootstrap-review" / "tests" / "test_bootstrap_review.py",
+            "run-refactor-implementation-acceptance": ROOT / ".agents" / "skills" / "run-refactor-implementation-acceptance" / "tests" / "test_package.py",
+        }
+        for consumer, path in composition_tests.items():
+            with self.subTest(consumer=consumer):
+                source = path.read_text(encoding="utf-8")
+                self.assertIn("publish_ready_receipt", source)
+                self.assertRegex(source, r"def test_.*consumes_real_ready_skill_input_context")
+
 
 if __name__ == "__main__":
     unittest.main()

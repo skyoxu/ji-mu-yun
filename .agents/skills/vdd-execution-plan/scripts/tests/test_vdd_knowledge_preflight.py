@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import hashlib
+import io
 import json
 import subprocess
 import sys
@@ -15,6 +16,11 @@ from unittest import mock
 SKILL_ROOT = Path(__file__).resolve().parents[2]
 PREFLIGHT_PATH = SKILL_ROOT / "scripts" / "vdd_knowledge_preflight.py"
 PREPARE_PATH = SKILL_ROOT / "scripts" / "prepare_knowledge_context.py"
+TEST_SUPPORT = SKILL_ROOT.parents[2] / "scripts" / "python" / "tests"
+if str(TEST_SUPPORT) not in sys.path:
+    sys.path.insert(0, str(TEST_SUPPORT))
+
+from skill_input_composition_support import publish_ready_receipt  # noqa: E402
 
 
 def load_preflight():
@@ -48,6 +54,90 @@ def bound_payload(module, payload: dict) -> dict:
 
 
 class VddKnowledgePreflightTests(unittest.TestCase):
+    def test_cli_consumes_real_ready_skill_input_context(self) -> None:
+        module = load_preflight()
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw) / "repo"
+            target = root / "execution-plans" / "plan"
+            target.mkdir(parents=True)
+            requirements = root / "requirements.md"
+            requirements.write_text("# Requirements\n", encoding="utf-8", newline="\n")
+            artifacts = publish_ready_receipt(
+                root,
+                consumer="vdd-execution-plan",
+                operation="create",
+                target="execution-plans/plan",
+                role_paths={"requirements": ["requirements.md"]},
+            )
+            snapshot = {"ref": "refs/heads/main", "commit": "a" * 40}
+            payload = bound_payload(module, {
+                "required_modules": ["repository-rules"],
+                "locator_request": {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": "request-1", "snapshot": snapshot},
+                "locator_result": {"schema_version": "jimuyun.knowledge-locator-result.v1", "request_id": "request-1", "snapshot": snapshot, "status": "matched", "candidates": [{"path": "AGENTS.md", "source_sha256": "b" * 64}]},
+                "decisions": [{"owner": "adapter", "decision": "accepted", "satisfies": ["repository-rules"], "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64}}],
+            })
+            input_path = target / "knowledge-preflight-input.json"
+            input_path.write_text(json.dumps(payload), encoding="utf-8")
+            output = io.StringIO()
+            with mock.patch.object(sys, "argv", [
+                "vdd_knowledge_preflight.py",
+                "--input", str(input_path),
+                "--repository-root", str(root),
+                "--skill-input-receipt", str(artifacts["receipt"]),
+                "--skill-input-contract", str(artifacts["contract"]),
+                "--skill-input-operation", "create",
+            ]), mock.patch.object(module, "validate_context", return_value=None), mock.patch("sys.stdout", output):
+                self.assertEqual(0, module.main())
+            result = json.loads(output.getvalue())
+            self.assertEqual(artifacts["context"].resolve().relative_to(root.resolve()).as_posix(), result["skill_input"]["context_artifact"])
+
+    def test_cli_blocks_missing_wrong_and_stale_ready_receipts(self) -> None:
+        module = load_preflight()
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw) / "repo"
+            target = root / "execution-plans" / "plan"
+            target.mkdir(parents=True)
+            requirements = root / "requirements.md"
+            requirements.write_text("# Requirements\n", encoding="utf-8", newline="\n")
+            artifacts = publish_ready_receipt(
+                root,
+                consumer="vdd-execution-plan",
+                operation="create",
+                target="execution-plans/plan",
+                role_paths={"requirements": ["requirements.md"]},
+            )
+            input_path = target / "knowledge-preflight-input.json"
+            input_path.write_text("{}\n", encoding="utf-8", newline="\n")
+
+            def invoke(receipt_path: Path, contract_path: Path) -> None:
+                with mock.patch.object(sys, "argv", [
+                    "vdd_knowledge_preflight.py",
+                    "--input", str(input_path),
+                    "--repository-root", str(root),
+                    "--skill-input-receipt", str(receipt_path),
+                    "--skill-input-contract", str(contract_path),
+                    "--skill-input-operation", "create",
+                ]):
+                    module.main()
+
+            with self.assertRaises(ValueError):
+                invoke(root / "missing-receipt.json", artifacts["contract"])
+            with self.assertRaises(ValueError):
+                invoke(artifacts["candidate_receipt"], artifacts["contract"])
+            wrong = publish_ready_receipt(
+                root,
+                consumer="wrong-vdd-consumer",
+                operation="create",
+                target="execution-plans/plan",
+                role_paths={"requirements": ["requirements.md"]},
+                protocol_name=".skill-input-composition-wrong",
+            )
+            with self.assertRaises(ValueError):
+                invoke(wrong["receipt"], wrong["contract"])
+            requirements.write_text("# Changed requirements\n", encoding="utf-8", newline="\n")
+            with self.assertRaises(ValueError):
+                invoke(artifacts["receipt"], artifacts["contract"])
+
     def test_cli_requires_skill_input_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

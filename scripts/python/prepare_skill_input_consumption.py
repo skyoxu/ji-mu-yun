@@ -24,12 +24,38 @@ from skill_input_consumption import (
     validate_contract,
     validate_request_payload,
     forbidden_repository_path,
+    is_reparse_point,
     write_bytes_atomic,
     write_json_atomic,
 )
 
 
 ZERO_HASH = "sha256:" + "0" * 64
+
+
+def _reject_symlink_components(path: Path, *, stop: Path | None = None) -> None:
+    current = path.absolute()
+    boundary = stop.absolute() if stop is not None else None
+    while True:
+        if is_reparse_point(current):
+            raise SkillInputError(f"artifact path may not contain a symlink: {path}")
+        if boundary is not None and current == boundary:
+            return
+        if current.parent == current:
+            return
+        current = current.parent
+
+
+def _directory_membership(repository_root: Path, directory: Path) -> tuple[tuple[str, str], ...]:
+    members: list[tuple[str, str]] = []
+    for item in directory.rglob("*"):
+        if is_reparse_point(item):
+            raise SkillInputError(f"symlink source is not allowed: {item}")
+        if not item.is_file() and not item.is_dir():
+            continue
+        relative = item.resolve().relative_to(repository_root.resolve()).as_posix()
+        members.append((relative, "file" if item.is_file() else "directory"))
+    return tuple(sorted(members))
 
 
 def _parse_role(value: str) -> tuple[str, str]:
@@ -97,8 +123,10 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     target_path, target_relative = contained_path(repository_root, args.target, must_exist=False)
     if forbidden_repository_path(target_relative):
         raise SkillInputError("target may not be under logs")
+    _reject_symlink_components(args.receipt)
     receipt_path = args.receipt.resolve()
     receipt_root = receipt_path.parent
+    _reject_symlink_components(args.snapshot_root)
     snapshot_root = args.snapshot_root.resolve()
     logs_root = (repository_root / "logs").resolve()
     try:
@@ -113,13 +141,22 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         pass
     else:
         raise SkillInputError("snapshot may not be stored under logs")
-    if snapshot_root.exists() and snapshot_root.is_symlink():
+    if snapshot_root.exists() and is_reparse_point(snapshot_root):
         raise SkillInputError("snapshot root may not be a symlink")
     snapshot_root.mkdir(parents=True, exist_ok=True)
 
     normalized_role_values: dict[str, list[str]] = {}
+    directory_memberships: dict[str, tuple[Path, tuple[tuple[str, str], ...]]] = {}
     for role_name, paths in role_values.items():
-        normalized_role_values[role_name] = [contained_path(repository_root, path)[1] for path in paths]
+        normalized_role_values[role_name] = []
+        for path in paths:
+            resolved_source, relative_source = contained_path(repository_root, path)
+            normalized_role_values[role_name].append(relative_source)
+            if resolved_source.is_dir() and relative_source not in directory_memberships:
+                directory_memberships[relative_source] = (
+                    resolved_source,
+                    _directory_membership(repository_root, resolved_source),
+                )
         if len(normalized_role_values[role_name]) != len(set(normalized_role_values[role_name])):
             raise SkillInputError(f"source role contains duplicate canonical paths: {role_name}")
     expanded = expand_source_graph(repository_root, contract, args.operation, normalized_role_values)
@@ -134,6 +171,8 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     manifest_entries: list[dict[str, Any]] = []
     changed_sources: list[str] = []
     for source, relative in expanded:
+        if relative.casefold() == "source-manifest.v1.json":
+            raise SkillInputError("source path is reserved for the protocol manifest")
         before = source.read_bytes()
         after = source.read_bytes()
         source_hash_before = sha256_bytes(before)
@@ -156,8 +195,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
                 line_count, ranges = 0, []
         if transport_status == "complete":
             destination = snapshot_root / relative
-            if destination.exists() and destination.is_symlink():
-                raise SkillInputError(f"snapshot destination may not be a symlink: {relative}")
+            _reject_symlink_components(destination, stop=snapshot_root)
             destination.parent.mkdir(parents=True, exist_ok=True)
             write_bytes_atomic(destination, safe_bytes)
         entry = {
@@ -182,6 +220,10 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
             "sensitivity": sensitivity,
             "redaction_status": redaction_status,
         })
+
+    for relative_root, (directory, before_membership) in directory_memberships.items():
+        if _directory_membership(repository_root, directory) != before_membership:
+            raise SkillInputError(f"directory source membership changed: {relative_root}")
 
     manifest = {
         "schema_version": "skill-input-source-manifest.v1",

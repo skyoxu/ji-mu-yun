@@ -131,7 +131,10 @@ After route selection and authority reads, load
 `scripts/python/prepare_skill_input_consumption.py` for `create` or `repair`.
 The adapter must receive the explicit requirements/target-plan/finding paths;
 it must not discover them from logs. Launch the typed semantic child only through
-`scripts/python/launch_skill_input_consumer.py`, then run
+`scripts/python/launch_skill_input_consumer.py`: first use `--create-request`
+with the candidate receipt and actual backend/model, then use
+`--run-semantic-child` with that generated request. Never hand-author its
+execution identity. Then run
 `scripts/python/validate_skill_input_consumption.py --require-ready` before the
 knowledge freeze or any plan artifact is generated. A candidate or failed gate
 routes to clarification/repair and cannot be returned as raw source content.

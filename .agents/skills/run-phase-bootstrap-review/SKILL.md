@@ -61,8 +61,10 @@ Bind every required context class to real in-scope artifacts. For implementation
 
 After closure selection and before Artifact View freeze or reviewer launch, load
 `references/skill-input-contract.v1.json` and prepare a `review` receipt with
-the explicit closure and authority paths. The semantic child may be launched
-only through `scripts/python/launch_skill_input_consumer.py`; validate the
+the explicit closure and authority paths. Create the child request through
+`scripts/python/launch_skill_input_consumer.py --create-request` using the
+candidate receipt and actual backend/model, then launch that generated request
+through the same entry point. Never hand-author its execution identity. Validate the
 result with `scripts/python/validate_skill_input_consumption.py --require-ready`.
 If the gate is not ready, stop before freezing Artifact View and route the
 missing or stale input to the existing repair path. Logs remain evidence only,

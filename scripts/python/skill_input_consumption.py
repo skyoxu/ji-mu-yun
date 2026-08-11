@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import subprocess
 import uuid
 from pathlib import Path, PureWindowsPath
@@ -25,6 +26,24 @@ SECRET_PATTERN = re.compile(
 )
 BEARER_PATTERN = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/-]+=*")
 API_KEY_PATTERN = re.compile(r"\bsk-[A-Za-z0-9_-]{8,}\b")
+PRIVATE_KEY_PATTERN = re.compile(
+    r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]+?-----END [A-Z0-9 ]*PRIVATE KEY-----"
+)
+COMMON_TOKEN_PATTERN = re.compile(
+    r"\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|xox[baprs]-[A-Za-z0-9-]{20,}|AKIA[0-9A-Z]{16})\b"
+)
+REDACTION_PROFILE_ID = "credential-values-v1"
+DEFAULT_MAX_SNAPSHOT_BYTES = 262144
+
+
+def is_reparse_point(path: Path) -> bool:
+    """Return whether a path component is a link/reparse point without following it."""
+    try:
+        attributes = os.stat(path, follow_symlinks=False).st_file_attributes
+    except (AttributeError, OSError):
+        attributes = 0
+    reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+    return bool(attributes & reparse_flag) or path.is_symlink()
 
 
 class SkillInputError(ValueError):
@@ -41,6 +60,23 @@ def canonical_hash(value: Any) -> str:
 
 def sha256_bytes(value: bytes) -> str:
     return "sha256:" + hashlib.sha256(value).hexdigest()
+
+
+def redaction_profile_hash() -> str:
+    """Bind semantic decisions to the exact v1 redaction rules."""
+    return canonical_hash({
+        "profile": REDACTION_PROFILE_ID,
+        "secret_pattern": SECRET_PATTERN.pattern,
+        "bearer_pattern": BEARER_PATTERN.pattern,
+        "api_key_pattern": API_KEY_PATTERN.pattern,
+        "private_key_pattern": PRIVATE_KEY_PATTERN.pattern,
+        "common_token_pattern": COMMON_TOKEN_PATTERN.pattern,
+        "replacement": {
+            "secret": "<redacted>",
+            "bearer": "Bearer <redacted>",
+            "api_key": "<redacted-api-key>",
+        },
+    })
 
 
 def read_json(path: Path) -> Any:
@@ -114,6 +150,8 @@ def validate_request_payload(value: Any, *, path: str = "request") -> None:
             raise SkillInputError(f"{path} contains a NUL byte")
         if Path(value).is_absolute() or PureWindowsPath(value).is_absolute() or value.startswith(("/", "\\\\")):
             raise SkillInputError(f"{path} contains an absolute machine path")
+        if _credential_like_text(value):
+            raise SkillInputError(f"{path} may not persist credential material")
         return
     if value is not None and not isinstance(value, (bool, int, float)):
         raise SkillInputError(f"{path} contains a non-JSON value")
@@ -127,7 +165,7 @@ def contained_path(repository_root: Path, raw_path: str, *, must_exist: bool = T
     joined = root / candidate
     current = joined
     while current != root and current != current.parent:
-        if current.is_symlink():
+        if is_reparse_point(current):
             raise SkillInputError("symlink source is not allowed")
         current = current.parent
     resolved = joined.resolve()
@@ -137,7 +175,7 @@ def contained_path(repository_root: Path, raw_path: str, *, must_exist: bool = T
         raise SkillInputError("source path escapes repository root") from exc
     if must_exist and not resolved.exists():
         raise SkillInputError(f"source does not exist: {relative}")
-    if joined.is_symlink() or resolved.is_symlink():
+    if is_reparse_point(joined) or is_reparse_point(resolved):
         raise SkillInputError(f"symlink source is not allowed: {relative}")
     return resolved, relative
 
@@ -191,7 +229,7 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
     missing = required - set(contract)
     if missing:
         raise SkillInputError(f"contract missing required fields: {sorted(missing)}")
-    unknown = set(contract) - required
+    unknown = set(contract) - required - {"max_snapshot_bytes"}
     if unknown:
         raise SkillInputError(f"contract contains unknown fields: {sorted(unknown)}")
     if contract["schema_version"] != "skill-input-contract.v1" or contract["mode"] != "strict":
@@ -220,12 +258,29 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
         raise SkillInputError("contract max_sources is invalid")
     if not isinstance(contract["max_context_bytes"], int) or not 512 <= contract["max_context_bytes"] <= 12000:
         raise SkillInputError("contract max_context_bytes is invalid")
+    max_snapshot_bytes = contract.get("max_snapshot_bytes", DEFAULT_MAX_SNAPSHOT_BYTES)
+    if not isinstance(max_snapshot_bytes, int) or isinstance(max_snapshot_bytes, bool) or not 65536 <= max_snapshot_bytes <= 4194304:
+        raise SkillInputError("contract max_snapshot_bytes is invalid")
     basis = contract["budget_basis"]
     if not isinstance(basis, dict) or set(basis) != {"path", "sha256"} or not isinstance(basis.get("path"), str) or not SHA256_PATTERN.fullmatch(str(basis.get("sha256", ""))):
         raise SkillInputError("contract budget_basis is invalid")
     basis_path, _ = contained_path(repository_root, basis["path"])
     if not basis_path.is_file() or sha256_bytes(basis_path.read_bytes()) != basis["sha256"]:
         raise SkillInputError("contract budget_basis hash mismatch")
+    try:
+        budget = read_json(basis_path)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise SkillInputError("contract budget_basis is not valid JSON") from exc
+    if not isinstance(budget, dict) or budget.get("schema_version") != "skill-input-budget.v1":
+        raise SkillInputError("contract budget_basis schema is invalid")
+    for field, effective in (
+        ("max_context_bytes", contract["max_context_bytes"]),
+        ("max_snapshot_bytes", max_snapshot_bytes),
+        ("max_sources", contract["max_sources"]),
+        ("max_reference_depth", contract["max_reference_depth"]),
+    ):
+        if budget.get(field) != effective:
+            raise SkillInputError(f"contract budget_basis does not bind {field}")
     source_roles = contract["source_roles"]
     operations = contract["operations"]
     if not isinstance(source_roles, dict) or not source_roles or not isinstance(operations, dict) or not operations:
@@ -253,7 +308,13 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
             raise SkillInputError(f"contract operation required_inputs are invalid: {operation_name}")
 
 
-_MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)")
+_MARKDOWN_INLINE_START = re.compile(r"!?\[[^\]\r\n]*\]\(\s*")
+_MARKDOWN_REFERENCE_DEFINITION = re.compile(
+    r"(?m)^[ \t]{0,3}\[([^\]\r\n]+)\]:[ \t]*(?:<([^>\r\n]+)>|([^\s\r\n]+))(?:[ \t]+[^\r\n]*)?[ \t]*\r?$"
+)
+_MARKDOWN_REFERENCE_USE = re.compile(r"!?\[([^\]\r\n]+)\]\[([^\]\r\n]*)\]")
+_MARKDOWN_SHORTCUT_USE = re.compile(r"!?\[([^\]\r\n]+)\]")
+_MARKDOWN_AUTOLINK = re.compile(r"<((?:[A-Za-z][A-Za-z0-9+.-]*:|//)[^>\s]+)>")
 _JSON_REFERENCE_SUFFIXES = {
     "path", "paths", "file", "files", "filepath", "filepaths", "filename", "filenames",
     "directory", "directories",
@@ -268,12 +329,177 @@ def _is_json_reference_field(key: str) -> bool:
     return bool(tokens) and tokens[-1] in _JSON_REFERENCE_SUFFIXES
 
 
+def _markdown_label(value: str) -> str:
+    return " ".join(value.split()).casefold()
+
+
+def _markdown_semantic_text(text: str) -> str:
+    """Mask Markdown regions whose link-looking text is literal content."""
+    masked = list(text)
+
+    def mask(start: int, end: int) -> None:
+        for index in range(start, end):
+            if masked[index] not in "\r\n":
+                masked[index] = " "
+
+    for match in re.finditer(r"(?s)<!--.*?(?:-->|\Z)", text):
+        mask(*match.span())
+
+    fence = re.compile(r"(?m)^[ \t]{0,3}(`{3,}|~{3,})[^\r\n]*(?:\r?\n|\Z)")
+    position = 0
+    while True:
+        opening = fence.search(text, position)
+        if opening is None:
+            break
+        marker = opening.group(1)
+        closing = re.compile(
+            rf"(?m)^[ \t]{{0,3}}{re.escape(marker[0])}{{{len(marker)},}}[ \t]*(?:\r?$)"
+        ).search(text, opening.end())
+        end = closing.end() if closing is not None else len(text)
+        mask(opening.start(), end)
+        position = end
+
+    index = 0
+    while index < len(text):
+        if text[index] != "`" or (index > 0 and text[index - 1] == "\\"):
+            index += 1
+            continue
+        end_marker = index
+        while end_marker < len(text) and text[end_marker] == "`":
+            end_marker += 1
+        marker = text[index:end_marker]
+        closing = text.find(marker, end_marker)
+        if closing < 0:
+            index = end_marker
+            continue
+        mask(index, closing + len(marker))
+        index = closing + len(marker)
+    return "".join(masked)
+
+
+def _markdown_match_is_escaped(text: str, start: int) -> bool:
+    backslashes = 0
+    index = start - 1
+    while index >= 0 and text[index] == "\\":
+        backslashes += 1
+        index -= 1
+    return backslashes % 2 == 1
+
+
+def _markdown_inline_close(text: str, index: int) -> int:
+    while index < len(text) and text[index] in " \t":
+        index += 1
+    if index < len(text) and text[index] in {'"', "'", "("}:
+        opening = text[index]
+        closing = ")" if opening == "(" else opening
+        index += 1
+        escaped = False
+        while index < len(text):
+            if escaped:
+                escaped = False
+            elif text[index] == "\\":
+                escaped = True
+            elif text[index] == closing:
+                index += 1
+                break
+            elif text[index] in "\r\n":
+                raise SkillInputError("Markdown inline reference title is incomplete")
+            index += 1
+        else:
+            raise SkillInputError("Markdown inline reference title is incomplete")
+        while index < len(text) and text[index] in " \t":
+            index += 1
+    if index >= len(text) or text[index] != ")":
+        raise SkillInputError("Markdown inline reference is incomplete")
+    return index
+
+
+def _markdown_inline_targets(text: str) -> list[str]:
+    """Parse inline Markdown destinations with balanced parentheses."""
+    targets: list[str] = []
+    for match in _MARKDOWN_INLINE_START.finditer(text):
+        if _markdown_match_is_escaped(text, match.start()):
+            continue
+        index = match.end()
+        if index >= len(text):
+            raise SkillInputError("Markdown inline reference is incomplete")
+        if text[index] == "<":
+            end = text.find(">", index + 1)
+            if end < 0:
+                raise SkillInputError("Markdown angle-bracket destination is incomplete")
+            target = text[index + 1:end]
+            _markdown_inline_close(text, end + 1)
+            targets.append(target)
+            continue
+        start = index
+        depth = 0
+        escaped = False
+        while index < len(text):
+            character = text[index]
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == "(":
+                depth += 1
+            elif character == ")":
+                if depth == 0:
+                    break
+                depth -= 1
+            elif character.isspace() and depth == 0:
+                break
+            index += 1
+        if index == start or index >= len(text):
+            raise SkillInputError("Markdown inline reference is incomplete")
+        target = text[start:index]
+        _markdown_inline_close(text, index)
+        targets.append(target.replace("\\(", "(").replace("\\)", ")"))
+    return targets
+
+
+def _markdown_reference_targets(text: str) -> list[str]:
+    definitions: dict[str, str] = {}
+    occupied: list[tuple[int, int]] = []
+    for match in _MARKDOWN_REFERENCE_DEFINITION.finditer(text):
+        if _markdown_match_is_escaped(text, match.start()):
+            continue
+        label = _markdown_label(match.group(1))
+        target = match.group(2) or match.group(3)
+        if label in definitions and definitions[label] != target:
+            raise SkillInputError(f"ambiguous Markdown reference definition: {match.group(1)}")
+        definitions[label] = target
+        occupied.append(match.span())
+    targets: list[str] = []
+    for match in _MARKDOWN_REFERENCE_USE.finditer(text):
+        if _markdown_match_is_escaped(text, match.start()):
+            continue
+        raw_label = match.group(2) or match.group(1)
+        label = _markdown_label(raw_label)
+        if label not in definitions:
+            raise SkillInputError(f"unresolved Markdown reference label: {raw_label}")
+        targets.append(definitions[label])
+        occupied.append(match.span())
+    for match in _MARKDOWN_INLINE_START.finditer(text):
+        occupied.append(match.span())
+    for match in _MARKDOWN_SHORTCUT_USE.finditer(text):
+        if _markdown_match_is_escaped(text, match.start()):
+            continue
+        if any(start <= match.start() < end for start, end in occupied):
+            continue
+        label = _markdown_label(match.group(1))
+        if label in definitions:
+            targets.append(definitions[label])
+    return targets
+
+
 def _reference_values(path: Path, reference_kinds: set[str]) -> list[str]:
     raw = path.read_bytes()
     values: list[str] = []
     if "markdown-link" in reference_kinds and path.suffix.lower() in {".md", ".markdown", ".mdx"}:
-        text = raw.decode("utf-8")
-        values.extend(match.group(1) for match in _MARKDOWN_LINK.finditer(text))
+        text = _markdown_semantic_text(raw.decode("utf-8"))
+        values.extend(_markdown_inline_targets(text))
+        values.extend(_markdown_reference_targets(text))
+        values.extend(match.group(1) for match in _MARKDOWN_AUTOLINK.finditer(text))
     if "json-path-field" in reference_kinds and path.suffix.lower() == ".json":
         try:
             payload = json.loads(raw.decode("utf-8"))
@@ -294,7 +520,7 @@ def _reference_values(path: Path, reference_kinds: set[str]) -> list[str]:
                     visit(child)
 
         visit(payload)
-    return values
+    return list(dict.fromkeys(values))
 
 
 def _resolve_reference(
@@ -382,7 +608,7 @@ def expand_source_graph(
         candidate_root, depth, ancestors, reference_kinds, reference_root = queue.pop(0)
         candidates = [candidate_root] if candidate_root.is_file() else sorted(item for item in candidate_root.rglob("*") if item.is_file())
         for candidate in candidates:
-            if candidate.is_symlink():
+            if is_reparse_point(candidate):
                 raise SkillInputError(f"symlink source is not allowed: {candidate}")
             relative = candidate.resolve().relative_to(repository_root.resolve()).as_posix()
             if forbidden_repository_path(relative):
@@ -412,7 +638,7 @@ def expand_source_graph(
                 queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root))
     if not expanded:
         raise SkillInputError("no source files were discovered")
-    return expanded
+    return sorted(expanded, key=lambda item: item[1])
 
 
 def redact_bytes(raw: bytes) -> tuple[bytes, str, str]:
@@ -420,13 +646,25 @@ def redact_bytes(raw: bytes) -> tuple[bytes, str, str]:
         text = raw.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise SkillInputError(f"source is not UTF-8: byte {exc.start}") from exc
-    sensitivity = "credential-bearing" if (SECRET_PATTERN.search(text) or BEARER_PATTERN.search(text) or API_KEY_PATTERN.search(text)) else "normal"
+    sensitivity = "credential-bearing" if _credential_like_text(text) else "normal"
     # Redact complete bearer/API credentials before generic key/value masking.
     redacted = BEARER_PATTERN.sub("Bearer <redacted>", text)
     redacted = API_KEY_PATTERN.sub("<redacted-api-key>", redacted)
+    redacted = PRIVATE_KEY_PATTERN.sub("<redacted-private-key>", redacted)
+    redacted = COMMON_TOKEN_PATTERN.sub("<redacted-token>", redacted)
     redacted = SECRET_PATTERN.sub(lambda match: f"{match.group(1)}=<redacted>", redacted)
     status = "complete" if sensitivity == "credential-bearing" else "not-required"
     return redacted.encode("utf-8"), sensitivity, status
+
+
+def _credential_like_text(value: str) -> bool:
+    return bool(
+        SECRET_PATTERN.search(value)
+        or BEARER_PATTERN.search(value)
+        or API_KEY_PATTERN.search(value)
+        or PRIVATE_KEY_PATTERN.search(value)
+        or COMMON_TOKEN_PATTERN.search(value)
+    )
 
 
 def line_ranges(raw: bytes) -> tuple[int, list[dict[str, int | str]]]:

@@ -50,8 +50,10 @@ missing artifacts and stop before `start-or-resume`.
 Before `start-or-resume`, load
 `references/skill-input-contract.v1.json` and prepare an `acceptance` receipt
 with the explicit implementation-target and acceptance-requirements paths.
-Use the typed boundary in `scripts/python/launch_skill_input_consumer.py` for
-semantic consumption and require
+Use `scripts/python/launch_skill_input_consumer.py --create-request` with the
+candidate receipt and actual backend/model, then run semantic consumption with
+that generated request through the same typed boundary. Never hand-author its
+execution identity. Require
 `scripts/python/validate_skill_input_consumption.py --require-ready`. A stale,
 partial, or unredacted input is `prerequisite_blocked`; it cannot be replaced
 with a log or historical summary. Pass the receipt to `start-or-resume` with

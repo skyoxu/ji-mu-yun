@@ -64,8 +64,10 @@ After the parent route and minimum target discovery, load
 `references/skill-input-contract.v1.json` and prepare a strict receipt with
 `scripts/python/prepare_skill_input_consumption.py --operation execute`.
 Pass the explicit plan directory and target file paths as source roles. Use
-`scripts/python/launch_skill_input_consumer.py` for the typed semantic child,
-then require `validate_skill_input_consumption.py --require-ready` before
+`scripts/python/launch_skill_input_consumer.py --create-request` with the
+candidate receipt and actual backend/model, then run the typed semantic child
+with that generated request. Never hand-author its execution identity. Require
+`validate_skill_input_consumption.py --require-ready` before
 action selection, `prepare`, or RED. `ready=false`, source drift, or a missing
 sidecar is a hard stop and must route to plan repair; no raw snapshot or log is
 fallback input. In the Python adapter, use `tools/adapter.py`'s

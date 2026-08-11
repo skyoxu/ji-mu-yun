@@ -14,6 +14,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
@@ -27,6 +28,11 @@ SPEC = importlib.util.spec_from_file_location("run_bootstrap_review", MODULE_PAT
 assert SPEC and SPEC.loader
 bootstrap = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(bootstrap)
+TEST_SUPPORT = REPOSITORY_ROOT / "scripts" / "python" / "tests"
+if str(TEST_SUPPORT) not in sys.path:
+    sys.path.insert(0, str(TEST_SUPPORT))
+
+from skill_input_composition_support import publish_ready_receipt  # noqa: E402
 
 
 class BootstrapReviewCliTests(unittest.TestCase):
@@ -248,6 +254,9 @@ class BootstrapReviewCliTests(unittest.TestCase):
         finding_reentry_authorization: Path | None = None,
         hard_limit_recovery: Path | None = None,
         expected_result: int = 0,
+        skill_input_receipt: Path | None = None,
+        skill_input_contract: Path | None = None,
+        mock_skill_input_gate: bool = True,
     ) -> None:
         profile_contract = bootstrap.load_profile(profile)
         context_args = []
@@ -404,12 +413,18 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 json.dumps(closure, indent=2) + "\n", encoding="utf-8", newline="\n"
             )
             repair_closure_args = ["--repair-closure", str(closure_path)]
-        skill_input_receipt = self.repo / "skill-input-receipt.json"
-        with mock.patch.object(
-            bootstrap,
-            "require_ready_skill_input",
-            return_value={"context_artifact": self.target, "context_artifact_hash": "sha256:" + "b" * 64, "binding_hash": "sha256:" + "a" * 64},
-        ):
+        selected_receipt = skill_input_receipt or self.repo / "skill-input-receipt.json"
+        gate_context = (
+            mock.patch.object(
+                bootstrap,
+                "require_ready_skill_input",
+                return_value={"context_artifact": self.target, "context_artifact_hash": "sha256:" + "b" * 64, "binding_hash": "sha256:" + "a" * 64},
+            )
+            if mock_skill_input_gate
+            else nullcontext()
+        )
+        skill_contract_args = [] if skill_input_contract is None else ["--skill-input-contract", str(skill_input_contract)]
+        with gate_context:
             result = bootstrap.main(
                 [
                     "prepare",
@@ -435,11 +450,83 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 *required_check_args,
                 "--execution-mode", execution_mode,
                 "--semantic-review-exclusivity", "no-other-semantic-review-in-cycle",
-                "--skill-input-receipt", str(skill_input_receipt),
+                "--skill-input-receipt", str(selected_receipt),
+                *skill_contract_args,
                 "--out-dir", str(self.run_dir),
                 ]
             )
         self.assertEqual(expected_result, result)
+
+    def test_prepare_consumes_real_ready_skill_input_context(self) -> None:
+        self.skill_input_gate_patcher.stop()
+        authority = self.repo / ".agents" / "skills" / "run-phase-bootstrap-review" / "references" / "authority-roots.v1.json"
+        artifacts = publish_ready_receipt(
+            self.repo,
+            consumer="run-phase-bootstrap-review",
+            operation="review",
+            target="upstream-plan",
+            role_paths={
+                "closure_inputs": ["upstream-plan"],
+                "authority": [authority.relative_to(self.repo).as_posix()],
+            },
+        )
+        self.prepare(
+            skill_input_receipt=artifacts["receipt"],
+            skill_input_contract=artifacts["contract"],
+            mock_skill_input_gate=False,
+        )
+        manifest = self.read_json("review-input.json")
+        self.assertEqual(artifacts["context"].resolve().relative_to(self.repo.resolve()).as_posix(), manifest["skillInput"]["contextArtifact"])
+
+    def test_prepare_blocks_missing_wrong_and_stale_ready_receipts(self) -> None:
+        self.skill_input_gate_patcher.stop()
+        authority = self.repo / ".agents" / "skills" / "run-phase-bootstrap-review" / "references" / "authority-roots.v1.json"
+        artifacts = publish_ready_receipt(
+            self.repo,
+            consumer="run-phase-bootstrap-review",
+            operation="review",
+            target="upstream-plan",
+            role_paths={
+                "closure_inputs": ["upstream-plan"],
+                "authority": [authority.relative_to(self.repo).as_posix()],
+            },
+        )
+        self.prepare(
+            skill_input_receipt=self.repo / "missing-receipt.json",
+            skill_input_contract=artifacts["contract"],
+            mock_skill_input_gate=False,
+            expected_result=1,
+        )
+        self.prepare(
+            skill_input_receipt=artifacts["candidate_receipt"],
+            skill_input_contract=artifacts["contract"],
+            mock_skill_input_gate=False,
+            expected_result=1,
+        )
+        wrong = publish_ready_receipt(
+            self.repo,
+            consumer="wrong-bootstrap-consumer",
+            operation="review",
+            target="upstream-plan",
+            role_paths={
+                "closure_inputs": ["upstream-plan"],
+                "authority": [authority.relative_to(self.repo).as_posix()],
+            },
+            protocol_name=".skill-input-composition-wrong",
+        )
+        self.prepare(
+            skill_input_receipt=wrong["receipt"],
+            skill_input_contract=wrong["contract"],
+            mock_skill_input_gate=False,
+            expected_result=1,
+        )
+        self.target.write_text("# Changed plan\n", encoding="utf-8", newline="\n")
+        self.prepare(
+            skill_input_receipt=artifacts["receipt"],
+            skill_input_contract=artifacts["contract"],
+            mock_skill_input_gate=False,
+            expected_result=1,
+        )
 
     def test_broh_s0_prepare_dry_run_contract(self) -> None:
         profile = "bootstrap-upstream-plan"

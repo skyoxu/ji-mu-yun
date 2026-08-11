@@ -70,10 +70,14 @@ consumer/operation receipt before their first authoritative action.
 
 `launch_skill_input_consumer.py --run-semantic-child` requires explicit
 `--backend` and `--model` values from the owning route. It uses the shared
-`scripts/sc/_llm_backend.py` stdin-first backend, creates an isolated temporary
-child root containing only the model-safe snapshot, and publishes only typed
-context/decision sidecars. It never selects a provider or falls back to raw
-child output.
+`scripts/sc/_llm_backend.py` stdin-first backend, serializes the complete
+model-safe snapshot into the prompt, runs in an empty ephemeral root with local
+and external tool surfaces disabled, and publishes only typed context/decision
+sidecars. It never selects a provider or falls back to raw child output. The
+owning launcher first calls the same entry point with `--create-request`;
+callers never hand-author `execution_identity`. Protocol v1 uses `codex-cli`
+for this child because the launcher can bind its executable and enforce the
+no-file-tools configuration; API-only backends fail closed at this boundary.
 
 Example contract:
 
@@ -114,6 +118,7 @@ Example contract:
   "max_reference_depth": 32,
   "max_sources": 500,
   "max_context_bytes": 12000,
+  "max_snapshot_bytes": 262144,
   "budget_basis": {
     "path": "tests/fixtures/skill-input/vdd-create-baseline.json",
     "sha256": "sha256:..."
@@ -132,7 +137,9 @@ Selectors accept only caller-supplied typed paths; they do not enumerate sibling
 plans, infer a target, or search logs. Unknown selectors, operations, schema
 versions, or fields fail closed. Current schemas use `additionalProperties: false`.
 Every `strict` contract must also require `budget_basis`, `sensitivity_policy`,
-and `redaction_profile`; omission is a schema failure, not an implicit default.
+and `redaction_profile`; omission is a schema failure. `max_snapshot_bytes` is
+an optional compatible v1 override; omission uses the fixed 262,144-byte default,
+and new child requests always persist the effective value.
 
 The shared adapter emits a temporary or authorized plan-local
 `skill-input-consumption.v1` receipt:
@@ -215,9 +222,12 @@ bytes. `request_hash` and `binding_hash` use the repository canonical JSON
 encoding: UTF-8, recursively sorted object keys, and no insignificant
 whitespace. Repository paths are normalized to repository-relative
 forward-slash form after resolved-root and symlink containment checks. The
-validator rejects absolute machine-specific paths and credential-bearing values
-inside persistent request bindings. It also recomputes the Git HEAD, index, and
-scoped worktree identity instead of trusting the receipt's stored identity.
+validator walks every existing lexical path component before resolution and
+rejects a symlink or reparse-point component, then verifies resolved-root
+containment. It rejects absolute machine-specific paths and credential-bearing
+values in every persistent request string, not only fields with sensitive names.
+It also recomputes the Git HEAD, index, and scoped worktree identity instead of
+trusting the receipt's stored identity.
 
 `request_hash` is recomputed from the stored `request_binding`, which covers the
 typed caller identity, consumer, operation, target, route, and explicit source
@@ -241,23 +251,46 @@ not pass actual credential values to a model or publish/commit them.
 Text coverage is represented by ordered,
 non-overlapping, inclusive line ranges and must cover line 1 through
 `line_count`; an empty text file is complete with `line_count=0` and no ranges.
-Binary sources are rejected unless the Skill contract declares an approved
-binary parser and its exact byte coverage rule. Encoding failures are
-`transport_status=failed`. Structured parsers additionally bind the exact source
-bytes. Directory sources are complete only when their sorted contained-path
-manifest has been fully processed. The raw snapshot is never returned to the
-main session.
+Protocol v1 rejects binary and non-UTF-8 sources. A future schema version may
+add an approved binary parser identity and exact byte coverage rule, but v1
+contracts cannot declare that capability. Encoding failures are
+`transport_status=failed`. Structured text parsers additionally bind the exact
+source bytes. Directory sources are complete only when their sorted
+contained-path manifest has been fully processed. The raw snapshot is never
+returned to the main session.
 
-The launcher sends a typed `skill-input-child-request.v1` containing only the
+The launcher sends a typed `skill-input-child-request.v1` containing the
 model-safe snapshot root, source-manifest hash, consumer, operation, contract
-hash, and an output directory. It binds the child executable/model/sandbox
-identity and rejects any extra path or tool capability. The controlled semantic
-child reads only that frozen snapshot and declared, hash-bound detached
-fixtures. It writes the bounded `context_artifact` and semantic decision to the
-separate output directory and cannot modify the snapshot or receipt. The context
-artifact is what the parent Skill receives; the receipt alone is not a
-substitute for task content. The artifact must not contain raw logs or unrelated
-tool transcripts.
+hash, and an output directory. The root is a parent-only binding: after checking
+the manifest and every declared UTF-8 source hash, the parent serializes the
+complete, path-sorted frozen snapshot into the child's stdin. The child never
+receives a filesystem path as a recovery mechanism and never reads source files
+itself. The launcher starts an ephemeral Codex process with user configuration
+ignored, replays only an allowlisted non-secret model-provider configuration,
+and disables shell, MCP, browser, image, plugin-adjacent, and sub-agent tool
+surfaces. This no-file-tools boundary is required on native Windows where the
+stronger read-root permission profile would otherwise require the elevated
+sandbox backend.
+
+An allowlisted provider key is not sufficient by itself. Values used as
+`env_key` or environment-backed HTTP headers must be environment-variable names;
+all other persistent string values are scanned with the active credential
+profile before configuration replay. A literal credential in `base_url`, a
+header, or another provider field fails before child launch.
+
+The child writes the bounded `context_artifact` and semantic decision through
+the Codex typed output channel; only the parent publishes those validated bytes
+to the separate output directory. The context artifact is what the parent Skill
+receives; the receipt alone is not a substitute for task content. The artifact
+must not contain raw logs or unrelated tool transcripts. The launcher derives
+identity from the resolved executable, backend, model, reasoning setting,
+protocol version, serialized-stdin mode, disabled-tool policy, provider config
+hash, and `read-only` command sandbox, then re-hashes the original snapshot
+after execution. Typed child output is re-scanned with the hash-bound
+`credential-values-v1` profile before sidecars can be published. That profile
+covers authorization/basic/bearer forms, common secret assignments, PEM private
+keys, GitHub tokens, Slack tokens, and AWS access keys. Matching values are
+replaced as complete values rather than partially masked substrings.
 
 The child request has this minimum shape:
 
@@ -272,6 +305,7 @@ The child request has this minimum shape:
   "output_root": "temporary-binding-relative-path",
   "execution_identity": "sha256:...",
   "max_context_bytes": 12000,
+  "max_snapshot_bytes": 262144,
   "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"],
   "authorizes": []
 }
@@ -297,7 +331,8 @@ It must contain the producer role and execution identity, source-manifest hash,
 context artifact hash, per-source semantic statuses, decision status, bounded
 rationale (at most 2,000 UTF-8 bytes), `redaction_status`,
 `redaction_profile_hash`, and `authorizes: []`. The validator projects those
-per-source values into the receipt and rejects any disagreement. A
+per-source values into the receipt and rejects any disagreement.
+`redaction_status=failed` always blocks ready publication. A
 `credential-bearing` source must have `redaction_status=complete` and may
 produce only a redacted derived value. If the task requires the credential value
 itself, the gate returns `ready=false` and routes to an explicitly authorized
@@ -325,7 +360,8 @@ load Skill authority
   -> select operation and route
   -> load the Skill input contract
   -> shared adapter discovers sources and freezes source plus model-safe snapshots
-  -> semantic child reads the model-safe snapshot and emits bounded context plus a decision
+  -> parent serializes the complete model-safe snapshot to a no-file-tools semantic child
+  -> semantic child emits bounded context plus a decision
   -> validator verifies skill-input-consumption.v1
   -> ready=true gate
   -> Skill enters its normal generation, modification, execution, or acceptance stage
@@ -335,11 +371,12 @@ When `ready=false`, the launcher may only perform bounded inspection, request a
 material clarification, or route to repair. It must not continue by returning
 the same incomplete content through another tool.
 
-The adapter must use explicit absolute or repository-contained paths, preserve
-UTF-8, reject path escape, and record hashes from the same byte snapshot that
-was consumed. A log may be evidence for a current diagnostic when a Skill's
-contract explicitly permits it, but a log is never a recovery source for missing
-task context.
+The adapter uses an explicit absolute repository root and repository-relative,
+contained source paths, preserves UTF-8, rejects path escape, and records hashes
+from the same byte snapshot that was consumed. This protocol never consumes a
+path under `logs/`. A current diagnostic that needs log evidence must use a
+separate authorized non-model diagnostic path; logs never become recovery input
+or semantic-child source content.
 
 ### 4.1 Mandatory Launcher Integration
 
@@ -431,6 +468,11 @@ invoke the adapter before `start-or-resume` publishes a persisted run.
 - Bind the receipt, contract hash, and context-artifact hash into the canonical
   run input. Any drift creates a new binding or a repair route; it never mutates
   an existing run.
+- Before publishing the append-only run state, validate the repository-relative
+  source path and hash, copy the context artifact into the run's own custody,
+  and bind both the source path and run-relative custody path. Resume and stale
+  successor creation revalidate the custody copy and do not recover from logs or
+  depend on the continued existence of the external source artifact.
 - `ready=true` only permits Acceptance orchestration to continue. It cannot
   publish `acceptance-passed`, authorize commit, release, or archive.
 
@@ -442,9 +484,18 @@ adapter rejects cycles, symlink escapes, external references, duplicate
 canonical paths within one explicit role, and limits exceeded. Converging
 references are de-duplicated by canonical path. `max_sources` and `max_context_bytes`
 must be finite positive integers and must cite an existing hash-bound
-`budget_basis` fixture; an override without a passing fixture is invalid. A
-reference is consumed only after its target is present in the same source
+`budget_basis` fixture whose JSON values exactly match all four effective
+limits (`max_sources`, `max_context_bytes`, `max_snapshot_bytes`, and
+`max_reference_depth`); an override without a passing fixture is invalid. The
+root-level `source-manifest.v1.json` name is reserved by the protocol and may
+not be supplied as a source path. A reference is consumed only after its target is present in the same source
 manifest.
+
+For every explicit directory source, the adapter records a sorted lexical
+membership snapshot before source-graph expansion and enumerates it again after
+all declared sources are consumed. Added, removed, renamed, or file/directory
+type-changed members fail closed. Hash stability of the files found in the first
+enumeration does not substitute for directory-membership stability.
 
 For `json-path-field`, `$ref` and object keys whose final camelCase/snake_case
 word is `path`, `paths`, `file`, `files`, `filepath`, `filepaths`, `filename`,
@@ -465,15 +516,22 @@ hash-bound leaf, but its own links and path fields are not reinterpreted. This
 prevents an explicit plan input from recursively promoting historical snapshots,
 backups, or unrelated evidence trees into new recovery authority.
 
-The default context artifact is an atomic UTF-8
+The default serialized model-safe snapshot is limited by the contract's finite
+`max_snapshot_bytes` (the four initial consumers use 262,144 UTF-8 bytes). The
+launcher rejects an oversized snapshot before starting the semantic child and
+returns a transport-budget failure; it never attempts an unchanged oversized
+retry. The default context artifact is an atomic UTF-8
 `skill-input-context.v1.json` file under the temporary binding directory. Its
 default limit is 12,000 UTF-8 bytes; a Skill contract may declare a different
 finite `max_context_bytes`. The artifact records its source-hash set,
 truncation state, omitted items, and semantic sections. `truncated=true` always
 produces `semantic_status=insufficient` and `ready=false`.
 
-After atomic ready publication, copied model-safe source bytes are deleted while
-the hash-bound source manifest is retained. A resumable Skill may persist the
+Ready publication deletes copied model-safe source bytes before the final
+candidate-to-ready compare-and-swap. If cleanup fails, the candidate remains
+`ready=false` and the route must repair or recreate the binding; ready is never
+published with copied source payload remaining. After successful publication,
+only the hash-bound source manifest remains. A resumable Skill may persist the
 manifest, child request, context, decision, and receipt only in its authorized plan state
 directory with the receipt binding; raw or copied source bytes are not persisted
 by this protocol and no protocol artifact may be placed under `logs/`. A persistent receipt is valid
@@ -539,6 +597,7 @@ After the shared scripts exist, run:
 
 ```powershell
 py -3 scripts/python/validate_skill_input_consumption.py <receipt.json> --contract <contract.json> --require-ready
+py -3 scripts/python/launch_skill_input_consumer.py --create-request --receipt <receipt.json> --contract <contract.json> --request <child-request.json> --binding-root <binding-root> --output-root <relative-output-root> --backend codex-cli --model <explicit-model>
 py -3 scripts/python/launch_skill_input_consumer.py --request <child-request.json> --binding-root <binding-root> --run-semantic-child --backend codex-cli --model <explicit-model>
 py -3 -m unittest discover -s scripts/python/tests -p "test_skill_input_consumption*.py"
 py -3 .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan
@@ -562,7 +621,12 @@ fixture matrix must include:
 | Reference cycle, depth/source limit, symlink or root escape | `ready=false` |
 | Semantic decision bound to another context artifact | `ready=false` |
 | Truncated or oversized context artifact | `ready=false` |
+| Serialized snapshot exceeds `max_snapshot_bytes` | child launch rejected; no raw fallback |
 | Credential-bearing source without complete redaction | `ready=false` |
+| `redaction_status=failed` in an otherwise bound decision | `ready=false` |
+| Literal credential-like provider value or non-name env binding | child launch rejected |
+| Explicit directory membership changes during consumption | `ready=false` |
+| Intermediate symlink/reparse-point artifact or snapshot component | path rejected before resolution |
 | Same binding after transport interruption | idempotent resume |
 | Same receipt with another target/request/route | binding failure |
 | Missing, stale, or unreadable persistent sidecar | `ready=false` |

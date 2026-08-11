@@ -1105,8 +1105,14 @@ def main() -> int:
             consumer="run-refactor-implementation-acceptance",
             operation="acceptance",
         )
+        repository_root = Path(args.repository_root).resolve()
+        context_artifact = Path(skill_input["context_artifact"]).resolve()
+        try:
+            context_artifact_relative = context_artifact.relative_to(repository_root).as_posix()
+        except ValueError as exc:
+            raise InputError("Skill input context artifact must be repository-contained") from exc
         print(json.dumps(start_or_resume_target_run(
-            Path(args.repository_root),
+            repository_root,
             args.target_plan,
             args.run_input_hash,
             args.contract_hash,
@@ -1114,6 +1120,7 @@ def main() -> int:
             run_id=args.run_id,
             skill_input_binding_hash=skill_input["binding_hash"],
             skill_input_context_hash=skill_input["context_artifact_hash"],
+            skill_input_context_path=context_artifact_relative,
         ), sort_keys=True))
         return 0
     if args.command == "import-bootstrap-launch-authorization":

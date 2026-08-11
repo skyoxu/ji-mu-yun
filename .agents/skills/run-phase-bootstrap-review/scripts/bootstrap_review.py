@@ -4757,6 +4757,11 @@ def command_prepare(args: argparse.Namespace) -> int:
         )
     except (OSError, ValueError) as exc:
         raise BootstrapError(f"Skill input gate is not ready: {exc}") from exc
+    context_artifact = Path(skill_input["context_artifact"]).resolve()
+    try:
+        context_artifact_relative = context_artifact.relative_to(repository_root).as_posix()
+    except ValueError as exc:
+        raise BootstrapError("Skill input context artifact must be repository-contained") from exc
     out_dir_candidate = Path(args.out_dir)
     if not out_dir_candidate.is_absolute():
         out_dir_candidate = repository_root / out_dir_candidate
@@ -5032,6 +5037,7 @@ def command_prepare(args: argparse.Namespace) -> int:
         "artifacts": artifacts,
         "skillInput": {
             "bindingHash": skill_input["binding_hash"],
+            "contextArtifact": context_artifact_relative,
             "contextArtifactHash": skill_input["context_artifact_hash"],
         },
     }

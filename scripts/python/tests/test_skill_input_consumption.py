@@ -1,32 +1,56 @@
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 PYTHON_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PYTHON_ROOT))
 
 from prepare_skill_input_consumption import prepare  # noqa: E402
-from skill_input_consumption import SkillInputError, canonical_hash, redact_bytes, sha256_bytes, validate_contract, write_json_atomic  # noqa: E402
-from validate_skill_input_consumption import ReceiptValidationError, publish_ready, validate_receipt  # noqa: E402
-from launch_skill_input_consumer import ChildRequestError, run_semantic_child, validate_child_request  # noqa: E402
+from skill_input_consumption import SkillInputError, canonical_hash, contained_path, redact_bytes, redaction_profile_hash, sha256_bytes, validate_contract, write_json_atomic  # noqa: E402
+from validate_skill_input_consumption import ReceiptValidationError, _artifact, _remove_model_snapshot_payload, publish_ready, validate_receipt  # noqa: E402
+from launch_skill_input_consumer import ChildRequestError, create_child_request, run_semantic_child, semantic_child_execution_identity, validate_child_request  # noqa: E402
 from skill_input_gate import require_ready_skill_input  # noqa: E402
 
 
 class SkillInputConsumptionTests(unittest.TestCase):
+    @staticmethod
+    def _backend_inspector(backend):
+        return {
+            "backend": backend,
+            "available": True,
+            "executable": "missing-test-codex",
+            "executable_sha256": "sha256:" + "e" * 64,
+        }
+
+    def _execution_identity(self, model="test-model"):
+        return semantic_child_execution_identity(
+            "codex-cli",
+            model,
+            backend_inspector=self._backend_inspector,
+        )
+
     def _fixture(self):
         temporary = tempfile.TemporaryDirectory()
         root = Path(temporary.name)
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.name", "test"], cwd=root, check=True)
-        basis = root / "budget.txt"
+        basis = root / "budget.json"
         source = root / "requirements.md"
-        basis.write_text("fixture\n", encoding="utf-8")
+        basis.write_text(json.dumps({
+            "schema_version": "skill-input-budget.v1",
+            "max_context_bytes": 512,
+            "max_snapshot_bytes": 262144,
+            "max_sources": 10,
+            "max_reference_depth": 4,
+        }), encoding="utf-8")
         source.write_text("token: abc\nRequirement text\n", encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=root, check=True)
         subprocess.run(["git", "commit", "-qm", "fixture"], cwd=root, check=True)
@@ -41,7 +65,8 @@ class SkillInputConsumptionTests(unittest.TestCase):
             "max_reference_depth": 4,
             "max_sources": 10,
             "max_context_bytes": 512,
-            "budget_basis": {"path": "budget.txt", "sha256": sha256_bytes(basis.read_bytes())},
+            "max_snapshot_bytes": 262144,
+            "budget_basis": {"path": "budget.json", "sha256": sha256_bytes(basis.read_bytes())},
             "sensitivity_policy": "deny-credential-values",
             "redaction_profile": "credential-values-v1",
             "forbidden_sources": ["logs-as-recovery-source"],
@@ -62,11 +87,126 @@ class SkillInputConsumptionTests(unittest.TestCase):
         safe = (root / "run" / "snapshot" / "requirements.md").read_text(encoding="utf-8")
         self.assertNotIn("abc", safe)
 
+    def test_legacy_v1_contract_uses_default_snapshot_budget(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        contract_payload.pop("max_snapshot_bytes")
+        contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+        prepare(args)
+        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+        request = create_child_request(
+            receipt_payload,
+            contract_payload,
+            root,
+            contract_path=contract,
+            receipt_root=receipt.parent,
+            output_root="run/output",
+            backend="codex-cli",
+            model="test-model",
+            backend_inspector=self._backend_inspector,
+        )
+        self.assertEqual(262144, request["max_snapshot_bytes"])
+
+    def test_budget_basis_values_are_bound_to_contract(self):
+        temporary, root, contract, _receipt, _args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        payload = json.loads(contract.read_text(encoding="utf-8"))
+        payload["max_context_bytes"] = 1024
+        with self.assertRaisesRegex(SkillInputError, "budget_basis does not bind max_context_bytes"):
+            validate_contract(payload, root)
+
+    def test_protocol_manifest_name_is_reserved(self):
+        temporary, root, _contract, _receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        reserved = root / "source-manifest.v1.json"
+        reserved.write_text("source\n", encoding="utf-8")
+        args.target = "source-manifest.v1.json"
+        args.source_role = ["requirements=source-manifest.v1.json"]
+        with self.assertRaisesRegex(SkillInputError, "reserved for the protocol manifest"):
+            prepare(args)
+
+    def test_protocol_manifest_name_is_reserved_case_insensitively(self):
+        temporary, root, _contract, _receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        reserved = root / "SOURCE-MANIFEST.V1.JSON"
+        reserved.write_text("source\n", encoding="utf-8")
+        args.target = "SOURCE-MANIFEST.V1.JSON"
+        args.source_role = ["requirements=SOURCE-MANIFEST.V1.JSON"]
+        with self.assertRaisesRegex(SkillInputError, "reserved for the protocol manifest"):
+            prepare(args)
+
+    def test_intermediate_junction_is_rejected_when_supported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            target.mkdir()
+            (target / "file.txt").write_text("x\n", encoding="utf-8")
+            junction = root / "junction"
+            result = subprocess.run(["cmd", "/c", "mklink", "/J", str(junction), str(target)], capture_output=True, text=True)
+            if result.returncode:
+                self.skipTest("directory junctions unavailable")
+            with self.assertRaisesRegex(SkillInputError, "symlink source is not allowed"):
+                contained_path(root, "junction/file.txt")
+
     def test_bearer_token_redaction_removes_complete_credential(self):
         redacted, sensitivity, status = redact_bytes(b"Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.secret.payload\n")
         self.assertEqual("credential-bearing", sensitivity)
         self.assertEqual("complete", status)
         self.assertNotIn(b"eyJhbGciOiJIUzI1NiJ9.secret.payload", redacted)
+
+    def test_empty_utf8_source_has_complete_zero_range_coverage(self):
+        temporary, _root, _contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        args.repository_root.joinpath("requirements.md").write_text("", encoding="utf-8")
+        prepare(args)
+        source = json.loads(receipt.read_text(encoding="utf-8"))["sources"][0]
+        self.assertEqual("complete", source["transport_status"])
+        self.assertEqual(0, source["line_count"])
+        self.assertEqual([], source["ranges_consumed"])
+
+    def test_non_utf8_source_fails_closed(self):
+        temporary, _root, _contract, _receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        args.repository_root.joinpath("requirements.md").write_bytes(b"\xff\xfe")
+        prepare(args)
+        payload = json.loads(args.receipt.read_text(encoding="utf-8"))
+        self.assertEqual("failed", payload["sources"][0]["transport_status"])
+        with self.assertRaisesRegex(SkillInputError, "not UTF-8"):
+            validate_receipt(args.receipt, args.repository_root, args.contract)
+
+    def test_multiline_source_has_exact_full_range_coverage(self):
+        temporary, _root, _contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        args.repository_root.joinpath("requirements.md").write_text(
+            "".join(f"line {index}\n" for index in range(1, 301)),
+            encoding="utf-8",
+        )
+        prepare(args)
+        source = json.loads(receipt.read_text(encoding="utf-8"))["sources"][0]
+        self.assertEqual(300, source["line_count"])
+        self.assertEqual([{"unit": "line", "start": 1, "end": 300}], source["ranges_consumed"])
+
+    def test_logs_source_is_rejected_even_for_current_diagnostic_input(self):
+        temporary, root, _contract, _receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        log_source = root / "logs" / "current.txt"
+        log_source.parent.mkdir()
+        log_source.write_text("diagnostic\n", encoding="utf-8")
+        args.source_role = ["requirements=logs/current.txt"]
+        with self.assertRaisesRegex(SkillInputError, "forbidden source path"):
+            prepare(args)
+
+    def test_common_tokens_and_private_keys_are_redacted(self):
+        raw = (
+            b"ghp_abcdefghijklmnopqrstuvwxyz123456\n"
+            b"-----BEGIN PRIVATE KEY-----\nsecret-material\n-----END PRIVATE KEY-----\n"
+        )
+        redacted, sensitivity, status = redact_bytes(raw)
+        self.assertEqual("credential-bearing", sensitivity)
+        self.assertEqual("complete", status)
+        self.assertNotIn(b"ghp_", redacted)
+        self.assertNotIn(b"secret-material", redacted)
 
     def test_multiword_secret_redaction_removes_complete_value(self):
         redacted, _sensitivity, _status = redact_bytes(b'password: "correct horse battery staple"\n')
@@ -184,6 +324,75 @@ class SkillInputConsumptionTests(unittest.TestCase):
         with self.assertRaisesRegex(SkillInputError, "external reference"):
             prepare(args)
 
+    def test_reference_style_markdown_link_enters_source_manifest(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        contract_payload["source_roles"]["requirements"]["reference_kinds"] = ["markdown-link"]
+        contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+        (root / "requirements.md").write_text(
+            "[Details][spec]\n\n[spec]: referenced.md\n", encoding="utf-8"
+        )
+        (root / "referenced.md").write_text("Referenced requirement\n", encoding="utf-8")
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        self.assertEqual(
+            ["referenced.md", "requirements.md"],
+            [source["path"] for source in payload["sources"]],
+        )
+
+    def test_shortcut_markdown_reference_enters_source_manifest(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        contract_payload["source_roles"]["requirements"]["reference_kinds"] = ["markdown-link"]
+        contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+        (root / "requirements.md").write_text(
+            "[Specification]\n\n[specification]: referenced.md\n", encoding="utf-8"
+        )
+        (root / "referenced.md").write_text("Referenced requirement\n", encoding="utf-8")
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        self.assertEqual(
+            {"requirements.md", "referenced.md"},
+            {source["path"] for source in payload["sources"]},
+        )
+
+    def test_markdown_literal_regions_and_escaped_links_are_not_references(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        contract_payload["source_roles"]["requirements"]["reference_kinds"] = ["markdown-link"]
+        contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+        (root / "requirements.md").write_text(
+            "`[inline](missing-inline.md)`\n"
+            "```markdown\n[fenced](missing-fenced.md)\n```\n"
+            "<!-- [comment](missing-comment.md) -->\n"
+            "\\[escaped](missing-escaped.md)\n"
+            "[Real](referenced.md)\n",
+            encoding="utf-8",
+        )
+        (root / "referenced.md").write_text("Referenced requirement\n", encoding="utf-8")
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        self.assertEqual(
+            {"requirements.md", "referenced.md"},
+            {source["path"] for source in payload["sources"]},
+        )
+
+    def test_angle_bracket_markdown_destination_requires_a_valid_close_or_title(self):
+        temporary, root, contract, _receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        contract_payload["source_roles"]["requirements"]["reference_kinds"] = ["markdown-link"]
+        contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+        (root / "requirements.md").write_text(
+            '[Details](<referenced.md> invalid title)\n', encoding="utf-8"
+        )
+        (root / "referenced.md").write_text("Referenced requirement\n", encoding="utf-8")
+        with self.assertRaisesRegex(SkillInputError, "inline reference"):
+            prepare(args)
+
     def test_request_binding_cannot_drop_required_source_roles(self):
         temporary, root, contract, receipt, args = self._fixture()
         self.addCleanup(temporary.cleanup)
@@ -232,6 +441,55 @@ class SkillInputConsumptionTests(unittest.TestCase):
         request.write_text(json.dumps({"working_directory": "C:\\private\\task"}), encoding="utf-8")
         with self.assertRaisesRegex(SkillInputError, "absolute machine path"):
             prepare(args)
+        request.write_text(
+            json.dumps({"header": "Authorization: Bearer actual-secret-value"}),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(SkillInputError, "credential material"):
+            prepare(args)
+
+    def test_directory_membership_change_during_prepare_fails_closed(self):
+        temporary, root, contract, _receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        contract_payload["source_roles"]["requirements"]["allowed_kinds"] = ["directory"]
+        contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+        source_dir = root / "requirements"
+        source_dir.mkdir()
+        (source_dir / "initial.md").write_text("Initial\n", encoding="utf-8")
+        args.target = "requirements"
+        args.source_role = ["requirements=requirements"]
+        import prepare_skill_input_consumption as prepare_module
+
+        original_expand = prepare_module.expand_source_graph
+
+        def expand_then_mutate(*expand_args, **expand_kwargs):
+            expanded = original_expand(*expand_args, **expand_kwargs)
+            (source_dir / "added.md").write_text("Added during preparation\n", encoding="utf-8")
+            return expanded
+
+        with patch.object(prepare_module, "expand_source_graph", side_effect=expand_then_mutate):
+            with self.assertRaisesRegex(SkillInputError, "directory source membership changed"):
+                prepare(args)
+
+    def test_artifact_path_rejects_intermediate_symlink(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            target.mkdir()
+            artifact = target / "context.json"
+            artifact.write_text("{}\n", encoding="utf-8")
+            link = root / "link"
+            try:
+                link.symlink_to(target, target_is_directory=True)
+            except OSError as exc:
+                self.skipTest(f"directory symlinks unavailable: {exc}")
+            with self.assertRaisesRegex(ReceiptValidationError, "symlink"):
+                _artifact(
+                    root,
+                    {"path": "link/context.json", "sha256": sha256_bytes(artifact.read_bytes())},
+                    "context",
+                )
 
     def test_repository_identity_drift_fails_closed(self):
         temporary, root, contract, receipt, args = self._fixture()
@@ -266,6 +524,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
             "output_root": "run/output",
             "execution_identity": "sha256:" + "1" * 64,
             "max_context_bytes": 512,
+            "max_snapshot_bytes": 262144,
             "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"],
             "authorizes": [],
         }
@@ -279,6 +538,178 @@ class SkillInputConsumptionTests(unittest.TestCase):
         request["allowed_capabilities"] = ["read-frozen-snapshot", "run-shell"]
         with self.assertRaises(ChildRequestError):
             validate_child_request(request, root)
+        request["allowed_capabilities"] = ["read-frozen-snapshot", "write-context-output"]
+        request["output_root"] = "run/snapshot/output"
+        with self.assertRaisesRegex(ChildRequestError, "must be disjoint"):
+            validate_child_request(request, root)
+        self.assertFalse((root / "run" / "snapshot" / "output").exists())
+
+    def test_child_request_is_constructed_from_actual_execution_identity(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        request = create_child_request(
+            receipt_payload,
+            contract_payload,
+            root,
+            contract_path=contract,
+            receipt_root=receipt.parent,
+            output_root="run/output",
+            backend="codex-cli",
+            model="test-model",
+            backend_inspector=self._backend_inspector,
+        )
+        self.assertEqual(self._execution_identity(), request["execution_identity"])
+        called = False
+
+        def fake_runner(**_kwargs):
+            nonlocal called
+            called = True
+            return 1, "", []
+
+        with self.assertRaisesRegex(ChildRequestError, "execution identity"):
+            run_semantic_child(
+                request,
+                root,
+                backend="codex-cli",
+                model="different-model",
+                runner=fake_runner,
+                backend_inspector=self._backend_inspector,
+            )
+        self.assertFalse(called)
+
+    def test_child_request_rejects_unbound_contract_or_receipt_before_creating_output(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        altered_contract = dict(contract_payload)
+        altered_contract["max_context_bytes"] = 1024
+        with self.assertRaisesRegex(ChildRequestError, "payload does not match artifact"):
+            create_child_request(
+                receipt_payload,
+                altered_contract,
+                root,
+                contract_path=contract,
+                receipt_root=receipt.parent,
+                output_root="run/untrusted-output",
+                backend="codex-cli",
+                model="test-model",
+                backend_inspector=self._backend_inspector,
+            )
+        self.assertFalse((root / "run" / "untrusted-output").exists())
+        receipt_payload["route_identity"] = "tampered"
+        with self.assertRaisesRegex(ChildRequestError, "receipt binding"):
+            create_child_request(
+                receipt_payload,
+                contract_payload,
+                root,
+                contract_path=contract,
+                receipt_root=receipt.parent,
+                output_root="run/untrusted-output",
+                backend="codex-cli",
+                model="test-model",
+                backend_inspector=self._backend_inspector,
+            )
+        self.assertFalse((root / "run" / "untrusted-output").exists())
+
+    def test_semantic_child_uses_one_normalized_configuration_snapshot(self):
+        temporary, root, _contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        isolation = {
+            "user_config": "ignored", "session": "ephemeral", "skip_git_repo_check": True,
+            "disabled_features": [], "web_search": "disabled", "project_doc_max_bytes": 0,
+            "provider": "default", "provider_config_hash": canonical_hash({}),
+        }
+        request = {
+            "schema_version": "skill-input-child-request.v1", "consumer": "demo-skill", "operation": "create",
+            "contract_hash": payload["contract_hash"], "source_manifest_hash": payload["source_manifest"]["sha256"],
+            "snapshot_root": "run/snapshot", "output_root": "run/output",
+            "execution_identity": semantic_child_execution_identity(
+                "codex-cli", " test-model ", " HIGH ",
+                backend_inspector=self._backend_inspector, isolation=isolation,
+            ),
+            "max_context_bytes": 512,
+            "max_snapshot_bytes": 262144,
+            "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
+        }
+
+        def fake_runner(**kwargs):
+            self.assertEqual("test-model", kwargs["codex_model"])
+            self.assertIn("model_reasoning_effort=high", kwargs["codex_configs"])
+            output = {
+                "context": {"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"},
+                "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []},
+            }
+            kwargs["output_last_message"].write_text(json.dumps(output), encoding="utf-8")
+            return 0, "", ["fake"]
+
+        with patch(
+            "launch_skill_input_consumer._isolated_codex_configuration",
+            return_value=(["features.shell_tool=false"], isolation),
+        ) as isolated_config:
+            run_semantic_child(
+                request,
+                root,
+                backend="codex-cli",
+                model=" test-model ",
+                reasoning_effort=" HIGH ",
+                runner=fake_runner,
+                backend_inspector=self._backend_inspector,
+            )
+        self.assertEqual(1, isolated_config.call_count)
+
+    def test_semantic_child_rejects_unknown_reasoning_effort_before_launch(self):
+        with self.assertRaisesRegex(ChildRequestError, "reasoning effort"):
+            semantic_child_execution_identity(
+                "codex-cli",
+                "test-model",
+                "turbo",
+                backend_inspector=self._backend_inspector,
+            )
+
+    def test_execution_identity_binds_safe_provider_config_and_rejects_literal_headers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            codex_home = Path(directory)
+            config = codex_home / "config.toml"
+            config.write_text(
+                'model_provider = "test-provider"\n'
+                '[model_providers.test-provider]\n'
+                'name = "Test"\n'
+                'base_url = "https://one.example.invalid"\n'
+                'wire_api = "responses"\n',
+                encoding="utf-8",
+            )
+            with patch.dict(os.environ, {"CODEX_HOME": str(codex_home)}):
+                first = self._execution_identity()
+                config.write_text(
+                    config.read_text(encoding="utf-8").replace("one.example", "two.example"),
+                    encoding="utf-8",
+                )
+                second = self._execution_identity()
+                self.assertNotEqual(first, second)
+                config.write_text(
+                    config.read_text(encoding="utf-8")
+                    + '[model_providers.test-provider.http_headers]\nAuthorization = "secret"\n',
+                    encoding="utf-8",
+                )
+                with self.assertRaisesRegex(ChildRequestError, "not safe to replay"):
+                    self._execution_identity()
+                config.write_text(
+                    'model_provider = "test-provider"\n'
+                    '[model_providers.test-provider]\n'
+                    'name = "Test"\n'
+                    'base_url = "https://example.invalid?api_key=sk-actualsecret123"\n'
+                    'wire_api = "responses"\n',
+                    encoding="utf-8",
+                )
+                with self.assertRaisesRegex(ChildRequestError, "credential-like value"):
+                    self._execution_identity()
 
     def test_publish_ready_binds_sidecars_and_recomputes_gate(self):
         temporary, root, contract, receipt, args = self._fixture()
@@ -293,13 +724,14 @@ class SkillInputConsumptionTests(unittest.TestCase):
             "schema_version": "skill-input-child-request.v1", "consumer": "demo-skill", "operation": "create",
             "contract_hash": payload["contract_hash"], "source_manifest_hash": payload["source_manifest"]["sha256"],
             "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": "sha256:" + "1" * 64,
-            "max_context_bytes": 512, "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
+            "max_context_bytes": 512,
+            "max_snapshot_bytes": 262144, "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
         }), encoding="utf-8")
         decision = output_root / "semantic-decision.v1.json"
         context = output_root / "skill-input-context.v1.json"
         context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
         context_hash = sha256_bytes(context.read_bytes())
-        decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": "sha256:" + "2" * 64, "authorizes": []}), encoding="utf-8")
+        decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
         publish_ready(receipt, child_request, decision, context, root, contract)
         self.assertFalse((root / "run" / "snapshot" / "requirements.md").exists())
         self.assertEqual("ready", validate_receipt(receipt, root, contract, require_ready=True)["status"])
@@ -308,6 +740,124 @@ class SkillInputConsumptionTests(unittest.TestCase):
         self.assertEqual(sha256_bytes(context.read_bytes()), gated["context_artifact_hash"])
         with self.assertRaises(ValueError):
             require_ready_skill_input(receipt_path=receipt, repository_root=root, contract_path=contract, consumer="other-skill", operation="create")
+
+    def test_publish_ready_rejects_failed_redaction_decision(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        source_path = payload["sources"][0]["path"]
+        output_root = root / "run" / "output"
+        output_root.mkdir()
+        child_request = root / "run" / "skill-input-child-request.v1.json"
+        child_request.write_text(json.dumps({
+            "schema_version": "skill-input-child-request.v1", "consumer": "demo-skill", "operation": "create",
+            "contract_hash": payload["contract_hash"], "source_manifest_hash": payload["source_manifest"]["sha256"],
+            "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": "sha256:" + "1" * 64,
+            "max_context_bytes": 512,
+            "max_snapshot_bytes": 262144, "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
+        }), encoding="utf-8")
+        context = output_root / "skill-input-context.v1.json"
+        context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
+        context_hash = sha256_bytes(context.read_bytes())
+        decision = output_root / "semantic-decision.v1.json"
+        decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "failed", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
+        candidate_bytes = receipt.read_bytes()
+        with self.assertRaisesRegex(ReceiptValidationError, "insufficient semantic input"):
+            publish_ready(receipt, child_request, decision, context, root, contract)
+        self.assertEqual(candidate_bytes, receipt.read_bytes())
+
+    def test_publish_ready_keeps_candidate_when_snapshot_cleanup_fails(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        output_root = root / "run" / "output"
+        output_root.mkdir()
+        child_request = root / "run" / "skill-input-child-request.v1.json"
+        child_request.write_text(json.dumps({
+            "schema_version": "skill-input-child-request.v1", "consumer": "demo-skill", "operation": "create",
+            "contract_hash": payload["contract_hash"], "source_manifest_hash": payload["source_manifest"]["sha256"],
+            "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": "sha256:" + "1" * 64,
+            "max_context_bytes": 512, "max_snapshot_bytes": 262144,
+            "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
+        }), encoding="utf-8")
+        context = output_root / "skill-input-context.v1.json"
+        context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
+        context_hash = sha256_bytes(context.read_bytes())
+        source_path = payload["sources"][0]["path"]
+        decision = output_root / "semantic-decision.v1.json"
+        decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
+        candidate_bytes = receipt.read_bytes()
+        with patch("validate_skill_input_consumption._remove_model_snapshot_payload", side_effect=OSError("cleanup unavailable")):
+            with self.assertRaisesRegex(OSError, "cleanup unavailable"):
+                publish_ready(receipt, child_request, decision, context, root, contract)
+        self.assertEqual(candidate_bytes, receipt.read_bytes())
+        self.assertEqual("candidate", validate_receipt(receipt, root, contract)["status"])
+
+    def test_snapshot_cleanup_restores_files_after_midway_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            snapshot = root / "snapshot"
+            snapshot.mkdir()
+            manifest = snapshot / "source-manifest.v1.json"
+            manifest.write_text("{}\n", encoding="utf-8")
+            first = snapshot / "first.md"
+            second = snapshot / "second.md"
+            first.write_text("first\n", encoding="utf-8")
+            second.write_text("second\n", encoding="utf-8")
+            original_unlink = Path.unlink
+            calls = 0
+
+            def fail_second(path, *args, **kwargs):
+                nonlocal calls
+                calls += 1
+                if calls == 2:
+                    raise OSError("second cleanup failed")
+                return original_unlink(path, *args, **kwargs)
+
+            with patch.object(Path, "unlink", new=fail_second):
+                with self.assertRaisesRegex(OSError, "second cleanup failed"):
+                    _remove_model_snapshot_payload(
+                        root,
+                        manifest,
+                        [{"path": "first.md"}, {"path": "second.md"}],
+                    )
+            self.assertEqual("first\n", first.read_text(encoding="utf-8"))
+            self.assertEqual("second\n", second.read_text(encoding="utf-8"))
+
+    def test_publish_ready_restores_snapshot_when_final_cas_fails(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        output_root = root / "run" / "output"
+        output_root.mkdir()
+        child_request = output_root / "skill-input-child-request.v1.json"
+        child_request.write_text(json.dumps({
+            "schema_version": "skill-input-child-request.v1", "consumer": "demo-skill", "operation": "create",
+            "contract_hash": payload["contract_hash"], "source_manifest_hash": payload["source_manifest"]["sha256"],
+            "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": "sha256:" + "1" * 64,
+            "max_context_bytes": 512, "max_snapshot_bytes": 262144,
+            "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
+        }), encoding="utf-8")
+        context = output_root / "skill-input-context.v1.json"
+        context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
+        context_hash = sha256_bytes(context.read_bytes())
+        source_path = payload["sources"][0]["path"]
+        decision = output_root / "semantic-decision.v1.json"
+        decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
+        import validate_skill_input_consumption as validator_module
+        original_writer = validator_module.write_json_atomic
+        def fail_final(path, value, **kwargs):
+            if "expected_bytes" in kwargs:
+                raise OSError("final CAS unavailable")
+            return original_writer(path, value, **kwargs)
+        with patch.object(validator_module, "write_json_atomic", side_effect=fail_final):
+            with self.assertRaisesRegex(OSError, "final CAS unavailable"):
+                publish_ready(receipt, child_request, decision, context, root, contract)
+        self.assertTrue((root / "run" / "snapshot" / "requirements.md").is_file())
+        self.assertEqual("candidate", validate_receipt(receipt, root, contract)["status"])
 
     def test_oversized_context_artifact_fails_closed(self):
         temporary, root, contract, receipt, args = self._fixture()
@@ -322,13 +872,14 @@ class SkillInputConsumptionTests(unittest.TestCase):
             "schema_version": "skill-input-child-request.v1", "consumer": "demo-skill", "operation": "create",
             "contract_hash": payload["contract_hash"], "source_manifest_hash": payload["source_manifest"]["sha256"],
             "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": "sha256:" + "1" * 64,
-            "max_context_bytes": 512, "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
+            "max_context_bytes": 512,
+            "max_snapshot_bytes": 262144, "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
         }), encoding="utf-8")
         decision = output_root / "semantic-decision.v1.json"
         context = output_root / "skill-input-context.v1.json"
         context.write_text(json.dumps({"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "x" * 2000}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"}), encoding="utf-8")
         context_hash = sha256_bytes(context.read_bytes())
-        decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": "sha256:" + "2" * 64, "authorizes": []}), encoding="utf-8")
+        decision.write_text(json.dumps({"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": "sha256:" + "1" * 64, "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": context_hash, "source_statuses": {source_path: "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []}), encoding="utf-8")
         candidate_bytes = receipt.read_bytes()
         with self.assertRaisesRegex(ReceiptValidationError, "max_context_bytes"):
             publish_ready(receipt, child_request, decision, context, root, contract)
@@ -343,23 +894,181 @@ class SkillInputConsumptionTests(unittest.TestCase):
         request = {
             "schema_version": "skill-input-child-request.v1", "consumer": "demo-skill", "operation": "create",
             "contract_hash": payload["contract_hash"], "source_manifest_hash": payload["source_manifest"]["sha256"],
-            "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": "sha256:" + "1" * 64,
+            "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": self._execution_identity(),
             "max_context_bytes": 512,
+            "max_snapshot_bytes": 262144,
             "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
         }
 
         def fake_runner(**kwargs):
+            self.assertEqual("read-only", kwargs["codex_sandbox"])
+            self.assertTrue(kwargs["codex_skip_git_repo_check"])
+            self.assertEqual(["--ephemeral", "--ignore-user-config"], kwargs["codex_extra_args"])
+            self.assertIn("features.shell_tool=false", kwargs["codex_configs"])
+            self.assertIn("features.view_image=false", kwargs["codex_configs"])
+            self.assertIn('web_search="disabled"', kwargs["codex_configs"])
+            self.assertIn("SNAPSHOT_JSON_BEGIN", kwargs["prompt"])
+            self.assertIn("Requirement text", kwargs["prompt"])
+            self.assertFalse((kwargs["root"] / "snapshot").exists())
             output = {
                 "context": {"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"},
-                "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": "sha256:" + "2" * 64, "authorizes": []},
+                "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []},
             }
             kwargs["output_last_message"].write_text(json.dumps(output), encoding="utf-8")
             return 0, "", ["fake"]
 
-        result = run_semantic_child(request, root, backend="codex-cli", model="test-model", runner=fake_runner)
+        result = run_semantic_child(request, root, backend="codex-cli", model="test-model", runner=fake_runner, backend_inspector=self._backend_inspector)
         self.assertEqual("complete", result["status"])
         self.assertTrue(Path(result["context_artifact"]).is_file())
         self.assertTrue(Path(result["semantic_decision"]).is_file())
+
+    def test_transport_failures_preserve_same_binding_for_retry(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        request = create_child_request(
+            payload,
+            json.loads(contract.read_text(encoding="utf-8")),
+            root,
+            contract_path=contract,
+            receipt_root=receipt.parent,
+            output_root="run/output",
+            backend="codex-cli",
+            model="test-model",
+            backend_inspector=self._backend_inspector,
+        )
+
+        def failed_runner(**_kwargs):
+            return 1, "", ["fake"]
+
+        with self.assertRaisesRegex(ChildRequestError, "failed without a typed output"):
+            run_semantic_child(request, root, backend="codex-cli", model="test-model", runner=failed_runner, backend_inspector=self._backend_inspector)
+        self.assertTrue((root / "run" / "snapshot" / "requirements.md").is_file())
+
+        def timed_out_runner(**_kwargs):
+            raise subprocess.TimeoutExpired(["codex", "exec"], 1)
+
+        with self.assertRaises(subprocess.TimeoutExpired):
+            run_semantic_child(request, root, backend="codex-cli", model="test-model", runner=timed_out_runner, backend_inspector=self._backend_inspector)
+
+        def malformed_runner(**kwargs):
+            kwargs["output_last_message"].write_text("not-json", encoding="utf-8")
+            return 0, "", ["fake"]
+
+        with self.assertRaisesRegex(ChildRequestError, "not valid JSON"):
+            run_semantic_child(request, root, backend="codex-cli", model="test-model", runner=malformed_runner, backend_inspector=self._backend_inspector)
+
+        def successful_runner(**kwargs):
+            output = {
+                "context": {"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"},
+                "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []},
+            }
+            kwargs["output_last_message"].write_text(json.dumps(output), encoding="utf-8")
+            return 0, "", ["fake"]
+
+        result = run_semantic_child(request, root, backend="codex-cli", model="test-model", runner=successful_runner, backend_inspector=self._backend_inspector)
+        self.assertEqual("complete", result["status"])
+
+    def test_semantic_child_rejects_oversized_serialized_snapshot_before_launch(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        snapshot_source = root / "run" / "snapshot" / "requirements.md"
+        snapshot_source.write_text("x" * 70000, encoding="utf-8", newline="")
+        manifest_path = root / "run" / "snapshot" / "source-manifest.v1.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["sources"][0]["semantic_snapshot_sha256"] = sha256_bytes(snapshot_source.read_bytes())
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8", newline="\n")
+        request = {
+            "schema_version": "skill-input-child-request.v1",
+            "consumer": "demo-skill", "operation": "create",
+            "contract_hash": payload["contract_hash"],
+            "source_manifest_hash": sha256_bytes(manifest_path.read_bytes()),
+            "snapshot_root": "run/snapshot", "output_root": "run/output",
+            "execution_identity": self._execution_identity(),
+            "max_context_bytes": 512, "max_snapshot_bytes": 65536,
+            "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"],
+            "authorizes": [],
+        }
+        with self.assertRaisesRegex(ChildRequestError, "max_snapshot_bytes"):
+            run_semantic_child(
+                request,
+                root,
+                backend="codex-cli",
+                model="test-model",
+                runner=unittest.mock.Mock(),
+                backend_inspector=self._backend_inspector,
+            )
+
+    def test_semantic_child_rejects_snapshot_modification(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        request = create_child_request(
+            payload,
+            json.loads(contract.read_text(encoding="utf-8")),
+            root,
+            contract_path=contract,
+            receipt_root=receipt.parent,
+            output_root="run/output",
+            backend="codex-cli",
+            model="test-model",
+            backend_inspector=self._backend_inspector,
+        )
+
+        def fake_runner(**kwargs):
+            (root / "run" / "snapshot" / "requirements.md").write_text("mutated\n", encoding="utf-8")
+            kwargs["output_last_message"].write_text("{}", encoding="utf-8")
+            return 0, "", ["fake"]
+
+        with self.assertRaisesRegex(ChildRequestError, "modified the frozen snapshot"):
+            run_semantic_child(
+                request,
+                root,
+                backend="codex-cli",
+                model="test-model",
+                runner=fake_runner,
+                backend_inspector=self._backend_inspector,
+            )
+
+    def test_semantic_child_rejects_credential_like_typed_output(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        request = create_child_request(
+            payload,
+            json.loads(contract.read_text(encoding="utf-8")),
+            root,
+            contract_path=contract,
+            receipt_root=receipt.parent,
+            output_root="run/output",
+            backend="codex-cli",
+            model="test-model",
+            backend_inspector=self._backend_inspector,
+        )
+
+        def fake_runner(**kwargs):
+            output = {
+                "context": {"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Authorization: Bearer actual-looking-secret"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"},
+                "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []},
+            }
+            kwargs["output_last_message"].write_text(json.dumps(output), encoding="utf-8")
+            return 0, "", ["fake"]
+
+        with self.assertRaisesRegex(ReceiptValidationError, "credential-like output"):
+            run_semantic_child(
+                request,
+                root,
+                backend="codex-cli",
+                model="test-model",
+                runner=fake_runner,
+                backend_inspector=self._backend_inspector,
+            )
+        self.assertFalse((root / "run" / "output" / "skill-input-context.v1.json").exists())
 
     def test_semantic_child_rejects_oversized_context_before_publishing_sidecars(self):
         temporary, root, _contract, receipt, args = self._fixture()
@@ -369,21 +1078,22 @@ class SkillInputConsumptionTests(unittest.TestCase):
         request = {
             "schema_version": "skill-input-child-request.v1", "consumer": "demo-skill", "operation": "create",
             "contract_hash": payload["contract_hash"], "source_manifest_hash": payload["source_manifest"]["sha256"],
-            "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": "sha256:" + "1" * 64,
+            "snapshot_root": "run/snapshot", "output_root": "run/output", "execution_identity": self._execution_identity(),
             "max_context_bytes": 512,
+            "max_snapshot_bytes": 262144,
             "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"], "authorizes": [],
         }
 
         def fake_runner(**kwargs):
             output = {
                 "context": {"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "x" * 2000}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"},
-                "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": "sha256:" + "2" * 64, "authorizes": []},
+                "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []},
             }
             kwargs["output_last_message"].write_text(json.dumps(output), encoding="utf-8")
             return 0, "", ["fake"]
 
         with self.assertRaisesRegex(ReceiptValidationError, "max_context_bytes"):
-            run_semantic_child(request, root, backend="codex-cli", model="test-model", runner=fake_runner)
+            run_semantic_child(request, root, backend="codex-cli", model="test-model", runner=fake_runner, backend_inspector=self._backend_inspector)
         self.assertFalse((root / "run" / "output" / "skill-input-context.v1.json").exists())
         self.assertFalse((root / "run" / "output" / "semantic-decision.v1.json").exists())
 
