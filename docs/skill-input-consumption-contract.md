@@ -143,6 +143,14 @@ The shared adapter emits a temporary or authorized plan-local
   "consumer": "skill-id",
   "operation": "create|repair|review|execute|acceptance",
   "request_hash": "sha256:...",
+  "request_binding": {
+    "request": {},
+    "consumer": "skill-id",
+    "operation": "create|repair|review|execute|acceptance",
+    "target": "execution-plans/example",
+    "route_identity": "strict_tdd_plan",
+    "source_roles": {"requirements": ["requirements.md"]}
+  },
   "target": "execution-plans/example",
   "route_identity": "strict_tdd_plan",
   "repository_identity": {
@@ -155,6 +163,10 @@ The shared adapter emits a temporary or authorized plan-local
   "contract_hash": "sha256:...",
   "source_manifest": {
     "path": ".../source-manifest.v1.json",
+    "sha256": "sha256:..."
+  },
+  "child_request": {
+    "path": ".../skill-input-child-request.v1.json",
     "sha256": "sha256:..."
   },
   "sources": [
@@ -194,28 +206,33 @@ The shared adapter emits a temporary or authorized plan-local
 omitted. It covers the contract, operation, request, route, target, repository
 identity, adapter version, `source_manifest.sha256`, every source hash and
 coverage range, sensitivity classification, semantic-snapshot/redaction hash,
-semantic decision, and context artifact. The adapter emits a candidate with
+child request, semantic decision, and context artifact. The adapter emits a candidate with
 `ready=false`; the validator recomputes all fields and atomically publishes the
 final `ready` value and matching `binding_hash`.
 
 `contract_hash`, source hashes, and artifact hashes are SHA-256 over exact file
-bytes. `request_hash` and `binding_hash` use RFC 8785 canonical JSON encoded as
-UTF-8. Repository paths are normalized to repository-relative forward-slash
-form after resolved-root and symlink containment checks. The validator rejects
-absolute machine-specific paths inside persistent receipts.
+bytes. `request_hash` and `binding_hash` use the repository canonical JSON
+encoding: UTF-8, recursively sorted object keys, and no insignificant
+whitespace. Repository paths are normalized to repository-relative
+forward-slash form after resolved-root and symlink containment checks. The
+validator rejects absolute machine-specific paths and credential-bearing values
+inside persistent request bindings. It also recomputes the Git HEAD, index, and
+scoped worktree identity instead of trusting the receipt's stored identity.
 
-`request_hash` covers the typed caller identity, consumer, operation, target,
-route, and explicit source paths; it excludes timestamps and temporary paths.
+`request_hash` is recomputed from the stored `request_binding`, which covers the
+typed caller identity, consumer, operation, target, route, and explicit source
+roles and paths; it excludes timestamps and temporary paths.
 Artifact paths in a receipt are relative to the receipt root. `resume` is not a
 new operation: it reuses the original operation and byte-identical binding. A
 changed request, repository identity, contract, source, or artifact creates a
 new binding.
 
-The adapter copies the verified source bytes into a private non-model temporary
-snapshot and emits `source-manifest.v1.json`. Before any semantic child launch,
-it applies the contract's deterministic sensitivity policy and emits a separate
-model-safe snapshot. Actual credential values stay only in the non-model
-snapshot and are never included in the child request, context artifact,
+The adapter reads the verified source bytes twice in the non-model parent,
+binds their before/after hashes in `source-manifest.v1.json`, applies the
+contract's deterministic sensitivity policy, and atomically emits only the
+model-safe snapshot. Actual credential values remain only in the authoritative
+live source and transient parent memory; they are never copied into protocol
+artifacts or included in the child request, context artifact,
 model-facing diagnostic output, published evidence, or committed file. An
 explicitly authorized non-model platform diagnostic may retain access-controlled
 operational evidence under the repository security boundary, but it still may
@@ -254,6 +271,7 @@ The child request has this minimum shape:
   "snapshot_root": "model-safe-binding-relative-path",
   "output_root": "temporary-binding-relative-path",
   "execution_identity": "sha256:...",
+  "max_context_bytes": 12000,
   "allowed_capabilities": ["read-frozen-snapshot", "write-context-output"],
   "authorizes": []
 }
@@ -261,7 +279,10 @@ The child request has this minimum shape:
 
 The launcher rejects a request with an absolute path, a capability outside the
 allowlist, or an execution identity that does not match the controlled process
-receipt.
+receipt. Ready publication hash-binds that exact child request and verifies its
+consumer, operation, contract, manifest, output root, context budget, and
+execution identity against the semantic decision; detached sidecars cannot be
+published without it.
 
 The validator sets `ready=true` only when all required sources are discovered,
 transport is `complete`, before/after hashes match, declared references are
@@ -281,7 +302,7 @@ per-source values into the receipt and rejects any disagreement. A
 produce only a redacted derived value. If the task requires the credential value
 itself, the gate returns `ready=false` and routes to an explicitly authorized
 non-model platform diagnostic whose output is redacted before any model sees it.
-The child may not read live sources, the non-model snapshot, logs, or write the
+The child may not read raw live sources, parent memory, logs, or write the
 receipt.
 
 The optional `diagnostic_authorization` is required whenever a contract allows
@@ -355,6 +376,8 @@ reads, and before knowledge preflight/source freeze or plan artifact generation.
 - `repair` requires the target plan's normative files plus the explicit finding
   or repair inputs; historical reports and logs cannot fill missing sources.
 - `plan-ready` validation must require the current receipt and context artifact.
+  The VDD knowledge-preflight result records `skill_input.binding_hash` and the
+  validated context-artifact path for its owning launcher.
 
 Standalone requirements Markdown remains direct implementation input and must
 not activate this gate unless the user explicitly requests a complete VDD plan.
@@ -374,6 +397,8 @@ state decisions, and must be recorded in the receipt.
   explicitly frozen knowledge context.
 - A missing, ambiguous, changed, or schema-invalid source routes to repair and
   cannot enter a slice.
+- Persist the receipt binding and context-artifact hash in recovery state so a
+  resumed slice cannot detach from the consumed input.
 
 ### 5.3 Bootstrap Review Skill
 
@@ -414,11 +439,31 @@ invoke the adapter before `start-or-resume` publishes a persisted run.
 Each contract declares a repository-contained root, allowed reference kinds,
 `max_reference_depth` (default 32), and `max_sources` (default 500). The
 adapter rejects cycles, symlink escapes, external references, duplicate
-canonical paths, and limits exceeded. `max_sources` and `max_context_bytes`
+canonical paths within one explicit role, and limits exceeded. Converging
+references are de-duplicated by canonical path. `max_sources` and `max_context_bytes`
 must be finite positive integers and must cite an existing hash-bound
 `budget_basis` fixture; an override without a passing fixture is invalid. A
 reference is consumed only after its target is present in the same source
 manifest.
+
+For `json-path-field`, `$ref` and object keys whose final camelCase/snake_case
+word is `path`, `paths`, `file`, `files`, `filepath`, `filepaths`, `filename`,
+`filenames`, `directory`, or `directories` declare references. Matching is
+case-insensitive, so camelCase and snake_case are equivalent without treating
+words such as `profile` as `file`. Generic semantic fields such as `source`,
+`target`, and `reference` do not declare paths by themselves.
+For a path-like key, a bare value without a separator, leading dot, or filename
+suffix is treated as a semantic name rather than a source reference; directory
+references outside the current source tree therefore use `./name` or another
+explicit relative path. Path-like references that are explicit but missing
+still fail closed.
+Glob and selector values containing `*`, `?`, or bracket expressions describe
+scope rather than one concrete source and do not enter the source graph.
+Reference traversal remains recursive only inside the caller's explicit source
+root. A concrete target outside that root is added to the manifest as a
+hash-bound leaf, but its own links and path fields are not reinterpreted. This
+prevents an explicit plan input from recursively promoting historical snapshots,
+backups, or unrelated evidence trees into new recovery authority.
 
 The default context artifact is an atomic UTF-8
 `skill-input-context.v1.json` file under the temporary binding directory. Its
@@ -427,22 +472,31 @@ finite `max_context_bytes`. The artifact records its source-hash set,
 truncation state, omitted items, and semantic sections. `truncated=true` always
 produces `semantic_status=insufficient` and `ready=false`.
 
-The temporary source snapshot and context artifact are deleted after validation
-and authoritative handoff. A resumable Skill may persist the manifest, context,
-decision, and receipt only in its authorized plan state directory with the
-receipt binding; raw snapshot bytes are not persisted by this protocol and no
-protocol artifact may be placed under `logs/`. A persistent receipt is valid
-only while every referenced manifest, context, and decision sidecar exists,
+After atomic ready publication, copied model-safe source bytes are deleted while
+the hash-bound source manifest is retained. A resumable Skill may persist the
+manifest, child request, context, decision, and receipt only in its authorized plan state
+directory with the receipt binding; raw or copied source bytes are not persisted
+by this protocol and no protocol artifact may be placed under `logs/`. A persistent receipt is valid
+only while every referenced manifest, child request, context, and decision sidecar exists,
 remains byte-identical, and passes the same validator. Missing, stale, or
 unreadable sidecars produce `ready=false`. Atomic publication requires staging
 complete bytes, fsync where supported, and replacing only an absent or
-byte-identical destination.
+byte-identical destination. The sole state transition exception is candidate
+`ready=false` to validated `ready=true`, which uses an exact expected-byte
+compare-and-swap.
+Before that compare-and-swap, the complete proposed ready receipt is written to
+a unique sibling staging artifact and passes the same `require-ready`
+validation. A failed budget, source, repository-identity, sidecar, or semantic
+check leaves the candidate receipt byte-identical and cannot publish an invalid
+`ready=true` state. Snapshot payload bytes use the same absent-or-byte-identical
+write rule, so another binding cannot overwrite an existing candidate snapshot.
 
-The adapter registers an expiry cleanup for every temporary binding before
-child launch. Normal completion, cancellation, timeout, child failure, and
-parent crash recovery all run the same cleanup path. A cleanup failure leaves a
-non-sensitive failure receipt, revokes the binding, and blocks reuse; it never
-returns the raw snapshot to the main session.
+The semantic child's isolated temporary execution root is removed by the
+launcher on normal completion, cancellation, timeout, or child failure. A
+candidate model-safe snapshot remains available only for same-binding transport
+retry; ready publication removes its copied source payload. Stale candidate
+bindings are non-authorizing and may be removed by bounded maintenance using
+their receipt roots; cleanup never returns snapshot bytes to the main session.
 
 The same `binding_hash` may resume idempotently after a transport interruption.
 A changed binding requires a new receipt. The adapter must never retry the same
@@ -467,23 +521,24 @@ external files must remain `none`.
    child-request schemas, redaction rules, and validator.
 2. The shared adapter, model-safe snapshot producer, typed child boundary, and
    receipt validator are implemented under `scripts/python/`. The semantic child
-   remains the only context/decision producer; `--publish-ready` is the explicit
-   atomic receipt publication step.
+   remains the only context/decision producer; `--publish-ready` requires the
+   exact child request and is the explicit atomic receipt publication step.
 3. VDD, Quick Dev TDD, Bootstrap Review, and Refactor Acceptance each declare a
    contract and gate at its first authoritative action. Their existing lifecycle
    remains the owner of route, write, review, and acceptance decisions.
 4. Keep extending the fixture matrix with source-graph, semantic-decision,
    idempotent-resume, artifact cleanup, sensitivity, and malformed-child cases
    before migrating additional Skills.
-5. Record receipts and validation evidence under `logs/`; never rewrite
-   historical evidence and never use logs as recovery input.
+5. Record validation evidence under `logs/`, but keep receipts and their
+   protocol sidecars in the authorized plan state or temporary binding root.
+   Evidence may reference their hashes; logs never become recovery input.
 
 ## 7. Validation Matrix
 
 After the shared scripts exist, run:
 
 ```powershell
-py -3 scripts/python/validate_skill_input_consumption.py --contract <contract.json> --receipt <receipt.json>
+py -3 scripts/python/validate_skill_input_consumption.py <receipt.json> --contract <contract.json> --require-ready
 py -3 scripts/python/launch_skill_input_consumer.py --request <child-request.json> --binding-root <binding-root> --run-semantic-child --backend codex-cli --model <explicit-model>
 py -3 -m unittest discover -s scripts/python/tests -p "test_skill_input_consumption*.py"
 py -3 .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan

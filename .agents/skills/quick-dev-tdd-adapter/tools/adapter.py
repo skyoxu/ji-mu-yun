@@ -75,6 +75,7 @@ def prepare_with_skill_input(
     result = _prepare_core(contract, slice_id, identities)
     result["skill_input"] = {
         "context_artifact": gate["context_artifact"].as_posix(),
+        "context_artifact_hash": gate["context_artifact_hash"],
         "binding_hash": gate["binding_hash"],
     }
     return result
@@ -325,5 +326,10 @@ def execute(
         "slice_id": slice_id, "contract_hash": identities["contract_hash"], "validator_hash": identities["validator_hash"],
         "predecessor_run_id": None, "supersedes_run_id": None, "stages": run["stages"], "authorizes": [],
     }
+    if isinstance(run.get("skill_input"), dict):
+        document["skill_input"] = {
+            "binding_hash": run["skill_input"]["binding_hash"],
+            "context_artifact_hash": run["skill_input"]["context_artifact_hash"],
+        }
     state_path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8", newline="\n")
     return run

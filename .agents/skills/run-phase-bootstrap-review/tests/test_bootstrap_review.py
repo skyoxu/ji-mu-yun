@@ -41,7 +41,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.skill_input_gate_patcher = mock.patch.object(
             bootstrap,
             "require_ready_skill_input",
-            return_value={"context_artifact": self.target, "binding_hash": "sha256:" + "a" * 64},
+            return_value={"context_artifact": self.target, "context_artifact_hash": "sha256:" + "b" * 64, "binding_hash": "sha256:" + "a" * 64},
         )
         self.skill_input_gate_patcher.start()
         self.addCleanup(self.skill_input_gate_patcher.stop)
@@ -408,7 +408,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         with mock.patch.object(
             bootstrap,
             "require_ready_skill_input",
-            return_value={"context_artifact": self.target, "binding_hash": "sha256:" + "a" * 64},
+            return_value={"context_artifact": self.target, "context_artifact_hash": "sha256:" + "b" * 64, "binding_hash": "sha256:" + "a" * 64},
         ):
             result = bootstrap.main(
                 [
@@ -477,6 +477,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.assertFalse(diagnostic["runCreated"])
         self.assertEqual(diagnostic["closureBindingVersion"], "v12")
         self.assertEqual(diagnostic["authorizes"], [])
+        self.assertEqual("sha256:" + "a" * 64, diagnostic["skillInput"]["bindingHash"])
+        self.assertRegex(diagnostic["skillInput"]["contextArtifactHash"], r"^sha256:[0-9a-f]{64}$")
         self.assertEqual(
             diagnostic["closureBindings"],
             {

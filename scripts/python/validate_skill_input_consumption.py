@@ -7,6 +7,8 @@ import argparse
 import json
 import re
 import sys
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -15,16 +17,22 @@ from skill_input_consumption import (
     canonical_hash,
     contained_path,
     contract_hash,
+    expand_source_graph,
+    forbidden_repository_path,
+    line_ranges,
     read_json,
     redact_bytes,
+    repository_identity,
     sha256_bytes,
     validate_contract,
+    validate_request_payload,
     write_json_atomic,
 )
 
 
 ZERO_HASH = "sha256:" + "0" * 64
 SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+CHILD_CAPABILITIES = {"read-frozen-snapshot", "write-context-output"}
 
 
 class ReceiptValidationError(ValueError):
@@ -54,7 +62,7 @@ def _check_sha(value: Any, label: str) -> None:
         raise ReceiptValidationError(f"{label} is not sha256:<64 lowercase hex>")
 
 
-def _validate_context(payload: Any, manifest_hash: str) -> None:
+def _validate_context(payload: Any, manifest_hash: str, *, max_context_bytes: int | None = None, serialized_size: int | None = None) -> None:
     if not isinstance(payload, dict):
         raise ReceiptValidationError("context artifact must be an object")
     required = {"schema_version", "source_manifest_hash", "sections", "truncated", "omitted_items", "generated_at"}
@@ -69,6 +77,13 @@ def _validate_context(payload: Any, manifest_hash: str) -> None:
             raise ReceiptValidationError("context section is invalid")
     if type(payload["truncated"]) is not bool or type(payload["omitted_items"]) is not int or payload["omitted_items"] < 0:
         raise ReceiptValidationError("context truncation fields are invalid")
+    if not isinstance(payload["generated_at"], str) or not payload["generated_at"]:
+        raise ReceiptValidationError("context generated_at is invalid")
+    if max_context_bytes is not None:
+        if serialized_size is None:
+            serialized_size = len((json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+        if serialized_size > max_context_bytes:
+            raise ReceiptValidationError("context artifact exceeds contract max_context_bytes")
 
 
 def _validate_decision(payload: Any, manifest_hash: str, context_hash: str, source_statuses: dict[str, str]) -> None:
@@ -79,11 +94,22 @@ def _validate_decision(payload: Any, manifest_hash: str, context_hash: str, sour
         raise ReceiptValidationError("semantic decision fields do not match schema")
     if payload["schema_version"] != "skill-semantic-decision.v1" or payload["source_manifest_hash"] != manifest_hash or payload["context_artifact_hash"] != context_hash:
         raise ReceiptValidationError("semantic decision binding is invalid")
+    if not isinstance(payload["producer_role"], str) or not payload["producer_role"]:
+        raise ReceiptValidationError("semantic decision producer role is invalid")
     _check_sha(payload["execution_identity"], "semantic decision execution_identity")
     _check_sha(payload["redaction_profile_hash"], "semantic decision redaction_profile_hash")
     if payload["status"] not in {"accepted", "insufficient"} or not isinstance(payload["rationale"], str) or len(payload["rationale"].encode("utf-8")) > 2000:
         raise ReceiptValidationError("semantic decision status or rationale is invalid")
-    if payload["authorizes"] != [] or not isinstance(payload["source_statuses"], dict):
+    if (
+        payload["authorizes"] != []
+        or not isinstance(payload["source_statuses"], dict)
+        or any(
+            not isinstance(path, str)
+            or not path
+            or status not in {"accepted", "insufficient", "not-evaluated"}
+            for path, status in payload["source_statuses"].items()
+        )
+    ):
         raise ReceiptValidationError("semantic decision must not authorize actions")
     if payload["source_statuses"] != source_statuses:
         raise ReceiptValidationError("semantic decision source statuses do not match receipt")
@@ -91,13 +117,72 @@ def _validate_decision(payload: Any, manifest_hash: str, context_hash: str, sour
         raise ReceiptValidationError("semantic decision redaction status is invalid")
 
 
+def _validate_child_request_binding(
+    payload: Any,
+    receipt: dict[str, Any],
+    contract: dict[str, Any],
+    repository_root: Path,
+    manifest_path: Path,
+    context_path: Path,
+    decision_path: Path,
+    decision: dict[str, Any],
+) -> None:
+    required = {
+        "schema_version", "consumer", "operation", "contract_hash", "source_manifest_hash",
+        "snapshot_root", "output_root", "execution_identity", "max_context_bytes",
+        "allowed_capabilities", "authorizes",
+    }
+    if not isinstance(payload, dict) or set(payload) != required:
+        raise ReceiptValidationError("child request fields do not match schema")
+    if (
+        payload["schema_version"] != "skill-input-child-request.v1"
+        or payload["consumer"] != receipt["consumer"]
+        or payload["operation"] != receipt["operation"]
+        or payload["contract_hash"] != receipt["contract_hash"]
+        or payload["source_manifest_hash"] != receipt["source_manifest"]["sha256"]
+        or payload["max_context_bytes"] != contract["max_context_bytes"]
+        or payload["authorizes"] != []
+        or payload["execution_identity"] != decision.get("execution_identity")
+    ):
+        raise ReceiptValidationError("child request binding is stale")
+    _check_sha(payload["execution_identity"], "child request execution_identity")
+    capabilities = payload["allowed_capabilities"]
+    if (
+        not isinstance(capabilities, list)
+        or not capabilities
+        or len(capabilities) != len(set(capabilities))
+        or any(capability not in CHILD_CAPABILITIES for capability in capabilities)
+    ):
+        raise ReceiptValidationError("child request capabilities are invalid")
+    try:
+        snapshot_root, _ = contained_path(repository_root, payload["snapshot_root"])
+        output_root, _ = contained_path(repository_root, payload["output_root"])
+    except (TypeError, SkillInputError) as exc:
+        raise ReceiptValidationError("child request path binding is invalid") from exc
+    if not snapshot_root.is_dir() or not output_root.is_dir():
+        raise ReceiptValidationError("child request roots are invalid")
+    if (snapshot_root / "source-manifest.v1.json").resolve() != manifest_path.resolve():
+        raise ReceiptValidationError("child request snapshot manifest is stale")
+    for sidecar, label in ((context_path, "context"), (decision_path, "decision")):
+        try:
+            sidecar.resolve().relative_to(output_root.resolve())
+        except ValueError as exc:
+            raise ReceiptValidationError(f"child request {label} output escapes output_root") from exc
+
+
 def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: Path, require_ready: bool = False) -> dict[str, Any]:
+    try:
+        receipt_path.resolve().relative_to((repository_root.resolve() / "logs").resolve())
+    except ValueError:
+        pass
+    else:
+        raise ReceiptValidationError("receipt may not be stored under logs")
     receipt = read_json(receipt_path)
     if not isinstance(receipt, dict) or receipt.get("schema_version") != "skill-input-consumption.v1":
         raise ReceiptValidationError("receipt schema_version is invalid")
     required_receipt = {
-        "schema_version", "consumer", "operation", "request_hash", "target", "route_identity",
-        "repository_identity", "adapter_version", "created_at", "contract_hash", "source_manifest",
+        "schema_version", "consumer", "operation", "request_hash", "request_binding", "target", "route_identity",
+        "repository_identity", "adapter_version", "created_at", "contract_hash", "source_manifest", "child_request",
         "sources", "missing_sources", "changed_sources", "semantic_decision", "context_artifact",
         "diagnostic_authorization", "authorizes", "binding_hash", "ready",
     }
@@ -116,13 +201,86 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
         validate_contract(contract, repository_root)
     except SkillInputError as exc:
         raise ReceiptValidationError(str(exc)) from exc
+    if receipt["consumer"] != contract["consumer"] or receipt["operation"] not in contract["operations"]:
+        raise ReceiptValidationError("receipt consumer or operation is not declared by contract")
+    if (
+        not isinstance(receipt.get("target"), str)
+        or not receipt["target"]
+        or not isinstance(receipt.get("route_identity"), str)
+        or not receipt["route_identity"]
+        or receipt.get("adapter_version") != "skill-input-adapter.v1"
+        or not isinstance(receipt.get("created_at"), str)
+        or not receipt["created_at"]
+    ):
+        raise ReceiptValidationError("receipt route metadata is invalid")
+    try:
+        target_path, target_relative = contained_path(repository_root, receipt["target"], must_exist=False)
+        validate_request_payload(receipt["route_identity"], path="route_identity")
+    except SkillInputError as exc:
+        raise ReceiptValidationError(str(exc)) from exc
+    if target_relative != receipt["target"] or forbidden_repository_path(target_relative) or target_path.is_symlink():
+        raise ReceiptValidationError("receipt target is forbidden")
+    request_binding = receipt.get("request_binding")
+    if not isinstance(request_binding, dict) or set(request_binding) != {"request", "consumer", "operation", "target", "route_identity", "source_roles"}:
+        raise ReceiptValidationError("receipt request_binding is invalid")
+    if (
+        not isinstance(request_binding["request"], dict)
+        or request_binding["consumer"] != receipt["consumer"]
+        or request_binding["operation"] != receipt["operation"]
+        or request_binding["target"] != receipt["target"]
+        or request_binding["route_identity"] != receipt["route_identity"]
+        or canonical_hash(request_binding) != receipt["request_hash"]
+    ):
+        raise ReceiptValidationError("receipt request binding is stale")
+    try:
+        validate_request_payload(request_binding["request"])
+    except SkillInputError as exc:
+        raise ReceiptValidationError(str(exc)) from exc
+    role_values = request_binding["source_roles"]
+    if (
+        not isinstance(role_values, dict)
+        or any(
+            not isinstance(role_name, str)
+            or role_name not in contract["source_roles"]
+            or not isinstance(paths, list)
+            or not paths
+            or any(not isinstance(path, str) or not path for path in paths)
+            or len(paths) != len(set(paths))
+            for role_name, paths in role_values.items()
+        )
+    ):
+        raise ReceiptValidationError("receipt source role binding is invalid")
+    try:
+        expected_expanded = expand_source_graph(repository_root, contract, receipt["operation"], role_values)
+    except SkillInputError as exc:
+        raise ReceiptValidationError(str(exc)) from exc
+    expected_paths = {relative for _path, relative in expected_expanded}
+    receipt_paths = [source.get("path") for source in receipt.get("sources", []) if isinstance(source, dict)]
+    if not receipt_paths or len(receipt_paths) != len(set(receipt_paths)) or set(receipt_paths) != expected_paths:
+        raise ReceiptValidationError("receipt sources do not match the declared source graph")
+    identity = receipt.get("repository_identity")
+    if not isinstance(identity, dict) or set(identity) != {"head", "index_hash", "scoped_worktree_hash"}:
+        raise ReceiptValidationError("receipt repository identity is invalid")
+    for key in ("index_hash", "scoped_worktree_hash"):
+        _check_sha(identity.get(key), f"receipt.repository_identity.{key}")
+    if not isinstance(identity.get("head"), str) or not identity["head"]:
+        raise ReceiptValidationError("receipt repository identity head is invalid")
+    try:
+        current_identity = repository_identity(repository_root, expected_paths)
+    except SkillInputError as exc:
+        raise ReceiptValidationError(str(exc)) from exc
+    if identity != current_identity:
+        raise ReceiptValidationError("receipt repository identity is stale")
     root = receipt_path.parent.resolve()
     manifest_path, _ = _artifact(root, receipt.get("source_manifest"), "source_manifest")
     if not manifest_path.is_file() or sha256_bytes(manifest_path.read_bytes()) != receipt["source_manifest"]["sha256"]:
         raise ReceiptValidationError("source manifest is missing or stale")
     manifest = read_json(manifest_path)
-    if not isinstance(manifest, dict) or manifest.get("schema_version") != "skill-input-source-manifest.v1" or manifest.get("snapshot_kind") != "model-safe" or not isinstance(manifest.get("sources"), list):
+    if not isinstance(manifest, dict) or set(manifest) != {"schema_version", "snapshot_kind", "consumer", "operation", "sources", "created_at"} or manifest.get("schema_version") != "skill-input-source-manifest.v1" or manifest.get("snapshot_kind") != "model-safe" or manifest.get("consumer") != receipt["consumer"] or manifest.get("operation") != receipt["operation"] or not isinstance(manifest.get("sources"), list) or not manifest["sources"]:
         raise ReceiptValidationError("source manifest is invalid")
+    for manifest_source in manifest["sources"]:
+        if not isinstance(manifest_source, dict) or set(manifest_source) != {"path", "sha256", "semantic_snapshot_sha256", "sensitivity", "redaction_status"}:
+            raise ReceiptValidationError("source manifest entry is invalid")
     if len(receipt.get("sources", [])) != len(manifest["sources"]):
         raise ReceiptValidationError("receipt and source manifest source counts differ")
     source_statuses: dict[str, str] = {}
@@ -130,7 +288,12 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
     if len(manifest_by_path) != len(manifest["sources"]):
         raise ReceiptValidationError("source manifest contains invalid or duplicate paths")
     for source in receipt["sources"]:
-        if not isinstance(source, dict) or not isinstance(source.get("path"), str):
+        source_required_fields = {
+            "path", "required", "sha256_before", "sha256_after", "size_bytes", "line_count",
+            "sensitivity", "semantic_snapshot_sha256", "redaction_status", "ranges_consumed",
+            "transport_status", "semantic_status",
+        }
+        if not isinstance(source, dict) or set(source) != source_required_fields or not isinstance(source.get("path"), str):
             raise ReceiptValidationError("receipt source entry is invalid")
         manifest_source = manifest_by_path.get(source["path"])
         if not isinstance(manifest_source, dict):
@@ -138,13 +301,32 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
         _check_sha(source.get("sha256_before"), f"source {source.get('path')} sha256_before")
         _check_sha(source.get("sha256_after"), f"source {source.get('path')} sha256_after")
         source_path, relative = contained_path(repository_root, source["path"])
-        if relative != source["path"] or relative.startswith("logs/") or relative.startswith(".git/"):
+        if relative != source["path"] or forbidden_repository_path(relative):
             raise ReceiptValidationError(f"forbidden source path: {source['path']}")
+        if type(source["required"]) is not bool or not isinstance(source["size_bytes"], int) or source["size_bytes"] < 0 or not isinstance(source["ranges_consumed"], list):
+            raise ReceiptValidationError(f"receipt source metadata is invalid: {source['path']}")
+        required = False
+        for role_name in contract["operations"][receipt["operation"]]["required_inputs"]:
+            for raw_root in role_values.get(role_name, []):
+                required_root, _ = contained_path(repository_root, raw_root)
+                if source_path == required_root or required_root.is_dir() and required_root in source_path.parents:
+                    required = True
+        if source["required"] != required:
+            raise ReceiptValidationError(f"receipt source required flag is stale: {source['path']}")
         raw = source_path.read_bytes()
         digest = sha256_bytes(raw)
         if digest != source["sha256_before"] or digest != source["sha256_after"]:
             raise ReceiptValidationError(f"source hash drift: {source['path']}")
         safe, sensitivity, redaction = redact_bytes(raw)
+        line_count, ranges = line_ranges(safe)
+        if (
+            source["size_bytes"] != len(raw)
+            or source.get("line_count") != line_count
+            or source["ranges_consumed"] != ranges
+            or source.get("transport_status") != "complete"
+            or source.get("semantic_status") not in {"accepted", "insufficient", "not-evaluated"}
+        ):
+            raise ReceiptValidationError(f"source transport coverage is incomplete: {source['path']}")
         if sha256_bytes(safe) != source["semantic_snapshot_sha256"] or sensitivity != source["sensitivity"] or redaction != source["redaction_status"]:
             raise ReceiptValidationError(f"source snapshot/redaction mismatch: {source['path']}")
         if (
@@ -161,18 +343,61 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
     context_ref = receipt.get("context_artifact")
     ready = receipt.get("ready") is True
     if ready or require_ready:
+        child_request_path, _ = _artifact(root, receipt.get("child_request"), "child_request")
         decision_path, _ = _artifact(root, decision_ref, "semantic_decision")
         context_path, _ = _artifact(root, context_ref, "context_artifact")
-        if not decision_path.is_file() or not context_path.is_file() or decision_ref["sha256"] == ZERO_HASH or context_ref["sha256"] == ZERO_HASH:
-            raise ReceiptValidationError("ready receipt requires decision and context sidecars")
+        if (
+            not child_request_path.is_file()
+            or not decision_path.is_file()
+            or not context_path.is_file()
+            or receipt["child_request"]["sha256"] == ZERO_HASH
+            or decision_ref["sha256"] == ZERO_HASH
+            or context_ref["sha256"] == ZERO_HASH
+        ):
+            raise ReceiptValidationError("ready receipt requires child request, decision, and context sidecars")
+        child_request = read_json(child_request_path)
         decision = read_json(decision_path)
         context = read_json(context_path)
-        if sha256_bytes(decision_path.read_bytes()) != decision_ref["sha256"] or sha256_bytes(context_path.read_bytes()) != context_ref["sha256"]:
+        if (
+            sha256_bytes(child_request_path.read_bytes()) != receipt["child_request"]["sha256"]
+            or sha256_bytes(decision_path.read_bytes()) != decision_ref["sha256"]
+            or sha256_bytes(context_path.read_bytes()) != context_ref["sha256"]
+        ):
             raise ReceiptValidationError("sidecar hash mismatch")
-        _validate_context(context, receipt["source_manifest"]["sha256"])
+        _validate_context(
+            context,
+            receipt["source_manifest"]["sha256"],
+            max_context_bytes=contract["max_context_bytes"],
+            serialized_size=len(context_path.read_bytes()),
+        )
         _validate_decision(decision, receipt["source_manifest"]["sha256"], context_ref["sha256"], source_statuses)
+        _validate_child_request_binding(
+            child_request,
+            receipt,
+            contract,
+            repository_root,
+            manifest_path,
+            context_path,
+            decision_path,
+            decision,
+        )
         if decision["status"] != "accepted" or context["truncated"] or any(status != "accepted" for status in source_statuses.values()):
             raise ReceiptValidationError("ready receipt has insufficient semantic input")
+    diagnostic = receipt.get("diagnostic_authorization")
+    if diagnostic is not None:
+        if not isinstance(diagnostic, dict) or set(diagnostic) != {"authority_path", "authority_sha256", "scope", "target", "issuer", "expires_at"}:
+            raise ReceiptValidationError("diagnostic authorization is invalid")
+        authority_path, _ = _artifact(root, {"path": diagnostic["authority_path"], "sha256": diagnostic["authority_sha256"]}, "diagnostic authority")
+        if not authority_path.is_file() or sha256_bytes(authority_path.read_bytes()) != diagnostic["authority_sha256"]:
+            raise ReceiptValidationError("diagnostic authority is missing or stale")
+        if diagnostic["target"] != receipt["target"] or not all(isinstance(diagnostic[key], str) and diagnostic[key] for key in ("scope", "issuer", "expires_at")):
+            raise ReceiptValidationError("diagnostic authorization scope is invalid")
+        try:
+            expires = datetime.fromisoformat(diagnostic["expires_at"].replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ReceiptValidationError("diagnostic authorization expiry is invalid") from exc
+        if expires.tzinfo is None or expires.astimezone(timezone.utc) <= datetime.now(timezone.utc):
+            raise ReceiptValidationError("diagnostic authorization is expired")
     binding = dict(receipt)
     binding.pop("binding_hash", None)
     if canonical_hash(binding) != receipt["binding_hash"]:
@@ -182,17 +407,31 @@ def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: P
     return {"status": "ready" if ready else "candidate", "receipt": receipt_path.as_posix()}
 
 
-def publish_ready(receipt_path: Path, semantic_decision: Path, context_artifact: Path) -> None:
+def publish_ready(
+    receipt_path: Path,
+    child_request: Path,
+    semantic_decision: Path,
+    context_artifact: Path,
+    repository_root: Path,
+    contract_path: Path,
+) -> None:
     """Bind validated child sidecars and publish the receipt's ready gate."""
+    previous_receipt_bytes = receipt_path.read_bytes()
     receipt = read_json(receipt_path)
     if not isinstance(receipt, dict) or receipt.get("ready") is True:
         raise ReceiptValidationError("only a candidate receipt may be published")
     root = receipt_path.parent.resolve()
     try:
+        child_request_relative = child_request.resolve().relative_to(root).as_posix()
         decision_relative = semantic_decision.resolve().relative_to(root).as_posix()
         context_relative = context_artifact.resolve().relative_to(root).as_posix()
     except ValueError as exc:
         raise ReceiptValidationError("sidecars must be inside the receipt root") from exc
+    child_request_path, _ = _artifact(
+        root,
+        {"path": child_request_relative, "sha256": sha256_bytes(child_request.read_bytes())},
+        "child_request",
+    )
     decision_path, _ = _artifact(root, {"path": decision_relative, "sha256": sha256_bytes(semantic_decision.read_bytes())}, "semantic_decision")
     context_path, _ = _artifact(root, {"path": context_relative, "sha256": sha256_bytes(context_artifact.read_bytes())}, "context_artifact")
     decision_payload = read_json(decision_path)
@@ -202,9 +441,43 @@ def publish_ready(receipt_path: Path, semantic_decision: Path, context_artifact:
                 source["semantic_status"] = decision_payload["source_statuses"][source["path"]]
     receipt["semantic_decision"] = {"path": decision_relative, "sha256": sha256_bytes(decision_path.read_bytes())}
     receipt["context_artifact"] = {"path": context_relative, "sha256": sha256_bytes(context_path.read_bytes())}
+    receipt["child_request"] = {"path": child_request_relative, "sha256": sha256_bytes(child_request_path.read_bytes())}
     receipt["ready"] = True
     receipt["binding_hash"] = canonical_hash({key: value for key, value in receipt.items() if key != "binding_hash"})
-    write_json_atomic(receipt_path, receipt)
+    proposed_path = receipt_path.with_name(f"{receipt_path.name}.{uuid.uuid4().hex}.proposed")
+    try:
+        write_json_atomic(proposed_path, receipt)
+        validate_receipt(proposed_path, repository_root.resolve(), contract_path.resolve(), require_ready=True)
+    finally:
+        try:
+            proposed_path.unlink()
+        except FileNotFoundError:
+            pass
+    write_json_atomic(receipt_path, receipt, expected_bytes=previous_receipt_bytes)
+    manifest_path, _ = _artifact(root, receipt["source_manifest"], "source_manifest")
+    _remove_model_snapshot_payload(root, manifest_path, receipt.get("sources", []))
+
+
+def _remove_model_snapshot_payload(root: Path, manifest_path: Path, sources: list[Any]) -> None:
+    """Remove copied source bytes while retaining the hash-bound manifest."""
+    snapshot_root = manifest_path.parent.resolve()
+    if snapshot_root == root or manifest_path.is_symlink() or not snapshot_root.is_dir():
+        return
+    for source in sources:
+        if not isinstance(source, dict) or not isinstance(source.get("path"), str):
+            continue
+        candidate = (snapshot_root / source["path"]).resolve()
+        try:
+            candidate.relative_to(snapshot_root)
+        except ValueError:
+            continue
+        if candidate.is_file() and not candidate.is_symlink():
+            candidate.unlink()
+    for directory in sorted((item for item in snapshot_root.rglob("*") if item.is_dir()), key=lambda item: len(item.parts), reverse=True):
+        try:
+            directory.rmdir()
+        except OSError:
+            pass
 
 
 def main() -> int:
@@ -214,14 +487,22 @@ def main() -> int:
     parser.add_argument("--contract", required=True, type=Path)
     parser.add_argument("--require-ready", action="store_true")
     parser.add_argument("--publish-ready", action="store_true")
+    parser.add_argument("--child-request", type=Path)
     parser.add_argument("--semantic-decision", type=Path)
     parser.add_argument("--context-artifact", type=Path)
     args = parser.parse_args()
     try:
         if args.publish_ready:
-            if not args.semantic_decision or not args.context_artifact:
-                raise ReceiptValidationError("--publish-ready requires --semantic-decision and --context-artifact")
-            publish_ready(args.receipt.resolve(), args.semantic_decision.resolve(), args.context_artifact.resolve())
+            if not args.child_request or not args.semantic_decision or not args.context_artifact:
+                raise ReceiptValidationError("--publish-ready requires --child-request, --semantic-decision, and --context-artifact")
+            publish_ready(
+                args.receipt.resolve(),
+                args.child_request.resolve(),
+                args.semantic_decision.resolve(),
+                args.context_artifact.resolve(),
+                args.repository_root.resolve(),
+                args.contract.resolve(),
+            )
         result = validate_receipt(args.receipt.resolve(), args.repository_root.resolve(), args.contract.resolve(), args.require_ready)
     except (OSError, SkillInputError, ReceiptValidationError) as exc:
         print(f"skill input receipt validation failed: {exc}", file=sys.stderr)

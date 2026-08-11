@@ -14,7 +14,7 @@ from skill_input_consumption import (
     canonical_hash,
     contained_path,
     contract_hash,
-    expand_sources,
+    expand_source_graph,
     line_ranges,
     now_utc,
     redact_bytes,
@@ -22,6 +22,9 @@ from skill_input_consumption import (
     repository_identity,
     sha256_bytes,
     validate_contract,
+    validate_request_payload,
+    forbidden_repository_path,
+    write_bytes_atomic,
     write_json_atomic,
 )
 
@@ -65,6 +68,13 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         raise SkillInputError("operation is not declared by contract")
     if args.consumer != contract["consumer"]:
         raise SkillInputError("consumer does not match contract")
+    if not isinstance(args.route_identity, str) or not args.route_identity:
+        raise SkillInputError("route identity is invalid")
+    validate_request_payload(args.route_identity, path="route_identity")
+    request = read_json(args.request_json) if args.request_json else {}
+    if not isinstance(request, dict):
+        raise SkillInputError("request JSON must be an object")
+    validate_request_payload(request)
 
     role_values: dict[str, list[str]] = {}
     for raw in args.source_role:
@@ -85,22 +95,36 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
             _role_root_allowed(repository_root, role, path)
 
     target_path, target_relative = contained_path(repository_root, args.target, must_exist=False)
-    if target_relative.startswith("logs/"):
+    if forbidden_repository_path(target_relative):
         raise SkillInputError("target may not be under logs")
     receipt_path = args.receipt.resolve()
     receipt_root = receipt_path.parent
     snapshot_root = args.snapshot_root.resolve()
-    if receipt_root == repository_root / "logs" or str(receipt_root).startswith(str(repository_root / "logs") + "/"):
+    logs_root = (repository_root / "logs").resolve()
+    try:
+        receipt_root.relative_to(logs_root)
+    except ValueError:
+        pass
+    else:
         raise SkillInputError("receipt may not be stored under logs")
+    try:
+        snapshot_root.relative_to(logs_root)
+    except ValueError:
+        pass
+    else:
+        raise SkillInputError("snapshot may not be stored under logs")
     if snapshot_root.exists() and snapshot_root.is_symlink():
         raise SkillInputError("snapshot root may not be a symlink")
     snapshot_root.mkdir(parents=True, exist_ok=True)
 
-    source_paths = [path for paths in role_values.values() for path in paths]
-    expanded = expand_sources(repository_root, source_paths, int(contract["max_sources"]))
+    normalized_role_values: dict[str, list[str]] = {}
+    for role_name, paths in role_values.items():
+        normalized_role_values[role_name] = [contained_path(repository_root, path)[1] for path in paths]
+        if len(normalized_role_values[role_name]) != len(set(normalized_role_values[role_name])):
+            raise SkillInputError(f"source role contains duplicate canonical paths: {role_name}")
+    expanded = expand_source_graph(repository_root, contract, args.operation, normalized_role_values)
     required_roots: list[Path] = []
     required_role_names = set(required_roles)
-    required_role_names.update(name for name, role in contract["source_roles"].items() if isinstance(role, dict) and role.get("required") is True)
     for role_name in required_role_names:
         for raw in role_values.get(role_name, []):
             required_root, _ = contained_path(repository_root, raw)
@@ -135,7 +159,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
             if destination.exists() and destination.is_symlink():
                 raise SkillInputError(f"snapshot destination may not be a symlink: {relative}")
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(safe_bytes)
+            write_bytes_atomic(destination, safe_bytes)
         entry = {
             "path": relative,
             "required": any(source == required_root or required_root.is_dir() and required_root in source.parents for required_root in required_roots),
@@ -170,16 +194,13 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
     manifest_path = snapshot_root / "source-manifest.v1.json"
     write_json_atomic(manifest_path, manifest)
     manifest_hash = sha256_bytes(manifest_path.read_bytes())
-    request = read_json(args.request_json) if args.request_json else {}
-    if not isinstance(request, dict):
-        raise SkillInputError("request JSON must be an object")
     request_binding = {
         "request": request,
         "consumer": args.consumer,
         "operation": args.operation,
         "target": target_relative,
         "route_identity": args.route_identity,
-        "source_roles": role_values,
+        "source_roles": normalized_role_values,
     }
     request_hash = canonical_hash(request_binding)
     root_relative = _relative_artifact(manifest_path, receipt_root)
@@ -187,6 +208,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         "schema_version": "skill-input-consumption.v1",
         "consumer": args.consumer,
         "operation": args.operation,
+        "request_binding": request_binding,
         "request_hash": request_hash,
         "target": target_relative,
         "route_identity": args.route_identity,
@@ -195,6 +217,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         "created_at": now_utc(),
         "contract_hash": contract_hash(contract_path),
         "source_manifest": {"path": root_relative, "sha256": manifest_hash},
+        "child_request": {"path": "pending/skill-input-child-request.v1.json", "sha256": ZERO_HASH},
         "sources": source_entries,
         "missing_sources": [],
         "changed_sources": changed_sources,

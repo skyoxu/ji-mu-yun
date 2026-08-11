@@ -708,6 +708,45 @@ class ExecutionControlTests(unittest.TestCase):
                     knowledge_context_hash,
                 )
 
+    def test_target_run_entry_binds_skill_input_receipt_and_context(self) -> None:
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repo"
+            (repository / "execution-plans" / "feature-a").mkdir(parents=True)
+            hashes = ["sha256:" + character * 64 for character in "abcde"]
+            created = execution_control.start_or_resume_target_run(
+                repository,
+                "execution-plans/feature-a",
+                hashes[0],
+                hashes[1],
+                hashes[2],
+                skill_input_binding_hash=hashes[3],
+                skill_input_context_hash=hashes[4],
+            )
+            run_dir = repository / created["runDirectory"]
+            state = json.loads((run_dir / "run-state.json").read_text(encoding="utf-8"))
+            self.assertEqual(hashes[3], state["skillInputBindingHash"])
+            self.assertEqual(hashes[4], state["skillInputContextHash"])
+            inspection = execution_control.inspect_persisted_run(
+                run_dir,
+                [{"actionId": "validate", "dependsOn": [], "order": 1, "commandId": "validate", "activation": True}],
+                hashes[0],
+                hashes[1],
+                hashes[2],
+            )
+            self.assertEqual("validate", inspection["nextAction"]["actionId"])
+            with self.assertRaisesRegex(execution_control.ControlError, "Skill input binding.*required"):
+                execution_control.start_or_resume_target_run(
+                    repository,
+                    "execution-plans/feature-a",
+                    hashes[0],
+                    hashes[1],
+                    hashes[2],
+                    run_id=created["runId"],
+                )
+
     def test_target_run_entry_does_not_migrate_legacy_artifact_only_run(self) -> None:
         import tempfile
         import execution_control

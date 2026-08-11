@@ -72,23 +72,27 @@ exact route before catalog-stale publication.
 
 Create or resume the target-owned append-only run with the canonical run-input
 request hash that `prepare-run` will publish as `inputHash`, plus the
-implementation-contract file hash and frozen knowledge-context file hash:
+implementation-contract file hash, frozen knowledge-context file hash, and the
+ready Skill-input receipt and contract:
 
 ```text
 py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py start-or-resume \
   --repository-root <repo> --target-plan <execution-plans/target> \
   --run-input-hash <sha256:...> --contract-hash <sha256:...> \
-  --knowledge-context-hash <sha256:...>
+  --knowledge-context-hash <sha256:...> \
+  --skill-input-receipt <binding-relative-or-absolute-receipt> \
+  --skill-input-contract .agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json
 ```
 
 `run-input-hash` is the canonical JSON hash that `prepare-run` computes as
-`inputHash`. The other two values are SHA-256 hashes of the exact contract
-and frozen context file bytes; use the context `sha256` emitted by
+`inputHash`. The next two values are SHA-256 hashes of the exact contract and
+frozen context file bytes; use the context `sha256` emitted by
 `freeze_knowledge_context`, not its semantic `contextHash`.
 
-Omitting `--run-id` derives `acceptance-<16-hex-binding-id>` from all three
-hashes. The same target and bindings resume the same persisted run without
-rewriting it. Any input, contract, or knowledge-context drift fails closed;
+Omitting `--run-id` derives `acceptance-<16-hex-binding-id>` from those three
+hashes plus the validated Skill-input binding and context-artifact hashes. The
+same target and bindings resume the same persisted run without rewriting it.
+Any input, contract, knowledge-context, Skill-input receipt, or context drift fails closed;
 prepare a new candidate/run or use the existing explicit stale-successor
 recovery instead of overwriting history.
 
@@ -102,11 +106,11 @@ Execute the orchestration in this order:
    creating new evidence.
 2. Resolve or deterministically materialize the complete manifests, action DAG,
    command registry, Acceptance-owned knowledge context, and typed run request;
-   then compute the three entry hashes.
+   then compute the three entry hashes and validate the Skill-input receipt.
 3. Run `start-or-resume`, write the `prepare-run` output inside the returned run
-   directory, and inspect/resume its existing action evidence with all three
-   hashes. A new persisted run must reject inspect or resume when the frozen
-   knowledge-context hash is omitted.
+   directory, and inspect/resume its existing action evidence with the persisted
+   entry bindings. A new persisted run must reject entry resume when the frozen
+   knowledge-context or Skill-input binding is omitted.
 4. Run the deterministic inventory, policy, matrix, checklist, scan, coverage,
    and evidence actions required by the target contract.
 5. Publish the immutable Bootstrap requirement decision and obtain a fresh

@@ -55,7 +55,14 @@ class AdapterTests(unittest.TestCase):
         return ADAPTER._prepare_core(self._contract(), "RMAP-S2", {"contract_hash": "sha256:contract", "validator_hash": "sha256:validator"})
 
     def _execute(self, run_dir: Path, events: list[dict], **kwargs):
-        gate = {"context_artifact": Path("context.json"), "binding_hash": "sha256:" + "a" * 64}
+        context = run_dir.parent / "skill-input-context.v1.json"
+        context.parent.mkdir(parents=True, exist_ok=True)
+        context.write_text("{}\n", encoding="utf-8", newline="\n")
+        gate = {
+            "context_artifact": context,
+            "context_artifact_hash": "sha256:" + "b" * 64,
+            "binding_hash": "sha256:" + "a" * 64,
+        }
         with mock.patch.object(ADAPTER, "require_ready_skill_input", return_value=gate):
             return ADAPTER.execute(
                 run_dir,
@@ -111,6 +118,8 @@ class AdapterTests(unittest.TestCase):
             recovery = json.loads((Path(tmp) / "run-001" / "recovery-state.json").read_text(encoding="utf-8"))
         self.assertEqual("refactor-verified", result["state"])
         self.assertEqual(["red", "green", "refactor"], recovery["stages"])
+        self.assertEqual("sha256:" + "a" * 64, recovery["skill_input"]["binding_hash"])
+        self.assertRegex(recovery["skill_input"]["context_artifact_hash"], r"^sha256:[0-9a-f]{64}$")
         self.assertEqual([], recovery["authorizes"])
 
     def test_execute_rejects_existing_run_directory(self) -> None:

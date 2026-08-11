@@ -4,7 +4,7 @@
   "title": "Skill input child request v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "consumer", "operation", "contract_hash", "source_manifest_hash", "snapshot_root", "output_root", "execution_identity", "allowed_capabilities", "authorizes"],
+  "required": ["schema_version", "consumer", "operation", "contract_hash", "source_manifest_hash", "snapshot_root", "output_root", "execution_identity", "max_context_bytes", "allowed_capabilities", "authorizes"],
   "properties": {
     "schema_version": {"const": "skill-input-child-request.v1"},
     "consumer": {"type": "string", "minLength": 1},
@@ -14,6 +14,7 @@
     "snapshot_root": {"type": "string", "minLength": 1, "pattern": "^(?![A-Za-z]:)(?!/)(?!\\\\)"},
     "output_root": {"type": "string", "minLength": 1, "pattern": "^(?![A-Za-z]:)(?!/)(?!\\\\)"},
     "execution_identity": {"$ref": "#/$defs/sha256"},
+    "max_context_bytes": {"type": "integer", "minimum": 512, "maximum": 12000},
     "allowed_capabilities": {
       "type": "array",
       "uniqueItems": true,

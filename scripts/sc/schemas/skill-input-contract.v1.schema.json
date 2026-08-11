@@ -34,6 +34,7 @@
     "operations": {
       "type": "object",
       "minProperties": 1,
+      "propertyNames": {"enum": ["create", "repair", "review", "execute", "acceptance"]},
       "additionalProperties": {"$ref": "#/$defs/operation"}
     },
     "reference_policy": {"const": "declared-in-root-and-contained"},

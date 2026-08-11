@@ -16,8 +16,8 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from skill_input_consumption import read_json, sha256_bytes, write_json_atomic
-from validate_skill_input_consumption import _validate_context, _validate_decision
+from skill_input_consumption import SkillInputError, read_json, sha256_bytes, write_bytes_atomic, write_json_atomic
+from validate_skill_input_consumption import ReceiptValidationError, _validate_context, _validate_decision
 
 SC_ROOT = Path(__file__).resolve().parents[2] / "scripts" / "sc"
 if str(SC_ROOT) not in sys.path:
@@ -55,7 +55,7 @@ def _relative_root(binding_root: Path, raw: Any, label: str, *, create: bool = F
 def validate_child_request(request: Any, binding_root: Path, expected_contract_hash: str | None = None, expected_execution_identity: str | None = None) -> dict[str, Any]:
     if not isinstance(request, dict):
         raise ChildRequestError("child request must be a JSON object")
-    required = {"schema_version", "consumer", "operation", "contract_hash", "source_manifest_hash", "snapshot_root", "output_root", "execution_identity", "allowed_capabilities", "authorizes"}
+    required = {"schema_version", "consumer", "operation", "contract_hash", "source_manifest_hash", "snapshot_root", "output_root", "execution_identity", "max_context_bytes", "allowed_capabilities", "authorizes"}
     if set(request) != required:
         raise ChildRequestError("child request fields do not match schema")
     if request["schema_version"] != "skill-input-child-request.v1" or not isinstance(request["consumer"], str) or not request["consumer"]:
@@ -65,6 +65,8 @@ def validate_child_request(request: Any, binding_root: Path, expected_contract_h
     for key in ("contract_hash", "source_manifest_hash", "execution_identity"):
         if not isinstance(request[key], str) or not SHA256_RE.fullmatch(request[key]):
             raise ChildRequestError(f"child request {key} is invalid")
+    if not isinstance(request["max_context_bytes"], int) or isinstance(request["max_context_bytes"], bool) or not 512 <= request["max_context_bytes"] <= 12000:
+        raise ChildRequestError("child request max_context_bytes is invalid")
     if expected_contract_hash and request["contract_hash"] != expected_contract_hash:
         raise ChildRequestError("child request contract hash does not match binding")
     if expected_execution_identity and request["execution_identity"] != expected_execution_identity:
@@ -77,6 +79,9 @@ def validate_child_request(request: Any, binding_root: Path, expected_contract_h
     manifest = snapshot / "source-manifest.v1.json"
     if not manifest.is_file() or sha256_bytes(manifest.read_bytes()) != request["source_manifest_hash"]:
         raise ChildRequestError("snapshot manifest is missing or hash-mismatched")
+    manifest_payload = read_json(manifest)
+    if not isinstance(manifest_payload, dict) or manifest_payload.get("consumer") != request["consumer"] or manifest_payload.get("operation") != request["operation"]:
+        raise ChildRequestError("snapshot manifest consumer or operation does not match request")
     return {"status": "validated", "consumer": request["consumer"], "operation": request["operation"], "snapshot_root": snapshot.as_posix(), "output_root": output.as_posix(), "execution_identity": request["execution_identity"]}
 
 
@@ -113,6 +118,7 @@ def run_semantic_child(
             f"source_manifest_hash={manifest_hash}, execution_identity={request['execution_identity']}, "
             "authorizes=[] and context_artifact_hash set to sha256:0 followed by 64 zeros. "
             "Use bounded, redacted summaries only; if insufficient, return status=insufficient."
+            f" The serialized context artifact must not exceed {request['max_context_bytes']} UTF-8 bytes."
         )
         output_path = child_root / "child-output.json"
         configs = [f"model_reasoning_effort={reasoning_effort}"] if reasoning_effort else []
@@ -139,18 +145,23 @@ def run_semantic_child(
         decision = child_output["decision"]
         if not isinstance(context, dict) or not isinstance(decision, dict):
             raise ChildRequestError("semantic child context or decision is invalid")
-        context_path = output_root / "skill-input-context.v1.json"
-        write_json_atomic(context_path, context)
-        context_bytes = context_path.read_bytes()
+        context_bytes = (json.dumps(context, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        _validate_context(
+            context,
+            manifest_hash,
+            max_context_bytes=request["max_context_bytes"],
+            serialized_size=len(context_bytes),
+        )
         context_hash = sha256_bytes(context_bytes)
         if decision.get("execution_identity") != request["execution_identity"]:
             raise ChildRequestError("semantic decision execution identity does not match child request")
         decision["context_artifact_hash"] = context_hash
         if not isinstance(decision.get("source_statuses"), dict):
             raise ChildRequestError("semantic decision source_statuses is missing")
-        _validate_context(context, manifest_hash)
         _validate_decision(decision, manifest_hash, context_hash, decision["source_statuses"])
+        context_path = output_root / "skill-input-context.v1.json"
         decision_path = output_root / "semantic-decision.v1.json"
+        write_bytes_atomic(context_path, context_bytes)
         write_json_atomic(decision_path, decision)
         return {
             "status": "complete",
@@ -183,7 +194,7 @@ def main() -> int:
             result = validate_child_request(request, args.binding_root.resolve(), args.contract_hash, args.execution_identity)
         if args.output:
             write_json_atomic(args.output.resolve(), result)
-    except (OSError, ChildRequestError) as exc:
+    except (OSError, SkillInputError, ReceiptValidationError, ChildRequestError) as exc:
         print(f"skill input child launch validation failed: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(result, separators=(",", ":")))

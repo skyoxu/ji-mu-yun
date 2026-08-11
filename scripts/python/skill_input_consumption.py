@@ -5,16 +5,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import subprocess
+import uuid
+from pathlib import Path, PureWindowsPath
+from urllib.parse import unquote, urlsplit
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Iterable
 
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = ROOT / "scripts" / "sc" / "schemas"
 SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+CONSUMER_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{2,127}$")
+SELECTOR_PATTERN = re.compile(r"^[a-z0-9_]{3,80}$")
 SECRET_PATTERN = re.compile(
     r"(?i)(token|secret|password|api[_-]?key|authorization)\s*[\"']?\s*[:=]\s*[\"']?(\"[^\"\r\n]*\"|'[^'\r\n]*'|[^,\r\n;]+)"
 )
@@ -45,11 +50,73 @@ def read_json(path: Path) -> Any:
         raise SkillInputError(f"invalid JSON: {path}: {exc}") from exc
 
 
-def write_json_atomic(path: Path, payload: Any) -> None:
+def write_json_atomic(path: Path, payload: Any, *, expected_bytes: bytes | None = None) -> None:
+    data = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    write_bytes_atomic(path, data, expected_bytes=expected_bytes)
+
+
+def write_bytes_atomic(path: Path, data: bytes, *, expected_bytes: bytes | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    staged = path.with_name(path.name + ".staging")
-    staged.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    staged = path.with_name(f"{path.name}.{os.getpid()}.{uuid.uuid4().hex}.staging")
+    with staged.open("wb") as handle:
+        handle.write(data)
+        handle.flush()
+        try:
+            os.fsync(handle.fileno())
+        except (AttributeError, OSError):
+            pass
+    if path.exists():
+        try:
+            current = path.read_bytes()
+            if current == data:
+                staged.unlink()
+                return
+            if expected_bytes is not None and current == expected_bytes:
+                staged.replace(path)
+                return
+        except OSError:
+            pass
+        try:
+            staged.unlink()
+        except OSError:
+            pass
+        raise SkillInputError(f"atomic destination is not absent or byte-identical: {path}")
     staged.replace(path)
+
+
+def forbidden_repository_path(relative: str) -> bool:
+    normalized = relative.replace("\\", "/").casefold()
+    return normalized == ".git" or normalized.startswith(".git/") or normalized == "logs" or normalized.startswith("logs/")
+
+
+_SENSITIVE_REQUEST_KEYS = {
+    "authorization", "credential", "credentials", "password", "secret",
+    "token", "access_token", "refresh_token", "api_key", "apikey",
+}
+
+
+def validate_request_payload(value: Any, *, path: str = "request") -> None:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if not isinstance(key, str) or not key:
+                raise SkillInputError(f"{path} contains an invalid object key")
+            normalized_key = key.casefold().replace("-", "_")
+            if normalized_key in _SENSITIVE_REQUEST_KEYS and child not in (None, "", [], {}):
+                raise SkillInputError(f"{path}.{key} may not persist credential material")
+            validate_request_payload(child, path=f"{path}.{key}")
+        return
+    if isinstance(value, list):
+        for index, child in enumerate(value):
+            validate_request_payload(child, path=f"{path}[{index}]")
+        return
+    if isinstance(value, str):
+        if "\x00" in value:
+            raise SkillInputError(f"{path} contains a NUL byte")
+        if Path(value).is_absolute() or PureWindowsPath(value).is_absolute() or value.startswith(("/", "\\\\")):
+            raise SkillInputError(f"{path} contains an absolute machine path")
+        return
+    if value is not None and not isinstance(value, (bool, int, float)):
+        raise SkillInputError(f"{path} contains a non-JSON value")
 
 
 def contained_path(repository_root: Path, raw_path: str, *, must_exist: bool = True) -> tuple[Path, str]:
@@ -57,14 +124,20 @@ def contained_path(repository_root: Path, raw_path: str, *, must_exist: bool = T
     if candidate.is_absolute():
         raise SkillInputError("absolute source paths are not allowed")
     root = repository_root.resolve()
-    resolved = (root / candidate).resolve()
+    joined = root / candidate
+    current = joined
+    while current != root and current != current.parent:
+        if current.is_symlink():
+            raise SkillInputError("symlink source is not allowed")
+        current = current.parent
+    resolved = joined.resolve()
     try:
         relative = resolved.relative_to(root).as_posix()
     except ValueError as exc:
         raise SkillInputError("source path escapes repository root") from exc
     if must_exist and not resolved.exists():
         raise SkillInputError(f"source does not exist: {relative}")
-    if resolved.is_symlink():
+    if joined.is_symlink() or resolved.is_symlink():
         raise SkillInputError(f"symlink source is not allowed: {relative}")
     return resolved, relative
 
@@ -118,26 +191,228 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
     missing = required - set(contract)
     if missing:
         raise SkillInputError(f"contract missing required fields: {sorted(missing)}")
+    unknown = set(contract) - required
+    if unknown:
+        raise SkillInputError(f"contract contains unknown fields: {sorted(unknown)}")
     if contract["schema_version"] != "skill-input-contract.v1" or contract["mode"] != "strict":
         raise SkillInputError("contract schema_version or mode is invalid")
+    if not isinstance(contract["consumer"], str) or not CONSUMER_PATTERN.fullmatch(contract["consumer"]):
+        raise SkillInputError("contract consumer is invalid")
+    if not isinstance(contract["trigger"], str) or not contract["trigger"]:
+        raise SkillInputError("contract trigger is invalid")
     if contract["reference_policy"] != "declared-in-root-and-contained":
         raise SkillInputError("contract reference_policy is invalid")
     if contract["sensitivity_policy"] != "deny-credential-values" or contract["redaction_profile"] != "credential-values-v1":
         raise SkillInputError("contract sensitivity policy is invalid")
-    if "logs-as-recovery-source" not in contract.get("forbidden_sources", []):
+    if contract["semantic_acceptance"] != "all-required-inputs-are-sufficient":
+        raise SkillInputError("contract semantic acceptance rule is invalid")
+    forbidden_sources = contract.get("forbidden_sources")
+    if (
+        not isinstance(forbidden_sources, list)
+        or any(not isinstance(item, str) or not item for item in forbidden_sources)
+        or len(set(forbidden_sources)) != len(forbidden_sources)
+        or "logs-as-recovery-source" not in forbidden_sources
+    ):
         raise SkillInputError("contract must forbid logs as recovery source")
+    if not isinstance(contract["max_reference_depth"], int) or not 1 <= contract["max_reference_depth"] <= 64:
+        raise SkillInputError("contract max_reference_depth is invalid")
     if not isinstance(contract["max_sources"], int) or not 0 < contract["max_sources"] <= 5000:
         raise SkillInputError("contract max_sources is invalid")
     if not isinstance(contract["max_context_bytes"], int) or not 512 <= contract["max_context_bytes"] <= 12000:
         raise SkillInputError("contract max_context_bytes is invalid")
     basis = contract["budget_basis"]
-    if not isinstance(basis, dict) or not isinstance(basis.get("path"), str) or not SHA256_PATTERN.fullmatch(str(basis.get("sha256", ""))):
+    if not isinstance(basis, dict) or set(basis) != {"path", "sha256"} or not isinstance(basis.get("path"), str) or not SHA256_PATTERN.fullmatch(str(basis.get("sha256", ""))):
         raise SkillInputError("contract budget_basis is invalid")
     basis_path, _ = contained_path(repository_root, basis["path"])
-    if sha256_bytes(basis_path.read_bytes()) != basis["sha256"]:
+    if not basis_path.is_file() or sha256_bytes(basis_path.read_bytes()) != basis["sha256"]:
         raise SkillInputError("contract budget_basis hash mismatch")
-    if not isinstance(contract["source_roles"], dict) or not isinstance(contract["operations"], dict):
+    source_roles = contract["source_roles"]
+    operations = contract["operations"]
+    if not isinstance(source_roles, dict) or not source_roles or not isinstance(operations, dict) or not operations:
         raise SkillInputError("contract source_roles or operations is invalid")
+    for role_name, role in source_roles.items():
+        if not isinstance(role_name, str) or not role_name or not isinstance(role, dict):
+            raise SkillInputError("contract source role is invalid")
+        if set(role) != {"selector", "required", "root", "allowed_kinds", "reference_kinds"}:
+            raise SkillInputError(f"contract source role fields are invalid: {role_name}")
+        if not isinstance(role["selector"], str) or not SELECTOR_PATTERN.fullmatch(role["selector"]):
+            raise SkillInputError(f"contract source role selector is invalid: {role_name}")
+        if type(role["required"]) is not bool or not isinstance(role["root"], str) or not role["root"]:
+            raise SkillInputError(f"contract source role metadata is invalid: {role_name}")
+        for field, allowed in (("allowed_kinds", {"file", "directory"}), ("reference_kinds", {"markdown-link", "json-path-field"})):
+            values = role[field]
+            if not isinstance(values, list) or any(not isinstance(item, str) for item in values) or len(set(values)) != len(values) or not values or any(item not in allowed for item in values):
+                if field == "reference_kinds" and values == []:
+                    continue
+                raise SkillInputError(f"contract source role {field} is invalid: {role_name}")
+    for operation_name, operation in operations.items():
+        if operation_name not in {"create", "repair", "review", "execute", "acceptance"} or not isinstance(operation, dict) or set(operation) != {"required_inputs"}:
+            raise SkillInputError(f"contract operation is invalid: {operation_name}")
+        required_inputs = operation["required_inputs"]
+        if not isinstance(required_inputs, list) or not required_inputs or any(not isinstance(item, str) or not item or item not in source_roles for item in required_inputs) or len(set(required_inputs)) != len(required_inputs):
+            raise SkillInputError(f"contract operation required_inputs are invalid: {operation_name}")
+
+
+_MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)")
+_JSON_REFERENCE_SUFFIXES = {
+    "path", "paths", "file", "files", "filepath", "filepaths", "filename", "filenames",
+    "directory", "directories",
+}
+
+
+def _is_json_reference_field(key: str) -> bool:
+    if key.casefold() == "$ref":
+        return True
+    separated = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", key)
+    tokens = re.findall(r"[a-z0-9]+", separated.casefold())
+    return bool(tokens) and tokens[-1] in _JSON_REFERENCE_SUFFIXES
+
+
+def _reference_values(path: Path, reference_kinds: set[str]) -> list[str]:
+    raw = path.read_bytes()
+    values: list[str] = []
+    if "markdown-link" in reference_kinds and path.suffix.lower() in {".md", ".markdown", ".mdx"}:
+        text = raw.decode("utf-8")
+        values.extend(match.group(1) for match in _MARKDOWN_LINK.finditer(text))
+    if "json-path-field" in reference_kinds and path.suffix.lower() == ".json":
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise SkillInputError(f"JSON reference source is invalid: {path}") from exc
+
+        def visit(value: Any) -> None:
+            if isinstance(value, dict):
+                for key, child in value.items():
+                    if isinstance(key, str) and _is_json_reference_field(key):
+                        if isinstance(child, str):
+                            values.append(child)
+                        elif isinstance(child, list):
+                            values.extend(item for item in child if isinstance(item, str))
+                    visit(child)
+            elif isinstance(value, list):
+                for child in value:
+                    visit(child)
+
+        visit(payload)
+    return values
+
+
+def _resolve_reference(
+    repository_root: Path,
+    source: Path,
+    raw_reference: str,
+    reference_root: Path,
+) -> tuple[Path, str] | None:
+    reference = raw_reference.strip().strip("<>")
+    if not reference or reference.startswith("#"):
+        return None
+    parsed = urlsplit(reference)
+    if parsed.scheme or parsed.netloc or reference.startswith("//"):
+        raise SkillInputError(f"external reference is forbidden: {raw_reference}")
+    if any(character in reference for character in "*?[]"):
+        return None
+    target_text = unquote(parsed.path)
+    if not target_text:
+        return None
+    try:
+        repository_resolved = repository_root.resolve()
+        source.resolve().relative_to(repository_resolved)
+        root_relative = reference_root.resolve().relative_to(repository_resolved)
+        ancestor_candidates: list[str] = []
+        ancestor = source.resolve().parent
+        while True:
+            ancestor_relative = ancestor.relative_to(repository_resolved)
+            ancestor_candidates.append((ancestor_relative / target_text).as_posix())
+            if ancestor == repository_resolved:
+                break
+            ancestor = ancestor.parent
+        candidates = ancestor_candidates + [(root_relative / target_text).as_posix(), target_text]
+    except ValueError as exc:
+        raise SkillInputError("reference source escapes repository") from exc
+    for candidate in dict.fromkeys(candidates):
+        try:
+            resolved, relative = contained_path(repository_root, candidate)
+        except SkillInputError:
+            continue
+        if forbidden_repository_path(relative):
+            raise SkillInputError(f"forbidden reference path: {relative}")
+        return resolved, relative
+    if not (
+        target_text.startswith(".")
+        or "/" in target_text
+        or "\\" in target_text
+        or bool(Path(target_text).suffix)
+    ):
+        return None
+    raise SkillInputError(f"referenced source does not exist: {raw_reference}")
+
+
+def expand_source_graph(
+    repository_root: Path,
+    contract: dict[str, Any],
+    operation: str,
+    role_values: dict[str, list[str]],
+) -> list[tuple[Path, str]]:
+    """Expand explicit role roots and their declared in-boundary references."""
+    validate_contract(contract, repository_root)
+    if operation not in contract["operations"]:
+        raise SkillInputError("operation is not declared by contract")
+    required_roles = contract["operations"][operation]["required_inputs"]
+    if any(role not in role_values for role in required_roles):
+        missing = sorted(set(required_roles) - set(role_values))
+        raise SkillInputError(f"required source role is missing: {missing}")
+    queue: list[tuple[Path, int, frozenset[str], set[str], Path]] = []
+    for role_name, raw_paths in role_values.items():
+        role = contract["source_roles"].get(role_name)
+        if not isinstance(role, dict) or not isinstance(raw_paths, list) or not raw_paths:
+            raise SkillInputError(f"source role values are invalid: {role_name}")
+        for raw_path in raw_paths:
+            root_path, relative_root = contained_path(repository_root, raw_path)
+            declared_root = role["root"].rstrip("/")
+            if declared_root != "repository" and relative_root != declared_root and not relative_root.startswith(declared_root + "/"):
+                raise SkillInputError(f"source does not satisfy role root: {raw_path}")
+            kind = "directory" if root_path.is_dir() else "file"
+            if kind not in role["allowed_kinds"]:
+                raise SkillInputError(f"source kind is not allowed for role: {role_name}")
+            reference_root = root_path if root_path.is_dir() else root_path.parent
+            queue.append((root_path, 0, frozenset(), set(role["reference_kinds"]), reference_root))
+    expanded: list[tuple[Path, str]] = []
+    seen: set[str] = set()
+    while queue:
+        candidate_root, depth, ancestors, reference_kinds, reference_root = queue.pop(0)
+        candidates = [candidate_root] if candidate_root.is_file() else sorted(item for item in candidate_root.rglob("*") if item.is_file())
+        for candidate in candidates:
+            if candidate.is_symlink():
+                raise SkillInputError(f"symlink source is not allowed: {candidate}")
+            relative = candidate.resolve().relative_to(repository_root.resolve()).as_posix()
+            if forbidden_repository_path(relative):
+                raise SkillInputError(f"forbidden source path: {relative}")
+            if relative in ancestors:
+                raise SkillInputError(f"reference cycle detected: {relative}")
+            if relative not in seen:
+                seen.add(relative)
+                expanded.append((candidate.resolve(), relative))
+                if len(expanded) > contract["max_sources"]:
+                    raise SkillInputError("source count exceeds contract max_sources")
+            if not reference_kinds:
+                continue
+            if depth >= contract["max_reference_depth"]:
+                references = _reference_values(candidate, reference_kinds)
+                if references:
+                    raise SkillInputError("reference depth exceeds contract max_reference_depth")
+                continue
+            for raw_reference in _reference_values(candidate, reference_kinds):
+                resolved, _ = _resolve_reference(repository_root, candidate, raw_reference, reference_root) or (None, None)
+                if resolved is None:
+                    continue
+                next_ancestors = frozenset(set(ancestors) | {relative})
+                resolved_path = resolved.resolve()
+                inside_reference_root = resolved_path == reference_root or reference_root in resolved_path.parents
+                next_reference_kinds = set(reference_kinds) if inside_reference_root else set()
+                queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root))
+    if not expanded:
+        raise SkillInputError("no source files were discovered")
+    return expanded
 
 
 def redact_bytes(raw: bytes) -> tuple[bytes, str, str]:
@@ -152,29 +427,6 @@ def redact_bytes(raw: bytes) -> tuple[bytes, str, str]:
     redacted = SECRET_PATTERN.sub(lambda match: f"{match.group(1)}=<redacted>", redacted)
     status = "complete" if sensitivity == "credential-bearing" else "not-required"
     return redacted.encode("utf-8"), sensitivity, status
-
-
-def expand_sources(repository_root: Path, raw_paths: list[str], max_sources: int) -> list[tuple[Path, str]]:
-    expanded: list[tuple[Path, str]] = []
-    seen: set[str] = set()
-    for raw in raw_paths:
-        path, relative = contained_path(repository_root, raw)
-        candidates = [path] if path.is_file() else sorted(item for item in path.rglob("*") if item.is_file())
-        for candidate in candidates:
-            if candidate.is_symlink():
-                raise SkillInputError(f"symlink source is not allowed: {candidate}")
-            rel = candidate.relative_to(repository_root.resolve()).as_posix()
-            if rel.startswith(".git/") or rel.startswith("logs/"):
-                raise SkillInputError(f"forbidden source path: {rel}")
-            if rel in seen:
-                continue
-            seen.add(rel)
-            expanded.append((candidate, rel))
-            if len(expanded) > max_sources:
-                raise SkillInputError("source count exceeds contract max_sources")
-    if not expanded:
-        raise SkillInputError("no source files were discovered")
-    return expanded
 
 
 def line_ranges(raw: bytes) -> tuple[int, list[dict[str, int | str]]]:

@@ -76,6 +76,8 @@ def create_persisted_run(
     *,
     predecessor_run_id: str | None = None,
     knowledge_context_hash: str | None = None,
+    skill_input_binding_hash: str | None = None,
+    skill_input_context_hash: str | None = None,
 ) -> Path:
     """Create one append-only run root with hash-bound non-authorizing state."""
     for value, label in ((run_input_hash, "run input"), (contract_hash, "contract")):
@@ -86,6 +88,14 @@ def create_persisted_run(
         or not re.fullmatch(r"sha256:[a-f0-9]{64}", knowledge_context_hash)
     ):
         raise ControlError("knowledge context hash is invalid")
+    for value, label in (
+        (skill_input_binding_hash, "Skill input binding"),
+        (skill_input_context_hash, "Skill input context"),
+    ):
+        if value is not None and (not isinstance(value, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", value)):
+            raise ControlError(label + " hash is invalid")
+    if (skill_input_binding_hash is None) != (skill_input_context_hash is None):
+        raise ControlError("Skill input binding and context hashes must be supplied together")
     run_dir = create_run_directory(root, run_id)
     state: dict[str, Any] = {
         "schemaVersion": "acceptance-execution-run.v1", "runId": run_id,
@@ -94,6 +104,10 @@ def create_persisted_run(
     }
     if knowledge_context_hash is not None:
         state["knowledgeContextHash"] = knowledge_context_hash
+    if skill_input_binding_hash is not None:
+        state["skillInputBindingHash"] = skill_input_binding_hash
+    if skill_input_context_hash is not None:
+        state["skillInputContextHash"] = skill_input_context_hash
     if predecessor_run_id is not None:
         if not isinstance(predecessor_run_id, str) or _RUN_ID.fullmatch(predecessor_run_id) is None:
             raise ControlError("predecessor run identity is invalid")
@@ -113,6 +127,8 @@ def start_or_resume_target_run(
     knowledge_context_hash: str,
     *,
     run_id: str | None = None,
+    skill_input_binding_hash: str | None = None,
+    skill_input_context_hash: str | None = None,
 ) -> dict[str, Any]:
     """Create or resume one target-owned run without inventing a second lifecycle."""
     for value, label in (
@@ -122,6 +138,14 @@ def start_or_resume_target_run(
     ):
         if not isinstance(value, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", value):
             raise ControlError(label + " hash is invalid")
+    for value, label in (
+        (skill_input_binding_hash, "Skill input binding"),
+        (skill_input_context_hash, "Skill input context"),
+    ):
+        if value is not None and (not isinstance(value, str) or not re.fullmatch(r"sha256:[a-f0-9]{64}", value)):
+            raise ControlError(label + " hash is invalid")
+    if (skill_input_binding_hash is None) != (skill_input_context_hash is None):
+        raise ControlError("Skill input binding and context hashes must be supplied together")
     root = repository_root.resolve()
     if not root.is_dir() or not isinstance(target_plan, str) or not target_plan.strip():
         raise ControlError("target plan is invalid")
@@ -140,9 +164,12 @@ def start_or_resume_target_run(
     ):
         raise ControlError("target plan must be an execution-plans directory")
 
-    binding_id = hashlib.sha256(
-        "\0".join((run_input_hash, contract_hash, knowledge_context_hash)).encode("ascii")
-    ).hexdigest()[:16]
+    binding_parts = [run_input_hash, contract_hash, knowledge_context_hash]
+    if skill_input_binding_hash is not None:
+        binding_parts.append(skill_input_binding_hash)
+    if skill_input_context_hash is not None:
+        binding_parts.append(skill_input_context_hash)
+    binding_id = hashlib.sha256("\0".join(binding_parts).encode("ascii")).hexdigest()[:16]
     selected_run_id = run_id or "acceptance-" + binding_id
     if _RUN_ID.fullmatch(selected_run_id) is None:
         raise ControlError("run identity is invalid")
@@ -169,7 +196,13 @@ def start_or_resume_target_run(
                 "legacy artifact-only run cannot be resumed; create a new binding-derived run"
             )
         _verify_persisted_binding(
-            run_dir, run_input_hash, contract_hash, knowledge_context_hash
+            run_dir,
+            run_input_hash,
+            contract_hash,
+            knowledge_context_hash,
+            skill_input_binding_hash,
+            skill_input_context_hash,
+            require_skill_input_binding=True,
         )
         state, _events_path = _load_persisted_run(run_dir)
         if state.get("runId") != selected_run_id:
@@ -183,9 +216,11 @@ def start_or_resume_target_run(
             run_input_hash,
             contract_hash,
             knowledge_context_hash=knowledge_context_hash,
+            skill_input_binding_hash=skill_input_binding_hash,
+            skill_input_context_hash=skill_input_context_hash,
         )
         disposition = "created"
-    return {
+    result = {
         "schemaVersion": "acceptance-run-entry.v1",
         "runId": selected_run_id,
         "runDirectory": run_dir.relative_to(root).as_posix(),
@@ -195,6 +230,11 @@ def start_or_resume_target_run(
         "knowledgeContextHash": knowledge_context_hash,
         "authorizes": [],
     }
+    if skill_input_binding_hash is not None:
+        result["skillInputBindingHash"] = skill_input_binding_hash
+    if skill_input_context_hash is not None:
+        result["skillInputContextHash"] = skill_input_context_hash
+    return result
 
 
 def create_stale_linked_successor(
@@ -222,6 +262,8 @@ def create_stale_linked_successor(
             if knowledge_context_hash is not None
             else predecessor_state.get("knowledgeContextHash")
         ),
+        skill_input_binding_hash=predecessor_state.get("skillInputBindingHash"),
+        skill_input_context_hash=predecessor_state.get("skillInputContextHash"),
     )
     state, _ = _load_persisted_run(successor)
     lifecycle_inputs = {
@@ -230,6 +272,10 @@ def create_stale_linked_successor(
     }
     if "knowledgeContextHash" in state:
         lifecycle_inputs["knowledgeContextHash"] = state["knowledgeContextHash"]
+    if "skillInputBindingHash" in state:
+        lifecycle_inputs["skillInputBindingHash"] = state["skillInputBindingHash"]
+    if "skillInputContextHash" in state:
+        lifecycle_inputs["skillInputContextHash"] = state["skillInputContextHash"]
     record_lifecycle_event(
         successor,
         action_id="recovery",
@@ -374,6 +420,10 @@ def _verify_persisted_binding(
     run_input_hash: str,
     contract_hash: str,
     knowledge_context_hash: str | None = None,
+    skill_input_binding_hash: str | None = None,
+    skill_input_context_hash: str | None = None,
+    *,
+    require_skill_input_binding: bool = False,
 ) -> None:
     state, _ = _load_persisted_run(run_dir)
     if state.get("runInputHash") != run_input_hash or state.get("contractHash") != contract_hash:
@@ -383,6 +433,15 @@ def _verify_persisted_binding(
         raise ControlError("persisted run knowledge context binding is required")
     if persisted_context_hash != knowledge_context_hash:
         raise ControlError("persisted run knowledge context binding is stale")
+    for field, supplied, label in (
+        ("skillInputBindingHash", skill_input_binding_hash, "Skill input binding"),
+        ("skillInputContextHash", skill_input_context_hash, "Skill input context"),
+    ):
+        persisted = state.get(field)
+        if require_skill_input_binding and persisted is not None and supplied is None:
+            raise ControlError(f"persisted run {label} is required")
+        if supplied is not None and persisted != supplied:
+            raise ControlError(f"persisted run {label} is stale")
 
 
 def claim_persisted_action(run_dir: Path, action_id: str, command_id: str) -> Path:

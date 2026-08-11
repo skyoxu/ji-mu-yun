@@ -1098,7 +1098,7 @@ def main() -> int:
         print(json.dumps(prepare_bootstrap_command(args.request, args.out), sort_keys=True))
         return 0
     if args.command == "start-or-resume":
-        require_ready_skill_input(
+        skill_input = require_ready_skill_input(
             receipt_path=Path(args.skill_input_receipt),
             repository_root=Path(args.repository_root),
             contract_path=Path(args.skill_input_contract),
@@ -1112,6 +1112,8 @@ def main() -> int:
             args.contract_hash,
             args.knowledge_context_hash,
             run_id=args.run_id,
+            skill_input_binding_hash=skill_input["binding_hash"],
+            skill_input_context_hash=skill_input["context_artifact_hash"],
         ), sort_keys=True))
         return 0
     if args.command == "import-bootstrap-launch-authorization":

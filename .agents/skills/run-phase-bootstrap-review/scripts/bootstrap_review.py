@@ -4748,7 +4748,7 @@ def command_prepare(args: argparse.Namespace) -> int:
     if not args.skill_input_receipt:
         raise BootstrapError("Skill input gate is required: provide --skill-input-receipt")
     try:
-        require_ready_skill_input(
+        skill_input = require_ready_skill_input(
             receipt_path=Path(args.skill_input_receipt),
             repository_root=repository_root,
             contract_path=Path(args.skill_input_contract),
@@ -5030,6 +5030,10 @@ def command_prepare(args: argparse.Namespace) -> int:
         "worktreeDirty": git_worktree_dirty(repository_root),
         "authorityClass": AUTHORITY_CLASS,
         "artifacts": artifacts,
+        "skillInput": {
+            "bindingHash": skill_input["binding_hash"],
+            "contextArtifactHash": skill_input["context_artifact_hash"],
+        },
     }
     if acceptance_candidate_freeze is not None:
         manifest["acceptanceCandidateFreeze"] = acceptance_candidate_freeze
@@ -5172,6 +5176,7 @@ def command_prepare(args: argparse.Namespace) -> int:
             "status": "dry-run",
             "closureBindingVersion": "v12",
             "runCreated": False,
+            "skillInput": manifest["skillInput"],
             "candidateHash": closure_bindings["candidateHash"],
             "candidateBindingHash": candidate_binding_hash,
             "sourceHash": closure_bindings["sourceHash"],

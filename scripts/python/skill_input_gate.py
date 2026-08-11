@@ -27,4 +27,9 @@ def require_ready_skill_input(
     context_path = (receipt_path.resolve().parent / context_ref["path"]).resolve()
     if not context_path.is_file():
         raise ValueError("ready Skill input context artifact is missing")
-    return {**result, "context_artifact": context_path, "binding_hash": receipt["binding_hash"]}
+    return {
+        **result,
+        "context_artifact": context_path,
+        "context_artifact_hash": context_ref["sha256"],
+        "binding_hash": receipt["binding_hash"],
+    }
