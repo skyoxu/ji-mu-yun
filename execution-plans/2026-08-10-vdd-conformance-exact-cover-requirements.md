@@ -2,10 +2,10 @@
 
 - Title: `vdd-conformance-exact-cover` Skill 需求规格
 - Status: `requirements-ready`
-- Goal: 在 VDD 创建或读取 execution-plan 之后，验证其 requirements 目录是否完整保留了该次 VDD source-freeze manifest 中的规范性上游内容，并产出可由 VDD `repair` 显式消费的非授权 conformance/repair artifact。
-- Scope: 上游 obligation 提取、requirements/acceptance/disposition 映射、确定性 exact-cover 检查、语义歧义 handoff、VDD repair 输入合同和验收夹具。
+- Goal: 在 VDD 创建或读取 execution-plan 之后，验证其 requirements 目录是否完整保留了同一次 VDD source-freeze manifest 中的 Canonical Spec Package 规范性内容，并产出可由 VDD `repair` 显式消费、可由现有 implementation authorization owner 验证的非授权 conformance/repair artifact。
+- Scope: Canonical Spec Package 权威图、最小 VDD source-freeze producer/repair consumer 合同、上游 obligation 提取、requirements/acceptance/disposition 映射、确定性 exact-cover 检查、语义歧义 handoff、implementation prerequisite receipt 和验收夹具。
 - Non-goal: 不修改 execution-plan；不实现或替代 `run-phase-bootstrap-review`；不拥有实现代码、测试、current run evidence、Bootstrap 启动决定、Acceptance 或任何 lifecycle/release 权限；不创建新的 review runner、reviewer 层或 legacy 迁移系统。
-- Related sources: 根 `AGENTS.md`、`README.md`、`workflow.md` Chapter 5、`docs/know14.txt`、`.agents/skills/vdd-execution-plan/SKILL.md`、`.agents/skills/run-phase-bootstrap-review/SKILL.md`。
+- Related sources: 根 `AGENTS.md`、`README.md`、`workflow.md` Chapter 5、`docs/know14.txt`、`docs/know17.txt`、`.agents/skills/vdd-execution-plan/SKILL.md`、`.agents/skills/run-phase-bootstrap-review/SKILL.md`。
 - Confidence: 0.90。新 Skill 只验证 VDD 已冻结的上游需求保真度；任何语义判断交给现有 `bootstrap-upstream-plan`，任何目录修复交给 VDD `repair`。
 
 ## 1. 背景与问题
@@ -28,7 +28,21 @@ VDD source-freeze manifest
 - “所有 slice 完成”可能被误当作需求已全部实现；
 - caller 提供的 `exactCoverPassed=true` 可能绕过独立重算。
 
-新 Skill 专门负责需求目录的机器可证明保真度。它不审查实现闭环，也不决定是否启动 Bootstrap；出现不可由确定性规则解决的语义歧义时，只产生带 source/requirement ID 的 `semantic_review_required` handoff，由现有 `bootstrap-upstream-plan` 在获得显式授权后审查。
+新 Skill 专门负责需求目录的机器可证明保真度。它不审查实现闭环，也不决定是否启动 Bootstrap；出现不可由确定性规则解决的语义歧义时，只产生带 source/requirement ID 的 `requirement_semantic_review_required` handoff，由现有 `bootstrap-upstream-plan` 在获得显式授权后审查。
+
+正式需求链路为：
+
+```text
+bmad-prd → bmad-spec
+         → [必要时 bmad-architecture → bmad-spec refresh]
+         → Canonical Spec Package
+         → VDD source-freeze → VDD create/repair
+         → vdd-conformance-exact-cover
+         → existing implementation authorization owner
+         → implementation
+```
+
+Canonical Spec Package 由 `bmad-spec` 最终拥有。已被 Spec fully absorbed 的 PRD、原始输入或旧 requirements 只保留 provenance 身份，不能重新成为与当前 Spec 平级的 downstream normative authority。
 
 ## 2. 职责边界
 
@@ -39,7 +53,8 @@ VDD source-freeze manifest
 3. 验证 source obligation 与 requirements/acceptance/disposition 的双向 sound-and-complete cover。
 4. 识别遗漏、unknown、重复、语义弱化、冲突和未处置项；不判断 implementation/test/evidence。
 5. 生成 compact、hash-bound、`authorizes=[]` 的 conformance/repair artifact。
-6. 对无法由确定性规则判定的映射输出 `semantic_review_required`，并指向 `bootstrap-upstream-plan`；不自动修改目标目录。
+6. 对无法由确定性规则判定的映射输出 `requirement_semantic_review_required`，并指向 `bootstrap-upstream-plan`；不自动修改目标目录。
+7. 为声明采用 canonical flow 的 VDD plan 生成 current、hash-bound 的 `conformant` receipt，供现有 implementation authorization owner 作为准入前置条件验证；receipt 本身仍固定 `authorizes=[]`。
 
 ### 2.2 明确不拥有的职责
 
@@ -50,7 +65,32 @@ VDD source-freeze manifest
 - 不拥有实现 ref、test definition、current run evidence、风险分级、review rounds 或 legacy migration。
 - 不修改 `execution-plans/<target>`；所有修复由 VDD `repair` 执行。
 
+### 2.3 本项目允许的 VDD 最小改动
+
+本需求允许并要求对 `.agents/skills/vdd-execution-plan/**` 做最小必要修改，以提供正式的 source-freeze producer，并让显式 VDD `repair` 消费 `vdd-repair-input.v1`。这些改动只建立 producer/consumer contract：不得把 exact-cover 算法、Bootstrap reviewer/runtime 或 semantic review 实现吸收到 VDD 内。
+
+VDD 仍是 execution-plan create/repair、`plan-ready` 和 plan lifecycle owner；exact-cover 不执行 VDD repair，也不发布任何 lifecycle 状态。
+
 ## 3. 权威与输入
+
+### 3.1 Canonical Spec Package
+
+新流程下，VDD 的主要产品需求 authority 是 `bmad-spec` 输出的 Canonical Spec Package。Package 至少区分：
+
+| 角色 | 语义 |
+| --- | --- |
+| `canonical` | 当前 canonical `SPEC.md` |
+| `normative_companion` | bmad-spec 编写且仍具规范性的 companion |
+| `adopted_companion` | bmad-spec adopt 的规范性 companion，例如 `ARCHITECTURE-SPINE.md` |
+| `provenance` | 已被 Spec fully absorbed 的 PRD、原始输入或历史来源，只用于追溯 |
+| `repository_authority` | 当前适用的 AGENTS、Accepted ADR、标准与知识绑定 |
+| `unresolved_input` | typed、可追踪的 assumption/open question；不得静默视为已解决 |
+
+Exact-cover 不重新解释 PRD、Architecture、旧 requirements 或 companions 谁是 authority，只消费 VDD 冻结的 authority graph。Caller 不得把 normative companion 降级为 provenance、从 source universe 删除，或把 provenance 提升为与 canonical Spec 平级的规范来源。
+
+Obligation extraction universe 只包含 `canonical`、`normative_companion`、`adopted_companion` 以及对当前目标适用的 `repository_authority`。`provenance` 只校验路径、hash 和 package relationship，不重新提取 normative obligation。`unresolved_input` 必须保持 typed 并映射到明确的 unresolved requirement/disposition；在 owner 解决或作出具名 defer/not-applicable 决定前，不得被投影成已解决的 active requirement 或静默通过 conformant。
+
+### 3.2 VDD source-freeze manifest prerequisite
 
 目标是一个由 VDD 产生或已存在的 `execution-plans/<target>` 需求目录。新 Skill 必须消费同一次 VDD 运行的 source-freeze manifest，而不是重新发明仓库 authority 发现器。运行开始时冻结 run input：
 
@@ -69,6 +109,21 @@ VDD source-freeze manifest
 | `authorizes` | 所有中间 receipt 固定为 `[]` |
 
 权威顺序为：VDD source-freeze manifest → 其 hash-bound 上游文件 → requirements directory → conformance validator。历史总结、旧 run 和 caller 结论只能作为诊断输入；仓库治理规则通过 VDD manifest/Locator 结果进入，不由本 Skill 创建第二套知识闭包。
+
+`vdd-source-freeze-manifest.v1` 是本需求的概念合同名；最终文件名遵循仓库既有命名规范。若当前 VDD production 尚未提供一等 source-freeze artifact，本项目必须增加最小 producer 能力。Manifest 至少包含：
+
+- schema/version、VDD run identity、target identity 和 canonical package root；
+- 每个 source/companion 的 repository-relative path、role、精确 byte SHA-256 和 package/source relationship；
+- applicable repository rules、knowledge bindings、unresolved input；
+- manifest 自身 canonical hash 和固定 `authorizes=[]`。
+
+VDD plan construction 与 exact-cover 必须绑定并重验同一个 frozen source manifest identity/hash。Caller 不得为 exact-cover 重新提交任意缩减的 source list。Manifest 缺失、schema unknown、hash drift、role drift、normative source omission 或 construction/conformance manifest identity 不一致均 fail closed。
+
+### 3.3 Implementation prerequisite，而非授权
+
+`conformant` 不等于 `implementation-authorized`。对于声明采用 canonical flow 的 VDD plan，在进入 implementation authorization 前，现有 authorization owner 必须验证 current、hash-bound、同时匹配当前 VDD source manifest、requirements manifest 和 validator identity 的 conformant receipt。
+
+Exact-cover 自身不得发布 `plan-ready`、`implementation-authorized`、`implementation-complete` 或 `acceptance-passed`。Missing、stale 或 non-conformant receipt 不得由 prose、人工布尔值、旧 review summary 或 assistant 声明替代。本需求不重新定义 maintainer 或其他现有 authorization owner，只规定其 prerequisite 消费关系。
 
 ## 4. Canonical 数据模型
 
@@ -139,9 +194,9 @@ LLM 只提出 obligation candidates、解释真实语义冲突、提议可证伪
 
 ### S4. Deterministic result and semantic handoff
 
-重量级读取和扫描在确定性子进程/脚本中完成。主进程只接收固定上限的摘要、计数、错误 ID、证据路径和 hash；原文 stdout、完整矩阵和源码只落盘到 run evidence，不注入主上下文。结果只能是：`blocked`（确定性缺口）、`conformant`（无语义歧义）或 `semantic_review_required`（需要既有 Bootstrap Review）。
+重量级读取和扫描在确定性子进程/脚本中完成。主进程只接收固定上限的摘要、计数、错误 ID、证据路径和 hash；原文 stdout、完整矩阵和源码只落盘到 run evidence，不注入主上下文。结果只能是：`blocked`（确定性缺口）、`conformant`（无语义歧义）或 `requirement_semantic_review_required`（需要既有 Bootstrap requirement review）。
 
-当结果为 `semantic_review_required`，产出完整、hash-bound 的 handoff，固定 profile 为 `bootstrap-upstream-plan`，列出 obligation/requirement IDs、歧义原因、冻结 authority 和 review scope。除非调用方明确授权，不自动启动 Review。
+当结果为 `requirement_semantic_review_required`，产出完整、hash-bound 的 handoff，固定 profile 为 `bootstrap-upstream-plan`，列出 obligation/requirement IDs、歧义原因、冻结 authority 和 review scope。除非调用方明确授权，不自动启动 Review。
 
 ### S5. VDD repair handoff
 
@@ -174,6 +229,34 @@ LLM 只提出 obligation candidates、解释真实语义冲突、提议可证伪
 - 所有 bounded output 必须有版本化上限、`truncated` 标志和完整 artifact 路径/hash。达到上限时不得静默截断或继续向主上下文追加全文。
 - 发现 Codex context-window、transport 或进程中断时，新 Skill 只能保留文件化 checkpoint 并停止；它不得宣称已压缩 Codex thread，也不得通过重复发送相同 prompt 恢复。
 
+## 7.1 两类 Semantic Review 的生命周期边界
+
+### A. Pre-implementation requirement semantic ambiguity
+
+```text
+exact-cover → requirement_semantic_review_required
+            → explicit authorization
+            → Bootstrap bootstrap-upstream-plan
+            → validation envelope
+            → explicit VDD repair
+            → exact-cover rerun
+```
+
+该 review 只判断 source obligation、VDD requirement、acceptance/disposition，以及是否存在语义弱化、错误合并、真实冲突或 applicability ambiguity。它不需要 implementation candidate，不通过 Refactor Acceptance 发起，也不审查 production code、tests 或 runtime evidence。
+
+### B. Post-implementation semantic assurance
+
+```text
+implementation-complete
+  → Refactor Acceptance
+  → decide-bootstrap
+  → Bootstrap implementation/focused profile
+```
+
+该 review 判断实现风险、runtime closure、changed production code、tests/evidence。它不是 requirement conformance 的替代，也不能消费 pre-implementation 的 `requirement_semantic_review_required` 作为实现审查授权。
+
+两者必须使用不同的 typed route/result 字段和生命周期身份，不得退化为共享的通用 semantic-review 布尔值。Exact-cover 只能声明 deterministic proof 无法闭合；其 handoff 仍为 `authorizes=[]`，实际 Bootstrap launch 继续受 Bootstrap 自身 policy、authorization、模型路由和高成本 acknowledgement 控制。
+
 ## 8. Fail-closed 与 stop-loss
 
 以下任一条件成立，结果不得为 `conformant`，且 `authorizes=[]`：
@@ -184,7 +267,7 @@ LLM 只提出 obligation candidates、解释真实语义冲突、提议可证伪
 - 确定性扫描输出超预算、schema error 或 `hard_uncovered`；
 - 路径越界、绝对路径、`..` 或 custody-path substitution。
 
-明确的语义疑义不得伪造 `blocked` 或 `conformant`，必须输出 `semantic_review_required`。同一失败不得原样重试；旧 evidence 追加保留，不覆盖历史文件。新 Skill 不修改 requirements 目录。
+明确的需求语义疑义不得伪造 `blocked` 或 `conformant`，必须输出 `requirement_semantic_review_required`。同一失败不得原样重试；旧 evidence 追加保留，不覆盖历史文件。新 Skill 不修改 requirements 目录。
 
 ## 9. 负例与组合验收
 
@@ -195,18 +278,35 @@ LLM 只提出 obligation candidates、解释真实语义冲突、提议可证伪
 3. requirement 语义弱化、合法合并、unknown ref 和冲突未处置；
 4. source/requirements/validator hash 漂移；
 5. typed disposition 正确排除 active universe；
-6. 语义歧义只输出 `semantic_review_required`，不伪造 PASS；
+6. 需求语义歧义只输出 `requirement_semantic_review_required`，不伪造 PASS；
 7. 旧或篡改的 Bootstrap validation envelope 被拒绝；
 8. 新 Skill 执行期间 requirements 目录字节不变；
 9. 中断后在新 thread/进程中仅凭 compact run manifest 和 hash-bound artifacts 可重启；
 10. resume fixture 证明 source 全文、reviewer 正文、工具 stdout 和历史 prompt 未进入主 Agent；
 11. bounded summary 超限时设置 `truncated=true` 并指向完整 artifact，不把全文追加到上下文。
+12. bmad-spec Canonical Spec Package → VDD source-freeze producer，且 canonical、normative、adopted、provenance 和 unresolved roles 完整保留；
+13. VDD create/repair 与 exact-cover 消费同一 manifest identity/hash；manifest A/B 不一致必须阻断；
+14. 删除 normative companion 或将其错标为 provenance 必须阻断；provenance 不得被重新提升为平级规范 authority；
+15. `vdd-repair-input.v1` → real VDD repair consumer，repair 后重新生成或绑定新的 applicable requirements identity 并重跑 exact-cover；
+16. 旧 conformant receipt 在 source、requirements、validator、role graph 或 manifest identity 任一变化后变为 stale；
+17. implementation authorization owner 的真实入口拒绝 missing、stale、non-conformant 或人工布尔值替代的 receipt，并接受匹配当前 bindings 的 receipt，但仍由原 owner 发布授权状态。
 
 组合链至少包括：
 
 ```text
  VDD source-freeze → exact-cover producer → (optional) bootstrap-upstream-plan
  semantic result → vdd-repair-input.v1 → explicit VDD repair
+```
+
+完整链路至少包括：
+
+```text
+bmad-spec Canonical Spec Package
+  → VDD source-freeze producer
+  → same manifest → VDD create/repair
+  → same manifest → exact-cover
+  → current conformant receipt
+  → existing implementation authorization owner
 ```
 
 ## 10. 计划的 Skill 结构
@@ -236,15 +336,89 @@ vdd-conformance-exact-cover/
 
 Legacy compatibility remains owned by VDD and its documented adapters. This Skill reads only a valid VDD source-freeze manifest; unknown manifest/schema versions fail closed. It does not migrate or rewrite legacy plans.
 
+## 11.1 稳定 Requirement Contract
+
+以下 ID 是本需求的稳定引用。后续修订可以补充或 supersede，不能重编号或复用。详细语义仍以所指章节全文为准；本表不得被用来缩减章节中的 load-bearing 内容。
+
+| Requirement ID | Normative requirement | Owning section | Acceptance IDs |
+| --- | --- | --- | --- |
+| `VCEC-001` | 输入 authority 必须是 bmad-spec 拥有的 Canonical Spec Package authority graph。 | §3.1 | `VCEC-A01`, `VCEC-A02` |
+| `VCEC-002` | Canonical、normative、adopted、provenance、repository authority 与 unresolved input roles 必须保持 typed 且不可由 caller 降级、提升或删除。 | §3.1 | `VCEC-A02`, `VCEC-A03` |
+| `VCEC-003` | VDD 必须产生版本化、一等、hash-bound、`authorizes=[]` 的 source-freeze manifest。 | §2.3, §3.2 | `VCEC-A04` |
+| `VCEC-004` | VDD construction 与 exact-cover 必须消费并重验同一 manifest identity/hash。 | §3.2 | `VCEC-A05` |
+| `VCEC-005` | Source-freeze 缺失、unknown schema、hash/role drift、normative omission 或 caller 缩减 source universe 必须 fail closed。 | §3.2, §8 | `VCEC-A06` |
+| `VCEC-006` | 每条 source obligation 必须绑定稳定 ID、逐字 anchor、source pointer 和 source hash。 | §2.1, §4.1 | `VCEC-A07` |
+| `VCEC-007` | Active obligation、requirement、acceptance 必须形成双向 sound-and-complete cover。 | §4.2, §4.3, §5 S2-S3 | `VCEC-A08` |
+| `VCEC-008` | Not-applicable、deferred 和 conflict 必须有 typed disposition、reason、authority reference 与 target plan。 | §4.1, §5 S2-S3 | `VCEC-A09` |
+| `VCEC-009` | Unknown、duplicate、orphan、错绑、语义弱化、未处置冲突和 silent omission 不得产生 conformant。 | §4.3, §8 | `VCEC-A10` |
+| `VCEC-010` | LLM 只能提出 candidates 或解释歧义；canonical ID、hash、cover 与 PASS 由确定性 producer/validator 决定。 | §5 S1-S3, §6 | `VCEC-A11` |
+| `VCEC-011` | Exact-cover 结果只能是 typed blocked、conformant 或 requirement semantic-review handoff，并提供 bounded、hash-bound evidence。 | §5 S4 | `VCEC-A12` |
+| `VCEC-012` | Pre-implementation requirement semantic ambiguity 只能显式路由到 Bootstrap `bootstrap-upstream-plan`，并在 validation 后回到显式 VDD repair 与 exact-cover rerun。 | §5 S4-S5, §7.1A | `VCEC-A13` |
+| `VCEC-013` | Pre-implementation requirement review 与 post-implementation semantic assurance 必须使用不同生命周期身份和 typed route/result。 | §7.1 | `VCEC-A14` |
+| `VCEC-014` | `vdd-repair-input.v1` 必须 hash-bound、schema-valid、`authorizes=[]`，且只能由显式 VDD repair 消费。 | §5 S5, §2.3 | `VCEC-A15` |
+| `VCEC-015` | VDD repair 必须产生或绑定新的 applicable requirements identity，并使旧 conformant receipt stale 后重跑 exact-cover。 | §9 | `VCEC-A16` |
+| `VCEC-016` | Current conformant receipt 是 canonical-flow implementation authorization 的必要前置证据，但不拥有任何 lifecycle authority。 | §3.3 | `VCEC-A17` |
+| `VCEC-017` | Existing authorization owner 必须拒绝 missing、stale、non-conformant 或非当前 binding 的 receipt，且不得接受 prose/boolean/旧 summary 替代。 | §3.3, §9 | `VCEC-A18` |
+| `VCEC-018` | Exact-cover 和所有中间 artifact 固定 `authorizes=[]`，不得发布 plan-ready、implementation-authorized、implementation-complete 或 acceptance-passed。 | §2, §3.3, §12 | `VCEC-A19` |
+| `VCEC-019` | VDD 修改仅限 source-freeze producer 与 repair-input consumer contract；不得吸收 exact-cover 或 Bootstrap implementation。 | §2.3 | `VCEC-A20` |
+| `VCEC-020` | Exact-cover 不修改 target execution-plan；VDD 保持 create/repair 和 plan lifecycle owner。 | §2.2, §5 S5 | `VCEC-A21` |
+| `VCEC-021` | 主 Agent 只能接收 bounded summary、路径、hash、verdict、有限 IDs 和 next action；完整 source/matrix/reviewer/stdout/prompt 只落盘。 | §5 S4, §7 | `VCEC-A22` |
+| `VCEC-022` | 运行必须可从 compact manifest 和当前 hash-bound artifacts 在新 thread/process 重启，不依赖 Codex resume/compaction 或旧聊天。 | §7 | `VCEC-A23` |
+| `VCEC-023` | 输出上限、truncated 标记、完整 artifact ref/hash、重复失败 stop-loss 与 stale restart 必须 fail closed。 | §7, §8 | `VCEC-A24` |
+| `VCEC-024` | 实现必须提供真实 producer→consumer composition、mutation/negative fixtures 和至少一个完整 dogfood。 | §9, §12 | `VCEC-A25`, `VCEC-A26` |
+| `VCEC-025` | Legacy migration 保持由 VDD 及其 adapter 拥有；Exact-cover 不迁移或改写 legacy plans。 | §11 | `VCEC-A27` |
+
+稳定 non-goal/lifecycle boundary 引用：
+
+| Boundary ID | Boundary |
+| --- | --- |
+| `VCEC-NG01` | 不创建第二个 review runner、reviewer layer 或 Bootstrap runtime。 |
+| `VCEC-NG02` | 不判断 implementation/test/current evidence，不替代 post-implementation Acceptance。 |
+| `VCEC-NG03` | 不修改 execution-plan，不执行 VDD repair，不拥有 lifecycle/release/commit authority。 |
+| `VCEC-NG04` | 不重新把 fully absorbed PRD、Architecture 或原始输入提升为与 Canonical Spec Package 平级的 downstream authority。 |
+| `VCEC-NG05` | 不声明修改 Codex thread resume、compaction、context-window 或 provider 行为。 |
+
+## 11.2 稳定 Acceptance Contract
+
+| Acceptance ID | Falsifiable acceptance predicate | Covers |
+| --- | --- | --- |
+| `VCEC-A01` | Canonical Spec Package fixture 可由 VDD producer 接受并冻结唯一 package root；非 bmad-spec package 被拒绝。 | `VCEC-001` |
+| `VCEC-A02` | Role graph round-trip 保留全部 normative/adopted/unresolved 项及 relationships；任一缺失导致失败。 | `VCEC-001`, `VCEC-002` |
+| `VCEC-A03` | Normative companion 降级为 provenance、provenance 提升为 canonical、从 provenance 重新提取 obligation、caller 删除 normative source 或把 unresolved input 静默标记为 resolved 的 fixtures 均失败。 | `VCEC-002` |
+| `VCEC-A04` | Real VDD producer 输出 schema-valid manifest，包含要求字段、canonical hash 和 `authorizes=[]`。 | `VCEC-003` |
+| `VCEC-A05` | VDD create/repair 与 exact-cover 使用同一 manifest 时通过 binding gate；manifest A/B 组合必失败。 | `VCEC-004` |
+| `VCEC-A06` | Missing/unknown/drift/omission/reduced-universe fixtures 均在读取 requirements 前 fail closed。 | `VCEC-005` |
+| `VCEC-A07` | 每个 obligation 的稳定 ID、逐字 inclusive anchor、source pointer/hash 可重算；重复或漂移失败。 | `VCEC-006` |
+| `VCEC-A08` | Active obligation、requirement、acceptance 双向集合检查相等，删除任一合法边产生 non-conformant。 | `VCEC-007` |
+| `VCEC-A09` | 非 active obligation 只有在完整 disposition 字段存在时排除；缺一字段即失败。 | `VCEC-008` |
+| `VCEC-A10` | Missing、unknown、duplicate、orphan、wrong-binding、weakening 和 unresolved-conflict mutation fixtures 均不产生 conformant。 | `VCEC-009` |
+| `VCEC-A11` | Caller 或 LLM 传入 canonical IDs、hash 或 pass boolean 不改变确定性重算结果。 | `VCEC-010` |
+| `VCEC-A12` | 三种结果均通过 schema；raw/full output 或无证据路径/hash 的结果失败。 | `VCEC-011` |
+| `VCEC-A13` | Ambiguous fixture 只产生 requirement-review handoff；未显式授权不启动 Bootstrap，current envelope 后仅生成 VDD repair input。 | `VCEC-012` |
+| `VCEC-A14` | Requirement-review artifact 无 implementation candidate 字段；post-implementation route 拒绝把该 handoff 当作 review authorization。 | `VCEC-013` |
+| `VCEC-A15` | Real VDD repair entry 接受 current repair input，拒绝 stale/tampered/implicit route，并保持 VDD lifecycle owner。 | `VCEC-014` |
+| `VCEC-A16` | Repair 后 requirements identity 改变，旧 receipt 被判 stale，重新 exact-cover 后才产生新 receipt。 | `VCEC-015` |
+| `VCEC-A17` | Matching receipt 可满足 authorization preflight，但 receipt 单独不改变 lifecycle state。 | `VCEC-016` |
+| `VCEC-A18` | Authorization owner 的真实入口拒绝 missing/stale/non-conformant/mismatched receipt 和 prose/boolean 替代。 | `VCEC-017` |
+| `VCEC-A19` | 对所有输出扫描 `authorizes=[]`，且禁止 lifecycle/acceptance/commit/release 发布字段。 | `VCEC-018` |
+| `VCEC-A20` | VDD diff 只包含 producer/consumer contract；植入 exact-cover 或 Bootstrap 算法的 fixture/审查失败。 | `VCEC-019` |
+| `VCEC-A21` | Exact-cover 前后 requirements directory byte manifest 相同；修复只通过显式 VDD repair 发生。 | `VCEC-020` |
+| `VCEC-A22` | Model-visible receipt 不含 source/reviewer/stdout/prompt 全文，且完整 artifacts 保存在受控路径。 | `VCEC-021` |
+| `VCEC-A23` | 中断后在新 process/thread 仅凭 compact manifest 和当前 artifacts 重启；不读取旧 rollout/chat。 | `VCEC-022` |
+| `VCEC-A24` | 超限设置 `truncated=true` 并绑定完整 artifact；hash drift、原样重试或丢失 artifact 均阻断。 | `VCEC-023` |
+| `VCEC-A25` | Composition suites 覆盖 Package→VDD producer→VDD create/repair→exact-cover→authorization preflight 的真实入口。 | `VCEC-024` |
+| `VCEC-A26` | 至少一个真实 plan 完成 create→exact-cover→可选 semantic review→repair→rerun dogfood，负例保持不可变。 | `VCEC-024` |
+| `VCEC-A27` | Unknown legacy manifest/schema fail closed，且 target legacy plan bytes 不被迁移或改写。 | `VCEC-025` |
+
 ## 12. 验收标准
 
 本需求实现后的 Skill 只有在以下条件全部成立时才算 `conformance-complete`：
 
-1. 消费真实 VDD source-freeze manifest，并验证 run/validator/schema identity；
+1. 从真实 bmad-spec Canonical Spec Package 产生 VDD source-freeze manifest，并验证 package roles、run/target/validator/schema identity；
 2. 对所有 active obligation 生成唯一、可追溯的 requirement/acceptance mapping；
 3. missing、unknown、duplicate、错绑、冲突未处置和 hash drift 全部不产生 `conformant`；
 4. `not_applicable|deferred|conflict` 均有 reason、authority_reference 和 target_plan；
-5. semantic ambiguity 只输出 `semantic_review_required`，handoff profile 为 `bootstrap-upstream-plan`；
+5. requirement semantic ambiguity 只输出 `requirement_semantic_review_required`，handoff profile 为 `bootstrap-upstream-plan`；
 6. 新 Skill 不修改 requirements 目录，所有中间 artifact `authorizes=[]`；
 7. `vdd-repair-input.v1` schema-valid、hash-bound、可被显式 VDD `repair` 消费；
 8. VDD repair 的真实跨进程 composition 通过，且 VDD 仍独立发布 plan/lifecycle 状态；
@@ -253,21 +427,44 @@ Legacy compatibility remains owned by VDD and its documented adapters. This Skil
 11. 主 Agent 的恢复输入只有 bounded summary、路径、hash、verdict、pending IDs 和 next action，不包含完整 source/reviewer/stdout/prompt；
 12. Skill 的任何输出均不得声称改变 Codex 原生 resume/compaction，context-window 错误只产生 checkpoint 和停止结果；
 13. 至少一个真实 execution-plan 完成 `VDD create → exact-cover → optional semantic review → VDD repair → exact-cover` dogfood。
+14. VDD create/repair 与 exact-cover 消费并重验同一个 source-freeze manifest identity/hash；manifest A/B、normative companion omission 和 role downgrade 负例全部阻断；
+15. VDD 的真实 producer 提供版本化 source-freeze manifest，真实 repair consumer 接受 current `vdd-repair-input.v1`，且两者均不吸收 exact-cover 或 Bootstrap 实现；
+16. Current conformant receipt 可满足现有 implementation authorization owner 的 prerequisite preflight，但 receipt 自身不发布任何 lifecycle 状态；missing、stale、non-conformant 和人工替代均被真实入口拒绝；
+17. Pre-implementation requirement review 与 post-implementation semantic assurance 使用不同 typed route/result 和生命周期身份，前者不需要 implementation candidate，也不由 Refactor Acceptance 发起；
+18. `VCEC-001` 至 `VCEC-025` 均至少映射一个 `VCEC-Axx`，全部 acceptance 可证伪，且 requirements-only review 确认现有 recovery、bounded context、hash binding、negative fixture 和 dogfood 约束未被弱化。
 
 ## 13. 最终语义
 
 ```text
-VDD source-freeze manifest + execution-plan requirements directory
-  ↓
-exact-cover Skill
-  ├─ deterministic gap → blocked + vdd-repair-input.v1
-  ├─ no ambiguity → conformant + authorizes=[]
-  └─ semantic ambiguity → semantic_review_required
-                              ↓ explicit bootstrap-upstream-plan
-                              ↓ validation envelope
-                       vdd-repair-input.v1
-                              ↓ explicit VDD repair
-                       exact-cover Skill rerun
+Canonical Spec Package
+owner: bmad-spec
+        ↓
+VDD source-freeze producer
+        ↓
+vdd-source-freeze-manifest.v1
+        ├──────────────→ VDD create / repair
+        │
+        └──────────────→ exact-cover
+                             ├─ blocked
+                             │    ↓
+                             │ VDD repair
+                             │    ↓
+                             │ exact-cover rerun
+                             │
+                             ├─ requirement_semantic_review_required
+                             │    ↓ explicit authorization
+                             │ Bootstrap bootstrap-upstream-plan
+                             │    ↓ validation envelope
+                             │ VDD repair
+                             │    ↓
+                             │ exact-cover rerun
+                             │
+                             └─ conformant + authorizes=[]
+                                  ↓
+                          prerequisite satisfied
+                                  ↓
+                          existing implementation
+                          authorization owner
 ```
 
 核心不变量：
@@ -283,3 +480,7 @@ exact-cover Skill
 > 新 Skill 不修改 execution-plan；VDD 是唯一的 repair、plan-ready 和 lifecycle owner。
 >
 > Skill 恢复依赖文件化 manifest 和 hash，不依赖或改写 Codex thread 历史。
+>
+> VDD construction 与 exact-cover 必须验证同一个 source-freeze manifest identity/hash。
+>
+> Requirement semantic review 与 post-implementation semantic assurance 属于不同生命周期，不共享模糊路由状态。

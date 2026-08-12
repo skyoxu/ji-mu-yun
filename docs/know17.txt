@@ -1,0 +1,223 @@
+请对 execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md 做一次需求补丁。
+
+本次只修改需求文档，不实现 .agents/skills/**、不创建新 Skill、不运行 VDD create、不修改 lifecycle 状态。目标是把当前 vdd-conformance-exact-cover 从“可选 conformance auditor”补齐为可进入正式需求流水线的明确合同。
+
+背景
+
+未来标准需求链路调整为：
+
+bmad-prd → bmad-spec → [必要时 bmad-architecture → bmad-spec refresh] → Canonical Spec Package → VDD source-freeze → VDD create → vdd-conformance-exact-cover → implementation
+
+其中：
+
+Canonical Spec Package 由 bmad-spec 最终拥有；
+package 包含 SPEC.md、spec-authored normative companions，以及被 bmad-spec adopt 的 normative companions，例如 ARCHITECTURE-SPINE.md；
+已被 Spec fully absorbed 的 PRD/原始输入属于 provenance，不应重新成为与 Spec 平级的 downstream normative authority；
+VDD 必须冻结本次实际消费的完整 authority universe，并让 VDD construction 与 exact-cover 消费同一个 source-freeze manifest hash；
+Bootstrap 是现有共享 semantic-review capability owner，exact-cover 只在 deterministic 规则无法判断需求语义保真时请求 bootstrap-upstream-plan；
+pre-implementation requirement semantic review 与 post-implementation Acceptance semantic review 是两种不同生命周期用途，不得混淆。
+必须补充的需求
+
+1. 明确 Canonical Spec Package 输入模型
+
+在“权威与输入 / source freeze”附近加入正式规则：
+
+新流程下 VDD 的主要产品需求 authority 为 bmad-spec 输出的 Canonical Spec Package。
+Canonical Spec Package 至少区分：
+canonical SPEC.md；
+normative spec-authored companions；
+normative adopted companions，例如 ARCHITECTURE-SPINE.md；
+fully-absorbed upstream sources，仅作为 provenance；
+unresolved assumptions/open questions，必须 typed、可追踪，不得静默视为已解决。
+exact-cover 不自行重新解释 PRD、Architecture、旧 requirements 等谁是 authority，而只消费 VDD 已冻结的 authority graph。
+不允许 caller 把 package 中的 normative companion 降级成 provenance 或从 source universe 中删除。
+
+2. 把 VDD source-freeze manifest 定义成正式 prerequisite
+
+当前文档假定存在 VDD source-freeze manifest，但需求必须明确：如果当前 VDD production 尚未提供该一等 artifact，本项目范围允许并要求增加最小必要的 VDD producer 能力。
+
+建议明确一个版本化合同，例如概念名：
+
+vdd-source-freeze-manifest.v1
+
+具体最终名称遵循仓库既有命名规范。
+
+manifest 至少需要表达：
+
+schema/version；
+VDD run identity；
+target identity；
+canonical package root；
+每个 source/companion 的 repository-relative path；
+role：canonical / normative companion / adopted companion / provenance / repository authority / unresolved input；
+exact byte SHA-256；
+package/source relationship；
+applicable repository rules / knowledge bindings；
+manifest 自身 canonical hash；
+authorizes=[]。
+
+核心不变量必须写入需求：
+
+VDD plan construction 与 exact-cover 必须绑定并验证同一个 frozen source manifest identity/hash。
+
+Caller 不得为 exact-cover 重新提供任意缩减后的 source list。
+
+Source manifest 缺失、schema unknown、hash drift、role drift、normative source omission 均 fail closed。
+
+3. 明确本项目允许修改 VDD producer/consumer adapter
+
+当前 planned Skill tree 主要只列出新 Skill 文件，容易让实现者误认为不得修改 VDD。
+
+补充 scope：
+
+允许对 .agents/skills/vdd-execution-plan/** 做最小必要修改，以：
+产生正式 source-freeze manifest；
+让 VDD explicit repair 能消费 vdd-repair-input.v1。
+这些修改只能建立 producer/consumer contract，不得把 exact-cover 算法或 Bootstrap review implementation 吸收到 VDD 内。
+VDD 仍是 execution-plan create/repair 与 plan lifecycle owner。
+
+4. 将 exact-cover 设为正式流程中的 prerequisite，而不是授权者
+
+明确区分：
+
+conformant != implementation-authorized
+
+exact-cover 所有输出继续：
+
+authorizes=[]
+
+但对于声明采用该新 canonical flow 的 VDD plan：
+
+进入 implementation authorization 前，现有 authorization owner 必须验证一个 current、hash-bound、与当前 VDD source manifest 和 requirements manifest 匹配的 conformant receipt；
+exact-cover 自身不得发布 plan-ready、implementation-authorized、implementation-complete 或 acceptance-passed；
+stale/missing/non-conformant receipt 不得被 prose、人工布尔值或旧 review summary 替代。
+
+不要在本需求中重新定义 maintainer authorization owner，只定义 prerequisite 消费关系。
+
+5. 明确两种 semantic review 的生命周期边界
+
+增加一节或强化现有边界：
+
+A. Pre-implementation requirement semantic ambiguity
+
+Exact-cover → semantic_review_required → explicit authorization → Bootstrap bootstrap-upstream-plan → validation envelope → VDD repair → exact-cover rerun
+
+该语义 review 的对象是：
+
+source obligation；
+VDD requirement；
+acceptance/disposition；
+是否发生语义弱化、错误合并、真实冲突或 applicability ambiguity。
+
+它不需要 implementation candidate，也不通过 Refactor Acceptance 发起。
+
+B. Post-implementation semantic assurance
+
+implementation-complete → Refactor Acceptance → decide-bootstrap → Bootstrap implementation/focused profile
+
+该 review 的对象是实现风险、runtime closure、changed production code、tests/evidence。
+
+两者不得共享一个“semantic_review_required”布尔值来模糊生命周期。
+
+exact-cover 可以判定“deterministic proof 无法闭合，因此 semantic review required”，但该 artifact 仍 authorizes=[]；实际 Bootstrap model launch 仍受 Bootstrap 自身 policy、authorization、高成本 acknowledgement 等控制。
+
+6. 增加稳定的本需求 Requirement IDs
+
+将当前章节式自然语言需求补成可被未来 exact-cover 自己 dogfood 的稳定 requirement contract。
+
+不要求重写全文，但至少给所有 load-bearing normative requirement 分配稳定 ID，例如：
+
+VCEC-001 ...
+
+并给对应 acceptance 分配：
+
+VCEC-A01 ...
+
+要求：
+
+每个 active requirement 至少映射一个 acceptance；
+acceptance 必须可证伪；
+non-goal / lifecycle boundary 也要有稳定引用方式；
+不得因为加 ID 而丢失现有章节中的任何 load-bearing 内容；
+不要为了压缩篇幅删除现有 recovery、bounded context、hash binding、negative fixtures、dogfood 等要求。
+
+7. 增加真实 producer→consumer composition 验收
+
+在现有组合验收基础上明确加入：
+
+bmad-spec Canonical Spec Package → VDD source-freeze producer
+same source-freeze manifest → VDD create
+same source-freeze manifest → exact-cover
+删除一个 normative companion 的负例必须阻断；
+把 normative companion 错标为 provenance 必须阻断；
+VDD create 使用 manifest A、exact-cover 使用 manifest B 必须阻断；
+vdd-repair-input.v1 → real VDD repair consumer
+repair 后必须重新生成/绑定新的 applicable requirements identity，并重新跑 exact-cover；
+exact-cover 旧 conformant receipt 在 source、requirements、validator 任一变化后必须 stale。
+
+8. 更新最终流程图
+
+最终语义应收敛为：
+
+Canonical Spec Package
+owner: bmad-spec
+        ↓
+VDD source-freeze producer
+        ↓
+vdd-source-freeze-manifest.v1
+        ├──────────────→ VDD create / repair
+        │
+        └──────────────→ exact-cover
+                             ├─ blocked
+                             │    ↓
+                             │ VDD repair
+                             │    ↓
+                             │ exact-cover rerun
+                             │
+                             ├─ semantic_review_required
+                             │    ↓ explicit authorization
+                             │ Bootstrap bootstrap-upstream-plan
+                             │    ↓
+                             │ VDD repair
+                             │    ↓
+                             │ exact-cover rerun
+                             │
+                             └─ conformant
+                                  ↓
+                          prerequisite satisfied
+                                  ↓
+                          existing implementation
+                          authorization owner
+必须保持不变的边界
+
+不得通过本补丁：
+
+创建或实现 vdd-conformance-exact-cover Skill；
+把 Bootstrap reviewer/runtime 复制进新 Skill；
+让 Exact-cover 获得 lifecycle authority；
+让 Exact-cover 直接发布 plan-ready 或 implementation-authorized；
+让 Acceptance 负责 pre-implementation requirement ambiguity；
+让 VDD 自己执行 exact-cover；
+让 PRD、SPEC、Architecture 永久成为三个平级 downstream authority；
+删除现有 authorizes=[]、hash binding、fail-closed、bounded context、restart、negative fixture、real dogfood 要求。
+完成标准
+
+修改后，请自行做一次 requirements-only review，并确认：
+
+文档不再假设一个不存在的 source-freeze producer，而是明确其最小 VDD prerequisite scope；
+Canonical Spec Package → VDD source-freeze → VDD → exact-cover 的 authority chain 唯一且无平级冲突；
+VDD create 与 exact-cover 必须消费同一 manifest identity/hash；
+vdd-repair-input.v1 有真实 VDD consumer scope；
+exact-cover 是 prerequisite，不是 lifecycle authority；
+pre-implementation 与 post-implementation semantic review 被明确分离；
+全部 load-bearing requirements 有稳定 ID，并有 acceptance 映射；
+当前文档原有的重要约束没有因为补丁而被删减或弱化。
+
+最后只输出：
+
+修改了哪些章节；
+新增了哪些 requirement/acceptance IDs；
+是否发现与现有需求冲突；
+仍存在的 open questions。
+
+不要开始实现代码。
