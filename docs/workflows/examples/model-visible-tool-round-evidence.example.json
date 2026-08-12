@@ -30,5 +30,6 @@
     "visible_result_tokens": 300,
     "method": "utf8-bytes-ceil-div-4"
   },
+  "capture_adapter": "example-measurement-adapter",
   "recorded_at": "2026-08-11T00:00:00Z"
 }

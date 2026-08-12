@@ -29,11 +29,12 @@ PREFLIGHT_SCHEMA_PATH = ROOT / "scripts" / "sc" / "schemas" / "model-visible-too
 MEASUREMENT_SCHEMA_PATH = ROOT / "scripts" / "sc" / "schemas" / "model-visible-tool-measurement.v1.schema.json"
 MAX_BYTES = 12000
 MAX_ESTIMATED_TOKENS = 3000
-REGISTERED_OBSERVED_BOUNDARIES: frozenset[str] = frozenset()
+REGISTERED_OBSERVED_BOUNDARIES: dict[str, Any] = {}
 # No workspace-authored sidecar is a trust root. A control-plane adapter must be
 # explicitly registered here before repository-scope parallelization can be enabled.
-REGISTERED_PREFLIGHT_ADAPTERS: frozenset[str] = frozenset()
-REGISTERED_BACKGROUND_ADAPTERS: frozenset[str] = frozenset()
+REGISTERED_PREFLIGHT_ADAPTERS: dict[str, Any] = {}
+REGISTERED_BACKGROUND_ADAPTERS: dict[str, Any] = {}
+REGISTERED_MEASUREMENT_ADAPTERS: dict[str, Any] = {}
 
 try:
     import jsonschema  # type: ignore
@@ -43,6 +44,17 @@ except ImportError:  # pragma: no cover
 
 class ToolRoundSummaryValidationError(ValueError):
     """Raised when a tool round summary is not safe to consume."""
+
+
+def _adapter_verifies(registry: dict[str, Any], adapter_id: Any, context: dict[str, Any]) -> bool:
+    """Require a control-plane verifier, not a workspace-authored adapter identifier."""
+    verifier = registry.get(adapter_id) if isinstance(adapter_id, str) else None
+    if not callable(verifier):
+        return False
+    try:
+        return verifier(context) is True
+    except Exception:
+        return False
 
 
 def _reject_duplicate_json_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -431,11 +443,13 @@ def _manual_schema_errors(payload: dict[str, Any]) -> list[str]:
             lifecycle = operation.get("background_lifecycle")
             lifecycle_names = {
                 "adapter", "job_id", "terminal_state", "exit_code", "log_evidence_ref",
-                "log_unit", "log_start", "log_end", "poll_count", "stop_reason",
+                "log_unit", "log_start", "log_end", "poll_count", "stop_reason", "timed_out",
             }
+            lifecycle_required_names = lifecycle_names - {"timed_out"}
             if lifecycle is not None and (
                 not isinstance(lifecycle, dict)
-                or set(lifecycle) != lifecycle_names
+                or not lifecycle_required_names.issubset(lifecycle)
+                or set(lifecycle) - lifecycle_names
                 or not isinstance(lifecycle.get("adapter"), str)
                 or not re.fullmatch(r"^[A-Za-z0-9._:-]{1,64}$", lifecycle.get("adapter", ""))
                 or not isinstance(lifecycle.get("job_id"), str)
@@ -447,6 +461,7 @@ def _manual_schema_errors(payload: dict[str, Any]) -> list[str]:
                 or not _is_int(lifecycle.get("log_start")) or lifecycle["log_start"] < 0
                 or not _is_int(lifecycle.get("log_end")) or lifecycle["log_end"] < lifecycle["log_start"]
                 or not _is_int(lifecycle.get("poll_count")) or not 0 <= lifecycle["poll_count"] <= 64
+                or not isinstance(lifecycle.get("timed_out", False), bool)
                 or (lifecycle.get("stop_reason") is not None and (not isinstance(lifecycle.get("stop_reason"), str) or not lifecycle["stop_reason"] or len(lifecycle["stop_reason"]) > 240))
             ):
                 errors.append(f"$.operations[{index}].background_lifecycle: invalid lifecycle")
@@ -564,7 +579,7 @@ def _manual_measurement_schema_errors(payload: Any) -> list[str]:
         return ["measurement sidecar must be an object"]
     required = {
         "schema_version", "run_id", "turn_id", "scope", "round_measurement", "round_events",
-        "visible_result_bytes", "token_measurement", "recorded_at",
+        "visible_result_bytes", "token_measurement", "capture_adapter", "recorded_at",
     }
     if set(payload) != required:
         return ["measurement sidecar fields are incomplete or unknown"]
@@ -596,6 +611,9 @@ def _manual_measurement_schema_errors(payload: Any) -> list[str]:
         errors.append("measurement sidecar token measurement is invalid")
     if not isinstance(payload.get("recorded_at"), str) or _parse_timestamp(payload["recorded_at"]) is None:
         errors.append("measurement sidecar recorded_at must be timezone-aware")
+    capture_adapter = payload.get("capture_adapter")
+    if not isinstance(capture_adapter, str) or not re.fullmatch(r"^[A-Za-z0-9._:-]{1,128}$", capture_adapter):
+        errors.append("measurement sidecar capture_adapter is invalid")
     return errors
 
 
@@ -756,7 +774,11 @@ def _preflight_errors(
             errors.append("$.preflight.evidence_ref: read_only_verified conflicts with a side-effecting operation")
         authority = sidecar.get("authority", {})
         adapter_id = authority.get("adapter_id")
-        if adapter_id not in REGISTERED_PREFLIGHT_ADAPTERS:
+        if not _adapter_verifies(
+            REGISTERED_PREFLIGHT_ADAPTERS,
+            adapter_id,
+            {"sidecar": sidecar, "summary": payload, "evidence": evidence, "root": root},
+        ):
             errors.append("$.preflight.evidence_ref: no trusted preflight adapter is registered")
         authority_path = _resolve_evidence_path(root, "AGENTS.md")
         if authority_path is None or not authority_path.is_file() or is_reparse_point(authority_path):
@@ -821,6 +843,13 @@ def _measurement_evidence_errors(
             errors.append(f"$.measurement: sidecar {ref_id!r} scope binding mismatch")
         if sidecar.get("visible_result_bytes") != payload.get("metrics", {}).get("visible_result_bytes"):
             errors.append(f"$.measurement: sidecar {ref_id!r} visible_result_bytes mismatch")
+        if measurement.get("rounds") != "unknown" or measurement.get("tokens") != "unknown":
+            if not _adapter_verifies(
+                REGISTERED_MEASUREMENT_ADAPTERS,
+                sidecar.get("capture_adapter"),
+                {"sidecar": sidecar, "summary": payload, "evidence": refs_by_id.get(ref_id), "root": root},
+            ):
+                errors.append(f"$.measurement: sidecar {ref_id!r} has no trusted capture verifier")
 
     rounds_ref = measurement.get("rounds_evidence_ref")
     if measurement.get("rounds") != "unknown" and isinstance(rounds_ref, str) and rounds_ref in sidecars:
@@ -880,8 +909,12 @@ def _background_lifecycle_errors(
         tool_family = operation.get("tool_family")
         if lifecycle.get("adapter") != tool_family:
             errors.append(f"{field}.adapter: must match operation tool_family")
-        if status == "complete" and tool_family not in REGISTERED_BACKGROUND_ADAPTERS:
-            errors.append(f"{field}.adapter: no registered background adapter can prove complete")
+        if status == "complete" and not _adapter_verifies(
+            REGISTERED_BACKGROUND_ADAPTERS,
+            tool_family,
+            {"lifecycle": lifecycle, "operation": operation, "summary": payload, "root": root},
+        ):
+            errors.append(f"{field}.adapter: no trusted background verifier can prove complete")
         if lifecycle.get("poll_count", 0) < 1:
             errors.append(f"{field}.poll_count: a started job requires at least one status query")
         if lifecycle.get("stop_reason") is None:
@@ -906,9 +939,14 @@ def _background_lifecycle_errors(
 
         state = lifecycle.get("terminal_state")
         exit_code = lifecycle.get("exit_code")
+        timed_out = lifecycle.get("timed_out", False)
+        if not isinstance(timed_out, bool):
+            errors.append(f"{field}.timed_out: must be boolean when supplied")
+        if timed_out and not (status == "failed" and state == "running" and exit_code is None):
+            errors.append(f"{field}.timed_out: requires failed status, running terminal_state, and null exit_code")
         if status == "complete" and (state != "complete" or exit_code != 0):
             errors.append(f"{field}: complete requires terminal_state=complete and exit_code=0")
-        elif status == "failed" and (state != "failed" or not _is_int(exit_code) or exit_code == 0):
+        elif status == "failed" and not timed_out and (state != "failed" or not _is_int(exit_code) or exit_code == 0):
             errors.append(f"{field}: failed requires terminal_state=failed and a non-zero exit_code")
         elif status == "interrupted" and state not in {"interrupted", "cancelled"}:
             errors.append(f"{field}: interrupted requires an interrupted or cancelled terminal state")
@@ -1192,8 +1230,12 @@ def _cross_field_errors(payload: dict[str, Any], root: Path) -> list[str]:
     if all(isinstance(item, str) for item in boundary_names) and boundary_names != sorted(boundary_names):
         errors.append("$.external_boundaries: must be sorted by boundary")
     for index, boundary in enumerate(boundaries):
-        if boundary.get("observed") is True and boundary.get("boundary") not in REGISTERED_OBSERVED_BOUNDARIES:
-            errors.append(f"$.external_boundaries[{index}].observed: no repository-registered adapter exists")
+        if boundary.get("observed") is True and not _adapter_verifies(
+            REGISTERED_OBSERVED_BOUNDARIES,
+            boundary.get("boundary"),
+            {"boundary": boundary, "summary": payload, "root": root},
+        ):
+            errors.append(f"$.external_boundaries[{index}].observed: no trusted boundary verifier exists")
     boundary_families = {
         "functions.exec": "functions-exec",
         "codex-service": "codex-shell",
@@ -1231,7 +1273,11 @@ def _cross_field_errors(payload: dict[str, Any], root: Path) -> list[str]:
             if not any(
                 item.get("boundary") == required_boundary
                 and item.get("observed") is True
-                and required_boundary in REGISTERED_OBSERVED_BOUNDARIES
+                and _adapter_verifies(
+                    REGISTERED_OBSERVED_BOUNDARIES,
+                    required_boundary,
+                    {"boundary": item, "summary": payload, "root": root},
+                )
                 for item in boundaries
             ):
                 errors.append(f"$.operations[{index}].status: complete requires a registered observed provider boundary")
@@ -1245,8 +1291,12 @@ def _cross_field_errors(payload: dict[str, Any], root: Path) -> list[str]:
         item.get("boundary") == "token-accounting" and item.get("observed") is False for item in boundaries
     ):
         errors.append("$.external_boundaries: unknown token measurement requires an unobserved token-accounting boundary")
-    if measurement.get("tokens") == "observed" and "token-accounting" not in REGISTERED_OBSERVED_BOUNDARIES:
-        errors.append("$.measurement.tokens: observed token accounting has no repository-registered adapter")
+    if measurement.get("tokens") == "observed" and not _adapter_verifies(
+        REGISTERED_OBSERVED_BOUNDARIES,
+        "token-accounting",
+        {"measurement": measurement, "summary": payload, "root": root},
+    ):
+        errors.append("$.measurement.tokens: observed token accounting has no trusted verifier")
 
     unverified_refs = [
         item for item in payload.get("evidence_refs", [])

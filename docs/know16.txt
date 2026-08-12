@@ -1,0 +1,62 @@
+调整恢复协议，而不是依赖自动压缩：
+  - 恢复时只注入阶段、路径、hash、摘要和未解决项。
+  - reviewer 文件只返回 compact summary；完整文件留在磁盘。
+  - 大文件按需读取指定章节或行范围。
+  - 每个阶段设置上下文预算，超过预算自动创建新 thread。
+  - 不把完整 AGENTS.md、完整 Skill 和全部历史 evidence 反复注入主会话。
+
+ 1. 当前 Codex 恢复协议的真实工作方式
+
+  当前实现没有“主进程调用子 LLM 判断恢复内容”这一层：
+
+  rollout JSONL
+    -> 确定性反向扫描
+    -> 找最近 compaction checkpoint
+    -> 重建 replacement_history + 后续 ResponseItem
+    -> 单独恢复 world_state 比较基线
+    -> 下一轮继续调用模型
+
+  具体表现：
+
+  - /C:/Users/Administrator/AppData/Local/Temp/2/tmp.gi1d2aUl8x/codex/codex-rs/core/src/session/rollout_reconstruction.rs:317 会重新构造历
+    史。
+
+  - 普通恢复保留 ResponseItem，包括工具调用和已经截断的工具输出。
+  - WorldState 不进入历史，代码在同文件第 370 行明确跳过，只在第 390 行恢复比较基线。
+  - /C:/Users/Administrator/AppData/Local/Temp/2/tmp.gi1d2aUl8x/codex/codex-rs/core/src/context_manager/history.rs:92 比较当前状态与恢复基
+    线；内容未变化时不会再次注入。
+
+  - 真正使用 LLM 做语义压缩的是 compaction，而不是 resume。
+  - compaction 最终只保留用户消息、摘要和重新计算的当前常驻上下文，工具调用会被剔除，见 /C:/Users/Administrator/AppData/Local/Temp/2/
+    tmp.gi1d2aUl8x/codex/codex-rs/core/src/compact.rs:616。
+
+  因此，know15 中“看到 world_state 保存 AGENTS/skills 就可能重复注入”的推断，从当前客户端源码看并不成立。保存快照是为了避免重复注入。旧 版
+  rollout、缺少基线或损坏的快照可能触发完整重注入，但这属于降级路径。
+
+ 2. 你的设计方向正确，但需要调整权威边界
+
+  我赞成目标，但不赞成“由子 LLM 自主决定读取哪些文件”。更稳妥的协议是：
+
+  主进程确定任务、权威顺序、允许文件和哈希
+    -> 子进程只读取该白名单并生成 recovery-context.v1
+    -> 主进程做 schema、哈希、任务身份和新鲜度验证
+    -> 主进程重新加载当前常驻上下文
+    -> 注入一份精简任务恢复上下文继续执行
+
+  关键规则：
+
+  - 常驻上下文不进入恢复包，由主进程按当前版本重新加载。
+  - 子进程不能扩大文件范围，也不能扫描日志寻找“可能有用的信息”。
+  - 工具调用、原始工具输出、assistant 闲聊全部剔除。
+  - 保留工具结果的耐久结论，例如退出码、测试状态、证据路径和哈希。
+  - 自由文本日志不是恢复权威，但可以作为结构化 JSON 引用的诊断证据。
+  - 缺少必需来源、哈希不匹配或状态过期时必须 fail closed。
+
+  这也符合本仓现有规则：/C:/jimuyun/PhaseA.Platform/AGENTS.md:43 要求服务端选择并冻结来源、阻止子进程扩张上下文；/C:/jimuyun/docs/
+  architecture/phase-service/prototype-routes-and-recovery.md:33 已定义确定性的八级权威顺序。
+
+  需要稍微修正“严禁从日志恢复”：应当禁止从自由文本执行日志推断任务状态，但不能按目录名一刀切。本仓部分当前结构化状态位于 logs/phase-a-
+  innernet/workspaces/**，而且修复路线允许引用最新诊断证据。应按 schema、authority、hash 和生命周期判断，不按文件是否位于 logs/ 判断。
+
+  你的方案更适合作为一层新的“结构化任务 checkpoint + 语义 handoff”，放在 Codex 原生 resume 之上。若在 Phase 平台落地，会触及受保护的
+  CodexHostedProcessCommandFactory 或共享 LLM 入口，实施前需要单独批准并补充 ADR、schema 和恢复测试。

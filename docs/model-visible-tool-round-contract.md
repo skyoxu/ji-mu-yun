@@ -25,18 +25,20 @@ Codex 服务或第三方 MCP 的真实轮次和 token accounting。
 - P2：黄金示例、正反向测试和字段说明已同步；浏览器、图片、MCP、Codex 和
   `functions.exec` 的真实运行时 telemetry 仍是外部边界，未在此文档中虚报为已完成。
 
-P2 外部边界的处置是 `blocked-external`，不是“已验证”：只有接入对应 provider
+P2 外部边界的处置使用 `status=blocked`，并以 `external_boundaries`/结构化错误码
+标记 `blocked-external` 语义，不是“已验证”：只有接入对应 provider
 adapter、产生可重放的 `round_events`/token sidecar，并通过同一 validator 后，
 才能把该边界从 `observed=false` 改为 `observed=true`。在此之前 producer 和
 validator 会保留 `unknown`/`partial`，不会把文档示例升级为 `Implemented`。
-当前版本没有注册任何外部 adapter，也没有注册受信 preflight/background
-adapter；因此并行授权和已启动 background operation 不能声明 `complete`。
+当前版本没有注册任何外部、受信 measurement、preflight 或 background adapter；因此
+并行授权、已启动 background operation 和真实可见结果 measurement 不能声明 `complete`。
 MCP、浏览器、图片、`functions.exec` 和 `other` operation 即使把 boundary 布尔值
 写成 `observed=true` 也会被拒绝。接入 adapter 时必须同时扩展注册集合、sidecar
 校验和回归证据；当前注册集合位于
 `scripts/python/validate_model_visible_tool_round_summary.py` 的
-`REGISTERED_OBSERVED_BOUNDARIES`、`REGISTERED_PREFLIGHT_ADAPTERS` 和
-`REGISTERED_BACKGROUND_ADAPTERS`，值均为空。
+`REGISTERED_OBSERVED_BOUNDARIES`、`REGISTERED_PREFLIGHT_ADAPTERS`、
+`REGISTERED_BACKGROUND_ADAPTERS` 和 `REGISTERED_MEASUREMENT_ADAPTERS`，值均为空。
+这些集合必须注册控制面 verifier；仅填写 adapter 名称不能构成可信证明。
 
 ## 1. 目标与适用范围
 
@@ -156,7 +158,9 @@ Windows 绝对路径、URI 或包含 `..` 的路径。workspace root、所有中
 
 - 并行只读组为每个操作返回独立的 `complete|partial|failed|interrupted|blocked` 状态；
 - 一个操作失败不得隐藏其他操作的结果；组状态由最严重状态决定；
-- 超时必须记录为 `failed`，并记录是否仍有后台任务；
+- 超时必须记录为 `failed`，并记录是否仍有后台任务；若任务仍在运行，必须使用
+  `background_lifecycle.timed_out=true`、`terminal_state=running` 和空 `exit_code`，
+  不得伪造终止状态；
 - 只有明确幂等、边界明确的操作允许自动重试；重试计入 `retries` 和
   `underlying_tool_calls`；
 - 结果必须按稳定的 `operation_id` 排序，避免同一输入产生不可复现摘要；
@@ -171,7 +175,8 @@ Windows 绝对路径、URI 或包含 `..` 的路径。workspace root、所有中
 - 每次查询都必须读取状态、退出码和未读日志范围；
 - 终止状态为 `complete|failed|interrupted`；连续轮询必须有停止原因和上限。
 - `execution_mode=background` 且已启动的 operation 必须携带
-  `background_lifecycle`：`adapter`、`job_id`、`terminal_state`、`exit_code`、
+  `background_lifecycle`：`adapter`、`job_id`、`terminal_state`、`exit_code`、可选
+  `timed_out`、
   `log_evidence_ref`、零基半开 byte `log_start/log_end`、`poll_count`（最多 64）
   和 `stop_reason`。`complete` 还必须由已注册的 tool-family adapter 证明，退出码
   为 0，且日志范围覆盖已验证本地日志；未启动且 `blocked + attempts=0` 才可省略
@@ -238,7 +243,8 @@ py -3 scripts/python/build_model_visible_tool_round_summary.py --input <operatio
 并绑定 owner、run 和 turn。
 同时绑定当前 `scope_kind`/`scope_ref`，否则 validator 会拒绝该 artifact。
 `rounds_evidence_ref` 和 `tokens_evidence_ref` 必须指向
-`model-visible-tool-measurement.v1` sidecar；validator 会逐字段比对其中的
+`model-visible-tool-measurement.v1` sidecar；sidecar 必须记录受信的
+`capture_adapter`，并由已注册 verifier 绑定；validator 会逐字段比对其中的
 round events、scope、可见字节数、token mode 和 token method，不能只凭文件存在
 或 hash 格式通过。
 producer 输出采用 append-only create-new：目标已存在、是 symlink/reparse 或发生

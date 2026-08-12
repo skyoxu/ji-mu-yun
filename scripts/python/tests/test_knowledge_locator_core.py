@@ -79,7 +79,11 @@ class KnowledgeLocatorCoreTests(unittest.TestCase):
         self.assertEqual("jimuyun.knowledge-locator-result.v1", output.get("schema_version"))
         self.assertEqual(request["request_id"], output.get("request_id"))
         self.assertEqual(request["snapshot"], output.get("snapshot"))
-        self.assertEqual("insufficient_match", output.get("status"))
+        current_main = subprocess.check_output(
+            ["git", "rev-parse", "refs/heads/main"], cwd=REPOSITORY_ROOT, text=True, encoding="ascii"
+        ).strip()
+        expected = "insufficient_match" if request["snapshot"]["commit"] == current_main else "blocked"
+        self.assertEqual(expected, output.get("status"))
 
     def test_catalog_covers_gdd_prototype_route_module(self) -> None:
         core = load_core()

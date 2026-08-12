@@ -251,6 +251,7 @@
         "job_id": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,160}$"},
         "terminal_state": {"type": "string", "enum": ["running", "complete", "failed", "interrupted", "cancelled"]},
         "exit_code": {"type": ["integer", "null"]},
+        "timed_out": {"type": "boolean"},
         "log_evidence_ref": {"type": ["string", "null"], "maxLength": 128},
         "log_unit": {"const": "byte"},
         "log_start": {"type": "integer", "minimum": 0},

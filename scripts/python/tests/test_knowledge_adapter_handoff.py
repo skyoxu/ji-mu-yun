@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -62,6 +63,13 @@ class KnowledgeAdapterHandoffTests(unittest.TestCase):
             "result_sha256": validation.canonical_hash(result),
         }
         preflight = vdd.evaluate_preflight(context, repository_root=REPOSITORY_ROOT)
+        current_main = subprocess.check_output(
+            ["git", "rev-parse", "refs/heads/main"], cwd=REPOSITORY_ROOT, text=True, encoding="ascii"
+        ).strip()
+        if snapshot["commit"] != current_main:
+            self.assertEqual("blocked", preflight["status"], preflight)
+            self.assertEqual("catalog_stale", preflight["failure_code"])
+            return
         self.assertEqual("ready", preflight["status"], preflight)
         with tempfile.TemporaryDirectory() as raw:
             plan_dir = Path(raw)

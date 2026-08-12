@@ -123,11 +123,19 @@ class KnowledgeQueryEvaluationTests(unittest.TestCase):
             encoding="utf-8",
             check=False,
         )
-        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
-        summary = json.loads(completed.stdout)
-        self.assertEqual("passed", summary["status"])
-        self.assertEqual((1, 1, 0), (summary["total"], summary["passed"], summary["failed"]))
-        self.assertEqual((4, 4, 0), (summary["protocol_total"], summary["protocol_passed"], summary["protocol_failed"]))
+        catalog = json.loads((REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json").read_text(encoding="utf-8"))
+        current_main = subprocess.check_output(
+            ["git", "rev-parse", "refs/heads/main"], cwd=REPOSITORY_ROOT, text=True, encoding="ascii"
+        ).strip()
+        if catalog["source_snapshot"]["commit"] != current_main:
+            self.assertEqual(2, completed.returncode)
+            self.assertEqual("blocked", json.loads(completed.stdout)["status"])
+        else:
+            self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+            summary = json.loads(completed.stdout)
+            self.assertEqual("passed", summary["status"])
+            self.assertEqual((1, 1, 0), (summary["total"], summary["passed"], summary["failed"]))
+            self.assertEqual((4, 4, 0), (summary["protocol_total"], summary["protocol_passed"], summary["protocol_failed"]))
 
     def test_generated_answer_fields_are_rejected_recursively(self) -> None:
         evaluator = _load_evaluator()

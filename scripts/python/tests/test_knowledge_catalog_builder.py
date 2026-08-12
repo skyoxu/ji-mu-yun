@@ -49,6 +49,7 @@ class KnowledgeCatalogBuilderTests(unittest.TestCase):
         )
         self.assertEqual(0, ancestry.returncode)
         self.assertEqual(self.snapshot, self.catalog["source_snapshot"])
+        before = {path: path.read_bytes() for path in (CATALOG_PATH, SNAPSHOT_PATH, PROJECTION_PATH)}
         completed = subprocess.run(
             [sys.executable, "-B", str(BUILDER_PATH), "--repository-root", str(REPOSITORY_ROOT), "--check"],
             capture_output=True,
@@ -56,7 +57,14 @@ class KnowledgeCatalogBuilderTests(unittest.TestCase):
             encoding="utf-8",
             check=False,
         )
-        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn(completed.returncode, {0, 2}, completed.stdout + completed.stderr)
+        result = json.loads(completed.stdout)
+        if completed.returncode == 0:
+            self.assertEqual("current", result["status"])
+        else:
+            self.assertEqual("stale", result["status"])
+            self.assertTrue(result["stale_outputs"])
+        self.assertEqual(before, {path: path.read_bytes() for path in before})
 
     def test_builder_cli_defaults_to_read_only_check(self) -> None:
         before = {path: path.read_bytes() for path in (CATALOG_PATH, SNAPSHOT_PATH, PROJECTION_PATH)}

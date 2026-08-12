@@ -40,7 +40,7 @@ def publication_authorization_token() -> publication._PublicationAuthorization:
 
 class KnowledgePublicationTests(unittest.TestCase):
     def test_publish_bundle_rejects_missing_authorization_before_writes(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temporary:
             root = Path(temporary)
             with self.assertRaisesRegex(ValueError, "knowledge_publication_request_required"):
                 publication._publish_bundle(
@@ -556,19 +556,13 @@ class KnowledgePublicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "repository"
             subprocess.run(["git", "clone", "--quiet", "--shared", "--no-checkout", str(REPOSITORY_ROOT), str(root)], check=True)
-            current_main = subprocess.run(
-                ["git", "-C", str(REPOSITORY_ROOT), "rev-parse", "HEAD"],
-                check=True,
-                capture_output=True,
-                text=True,
-                encoding="ascii",
-            ).stdout.strip()
+            lkg_main = pointer["main_commit"]
             subprocess.run(["git", "config", "core.sparseCheckout", "true"], cwd=root, check=True)
             sparse_checkout = root / ".git" / "info" / "sparse-checkout"
             sparse_checkout.parent.mkdir(parents=True, exist_ok=True)
             sparse_checkout.write_text("/*\n!**/.acceptance-snapshots/\n", encoding="ascii", newline="\n")
             subprocess.run(
-                ["git", "-c", "core.longpaths=true", "checkout", "--quiet", "-B", "main", current_main],
+                ["git", "-c", "core.longpaths=true", "checkout", "--quiet", "-B", "main", lkg_main],
                 cwd=root,
                 check=True,
             )

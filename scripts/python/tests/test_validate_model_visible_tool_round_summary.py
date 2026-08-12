@@ -46,6 +46,11 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         (self.root / "AGENTS.md").write_text("# Repository contract\n", encoding="utf-8", newline="\n")
+        self.measurement_adapter_patch = patch.object(
+            validator_module, "REGISTERED_MEASUREMENT_ADAPTERS", {"test-measurement-adapter": lambda context: True}
+        )
+        self.measurement_adapter_patch.start()
+        self.addCleanup(self.measurement_adapter_patch.stop)
 
     def _evidence(self, ref_id: str, relative: str, kind: str = "sidecar") -> dict[str, object]:
         path = self.root / relative
@@ -140,6 +145,7 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
                     "visible_result_tokens": 300,
                     "method": "utf8-bytes-ceil-div-4",
                 },
+                "capture_adapter": "test-measurement-adapter",
                 "recorded_at": "2026-08-11T00:00:00Z",
             },
         )
@@ -258,6 +264,27 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
     def test_valid_summary(self) -> None:
         validate_payload(self.valid_payload(), root=self.root)
 
+    def test_complete_measurement_requires_registered_capture_adapter(self) -> None:
+        with patch.object(validator_module, "REGISTERED_MEASUREMENT_ADAPTERS", {}):
+            with self.assertRaises(ToolRoundSummaryValidationError):
+                validate_payload(self.valid_payload(), root=self.root)
+
+    def test_partial_observed_measurement_also_requires_trusted_capture_verifier(self) -> None:
+        payload = self.valid_payload()
+        payload["status"] = "partial"
+        payload["operations"][0]["status"] = "partial"
+        payload["metrics"]["partial_results"] = 1
+        with patch.object(validator_module, "REGISTERED_MEASUREMENT_ADAPTERS", {}):
+            with self.assertRaises(ToolRoundSummaryValidationError):
+                validate_payload(payload, root=self.root)
+
+    def test_adapter_name_without_callable_verifier_is_not_trusted(self) -> None:
+        with patch.object(
+            validator_module, "REGISTERED_MEASUREMENT_ADAPTERS", {"test-measurement-adapter": "registered"}
+        ):
+            with self.assertRaises(ToolRoundSummaryValidationError):
+                validate_payload(self.valid_payload(), root=self.root)
+
     def test_parallel_requires_authoritative_preflight(self) -> None:
         payload = self._parallel_payload()
         payload["preflight"] = {**payload["preflight"], "evidence_ref": None}
@@ -340,7 +367,7 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
         payload = self._parallel_payload()
         payload["operations"][0]["tool_call_id"] = "call:changed"
         payload["operations"][1]["parent_tool_call_id"] = "call:changed"
-        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", frozenset({"test-preflight-adapter"})):
+        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", {"test-preflight-adapter": lambda context: True}):
             with self.assertRaises(ToolRoundSummaryValidationError):
                 validate_payload(payload, root=self.root)
 
@@ -366,7 +393,7 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
         sidecar["authority"]["sha256"] = _sha256(external_authority)
         _write_json(sidecar_path, sidecar)
         self._ref(payload, "ev-preflight")["sha256"] = _sha256(sidecar_path)
-        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", frozenset({"test-preflight-adapter"})):
+        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", {"test-preflight-adapter": lambda context: True}):
             with self.assertRaises(ToolRoundSummaryValidationError):
                 validate_payload(payload, root=self.root)
 
@@ -388,7 +415,7 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
         sidecar["scope"]["scope_ref"] = "/outside"
         _write_json(sidecar_path, sidecar)
         self._ref(payload, "ev-preflight")["sha256"] = _sha256(sidecar_path)
-        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", frozenset({"test-preflight-adapter"})):
+        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", {"test-preflight-adapter": lambda context: True}):
             with self.assertRaises(ToolRoundSummaryValidationError):
                 validate_payload(payload, root=self.root)
 
@@ -399,7 +426,7 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
 
     def test_registered_preflight_adapter_validates_bound_parallel_payload(self) -> None:
         payload = self._parallel_payload()
-        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", frozenset({"test-preflight-adapter"})):
+        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", {"test-preflight-adapter": lambda context: True}):
             validate_payload(payload, root=self.root)
 
     def test_project_scope_parallelization_is_blocked_in_v1(self) -> None:
@@ -518,7 +545,7 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
         payload["external_boundaries"] = [
             {"boundary": "functions.exec", "observed": True, "reason": "trusted provider telemetry is bound"}
         ]
-        with patch.object(validator_module, "REGISTERED_OBSERVED_BOUNDARIES", frozenset({"functions.exec"})):
+        with patch.object(validator_module, "REGISTERED_OBSERVED_BOUNDARIES", {"functions.exec": lambda context: True}):
             validate_payload(payload, root=self.root)
 
     def test_complete_summary_cannot_have_continuation(self) -> None:
@@ -785,7 +812,7 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
         preflight["operation_manifest_sha256"] = operation_manifest_hash(payload["operations"])
         _write_json(preflight_path, preflight)
         self._ref(payload, "ev-preflight")["sha256"] = _sha256(preflight_path)
-        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", frozenset({"test-preflight-adapter"})):
+        with patch.object(validator_module, "REGISTERED_PREFLIGHT_ADAPTERS", {"test-preflight-adapter": lambda context: True}):
             with self.assertRaises(ToolRoundSummaryValidationError):
                 validate_payload(payload, root=self.root)
 
@@ -1087,7 +1114,7 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
 
     def test_producer_accounts_for_background_operations(self) -> None:
         payload = self._background_payload()
-        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", frozenset({"fastctx"})):
+        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", {"fastctx": lambda context: True}):
             summary = build(self._ledger(payload), self.root)
         self.assertEqual(1, summary["metrics"]["background_calls"])
         self.assertEqual(1, summary["metrics"]["sequential_calls"])
@@ -1107,24 +1134,66 @@ class ModelVisibleToolRoundSummaryValidationTests(unittest.TestCase):
 
     def test_registered_background_lifecycle_can_validate(self) -> None:
         payload = self._background_payload()
-        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", frozenset({"fastctx"})):
+        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", {"fastctx": lambda context: True}):
             validate_payload(payload, root=self.root)
+
+    def test_timed_out_running_background_job_is_failed_and_valid(self) -> None:
+        payload = self._background_payload()
+        operation = payload["operations"][1]
+        operation["status"] = "failed"
+        payload["status"] = "failed"
+        payload["metrics"]["failed_calls"] = 1
+        payload["errors"] = [{
+            "code": "timeout",
+            "family": "timeout",
+            "severity": "error",
+            "message": "background job exceeded deadline",
+            "operation_id": operation["operation_id"],
+        }]
+        lifecycle = operation["background_lifecycle"]
+        lifecycle["terminal_state"] = "running"
+        lifecycle["exit_code"] = None
+        lifecycle["timed_out"] = True
+        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", {"fastctx": lambda context: True}):
+            validate_payload(payload, root=self.root)
+
+    def test_timed_out_background_job_requires_running_state(self) -> None:
+        payload = self._background_payload()
+        lifecycle = payload["operations"][1]["background_lifecycle"]
+        lifecycle["timed_out"] = True
+        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", {"fastctx": lambda context: True}):
+            with self.assertRaises(ToolRoundSummaryValidationError):
+                validate_payload(payload, root=self.root)
 
     def test_background_lifecycle_binds_exit_and_log_range(self) -> None:
         payload = self._background_payload()
         lifecycle = payload["operations"][1]["background_lifecycle"]
         lifecycle["exit_code"] = 1
-        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", frozenset({"fastctx"})):
+        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", {"fastctx": lambda context: True}):
             with self.assertRaises(ToolRoundSummaryValidationError):
                 validate_payload(payload, root=self.root)
         payload = self._background_payload()
         payload["operations"][1]["background_lifecycle"]["log_end"] += 1
-        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", frozenset({"fastctx"})):
+        with patch.object(validator_module, "REGISTERED_BACKGROUND_ADAPTERS", {"fastctx": lambda context: True}):
             with self.assertRaises(ToolRoundSummaryValidationError):
                 validate_payload(payload, root=self.root)
 
     def test_cli_does_not_disclose_absolute_output_path(self) -> None:
         ledger = self._ledger(self.valid_payload())
+        ledger["operations"][0]["status"] = "partial"
+        ledger["measurement"] = {
+            "rounds": "unknown",
+            "tokens": "unknown",
+            "rounds_evidence_ref": None,
+            "tokens_evidence_ref": None,
+        }
+        ledger["round_events"] = []
+        for operation in ledger["operations"]:
+            operation["round_id"] = None
+        ledger["external_boundaries"] = [
+            {"boundary": "codex-service", "observed": False, "reason": "outer round telemetry unavailable"},
+            {"boundary": "token-accounting", "observed": False, "reason": "token accounting unavailable"},
+        ]
         input_path = self.root / "ledger.json"
         output_path = self.root / "logs/summary.json"
         _write_json(input_path, ledger)
