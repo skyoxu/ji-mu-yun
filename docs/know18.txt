@@ -1,0 +1,414 @@
+请再次对
+execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md
+做一次 requirements-only 增量补丁。
+
+本次只修改 8-10 requirements，不实现代码、不创建 Skill、不运行 VDD、不修改 lifecycle 状态。
+
+本次补丁目标
+
+将 workflow.md Chapter 5: Conditional Semantics Stabilization 中经过实践验证的核心方法，抽象并吸收到 vdd-conformance-exact-cover 的执行设计中。
+
+不要复制 Chapter 5 的游戏、Taskmaster、tasks_back/tasks_gameplay、PowerShell、本地路径等业务实现。
+
+只吸收以下通用思想：
+
+deterministic-first；
+conditional semantic escalation；
+input fingerprint / safe reuse；
+failure-family classification；
+bounded retry / stop-loss；
+shard / hotspot / quarantine；
+semantic extraction instability detection；
+jitter / consensus 仅用于语义不稳定诊断；
+不因 timeout 而掩盖真实 coverage failure；
+大型输入的增量重验而非无脑全量重跑。
+1. 增加“Adaptive Semantic Stabilization”原则
+
+在 Exact-cover workflow 中增加一个明确原则：
+
+Exact-cover 不是固定执行一串昂贵 LLM review。
+
+默认顺序必须是：
+
+cheap deterministic validation
+→ obligation extraction only when needed
+→ deterministic canonicalization
+→ deterministic exact-cover
+→ semantic review only for unresolved semantic ambiguity
+
+必须规定：
+
+schema/hash/path/ID/set equality/orphan/duplicate/disposition 等机器可判定问题必须先处理；
+deterministic failure 存在时不得通过增加 LLM 次数、timeout、reasoning effort 或 Bootstrap review 来“绕过去”；
+semantic capability 只能处理机器不能决定的语义问题；
+Bootstrap 仍只处理真正的 requirement semantic ambiguity。
+2. 增加 typed failure taxonomy
+
+Exact-cover 不应只输出笼统 blocked。
+
+在不改变顶层结果：
+
+blocked
+conformant
+requirement_semantic_review_required
+
+的前提下，为 blocked/diagnostics 增加稳定 failure family，例如：
+
+manifest_invalid
+source_drift
+authority_role_drift
+schema_error
+deterministic_coverage_gap
+obligation_extraction_invalid
+obligation_extraction_unstable
+semantic_ambiguity
+semantic_conflict
+timeout
+transport_failure
+validator_failure
+artifact_integrity_failure
+
+要求：
+
+family 必须由确定性规则优先分类；
+raw exception/message 只能是 detail，不能替代 family；
+downstream recovery 根据 family 决定下一步；
+不允许把所有失败归类为 generic LLM failure。
+3. 增加 stop-loss / retry policy
+
+明确以下不变量：
+
+不允许重试的情况
+
+以下问题默认 不得通过重复 LLM 调用解决：
+
+missing normative source；
+manifest mismatch；
+hash drift；
+schema failure；
+unknown IDs；
+orphan acceptance；
+hard uncovered obligation；
+invalid disposition；
+deterministic set mismatch。
+
+应直接产生结构化 repair input。
+
+可以 bounded retry 的情况
+
+只有：
+
+timeout；
+transport failure；
+malformed model output；
+明确的 semantic extraction instability；
+
+才允许有限重试。
+
+必须：
+
+有最大 attempt 数；
+记录 attempt identity；
+每次 retry 不能无限扩大上下文；
+连续同 family 失败达到阈值后 stop-loss；
+禁止无限“再试一次”。
+4. 增加 input fingerprint 和 safe reuse
+
+Exact-cover 的昂贵 semantic/extraction 阶段应允许安全复用，但只能在完整 identity 一致时。
+
+定义或要求一个稳定 fingerprint，至少绑定：
+
+source-freeze manifest hash；
+requirements manifest hash；
+validator/code fingerprint；
+obligation extraction prompt/schema version；
+relevant policy/profile version；
+applicable source shard identity。
+
+只有 fingerprint 完全一致时，才允许复用前一次成功 extraction/result。
+
+以下任一变化必须使旧结果 stale：
+
+source content；
+source role；
+requirements；
+validator；
+extraction schema；
+semantic policy；
+authoritative companion set。
+
+Safe reuse 只能节省重新计算成本，不能成为 authorization authority。
+
+5. 增加大型 Spec Package 的 shard / hotspot 模型
+
+对大型 Canonical Spec Package，不要求每次 semantic extraction 都把全部 source 塞入一个 LLM context。
+
+允许按稳定 source/obligation boundaries 做 shard。
+
+每个 shard 必须：
+
+绑定 source manifest hash；
+有稳定 shard identity；
+记录 source ranges/paths；
+独立产出 hash-bound result；
+最终由 deterministic aggregator 合并。
+
+必须支持：
+
+clean shard
+hotspot shard
+quarantined shard
+
+规则：
+
+已证明 clean 且 fingerprint 未变化的 shard 可安全复用；
+只有发生变化或失败的 hotspot shard 需要重跑；
+单个异常 shard 不应强迫所有稳定 shard 重付 semantic 成本；
+quarantined shard 不得被静默排除于最终 exact-cover universe；
+最终 conformant 仍要求所有 active normative universe 被覆盖。
+6. 吸收 Chapter 5 的 semantic instability / jitter 思想，但限制 authority
+
+当 obligation extraction 在相同 frozen input 上出现明显不稳定，例如：
+
+多次运行产生不同 obligation 数量；
+obligation boundary 明显漂移；
+同一个 source claim 在 active / ignored 之间抖动；
+stable mapping 无法形成；
+
+可以进入：
+
+obligation_extraction_unstable
+
+状态。
+
+此时允许进行小规模 bounded jitter/consensus diagnostics。
+
+但必须明确：
+
+Jitter/majority vote 不能决定 normative truth。
+
+它只能用于判断：
+
+extraction 是否稳定；
+哪些 source region 是 hotspot；
+是否应转入 semantic review；
+是否应该要求 VDD/Spec 上游进一步明确。
+
+禁止：
+
+3 次里 2 次说 covered
+→ therefore conformant
+
+conformant 仍必须来自 deterministic exact-cover proof。
+
+7. 增加 semantic escalation 的成本控制
+
+明确：
+
+deterministic gap
+→ VDD repair
+
+不得进入 Bootstrap。
+
+只有：
+
+deterministic structure valid
++ source binding valid
++ mapping structurally complete
++ remaining question is genuinely semantic
+
+才能输出：
+
+requirement_semantic_review_required
+
+例如：
+
+requirement 是否弱化原 obligation；
+两种表述是否真正等价；
+conflict 是否真实；
+applicability 是否存在无法机器判断的歧义。
+
+这时才 handoff：
+
+bootstrap-upstream-plan
+
+不要引入新的：
+
+LLM align stage；
+LLM coverage reviewer；
+LLM semantic gate；
+LLM refs repair；
+
+形成多层重复 reviewer 链。
+
+新体系原则应是：
+
+能 deterministic 的全部 deterministic；只保留一个明确的 semantic exception lane。
+
+8. 增加 failure-family-driven recommended action
+
+compact run artifact 应能给 recovery consumer 一个 typed recommended action，例如：
+
+repair_manifest
+repair_requirements
+rerun_changed_shards
+retry_transport
+semantic_review
+inspect_validator
+restart_from_source_freeze
+
+但必须：
+
+recommendation 不是 authorization；
+authorizes=[] 保持不变；
+recommendation 必须由 failure family + current evidence deterministic 派生；
+prose explanation 不能覆盖 typed result。
+9. 强化 bounded-context 与增量恢复
+
+将现有 recovery 要求补充为：
+
+主 Agent 不接收所有 shard raw output；
+只接收 counts、family、affected IDs、hashes、artifact refs、recommended action；
+full source/extraction/matrix 留在 artifact；
+restart 时从 manifest + current shard states 重建；
+不依赖旧 Codex conversation；
+clean unchanged shard 不需要重新进入 LLM；
+stale shard 必须强制重新验证。
+10. 增加相应 Requirement IDs
+
+禁止修改、重编号、复用已有 VCEC-001 ~ VCEC-025。
+
+从后面继续追加，例如：
+
+VCEC-026 deterministic-first semantic escalation
+VCEC-027 typed failure families
+VCEC-028 bounded retry / stop-loss
+VCEC-029 input fingerprint and safe reuse
+VCEC-030 shard/hotspot/quarantine
+VCEC-031 semantic extraction instability
+VCEC-032 jitter is diagnostic, not authority
+VCEC-033 semantic escalation cost boundary
+VCEC-034 failure-family recommended action
+VCEC-035 incremental recovery / unchanged-shard reuse
+
+最终 ID 数量可根据实际拆分调整，但：
+
+只能 append；
+不得改变已有 ID 语义；
+每个新 requirement 至少一个 falsifiable acceptance。
+11. 增加 Acceptance / negative fixtures
+
+至少加入以下可证伪测试：
+
+存在 hard uncovered obligation 时，即使 semantic LLM 连续返回 PASS，也不得 conformant。
+manifest mismatch 时不得启动 semantic review。
+timeout 可以 bounded retry，但达到最大次数必须停止。
+schema/hash/coverage deterministic failure 不得因为提高 timeout 而重试。
+identical fingerprint 可复用 prior successful extraction。
+source 或 validator hash 改变后 prior reuse 必须 stale。
+100 个 source shard 中只改 1 个，只需重新验证受影响 shard，但最终 aggregate 必须重新计算。
+quarantined shard 存在时不得产生 conformant。
+相同 frozen input 多轮 obligation extraction 明显不同，应产生 instability/hotspot，而不是 majority-pass。
+2/3 LLM 认为 covered、但 deterministic mapping 缺失时必须 blocked。
+deterministic proof 完整且无 semantic ambiguity 时不得调用 Bootstrap。
+只有真正 semantic ambiguity 才允许产生 requirement_semantic_review_required。
+failure family 必须映射到稳定 typed recommended action。
+restart 后 clean unchanged shard 可以复用，但 stale shard 不可复用。
+12. 不得引入的 Chapter 5 legacy 设计
+
+明确写进 non-goal 或 implementation guidance：
+
+不得因为参考 Chapter 5 而引入：
+
+Taskmaster triplet；
+tasks_back/tasks_gameplay；
+游戏领域 taxonomy；
+Chapter 5 script names；
+Chapter 5 的多层 LLM：
+extract → align → coverage → semantic_gate → refs
+基于多数投票直接宣布 requirement correctness；
+独立于 VDD source-freeze 的第二套 source discovery；
+自动 promotion semantic baseline；
+自动 Bootstrap invocation。
+
+Chapter 5 只作为 execution-governance inspiration，不是新的 runtime dependency。
+
+13. 更新最终架构语义
+
+建议最终流程表达为：
+
+Canonical Spec Package
+        ↓
+VDD source-freeze
+        ↓
+VDD create / repair
+        ↓
+Exact-cover
+        ↓
+deterministic preflight
+        │
+        ├─ deterministic failure
+        │      ↓
+        │ failure family
+        │      ↓
+        │ VDD repair / source-freeze repair
+        │
+        ↓
+obligation extraction
+        │
+        ├─ stable → canonicalization
+        │
+        └─ unstable
+               ↓
+         bounded jitter diagnostics
+               ↓
+         hotspot / semantic ambiguity
+
+canonicalization
+        ↓
+deterministic exact-cover
+        │
+        ├─ blocked
+        │
+        ├─ requirement_semantic_review_required
+        │       ↓
+        │ Bootstrap bootstrap-upstream-plan
+        │       ↓
+        │ VDD repair
+        │       ↓
+        │ exact-cover rerun
+        │
+        └─ conformant
+                ↓
+       existing implementation
+       authorization prerequisite
+
+核心原则必须明确写出：
+
+Chapter 5 的价值在于如何治理不稳定的 semantic computation；Exact-cover 的 authority 仍来自 frozen source universe 与 deterministic proof。
+
+完成后自检
+
+修改完成后只做 requirements-level review，并确认：
+
+没有削弱已有 VCEC-001~025；
+没有把 Chapter 5 的 Taskmaster/Game 实现搬进新 Skill；
+deterministic failure 永远优先于 semantic escalation；
+jitter/consensus 不拥有 PASS authority；
+semantic review 仍只有真正 ambiguity 才进入 Bootstrap；
+retry 有明确 stop-loss；
+reuse 有完整 fingerprint 和 stale semantics；
+shard/quarantine 不允许缩减 authority universe；
+大型输入可以增量重验；
+所有新增 requirement 都有 falsifiable acceptance。
+
+最后只输出：
+
+修改了哪些章节；
+新增的 VCEC-* / VCEC-A*；
+从 Chapter 5 吸收了哪些原则；
+明确没有吸收哪些 legacy 实现；
+是否发现和现有 8-10 requirement 的冲突；
+remaining open questions。
+
+不要开始实现代码。
