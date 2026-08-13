@@ -1,0 +1,214 @@
+我检查了最新 main，最新提交是 52123e21... / Repair VDD exact-cover execution closure。
+
+这一轮把上一轮的问题基本都按正确方向收掉了，但我仍然不建议进入 implementation。
+
+当前判断：
+
+P0：3 个
+P1：2 个
+P2：0 个
+
+已真正修好的
+
+这些现在可以关闭：
+
+registry 已只有一个 Round 3 terminal-full；
+terminal-full 已去掉 implementation-complete lifecycle 前置，不再循环依赖；
+RED/GREEN command 已分开，所有 command ID 都注册；
+implementation commands 在实现证据不存在时确实 fail closed，而不是提前假 PASS；
+Round 3 有 current callsite inventory；
+closure 已绑定 finding、predecessor、inventory hashes；
+controlled composition 现在真的执行了 producer 和 consumer，并留下真实 execution output receipt。
+
+所以 Round 3 不是形式修复。
+
+P0-1：implementation-evidence.v1.json 现在可以“自报 PASS”
+
+这是目前最关键的问题。
+
+implementation-command.py 不会运行真实 validator/test。它只读取未来的：
+
+implementation-evidence.v1.json
+
+然后检查：
+
+status == implementation-ready
+implemented_commands 包含 command
+commands[command].status == passed
+acceptance_ids 非空
+validation_reference 非空
+
+之后直接返回 ready。
+
+但它没有：
+
+执行 validation_reference；
+hash/revalidate validation artifact；
+检查 production files；
+检查 validator identity；
+检查 receipt 是受控命令真实产生；
+重新计算 acceptance predicate。
+
+因此未来只要手写一个：
+
+{
+  "status": "implementation-ready",
+  "implemented_commands": ["exact-cover"],
+  "commands": {
+    "exact-cover": {
+      "status": "passed",
+      "acceptance_ids": ["VCEC-A01"],
+      "validation_reference": "anything"
+    }
+  }
+}
+
+这一 command 就能变绿。
+
+这与整个 Exact-cover 的原则冲突：
+
+prose / boolean / caller assertion 不能替代 deterministic proof。
+
+必须让 command 自己执行验证，或者验证 hash-bound controlled-command receipt，而不是相信 evidence 声称自己 passed。
+
+P0-2：terminal-full 只强制 4 个 commands，不能证明 S0~S5 完成
+
+terminal 当前硬编码：
+
+required = {
+    "vdd-source-freeze",
+    "exact-cover",
+    "semantic-handoff",
+    "authorization-preflight"
+}
+
+这漏掉了：
+
+bmad-spec regression
+exact-cover negatives
+retry taxonomy
+fingerprint/shard
+recovery/context
+all negative variants
+legacy/composition-negative
+S5 dogfood
+
+但 execution contract 明明有：
+
+S0, S1, S2, S3a, S3b, S3c, S3d, S4, S5。
+
+所以理论上：
+
+S3b 没实现
+S3c 没实现
+S3d 没实现
+所有 negative fixtures 没实现
+
+terminal 仍可能 PASS。
+
+正确做法是 terminal 从 implementation-contract.v1.json 确定性推导所有 slice 的 RED/GREEN command universe，不能再手写四个名字。
+
+P0-3：S5 的 composition 验证的是错误的 composition
+
+这是非常明确的 semantic mismatch。
+
+Requirement mapping 中：
+
+VCEC-024 → A25/A26 → S5 → composition
+
+而 A25/A26 要求的其实是：
+
+Canonical Package
+→ VDD producer/create
+→ exact-cover
+→ optional semantic review
+→ VDD repair
+→ exact-cover rerun
+→ authorization-preflight
+
+真实 dogfood。
+
+但现在 registry 的 composition 实际运行：
+
+round-3/composition.py。
+
+这个脚本运行的是：
+
+prepare_knowledge_context.py
+→ vdd_knowledge_preflight.evaluate_preflight()
+
+也就是 knowledge-context producer/consumer composition。
+
+这个 composition 对修 Round 3 的 stale-catalog/control-plane 问题是有价值的，但它不是 VCEC-A25/A26 的 exact-cover dogfood composition。
+
+应该拆名：
+
+repair-knowledge-composition
+
+用于证明 Round 3 repair。
+
+另设：
+
+exact-cover-dogfood
+
+作为 S5 GREEN。
+
+P1-1：controlled composition 没走真实 consumer CLI boundary
+
+vdd_knowledge_preflight.py 的真实 CLI main() 会先执行：
+
+require_ready_skill_input(...)
+
+验证 skill-input receipt，然后再产生绑定结果。
+
+但 composition.py 只是 import 它，然后直接调用：
+
+evaluate_preflight(...)
+
+因此 composition 虽然确实执行了 consumer logic，却绕过了真实 entry point 的 skill-input gate。
+
+对 repair composition 来说建议直接 subprocess 调真实 CLI，并传真实 receipt。
+
+P1-2：Round 3 composition receipt 会被后续 terminal 覆写
+
+composition.py 每次运行都会新建：
+
+composition-runs/run-NNN/
+
+这一点很好。
+
+但默认 receipt 始终写：
+
+repair/round-3/composition-receipt.v1.json
+
+而 terminal-full 将来还会再次执行 composition.py。
+
+因此已经属于 Round 3 closure 的 receipt 会在 implementation terminal replay 时被覆写，而 closure 本身没有绑定 composition_receipt_sha256。
+
+建议：
+
+repair/round-3/composition-runs/run-NNN/receipt.json
+
+append-only 保存每次 receipt；
+
+Round 3 closure 固定绑定当时那一个 receipt hash。
+
+未来 implementation terminal 使用新的 run，不修改历史 repair evidence。
+
+现在是否可以 implementation？
+
+还不行。
+
+不过已经非常接近了，而且下一轮不应该再动 authority、requirements、slice 设计。
+
+只需要再做一次很窄的 execution-proof repair：
+
+implementation-command.py 不信任 self-reported status=passed；必须执行或重验 hash-bound controlled evidence。
+terminal 从 implementation-contract 自动推导全部 RED/GREEN command universe。
+把 repair knowledge composition 与 S5 exact-cover dogfood 分离。
+knowledge composition 走真实 consumer CLI + skill-input receipt。
+composition receipt append-only，并由 repair closure 固定 hash。
+
+这 5 个收掉以后，我认为就可以结束人工自举审计，给出：
+
+manual exact-cover = conformant → implementation authorization → Quick Dev implementation。

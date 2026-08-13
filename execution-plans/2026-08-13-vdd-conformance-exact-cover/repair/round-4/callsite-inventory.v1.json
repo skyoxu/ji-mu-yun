@@ -1,0 +1,17 @@
+{
+  "schema_version": "vdd-repair-callsite-inventory.v1",
+  "round": 4,
+  "source_roots": ["execution-plans/2026-08-13-vdd-conformance-exact-cover"],
+  "matches": [
+    {"path": "command-registry.v1.json", "context": "all registered implementation, repair, dogfood, and terminal commands", "disposition": "changed"},
+    {"path": "implementation-contract.v1.json", "context": "complete RED/GREEN command universe", "disposition": "changed"},
+    {"path": "repair/round-4/implementation-command.py", "context": "receipt execution and artifact hash verifier", "disposition": "changed"},
+    {"path": "repair/round-4/terminal-full.py", "context": "contract-derived terminal gate", "disposition": "changed"},
+    {"path": "repair/round-4/repair-knowledge-composition.py", "context": "real CLI repair composition", "disposition": "changed"},
+    {"path": "repair/round-4/exact-cover-dogfood.py", "context": "S5 dogfood entry point", "disposition": "changed"},
+    {"path": "repair/round-1/requirements-acceptance-slice-command.v1.json", "context": "S1/S5 command semantic mapping", "disposition": "changed"}
+  ],
+  "excluded_siblings": [],
+  "inventory_hash": "sha256:b6babe46c17d0a64a48323186c066d0a339c3170b6e6a29ce45a723b387460da",
+  "authorizes": []
+}

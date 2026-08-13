@@ -1,0 +1,37 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:45e6ce37ffdb25929f6c51d5662f5e37bbad09bf2c1f95186f94bef90132e9c7",
+  "sections": [
+    {
+      "title": "Objective and authority",
+      "content": "Plan the vdd-conformance-exact-cover capability as a deterministic, read-only consumer proving sound-and-complete coverage between a VDD-frozen Canonical Spec Package and execution-plan requirements. bmad-spec owns the package descriptor and external selection registry; VDD owns source freeze, create/repair, draft, and plan-ready; the maintainer authorization adapter alone owns implementation authorization."
+    },
+    {
+      "title": "Required delivery order",
+      "content": "First upgrade bmad-spec create/refresh/validation to emit the typed canonical-spec-package.v1 descriptor and atomically publish a content-addressed selection record plus current pointer. Then add minimal VDD source-freeze production and repair-input consumption, implement exact-cover against the same frozen identity, and finally add current-receipt preflight to the existing authorization boundary."
+    },
+    {
+      "title": "Canonical contracts",
+      "content": "Use repository-canonical-json.v1, explicit domain-separated hash envelopes, artifact-specific self-hash projections, repository-relative POSIX paths, deterministic UTF-8 ordering, raw-byte file hashes, and independently reconstructable manifests. Preserve the exact newline-delimited vcec-shard-v1 identity as the sole non-JSON hash exception. Unknown schemas, duplicate keys, invalid paths, role drift, omissions, stale hashes, or caller-reduced authority universes fail closed."
+    },
+    {
+      "title": "Coverage and semantic boundaries",
+      "content": "Deterministically validate schema, paths, identities, roles, sets, mappings, dispositions, and bidirectional obligation-requirement-acceptance coverage before semantic work. LLM output may propose anchored obligation candidates or explain ambiguity but cannot assign canonical identity, decide coverage, or produce PASS. Only a structurally complete, source-bound ambiguity may yield requirement_semantic_review_required for explicitly authorized bootstrap-upstream-plan review."
+    },
+    {
+      "title": "Fingerprints, policy, and bounded output",
+      "content": "Bind each run to the complete aggregate fingerprint and each reusable shard to the exact shard-level fingerprint. Global drift invalidates aggregate results and receipts; relevant shard drift invalidates only affected extraction, while unchanged reuse requires current-manifest proof. Runtime retry, partition, quarantine, and presentation values must come from an approved versioned registry profile. The sole model-visible hard gate is 12000 exact serialized UTF-8 bytes; token count is telemetry only."
+    },
+    {
+      "title": "Recovery and authority isolation",
+      "content": "Use append-only recovery-checkpoint.v1 lineages with explicit branch authorization, exact sequence progression, immutable validator and policy identities, complete content-addressed artifact references, stage-tagged bindings, and typed live blockers. Resume selects the greatest validated sequence on the authorized lineage and re-hashes all bindings. Exact-cover outputs diagnostics, handoffs, checkpoints, and receipts with authorizes empty; it never mutates the target or publishes lifecycle, acceptance, release, or commit state."
+    },
+    {
+      "title": "Verification scope",
+      "content": "The execution plan must cover schemas and golden vectors, package and source-freeze producer-consumer composition, deterministic negative and mutation fixtures, bounded retry and stop-loss, shard reuse and quarantine, semantic handoff and explicit VDD repair, stale-evidence invalidation, authorization preflight, cross-process recovery, target-byte immutability, and at least one full create-to-rerun dogfood flow. Stable requirements VCEC-001 through VCEC-036 and acceptances VCEC-A01 through VCEC-A43 form the traceability baseline."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-13T09:59:39.970225Z"
+}

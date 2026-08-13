@@ -33,3 +33,21 @@ composition command actually executes the knowledge producer and consumer,
 writing a hash-bound receipt. Round 3 closure binds finalized findings,
 predecessor evidence, and a generated callsite inventory. Lifecycle remains
 `plan-ready` and `authorizes` remains empty.
+
+Repair round 4, sourced from `docs/know22.txt`, remains limited to execution
+proof. Implementation commands now require a controlled validator program and
+revalidated hash-bound receipt/artifact set; terminal validation derives its
+command universe from every slice RED/GREEN declaration. Repair knowledge
+composition is separate from the future S5 exact-cover dogfood flow and uses
+the real consumer CLI boundary with a current skill-input receipt. The repair
+receipt is append-only and closure binds the successful run receipt hash.
+Lifecycle remains `plan-ready` and no authorization is granted.
+
+Repair round 4, sourced from `docs/know22.txt`, remains limited to execution
+proof. Implementation commands now require a controlled validator program and
+revalidated hash-bound receipt/artifact set; terminal validation derives its
+command universe from every slice RED/GREEN declaration. Repair knowledge
+composition is separate from the future S5 exact-cover dogfood flow and uses
+the real consumer CLI boundary with a current skill-input receipt. The repair
+receipt is append-only and closure binds the successful run receipt hash.
+Lifecycle remains `plan-ready` and no authorization is granted.

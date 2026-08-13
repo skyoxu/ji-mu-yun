@@ -10,15 +10,15 @@
   "forbidden_changes":["PhaseA.Platform/**","runtime/phase-a/**","logs/phase-a-innernet/**","user sandbox data"],
   "slices":[
     {"id":"S0","behavior":"preserve and harden existing typed package and selection registry producer","red_command_ids":["bmad-spec-regression"],"green_command_ids":["bmad-spec-regression"],"red":"tampered descriptor or pointer rejects","green":"existing producer regression plus create-refresh-tamper fixtures pass","recovery":"restore valid pointer"},
-    {"id":"S1","behavior":"VDD source-freeze manifest producer","red_command_ids":["vdd-source-freeze-negative"],"green_command_ids":["vdd-source-freeze"],"red":"caller-reduced or drifted package rejects","green":"independent manifest recomputation passes","recovery":"restart source freeze"},
+    {"id":"S1","behavior":"VDD source-freeze manifest producer","red_command_ids":["vdd-source-freeze-negative"],"green_command_ids":["vdd-source-freeze","repair-knowledge-composition"],"red":"caller-reduced or drifted package rejects","green":"independent manifest recomputation passes","recovery":"restart source freeze"},
     {"id":"S2","behavior":"deterministic exact-cover core","red_command_ids":["exact-cover-negative"],"green_command_ids":["exact-cover"],"red":"schema/hash/set/coverage mutations block","green":"golden vectors and VCEC-A01..A12 pass","recovery":"repair deterministic input"},
     {"id":"S3a","behavior":"semantic handoff and VDD repair contract","red_command_ids":["semantic-handoff-negative"],"green_command_ids":["semantic-handoff"],"red":"stale or implicit handoff rejects","green":"VCEC-A13..A16 and A39 pass","recovery":"preserve prior requirements"},
     {"id":"S3b","behavior":"failure taxonomy and retry stop-loss","red_command_ids":["retry-taxonomy-negative"],"green_command_ids":["retry-taxonomy"],"red":"deterministic defect retries","green":"VCEC-A30..A32, A40, A42 pass","recovery":"stop at policy ceiling"},
     {"id":"S3c","behavior":"fingerprint shard reuse and instability","red_command_ids":["fingerprint-shard-negative"],"green_command_ids":["fingerprint-shard"],"red":"unsafe reuse or deleted quarantine","green":"VCEC-A33..A38 pass","recovery":"rerun affected shards"},
     {"id":"S3d","behavior":"recovery checkpoints and bounded context","red_command_ids":["recovery-context-negative"],"green_command_ids":["recovery-context"],"red":"stale lineage or overflow resumes","green":"VCEC-A22..A24 and A41 pass","recovery":"authorized checkpoint only"},
     {"id":"S4","behavior":"authorization receipt preflight","red_command_ids":["authorization-preflight-negative"],"green_command_ids":["authorization-preflight"],"red":"missing or stale receipt rejects","green":"current receipt composition passes","recovery":"leave lifecycle unchanged"},
-    {"id":"S5","behavior":"terminal dogfood replay","red_command_ids":["composition-negative"],"green_command_ids":["composition"],"red":"legacy schema or target mutation blocks","green":"create-review-repair-rerun passes","recovery":"new requirements identity"}
+    {"id":"S5","behavior":"terminal dogfood replay","red_command_ids":["composition-negative"],"green_command_ids":["exact-cover-dogfood"],"red":"legacy schema or target mutation blocks","green":"create-review-repair-rerun passes","recovery":"new requirements identity"}
   ],
-  "terminal_validation":"python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-3/terminal-full.py",
+  "terminal_validation":"python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-4/terminal-full.py",
   "authorizes":[]
 }

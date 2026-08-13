@@ -1,0 +1,29 @@
+{
+  "schema_version": "vdd-repair-closure.v1",
+  "plan_id": "vdd-conformance-exact-cover",
+  "round": 4,
+  "predecessor_round": 3,
+  "finding_source": "docs/know22.txt",
+  "finding_source_sha256": "sha256:eaa844cfb4d2a1921d6542cb1b23f1327b71be7799cd89ba7761c93183539496",
+  "finalized_findings_sha256": "sha256:313e627bc77b2932cfdeea22546e1900edb51af2b539ff28ac5d55b03e74f30b",
+  "predecessor_closure_sha256": "sha256:5042323d8304688bc5d4e30345b6c66395b364a7d3db6107605778e3f0413b06",
+  "composition_receipt": "repair/round-4/composition-runs/run-003/receipt.json",
+  "composition_receipt_sha256": "sha256:c2e2b5cfff389ed754d66702fdc213aadfd57a4155fdebcf48f17c27da5392cc",
+  "callsite_inventory": "repair/round-4/callsite-inventory.v1.json",
+  "scope": [
+    "repair/round-4/findings.md",
+    "repair/round-4/repair-closure.json",
+    "repair/round-4/implementation-command.py",
+    "repair/round-4/terminal-full.py",
+    "repair/round-4/repair-knowledge-composition.py",
+    "repair/round-4/exact-cover-dogfood.py",
+    "repair/round-4/callsite-inventory.v1.json",
+    "repair/round-4/composition-runs/run-003/receipt.json",
+    "command-registry.v1.json",
+    "implementation-contract.v1.json",
+    "repair/round-1/requirements-acceptance-slice-command.v1.json",
+    "docs/know22.txt"
+  ],
+  "status": "repair-validated",
+  "authorizes": []
+}

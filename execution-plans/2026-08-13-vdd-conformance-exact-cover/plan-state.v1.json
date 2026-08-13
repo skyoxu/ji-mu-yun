@@ -3,13 +3,13 @@
   "plan_id": "vdd-conformance-exact-cover",
   "profile": "self-hosted",
   "state": "plan-ready",
-  "repair_round": 3,
+  "repair_round": 4,
   "repair_status": "repair-validated",
   "state_owner": "vdd",
   "resume": {
-    "next_action": "Implement S0 through S5 in dependency order, then run repair/round-3/terminal-full.py.",
-    "last_completed_step": "repair-round-3-validation-written",
-    "recovery_instruction": "Revalidate Round 3 closure, command entry points, composition receipt, knowledge freshness, and current pointer hashes before continuing."
+    "next_action": "Implement S0 through S5 in dependency order, then run repair/round-4/terminal-full.py.",
+    "last_completed_step": "repair-round-4-validation-written",
+    "recovery_instruction": "Revalidate Round 4 closure, receipt hashes, full command universe, knowledge freshness, and current pointer hashes before continuing."
   },
   "slices": [
     {"id":"S0","status":"pending","depends_on":[]},
