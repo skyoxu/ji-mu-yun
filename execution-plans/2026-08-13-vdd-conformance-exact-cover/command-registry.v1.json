@@ -1,0 +1,11 @@
+{
+  "schema_version":"vdd-conformance-exact-cover.command-registry.v1",
+  "plan_id":"vdd-conformance-exact-cover",
+  "commands":[
+    {"id":"skill-input","command":"python scripts/python/validate_skill_input_consumption.py --contract .agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json --require-ready execution-plans/2026-08-13-vdd-conformance-exact-cover/in/receipt.json","purpose":"Validate complete Canonical Package transport."},
+    {"id":"knowledge-preflight","command":"python .agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py --input execution-plans/2026-08-13-vdd-conformance-exact-cover/knowledge-context.v1.json --skill-input-receipt execution-plans/2026-08-13-vdd-conformance-exact-cover/in/receipt.json","purpose":"Validate VDD knowledge binding."},
+    {"id":"unit","command":"python -m unittest scripts.python.tests.test_skill_input_consumption scripts.python.tests.test_knowledge_context_validation","purpose":"Run shared contract tests."},
+    {"id":"terminal","command":"git diff --check","purpose":"Terminal hygiene check."}
+  ],
+  "authorizes":[]
+}

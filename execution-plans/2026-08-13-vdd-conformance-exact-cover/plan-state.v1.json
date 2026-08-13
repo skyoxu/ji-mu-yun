@@ -1,0 +1,23 @@
+{
+  "schema_version": "vdd.plan-state.v1",
+  "plan_id": "vdd-conformance-exact-cover",
+  "profile": "self-hosted",
+  "state": "plan-ready",
+  "state_owner": "vdd",
+  "resume": {
+    "next_action": "Implement S0 through S5 in dependency order.",
+    "last_completed_step": "authority-read-input-gate-knowledge-preflight",
+    "recovery_instruction": "Revalidate source-freeze, knowledge, and current pointer hashes before continuing."
+  },
+  "slices": [
+    {"id":"S0","status":"pending","depends_on":[]},
+    {"id":"S1","status":"pending","depends_on":["S0"]},
+    {"id":"S2","status":"pending","depends_on":["S1"]},
+    {"id":"S3","status":"pending","depends_on":["S2"]},
+    {"id":"S4","status":"pending","depends_on":["S2","S3"]},
+    {"id":"S5","status":"pending","depends_on":["S0","S1","S2","S3","S4"]}
+  ],
+  "blocking_conditions": [],
+  "authorizes": [],
+  "does_not_authorize":["implementation-authorized","implementation-complete","acceptance-passed","archived"]
+}

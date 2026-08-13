@@ -1,0 +1,6 @@
+{
+  "status": "complete",
+  "context_artifact": "C:/jimuyun/execution-plans/2026-08-13-vdd-conformance-exact-cover/in/o/skill-input-context.v1.json",
+  "semantic_decision": "C:/jimuyun/execution-plans/2026-08-13-vdd-conformance-exact-cover/in/o/semantic-decision.v1.json",
+  "source_manifest_hash": "sha256:45e6ce37ffdb25929f6c51d5662f5e37bbad09bf2c1f95186f94bef90132e9c7"
+}

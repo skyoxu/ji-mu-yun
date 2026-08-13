@@ -1,0 +1,266 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "create",
+  "request_binding": {
+    "request": {
+      "requirements": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+      "selection": "_bmad-output/specs/canonical-spec-package-selections/sha256-f6d6887ee80f686fb1cbb7b4acdff4c1a257e5762e83287996bfb77396448bdc.json",
+      "target_plan": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+      "authority": "canonical-spec-package.v1",
+      "source_role": "canonical+typed-companions+selection"
+    },
+    "consumer": "vdd-execution-plan",
+    "operation": "create",
+    "target": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+    "route_identity": "sha256:57429bf8d88e0a6f1186ff36f7743bb5b7a3a62c0fe3d74ca1d0a144bd77e79",
+    "source_roles": {
+      "requirements": [
+        "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+        "_bmad-output/specs/spec-vdd-conformance-exact-cover/authority-and-data-contracts.md",
+        "_bmad-output/specs/spec-vdd-conformance-exact-cover/execution-and-recovery.md",
+        "_bmad-output/specs/spec-vdd-conformance-exact-cover/implementation-conventions.md",
+        "_bmad-output/specs/spec-vdd-conformance-exact-cover/execution-policy.md",
+        "_bmad-output/specs/spec-vdd-conformance-exact-cover/acceptance-contract.md",
+        "_bmad-output/specs/spec-vdd-conformance-exact-cover/architecture-diagrams.md",
+        "_bmad-output/planning-artifacts/architecture/architecture-vdd-conformance-exact-cover-2026-08-13/ARCHITECTURE-SPINE.md",
+        "_bmad-output/specs/canonical-spec-package-selections/sha256-f6d6887ee80f686fb1cbb7b4acdff4c1a257e5762e83287996bfb77396448bdc.json"
+      ]
+    }
+  },
+  "request_hash": "sha256:4f50b75765adf3c9e9a613fea2a6eb6ea558d9d1122704eceff3ede765e9cea2",
+  "target": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+  "route_identity": "sha256:57429bf8d88e0a6f1186ff36f7743bb5b7a3a62c0fe3d74ca1d0a144bd77e79",
+  "repository_identity": {
+    "head": "1bb9c757985cad88c651c8b59fa815d0efcc998c",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-13T09:59:39.980498Z",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:45e6ce37ffdb25929f6c51d5662f5e37bbad09bf2c1f95186f94bef90132e9c7"
+  },
+  "child_request": {
+    "path": "child.json",
+    "sha256": "sha256:8916506f54ba9ab50d8d731d5bbc7dbc0c1ff89fad4af22cc408e26ced513b1a"
+  },
+  "sources": [
+    {
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-vdd-conformance-exact-cover-2026-08-13/ARCHITECTURE-SPINE.md",
+      "required": true,
+      "sha256_before": "sha256:adcdfcb746a6247d964122c733efccb4acfb4d5af6b10c7d2d5bb38af5130bf3",
+      "sha256_after": "sha256:adcdfcb746a6247d964122c733efccb4acfb4d5af6b10c7d2d5bb38af5130bf3",
+      "size_bytes": 27241,
+      "line_count": 181,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:adcdfcb746a6247d964122c733efccb4acfb4d5af6b10c7d2d5bb38af5130bf3",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 181
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "_bmad-output/specs/canonical-spec-package-selections/sha256-f6d6887ee80f686fb1cbb7b4acdff4c1a257e5762e83287996bfb77396448bdc.json",
+      "required": true,
+      "sha256_before": "sha256:2da070677ab3a6d2f914d264c7b2929e408eaf56b39f567f599ff51a13874236",
+      "sha256_after": "sha256:2da070677ab3a6d2f914d264c7b2929e408eaf56b39f567f599ff51a13874236",
+      "size_bytes": 1261,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:2da070677ab3a6d2f914d264c7b2929e408eaf56b39f567f599ff51a13874236",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+      "required": true,
+      "sha256_before": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+      "sha256_after": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+      "size_bytes": 7281,
+      "line_count": 81,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:1031c3ab9b10ab757182bf46e0940f7ea323db0c0ff931e9d8c190cae9eebe04",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 81
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/acceptance-contract.md",
+      "required": true,
+      "sha256_before": "sha256:70560db6e8eb229d035587ece79d52ef33db8fa11931a15fffb4721a9f1ee960",
+      "sha256_after": "sha256:70560db6e8eb229d035587ece79d52ef33db8fa11931a15fffb4721a9f1ee960",
+      "size_bytes": 15278,
+      "line_count": 120,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:70560db6e8eb229d035587ece79d52ef33db8fa11931a15fffb4721a9f1ee960",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 120
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/architecture-diagrams.md",
+      "required": true,
+      "sha256_before": "sha256:70d30dda76a187a78459bab6e7197b764624352f21e4f2c9d1a9c909234f3d43",
+      "sha256_after": "sha256:70d30dda76a187a78459bab6e7197b764624352f21e4f2c9d1a9c909234f3d43",
+      "size_bytes": 2648,
+      "line_count": 75,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:70d30dda76a187a78459bab6e7197b764624352f21e4f2c9d1a9c909234f3d43",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 75
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/authority-and-data-contracts.md",
+      "required": true,
+      "sha256_before": "sha256:5c77391e8011cf1a25d25fb5f8eac7c4b5df2383fab2dfb6b0c37085580a0d90",
+      "sha256_after": "sha256:5c77391e8011cf1a25d25fb5f8eac7c4b5df2383fab2dfb6b0c37085580a0d90",
+      "size_bytes": 7913,
+      "line_count": 77,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:5c77391e8011cf1a25d25fb5f8eac7c4b5df2383fab2dfb6b0c37085580a0d90",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 77
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/execution-and-recovery.md",
+      "required": true,
+      "sha256_before": "sha256:0efccb695970ea57cea4c7220b2d7e3591913a47b5a153ccdbd7ed2b7af1bf6a",
+      "sha256_after": "sha256:0efccb695970ea57cea4c7220b2d7e3591913a47b5a153ccdbd7ed2b7af1bf6a",
+      "size_bytes": 7329,
+      "line_count": 67,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:0efccb695970ea57cea4c7220b2d7e3591913a47b5a153ccdbd7ed2b7af1bf6a",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 67
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/execution-policy.md",
+      "required": true,
+      "sha256_before": "sha256:3ae7239610dae0a8732425f718c4fac417405fe6538bbc2e67fd0f83d4faf972",
+      "sha256_after": "sha256:3ae7239610dae0a8732425f718c4fac417405fe6538bbc2e67fd0f83d4faf972",
+      "size_bytes": 6815,
+      "line_count": 57,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3ae7239610dae0a8732425f718c4fac417405fe6538bbc2e67fd0f83d4faf972",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 57
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "_bmad-output/specs/spec-vdd-conformance-exact-cover/implementation-conventions.md",
+      "required": true,
+      "sha256_before": "sha256:f5e738337af4db5bffabc63a32d8650ad072ea14b54057fcaba58e6ddf1dad8a",
+      "sha256_after": "sha256:f5e738337af4db5bffabc63a32d8650ad072ea14b54057fcaba58e6ddf1dad8a",
+      "size_bytes": 3732,
+      "line_count": 51,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:f5e738337af4db5bffabc63a32d8650ad072ea14b54057fcaba58e6ddf1dad8a",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 51
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md",
+      "required": false,
+      "sha256_before": "sha256:d0f4d3035394a0a5c05621efd739ef1137473a3fbc72256abe57f88a244d54ec",
+      "sha256_after": "sha256:d0f4d3035394a0a5c05621efd739ef1137473a3fbc72256abe57f88a244d54ec",
+      "size_bytes": 53347,
+      "line_count": 579,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:d0f4d3035394a0a5c05621efd739ef1137473a3fbc72256abe57f88a244d54ec",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 579
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "o/semantic-decision.v1.json",
+    "sha256": "sha256:61a63d1f75870232d7e6117860fdce72a6d3134da0f7585625db810405a0bb1c"
+  },
+  "context_artifact": {
+    "path": "o/skill-input-context.v1.json",
+    "sha256": "sha256:4cdc461785a77cb2ca28d30c51380250664b685644ec5250a5689b0fd6f4e96f"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:7d3eb26edcce482226b3fecbe7f5df43d90618b305b34d7ef67cb2c2d862a66e"
+}

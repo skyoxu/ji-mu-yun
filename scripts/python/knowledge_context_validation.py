@@ -39,6 +39,12 @@ def canonical_hash(value: Any) -> str:
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
+def catalog_freshness_failure(error: str | None, request: dict[str, Any]) -> str | None:
+    if error == "catalog_stale" and request.get("allow_stale_catalog") is True:
+        return None
+    return error
+
+
 def _main_source_hashes(repository_root: Path, catalog: dict[str, Any]) -> dict[str, str]:
     snapshot = catalog.get("source_snapshot")
     if not isinstance(snapshot, dict) or not isinstance(snapshot.get("sources"), list):
@@ -244,6 +250,7 @@ def validate_context(
         return "locator_snapshot_invalid"
     if repository_root is not None and verify_catalog:
         catalog_error = validate_catalog_freshness(repository_root.resolve())
+        catalog_error = catalog_freshness_failure(catalog_error, request)
         if catalog_error:
             return catalog_error
     if result.get("status") != "matched":

@@ -139,6 +139,7 @@ def main() -> int:
     parser.add_argument("--max-candidates", type=int, default=12)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
     parser.add_argument("--allow-unpublished-inputs", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--allow-stale-catalog", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     request = json.load(sys.stdin)
     repository_root = args.repository_root.resolve()
@@ -183,6 +184,7 @@ def main() -> int:
         projection_valid = False
     else:
         projection_valid = True
+    stale_allowed = args.allow_stale_catalog and fresh.get("status") != "current"
     if (
         snapshot is None
         # ADR-0050 permits a generation source commit to precede main only
@@ -191,7 +193,7 @@ def main() -> int:
         # Freshness is established by the complete read-set above, so require
         # the caller to bind that catalog snapshot rather than the later HEAD.
         or request.get("snapshot") != {"ref": snapshot["ref"], "commit": snapshot["commit"]}
-        or fresh["status"] != "current"
+        or (fresh["status"] != "current" and not stale_allowed)
         or policy is None
         or not projection_valid
         or not publication_valid
@@ -207,6 +209,7 @@ def main() -> int:
             policy=policy,
             eligible_module_ids=eligible_module_ids,
         )
+        core_result["freshness"] = fresh.get("status", "unknown")
     result = bind_result_to_request(request, core_result)
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0

@@ -642,6 +642,14 @@ class SkillInputConsumptionTests(unittest.TestCase):
         def fake_runner(**kwargs):
             self.assertEqual("test-model", kwargs["codex_model"])
             self.assertIn("model_reasoning_effort=high", kwargs["codex_configs"])
+            self.assertIn(
+                "schema_version, source_manifest_hash, sections, truncated, omitted_items, generated_at",
+                kwargs["prompt"],
+            )
+            self.assertIn(
+                "context_artifact_hash, source_statuses, status, rationale, redaction_status",
+                kwargs["prompt"],
+            )
             output = {
                 "context": {"schema_version": "skill-input-context.v1", "source_manifest_hash": payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"},
                 "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []},

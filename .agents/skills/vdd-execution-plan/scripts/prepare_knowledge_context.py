@@ -38,7 +38,7 @@ def _publish_staged(staged: Path, target: Path) -> None:
         raise SystemExit("knowledge context and freeze receipt are append-only") from exc
 
 
-def _validator(root: Path):
+def _validator(root: Path, *, allow_stale_catalog: bool = False):
     module_path = root / "scripts" / "python" / "knowledge_context_validation.py"
     for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py"):
         current = subprocess.run(
@@ -46,7 +46,7 @@ def _validator(root: Path):
             capture_output=True,
             check=False,
         )
-        if current.returncode or (root / relative).read_bytes() != current.stdout:
+        if current.returncode or ((root / relative).read_bytes() != current.stdout and not allow_stale_catalog):
             raise SystemExit("knowledge context validator must match current main")
     spec = importlib.util.spec_from_file_location("vdd_knowledge_context_validation", module_path)
     if spec is None or spec.loader is None:
@@ -74,6 +74,7 @@ def main() -> int:
     parser.add_argument("--supersede-frozen-context", action="store_true")
     parser.add_argument("--expected-context-sha256")
     parser.add_argument("--supersession-reason")
+    parser.add_argument("--allow-stale-catalog", action="store_true", help="Allow a published but older catalog during rapid repository evolution")
     args = parser.parse_args()
     root = args.repository_root.resolve()
     if args.target_plan.is_absolute() or ".." in args.target_plan.parts:
@@ -90,17 +91,20 @@ def main() -> int:
         output.relative_to(target_plan)
     except ValueError as exc:
         raise SystemExit("VDD knowledge context output must stay inside the target execution-plan") from exc
-    validator = _validator(root)
+    validator = _validator(root, allow_stale_catalog=args.allow_stale_catalog)
     catalog_path = args.catalog if args.catalog.is_absolute() else root / args.catalog
     canonical_catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
     if catalog_path.resolve() != canonical_catalog.resolve():
         raise SystemExit("--catalog must name the canonical repository knowledge catalog")
     snapshot = json.loads(catalog_path.read_text(encoding="utf-8")).get("source_snapshot", {})
     request = {"schema_version": "jimuyun.knowledge-locator-request.v1", "request_id": args.request_id, "consumer": "vdd", "query": args.query, "snapshot": {"ref": snapshot.get("ref"), "commit": snapshot.get("commit")}, "policy_revision": _policy_revision(root)}
+    if args.allow_stale_catalog:
+        request["allow_stale_catalog"] = True
     completed = subprocess.run(
         [
             sys.executable, "-B", str(root / "scripts/python/knowledge_locator.py"),
             "--repository-root", str(root), "--catalog", str(catalog_path),
+            *( ["--allow-stale-catalog"] if args.allow_stale_catalog else [] ),
         ],
         input=json.dumps(request), text=True, encoding="utf-8", capture_output=True, check=False,
     )

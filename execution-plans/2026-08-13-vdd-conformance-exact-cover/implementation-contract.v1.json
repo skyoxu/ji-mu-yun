@@ -1,0 +1,20 @@
+{
+  "schema_version":"vdd-conformance-exact-cover.implementation-contract.v1",
+  "plan_id":"vdd-conformance-exact-cover",
+  "profile":"self-hosted",
+  "lifecycle_state":"plan-ready",
+  "authority":"_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md",
+  "selection_pointer":"_bmad-output/specs/canonical-spec-package-selections/current/SPEC-vdd-conformance-exact-cover.json",
+  "required_upstream":["bmad-spec typed descriptor","canonical-spec-package-selection.v1 producer"],
+  "forbidden_changes":["PhaseA.Platform/**","runtime/phase-a/**","logs/phase-a-innernet/**","user sandbox data"],
+  "slices":[
+    {"id":"S0","behavior":"typed package and selection registry producer","red":"tampered descriptor or pointer rejects","green":"create-refresh-tamper fixtures pass","recovery":"restore valid pointer"},
+    {"id":"S1","behavior":"VDD source-freeze manifest producer","red":"caller-reduced or drifted package rejects","green":"independent manifest recomputation passes","recovery":"restart source freeze"},
+    {"id":"S2","behavior":"deterministic exact-cover core","red":"schema/hash/set/coverage mutations block","green":"golden vectors and VCEC-A01..A12 pass","recovery":"repair deterministic input"},
+    {"id":"S3","behavior":"bounded recovery and shard reuse","red":"stale checkpoint or unstable shard blocks","green":"VCEC-A13..A42 pass","recovery":"authorized checkpoint or quarantine"},
+    {"id":"S4","behavior":"authorization receipt preflight","red":"missing or stale receipt rejects","green":"current receipt composition passes","recovery":"leave lifecycle unchanged"},
+    {"id":"S5","behavior":"terminal dogfood replay","red":"legacy schema or target mutation blocks","green":"create-review-repair-rerun passes","recovery":"new requirements identity"}
+  ],
+  "terminal_validation":"python -m unittest scripts.python.tests.test_skill_input_consumption && python -m unittest scripts.python.tests.test_knowledge_context_validation",
+  "authorizes":[]
+}

@@ -59,6 +59,19 @@ class KnowledgeContextValidationTests(unittest.TestCase):
                 validate_context(document, repository_root=Path.cwd(), verify_catalog=True),
             )
 
+    def test_vdd_explicit_stale_catalog_opt_in_is_non_blocking(self) -> None:
+        self.assertIsNone(
+            validation.catalog_freshness_failure("catalog_stale", {"allow_stale_catalog": True})
+        )
+
+    def test_stale_catalog_opt_in_does_not_bypass_invalid_publication(self) -> None:
+        self.assertEqual(
+            "catalog_publication_invalid",
+            validation.catalog_freshness_failure(
+                "catalog_publication_invalid", {"allow_stale_catalog": True}
+            ),
+        )
+
     def test_catalog_validation_fails_closed_when_publication_pointer_is_invalid(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
