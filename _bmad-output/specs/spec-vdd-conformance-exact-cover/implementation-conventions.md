@@ -36,5 +36,7 @@ VDD producer schema 由 `.agents/skills/vdd-execution-plan/references/schemas/vd
 ## Ownership Limits
 
 - 不复制 Bootstrap runner、reviewer layers、risk policy、lifecycle 或 VDD repair implementation。
+- VDD adapter 只拥有 source freeze、create/repair、`draft` 与 `plan-ready`。Mandatory receipt preflight 与 `implementation-authorized` publication 位于独立 maintainer authorization adapter。
+- Shared canonical-contract core owns package/manifests/envelopes schemas, canonical JSON/domain hashing, path containment/order, and cross-adapter golden vectors; VDD and exact-cover adapters may not fork these rules.
 - 不引入 Chapter 5 Taskmaster triplet、`tasks_back`/`tasks_gameplay`、game taxonomy、script names、PowerShell/local-path assumptions、multi-stage `extract → align → coverage → semantic_gate → refs` reviewer chain、majority-vote correctness、第二套 source discovery、automatic semantic baseline promotion 或 automatic Bootstrap invocation。
 - Chapter 5 只是 execution-governance inspiration，不是 runtime dependency。

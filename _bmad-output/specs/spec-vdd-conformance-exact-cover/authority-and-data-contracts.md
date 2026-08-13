@@ -2,7 +2,7 @@
 
 ## Authority Graph
 
-Canonical Spec Package 由 `bmad-spec` 拥有，其角色为：
+Canonical Spec Package contract 与 external selection registry 由 `bmad-spec` 拥有。Package descriptor 是唯一 root `SPEC.md` frontmatter；selection record 在 package 外以 content-addressed record + maintainer-scoped current pointer 承诺 expected descriptor hash 与完整 role graph，不证明 producer identity。其角色为：
 
 | Role | Contract |
 | --- | --- |
@@ -10,8 +10,8 @@ Canonical Spec Package 由 `bmad-spec` 拥有，其角色为：
 | `normative_companion` | Spec-authored normative companion。 |
 | `adopted_companion` | 被显式 adopt 为 normative 的上游 artifact。 |
 | `provenance` | 已 fully absorbed 的上游 source；只用于追溯，不再是平级 authority。 |
-| `repository_authority` | 适用的 AGENTS、Accepted ADR、standard 与 knowledge binding。 |
-| `unresolved_input` | Typed assumption 或 open question，不得静默转成 resolved。 |
+| `repository_authority` | 仅由 VDD source-freeze manifest 引入的适用 AGENTS、Accepted ADR、standard 与 knowledge binding。 |
+| `unresolved_input` | 仅由 VDD source-freeze manifest 引入的 typed assumption/open question；不得静默转成 resolved。 |
 
 只有 canonical、normative、adopted 与适用 repository authority 贡献 active obligations。Provenance 只保留 path、byte hash 与 package relationship，不贡献 downstream obligation。Unresolved input 在 owner 解决前必须映射到 unresolved requirement 或具名 disposition。
 
@@ -58,9 +58,9 @@ Typed `not_applicable`、`deferred`、`conflict` disposition 必须具有 reason
 
 ## Fingerprints And Shards
 
-`run_aggregate_fingerprint` 绑定完整 source manifest hash、requirements manifest hash、validator/code fingerprint、extraction prompt/schema version、policy/profile version 与 authoritative companion set。任一全局变化都使 prior aggregate、conformance result 与 receipt stale。
+All JSON identities use `repository-canonical-json.v1` and AD-3 domain-separated envelopes. `run_aggregate_fingerprint.v1` uses the exact AD-6 payload `{source_manifest_hash, requirements_manifest_hash, validator_identity, prompt_identity, policy_identity, authoritative_companions}`. Any global change makes prior aggregate, conformance result, and receipt stale.
 
-`shard_reuse_fingerprint` 绑定 shard identity、精确 source paths/ranges/byte hashes、roles/package relationships、requirements manifest hash、validator/code fingerprint、extraction prompt/schema version 与 policy/profile version。完整 source manifest hash 不是 unchanged shard 跨 run reuse 的 equality condition。
+`shard_reuse_fingerprint.v1` uses the exact AD-6 payload `{shard_identity, source_segments, roles, relationships, requirements_manifest_hash, validator_identity, prompt_identity, policy_identity}`. Complete source-manifest hash is not an equality condition for unchanged shard reuse. The exact newline-delimited `vcec-shard-v1` SHA-256 identity is the sole typed non-JSON hash exception.
 
 每个 shard artifact 记录 source manifest identity、`source_manifest_hash`、精确 source entries、result hash 与 shard reuse fingerprint。Manifest hash 建立 provenance/custody 与 current aggregate binding；current manifest 的逐字段证明决定 reuse。相关 input drift 使 affected shard stale；全局 manifest 或 companion-set drift 始终使 aggregate stale，但不自动使其他已证明 unchanged 的 shard extraction stale。
 
@@ -72,4 +72,4 @@ Shard states 为 `clean`、`hotspot`、`quarantined`。Quarantined shard 必须�
 
 Conformant receipt 绑定 current source manifest、requirements manifest、validator identity、role graph 与 run aggregate fingerprint。Receipt 只是 prerequisite；现有 authorization owner 仍独占 `implementation-authorized` 发布权，并必须拒绝 stale、missing、mismatched、non-conformant、prose、boolean 或 old-summary substitute。
 
-Schema registry、retry ceilings、shard thresholds 与 bounded-output limits 由 `execution-policy.md` 固定；schema major change invalidates prior artifacts and requires a new validator identity.
+Schema projections and canonical identities follow adopted AD-2 through AD-6. Runtime retry/shard/hotspot/quarantine/presentation values are selected only from the maintainer-owned approved registry under AD-7; schema major change invalidates prior artifacts and requires a new validator identity.

@@ -3,7 +3,7 @@
 ## Canonical Flow
 
 ```text
-Canonical Spec Package（owner: bmad-spec）
+Canonical Spec Package contract + external selection registry（owner: bmad-spec）
         ↓
 VDD source-freeze producer
         ↓
@@ -34,8 +34,10 @@ obligation extraction shards
                                         ↓
                                 prerequisite satisfied
                                         ↓
-                                existing implementation
-                                authorization owner
+                                maintainer authorization adapter
+                                receipt preflight
+                                        ↓
+                                implementation-authorized
 ```
 
 ## Lifecycle Separation
@@ -55,4 +57,17 @@ implementation-complete
   → Refactor Acceptance
   → decide-bootstrap
   → Bootstrap implementation/focused profile
+```
+
+## Recovery Authority
+
+```text
+recovery-checkpoint.v1 append-only lineage
+  → authorized branch
+  → validated predecessor/fork_from hashes
+  → greatest sequence
+  → immutable validator + approved policy identities
+  → complete content-addressed artifact refs
+  → stage-tagged package/source/requirements/aggregate bindings
+  → resume or fail closed on any drift
 ```

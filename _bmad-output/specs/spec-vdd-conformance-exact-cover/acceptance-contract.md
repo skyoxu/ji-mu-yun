@@ -25,7 +25,7 @@
 | `VCEC-017` | Existing authorization owner 必须拒绝 missing、stale、non-conformant、mismatched、prose、boolean 与 old-summary substitutes。 | `VCEC-A18` |
 | `VCEC-018` | Exact-cover 与中间 artifacts 保持 `authorizes=[]`，不得发布 lifecycle 或 acceptance states。 | `VCEC-A19` |
 | `VCEC-019` | VDD 修改只限 source-freeze production 与 repair-input consumption，不得包含 exact-cover 或 Bootstrap implementation。 | `VCEC-A20` |
-| `VCEC-020` | Exact-cover 不修改 target；VDD 保留 create/repair 与 lifecycle ownership。 | `VCEC-A21` |
+| `VCEC-020` | Exact-cover 不修改 target；VDD 保留 source freeze、create/repair、`draft` 与 `plan-ready`，maintainer adapter 保留 implementation authorization。 | `VCEC-A21` |
 | `VCEC-021` | Model-visible output 必须 bounded；完整 source、matrix、reviewer output、stdout 与 prompts 留在 artifacts。 | `VCEC-A22` |
 | `VCEC-022` | Run 必须从 compact current artifacts 在新进程重启，不依赖 Codex resume、compaction 或 old chat。 | `VCEC-A23` |
 | `VCEC-023` | Limits、truncation、full artifact refs/hashes、repeat-failure stop-loss 与 stale restart 必须 fail closed。 | `VCEC-A24` |
@@ -57,7 +57,7 @@
 
 | ID | Predicate | Covers |
 | --- | --- | --- |
-| `VCEC-A01` | VDD 从 valid Canonical Spec Package 冻结唯一 package root，并拒绝非 `bmad-spec` package。 | `VCEC-001` |
+| `VCEC-A01` | VDD validates `canonical-spec-package.v1` contract conformance and the external content-addressed selection commitment; producer name or attestation is not a pass/fail predicate. | `VCEC-001` |
 | `VCEC-A02` | Role-graph round-trip 保留全部 normative、adopted、unresolved items 与 relationships；任一遗漏失败。 | `VCEC-001`, `VCEC-002` |
 | `VCEC-A03` | Role demotion/promotion、provenance obligation extraction、normative deletion 或 silent unresolved-to-resolved fixtures 均失败。 | `VCEC-002` |
 | `VCEC-A04` | 真实 VDD producer 输出含所需字段、canonical hash 与 `authorizes=[]` 的 schema-valid manifest。 | `VCEC-003` |
@@ -97,7 +97,7 @@
 | `VCEC-A38` | 2/3 covered vote 但缺 deterministic mapping 时仍 blocked，不产生 conformant receipt。 | `VCEC-032` |
 | `VCEC-A39` | 只有 structure/bindings/mapping 通过且剩余问题是 equivalence、weakening、conflict 或 applicability ambiguity 时才产生 handoff。 | `VCEC-033` |
 | `VCEC-A40` | 每个 family 确定性映射 allowed action；修改 prose/caller suggestion 不改变结果，且 `authorizes=[]`。 | `VCEC-034` |
-| `VCEC-A41` | 新进程恢复时 reuse 已证明 unchanged 的 clean shards、拒绝 stale shards，并重算 current aggregate。 | `VCEC-035` |
+| `VCEC-A41` | 新进程只从 authorized branch 的 append-only checkpoint lineage 恢复；重验 validator/policy/artifact refs，reuse 已证明 unchanged 的 clean shards、拒绝 stale shards，并重算 current aggregate。 | `VCEC-035` |
 | `VCEC-A42` | Malformed extraction 为 `obligation_extraction_invalid`；attempts 唯一，ceiling 前用 `rerun_changed_shards`，随后 stop 并 blocked `inspect_extraction`。 | `VCEC-028` |
 
 ## Completion Gate
@@ -111,7 +111,7 @@
 - Pre/post-implementation semantic review 保持分离；Bootstrap 只对显式授权的 genuine ambiguity 启动。
 - Bounded recovery 在新进程工作，保留 historical evidence，不向主模型暴露完整 source/reviewer/stdout/prompt，也不声明 Codex-resume 能力。
 - Retry、stop-loss、两级 fingerprint、shard reuse、aggregate recomputation、instability/jitter 与 typed-action fixtures 全部通过。
-- `execution-policy.md` 中的 retry ceilings、deterministic shard identity/limits、hotspot/quarantine threshold、bounded-output limits 与 schema registry fixtures 全部通过；实现不得用其他默认值替代。
+- Maintainer-owned runtime-policy registry 满足 AD-7；candidate retry/shard/presentation values 只有被 registry 明确批准并 hash-bound 后才生效。12,000 exact serialized UTF-8 bytes 是唯一 model-visible hard gate，token estimate 仅为 deterministic telemetry。
 - VDD 独占 source-freeze producer schema；exact-cover 只验证其 path/hash/version。复制 schema、owner/path/hash drift 或 unknown version fixtures 全部 fail closed。
 - 至少一个真实 plan 完成 create → exact-cover → optional review → repair → exact-cover dogfood。
 - `VCEC-001` 至 `VCEC-035` 各自映射至少一个可证伪 acceptance，且现有 recovery、hash binding、negative fixtures 与 lifecycle boundaries 得到保留。

@@ -61,7 +61,7 @@ For a new spine, bind `{doc_workspace}` to `{workflow.spine_output_path}/{workfl
 
 ## Reviewer Gate
 
-The spine's pre-handoff review — full mechanics in `references/reviewer-gate.md`. Load it when finalizing or validating: a deterministic `lint_spine.py` pass, then a rubric walker (good-spine checklist) + every `{workflow.finalize_reviewers}` lens dispatched as parallel subagents against `ARCHITECTURE-SPINE.md`, scaled to stakes. At Finalize you apply the clear fixes; under the Validate intent you deliver a bespoke HTML report and then get user input.
+The spine's pre-handoff review — full mechanics in `references/reviewer-gate.md`. Load it when finalizing or validating: a deterministic `lint_spine.py` pass, then a rubric walker (good-spine checklist) + every `{workflow.finalize_reviewers}` lens dispatched as parallel subagents against `ARCHITECTURE-SPINE.md`, scaled to stakes. Reviewer dispatch and monitoring use collaboration/agent lifecycle tools exclusively. A process or exec wait tool is valid only with the real process/cell identifier returned by its matching execution call; it is never a substitute for `wait_agent`. FastCtx, Git, filesystem, shell commands, empty execution calls, and text-only execution placeholders are not reviewer progress probes. Run repository validation only after the reviewer set is terminal. At Finalize you apply the clear fixes; under the Validate intent you deliver a bespoke HTML report and then get user input.
 
 ## Finalize
 

@@ -1,14 +1,24 @@
 ---
 id: SPEC-vdd-conformance-exact-cover
+package_schema: canonical-spec-package.v1
 companions:
-  - authority-and-data-contracts.md
-  - execution-and-recovery.md
-  - implementation-conventions.md
-  - execution-policy.md
-  - acceptance-contract.md
-  - architecture-diagrams.md
+  - path: _bmad-output/specs/spec-vdd-conformance-exact-cover/authority-and-data-contracts.md
+    role: normative_companion
+  - path: _bmad-output/specs/spec-vdd-conformance-exact-cover/execution-and-recovery.md
+    role: normative_companion
+  - path: _bmad-output/specs/spec-vdd-conformance-exact-cover/implementation-conventions.md
+    role: normative_companion
+  - path: _bmad-output/specs/spec-vdd-conformance-exact-cover/execution-policy.md
+    role: normative_companion
+  - path: _bmad-output/specs/spec-vdd-conformance-exact-cover/acceptance-contract.md
+    role: normative_companion
+  - path: _bmad-output/specs/spec-vdd-conformance-exact-cover/architecture-diagrams.md
+    role: normative_companion
+  - path: _bmad-output/planning-artifacts/architecture/architecture-vdd-conformance-exact-cover-2026-08-13/ARCHITECTURE-SPINE.md
+    role: adopted_companion
 sources:
-  - ../../../execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md
+  - path: execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md
+    role: provenance
 ---
 
 > **Canonical contract.** 本 SPEC 与 `companions:` 中的文件共同构成构建、测试和验证所需的完整、经过 preservation validation 的合同。`sources:` 中的源文档仅用于追溯。
@@ -45,12 +55,12 @@ VDD 需要以机器可证明的方式确认 execution-plan requirements 目录�
 
 ## Constraints
 
-- `bmad-spec` 拥有 Canonical Spec Package；VDD 拥有 source-freeze production、create/repair、`plan-ready` 和 plan lifecycle。
+- `bmad-spec` owns the Canonical Spec Package contract and external selection registry. VDD owns source-freeze production, create/repair, `draft`, and `plan-ready`; the maintainer authorization adapter alone owns receipt preflight and `implementation-authorized` publication.
 - Exact-cover 对 target plan 只读，不拥有 implementation、test、evidence、review launch、Acceptance、release、commit 或 migration authority。
 - 所有 exact-cover 与中间 artifacts 均 hash-bound 且 `authorizes=[]`；只有确定性重算能产生 `conformant`。
 - Deterministic schema、hash、path、ID、set、mapping 与 disposition 检查必须先于 semantic work，不能通过 retry、更大 context、reasoning effort 或 Bootstrap 绕过。
 - Semantic review 只使用显式的 pre-implementation `bootstrap-upstream-plan` lane；post-implementation semantic assurance 保持独立 Acceptance lifecycle。
-- Recovery 必须文件化、有界，并独立于 Codex resume、compaction、context-window 或旧对话行为；v1 policy 固定 retry、shard 与 bounded-output ceilings。
+- Recovery 必须文件化、有界，并独立于 Codex resume、compaction、context-window 或旧对话行为；runtime policy 必须 registry-owned、versioned、approved 且 hash-bound，具体 retry/shard/presentation 数值不由本 SPEC 冻结。
 - Chapter 5 只提供治理原则；不得引入其 Taskmaster、游戏、PowerShell、多 reviewer、source discovery、baseline promotion 或 automatic launch 实现。
 
 ## Non-goals
@@ -65,6 +75,6 @@ VDD 需要以机器可证明的方式确认 execution-plan requirements 目录�
 - 一个真实 Canonical Spec Package 被一次冻结，由 VDD 与 exact-cover 绑定同一 manifest identity/hash，只能通过 VDD 修复，并且只有 current conformant receipt 才能通过现有 authorization preflight。
 - Mutation、drift、ambiguity、retry、shard、recovery 与 legacy fixtures 均确定性地产生规定的 typed outcomes，不发生 silent obligation loss 或 lifecycle authority leakage。
 
-## Resolved Policy
+## Architecture Adoption
 
-- `execution-policy.md` 是本 package 的 v1 policy authority，固定 retry ceilings、deterministic shard partition、hotspot/quarantine thresholds、bounded-output limits 与 schema registry；不允许实现者临场改值。
+- Adopted `ARCHITECTURE-SPINE.md` AD-1 through AD-11 govern package conformance, canonical serialization and hashes, policy ownership, output measurement, lifecycle authority, semantic handoff, and recovery. `execution-policy.md` preserves candidate defaults and ratified invariants but is not the owner of maintainer-selected runtime values.
