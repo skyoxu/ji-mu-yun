@@ -1,0 +1,15 @@
+{
+  "schema_version":"vdd-repair-callsite-inventory.v1",
+  "round":1,
+  "source_roots":["execution-plans/2026-08-13-vdd-conformance-exact-cover",".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py","scripts/python/knowledge_locator.py","scripts/python/knowledge_context_validation.py"],
+  "matches":[
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/00-index.md","context":"plan slice and validation authority","disposition":"changed"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json","context":"slice contract","disposition":"changed"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json","context":"registered commands","disposition":"changed"},
+    {"path":"scripts/python/knowledge_locator.py","context":"stale catalog opt-in producer","disposition":"existing prerequisite"},
+    {"path":"scripts/python/knowledge_context_validation.py","context":"stale catalog validation boundary","disposition":"existing prerequisite"}
+  ],
+  "excluded_siblings":[],
+  "inventory_hash":"sha256:12e2342a07d4e22415a94cb3ca9ebeeafed6d91eec8a1dd7b3ad20a19f0bcba0",
+  "authorizes":[]
+}

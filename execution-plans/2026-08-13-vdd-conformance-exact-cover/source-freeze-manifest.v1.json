@@ -1,5 +1,6 @@
 {
   "schema_version":"vdd-source-freeze-manifest.v1",
+  "evidence_status":"bootstrap-planning-evidence; not proof of VCEC-003/A04 formal producer delivery",
   "run_id":"vdd-conformance-exact-cover-2026-08-13",
   "target_root":"execution-plans/2026-08-13-vdd-conformance-exact-cover",
   "package_root":"_bmad-output/specs/spec-vdd-conformance-exact-cover",

@@ -3,11 +3,13 @@
   "plan_id": "vdd-conformance-exact-cover",
   "profile": "self-hosted",
   "state": "plan-ready",
+  "repair_round": 1,
+  "repair_status": "repair-ready",
   "state_owner": "vdd",
   "resume": {
-    "next_action": "Implement S0 through S5 in dependency order.",
-    "last_completed_step": "authority-read-input-gate-knowledge-preflight",
-    "recovery_instruction": "Revalidate source-freeze, knowledge, and current pointer hashes before continuing."
+    "next_action": "Run repair/round-1/terminal_full_validation.py, then implement S0 through S5 in dependency order.",
+    "last_completed_step": "repair-round-1-delta-written",
+    "recovery_instruction": "Revalidate repair closure, source-freeze evidence, knowledge, and current pointer hashes before continuing."
   },
   "slices": [
     {"id":"S0","status":"pending","depends_on":[]},

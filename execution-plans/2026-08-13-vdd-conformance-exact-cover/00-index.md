@@ -13,7 +13,8 @@ provenance only.
 
 ## Scope
 
-- Upgrade bmad-spec typed package descriptor and selection-registry producer.
+- Preserve and harden the existing bmad-spec typed package descriptor and
+  selection-registry producer through regression and mutation fixtures.
 - Add VDD source-freeze create/repair consumer behavior.
 - Add exact-cover deterministic validator, bounded extraction, fingerprints,
   shards, recovery, and non-authorizing receipts.
@@ -23,10 +24,13 @@ provenance only.
 
 | Slice | Behavior | RED / negative | GREEN / acceptance | Recovery |
 | --- | --- | --- | --- | --- |
-| S0 | bmad-spec emits typed descriptor, selection record, and current pointer atomically. | Missing pointer, stale record, role drift, and tampered descriptor reject. | Create/refresh and tamper fixtures recompute the same selection identity. | Restore the last valid pointer; never synthesize registry state. |
+| S0 | Existing bmad-spec producer remains the upstream selection authority. | Missing pointer, stale record, role drift, and tampered descriptor reject. | Existing producer tests plus create/refresh/mutation regression pass. | Restore the last valid pointer; never synthesize registry state. |
 | S1 | VDD freezes the complete package into `vdd-source-freeze-manifest.v1`. | Caller-reduced universe, provenance promotion, path/hash drift reject. | Independent manifest recomputation and create/repair fixtures pass. | Restart from package selection; preserve prior evidence as stale. |
 | S2 | Exact-cover proves sound-and-complete coverage with deterministic hashes. | Unknown, duplicate, orphan, uncovered, wrong binding, and weakening mutations block. | VCEC-A01..A12 and paired producer/consumer golden vectors pass. | Repair requirements or validator input; no semantic retry for deterministic defects. |
-| S3 | Recovery, retry, shard reuse, instability, and semantic handoff are bounded. | Stale checkpoint, unstable shard, unauthorized handoff, or output overflow blocks. | VCEC-A13..A42 fixtures pass; aggregate is always recomputed. | Resume only from authorized checkpoint lineage; quarantine unstable shards. |
+| S3a | Semantic handoff and VDD repair input remain explicit and non-authorizing. | Unbound, stale, or implicit repair input rejects. | VCEC-A13..A16 and A39 pass. | Preserve prior requirements and await explicit repair. |
+| S3b | Failure taxonomy, bounded retry, and stop-loss are deterministic. | Retry on deterministic defects, unknown family, or missing attempt identity rejects. | VCEC-A30..A32, A40, A42 pass. | Stop at policy ceiling and route typed action. |
+| S3c | Fingerprints, shards, reuse, and instability preserve the full universe. | Hash drift, unsafe reuse, deleted quarantine, or vote-as-truth rejects. | VCEC-A33..A38 pass. | Re-run affected shards; quarantine unstable shards. |
+| S3d | Recovery checkpoints and bounded model context are restartable. | Stale lineage, artifact drift, raw source recovery, or overflow rejects. | VCEC-A22..A24 and A41 pass. | Resume only from authorized checkpoint lineage. |
 | S4 | Authorization prerequisite consumes a current conformant receipt. | Missing, stale, mismatched, prose, or boolean receipt rejects. | VCEC-A17/A18/A25/A26 composition passes. | Leave lifecycle unchanged and return typed prerequisite failure. |
 | S5 | Dogfood create, exact-cover, optional review, repair, and rerun. | Legacy schema and target mutation fixtures fail closed. | VCEC-A24..A43 terminal replay passes with current artifacts. | Start a new requirements identity after explicit repair. |
 
@@ -39,5 +43,7 @@ remains the sole owner of `implementation-authorized`.
 ## Validation
 
 Run the commands in `command-registry.v1.json`, then one terminal full replay.
+The exact requirement/acceptance coverage is in
+`repair/round-1/requirements-acceptance-slice-command.v1.json`.
 Knowledge is bound by `knowledge-context.freeze.v1.json`; its catalog freshness
 is recorded as an explicit stale warning under the VDD opt-in policy.

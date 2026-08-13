@@ -1,0 +1,11 @@
+{
+  "schema_version":"vdd-repair-closure.v1",
+  "plan_id":"vdd-conformance-exact-cover",
+  "round":1,
+  "predecessor_state":"plan-ready",
+  "finding_source":"docs/know19.txt",
+  "finding_sha256":"sha256:8b41d7a646733af3878c4d4f99a80685324ef2b54e353ec0f1a24865be8cdc3b",
+  "scope":["repair/round-1/findings.md","repair/round-1/requirements-acceptance-slice-command.v1.json","repair/round-1/callsite-inventory.v1.json","repair/round-1/composition-receipt.v1.json","repair/round-1/terminal_full_validation.py","repair/round-1/repair-closure.json","00-index.md","requirements-and-acceptance.md","implementation-contract.v1.json","command-registry.v1.json","plan-state.v1.json","source-freeze-manifest.v1.json","95-implementation-evolution-and-completion-report.md"],
+  "status":"repair-validated",
+  "authorizes":[]
+}

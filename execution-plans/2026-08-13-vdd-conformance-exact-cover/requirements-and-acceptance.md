@@ -10,9 +10,13 @@ The normative universe is the typed Canonical Spec Package graph:
 `execution-plans/2026-08-10-vdd-conformance-exact-cover-requirements.md` is
 recorded only as provenance and contributes no active obligation.
 
-Coverage must include VCEC-001 through VCEC-043, with every active obligation
-mapped to at least one falsifiable acceptance and every acceptance mapped back
-to an obligation. `authorizes` is always `[]` in VDD and exact-cover artifacts.
+The requirement universe is exactly `VCEC-001..VCEC-036`; the acceptance
+universe is exactly `VCEC-A01..VCEC-A43`. Every requirement is mapped to one or
+more falsifiable acceptance IDs, implementation slices, and registered
+commands; every acceptance maps back to one or more requirements. The complete
+forward and reverse mapping is authoritative for this plan at
+`repair/round-1/requirements-acceptance-slice-command.v1.json`. `authorizes`
+is always `[]` in VDD and exact-cover artifacts.
 
 Important non-goals: no producer attestation, no lifecycle transition owned by
 exact-cover, no copied VDD schema in exact-cover, no Chapter 5 dependency, no
