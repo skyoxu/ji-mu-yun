@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:a5acbdaaccbe4cf46d214d0d585902ea3fc8b53db89d1b5c8273e7b8e206fdbd",
+  "sections": [
+    {
+      "title": "Review Finding",
+      "content": "Round 5 repairs prior custody and command-truth issues, but the cited review states manual exact-cover remains blocked until execution and closure evidence are complete."
+    },
+    {
+      "title": "Implementation Contract",
+      "content": "The plan is self-hosted and plan-ready. S0 through S5 define pending implementation work, terminal validation, and no authorization."
+    },
+    {
+      "title": "Plan State",
+      "content": "Repair round 5 is repair-validated, but every implementation slice remains pending. The state explicitly excludes implementation authorization and acceptance completion."
+    },
+    {
+      "title": "Requirement Mapping",
+      "content": "The Round 5 superseding mapping assigns requirements and acceptance criteria to S0-S5 command identifiers and preserves an empty authorization list."
+    },
+    {
+      "title": "Repair Target",
+      "content": "The target scope is the exact-cover execution plan. It explicitly characterizes supplied material as pre-implementation repair inputs with pending slices and authorizes=[]"
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-13T13:28:52.964313Z"
+}

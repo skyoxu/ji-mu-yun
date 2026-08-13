@@ -1,0 +1,19 @@
+{
+  "schema_version": "skill-semantic-decision.v1",
+  "producer_role": "controlled-semantic-skill-input-consumer",
+  "execution_identity": "sha256:1b9f13300d7fe4dc8400c656d45a9cfd153a9662e5937b8262fa73b0a1162cc8",
+  "source_manifest_hash": "sha256:4b87cd3962ac37aae0f9bc57b4c389187d7c3268e410d2b533a376228e3964c4",
+  "context_artifact_hash": "sha256:9e5c755e384d0a77b784ceebaa1eae74010678ff0488ed9934e8468436b2e27d",
+  "source_statuses": {
+    "docs/know23.txt": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/requirements-acceptance-slice-command.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan/target-plan.md": "accepted"
+  },
+  "status": "insufficient",
+  "rationale": "Accepted sources establish a bounded Round 5 repair context, but the plan state keeps every implementation slice pending and explicitly withholds implementation authorization and acceptance completion.",
+  "redaction_status": "complete",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "authorizes": []
+}

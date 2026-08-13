@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:4b87cd3962ac37aae0f9bc57b4c389187d7c3268e410d2b533a376228e3964c4",
+  "sections": [
+    {
+      "title": "Review finding",
+      "content": "Prior review reports unresolved custody and execution-proof defects; manual exact-cover remains blocked pending a narrow Round 5 repair."
+    },
+    {
+      "title": "Implementation contract",
+      "content": "Plan is self-hosted and plan-ready. S0-S5 define pending implementation slices; terminal validation is Round 5 terminal-full.py; no authorization is granted."
+    },
+    {
+      "title": "Plan state",
+      "content": "Repair round 5 is marked repair-validated, but all implementation slices remain pending and state explicitly excludes implementation authorization and acceptance completion."
+    },
+    {
+      "title": "Round 5 mapping",
+      "content": "Round 5 supersedes the historical mapping and assigns requirements to slice command IDs, including dedicated manifest-composition, scope-boundary, readonly-target, and dogfood commands."
+    },
+    {
+      "title": "Repair target",
+      "content": "Bounded repair inputs are the current mapping, implementation contract, and plan state for the exact-cover execution-plan target."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-13T13:27:59.350119Z"
+}

@@ -1,0 +1,26 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:378a7e27be88f6ec496ad29a4304d3e97ee8ba636b08010915797ad8e2357f2e",
+  "canonical_context_sha256": "sha256:086367d92fe2be22f4f973d2c85f2d6ff6f07b1f16668e70e65248fc19febd28",
+  "request_sha256": "sha256:9cbf3b76c56d05fdba336366869528c3e449ed9e698453731d2313369adf00a3",
+  "result_sha256": "sha256:9cf4a9ca8f3bb4dd6cd22a3e3d5e0325ca2e3d672dcc5f8284cf50afb12acbad",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "bdb9df4bd61def6f048cf4ad7cc427565228cb07"
+  },
+  "source_snapshot_id": "sha256:f3aaf8025b9b4179103a22a00d6ad17f6f484470d0ccd8eb425bee92c61d6f3b",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "satisfies": [
+        "adr.ADR-0044",
+        "adr.ADR-0048",
+        "repository-rules"
+      ]
+    }
+  ],
+  "authorizes": []
+}

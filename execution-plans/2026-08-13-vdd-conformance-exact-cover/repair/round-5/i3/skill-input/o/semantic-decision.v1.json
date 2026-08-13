@@ -1,0 +1,19 @@
+{
+  "schema_version": "skill-semantic-decision.v1",
+  "producer_role": "vdd-execution-plan",
+  "execution_identity": "sha256:1b9f13300d7fe4dc8400c656d45a9cfd153a9662e5937b8262fa73b0a1162cc8",
+  "source_manifest_hash": "sha256:a5acbdaaccbe4cf46d214d0d585902ea3fc8b53db89d1b5c8273e7b8e206fdbd",
+  "context_artifact_hash": "sha256:ec6f6f31a2b9224b8885342b918b50a62dc6e5cb5c993d1b9cfd79f60f849eee",
+  "source_statuses": {
+    "docs/know23.txt": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/requirements-acceptance-slice-command.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan/target-plan.md": "accepted"
+  },
+  "status": "insufficient",
+  "rationale": "The snapshot consistently identifies a pre-implementation repair state: all slices remain pending, terminal execution evidence is absent, and authorizes is empty. It cannot support an implementation execution plan decision.",
+  "redaction_status": "complete",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "authorizes": []
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:5f04a7eb9135013a4b2a860484f86f6ffcec5592774ad111bced50739412d301",
+  "sections": [
+    {
+      "title": "Finding",
+      "content": "Round 5 repair finding identifies custody and command-truth defects and defines a bounded non-authorizing repair scope."
+    },
+    {
+      "title": "Implementation Contract",
+      "content": "Plan is plan-ready with pending slices S0 through S5; terminal validation is defined and authorizes is empty."
+    },
+    {
+      "title": "Plan State",
+      "content": "Repair round 5 is repair-validated. Implementation remains pending and no lifecycle authorization is granted."
+    },
+    {
+      "title": "Current Mapping",
+      "content": "Round 5 superseding requirement-to-acceptance command mapping covers VCEC-A01 through VCEC-A43."
+    },
+    {
+      "title": "Target Scope",
+      "content": "Supplied inputs are sufficient only for non-authorizing VDD plan repair, not implementation authorization or conformance."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-13T13:34:17.056989Z"
+}

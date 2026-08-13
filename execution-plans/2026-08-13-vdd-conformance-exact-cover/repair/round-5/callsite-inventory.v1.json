@@ -1,0 +1,62 @@
+{
+  "schema_version": "vdd-repair-callsite-inventory.v1",
+  "round": 5,
+  "source_roots": [
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover"
+  ],
+  "matches": [
+    {
+      "path": "requirements-and-acceptance.md",
+      "context": "current requirement mapping authority pointer",
+      "disposition": "changed"
+    },
+    {
+      "path": "implementation-contract.v1.json",
+      "context": "S0/S1 command universe and terminal command",
+      "disposition": "changed"
+    },
+    {
+      "path": "command-registry.v1.json",
+      "context": "registered command and validator truth",
+      "disposition": "changed"
+    },
+    {
+      "path": "plan-state.v1.json",
+      "context": "current repair lifecycle state",
+      "disposition": "changed"
+    },
+    {
+      "path": "95-implementation-evolution-and-completion-report.md",
+      "context": "append-only repair record",
+      "disposition": "changed"
+    },
+    {
+      "path": "repair/round-5/implementation-command.py",
+      "context": "registry-bound implementation evidence dispatcher",
+      "disposition": "changed"
+    },
+    {
+      "path": "repair/round-5/implementation-receipt-validator.py",
+      "context": "controlled receipt validator",
+      "disposition": "changed"
+    },
+    {
+      "path": "repair/round-5/terminal-full.py",
+      "context": "registry-resolved terminal gate",
+      "disposition": "changed"
+    },
+    {
+      "path": "repair/round-5/repair-knowledge-composition.py",
+      "context": "official Skill Input composition",
+      "disposition": "changed"
+    }
+  ],
+  "excluded_siblings": [
+    {
+      "path": "repair/round-1/requirements-acceptance-slice-command.v1.json",
+      "reason": "restored immutable historical evidence; current authority is the Round 5 successor."
+    }
+  ],
+  "inventory_hash": "sha256:d9673bc6588ed3cb292406e71077e50763c938a843877f3bd2323e96a9ee8b6c",
+  "authorizes": []
+}

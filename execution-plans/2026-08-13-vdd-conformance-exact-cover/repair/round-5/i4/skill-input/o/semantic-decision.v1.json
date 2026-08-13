@@ -1,0 +1,19 @@
+{
+  "schema_version": "skill-semantic-decision.v1",
+  "producer_role": "controlled-semantic-skill-input-consumer",
+  "execution_identity": "sha256:1b9f13300d7fe4dc8400c656d45a9cfd153a9662e5937b8262fa73b0a1162cc8",
+  "source_manifest_hash": "sha256:1eb83c29193f21118175093a2d74defad12ce8d3cbef8d4a55245e1a43afdc36",
+  "context_artifact_hash": "sha256:b6c811980d17b4c16178c3611be9c94d2f543f7fde3aacebbbb8bc04cf72c434",
+  "source_statuses": {
+    "docs/know23.txt": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/requirements-acceptance-slice-command.v1.json": "accepted",
+    "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan/target-plan.md": "accepted"
+  },
+  "status": "accepted",
+  "rationale": "The frozen sources consistently establish a bounded Round 5 non-authorizing repair scope, current mapping, contract, state, and identified custody and execution-proof concerns. They are sufficient only for the stated plan-repair operation.",
+  "redaction_status": "complete",
+  "redaction_profile_hash": "sha256:b32491088e18ae1691b458e95d2c94780a0efb7ed0f9bc319cdf5026c77ed3d9",
+  "authorizes": []
+}

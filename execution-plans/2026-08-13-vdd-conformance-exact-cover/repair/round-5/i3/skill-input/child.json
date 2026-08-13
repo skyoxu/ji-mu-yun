@@ -1,0 +1,17 @@
+{
+  "schema_version": "skill-input-child-request.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest_hash": "sha256:a5acbdaaccbe4cf46d214d0d585902ea3fc8b53db89d1b5c8273e7b8e206fdbd",
+  "snapshot_root": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/s",
+  "output_root": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/o",
+  "execution_identity": "sha256:1b9f13300d7fe4dc8400c656d45a9cfd153a9662e5937b8262fa73b0a1162cc8",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 262144,
+  "allowed_capabilities": [
+    "read-frozen-snapshot",
+    "write-context-output"
+  ],
+  "authorizes": []
+}

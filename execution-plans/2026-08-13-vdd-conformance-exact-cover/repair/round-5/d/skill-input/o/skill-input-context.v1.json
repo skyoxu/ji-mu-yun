@@ -1,0 +1,25 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:3eb8d75c4a5646c078eec53a0100ed7761e040e00002d9fa0f03fdfc0773ced3",
+  "sections": [
+    {
+      "title": "Finding summary",
+      "content": "Round 5 addresses custody, command-truth, receipt-validation, and closure-scope defects identified in prior repair evidence. Implementation remains pending and non-authorized."
+    },
+    {
+      "title": "Current contract",
+      "content": "The plan is self-hosted and plan-ready. S0 through S5 remain pending, terminal validation is defined, and authorizes is empty."
+    },
+    {
+      "title": "Round 5 mapping",
+      "content": "The superseding mapping assigns all listed requirements and acceptance identifiers to slices and command identifiers, including source-freeze composition, scope, readonly-target, and terminal dogfood checks."
+    },
+    {
+      "title": "Target scope",
+      "content": "The supplied target is limited to a non-authorizing repair of the VDD plan. It explicitly excludes implementation authorization, completion, acceptance, and runtime conformance."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-13T13:54:40.789052Z"
+}

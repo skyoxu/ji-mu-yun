@@ -1,0 +1,808 @@
+{
+  "schema_version": "vdd-repair-changed-set.v1",
+  "round": 5,
+  "baseline": "HEAD",
+  "entries": [
+    {
+      "path": "docs/know23.txt",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/95-implementation-evolution-and-completion-report.md",
+      "baseline_sha256": "sha256:fac9979138771dfd42030bc4579c790ea961ee7aa5108c37282cb3a129a335a5",
+      "candidate_sha256": "sha256:fc5eddd9c81fa27abc8e16e8a4d9fe60ab825c0ae121a7ce80733598ae0854be",
+      "status": "modified"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json",
+      "baseline_sha256": "sha256:4cb92deb6cd2ea1dfe1d04f93b5a62567fe9227d422fddfc4d8421cccedd4f35",
+      "candidate_sha256": "sha256:b3f55e535af753a73dbedaa23ec1fabca1d78b1726a5d1813301f082179d3592",
+      "status": "modified"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "baseline_sha256": "sha256:b3fd749977f270286c3982da64d22f5ab7848feacfa04f01429ce2f835b66145",
+      "candidate_sha256": "sha256:671bad37bc6b32459d7e2ee631b17cb8c91c643c1ff705722d547bd1d45cb89a",
+      "status": "modified"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "baseline_sha256": "sha256:2d7d170f06b039b80c43442743b8848869fced81ea74850e9b695574f61203d3",
+      "candidate_sha256": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "status": "modified"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-1/requirements-acceptance-slice-command.v1.json",
+      "baseline_sha256": "sha256:8ba8663c0d4bf5e636fa2512e901a3eb2a4f406bf7985ad6d61fdaeb66a9cd42",
+      "candidate_sha256": "sha256:68995816ff7267f1d0f21daa48c591c80159b74036bc8953f83ce55edf07d03b",
+      "status": "modified"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/a/knowledge-context.freeze.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1ee8e06e834606aa98f42cfc39faf652665b9965f26d509146c8873e7b0e1941",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/a/knowledge-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:3af0a26131671f45362bb383a512e542c3a9255ef7ae5b31cb7ed4ea6b0c0f3b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/a/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/a/skill-input/child.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:55b9984ffc602663a07f9be909134858a721170d31517c5bb9fb52b408251736",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/a/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/a/skill-input/o/semantic-decision.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:77bff69946504a334cdfd89b598d2d79480e15468737fa1184c13e93c67d2ca6",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/a/skill-input/o/skill-input-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:80095861677ec3dce87ac95864a2a20626af5b06833c41a7cc900e532da958a1",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/a/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:4f4b20dc1f4c0a7631e338e005b0e9e8ff5dc4f2760bcd8929505fa1324e64f7",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/a/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:5f04a7eb9135013a4b2a860484f86f6ffcec5592774ad111bced50739412d301",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/knowledge-context.freeze.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:588b6e5c6e4616f2cd0f9c7e6c5010512713d9d62a11be2c249621baa441436e",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/knowledge-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:378a7e27be88f6ec496ad29a4304d3e97ee8ba636b08010915797ad8e2357f2e",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:fbfdc3d2bca8f8bff3ba3cf090609228f44f7f08018fe23daeba3f27c6697f77",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/skill-input/child.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:9feb2d8821004c93ce7b1b2c4cff5276688df2de3b1ca9fea06c228ba9d23b9b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/skill-input/o/semantic-decision.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:bbee17858fd9b4ad5c0cf366a51bd54ebc8763c5ccb74d3be8c6920f660be739",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/skill-input/o/skill-input-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:296cbad6a4b24f9dd9a6639608a900e0880aa80c72dcc3e77c41df6e2d36dafa",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:93871928a4c598147538f6a584f8a682ee25fb0f8c5ec75d1a5e9bc5bc413c00",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/b/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6ca3bc8902e35dbee2bcbf3e8dc38dca4493020d8fca8de96ac36e1a57bb69bf",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/knowledge-context.freeze.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:588b6e5c6e4616f2cd0f9c7e6c5010512713d9d62a11be2c249621baa441436e",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/knowledge-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:378a7e27be88f6ec496ad29a4304d3e97ee8ba636b08010915797ad8e2357f2e",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:5dd589d959eae44142badb7df094ea23e0b32eb5de6d060c7ef3a74e541efba1",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/skill-input/child.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:8d629952ce86ca01763fca1f5dcef4d3e1556b52251d5b02efa30d4f74b96569",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/skill-input/o/semantic-decision.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6bcd5c186aa5fe46f6baea39a226c27e3543efb8c9e3388f747dc127464bb712",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/skill-input/o/skill-input-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:3a7225ebeb34ed0ff0fe0b4e6df63a597967fb73b95bf86f9d05270ef3174b48",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ecc0fca8d572b572a79504800483f69f6d36916a5a502428d66a435ace32535f",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/c/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:2f45bae22638d283ca7805ee339060681018c9f09591ef386276ec64f11d4e84",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/callsite-inventory.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:343133b89a36cacccf76becb8fa4f5b19fd5ccf2f3aa0630cf01e10973aa5c43",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/composition-runs/run-001/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/composition-runs/run-001/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/composition-runs/run-002/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/composition-runs/run-002/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/composition-runs/run-003/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/composition-runs/run-003/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/composition-runs/run-003/skill-input/s/docs/know23.txt",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/composition-runs/run-003/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:37153d17784dff5433e145b2e7143fb2edea28bbc54eee0dd25ec75b88fedf45",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/composition-runs/run-003/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/knowledge-context.freeze.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:588b6e5c6e4616f2cd0f9c7e6c5010512713d9d62a11be2c249621baa441436e",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/knowledge-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:378a7e27be88f6ec496ad29a4304d3e97ee8ba636b08010915797ad8e2357f2e",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:fdbf013dbd30a0072146033d609744725f1a2c721f808a4ec6351145eb733b94",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/child.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:36c6c5c94a0ce77a2465a6dbb7ccf5bf6935dab070f429ca3266f1ec1cc6e8f0",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/o/semantic-decision.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:a134347c321a451ab1bb961a8ad21e567771969725f88b87d8031436c137c4f1",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/o/skill-input-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:4dde922547a5cc445683de0ef3ae71b2c33af2889235ba861b641ba37d06ab18",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:9267b95ffc3a4a0ae4838641ef51c8837b88fc963f520225c6ddaeeb6bb2d10b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:3eb8d75c4a5646c078eec53a0100ed7761e040e00002d9fa0f03fdfc0773ced3",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/knowledge-context.freeze.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:588b6e5c6e4616f2cd0f9c7e6c5010512713d9d62a11be2c249621baa441436e",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/knowledge-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:378a7e27be88f6ec496ad29a4304d3e97ee8ba636b08010915797ad8e2357f2e",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:22402cdd948eba55f7af77414785304ab59d702a4075d0874f576e51d506751a",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/skill-input/child.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:037c9d5a1cf4cb361224298c1d77298d87f0df6f10c147e29b799f28e640e2e1",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/skill-input/o/semantic-decision.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:4dc651f1ca0ab9ec773d26c9888cc1683f58e016742a6184cb44065e5e6f4bd8",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/skill-input/o/skill-input-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ba7be8cb8fc17ebd0bc94a8778b9b6e76545f9cad83e5d710480b3f728c0b1e5",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:d411fa5950dae8f519747f95815c78fffa917c9b19c15dff83c6943d569bccb5",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:21413fa51c4cccfd023811aa0f249a7863deb65a4fd33396897d55d654fb848c",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/findings.md",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:24bdd3f9ac1290cf48df0d83c065a760ac549f5a52ac629997ea7825c55f4a60",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:94013e920ea851fa3f97d568ee11d598b8e542cbc9a8f87dc4af3bfe394efebc",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i/skill-input/s/docs/know23.txt",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:37153d17784dff5433e145b2e7143fb2edea28bbc54eee0dd25ec75b88fedf45",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/requirements-acceptance-slice-command.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:e818731cc9b056e9451a141207059dcf07669cd13e660949e3a0a97cefcd6338",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan/target-plan.md",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:3bf45634e5a39a015104bb85772868e7b39a57c01793bac35c0636d005d0fc9a",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6f8c210dc1d065f76a92c12daab7d60a9d859ded6a7b78b6400ce99c893d290b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/child.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ef05101df5feba722f674265cd7b5660a4777a59ca334cb0ec4ab7854c57c3bf",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/o/semantic-decision.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:9825f326766a933ea391b2531d41e7afedeec93e472c1bdbf80681cdd9e9babd",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/o/skill-input-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:9e5c755e384d0a77b784ceebaa1eae74010678ff0488ed9934e8468436b2e27d",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:2e11bdf7c6850c851ef84cfce579c43a5b254f9690560391c1e4dca8893a5cf9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/s/docs/know23.txt",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:37153d17784dff5433e145b2e7143fb2edea28bbc54eee0dd25ec75b88fedf45",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/requirements-acceptance-slice-command.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:e818731cc9b056e9451a141207059dcf07669cd13e660949e3a0a97cefcd6338",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan/target-plan.md",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:3bf45634e5a39a015104bb85772868e7b39a57c01793bac35c0636d005d0fc9a",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i2/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:4b87cd3962ac37aae0f9bc57b4c389187d7c3268e410d2b533a376228e3964c4",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/child.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:479e86804543279840af60fa2e3b87aeca938b2ec6eb42afa139884f35f051aa",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/o/semantic-decision.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:c1a800482dc0278b39d13eff2c4eba6ffc59532ca5a7bae29c439608c14a4b43",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/o/skill-input-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ec6f6f31a2b9224b8885342b918b50a62dc6e5cb5c993d1b9cfd79f60f849eee",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:2a59e7620de1b3e92397160676bb7a1e1eaf644cdcbbb305ae80925f3f3cefb5",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/s/docs/know23.txt",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:37153d17784dff5433e145b2e7143fb2edea28bbc54eee0dd25ec75b88fedf45",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/requirements-acceptance-slice-command.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:e818731cc9b056e9451a141207059dcf07669cd13e660949e3a0a97cefcd6338",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan/target-plan.md",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:901d7884e4bf1651afe1564e751eafa693f713b432b4ea0659e68538ef0f7b4c",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i3/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:a5acbdaaccbe4cf46d214d0d585902ea3fc8b53db89d1b5c8273e7b8e206fdbd",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i4/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i4/skill-input/child.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6e8735a58516d6a543bfcb1adecf0e34870aa80f8816dbf3605968387a52ec11",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i4/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i4/skill-input/o/semantic-decision.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:969fb382118d5cf6c7c10348055466496d7b9d866364af14d6c83a7375ba9c35",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i4/skill-input/o/skill-input-context.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:b6c811980d17b4c16178c3611be9c94d2f543f7fde3aacebbbb8bc04cf72c434",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i4/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:a64f19a0d16488aa26085744663433cbb9924f8f6e8e568eab9ee9e04524d037",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i4/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1eb83c29193f21118175093a2d74defad12ce8d3cbef8d4a55245e1a43afdc36",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/skill-input/child.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:04f61cb1cfa0fd40f89d5a39599330069bdbc783254961e4202eda2cc091b8dc",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/skill-input/receipt.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:086922db874aa2d00a985f0fe424664eb6a353444523dc401ed575c62e5fe896",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/skill-input/s/docs/know23.txt",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:37153d17784dff5433e145b2e7143fb2edea28bbc54eee0dd25ec75b88fedf45",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/requirements-acceptance-slice-command.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:e818731cc9b056e9451a141207059dcf07669cd13e660949e3a0a97cefcd6338",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan/target-plan.md",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:8b6f979a35538c72012359e385721027d3147736faafbaccb79590768149d0b2",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i5/skill-input/s/source-manifest.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:5a895f4f22dd5a4b7b51ea7e4e338b4dae88354f8f13e200bdb4e93ee4d28bd2",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i6/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i6/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i6/skill-input/s/docs/know23.txt",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i6/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:37153d17784dff5433e145b2e7143fb2edea28bbc54eee0dd25ec75b88fedf45",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/i6/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-command.py",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:25e0adebd56b05bbb0a33400f89adfec0f786e1d3d292ac90cde3267c4d7856f",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/r/run-001/request.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:ac5241df8c15b86b71ce24067779dfd10179bfba0b1458696002636212bcc98b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/r/run-001/skill-input/contract.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/r/run-001/skill-input/s/docs/know23.txt",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/r/run-001/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:37153d17784dff5433e145b2e7143fb2edea28bbc54eee0dd25ec75b88fedf45",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/r/run-001/skill-input/s/execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-knowledge-composition.py",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:4f597ab9334e4abcdc0e23b78f5d7987515326d613ab1a7159bf006ede61f53e",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/requirements-acceptance-slice-command.v1.json",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:e818731cc9b056e9451a141207059dcf07669cd13e660949e3a0a97cefcd6338",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan/target-plan.md",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:bb836031d75ffca589202dfc52a9f1748f64be5496c1fd1d90cae263e431e996",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/terminal-full.py",
+      "baseline_sha256": null,
+      "candidate_sha256": "sha256:fd5b508e1ee970a3bd1dbfca5779a96d3f043090af2ad9f5d80edc6660712e3b",
+      "status": "added"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/requirements-and-acceptance.md",
+      "baseline_sha256": "sha256:eda899b4bf9c197d5d465f57300e99acfd36c56abb0e6ae7d83acc691b387743",
+      "candidate_sha256": "sha256:54c51adeaaac8a997e643350442e8e0a0ada90c59860d1691fb5cc0f24e2366c",
+      "status": "modified"
+    }
+  ],
+  "self_exclusion": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/changed-set.v1.json",
+  "closure_exclusion": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-closure.json",
+  "authorizes": []
+}

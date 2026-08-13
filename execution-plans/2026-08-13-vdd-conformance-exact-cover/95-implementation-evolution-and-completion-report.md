@@ -34,13 +34,12 @@ writing a hash-bound receipt. Round 3 closure binds finalized findings,
 predecessor evidence, and a generated callsite inventory. Lifecycle remains
 `plan-ready` and `authorizes` remains empty.
 
-Repair round 4, sourced from `docs/know22.txt`, remains limited to execution
-proof. Implementation commands now require a controlled validator program and
-revalidated hash-bound receipt/artifact set; terminal validation derives its
-command universe from every slice RED/GREEN declaration. Repair knowledge
-composition is separate from the future S5 exact-cover dogfood flow and uses
-the real consumer CLI boundary with a current skill-input receipt. The repair
-receipt is append-only and closure binds the successful run receipt hash.
+Repair round 5, sourced from `docs/know23.txt`, restores immutable Round 1
+evidence and publishes a superseding current mapping. Terminal validation now
+resolves every contract command through the registry, while implementation
+evidence is bound to that command's registered acceptance IDs and validator
+path/hash. Repair composition uses the official Skill Input adapter, launcher,
+and ready-receipt validator; its fixed closure receipt is fully revalidated.
 Lifecycle remains `plan-ready` and no authorization is granted.
 
 Repair round 4, sourced from `docs/know22.txt`, remains limited to execution

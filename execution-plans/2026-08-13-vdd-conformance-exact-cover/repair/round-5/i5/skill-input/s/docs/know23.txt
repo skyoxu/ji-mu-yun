@@ -1,0 +1,257 @@
+我看了最新 main，最新提交是 19932009a35a... / Repair VDD exact-cover execution proof。
+
+结论仍然是：暂时不要进入 implementation。manual exact-cover 仍是 blocked。
+
+这轮确实修对了不少东西，但又暴露了几处更底层的 custody/command-truth 问题。我目前评为：
+
+P0：4 个
+P1：3 个
+P2：1 个
+
+已经真正修好的
+
+上一轮要求的几个方向现在是成立的：
+
+terminal 已从所有 slice 的 RED/GREEN 声明推导 command universe，不再只写死 4 个 command。
+S5 已独立成 exact-cover-dogfood，当前实现不存在时明确 RED/blocked。
+repair knowledge composition 与 S5 dogfood 已拆开。
+repair composition 已真正 subprocess 调用 vdd_knowledge_preflight.py CLI。
+Round 4 closure 已绑定固定 run-003/receipt.json 及其 SHA-256。
+
+这些都比上一版正确很多。
+
+P0-1：Round 4 改写了 Round 1 历史 evidence
+
+这是新的硬错误。
+
+父提交中：
+
+repair/round-1/requirements-acceptance-slice-command.v1.json
+
+明确还是：
+
+VCEC-004 -> composition
+VCEC-019 -> composition
+VCEC-020 -> composition
+VCEC-024 -> composition
+
+Round 4 却直接修改同一个 Round 1 文件，变成：
+
+VCEC-004 -> repair-knowledge-composition
+VCEC-019 -> repair-knowledge-composition
+VCEC-020 -> repair-knowledge-composition
+VCEC-024 -> exact-cover-dogfood
+
+但 VDD 自己的 repair contract 明确要求：
+
+Initial slices and historical evidence stay immutable.
+
+更严重的是，当前 requirements-and-acceptance.md 仍把这个 Round 1 文件声明为当前 authoritative mapping。
+
+所以这是 lineage/custody 破坏，不是文档整理问题。
+
+修法：恢复 Round 1 原 bytes，新建 Round 4/5 superseding mapping，并把 current authority pointer 更新到新 mapping。
+
+P0-2：新的 requirement → command 映射本身语义错误
+
+即使暂时忽略上面的历史改写，当前 mapping 也不 exact-cover。
+
+Canonical authority 明确规定：
+
+VCEC-004/A05：VDD construction 与 Exact-cover 必须绑定同一个 source-freeze manifest identity/hash；
+VCEC-019/A20：验证 VDD diff 只包含 source-freeze/repair consumer，不得嵌入 Exact-cover/Bootstrap 算法；
+VCEC-020/A21：验证 Exact-cover 不修改 target，lifecycle ownership 不越权。
+
+但这三条现在全部映射：
+
+repair-knowledge-composition
+
+而该 command 实际做的是：
+
+prepare_knowledge_context.py
+→ vdd_knowledge_preflight.py
+
+它根本不能证明 A05/A20/A21。
+
+同样，implementation-contract 还把 repair-knowledge-composition 塞进 S1 GREEN。
+
+建议改成真正对应的 commands，例如：
+
+VCEC-004/A05  -> vdd-exact-cover-manifest-composition
+VCEC-019/A20 -> vdd-scope-boundary-negative
+VCEC-020/A21 -> exact-cover-readonly-target
+VCEC-024     -> exact-cover-dogfood
+
+repair-knowledge-composition 应该只是 repair evidence，不要属于产品 implementation requirement universe。
+
+P0-3：terminal 虽然推导了完整 command universe，但没有执行 registry 中的真实 commands
+
+这是当前最大的 execution-proof 漏洞。
+
+例如 S5 GREEN 已经明确是：
+
+exact-cover-dogfood。
+
+Registry 中它真正对应：
+
+python .../exact-cover-dogfood.py
+
+而这个脚本当前正确地返回 blocked。
+
+但是 terminal 对所有 ID 实际执行的是：
+
+implementation-command.py --command <id>
+
+而不是执行 registry 中 <id> 对应的 command。
+
+因此未来理论上可以出现：
+
+exact-cover-dogfood.py 仍然 return 2
+
+但 implementation-evidence
+给 exact-cover-dogfood 指一个别的 passing validator
+
+→ terminal PASS
+
+因为 implementation-command.py 允许 evidence 自己指定 validation_program。
+
+所以 command registry 目前还不是 terminal 的 source of truth。
+
+terminal 应从 contract 得到 ID，再从 registry resolve ID → exact command，并执行那个 registered command。
+
+P0-4：terminal 验证的 repair receipt 不是 closure 固定的 receipt，而且 validator 会漏掉明显错误
+
+Round 4 closure 明确固定的是：
+
+run-003/receipt.json
+
+Registry 的 composition 也明确指向 run-003。
+
+但 terminal 最后运行：
+
+repair-knowledge-composition.py --validate-receipt
+
+没有传 receipt path。
+
+而这个脚本默认值写死：
+
+run-001/receipt.json。
+
+更明显的是，当前 run-001 receipt 自己居然引用的是 run-002 的 Skill Input 和 outputs。
+
+但 --validate-receipt 只验证：
+
+receipt schema/status；
+producer hash；
+consumer hash。
+
+它根本没有重新验证：
+
+skill_input_receipt hash；
+execution_outputs hashes；
+exit codes；
+authorizes=[]；
+closure-bound receipt SHA。
+
+所以一个已经明显 cross-run 的 receipt 仍然可以被它判 valid。
+
+这说明 terminal repair-composition gate 当前仍是假阳性风险。
+
+P1-1：所谓“current Skill Input receipt”仍是脚本合成的，不是官方 adapter 产生的
+
+Round 4 composition 的确走了真实 consumer CLI，这部分修对了。
+
+但在此之前它做的是：
+
+copytree(PLAN/in)
+→ 修改 repository_identity
+→ 修改 child snapshot/output roots
+→ 修改 sidecar hashes
+→ 重算 binding_hash
+
+也就是说它复制并重写了一份 ready receipt。
+
+而 VDD 正式 contract 要求：
+
+prepare_skill_input_consumption.py
+→ launch_skill_input_consumer.py --create-request
+→ --run-semantic-child
+→ validate_skill_input_consumption.py --require-ready
+
+并明确禁止手工构造 execution path/identity。
+
+所以现在证明的是：
+
+consumer CLI 能消费一个“重新封装后能通过 validator 的 receipt”
+
+还不是：
+
+production adapter → child launcher → ready receipt → consumer CLI 的真实 composition。
+
+这是 P1。
+
+P1-2：implementation-command 仍未确定性绑定 command → expected validator / acceptance set
+
+相比上轮已经好很多：现在真的会执行 validation program，并重新检查 receipt/artifact hashes。
+
+但 implementation-evidence.v1.json 仍可以自行选择：
+
+validation_program
+validation_arguments
+acceptance_ids
+
+implementation-command.py 只检查 receipt 中 acceptance IDs 与 evidence 自己声明的一致，并没有检查：
+
+command ID
+→ Canonical expected acceptance IDs
+→ approved validator identity
+
+因此“自报 PASS”已经从 boolean 提升成了“自选 validator”，但 դեռ没有彻底闭合。
+
+至少应该确定性验证：
+
+command
+→ expected acceptance IDs
+→ controlled validator path/hash
+
+而不是三者都由 implementation evidence 自己提供。
+
+另外 artifact path 当前也缺 repository containment check。
+
+P1-3：Round 4 repair closure 的 scope 仍不是 complete changed set
+
+Round 4 当前 plan-state.v1.json 已更新到 repair round 4。
+
+95 report 也新增了 Round 4 内容。
+
+但 Round 4 closure 的 scope 没包含：
+
+plan-state.v1.json
+95-implementation-evolution-and-completion-report.md
+
+而且只记录 callsite_inventory path，没有像之前那样绑定其 byte hash。
+
+这不满足 VDD 自己要求的完整 repair changed-set / review-scope custody。
+
+P2
+
+95 report 的 Round 4 段落重复了两遍。
+
+纯清理问题，不阻断。
+
+结论
+
+这次已经非常接近，但还不能给 manual exact-cover = conformant。
+
+下一轮建议不要再碰 BMad、Architecture、requirements 语义，也不要再扩展设计，只做一个非常窄的 Round 5 custody/execution repair：
+
+恢复 Round 1 mapping 原 bytes；新增 Round 5 current mapping。
+修正 VCEC-004/019/020 的真实 acceptance commands；repair knowledge composition 不再属于 normative implementation mapping。
+terminal：contract command IDs → registry exact commands → execute。
+terminal 从 Round 5 closure 读取固定 composition receipt path/hash，不允许 default run。
+receipt validator 完整重验 receipt SHA、Skill Input receipt、outputs、exit codes、authorizes=[]。
+repair knowledge composition 用官方 Skill Input adapter + launcher 生成 current ready receipt。
+validator registry/binding 明确 command → acceptance IDs → validator path/hash。
+closure 包含完整 changed set；顺手删掉重复 95 段落。
+
+这 8 项收掉后，我认为这套 VDD 自举审计就可以真正结束，下一步才是 implementation authorization → Quick Dev。

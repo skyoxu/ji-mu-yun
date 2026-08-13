@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:1eb83c29193f21118175093a2d74defad12ce8d3cbef8d4a55245e1a43afdc36",
+  "sections": [
+    {
+      "title": "Review finding",
+      "content": "Round 5 repair is scoped to custody and execution-proof corrections. The finding identifies historical-evidence immutability, command-registry execution, receipt binding, validator binding, closure scope, and adapter-lineage concerns."
+    },
+    {
+      "title": "Implementation contract",
+      "content": "The plan is self-hosted and plan-ready. Slices S0 through S5 remain defined with a terminal validation command; authorizes is empty."
+    },
+    {
+      "title": "Plan state",
+      "content": "Repair round 5 is repair-validated, with all implementation slices pending and no implementation or acceptance authorization."
+    },
+    {
+      "title": "Current mapping",
+      "content": "The Round 5 superseding requirement-to-acceptance mapping assigns source-freeze composition, scope-boundary, readonly-target, and dogfood commands to the relevant requirements."
+    },
+    {
+      "title": "Repair target",
+      "content": "The supplied materials are declared sufficient only for a bounded, non-authorizing VDD plan repair. They must not determine implementation authorization, completion, acceptance, or runtime conformance."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-13T13:29:43.854481Z"
+}

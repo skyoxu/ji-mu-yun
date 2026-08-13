@@ -1,0 +1,58 @@
+{
+  "schema_version": "vdd-repair-composition-receipt.v2",
+  "round": 5,
+  "command_id": "repair-knowledge-composition",
+  "status": "passed",
+  "programs": [
+    {
+      "path": "scripts/python/prepare_skill_input_consumption.py",
+      "sha256": "sha256:5627c1112843303af82453592cdf2066604d14079d71e27bfa69b04d32afafb1",
+      "exit_code": 0
+    },
+    {
+      "path": "scripts/python/launch_skill_input_consumer.py",
+      "sha256": "sha256:f5662882d4960b8ecfc86fc377ebf88d057e4d828091bd6b7c0ab58371917756",
+      "exit_code": 0
+    },
+    {
+      "path": "scripts/python/validate_skill_input_consumption.py",
+      "sha256": "sha256:6587992fe5ea5894fc0f56c4c70c34b9a5795a7f64d1247da75f614ffdc214d0",
+      "exit_code": 0
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py",
+      "sha256": "sha256:a799cbca37455371b2f7387ab34322f7e23db995d02a6e44bfec30c0d75f3dee",
+      "exit_code": 0
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+      "sha256": "sha256:25c29d7dd5d82abb610a82e1c8db7ea0c93a913a78c6f4bf49a60ab9aa794666",
+      "exit_code": 0
+    }
+  ],
+  "skill_input_receipt": {
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/receipt.json",
+    "sha256": "sha256:9267b95ffc3a4a0ae4838641ef51c8837b88fc963f520225c6ddaeeb6bb2d10b"
+  },
+  "child_request": {
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/child.json",
+    "sha256": "sha256:36c6c5c94a0ce77a2465a6dbb7ccf5bf6935dab070f429ca3266f1ec1cc6e8f0"
+  },
+  "semantic_decision": {
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/o/semantic-decision.v1.json",
+    "sha256": "sha256:a134347c321a451ab1bb961a8ad21e567771969725f88b87d8031436c137c4f1"
+  },
+  "context_artifact": {
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/skill-input/o/skill-input-context.v1.json",
+    "sha256": "sha256:4dde922547a5cc445683de0ef3ae71b2c33af2889235ba861b641ba37d06ab18"
+  },
+  "knowledge_context": {
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/knowledge-context.v1.json",
+    "sha256": "sha256:378a7e27be88f6ec496ad29a4304d3e97ee8ba636b08010915797ad8e2357f2e"
+  },
+  "knowledge_freeze": {
+    "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/d/knowledge-context.freeze.v1.json",
+    "sha256": "sha256:588b6e5c6e4616f2cd0f9c7e6c5010512713d9d62a11be2c249621baa441436e"
+  },
+  "authorizes": []
+}

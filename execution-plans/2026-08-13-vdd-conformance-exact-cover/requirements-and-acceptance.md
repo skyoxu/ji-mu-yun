@@ -15,7 +15,9 @@ universe is exactly `VCEC-A01..VCEC-A43`. Every requirement is mapped to one or
 more falsifiable acceptance IDs, implementation slices, and registered
 commands; every acceptance maps back to one or more requirements. The complete
 forward and reverse mapping is authoritative for this plan at
-`repair/round-1/requirements-acceptance-slice-command.v1.json`. `authorizes`
+`repair/round-5/requirements-acceptance-slice-command.v1.json`. Round 1 is
+immutable historical evidence and is superseded only for current consumption.
+`authorizes`
 is always `[]` in VDD and exact-cover artifacts.
 
 Important non-goals: no producer attestation, no lifecycle transition owned by

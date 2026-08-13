@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:2f45bae22638d283ca7805ee339060681018c9f09591ef386276ec64f11d4e84",
+  "sections": [
+    {
+      "title": "Review finding",
+      "content": "Round 5 repair addresses custody and execution-proof findings. It preserves pre-implementation status and identifies required corrections to mappings, command execution, receipt validation, adapter composition, registry bindings, and closure scope."
+    },
+    {
+      "title": "Implementation contract",
+      "content": "Plan is self-hosted and plan-ready. S0 through S5 define required validation command identities; terminal validation is the Round 5 terminal script. No authorization is granted."
+    },
+    {
+      "title": "Plan state",
+      "content": "Repair round 5 is repair-validated. All implementation slices remain pending, with dependency ordering defined. State explicitly excludes implementation authorization, completion, acceptance, and archival."
+    },
+    {
+      "title": "Round 5 coverage mapping",
+      "content": "Superseding requirement-to-acceptance mapping covers VCEC-001 through VCEC-036 and acceptance IDs A01 through A43. It assigns source-freeze, scope, readonly, dogfood, and other command identities to relevant slices without authorization."
+    },
+    {
+      "title": "Repair target",
+      "content": "The bounded target is the exact-cover execution-plan directory. Supplied finding, mapping, contract, and state are sufficient only for a non-authorizing VDD plan repair; implementation and runtime conformance decisions remain out of scope."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-13T13:48:39.656937Z"
+}

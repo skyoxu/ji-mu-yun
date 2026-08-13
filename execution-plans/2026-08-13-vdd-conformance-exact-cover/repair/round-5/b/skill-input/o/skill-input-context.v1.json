@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:6ca3bc8902e35dbee2bcbf3e8dc38dca4493020d8fca8de96ac36e1a57bb69bf",
+  "sections": [
+    {
+      "title": "Review finding",
+      "content": "Round 5 repair is scoped to custody and command-truth corrections; implementation remains blocked pending later work."
+    },
+    {
+      "title": "Implementation contract",
+      "content": "Defines S0-S5 pending slices, command IDs, terminal validation, forbidden targets, and no authorization."
+    },
+    {
+      "title": "Plan state",
+      "content": "Plan is repair-validated and plan-ready; all implementation slices remain pending and authorization is empty."
+    },
+    {
+      "title": "Current mapping",
+      "content": "Round 5 supersedes the historical mapping and maps requirements and acceptance IDs to S0-S5 commands."
+    },
+    {
+      "title": "Repair target",
+      "content": "Confirms this is a bounded, non-authorizing repair decision and that supplied inputs are sufficient for that limited operation."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-13T13:41:56.413100Z"
+}

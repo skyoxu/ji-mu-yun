@@ -1,0 +1,158 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "request_binding": {
+    "request": {
+      "finding": "docs/know23.txt",
+      "target_plan": "execution-plans/2026-08-13-vdd-conformance-exact-cover"
+    },
+    "consumer": "vdd-execution-plan",
+    "operation": "repair",
+    "target": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+    "route_identity": "sha256:ad551c4b0f9a7573a4bdf5f78cf31c1f9ee0c7cac64d0f68ebed65065b5a5531",
+    "source_roles": {
+      "target_plan": [
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan"
+      ],
+      "repair_finding": [
+        "docs/know23.txt"
+      ]
+    }
+  },
+  "request_hash": "sha256:1e625f649146a08c259d28026a637f196b39b351c6873480d9528fb7e2373712",
+  "target": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+  "route_identity": "sha256:ad551c4b0f9a7573a4bdf5f78cf31c1f9ee0c7cac64d0f68ebed65065b5a5531",
+  "repository_identity": {
+    "head": "19932009a35ae33d4a56cfc759d8f0da004b31a7",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:69f65bef2577ceaea054ebc852f887b6406ea4b8ec1fc415b48d73c81e04f72e"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-13T13:54:40.795463Z",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:3eb8d75c4a5646c078eec53a0100ed7761e040e00002d9fa0f03fdfc0773ced3"
+  },
+  "child_request": {
+    "path": "child.json",
+    "sha256": "sha256:36c6c5c94a0ce77a2465a6dbb7ccf5bf6935dab070f429ca3266f1ec1cc6e8f0"
+  },
+  "sources": [
+    {
+      "path": "docs/know23.txt",
+      "required": true,
+      "sha256_before": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "sha256_after": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "size_bytes": 8488,
+      "line_count": 257,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:1d43524c9d3733332be805a3f2be00c4d5f279ac1554eb91cd28870c5a65f496",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 257
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json",
+      "required": false,
+      "sha256_before": "sha256:671bad37bc6b32459d7e2ee631b17cb8c91c643c1ff705722d547bd1d45cb89a",
+      "sha256_after": "sha256:671bad37bc6b32459d7e2ee631b17cb8c91c643c1ff705722d547bd1d45cb89a",
+      "size_bytes": 3687,
+      "line_count": 24,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:671bad37bc6b32459d7e2ee631b17cb8c91c643c1ff705722d547bd1d45cb89a",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 24
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json",
+      "required": false,
+      "sha256_before": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "sha256_after": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "size_bytes": 1349,
+      "line_count": 28,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 28
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/requirements-acceptance-slice-command.v1.json",
+      "required": false,
+      "sha256_before": "sha256:e818731cc9b056e9451a141207059dcf07669cd13e660949e3a0a97cefcd6338",
+      "sha256_after": "sha256:e818731cc9b056e9451a141207059dcf07669cd13e660949e3a0a97cefcd6338",
+      "size_bytes": 5475,
+      "line_count": 48,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:e818731cc9b056e9451a141207059dcf07669cd13e660949e3a0a97cefcd6338",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 48
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/skill-input-target-plan/target-plan.md",
+      "required": true,
+      "sha256_before": "sha256:bb836031d75ffca589202dfc52a9f1748f64be5496c1fd1d90cae263e431e996",
+      "sha256_after": "sha256:bb836031d75ffca589202dfc52a9f1748f64be5496c1fd1d90cae263e431e996",
+      "size_bytes": 1322,
+      "line_count": 24,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:bb836031d75ffca589202dfc52a9f1748f64be5496c1fd1d90cae263e431e996",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 24
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "o/semantic-decision.v1.json",
+    "sha256": "sha256:a134347c321a451ab1bb961a8ad21e567771969725f88b87d8031436c137c4f1"
+  },
+  "context_artifact": {
+    "path": "o/skill-input-context.v1.json",
+    "sha256": "sha256:4dde922547a5cc445683de0ef3ae71b2c33af2889235ba861b641ba37d06ab18"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:03c9e826cec5c5ca485c217f301bc5e647af14561ec1b166089b0c7af46889dc"
+}
