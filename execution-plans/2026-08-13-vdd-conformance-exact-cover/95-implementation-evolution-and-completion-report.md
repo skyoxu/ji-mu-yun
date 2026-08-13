@@ -23,3 +23,13 @@ paths by SHA-256, changed paths, direct consumers, and its validation command.
 The VDD knowledge adapter independently enforces validator freshness; stale
 catalog opt-in cannot bypass validator implementation drift. Lifecycle remains
 `plan-ready` and no authorization is granted.
+
+Repair round 3, sourced from `docs/know21.txt`, separates repair validation
+from future implementation entry points. Registered implementation commands
+now fail closed until explicit implementation evidence exists; the terminal
+gate validates candidate evidence without reading lifecycle state as a
+precondition. The registry has one Round 3 terminal truth, and the controlled
+composition command actually executes the knowledge producer and consumer,
+writing a hash-bound receipt. Round 3 closure binds finalized findings,
+predecessor evidence, and a generated callsite inventory. Lifecycle remains
+`plan-ready` and `authorizes` remains empty.

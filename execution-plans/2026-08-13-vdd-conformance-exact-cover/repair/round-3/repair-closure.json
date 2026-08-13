@@ -1,0 +1,32 @@
+{
+  "schema_version": "vdd-repair-closure.v1",
+  "plan_id": "vdd-conformance-exact-cover",
+  "round": 3,
+  "predecessor_round": 2,
+  "finding_source": "docs/know21.txt",
+  "finding_source_sha256": "sha256:c233bb471c2fa22df2f0fca6da41d16c25b6bd67b7ece8fd5592f1af98843738",
+  "finalized_findings_sha256": "sha256:cdf1c4253b316f6df3775e01053e66afa2052589814e37ab04c9ffbf7ce31ac6",
+  "predecessor_findings_sha256": "sha256:58f776f4d3931e0e95d6c53c6180f7d679a46fdc9a3c80fb0d6205e9a591e636",
+  "predecessor_closure_sha256": "sha256:786298ecf14d4fc3f45783b33c6b1cf6cc0c8cc4f20820a00bbd2ea45dc525f9",
+  "callsite_inventory": "repair/round-3/callsite-inventory.v1.json",
+  "callsite_inventory_sha256": "sha256:1dc9eef76d12b418cb69e3971ca8a8e49106babb73f2647fbf2645181c19faf8",
+  "scope": [
+    "repair/round-3/findings.md",
+    "repair/round-3/callsite-inventory.v1.json",
+    "repair/round-3/repair-closure.json",
+    "repair/round-3/implementation-command.py",
+    "repair/round-3/composition.py",
+    "repair/round-3/terminal-full.py",
+    "repair/round-3/composition-receipt.v1.json",
+    "repair/round-3/composition-runs/run-004/knowledge-context.v1.json",
+    "repair/round-3/composition-runs/run-004/knowledge-context.freeze.v1.json",
+    "repair/round-2/repair-validation.py",
+    "command-registry.v1.json",
+    "implementation-contract.v1.json",
+    "plan-state.v1.json",
+    "95-implementation-evolution-and-completion-report.md",
+    "docs/know21.txt"
+  ],
+  "status": "repair-validated",
+  "authorizes": []
+}

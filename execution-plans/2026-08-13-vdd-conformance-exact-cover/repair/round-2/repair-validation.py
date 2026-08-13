@@ -13,7 +13,7 @@ PLAN = ROOT / "execution-plans/2026-08-13-vdd-conformance-exact-cover"
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--check", default="all")
+    parser.add_argument("--check", choices=["repair"], default="repair")
     args = parser.parse_args()
     mapping = json.loads((PLAN / "repair/round-1/requirements-acceptance-slice-command.v1.json").read_text(encoding="utf-8"))
     registry = json.loads((PLAN / "command-registry.v1.json").read_text(encoding="utf-8"))
@@ -28,7 +28,7 @@ def main() -> int:
     subprocess.run([sys.executable, "-m", "unittest", "scripts.python.tests.test_knowledge_context_validation"], cwd=ROOT, check=True)
     subprocess.run([sys.executable, ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py", "--skill-root", ".agents/skills/vdd-execution-plan"], cwd=ROOT, check=True)
     subprocess.run(["git", "diff", "--check"], cwd=ROOT, check=True)
-    print(f"repair-validation=passed check={args.check}")
+    print("repair-validation=passed check=repair")
     return 0
 
 

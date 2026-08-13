@@ -1,0 +1,233 @@
+这一轮又修掉不少，但还不能进入 implementation。现在我评为：
+
+P0：3 个
+P1：2 个
+P2：1 个
+
+已真正修好的
+
+上一轮这几项已经闭合：
+
+mapping 引用的 command ID 现在都能在 registry 找到；
+plan-state 已同步为 S3a/S3b/S3c/S3d，依赖关系也同步了；
+implementation-contract 已显式记录每个 slice 的 red_command_ids / green_command_ids；
+allow_stale_catalog 已不能再绕过 validator implementation freshness，_validator() 始终要求代码与 current main 一致。
+也新增了对应 regression guard。
+
+所以这些不再算问题。
+
+P0-1：新注册的 implementation commands 实际还是假的
+
+这是当前最大问题。
+
+例如 registry 新增：
+
+vdd-source-freeze
+vdd-source-freeze-negative
+semantic-handoff
+authorization-preflight
+retry-taxonomy
+fingerprint-shard
+
+但它们全部只是调用：
+
+repair/round-2/repair-validation.py --check xxx
+
+而 repair-validation.py 根本没有根据 args.check 执行不同验证。
+
+它只是：
+
+检查 mapping command 名称是否存在；
+检查 slice 名称集合；
+跑 knowledge-context 旧 tests；
+跑 VDD Skill contract；
+git diff --check。
+
+最后无论：
+
+--check source-freeze
+--check semantic-handoff
+--check authorization-preflight
+--check retry-taxonomy
+--check fingerprint-shard
+
+执行的都是同一件事。
+
+所以现在只是：
+
+command ID 注册齐了
+
+但没有做到：
+
+command 真正证明对应 acceptance。
+
+而且这些所谓 RED/GREEN 在 Exact-cover 尚未实现的今天就可以 PASS，这直接说明它们不是真正的 implementation commands。
+
+P0-2：真正 terminal-full 出现生命周期循环依赖
+
+这次把 terminal-full 分离出来是正确方向。
+
+但当前：
+
+if contract.get("lifecycle_state") != "implementation-complete":
+    return 2
+
+也就是说它要求 先是 implementation-complete 才允许验证 implementation。
+
+但 VDD 自身规则恰好相反：
+
+Before publishing implementation-complete, run one current terminal full validation.
+
+所以形成：
+
+terminal-full PASS
+    需要
+implementation-complete
+
+implementation-complete
+    又需要
+terminal-full PASS
+
+这是闭环死锁。
+
+正确顺序必须是：
+
+candidate implementation exists
+↓
+terminal-full 根据当前代码/测试/receipts 验证
+↓
+PASS
+↓
+Quick Dev 才允许发布 implementation-complete
+
+terminal-full 绝不能读取 lifecycle state 作为 PASS 前置条件。
+
+P0-3：command registry 的官方 terminal-full 仍指向旧 Round 1 validator
+
+implementation-contract 已经正确指向：
+
+repair/round-2/terminal-full.py
+
+但是 command-registry.v1.json 的：
+
+"id": "terminal-full"
+
+仍然指向：
+
+repair/round-1/terminal_full_validation.py
+
+而那个脚本正是上一轮已经确认的 stage-insensitive repair validator。
+
+同样，registry 里的：
+
+source-freeze
+exact-cover-negative
+recovery-context
+composition
+
+还继续调用这个 Round 1 脚本。
+
+因此现在存在两个“terminal truth”：
+
+implementation-contract
+→ round-2/terminal-full.py
+
+command-registry terminal-full
+→ round-1/terminal_full_validation.py
+
+这是不能留给 Quick Dev 自己猜的。
+
+P1-1：Round 2 composition receipt 还不是真正的 composition execution evidence
+
+receipt 现在的确比上次完整很多，加入了：
+
+producer paths + SHA-256；
+consumer paths + SHA-256；
+changed paths；
+direct consumers；
+validation reference。
+
+但它声明运行的是：
+
+command_id: repair-validation
+command: .../repair-validation.py
+
+而：
+
+repair-validation 并不是 registered command ID；
+这个脚本根本没有调用这些 producer/consumer；
+没有真正执行任何 prepare_knowledge_context → validator/locator → consumer composition。
+
+也就是说这是：
+
+“把 producer/consumer hash 写进 receipt”
+
+而不是：
+
+“受控命令实际执行 producer/consumer composition，并把参与 execution 的 bytes 绑定进 receipt”。
+
+VDD 自己要求的是后者。
+
+所以 repair-closure.status = repair-validated 目前还是略早。
+
+P1-2：Round 2 repair closure 没有真正绑定 finalized finding set
+
+Round 1 的 closure 当时还有：
+
+finding_sha256
+
+而 Round 2 现在只有：
+
+"finding_source": "docs/know20.txt"
+
+没有：
+
+finding content hash；
+predecessor review hash；
+current callsite inventory。
+
+而 VDD 的 repair contract 要求 repair round bind exact finalized finding set，并在 re-entry 前生成 current root-cause callsite inventory。
+
+Round 2 目录当前也没有新的 callsite inventory。
+
+这个不像前三个那么致命，但应该补。
+
+P2：stale-validator regression test 偏静态
+
+新增的测试是读取：
+
+prepare_knowledge_context.py
+
+然后检查源码字符串：
+
+不包含 "and not allow_stale_catalog"
+
+现在代码本身确实已经正确，所以不阻断。
+
+但更好的测试应该实际构造：
+
+validator bytes != current main
++
+--allow-stale-catalog
+→ 仍然 fail
+
+而不是检查源码长什么样。
+
+结论
+
+还不能 implementation，但已经非常接近。
+
+这一次不需要再做大规模 repair。建议 Round 3 只修执行闭环：
+
+repair-validation.py 只负责 repair validation，不要再冒充 S1~S5 的 implementation commands。
+为未来 implementation 定义真正 command entry points；当前未实现时它们应该 RED/blocked，而不是 PASS。
+terminal-full.py 去掉 implementation-complete lifecycle 前置，改为直接验证 production implementation + composition + dogfood。
+registry 的唯一 terminal-full 改为 Round 2/3 真正 terminal implementation gate，删除/降级旧 Round 1 terminal 名义。
+做一个真实 controlled producer-consumer composition command，并由它产生 hash-bound receipt。
+Round 3 closure 加 finding_sha256 + current callsite inventory。
+
+这六项收掉后，我预计就可以人工给出：
+
+manual exact-cover = conformant → 进入 implementation authorization → Quick Dev。
+
+现在最大的剩余问题已经不是 Spec/VDD 内容设计，而只是 “测试命令必须真的测试它声称测试的东西”。
