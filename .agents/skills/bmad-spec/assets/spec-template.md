@@ -1,7 +1,8 @@
 ---
 id: SPEC-{slug}
-companions: []     # files downstream MUST read alongside SPEC.md. Paths may point inside the spec folder (spec-authored) or outside it (adopted from an upstream skill).
-sources: []        # files fully absorbed into the SPEC (audit only; downstream does NOT read these). Never the memlog.
+package_schema: canonical-spec-package.v1
+companions: []     # typed {path, role}; role is normative_companion or adopted_companion.
+sources: []        # typed {path, role: provenance}; fully absorbed audit sources only. Never the memlog.
 ---
 
 > **Canonical contract.** This SPEC and the files in `companions:` are the complete, preservation-validated contract for what to build, test, and validate. Source documents listed in frontmatter are for traceability only — consult them only if you need narrative rationale or prose color this contract intentionally omits.

@@ -4,6 +4,8 @@
 
 ```text
 Canonical Spec Package contract + external selection registry（owner: bmad-spec）
+        ↓ required upstream delivery: create/refresh + atomic publish
+typed descriptor + selection record + current pointer
         ↓
 VDD source-freeze producer
         ↓

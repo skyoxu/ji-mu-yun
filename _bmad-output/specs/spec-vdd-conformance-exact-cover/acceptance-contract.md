@@ -14,7 +14,7 @@
 | `VCEC-006` | 每条 source obligation 必须绑定 stable ID、verbatim anchor、source pointer 与 source hash。 | `VCEC-A07` |
 | `VCEC-007` | Active obligations、requirements 与 acceptances 必须形成 bidirectional sound-and-complete cover。 | `VCEC-A08` |
 | `VCEC-008` | Not-applicable、deferred 与 conflict dispositions 必须具有 reason、authority reference 与 target plan。 | `VCEC-A09` |
-| `VCEC-009` | Unknown、duplicate、orphan、wrong binding、weakening、unresolved conflict 与 silent omission 不得产生 conformant。 | `VCEC-A10` |
+| `VCEC-009` | Unknown、duplicate、orphan、wrong binding、deterministically provable weakening、unresolved conflict 与 silent omission 不得产生 conformant；机器不可判定的 weakening 必须进入 semantic-review handoff。 | `VCEC-A10` |
 | `VCEC-010` | LLM 只能提出 candidates 或解释 ambiguity；canonical IDs/hashes/cover/PASS 由 deterministic producer 决定。 | `VCEC-A11` |
 | `VCEC-011` | Results 只能是 typed blocked、conformant 或 requirement-semantic-review handoff，并携带 bounded hash-bound evidence。 | `VCEC-A12` |
 | `VCEC-012` | Pre-implementation ambiguity 必须显式路由到 `bootstrap-upstream-plan`，随后 explicit VDD repair 与 exact-cover rerun。 | `VCEC-A13` |
@@ -41,6 +41,7 @@
 | `VCEC-033` | Deterministic failure 不得进入 Bootstrap；只有机器不可判定的 requirement ambiguity 可 escalation。 | `VCEC-A29`, `VCEC-A39` |
 | `VCEC-034` | Failure family 与 current evidence 必须确定性选择 typed、non-authorizing recommended action。 | `VCEC-A40` |
 | `VCEC-035` | Recovery 必须从 manifest、两级 fingerprints 与 shard states 重建；clean reuse 需证明，stale shards 重验，aggregate 重算。 | `VCEC-A41` |
+| `VCEC-036` | 本需求必须先交付 `bmad-spec` selection-registry producer；VDD/exact-cover 只能验证和消费，不能代产或把它假定为既有 prerequisite。 | `VCEC-A43` |
 
 ## Lifecycle Boundaries
 
@@ -66,7 +67,7 @@
 | `VCEC-A07` | 每个 stable obligation ID、inclusive quote、source pointer/hash 均可重算；duplicate 或 drift 失败。 | `VCEC-006` |
 | `VCEC-A08` | Bidirectional active sets 相等；删除任一合法 edge 后结果 non-conformant。 | `VCEC-007` |
 | `VCEC-A09` | Non-active obligation 只有在 disposition 字段完整时才排除；缺任一字段即失败。 | `VCEC-008` |
-| `VCEC-A10` | Missing、unknown、duplicate、orphan、wrong-binding、weakening 与 unresolved-conflict mutations 均不 conform。 | `VCEC-009` |
+| `VCEC-A10` | Missing、unknown、duplicate、orphan、wrong-binding、deterministically provable weakening 与 unresolved-conflict mutations 均不 conform；semantic ambiguity mutation 只能产生 review handoff，不能产生 conformant。 | `VCEC-009` |
 | `VCEC-A11` | Caller/LLM canonical IDs、hashes 或 PASS booleans 不改变 deterministic recomputation。 | `VCEC-010` |
 | `VCEC-A12` | 三种 result forms 均能 validate；raw/full output 或缺 evidence path/hash 失败。 | `VCEC-011` |
 | `VCEC-A13` | Ambiguity 只产生 requirement-review handoff；无显式授权不启动 Bootstrap；current envelope 只产生 repair input。 | `VCEC-012` |
@@ -99,12 +100,14 @@
 | `VCEC-A40` | 每个 family 确定性映射 allowed action；修改 prose/caller suggestion 不改变结果，且 `authorizes=[]`。 | `VCEC-034` |
 | `VCEC-A41` | 新进程只从 authorized branch 的 append-only checkpoint lineage 恢复；重验 validator/policy/artifact refs，reuse 已证明 unchanged 的 clean shards、拒绝 stale shards，并重算 current aggregate。 | `VCEC-035` |
 | `VCEC-A42` | Malformed extraction 为 `obligation_extraction_invalid`；attempts 唯一，ceiling 前用 `rerun_changed_shards`，随后 stop 并 blocked `inspect_extraction`。 | `VCEC-028` |
+| `VCEC-A43` | 从不含 selection capability 的基线开始，真实 `bmad-spec` create/refresh 产生 typed descriptor、可重算的 content-addressed selection record 与 matching current pointer；VDD 在此之前 fail closed，之后只读消费，且 VDD/exact-cover diff 不含 registry write path。 | `VCEC-036` |
 
 ## Completion Gate
 
 完成必须同时满足：
 
 - 真实 Canonical Spec Package 产生具有完整 roles 的 VDD manifest，且 VDD/exact-cover 绑定同一 identity/hash。
+- `bmad-spec` selection-registry producer 已作为本需求的 upstream deliverable 实现并通过 create/refresh、tamper、missing/stale pointer 与 VDD read-only composition fixtures；未交付时不得进入 VDD source freeze。
 - 每个 active obligation 都有 stable、traceable requirement/acceptance coverage；每个 disposition 完整。
 - 所有 deterministic gaps、drift、tampering、unknown、duplicate、wrong binding、normative omission、quarantined shard 与 manifest A/B cases 均 fail closed。
 - 真实 VDD repair 与现有 authorization preflight 消费 current artifacts，同时保持原 lifecycle ownership。
@@ -114,4 +117,4 @@
 - Maintainer-owned runtime-policy registry 满足 AD-7；candidate retry/shard/presentation values 只有被 registry 明确批准并 hash-bound 后才生效。12,000 exact serialized UTF-8 bytes 是唯一 model-visible hard gate，token estimate 仅为 deterministic telemetry。
 - VDD 独占 source-freeze producer schema；exact-cover 只验证其 path/hash/version。复制 schema、owner/path/hash drift 或 unknown version fixtures 全部 fail closed。
 - 至少一个真实 plan 完成 create → exact-cover → optional review → repair → exact-cover dogfood。
-- `VCEC-001` 至 `VCEC-035` 各自映射至少一个可证伪 acceptance，且现有 recovery、hash binding、negative fixtures 与 lifecycle boundaries 得到保留。
+- `VCEC-001` 至 `VCEC-036` 各自映射至少一个可证伪 acceptance，且现有 recovery、hash binding、negative fixtures 与 lifecycle boundaries 得到保留。

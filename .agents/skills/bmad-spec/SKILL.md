@@ -49,6 +49,14 @@ Inside the spec folder:
   .memlog.md               ← canonical, append-only memory; what SPEC.md is distilled from
 ```
 
+The package contract is defined by [references/canonical-package-contract.md](references/canonical-package-contract.md). A v1 package MUST use `package_schema: canonical-spec-package.v1` and typed descriptor entries; do not create or preserve a second producer format.
+
+After rendering or refreshing the package, validate and publish its external selection commitment with:
+
+`uv run {skill-root}/scripts/canonical_package.py --repo-root {project-root} --spec {spec-folder}/SPEC.md --publish`
+
+Treat its JSON output as the package-envelope validation result. Do not hand-compute or hand-write descriptor hashes, selection records, or current pointers.
+
 ## Memory and derivation
 
 `.memlog.md` is canonical — an append-only, chronological record of every decision, constraint, capability (with its stable `CAP-N`), assumption, open question, and bit of user direction, one line each in the order it happened, never edited or reordered. `SPEC.md` and every spec-authored companion are **derived on each run** from the memlog (the decision-of-record) plus the sources it cites for raw content — never hand-patched.
@@ -90,7 +98,11 @@ When load-bearing content does not fit the five-field kernel, it lives in a comp
 Companions are either:
 
 - **Spec-authored** companions are written by bmad-spec and live as **siblings of SPEC.md** (e.g., `glossary.md`, `patron-archetypes.md`). bmad-spec owns them and may edit them on update operations.
-- **Adopted** companions are load-bearing artifacts written by an upstream skill that downstream still needs to read. bmad-spec references them into `companions:` by relative path but does NOT edit them (e.g., a `DESIGN.md` or `EXPERIENCE.md` from a UX run, an integration partner's API spec). The originating skill owns them.
+- **Adopted** companions are load-bearing artifacts written by an upstream skill that downstream still needs to read. bmad-spec references them with normalized repository-relative POSIX paths and role `adopted_companion`, but does NOT edit them (e.g., a `DESIGN.md` or `EXPERIENCE.md` from a UX run, an integration partner's API spec). The originating skill owns them.
+
+For `canonical-spec-package.v1`, the distinction is explicit in the root descriptor: each `companions` entry is `{path, role}` with role `normative_companion` or `adopted_companion`; each `sources` entry is `{path, role: provenance}`. A root `SPEC.md` is the sole implicit `canonical` entry. `repository_authority` and `unresolved_input` are VDD source-freeze roles and MUST NOT be emitted by bmad-spec frontmatter. Legacy string path arrays are not a supported v1 producer output; an update/refresh migrates them to typed entries while preserving capability IDs and append-only history.
+
+`bmad-spec` also owns the external `canonical-spec-package-selection.v1` registry. After rendering, publish a content-addressed selection record containing the package ID, expected descriptor hash, and complete role graph, plus a maintainer-scoped current pointer that names the record hash. The record is a completeness/selection commitment, not producer attestation. VDD validates the descriptor and selection record independently and fails closed on missing, stale, altered, or incomplete role graphs.
 
 Two rules govern companions:
 
@@ -118,6 +130,8 @@ After every create or update, sweep the resulting artifact in **two passes** bef
 
 **Pass 1 — Coherence.** Judge the spec against Spec Law rules 1–6 and 8. For anything that fails or feels weak, attempt to fix it without inventing content the input did not support. Calls made without direct confirmation become `assumptions[]`; gaps that could not be filled become `open_questions[]`.
 
+Also validate the package envelope: parse the typed descriptor, reject legacy arrays/unknown roles/duplicates/missing paths, recompute the descriptor and selection hashes, and verify the external current pointer selects the exact complete role graph. Assistant prose is not package-validity evidence.
+
 **Pass 2 — Preservation.** Walk the source claim by claim. Confirm each load-bearing claim landed in SPEC.md or a companion. Wrapper-ceremony drops are logged under "Wrapper-only content" so the drop is on the record, not silent.
 
 Record the verdict for each pass to `.memlog.md` (`append --type event`). In interactive mode, review it with the user. In headless mode, `.memlog.md` is one of the files returned, so the caller (or its downstream LLM) reads the verdict there.
@@ -140,6 +154,8 @@ Any update to the spec — resolved assumptions, answered open questions, other 
 
 ## Frontmatter conventions
 
-- `companions:` array of `.md` files downstream MUST read alongside SPEC.md to have the full contract. Paths may point inside the spec folder (spec-authored companions like `glossary.md`) or outside it (adopted companions like `../planning-artifacts/ux-designs/ux-foo-bar-2026-05-23/DESIGN.md`). The split between spec-authored and adopted is implicit by path; downstream treats both the same.
-- `sources:` array of paths to files that were **fully absorbed** into the SPEC, with no remaining downstream value (e.g., a PRD whose every load-bearing claim is now in the kernel). Listed for audit and for bmad-spec to re-read on update. Downstream does NOT read these. Files that downstream still needs to read belong in `companions:`, not here.
+- `package_schema:` MUST be `canonical-spec-package.v1` for every newly created or refreshed package.
+- `companions:` is an ordered array of typed entries `{path, role}`. `role` MUST be `normative_companion` or `adopted_companion`; paths are normalized repository-relative POSIX paths under the package contract's containment rules.
+- `sources:` is an ordered array of typed entries `{path, role: provenance}` for files fully absorbed into the SPEC and retained only for traceability. Downstream does not extract obligations from provenance. Files downstream must read belong in `companions:`.
+- The root `SPEC.md` is the sole implicit `canonical` entry and MUST NOT appear in `companions` or `sources`. Duplicate paths, unknown roles, missing files, unlisted normative companions, and nested competing descriptors fail closed.
 - **Do not list** the memlog, README files, organizational artifacts, or any operational record of how upstream skills produced their artifacts. Those are not source content; they are process metadata that downstream consumers don't need.

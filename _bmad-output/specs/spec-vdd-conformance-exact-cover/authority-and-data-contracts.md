@@ -4,6 +4,8 @@
 
 Canonical Spec Package contract 与 external selection registry 由 `bmad-spec` 拥有。Package descriptor 是唯一 root `SPEC.md` frontmatter；selection record 在 package 外以 content-addressed record + maintainer-scoped current pointer 承诺 expected descriptor hash 与完整 role graph，不证明 producer identity。其角色为：
 
+本需求必须交付该 `bmad-spec` producer capability：create/refresh 在 package render 后确定性验证 descriptor，原子发布 selection record，再更新 current pointer。VDD 只独立解析和验证；在 producer 尚未交付或 evidence 缺失时 fail closed，不能把 selection registry 解释为现有 prerequisite，也不能自行补写 registry。
+
 | Role | Contract |
 | --- | --- |
 | `canonical` | 当前 `SPEC.md`。 |
@@ -15,7 +17,7 @@ Canonical Spec Package contract 与 external selection registry 由 `bmad-spec` 
 
 只有 canonical、normative、adopted 与适用 repository authority 贡献 active obligations。Provenance 只保留 path、byte hash 与 package relationship，不贡献 downstream obligation。Unresolved input 在 owner 解决前必须映射到 unresolved requirement 或具名 disposition。
 
-Authority 顺序为 source-freeze manifest、其 hash-bound package files、requirements directory、conformance validator。Caller source list、boolean、旧 run、summary 与 assistant statement 只能作为 diagnostic。
+Custody / Validation Order 为 source-freeze manifest、其 hash-bound package files、requirements directory、conformance validator。该顺序描述输入的托管与验证链，不定义 normative authority precedence。Caller source list、boolean、旧 run、summary 与 assistant statement 只能作为 diagnostic。
 
 ## Source-Freeze Manifest
 
@@ -54,7 +56,7 @@ VDD construction 与 exact-cover 必须消费并重验同一个 frozen manifest 
 
 Conformance matrix 包含 obligation、requirement、acceptance、mapping kind、source hashes、requirements hash、disposition 与 evidence refs。Exact-cover 表示 sound-and-complete cover，不要求 exclusive partition；合法 many-to-many coverage 必须记录 relationships 与 merge reason。
 
-Typed `not_applicable`、`deferred`、`conflict` disposition 必须具有 reason、authority reference 与 target plan。Unknown ref、duplicate ID、orphan acceptance、wrong binding、weakening、unresolved conflict 或 silent omission 均阻断 conformant。
+Typed `not_applicable`、`deferred`、`conflict` disposition 必须具有 reason、authority reference 与 target plan。Unknown ref、duplicate ID、orphan acceptance、wrong binding、deterministically provable weakening、unresolved conflict 或 silent omission 均阻断 conformant；无法由机器确定性判定的 weakening 属于 semantic ambiguity，必须进入显式 review handoff。
 
 ## Fingerprints And Shards
 

@@ -8,6 +8,15 @@
 - LLM obligation extraction 必须使用仓库 shared LLM backend 与 UTF-8 stdin。
 - 每次 requirement coverage 不得触发一次 LLM pass；正常成本应主要来自 parsing、set operations 与 hashing。
 
+## Implementation Scope And Order
+
+1. Upgrade `bmad-spec` to emit and refresh the typed `canonical-spec-package.v1` descriptor, validate it, and atomically publish the content-addressed `canonical-spec-package-selection.v1` record plus maintainer-scoped current pointer.
+2. Add the minimal VDD source-freeze producer/repair-consumer changes. VDD resolves the current pointer and record independently; missing, stale, mismatched, or incomplete selection evidence blocks before requirements construction.
+3. Implement exact-cover as a read-only consumer of the same VDD-frozen package identity and selection binding.
+4. Add the existing authorization-owner receipt preflight only after producer-to-consumer composition is current.
+
+The first item is a required upstream deliverable of this initiative, not a pre-existing prerequisite. VDD and exact-cover MUST NOT create, repair, or silently synthesize selection registry state.
+
 ## Planned Skill Layout
 
 ```text

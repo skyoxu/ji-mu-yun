@@ -32,11 +32,11 @@ VDD 需要以机器可证明的方式确认 execution-plan requirements 目录�
 ## Capabilities
 
 - **CAP-1**
-  - **intent:** VDD 能为 plan construction 与 conformance 冻结并验证完整的 Canonical Spec Package authority graph。
-  - **success:** 一个 schema-valid、hash-bound 的 source manifest 保留全部 typed authority roles，并由 VDD construction 与 exact-cover 绑定同一 identity/hash。
+  - **intent:** `bmad-spec` 能发布可独立验证的 Canonical Spec Package selection commitment，VDD 能为 plan construction 与 conformance 冻结并验证其完整 authority graph。
+  - **success:** `bmad-spec` 先产生 typed descriptor、content-addressed selection record 与 current pointer；VDD 随后产生 schema-valid、hash-bound source manifest，保留全部 typed authority roles，并由 VDD construction 与 exact-cover 绑定同一 identity/hash。
 - **CAP-2**
   - **intent:** 工具链控制面能证明 source obligations、plan requirements、acceptances 与 dispositions 构成 sound-and-complete cover。
-  - **success:** 确定性重算覆盖全部 active obligation，并拒绝 unknown、orphan、duplicate、weakening、conflict 或 silent omission。
+  - **success:** 确定性重算覆盖全部 active obligation，并拒绝 unknown、orphan、duplicate、deterministically provable weakening、conflict 或 silent omission；无法机器判定的 weakening 进入显式 semantic-review handoff，不得被误报为 deterministic conformant。
 - **CAP-3**
   - **intent:** 工具链控制面能隔离真正的 requirement-semantic ambiguity，而不把 semantic review 变成通用 coverage gate。
   - **success:** Deterministic failure 保持 blocked；只有结构完整且 source-bound 的歧义才产生不授权的 `bootstrap-upstream-plan` handoff，并经显式 VDD repair 返回。
@@ -56,6 +56,7 @@ VDD 需要以机器可证明的方式确认 execution-plan requirements 目录�
 ## Constraints
 
 - `bmad-spec` owns the Canonical Spec Package contract and external selection registry. VDD owns source-freeze production, create/repair, `draft`, and `plan-ready`; the maintainer authorization adapter alone owns receipt preflight and `implementation-authorized` publication.
+- 本需求的 implementation scope 明确包含升级 `bmad-spec` producer，使其创建、刷新、验证并维护 selection record/current pointer；该能力是 VDD source freeze 的前置交付，不是已存在的外部 prerequisite，也不得由 VDD 或 exact-cover 代产。
 - Exact-cover 对 target plan 只读，不拥有 implementation、test、evidence、review launch、Acceptance、release、commit 或 migration authority。
 - 所有 exact-cover 与中间 artifacts 均 hash-bound 且 `authorizes=[]`；只有确定性重算能产生 `conformant`。
 - Deterministic schema、hash、path、ID、set、mapping 与 disposition 检查必须先于 semantic work，不能通过 retry、更大 context、reasoning effort 或 Bootstrap 绕过。
