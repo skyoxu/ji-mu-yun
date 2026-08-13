@@ -38,7 +38,7 @@ def _publish_staged(staged: Path, target: Path) -> None:
         raise SystemExit("knowledge context and freeze receipt are append-only") from exc
 
 
-def _validator(root: Path, *, allow_stale_catalog: bool = False):
+def _validator(root: Path):
     module_path = root / "scripts" / "python" / "knowledge_context_validation.py"
     for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py"):
         current = subprocess.run(
@@ -46,7 +46,7 @@ def _validator(root: Path, *, allow_stale_catalog: bool = False):
             capture_output=True,
             check=False,
         )
-        if current.returncode or ((root / relative).read_bytes() != current.stdout and not allow_stale_catalog):
+        if current.returncode or (root / relative).read_bytes() != current.stdout:
             raise SystemExit("knowledge context validator must match current main")
     spec = importlib.util.spec_from_file_location("vdd_knowledge_context_validation", module_path)
     if spec is None or spec.loader is None:
@@ -91,7 +91,7 @@ def main() -> int:
         output.relative_to(target_plan)
     except ValueError as exc:
         raise SystemExit("VDD knowledge context output must stay inside the target execution-plan") from exc
-    validator = _validator(root, allow_stale_catalog=args.allow_stale_catalog)
+    validator = _validator(root)
     catalog_path = args.catalog if args.catalog.is_absolute() else root / args.catalog
     canonical_catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
     if catalog_path.resolve() != canonical_catalog.resolve():

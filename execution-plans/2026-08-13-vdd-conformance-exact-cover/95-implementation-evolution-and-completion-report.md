@@ -13,3 +13,13 @@ reclassifies the existing bmad-spec producer as regression/hardening scope,
 splits the former recovery slice by owner, and adds executable validation
 commands. The initial source-freeze JSON remains bootstrap planning evidence;
 formal VCEC-003/A04 proof is deferred to S1 implementation.
+
+Repair round 2, sourced from `docs/know20.txt`, closes the remaining plan
+contract defects: all mapping command IDs are registered, the plan state and
+slice dependencies use S3a-S3d, each slice declares explicit RED/GREEN command
+IDs, and the implementation terminal gate remains blocked until real S0-S5
+evidence exists. The composition receipt now binds producer and consumer
+paths by SHA-256, changed paths, direct consumers, and its validation command.
+The VDD knowledge adapter independently enforces validator freshness; stale
+catalog opt-in cannot bypass validator implementation drift. Lifecycle remains
+`plan-ready` and no authorization is granted.

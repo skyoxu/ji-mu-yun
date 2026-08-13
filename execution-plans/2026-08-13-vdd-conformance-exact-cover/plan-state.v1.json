@@ -3,21 +3,24 @@
   "plan_id": "vdd-conformance-exact-cover",
   "profile": "self-hosted",
   "state": "plan-ready",
-  "repair_round": 1,
-  "repair_status": "repair-ready",
+  "repair_round": 2,
+  "repair_status": "repair-validated",
   "state_owner": "vdd",
   "resume": {
-    "next_action": "Run repair/round-1/terminal_full_validation.py, then implement S0 through S5 in dependency order.",
-    "last_completed_step": "repair-round-1-delta-written",
-    "recovery_instruction": "Revalidate repair closure, source-freeze evidence, knowledge, and current pointer hashes before continuing."
+    "next_action": "Implement S0 through S5 in dependency order, then run repair/round-2/terminal-full.py.",
+    "last_completed_step": "repair-round-2-validation-written",
+    "recovery_instruction": "Revalidate round-2 closure, composition receipt, registry commands, knowledge freshness, and current pointer hashes before continuing."
   },
   "slices": [
     {"id":"S0","status":"pending","depends_on":[]},
     {"id":"S1","status":"pending","depends_on":["S0"]},
     {"id":"S2","status":"pending","depends_on":["S1"]},
-    {"id":"S3","status":"pending","depends_on":["S2"]},
-    {"id":"S4","status":"pending","depends_on":["S2","S3"]},
-    {"id":"S5","status":"pending","depends_on":["S0","S1","S2","S3","S4"]}
+    {"id":"S3a","status":"pending","depends_on":["S2"]},
+    {"id":"S3b","status":"pending","depends_on":["S2"]},
+    {"id":"S3c","status":"pending","depends_on":["S2"]},
+    {"id":"S3d","status":"pending","depends_on":["S2","S3c"]},
+    {"id":"S4","status":"pending","depends_on":["S2","S3a"]},
+    {"id":"S5","status":"pending","depends_on":["S0","S1","S2","S3a","S3b","S3c","S3d","S4"]}
   ],
   "blocking_conditions": [],
   "authorizes": [],

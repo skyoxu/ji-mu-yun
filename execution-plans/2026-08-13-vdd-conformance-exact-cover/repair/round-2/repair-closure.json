@@ -1,0 +1,11 @@
+{
+  "schema_version":"vdd-repair-closure.v1",
+  "plan_id":"vdd-conformance-exact-cover",
+  "round":2,
+  "predecessor_round":1,
+  "finding_source":"docs/know20.txt",
+  "scope":["repair/round-2/findings.md","repair/round-2/repair-validation.py","repair/round-2/terminal-full.py","repair/round-2/composition-receipt.v1.json","command-registry.v1.json","plan-state.v1.json","implementation-contract.v1.json",".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py","scripts/python/tests/test_knowledge_context_validation.py"],
+  "status":"repair-validated",
+  "composition_receipt":"repair/round-2/composition-receipt.v1.json",
+  "authorizes":[]
+}

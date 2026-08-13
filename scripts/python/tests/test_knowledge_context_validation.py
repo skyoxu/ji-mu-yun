@@ -48,6 +48,13 @@ def payload(*, path: str = "AGENTS.md", digest: str = "a" * 64) -> dict:
 
 
 class KnowledgeContextValidationTests(unittest.TestCase):
+    def test_stale_catalog_flag_cannot_bypass_validator_implementation_freshness(self) -> None:
+        prepare = Path(__file__).resolve().parents[3] / ".agents/skills/vdd-execution-plan/scripts/prepare_knowledge_context.py"
+        source = prepare.read_text(encoding="utf-8")
+        freshness_block = source[source.index("def _validator"):source.index("def main")]
+        self.assertIn("knowledge context validator must match current main", freshness_block)
+        self.assertNotIn("and not allow_stale_catalog", freshness_block)
+
     def test_catalog_stale_precedes_blocked_locator_result(self) -> None:
         document = payload()
         document["locator_result"].update({"status": "blocked", "candidates": []})

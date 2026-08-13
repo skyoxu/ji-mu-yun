@@ -1,0 +1,203 @@
+已经修好的部分
+
+上一轮几个核心问题确实修掉了：
+
+VCEC-001..036 与 VCEC-A01..A43 已正确分开。
+36 条 requirement 已逐条映射 acceptance，reverse mapping 也完整；我对照 Canonical acceptance contract，映射本身是对的。
+S0 已改为 existing producer 的 regression/hardening。
+原来的大 S3 已拆成 S3a/S3b/S3c/S3d。
+source-freeze 已明确标成 bootstrap planning evidence，不是 VCEC-003/A04 的正式实现证据。
+
+这些修改方向都正确。
+
+P0-1 — mapping 指向了不存在的 registered commands
+
+requirements-acceptance-slice-command.v1.json 现在确实给每条 requirement 写了 command，但是其中至少下面 8 个 command ID 根本不在 command-registry.v1.json：
+
+vdd-source-freeze
+vdd-source-freeze-negative
+semantic-handoff
+authorization-preflight
+authorization-preflight-negative
+composition-negative
+retry-taxonomy
+fingerprint-shard
+
+当前 registry 实际只有：
+
+bmad-spec-regression
+stale-catalog-policy
+skill-input
+knowledge-preflight
+source-freeze
+exact-cover-negative
+recovery-context
+composition
+terminal-full
+
+所以 requirements-and-acceptance.md 所说的“每个 requirement 都映射 registered commands”目前实际上不成立。
+
+必须让所有 mapping command ID 真正 resolve 到 registry。
+
+P0-2 — terminal-full 现在只是 repair validator，不是 implementation terminal validator
+
+这是目前最重要的问题。
+
+implementation-contract.v1.json 把：
+
+repair/round-1/terminal_full_validation.py
+
+定义成最终 terminal_validation。
+
+但这个脚本实际只做：
+
+检查 36/43 ID 集合；
+跑 bmad-spec 已有 tests；
+跑已有 knowledge tests；
+验证 VDD Skill contract；
+git diff --check。
+
+而且虽然接受：
+
+--stage source-freeze
+--stage exact-cover-negative
+--stage recovery-context
+--stage composition
+
+args.stage 后面根本没有参与任何分支。所有 stage 跑的完全是同一套旧 tests。
+
+也就是说现在：
+
+--stage source-freeze
+
+并没有验证 source-freeze；
+
+--stage composition
+
+也没有运行真正的 producer → consumer composition。
+
+更关键的是：Exact-cover Skill 还没实现，这个所谓 terminal-full 就已经 passed 了。 composition-receipt 甚至记录了 “75 tests passed”。
+
+这说明它只能证明 VDD repair artifact 自己结构正常，不能作为未来 implementation-complete 的 terminal validation。
+
+正确做法应该分成两个东西：
+
+repair-validation
+    → 现在可以 PASS
+    → 只验证 VDD repair 本身
+
+terminal-full
+    → 真正覆盖 S0~S5
+    → implementation 前应该尚不能形成最终 GREEN
+    → implementation 后才能证明整个 Exact-cover delivery
+
+VDD 自己也明确要求每个 slice 有真正 RED/negative、GREEN/acceptance command，并在 implementation-complete 前跑 current terminal full replay。
+
+P0-3 — plan-state 还是旧的 S3，没有跟 S3a~S3d 同步
+
+implementation-contract 已经是：
+
+S3a
+S3b
+S3c
+S3d
+
+但 plan-state.v1.json 仍然只有：
+
+S0
+S1
+S2
+S3
+S4
+S5
+
+而且：
+
+S4 depends_on ["S2","S3"]
+S5 depends_on ["S0","S1","S2","S3","S4"]
+
+这样 repair 后的 dependency invalidation / resume state 已经与 execution contract 不一致。
+
+应该改成真正的：
+
+S3a
+S3b
+S3c
+S3d
+
+并重新定义 S4/S5 dependency。
+
+P1-1 — repair composition receipt 还不满足 VDD 自己的 repair contract
+
+当前 receipt 只有：
+
+command；
+status；
+“75 tests passed”；
+consumers 名称。
+
+但 VDD 当前正式规则明确要求 composition receipt：
+
+bind current producer bytes；
+bind current consumer bytes；
+使用 controlled-command input paths；
+composition 必须覆盖 changed path；
+consumer 必须声明为 direct consumer；
+receipt 成为 validation reference。
+
+当前 receipt 没有这些 path/hash binding。
+
+所以 repair-closure.json 虽然写了：
+
+"status":"repair-validated"
+
+这个状态目前还不能按 VDD 自己的规则成立。
+
+P1-2 — allow_stale_catalog 仍然存在过宽旁路
+
+这个问题实际上没有完全修。
+
+现在代码还是：
+
+if current.returncode or (
+    (root / relative).read_bytes() != current.stdout
+    and not allow_stale_catalog
+):
+
+也就是说打开：
+
+--allow-stale-catalog
+
+不仅允许 catalog stale，还同时允许：
+
+knowledge_context_validation.py / _knowledge_locator_core.py 与 current main 不一致。
+
+但现有 test_knowledge_context_validation 测的是：
+
+stale catalog opt-in；
+invalid publication 仍失败。
+
+它没有测试这个 validator-code freshness bypass。
+
+这里建议直接修语义：
+
+allow_stale_catalog
+只允许 catalog snapshot stale
+
+绝不能允许 validator implementation stale
+
+也就是 validator 与 current main 的一致性检查不应该受这个 flag 控制。
+
+当前结论
+
+现在已经不是“重新做一次大 repair”了，剩余问题非常集中。
+
+建议只做 Repair Round 2：
+
+让全部 requirement mapping command ID 真正存在，并为每个 slice 明确 red_command_ids / green_command_ids。
+把现在的 terminal_full_validation.py 降级为 repair-validation；另定义真正 implementation terminal-full。
+plan-state 同步成 S3a/S3b/S3c/S3d。
+composition receipt 增加 producer/consumer path + byte hash + changed-path/direct-consumer binding。
+allow_stale_catalog 不再绕过 validator-code 与 main 的一致性检查，并给 prepare_knowledge_context.py 本身加 regression test。
+
+这 5 项修完，我认为就很接近真正 conformant 了，不需要再动 BMad Spec，也不需要 Bootstrap
