@@ -1,0 +1,817 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-context.v1",
+  "locator_request": {
+    "schema_version": "jimuyun.knowledge-locator-request.v1",
+    "request_id": "vdd-conformance-exact-cover-2026-08-14-rules",
+    "consumer": "vdd",
+    "query": "repository rules AGENTS.md ADR-0044 ADR-0048",
+    "snapshot": {
+      "ref": "refs/heads/main",
+      "commit": "bdb9df4bd61def6f048cf4ad7cc427565228cb07"
+    },
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "allow_stale_catalog": true
+  },
+  "locator_result": {
+    "candidates": [
+      {
+        "anchor": "Context And Documentation Layers",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "repository-guide",
+        "lifecycle": "repository-source",
+        "line_end": 15,
+        "line_start": 15,
+        "module_id": "repository-rules",
+        "path": "AGENTS.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "high",
+          "score": 172,
+          "strategy": "hybrid-token",
+          "token_matches": 4
+        },
+        "read_set": [
+          {
+            "path": "AGENTS.md",
+            "role": "primary",
+            "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "repository-authority",
+        "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "ADR-0048: Repository Knowledge Locator Workflow Consumption",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0048",
+        "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 70,
+          "strategy": "hybrid-token",
+          "token_matches": 3
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+            "role": "primary",
+            "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0037",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0041",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0043",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0044",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "ADR-0044: Knowledge Projection Authority And E2 Hosted Context Envelope",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 1,
+        "line_start": 1,
+        "module_id": "adr.ADR-0044",
+        "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 54,
+          "strategy": "hybrid-token",
+          "token_matches": 3
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+            "role": "primary",
+            "source_sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0033",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0035",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0037",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0038",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0040",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "Accepted",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr-scope-index",
+        "lifecycle": "repository-source",
+        "line_end": 18,
+        "line_start": 18,
+        "module_id": "adr-index.phase",
+        "path": "docs/architecture/ADR_INDEX_PHASE.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 50,
+          "strategy": "hybrid-token",
+          "token_matches": 5
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/ADR_INDEX_PHASE.md",
+            "role": "primary",
+            "source_sha256": "a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "collection-index",
+        "source_sha256": "a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "云端平台",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "repository-overview",
+        "lifecycle": "repository-source",
+        "line_end": 158,
+        "line_start": 158,
+        "module_id": "repository.overview",
+        "path": "README.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 48,
+          "strategy": "hybrid-token",
+          "token_matches": 4
+        },
+        "read_set": [
+          {
+            "path": "README.md",
+            "role": "primary",
+            "source_sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "repository-overview",
+        "source_sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Invariants",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-module",
+        "lifecycle": "repository-source",
+        "line_end": 37,
+        "line_start": 37,
+        "module_id": "architecture.phase-service.hosted-workspaces-and-artifacts",
+        "path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 40,
+          "strategy": "hybrid-token",
+          "token_matches": 4
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
+            "role": "primary",
+            "source_sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0035",
+            "type": "governed_by"
+          },
+          {
+            "target": "adr.ADR-0044",
+            "type": "governed_by"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Skill Authoring Standard Execution Plan",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "execution-plan",
+        "lifecycle": "repository-source",
+        "line_end": 5,
+        "line_start": 5,
+        "module_id": "plan.2026-08-06-skill-authoring-standard",
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 40,
+          "strategy": "hybrid-token",
+          "token_matches": 4
+        },
+        "read_set": [
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+            "role": "primary",
+            "source_sha256": "4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+            "role": "command-registry",
+            "source_sha256": "5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+            "role": "implementation-contract",
+            "source_sha256": "b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/plan-state.v1.json",
+            "role": "plan-state",
+            "source_sha256": "5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2"
+          },
+          {
+            "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+            "role": "requirements-ledger",
+            "source_sha256": "af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0041",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0043",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0048",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0057",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0060",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "plan-index",
+        "source_sha256": "4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110",
+        "status": "conditional",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Context",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 9,
+        "line_start": 9,
+        "module_id": "adr.ADR-0047",
+        "path": "docs/adr/ADR-0047-e2-hosted-context-readiness-declaration.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 30,
+          "strategy": "hybrid-token",
+          "token_matches": 3
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0047-e2-hosted-context-readiness-declaration.md",
+            "role": "primary",
+            "source_sha256": "63ee0204e41eb093abb562ac95c56813e5d566d7f6226eb9080020a0ff915371"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0037",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0038",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0044",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0046",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "63ee0204e41eb093abb562ac95c56813e5d566d7f6226eb9080020a0ff915371",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "Relationships",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 66,
+        "line_start": 66,
+        "module_id": "adr.ADR-0050",
+        "path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 30,
+          "strategy": "hybrid-token",
+          "token_matches": 3
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+            "role": "primary",
+            "source_sha256": "6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0044",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0048",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "Relationships",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "adr",
+        "lifecycle": "repository-source",
+        "line_end": 45,
+        "line_start": 45,
+        "module_id": "adr.ADR-0057",
+        "path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+        "primary_domain": "toolchain",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 30,
+          "strategy": "hybrid-token",
+          "token_matches": 3
+        },
+        "read_set": [
+          {
+            "path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+            "role": "primary",
+            "source_sha256": "1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7"
+          }
+        ],
+        "relations": [
+          {
+            "target": "adr.ADR-0044",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0048",
+            "type": "references"
+          },
+          {
+            "target": "adr.ADR-0050",
+            "type": "references"
+          }
+        ],
+        "semantic_eligible": true,
+        "source_role": "decision",
+        "source_sha256": "1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "dependency",
+          "toolchain": "active",
+          "workspace": "excluded"
+        }
+      },
+      {
+        "anchor": "Purpose",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-collection",
+        "lifecycle": "repository-source",
+        "line_end": 16,
+        "line_start": 16,
+        "module_id": "architecture.phase-service.index",
+        "path": "docs/architecture/phase-service/_index.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 30,
+          "strategy": "hybrid-token",
+          "token_matches": 3
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/phase-service/_index.md",
+            "role": "primary",
+            "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "collection-index",
+        "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      },
+      {
+        "anchor": "Change Rules",
+        "consumer_ids": [
+          "bootstrap",
+          "refactor-acceptance",
+          "vdd"
+        ],
+        "enforcement_level": "E1",
+        "kind": "architecture-module",
+        "lifecycle": "repository-source",
+        "line_end": 65,
+        "line_start": 65,
+        "module_id": "architecture.phase-service.system-overview",
+        "path": "docs/architecture/phase-service/system-overview.md",
+        "primary_domain": "phase",
+        "provenance": [
+          "catalog-v2",
+          "refs/heads/main"
+        ],
+        "rank_evidence": {
+          "confidence": "medium",
+          "score": 30,
+          "strategy": "hybrid-token",
+          "token_matches": 3
+        },
+        "read_set": [
+          {
+            "path": "docs/architecture/phase-service/system-overview.md",
+            "role": "primary",
+            "source_sha256": "e1ac21ddd5f79d91c92f39148547a60d11e01b50f3108ba3571e535dcf9adfea"
+          }
+        ],
+        "relations": [],
+        "semantic_eligible": true,
+        "source_role": "architecture-module",
+        "source_sha256": "e1ac21ddd5f79d91c92f39148547a60d11e01b50f3108ba3571e535dcf9adfea",
+        "status": "active",
+        "visibility": {
+          "marketplace": "excluded",
+          "phase": "active",
+          "toolchain": "dependency",
+          "workspace": "dependency"
+        }
+      }
+    ],
+    "policy_revision": "knowledge-consumer-policies.v2",
+    "request_id": "vdd-conformance-exact-cover-2026-08-14-rules",
+    "schema_version": "jimuyun.knowledge-locator-result.v1",
+    "snapshot": {
+      "commit": "bdb9df4bd61def6f048cf4ad7cc427565228cb07",
+      "ref": "refs/heads/main"
+    },
+    "source_snapshot_id": "sha256:f3aaf8025b9b4179103a22a00d6ad17f6f484470d0ccd8eb425bee92c61d6f3b",
+    "status": "matched"
+  },
+  "required_modules": [
+    "repository-rules"
+  ],
+  "decisions": [
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "AGENTS.md",
+        "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4"
+      },
+      "decision": "accepted",
+      "satisfies": [
+        "repository-rules"
+      ],
+      "rejection_reason": null
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+        "source_sha256": "69f07c9a1f77b831e05955bd12a6e085e608e7f7f4690cf3f02201beb47d0d23"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0044-knowledge-projection-authority-e2-hosted-context-envelope.md",
+        "source_sha256": "2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/ADR_INDEX_PHASE.md",
+        "source_sha256": "a5ad263d3b281d03bd034364a392515d6d91235f0d7819cc4a3309430f2b0b6e"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "README.md",
+        "source_sha256": "56e502b76ea83d2b0dbcfeb2d777127992db4348ffe4befd70e985f36bcf00f6"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/hosted-workspaces-and-artifacts.md",
+        "source_sha256": "572193d9c10a8eafc9e9d52542471f0ac91edb253f91f04fad341e81b1f699e0"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+        "source_sha256": "4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0047-e2-hosted-context-readiness-declaration.md",
+        "source_sha256": "63ee0204e41eb093abb562ac95c56813e5d566d7f6226eb9080020a0ff915371"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0050-knowledge-publication-lkg-recovery-and-generation-retention.md",
+        "source_sha256": "6e9be5f54ae38695e84ec5340fe4b1c9d098e0279aa65fa3960ee323dfd1c0b3"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/adr/ADR-0057-explicit-knowledge-publication-and-nonrecursive-plan-indexing.md",
+        "source_sha256": "1a2e2443fb88607d2ec3f7935b338608b5a6a066bd0ab5791bb51040b3de0be7"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/_index.md",
+        "source_sha256": "1b6aa65cccf87fa067f89f188e6b3f99530ac637d9166008f3ef2d39a0ef8474"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    },
+    {
+      "owner": "adapter",
+      "candidate": {
+        "path": "docs/architecture/phase-service/system-overview.md",
+        "source_sha256": "e1ac21ddd5f79d91c92f39148547a60d11e01b50f3108ba3571e535dcf9adfea"
+      },
+      "decision": "rejected",
+      "satisfies": [],
+      "rejection_reason": "insufficient_specificity"
+    }
+  ],
+  "request_sha256": "sha256:62d0be89792758a49d676a3ac61fde90ed9bccdb8a8837600772096ed2c8c6ca",
+  "result_sha256": "sha256:30f65be9e76dc2b4cec3a78601a1b1f042b334c75e2a4472755b9138e2e1f873",
+  "preflight": {
+    "status": "ready",
+    "failure_code": null,
+    "context_sha256": "sha256:743c0149cf1313b3e7ddc8c391b1cebf23dd2d0044eaec8d534a11aa9d060f43"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+  "context_path": "knowledge-context.v1.json",
+  "context_sha256": "sha256:69842a4e549764911e5b5c54bfa9f08cd766059330de22a1bd6a7c7fbcc0abbe",
+  "canonical_context_sha256": "sha256:31caf47ad7a2c3105d35e61bf9f9d767b7152399ac2d0ce01179b81355694ef3",
+  "request_sha256": "sha256:62d0be89792758a49d676a3ac61fde90ed9bccdb8a8837600772096ed2c8c6ca",
+  "result_sha256": "sha256:30f65be9e76dc2b4cec3a78601a1b1f042b334c75e2a4472755b9138e2e1f873",
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "bdb9df4bd61def6f048cf4ad7cc427565228cb07"
+  },
+  "source_snapshot_id": "sha256:f3aaf8025b9b4179103a22a00d6ad17f6f484470d0ccd8eb425bee92c61d6f3b",
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "accepted": [
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "06639ea4024ba0e20f4e1896605a8f7bc687da1e85b2903c96f1f9ed40f1bdd4",
+      "satisfies": [
+        "repository-rules"
+      ]
+    }
+  ],
+  "authorizes": [],
+  "supersedes": {
+    "context_sha256": "sha256:1dc14169e00cce53f5e4da0d6ee49e23328f6ac2b99d82ff68f5126f3ca76212",
+    "freeze_receipt_path": "knowledge-context.freeze.history/1dc14169e00cce53f5e4da0d6ee49e23328f6ac2b99d82ff68f5126f3ca76212.v1.json",
+    "reason": "Round 9 Quick Dev adapter compatibility repair binds the final contract and current repository identity"
+  }
+}

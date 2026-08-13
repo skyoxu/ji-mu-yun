@@ -1,7 +1,7 @@
 {
-  "generation_id": "7f1d3e5fbee942490e5fbaaba8b3eff74cd959bbd6e501f2cacef4ce49217805",
-  "generation_sha256": "sha256:6634e6e233fb8dd51cb72d2aeecfc8920124494abc86f6939cd19d6d47c6a1eb",
-  "main_commit": "bdb9df4bd61def6f048cf4ad7cc427565228cb07",
+  "generation_id": "af995c62127455f71c9c524080a3fce9095323d2993007300cbc5523fd4e8690",
+  "generation_sha256": "sha256:16d8f1339a226ad2633b38b2595a0b86a4ad44c3fbd6edcf55a4ccd668305295",
+  "main_commit": "868dc1d92c4249713ec6c1e6ca3fba4a15079565",
   "schema_version": "jimuyun.knowledge-index-pointer.v2",
-  "source_snapshot_id": "sha256:f3aaf8025b9b4179103a22a00d6ad17f6f484470d0ccd8eb425bee92c61d6f3b"
+  "source_snapshot_id": "sha256:765976080f3d0fb3b4ed80ff56ecb01a3cd489e706c6599f32b5aa705555c58b"
 }

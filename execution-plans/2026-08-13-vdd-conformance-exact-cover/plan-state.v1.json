@@ -2,10 +2,10 @@
   "schema_version": "vdd.plan-state.v1",
   "plan_id": "vdd-conformance-exact-cover",
   "profile": "self-hosted",
-  "state": "plan-ready",
+  "state": "implementation-authorized",
   "repair_round": 8,
   "repair_status": "repair-validated",
-  "state_owner": "vdd",
+  "state_owner": "maintainer",
   "resume": {
     "next_action": "Implement S0 through S5 in dependency order, then run repair/round-8/terminal-full.py.",
     "last_completed_step": "repair-round-8-custody-closure-written",
@@ -23,6 +23,6 @@
     {"id":"S5","status":"pending","depends_on":["S0","S1","S2","S3a","S3b","S3c","S3d","S4"]}
   ],
   "blocking_conditions": [],
-  "authorizes": [],
-  "does_not_authorize":["implementation-authorized","implementation-complete","acceptance-passed","archived"]
+  "authorizes": ["plan-ready", "implementation-authorized"],
+  "does_not_authorize":["implementation-complete","acceptance-passed","archived"]
 }
