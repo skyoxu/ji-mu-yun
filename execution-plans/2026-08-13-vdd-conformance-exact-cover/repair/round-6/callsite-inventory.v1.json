@@ -1,0 +1,22 @@
+{
+  "schema_version": "vdd-repair-callsite-inventory.v1",
+  "round": 6,
+  "source_roots": ["execution-plans/2026-08-13-vdd-conformance-exact-cover"],
+  "matches": [
+    {"path":"00-index.md","context":"plan entrypoint and current authority pointer","disposition":"changed"},
+    {"path":"command-registry.v1.json","context":"behavior and receipt-checker command bindings","disposition":"changed"},
+    {"path":"implementation-contract.v1.json","context":"Round 6 terminal validation entrypoint","disposition":"changed"},
+    {"path":"repair/round-6/implementation-command.py","context":"fixed behavior execution and receipt checking","disposition":"added"},
+    {"path":"repair/round-6/terminal-full.py","context":"registry binding gate","disposition":"added"},
+    {"path":"repair/round-5/repair-knowledge-composition.py","context":"closure-bound composition consumer","disposition":"unchanged"},
+    {"path":"repair/round-5/repair-closure.json","context":"predecessor closure authority","disposition":"unchanged"},
+    {"path":"repair/round-5/e/receipt.json","context":"closure-bound composition receipt","disposition":"unchanged"},
+    {"path":"95-implementation-evolution-and-completion-report.md","context":"append-only round chronology","disposition":"changed"}
+  ],
+  "excluded_siblings": [
+    {"path":"repair/round-1/requirements-acceptance-slice-command.v1.json","reason":"immutable historical evidence"},
+    {"path":"repair/round-4/exact-cover-dogfood.py","reason":"immutable historical blocked stub; no longer registered"}
+  ],
+  "search_rule":"Search every tracked and untracked file under the plan root for current authority, command IDs, validator paths, receipt paths, and baseline identities; classify each match or explicitly exclude immutable historical evidence.",
+  "authorizes": []
+}

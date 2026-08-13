@@ -1,0 +1,20 @@
+{
+  "schema_version":"vdd-repair-closure.v1",
+  "plan_id":"vdd-conformance-exact-cover",
+  "round":6,
+  "predecessor_round":5,
+  "finding_source":"repair/round-6/findings.md",
+  "composition_receipt":"repair/round-5/e/receipt.json",
+  "composition_receipt_sha256":"sha256:22402cdd948eba55f7af77414785304ab59d702a4075d0874f576e51d506751a",
+  "callsite_inventory":"repair/round-6/callsite-inventory.v1.json",
+  "callsite_inventory_sha256":"sha256:ee0f6145cf5b28e2b417a6394de7a88cb357c5c7d8807f4836c4a4af7f871670",
+  "scope":["00-index.md","command-registry.v1.json","95-implementation-evolution-and-completion-report.md","repair/round-6"],
+  "changed_set":"repair/round-6/changed-set.v1.json",
+  "changed_set_sha256":"sha256:f61c0e9cad0b42284ef4c38ff30192766b1760ad10954154d192c88e8b8f06ca",
+  "validator_programs":[
+    {"path":"repair/round-6/implementation-command.py","sha256":"sha256:9f75946cee2e3dbfccc08463c256d6129d4fe1f16c59c8cf87ec5e3ee89872bf"},
+    {"path":"repair/round-6/terminal-full.py","sha256":"sha256:0e3abfb3466b2697cba22b1aa78f2330a1dcacdbe3679847be45a5389ffb3fd9"}
+  ],
+  "status":"repair-validated",
+  "authorizes":[]
+}

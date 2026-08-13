@@ -43,7 +43,8 @@ remains the sole owner of `implementation-authorized`.
 ## Validation
 
 Run the commands in `command-registry.v1.json`, then one terminal full replay.
-The exact requirement/acceptance coverage is in
-`repair/round-1/requirements-acceptance-slice-command.v1.json`.
+The authoritative requirement/acceptance coverage is in
+`repair/round-5/requirements-acceptance-slice-command.v1.json`; the Round 1
+mapping is immutable historical evidence only.
 Knowledge is bound by `knowledge-context.freeze.v1.json`; its catalog freshness
 is recorded as an explicit stale warning under the VDD opt-in policy.

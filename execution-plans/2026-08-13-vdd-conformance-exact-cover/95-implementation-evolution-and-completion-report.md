@@ -34,6 +34,15 @@ writing a hash-bound receipt. Round 3 closure binds finalized findings,
 predecessor evidence, and a generated callsite inventory. Lifecycle remains
 `plan-ready` and `authorizes` remains empty.
 
+Repair round 4, sourced from `docs/know22.txt`, remains limited to execution
+proof. Implementation commands now require a controlled validator program and
+revalidated hash-bound receipt/artifact set; terminal validation derives its
+command universe from every slice RED/GREEN declaration. Repair knowledge
+composition is separate from the future S5 exact-cover dogfood flow and uses
+the real consumer CLI boundary with a current skill-input receipt. The repair
+receipt is append-only and closure binds the successful run receipt hash.
+Lifecycle remains `plan-ready` and no authorization is granted.
+
 Repair round 5, sourced from `docs/know23.txt`, restores immutable Round 1
 evidence and publishes a superseding current mapping. Terminal validation now
 resolves every contract command through the registry, while implementation
@@ -42,11 +51,10 @@ path/hash. Repair composition uses the official Skill Input adapter, launcher,
 and ready-receipt validator; its fixed closure receipt is fully revalidated.
 Lifecycle remains `plan-ready` and no authorization is granted.
 
-Repair round 4, sourced from `docs/know22.txt`, remains limited to execution
-proof. Implementation commands now require a controlled validator program and
-revalidated hash-bound receipt/artifact set; terminal validation derives its
-command universe from every slice RED/GREEN declaration. Repair knowledge
-composition is separate from the future S5 exact-cover dogfood flow and uses
-the real consumer CLI boundary with a current skill-input receipt. The repair
-receipt is append-only and closure binds the successful run receipt hash.
+Repair round 6 closes execution custody defects. Each implementation command
+now names a fixed behavior program plus a separate receipt checker; missing
+production behavior remains blocked and cannot be replaced by a hand-authored
+receipt. S5 dogfood points to the future implementation-owned Skill runner,
+composition binds Round 5 `e/receipt.json`, the plan index points to the Round 5
+mapping, and the inventory/baseline use explicit Round 6 custody metadata.
 Lifecycle remains `plan-ready` and no authorization is granted.
