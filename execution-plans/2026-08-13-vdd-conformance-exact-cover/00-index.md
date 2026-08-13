@@ -31,8 +31,8 @@ provenance only.
 | S3b | Failure taxonomy, bounded retry, and stop-loss are deterministic. | Retry on deterministic defects, unknown family, or missing attempt identity rejects. | VCEC-A30..A32, A40, A42 pass. | Stop at policy ceiling and route typed action. |
 | S3c | Fingerprints, shards, reuse, and instability preserve the full universe. | Hash drift, unsafe reuse, deleted quarantine, or vote-as-truth rejects. | VCEC-A33..A38 pass. | Re-run affected shards; quarantine unstable shards. |
 | S3d | Recovery checkpoints and bounded model context are restartable. | Stale lineage, artifact drift, raw source recovery, or overflow rejects. | VCEC-A22..A24 and A41 pass. | Resume only from authorized checkpoint lineage. |
-| S4 | Authorization prerequisite consumes a current conformant receipt. | Missing, stale, mismatched, prose, or boolean receipt rejects. | Round 5 mapping binds VCEC-A17/A18 and composition evidence; implementation remains pending until the current command wrapper passes. | Leave lifecycle unchanged and return typed prerequisite failure. |
-| S5 | Dogfood create, exact-cover, optional review, repair, and rerun. | Legacy schema and target mutation fixtures fail closed. | Round 5 mapping binds VCEC-A24..A27; Round 7 terminal invokes dogfood through the same implementation wrapper. | Start a new requirements identity after explicit repair. |
+| S4 | Authorization prerequisite consumes a current conformant receipt. | Missing, stale, mismatched, prose, or boolean receipt rejects. | Round 5 mapping binds VCEC-A17..A19 and composition evidence; implementation remains pending until the current command wrapper passes. | Leave lifecycle unchanged and return typed prerequisite failure. |
+| S5 | Dogfood create, exact-cover, optional review, repair, and rerun. | Legacy schema and target mutation fixtures fail closed. | Round 5 mapping binds VCEC-A25..A27; Round 8 terminal invokes dogfood through the same implementation wrapper. | Start a new requirements identity after explicit repair. |
 
 ## Lifecycle
 

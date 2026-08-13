@@ -66,3 +66,11 @@ continuing to consume immutable Round 5 composition evidence through the Round
 7 closure. The S5 dogfood command now uses the same implementation wrapper as
 all other implementation commands. Lifecycle remains `plan-ready` and no
 authorization is granted.
+
+Repair round 8, sourced from `docs/know25.txt`, removes the last current-custody
+split. The registry terminal command and implementation contract now point to
+Round 8; the terminal validates every changed-set candidate path/hash rather
+than only the manifest files; and the closure binds the Round 7 predecessor
+closure and this round's finding source by SHA-256. The index corrects the S4
+and S5 acceptance summaries. Lifecycle remains `plan-ready` and no
+authorization is granted.
