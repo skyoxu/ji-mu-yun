@@ -1,0 +1,149 @@
+已修好的
+
+这些可以关闭了：
+
+command 已拆成 固定 behavior program + receipt checker，不再允许只靠通用 receipt 自报行为完成；Round 6 wrapper 会先执行 behavior program，再验证 receipt。
+future S5 dogfood 已移到 .agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py，不再要求修改历史 Round 4 stub。
+repair knowledge composition 已统一到 Round 5 closure 固定的 e/receipt.json。
+changed-set baseline 已改成明确 predecessor commit 27aae97a...，不再写浮动 HEAD。
+00-index 已把 current mapping 改为 Round 5。
+95 report chronology 已恢复 Round 3 → 4 → 5 → 6。
+P0-1：current repair truth 仍然分裂在 Round 5 / Round 6
+
+这是现在最大的阻断点。
+
+implementation-contract.v1.json 已经明确：
+
+terminal_validation
+→ repair/round-6/terminal-full.py
+
+Round 6 也已经有自己的：
+
+repair/round-6/repair-closure.json
+round = 6
+predecessor_round = 5
+
+但是当前 plan-state.v1.json 仍然是：
+
+repair_round = 5
+last_completed_step = repair-round-5-...
+next_action = ...round-5/terminal-full.py
+
+所以现在有两个 current truths：
+
+implementation-contract → Round 6
+repair closure          → Round 6
+
+plan-state / resume     → Round 5
+
+而且旧 Round 5 terminal 与现在的 registry contract 已经不是同一代语义。
+
+必须把 plan-state 升到 Round 6。
+
+P0-2：Round 6 terminal 自己仍读取 Round 5 closure
+
+repair/round-6/terminal-full.py 开头现在还是：
+
+CLOSURE = PLAN / "repair/round-5/repair-closure.json"
+
+这意味着：
+
+当前 repair = Round 6
+
+terminal-full
+却只验证 predecessor Round 5 closure
+
+Round 6 closure 中新绑定的：
+
+Round 6 changed-set；
+Round 6 callsite inventory；
+Round 6 implementation-command；
+Round 6 terminal validator；
+
+不会成为 terminal 的 current repair custody gate。
+
+正确方式应该是：
+
+terminal
+→ load Round 6 closure
+→ validate Round 6 closure/current changed-set/validator bindings
+→ 从 Round 6 closure 继续解析其 composition_receipt
+   （它仍然可以合法指向 immutable Round 5 e/receipt）
+
+也就是说：
+
+current closure 应是 Round 6；composition evidence 可以继续来自 Round 5。
+
+P1-1：Round 6 callsite inventory 漏掉了 plan-state.v1.json
+
+Round 6 inventory 自己声明：
+
+Search every tracked and untracked file under the plan root for current authority, command IDs, validator paths, receipt paths, and baseline identities.
+
+但它的 matches 里没有 plan-state.v1.json。
+
+而 plan-state 正好包含一个 stale 的：
+
+round-5/terminal-full.py
+
+所以这里不是单纯漏列文件，而是说明 Round 6 的 root-cause callsite inventory 本身没有实现它声称的 complete scan。
+
+修 P0-1 后一起重建 inventory 即可。
+
+P1-2：exact-cover-dogfood 是唯一绕过统一 wrapper 的 implementation command
+
+大多数命令现在都是：
+
+round-6/implementation-command.py --command <id>
+
+由 wrapper 强制：
+
+behavior path/hash
+→ behavior execution
+→ receipt checker path/hash
+→ receipt/artifact validation
+
+但 exact-cover-dogfood 当前 registry command 是直接：
+
+python .agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py
+
+而 terminal 只是直接执行 registry 的 command string。
+
+因此对这一条，registry 虽然声明了 behavior hash / receipt checker，但 terminal 实际不会经过 wrapper 去重验它们。
+
+建议统一成：
+
+round-6/implementation-command.py --command exact-cover-dogfood
+
+这样 S0~S5 没有特殊例外。
+
+P2：00-index 的 S4/S5 acceptance 摘要仍旧
+
+现在 authoritative mapping pointer 已经修好了，这是主要的。
+
+但 index 表格仍写：
+
+S4 → A17/A18/A25/A26
+S5 → A24..A43
+
+而正式 implementation contract / Round 5 mapping 已经不是这个 ownership。
+
+因为 index 已明确说 Round 5 mapping 才是 authority，所以这是 P2，不阻断逻辑，但建议顺手同步。
+
+结论
+
+这次已经不是“大修”了。
+
+我建议只做一个很小的 Round 7 current-pointer closure repair：
+
+1. plan-state → repair_round=6
+   next_action → round-6/terminal-full.py
+
+2. Round 6 terminal → load Round 6 closure
+   Round 6 closure 再引用 immutable Round 5 composition receipt
+
+3. 重建 callsite inventory，必须包含 plan-state
+
+4. exact-cover-dogfood 也统一走 implementation-command wrapper
+
+5. 顺手同步 00-index S4/S5 summary

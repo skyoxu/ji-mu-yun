@@ -1,0 +1,22 @@
+{
+  "schema_version":"vdd-repair-callsite-inventory.v1",
+  "round":7,
+  "source_roots":["execution-plans/2026-08-13-vdd-conformance-exact-cover"],
+  "matches":[
+    {"path":"00-index.md","context":"current authority and S4/S5 entrypoint summary","disposition":"changed"},
+    {"path":"implementation-contract.v1.json","context":"current terminal validation entrypoint","disposition":"changed"},
+    {"path":"plan-state.v1.json","context":"current repair round and resume authority","disposition":"changed"},
+    {"path":"command-registry.v1.json","context":"current wrapper and dogfood command bindings","disposition":"changed"},
+    {"path":"repair/round-7/implementation-command.py","context":"current implementation wrapper","disposition":"added"},
+    {"path":"repair/round-7/terminal-full.py","context":"current terminal custody gate","disposition":"added"},
+    {"path":"95-implementation-evolution-and-completion-report.md","context":"append-only round chronology","disposition":"changed"},
+    {"path":"docs/know24.txt","context":"finalized Round 7 findings source","disposition":"consumed"}
+  ],
+  "excluded_siblings":[
+    {"path":"repair/round-6/repair-closure.json","reason":"immutable predecessor closure"},
+    {"path":"repair/round-6/terminal-full.py","reason":"immutable predecessor validator"},
+    {"path":"repair/round-4/exact-cover-dogfood.py","reason":"immutable historical blocked stub; no longer registered"}
+  ],
+  "search_rule":"Search every tracked and untracked file under the plan root for current authority, command IDs, terminal paths, validator paths, receipt paths, and baseline identities; classify every discovered sibling or explicitly exclude immutable historical evidence.",
+  "authorizes":[]
+}

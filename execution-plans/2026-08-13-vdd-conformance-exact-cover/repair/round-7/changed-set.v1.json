@@ -1,0 +1,19 @@
+{
+  "schema_version":"vdd-repair-changed-set.v1",
+  "round":7,
+  "baseline":"16ca517a842ffa8641ae3bf58db98585ab598bb9",
+  "entries":[
+    {"path":"docs/know24.txt","baseline_sha256":null,"candidate_sha256":"sha256:c2e6746b3d32cf80c0195ba3d38b7424bead71d987bf0e870d0ff2ef9e897c02","status":"added"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/00-index.md","baseline_sha256":"sha256:8ddeb50adc898058060000dd16853198e7e14840912359f2c428598209565b1c","candidate_sha256":"sha256:d0b4ee38672349348e777acb3f4c57ff904d68e697e983189a3a7cf7ca5d0e2f","status":"modified"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/implementation-contract.v1.json","baseline_sha256":"sha256:caef3c8fd3d6222e1f04efe96147216798008122d24691cdac50f5fc4e785c1f","candidate_sha256":"sha256:185c313eb2353f8bddd85b3093d66095683d6625adf977e0043704cb7bebbef1","status":"modified"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/plan-state.v1.json","baseline_sha256":"sha256:bcd151c9080fe8a25f95af4b20b201581063130f94ad02e2628dffe2ee310dbc","candidate_sha256":"sha256:41392a5858acaefdd4bab59be064b65ce01c6981305fb6aa1143ed429fa21042","status":"modified"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/command-registry.v1.json","baseline_sha256":"sha256:6685b1d51a368bd7661ce79a8a258346c394ac40a5d1cf01ece85f778b5d773f","candidate_sha256":"sha256:a7bfb46d30c64bb66c6f83dea4e92a4a161d0e341796c2a0ffeb654e1be1aebd","status":"modified"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/95-implementation-evolution-and-completion-report.md","baseline_sha256":"sha256:bdcdd1f2e1f193f31a241088dc4ef040dabaf5c710ab11382534729b0ad89056","candidate_sha256":"sha256:3f0cbf6c1c4d518fbb7203a384b27923664627aa6058b9495c6daa3459efc622","status":"modified"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py","baseline_sha256":null,"candidate_sha256":"sha256:9f75946cee2e3dbfccc08463c256d6129d4fe1f16c59c8cf87ec5e3ee89872bf","status":"added"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/terminal-full.py","baseline_sha256":null,"candidate_sha256":"sha256:d4616b70290960b66eedc582bbbf69b098eabea5ead4971408019c3bdd5c91f4","status":"added"},
+    {"path":"execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/callsite-inventory.v1.json","baseline_sha256":null,"candidate_sha256":"sha256:6ff7660b517d459b7b9c3fe7e34d15986d9bb25d98bc0f68223b976042c4c8d8","status":"added"}
+  ],
+  "self_exclusion":"execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/changed-set.v1.json",
+  "closure_exclusion":"execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/repair-closure.json",
+  "authorizes":[]
+}

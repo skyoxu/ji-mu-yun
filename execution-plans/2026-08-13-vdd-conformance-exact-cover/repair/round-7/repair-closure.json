@@ -1,0 +1,20 @@
+{
+  "schema_version":"vdd-repair-closure.v1",
+  "plan_id":"vdd-conformance-exact-cover",
+  "round":7,
+  "predecessor_round":6,
+  "finding_source":"docs/know24.txt",
+  "composition_receipt":"repair/round-5/e/receipt.json",
+  "composition_receipt_sha256":"sha256:22402cdd948eba55f7af77414785304ab59d702a4075d0874f576e51d506751a",
+  "callsite_inventory":"repair/round-7/callsite-inventory.v1.json",
+  "callsite_inventory_sha256":"sha256:86e218676bed0e90bfa08ae98e3c15ddea0a5112107b381463f42bda43f03386",
+  "scope":["00-index.md","implementation-contract.v1.json","plan-state.v1.json","command-registry.v1.json","95-implementation-evolution-and-completion-report.md","repair/round-7","docs/know24.txt"],
+  "changed_set":"repair/round-7/changed-set.v1.json",
+  "changed_set_sha256":"sha256:f3931d62b1c5c86ba81a4e3b45bc94492394a72a0c3ea16b96f265fd73c73794",
+  "validator_programs":[
+    {"path":"repair/round-7/implementation-command.py","sha256":"sha256:9f75946cee2e3dbfccc08463c256d6129d4fe1f16c59c8cf87ec5e3ee89872bf"},
+    {"path":"repair/round-7/terminal-full.py","sha256":"sha256:d4616b70290960b66eedc582bbbf69b098eabea5ead4971408019c3bdd5c91f4"}
+  ],
+  "status":"repair-validated",
+  "authorizes":[]
+}

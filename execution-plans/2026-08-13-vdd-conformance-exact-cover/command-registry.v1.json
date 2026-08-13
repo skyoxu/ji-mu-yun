@@ -27,7 +27,7 @@
   "commands": [
     {
       "id": "bmad-spec-regression",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command bmad-spec-regression",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command bmad-spec-regression",
       "purpose": "Prove existing bmad-spec producer and selection registry regression/hardening.",
       "acceptance_ids": [
         "VCEC-A43"
@@ -54,12 +54,12 @@
     },
     {
       "id": "source-freeze",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command vdd-source-freeze",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-source-freeze",
       "purpose": "Implementation entry point for source-freeze evidence."
     },
     {
       "id": "vdd-source-freeze",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command vdd-source-freeze",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-source-freeze",
       "purpose": "Implementation command for the VDD source-freeze producer.",
       "acceptance_ids": [
         "VCEC-A04"
@@ -71,7 +71,7 @@
     },
     {
       "id": "vdd-source-freeze-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command vdd-source-freeze-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-source-freeze-negative",
       "purpose": "Negative command for reduced or drifted source-freeze input.",
       "acceptance_ids": [
         "VCEC-A06"
@@ -83,7 +83,7 @@
     },
     {
       "id": "semantic-handoff",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command semantic-handoff",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command semantic-handoff",
       "purpose": "Implementation command for semantic handoff and VDD repair state.",
       "acceptance_ids": [
         "VCEC-A13",
@@ -99,7 +99,7 @@
     },
     {
       "id": "semantic-handoff-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command semantic-handoff-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command semantic-handoff-negative",
       "purpose": "Negative command for stale or implicit semantic handoff.",
       "acceptance_ids": [
         "VCEC-A13",
@@ -115,7 +115,7 @@
     },
     {
       "id": "authorization-preflight",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command authorization-preflight",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command authorization-preflight",
       "purpose": "Implementation command for authorization receipt preflight.",
       "acceptance_ids": [
         "VCEC-A17"
@@ -127,7 +127,7 @@
     },
     {
       "id": "authorization-preflight-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command authorization-preflight-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command authorization-preflight-negative",
       "purpose": "Negative command for missing or stale authorization receipts.",
       "acceptance_ids": [
         "VCEC-A18",
@@ -140,7 +140,7 @@
     },
     {
       "id": "composition-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command composition-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command composition-negative",
       "purpose": "Negative command for invalid producer-consumer composition.",
       "acceptance_ids": [
         "VCEC-A27"
@@ -157,7 +157,7 @@
     },
     {
       "id": "retry-taxonomy",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command retry-taxonomy",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command retry-taxonomy",
       "purpose": "Implementation command for retry taxonomy and stop-loss behavior.",
       "acceptance_ids": [
         "VCEC-A30",
@@ -173,7 +173,7 @@
     },
     {
       "id": "retry-taxonomy-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command retry-taxonomy-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command retry-taxonomy-negative",
       "purpose": "Negative command for retry taxonomy violations.",
       "acceptance_ids": [
         "VCEC-A30",
@@ -189,7 +189,7 @@
     },
     {
       "id": "fingerprint-shard",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command fingerprint-shard",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command fingerprint-shard",
       "purpose": "Implementation command for fingerprint and shard reuse behavior.",
       "acceptance_ids": [
         "VCEC-A33",
@@ -206,7 +206,7 @@
     },
     {
       "id": "fingerprint-shard-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command fingerprint-shard-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command fingerprint-shard-negative",
       "purpose": "Negative command for unsafe fingerprint or shard reuse.",
       "acceptance_ids": [
         "VCEC-A33",
@@ -223,7 +223,7 @@
     },
     {
       "id": "exact-cover-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command exact-cover-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command exact-cover-negative",
       "purpose": "Negative command for deterministic exact-cover coverage.",
       "acceptance_ids": [
         "VCEC-A01",
@@ -245,7 +245,7 @@
     },
     {
       "id": "exact-cover",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command exact-cover",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command exact-cover",
       "purpose": "Implementation command for deterministic exact-cover core.",
       "acceptance_ids": [
         "VCEC-A01",
@@ -265,7 +265,7 @@
     },
     {
       "id": "recovery-context",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command recovery-context",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command recovery-context",
       "purpose": "Implementation command for bounded recovery/context behavior.",
       "acceptance_ids": [
         "VCEC-A22",
@@ -280,7 +280,7 @@
     },
     {
       "id": "recovery-context-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command recovery-context-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command recovery-context-negative",
       "purpose": "Negative command for stale lineage or overflow recovery.",
       "acceptance_ids": [
         "VCEC-A22",
@@ -300,7 +300,7 @@
     },
     {
       "id": "exact-cover-dogfood",
-      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command exact-cover-dogfood",
       "purpose": "S5 create-to-rerun exact-cover dogfood flow.",
       "acceptance_ids": [
         "VCEC-A25",
@@ -318,7 +318,7 @@
     },
     {
       "id": "vdd-exact-cover-manifest-composition",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command vdd-exact-cover-manifest-composition",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-exact-cover-manifest-composition",
       "purpose": "Shared VDD and exact-cover manifest identity validator.",
       "acceptance_ids": [
         "VCEC-A05"
@@ -330,7 +330,7 @@
     },
     {
       "id": "vdd-scope-boundary-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command vdd-scope-boundary-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-scope-boundary-negative",
       "purpose": "VDD scope boundary negative validator.",
       "acceptance_ids": [
         "VCEC-A20"
@@ -342,7 +342,7 @@
     },
     {
       "id": "exact-cover-readonly-target",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command exact-cover-readonly-target",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command exact-cover-readonly-target",
       "purpose": "Exact-cover readonly target validator.",
       "acceptance_ids": [
         "VCEC-A21"
@@ -354,7 +354,7 @@
     },
     {
       "id": "bmad-spec-regression-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-6/implementation-command.py --command bmad-spec-regression-negative",
+      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command bmad-spec-regression-negative",
       "purpose": "Negative command for tampered typed package descriptor or pointer.",
       "acceptance_ids": [
         "VCEC-A43"

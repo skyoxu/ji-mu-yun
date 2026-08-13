@@ -58,3 +58,11 @@ receipt. S5 dogfood points to the future implementation-owned Skill runner,
 composition binds Round 5 `e/receipt.json`, the plan index points to the Round 5
 mapping, and the inventory/baseline use explicit Round 6 custody metadata.
 Lifecycle remains `plan-ready` and no authorization is granted.
+
+Repair round 7, sourced from `docs/know24.txt`, promotes the current plan state
+and resume pointer to Round 7. Its terminal loads and validates the Round 7
+closure, current changed-set, callsite inventory, and validator hashes while
+continuing to consume immutable Round 5 composition evidence through the Round
+7 closure. The S5 dogfood command now uses the same implementation wrapper as
+all other implementation commands. Lifecycle remains `plan-ready` and no
+authorization is granted.
