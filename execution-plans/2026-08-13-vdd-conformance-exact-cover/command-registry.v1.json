@@ -8,11 +8,15 @@
     },
     {
       "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-      "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+      "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
+      "sha256": "sha256:8e3240bd55ed24f5f7a505c9857e669e6a2a3142c39b3a5c74414cd5152a77d9"
     },
     {
       "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-      "sha256": "sha256:d08a604dd253b50703e84ad8316ed8637350275c461f5f188ea85a217ac9864a"
+      "sha256": "sha256:0b19a291ae1e93af5d2622b0414e9fd73995367092bf5632f51d5035f8776a8f"
     },
     {
       "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
@@ -25,6 +29,10 @@
     {
       "path": ".agents/skills/authorization/scripts/conformance_preflight.py",
       "sha256": "sha256:19f5495b6ee332e7ca4b4799ddbc1b6c793fbd0b852c1a2e6c223048730ee08a"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
+      "sha256": "sha256:38826200d1f7c8d5a6e92ddd242e10e6b3ce732a80576845892d0bc7fbf92594"
     }
   ],
   "behavior_programs": {
@@ -44,11 +52,19 @@
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+          "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
+          "sha256": "sha256:8e3240bd55ed24f5f7a505c9857e669e6a2a3142c39b3a5c74414cd5152a77d9"
         },
         {
           "path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
           "sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68"
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
+          "sha256": "sha256:38826200d1f7c8d5a6e92ddd242e10e6b3ce732a80576845892d0bc7fbf92594"
         }
       ],
       "args": []
@@ -59,12 +75,18 @@
     },
     "semantic-handoff": {
       "path": ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff.py",
-      "sha256": "sha256:35070898e9a13af273d72a9d93445215f0a55b0567a86d2530e57d57856bdf17",
-      "args": []
+      "sha256": "sha256:c931ef8a523d2886f046b9e1d8a90d538303db97fa0c7418bb92c2f1c955282c",
+      "args": [],
+      "dependencies": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
+          "sha256": "sha256:38826200d1f7c8d5a6e92ddd242e10e6b3ce732a80576845892d0bc7fbf92594"
+        }
+      ]
     },
     "semantic-handoff-negative": {
       "path": ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff_negative.py",
-      "sha256": "sha256:d02f789cfbb09e05d7b7d34416f0679f1ed7ef012fa24e0ecb4317304b94e5cf",
+      "sha256": "sha256:5600a1e3b1598aa5c74aec4c64c2458e725635a50732eabc277de30f70f47f29",
       "args": []
     },
     "authorization-preflight": {
@@ -81,11 +103,11 @@
         },
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+          "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-          "sha256": "sha256:d08a604dd253b50703e84ad8316ed8637350275c461f5f188ea85a217ac9864a"
+          "sha256": "sha256:0b19a291ae1e93af5d2622b0414e9fd73995367092bf5632f51d5035f8776a8f"
         }
       ],
       "args": []
@@ -122,15 +144,15 @@
     },
     "exact-cover": {
       "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py",
-      "sha256": "sha256:ee8b1e255d692c51c854c97bece1b7cc76385482f27735d3e6ddcb61600faec4",
+      "sha256": "sha256:1d36bc48524f1b3aaef06588d5ed7b5ad9798b6fe016c59460b733536ebde544",
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+          "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-          "sha256": "sha256:d08a604dd253b50703e84ad8316ed8637350275c461f5f188ea85a217ac9864a"
+          "sha256": "sha256:0b19a291ae1e93af5d2622b0414e9fd73995367092bf5632f51d5035f8776a8f"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
@@ -154,19 +176,23 @@
     },
     "exact-cover-dogfood": {
       "path": ".agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py",
-      "sha256": "sha256:3e4d01d8d8bdec436bc851b8999115108f8d4b2ed8cc52b47c20b5648d26ac25",
+      "sha256": "sha256:8670d9fdf3b2dd0561b155339108030e31f0bd1bb063daf96c57562da0e3e914",
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+          "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-          "sha256": "sha256:d08a604dd253b50703e84ad8316ed8637350275c461f5f188ea85a217ac9864a"
+          "sha256": "sha256:0b19a291ae1e93af5d2622b0414e9fd73995367092bf5632f51d5035f8776a8f"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
           "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
+          "sha256": "sha256:38826200d1f7c8d5a6e92ddd242e10e6b3ce732a80576845892d0bc7fbf92594"
         }
       ],
       "args": []

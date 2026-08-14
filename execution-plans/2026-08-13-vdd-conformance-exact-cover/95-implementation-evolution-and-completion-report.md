@@ -77,6 +77,18 @@ closure and this round's finding source by SHA-256. The index corrects the S4
 and S5 acceptance summaries. Lifecycle remains `plan-ready` and no
 authorization is granted.
 
+Repair round 9 closes semantic exact-cover and VDD repair custody gaps. The
+validator now classifies every retained source line with a typed
+kind/status/disposition, admits only canonical-ID identity bindings to a
+deterministic conformant result, and routes deferred source-to-requirement
+equivalence through a hash-bound semantic handoff. Exact-cover now creates the
+complete non-authorizing repair input; VDD validates its frozen authority,
+review run, prior/repaired requirements identities, validator, policy,
+ambiguity IDs, and scope. Dogfood proves that a repaired manifest rejects the
+old requirements identity before the new identity can pass authorization
+preflight. Lifecycle remains `implementation-authorized` and no authorization
+is granted by these artifacts.
+
 Quick Dev TDD implementation was revalidated through S0-S5 under the current
 hash-bound command registry. The current terminal executes each declared RED
 fixture as an expected rejection and every GREEN command as a real behavior

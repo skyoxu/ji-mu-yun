@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import subprocess
 import tempfile
+import re
 
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts"))
@@ -61,9 +62,21 @@ def main() -> int:
             requirement["obligation_ids"] = []
         requirement_index = {item["id"]: item for item in prepared["requirements"]}
         for obligation in inventory:
-            requirement_id = obligation["obligation_id"] if obligation["obligation_id"] in requirement_index else "VCEC-001"
-            obligation["requirement_ids"] = [requirement_id]
-            requirement_index[requirement_id]["obligation_ids"].append(obligation["obligation_id"])
+            direct = sorted(set(re.findall(r"`(VCEC-\d{3})`", obligation["anchor"]["quote"])))
+            if obligation["status"] == "active":
+                if not direct:
+                    return 2
+                obligation["requirement_ids"] = direct
+                obligation["acceptance_ids"] = sorted({aid for rid in direct for aid in requirement_index[rid]["acceptance_ids"]})
+                obligation["mapping_kind"] = "identity"
+                obligation["merge_reason"] = "Canonical VCEC requirement identifier is present in the source anchor."
+                for requirement_id in direct:
+                    requirement_index[requirement_id]["obligation_ids"].append(obligation["obligation_id"])
+            else:
+                obligation["requirement_ids"] = []
+                obligation["acceptance_ids"] = []
+                obligation["mapping_kind"] = "disposition"
+                obligation["merge_reason"] = obligation["disposition"]["reason"]
         prepared["obligations"] = inventory
         mapping = Path(raw) / "complete-mapping.json"
         mapping.write_text(json.dumps(prepared), encoding="utf-8", newline="\n")
@@ -71,9 +84,12 @@ def main() -> int:
         if checked["status"] != "conformant" or checked.get("obligation_count") != len(inventory):
             return 2
         semantic = json.loads(json.dumps(prepared))
+        deferred = next(item for item in inventory if item["status"] == "deferred")
         semantic["semantic_review"] = [{
-            "obligation_ids": [inventory[0]["obligation_id"]],
+            "obligation_ids": [deferred["obligation_id"]],
+            "requirement_ids": ["VCEC-001"],
             "reason": "Source-bound equivalence ambiguity requires upstream review.",
+            "scope": "Validate the proposed source-to-requirement equivalence before VDD repair.",
             "profile": "bootstrap-upstream-plan",
             "target_plan": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
         }]

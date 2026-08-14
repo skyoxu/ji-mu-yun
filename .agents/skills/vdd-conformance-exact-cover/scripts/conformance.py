@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import re
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -72,14 +73,31 @@ def shard_reuse_fingerprint(payload: dict[str, Any]) -> str:
 
 
 def bounded_summary(value: dict[str, Any]) -> dict[str, Any]:
-    result = {**value, "serialized_utf8_bytes": 0, "estimated_tokens_v1": 0, "measurement_mode": "estimated", "measurement_method": "utf8-bytes-ceil-div-4-v1", "truncated": False, "authorizes": []}
-    for _ in range(4):
+    result = {**value, "serialized_utf8_bytes": 0, "estimated_tokens_v1": 0, "measurement_mode": "estimated", "measurement_method": "utf8-bytes-ceil-div-4-v1", "truncated": bool(value.get("truncated", False)), "authorizes": []}
+    for _ in range(8):
         size = len((json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
         result["serialized_utf8_bytes"] = size
         result["estimated_tokens_v1"] = (size + 3) // 4
     final_size = len((json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
+    if final_size > 12000 and not result["truncated"]:
+        errors = result.get("errors")
+        if isinstance(errors, list) and len(errors) > 20:
+            result["errors"] = errors[:20]
+            result["omitted_items"] = len(errors) - 20
+            result["truncated"] = True
+        handoff = result.get("semantic_handoff")
+        if isinstance(handoff, dict) and len(handoff.get("affected_obligation_ids", [])) > 100:
+            original_count = len(handoff["affected_obligation_ids"])
+            handoff["affected_obligation_ids"] = handoff["affected_obligation_ids"][:100]
+            handoff["omitted_affected_obligation_ids"] = original_count - 100
+            result["truncated"] = True
+        for _ in range(8):
+            final_size = len((json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
+            result["serialized_utf8_bytes"] = final_size
+            result["estimated_tokens_v1"] = (final_size + 3) // 4
     if final_size != result["serialized_utf8_bytes"]:
-        raise ValueError("model-visible output size did not converge")
+        result["serialized_utf8_bytes"] = final_size
+        result["estimated_tokens_v1"] = (final_size + 3) // 4
     if final_size > 12000:
         raise ValueError("model-visible output exceeds 12000 UTF-8 bytes")
     return result
@@ -145,6 +163,9 @@ def _load_vdd_source_freeze(root: Path):
 
 
 ACTIVE_OBLIGATION_ROLES = {"canonical", "normative_companion", "adopted_companion", "repository_authority"}
+_REQUIREMENT_ID = re.compile(r"`(VCEC-\d{3})`")
+_ACCEPTANCE_ID = re.compile(r"`(VCEC-A\d{2})`")
+_NORMATIVE_MARKER = re.compile(r"\b(must|must not|never|only|required|requires|shall)\b|必须|不得|只能|禁止|需要")
 
 
 def _obligation_id(source: dict[str, Any], number: int, line: str) -> str:
@@ -158,12 +179,45 @@ def _obligation_id(source: dict[str, Any], number: int, line: str) -> str:
     return f"OBL-{identity}"
 
 
+def _disposition(source: dict[str, Any], line_number: int, reason: str, target_root: str) -> dict[str, str]:
+    return {
+        "reason": reason,
+        "authority_reference": f"{source['path']}:{line_number}",
+        "target_plan": target_root,
+    }
+
+
+def _classify_obligation(source: dict[str, Any], line_number: int, line: str, target_root: str) -> dict[str, Any]:
+    """Classify source text without promoting document structure to requirements.
+
+    Canonical IDs are authoritative identity bindings. Other imperative prose
+    is retained as a typed deferred boundary; it cannot be silently promoted to
+    a generic requirement and needs explicit VDD review before activation.
+    """
+    acceptance_ids = sorted(set(_ACCEPTANCE_ID.findall(line)))
+    direct_requirements = sorted(set(_REQUIREMENT_ID.findall(line)))
+    if line.startswith("#"):
+        return {"kind": "workflow", "status": "not_applicable", "disposition": _disposition(source, line_number, "Markdown heading is structural context, not a standalone obligation.", target_root), "acceptance_ids": []}
+    if line.startswith("|") and ("---" in line or line.startswith("| ID |") or line.startswith("| Role |") or line.startswith("| Field |")):
+        return {"kind": "constraint", "status": "not_applicable", "disposition": _disposition(source, line_number, "Markdown table header or separator is structural context.", target_root), "acceptance_ids": []}
+    if acceptance_ids and not direct_requirements:
+        return {"kind": "constraint", "status": "not_applicable", "disposition": _disposition(source, line_number, "Acceptance definition is consumed as an acceptance record, not a separate requirement obligation.", target_root), "acceptance_ids": []}
+    if "`VCEC-NG" in line:
+        return {"kind": "non_goal", "status": "deferred", "disposition": _disposition(source, line_number, "Non-goal prose is retained as a typed deferred boundary and is not a deliverable obligation.", target_root), "acceptance_ids": []}
+    if direct_requirements:
+        return {"kind": "workflow" if "workflow" in line.casefold() or "流程" in line else "behavior", "status": "active", "disposition": None, "acceptance_ids": acceptance_ids}
+    if _NORMATIVE_MARKER.search(line):
+        return {"kind": "workflow" if "workflow" in line.casefold() or "流程" in line else "constraint", "status": "deferred", "disposition": _disposition(source, line_number, "Imperative prose lacks a stable canonical requirement ID; activation requires an explicit VDD semantic review and repair.", target_root), "acceptance_ids": []}
+    return {"kind": "constraint", "status": "not_applicable", "disposition": _disposition(source, line_number, "Explanatory source text has no standalone normative operator or canonical requirement identifier.", target_root), "acceptance_ids": []}
+
+
 def build_obligation_inventory(root: Path, manifest: dict[str, Any]) -> list[dict[str, Any]]:
     """Build a complete deterministic active universe from the frozen role graph.
 
-    Every non-blank line from an active authority source is retained. This is
-    deliberately conservative: an unclassified source line cannot disappear
-    merely because an extractor did not recognize its prose as normative.
+    Every non-blank line is retained with a typed classification. Structural and
+    explanatory lines receive a complete named disposition; imperative prose
+    without a canonical requirement reference is deferred, never silently
+    mapped to a generic requirement.
     """
     rows: list[dict[str, Any]] = []
     for source in manifest["sources"]:
@@ -174,16 +228,27 @@ def build_obligation_inventory(root: Path, manifest: dict[str, Any]) -> list[dic
             line = raw_line.rstrip()
             if not line:
                 continue
+            classification = _classify_obligation(source, number, line, manifest["target_root"])
             rows.append({
                 "obligation_id": _obligation_id(source, number, line),
                 "source_path": source["path"],
                 "source_sha256": source["sha256"],
                 "role": source["role"],
                 "anchor": {"line_start": number, "line_end": number, "quote": line},
-                "kind": "constraint",
-                "status": "active",
-                "disposition": None,
+                **classification,
             })
+    requirement_acceptance: dict[str, set[str]] = {}
+    for row in rows:
+        if row["status"] != "active":
+            continue
+        for requirement_id in _REQUIREMENT_ID.findall(row["anchor"]["quote"]):
+            requirement_acceptance.setdefault(requirement_id, set()).update(row["acceptance_ids"])
+    for row in rows:
+        if row["status"] != "active":
+            continue
+        requirement_ids = _REQUIREMENT_ID.findall(row["anchor"]["quote"])
+        if requirement_ids:
+            row["acceptance_ids"] = sorted({acceptance_id for requirement_id in requirement_ids for acceptance_id in requirement_acceptance.get(requirement_id, set())})
     rows.sort(key=lambda item: (item["source_path"], item["anchor"]["line_start"], item["obligation_id"]))
     identifiers = [item["obligation_id"] for item in rows]
     if not rows or len(identifiers) != len(set(identifiers)):
@@ -213,34 +278,54 @@ def acceptance_obligations(root: Path, manifest: dict[str, Any]) -> set[str]:
     return values
 
 
-def _mapping_obligation_errors(mapping: dict[str, Any], inventory: list[dict[str, Any]]) -> list[dict[str, str]]:
+def _mapping_obligation_errors(mapping: dict[str, Any], inventory: list[dict[str, Any]]) -> tuple[list[dict[str, str]], dict[str, dict[str, Any]]]:
     provided = mapping.get("obligations")
     requirements = mapping.get("requirements")
     if not isinstance(provided, list) or not isinstance(requirements, list):
-        return [{"family": "deterministic_coverage_gap", "code": "frozen_obligation_universe_mismatch"}]
+        return [{"family": "deterministic_coverage_gap", "code": "frozen_obligation_universe_mismatch"}], {}
     expected = {item["obligation_id"]: item for item in inventory}
     actual: dict[str, dict[str, Any]] = {}
     for item in provided:
         if not isinstance(item, dict) or not isinstance(item.get("obligation_id"), str):
-            return [{"family": "deterministic_coverage_gap", "code": "obligation_record_invalid"}]
+            return [{"family": "deterministic_coverage_gap", "code": "obligation_record_invalid"}], {}
         identifier = item["obligation_id"]
         if identifier in actual:
-            return [{"family": "deterministic_coverage_gap", "code": "duplicate_obligation"}]
+            return [{"family": "deterministic_coverage_gap", "code": "duplicate_obligation"}], {}
         actual[identifier] = item
     if set(actual) != set(expected):
-        return [{"family": "deterministic_coverage_gap", "code": "frozen_obligation_universe_mismatch"}]
+        return [{"family": "deterministic_coverage_gap", "code": "frozen_obligation_universe_mismatch"}], {}
     requirement_index = {item.get("id"): item for item in requirements if isinstance(item, dict)}
-    claims: dict[str, set[str]] = {identifier: set() for identifier in expected}
+    claims: dict[str, set[str]] = {
+        identifier: set() for identifier, item in expected.items() if item["status"] == "active"
+    }
     errors: list[dict[str, str]] = []
     for identifier, expected_item in expected.items():
         item = actual[identifier]
-        projection = {key: value for key, value in item.items() if key != "requirement_ids"}
+        projection = {key: value for key, value in item.items() if key not in {"requirement_ids", "mapping_kind", "merge_reason"}}
         if projection != expected_item:
             errors.append({"family": "deterministic_coverage_gap", "code": "obligation_source_binding_mismatch"})
             continue
         requirement_ids = item.get("requirement_ids")
+        acceptance_ids = item.get("acceptance_ids")
+        mapping_kind = item.get("mapping_kind")
+        merge_reason = item.get("merge_reason")
+        if expected_item["status"] != "active":
+            if requirement_ids != [] or acceptance_ids != [] or mapping_kind != "disposition" or not isinstance(merge_reason, str) or not merge_reason:
+                errors.append({"family": "deterministic_coverage_gap", "code": "disposition_mapping_invalid"})
+            continue
         if not isinstance(requirement_ids, list) or not requirement_ids or len(requirement_ids) != len(set(requirement_ids)):
             errors.append({"family": "deterministic_coverage_gap", "code": "obligation_requirement_binding_invalid"})
+            continue
+        if mapping_kind not in {"identity", "semantic_equivalence"} or not isinstance(merge_reason, str) or not merge_reason:
+            errors.append({"family": "deterministic_coverage_gap", "code": "obligation_mapping_kind_invalid"})
+            continue
+        expected_acceptance = sorted({acceptance_id for requirement_id in requirement_ids for acceptance_id in requirement_index.get(requirement_id, {}).get("acceptance_ids", [])})
+        if not isinstance(acceptance_ids, list) or acceptance_ids != expected_acceptance or not acceptance_ids:
+            errors.append({"family": "deterministic_coverage_gap", "code": "obligation_acceptance_binding_invalid"})
+            continue
+        direct_ids = sorted(set(_REQUIREMENT_ID.findall(expected_item["anchor"]["quote"])))
+        if direct_ids and (mapping_kind != "identity" or sorted(requirement_ids) != direct_ids):
+            errors.append({"family": "deterministic_coverage_gap", "code": "deterministically_provable_weakening"})
             continue
         for requirement_id in requirement_ids:
             requirement = requirement_index.get(requirement_id)
@@ -258,29 +343,136 @@ def _mapping_obligation_errors(mapping: dict[str, Any], inventory: list[dict[str
                 errors.append({"family": "deterministic_coverage_gap", "code": "wrong_obligation_requirement_binding"})
     if any(not values for values in claims.values()):
         errors.append({"family": "deterministic_coverage_gap", "code": "uncovered_obligation"})
-    return errors
+    return errors, actual
 
 
-def _semantic_handoff(mapping: dict[str, Any], inventory: list[dict[str, Any]]) -> dict[str, Any] | None:
+def _semantic_handoff(mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest_path: Path, manifest: dict[str, Any], mapping_path: Path) -> dict[str, Any] | None:
     review = mapping.get("semantic_review", [])
     if review is None:
         review = []
     if not isinstance(review, list):
         raise ValueError("semantic review handoff is invalid")
-    if not review:
-        return None
     valid = {item["obligation_id"] for item in inventory}
+    mapping_index = {item.get("obligation_id"): item for item in mapping.get("obligations", []) if isinstance(item, dict)}
+    required = {
+        identifier for identifier, item in mapping_index.items()
+        if identifier in valid and item.get("status") == "active" and item.get("mapping_kind") == "semantic_equivalence"
+    }
+    if not required and not review:
+        return None
     affected: set[str] = set()
+    requirements: set[str] = set()
+    ambiguities: list[dict[str, Any]] = []
     for item in review:
-        if not isinstance(item, dict) or set(item) != {"obligation_ids", "reason", "profile", "target_plan"}:
+        if not isinstance(item, dict) or set(item) != {"obligation_ids", "requirement_ids", "reason", "scope", "profile", "target_plan"}:
             raise ValueError("semantic review handoff is invalid")
         identifiers = item["obligation_ids"]
         if not isinstance(identifiers, list) or not identifiers or any(not isinstance(value, str) or value not in valid for value in identifiers):
             raise ValueError("semantic review obligations are invalid")
-        if item["profile"] != "bootstrap-upstream-plan" or any(not isinstance(item[key], str) or not item[key] for key in ("reason", "target_plan")):
+        if item["profile"] != "bootstrap-upstream-plan" or any(not isinstance(item[key], str) or not item[key] for key in ("reason", "scope", "target_plan")):
             raise ValueError("semantic review routing is invalid")
+        if not isinstance(item["requirement_ids"], list) or not item["requirement_ids"] or any(not isinstance(value, str) for value in item["requirement_ids"]):
+            raise ValueError("semantic review requirements are invalid")
+        for identifier in identifiers:
+            mapped = mapping_index.get(identifier, {})
+            if mapped.get("status") == "active" and mapped.get("mapping_kind") != "semantic_equivalence":
+                raise ValueError("semantic review cannot override a deterministic identity binding")
+            if mapped.get("status") not in {"deferred", "conflict", "active"}:
+                raise ValueError("semantic review obligation is not eligible")
         affected.update(identifiers)
-    return {"profile": "bootstrap-upstream-plan", "obligation_ids": sorted(affected), "authorizes": []}
+        requirements.update(item["requirement_ids"])
+        ambiguities.append({key: item[key] for key in ("obligation_ids", "requirement_ids", "reason", "scope")})
+    if not required.issubset(affected):
+        raise ValueError("semantic review must cover every semantic-equivalence obligation")
+    return {
+        "schema_version": "vdd-requirement-semantic-handoff.v1",
+        "profile": "bootstrap-upstream-plan",
+        "frozen_authority": {
+            "source_manifest_hash": file_hash(manifest_path),
+            "source_manifest_canonical_hash": manifest["canonical_hash"],
+            "role_graph_hash": domain_hash("frozen_role_graph", manifest["sources"]),
+        },
+        "affected_obligation_ids": sorted(affected),
+        "affected_requirement_ids": sorted(requirements),
+        "ambiguities": ambiguities,
+        "review_run_required": True,
+        "requirements_manifest_hash": file_hash(mapping_path),
+        "authorizes": [],
+    }
+
+
+def _contained_artifact(root: Path, path: Path, label: str) -> dict[str, str]:
+    resolved = path.resolve()
+    try:
+        relative = resolved.relative_to(root.resolve()).as_posix()
+    except ValueError as exc:
+        raise ValueError(f"{label} must stay inside the repository") from exc
+    if not resolved.is_file():
+        raise ValueError(f"{label} is missing")
+    return {"path": relative, "sha256": file_hash(resolved)}
+
+
+def build_repair_input(
+    root: Path,
+    result: dict[str, Any],
+    manifest_path: Path,
+    mapping_path: Path,
+    review_run_path: Path,
+    repaired_requirements_path: Path,
+    policy_path: Path,
+    repair_id: str,
+    allowed_repair_scope: list[str],
+) -> dict[str, Any]:
+    """Create the exact-cover-owned, non-mutating VDD repair handoff."""
+    if result.get("status") not in {"blocked", "requirement_semantic_review_required"} or result.get("authorizes") != []:
+        raise ValueError("repair input requires a current non-authorizing conformance result")
+    if not isinstance(repair_id, str) or not repair_id or not isinstance(allowed_repair_scope, list) or not allowed_repair_scope or any(not isinstance(item, str) or not item for item in allowed_repair_scope):
+        raise ValueError("repair input identity or scope is invalid")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    _load_vdd_source_freeze(root).validate_manifest(root, manifest)
+    source_manifest = _contained_artifact(root, manifest_path, "source manifest")
+    prior_requirements = _contained_artifact(root, mapping_path, "prior requirements manifest")
+    review_run = _contained_artifact(root, review_run_path, "review run")
+    review = json.loads(review_run_path.read_text(encoding="utf-8"))
+    if not isinstance(review, dict) or review.get("authorizes") != [] or not isinstance(review.get("status"), str) or not review["status"]:
+        raise ValueError("review run is not a typed non-authorizing artifact")
+    repaired = _contained_artifact(root, repaired_requirements_path, "repaired requirements manifest")
+    if repaired == prior_requirements:
+        raise ValueError("repair input must bind a new requirements identity")
+    validator = _contained_artifact(root, Path(__file__), "validator")
+    policy = _contained_artifact(root, policy_path, "policy")
+    ambiguity_ids: list[str] = []
+    affected_requirement_ids: list[str] = []
+    ambiguity: list[dict[str, Any]] = []
+    handoff = result.get("semantic_handoff")
+    if isinstance(handoff, dict):
+        if handoff.get("omitted_affected_obligation_ids"):
+            raise ValueError("truncated semantic handoff cannot create a repair input")
+        ambiguity_ids = list(handoff.get("affected_obligation_ids", []))
+        affected_requirement_ids = list(handoff.get("affected_requirement_ids", []))
+        ambiguity = list(handoff.get("ambiguities", []))
+    if result.get("source_manifest_hash") != source_manifest["sha256"] or result.get("requirements_manifest_hash") != prior_requirements["sha256"]:
+        raise ValueError("repair input conformance result is stale")
+    return {
+        "schema_version": "vdd-repair-input.v1",
+        "repair_id": repair_id,
+        "target_root": manifest["target_root"],
+        "frozen_authority": {
+            "source_manifest": source_manifest,
+            "source_manifest_canonical_hash": manifest["canonical_hash"],
+            "role_graph_hash": domain_hash("frozen_role_graph", manifest["sources"]),
+        },
+        "review_run": review_run,
+        "prior_requirements_manifest": prior_requirements,
+        "repaired_requirements_manifest": repaired,
+        "validator": validator,
+        "policy": policy,
+        "ambiguity_ids": ambiguity_ids,
+        "affected_requirement_ids": affected_requirement_ids,
+        "ambiguity": ambiguity,
+        "allowed_repair_scope": allowed_repair_scope,
+        "authorizes": [],
+    }
 
 
 def validate_conformance(root: Path, manifest_path: Path, mapping_path: Path) -> dict[str, Any]:
@@ -308,12 +500,23 @@ def validate_conformance(root: Path, manifest_path: Path, mapping_path: Path) ->
             "status": "blocked",
             "errors": [*result["errors"], {"family": "deterministic_coverage_gap", "code": "frozen_acceptance_universe_mismatch"}],
         }
-    mapping_errors = _mapping_obligation_errors(mapping, obligations)
+    requirements_identity = manifest.get("requirements_manifest")
+    if requirements_identity is not None and (
+        not isinstance(requirements_identity, dict)
+        or requirements_identity.get("path") != mapping_path.resolve().relative_to(root.resolve()).as_posix()
+        or requirements_identity.get("sha256") != file_hash(mapping_path)
+    ):
+        result = {**result, "status": "blocked", "errors": [*result["errors"], {"family": "deterministic_coverage_gap", "code": "requirements_identity_mismatch"}]}
+    mapping_errors, _mapping_index = _mapping_obligation_errors(mapping, obligations)
     if mapping_errors:
         result = {**result, "status": "blocked", "errors": [*result["errors"], *mapping_errors]}
-    handoff = _semantic_handoff(mapping, obligations)
+    handoff = _semantic_handoff(mapping, obligations, manifest_path, manifest, mapping_path)
     if result["status"] == "conformant" and handoff is not None:
         result = {**result, "status": "requirement_semantic_review_required", "semantic_handoff": handoff}
+    try:
+        full_artifact_path = mapping_path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        full_artifact_path = mapping_path.resolve().as_posix()
     return bounded_summary({
         **result,
         "source_manifest_hash": file_hash(manifest_path),
@@ -324,6 +527,7 @@ def validate_conformance(root: Path, manifest_path: Path, mapping_path: Path) ->
         "obligation_inventory_hash": domain_hash("obligation_inventory", obligations),
         "acceptance_count": len(expected_acceptance_ids),
         "acceptance_inventory_hash": domain_hash("acceptance_inventory", sorted(expected_acceptance_ids)),
+        "full_artifact": {"path": full_artifact_path, "sha256": file_hash(mapping_path)},
     })
 
 
@@ -332,6 +536,12 @@ def main() -> int:
     parser.add_argument("--mapping", type=Path, required=True)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--repository-root", type=Path)
+    parser.add_argument("--repair-input-out", type=Path)
+    parser.add_argument("--repair-id")
+    parser.add_argument("--review-run", type=Path)
+    parser.add_argument("--repaired-requirements-manifest", type=Path)
+    parser.add_argument("--policy", type=Path)
+    parser.add_argument("--allowed-repair-scope", action="append", default=[])
     args = parser.parse_args()
     try:
         if args.manifest is None or args.repository_root is None:
@@ -339,6 +549,20 @@ def main() -> int:
             result = exact_cover(data["requirements"], data["acceptance_ids"], data["reverse_mapping"])
         else:
             result = validate_conformance(args.repository_root.resolve(), args.manifest.resolve(), args.mapping.resolve())
+        if args.repair_input_out:
+            if not all((args.repository_root, args.manifest, args.repair_id, args.review_run, args.repaired_requirements_manifest, args.policy)):
+                raise ValueError("repair input publication requires the complete explicit handoff contract")
+            repair_input = build_repair_input(
+                args.repository_root.resolve(), result, args.manifest.resolve(), args.mapping.resolve(),
+                args.review_run.resolve(), args.repaired_requirements_manifest.resolve(), args.policy.resolve(),
+                args.repair_id, args.allowed_repair_scope,
+            )
+            if args.repair_input_out.exists():
+                raise ValueError("repair input output is append-only")
+            args.repair_input_out.parent.mkdir(parents=True, exist_ok=True)
+            args.repair_input_out.write_bytes(canonical_bytes(repair_input) + b"\n")
+            print(json.dumps({"status": "repair_input_created", "repair_input_hash": file_hash(args.repair_input_out), "authorizes": []}, ensure_ascii=False, separators=(",", ":")))
+            return 0
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         print(json.dumps({"status": "blocked", "family": "schema_error", "detail": str(exc), "authorizes": []}))
         return 2

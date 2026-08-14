@@ -100,20 +100,68 @@ def _knowledge_bindings(root: Path, target_root: str) -> list[dict[str, str]]:
     return bindings
 
 
+def _artifact_ref(root: Path, value: object, label: str) -> dict[str, str]:
+    if not isinstance(value, dict) or set(value) != {"path", "sha256"}:
+        raise ValueError(f"{label} reference is invalid")
+    path = contained_path(root, value["path"], label)
+    if not path.is_file() or value["sha256"] != file_hash(path):
+        raise ValueError(f"{label} binding is stale")
+    return {"path": value["path"], "sha256": value["sha256"]}
+
+
 def validate_repair_input(root: Path, path: Path, target_root: str) -> dict[str, str]:
     try:
         relative_path = relative(root, path)
     except ValueError as exc:
         raise ValueError("VDD repair input must stay inside the repository") from exc
     value = json.loads(path.read_text(encoding="utf-8"))
-    required = {"schema_version", "repair_id", "target_root", "prior_source_manifest_hash", "authorizes"}
+    required = {
+        "schema_version", "repair_id", "target_root", "frozen_authority", "review_run",
+        "prior_requirements_manifest", "repaired_requirements_manifest", "validator", "policy",
+        "ambiguity_ids", "affected_requirement_ids", "ambiguity", "allowed_repair_scope", "authorizes",
+    }
     if set(value) != required or value.get("schema_version") != "vdd-repair-input.v1" or value.get("authorizes") != []:
         raise ValueError("VDD repair input schema or authority is invalid")
     if value.get("target_root") != _safe_target(target_root) or not isinstance(value.get("repair_id"), str) or not value["repair_id"]:
         raise ValueError("VDD repair input target or identity is invalid")
-    prior = value.get("prior_source_manifest_hash")
-    if not isinstance(prior, str) or not prior.startswith("sha256:") or len(prior) != 71:
-        raise ValueError("VDD repair input prior manifest binding is invalid")
+    frozen = value.get("frozen_authority")
+    if not isinstance(frozen, dict) or set(frozen) != {"source_manifest", "source_manifest_canonical_hash", "role_graph_hash"}:
+        raise ValueError("VDD repair input frozen authority is invalid")
+    source_manifest = _artifact_ref(root, frozen["source_manifest"], "VDD repair input source manifest")
+    source_manifest_value = json.loads((root / source_manifest["path"]).read_text(encoding="utf-8"))
+    if not all(isinstance(frozen.get(key), str) and frozen[key].startswith("sha256:") and len(frozen[key]) == 71 for key in ("source_manifest_canonical_hash", "role_graph_hash")):
+        raise ValueError("VDD repair input frozen authority hash is invalid")
+    if source_manifest_value.get("canonical_hash") != frozen["source_manifest_canonical_hash"]:
+        raise ValueError("VDD repair input frozen authority canonical hash is stale")
+    for label in ("review_run", "prior_requirements_manifest", "repaired_requirements_manifest", "validator", "policy"):
+        _artifact_ref(root, value.get(label), f"VDD repair input {label}")
+    review_value = json.loads((root / value["review_run"]["path"]).read_text(encoding="utf-8"))
+    if not isinstance(review_value, dict) or review_value.get("authorizes") != [] or not isinstance(review_value.get("status"), str) or not review_value["status"]:
+        raise ValueError("VDD repair input review run is invalid")
+    prior = value["prior_requirements_manifest"]
+    repaired = value["repaired_requirements_manifest"]
+    if prior["path"] == repaired["path"] and prior["sha256"] == repaired["sha256"]:
+        raise ValueError("VDD repair input must bind a new requirements identity")
+    if not isinstance(value["ambiguity_ids"], list) or any(not isinstance(item, str) or not item for item in value["ambiguity_ids"]):
+        raise ValueError("VDD repair input ambiguity IDs are invalid")
+    if not isinstance(value["affected_requirement_ids"], list) or any(not isinstance(item, str) or not item for item in value["affected_requirement_ids"]):
+        raise ValueError("VDD repair input affected requirement IDs are invalid")
+    ambiguity = value["ambiguity"]
+    if not isinstance(ambiguity, list) or any(
+        not isinstance(item, dict)
+        or set(item) != {"obligation_ids", "requirement_ids", "reason", "scope"}
+        or not isinstance(item["obligation_ids"], list)
+        or not isinstance(item["requirement_ids"], list)
+        or any(not isinstance(identifier, str) or not identifier for identifier in [*item["obligation_ids"], *item["requirement_ids"]])
+        or any(not isinstance(item[key], str) or not item[key] for key in ("reason", "scope"))
+        for item in ambiguity
+    ):
+        raise ValueError("VDD repair input ambiguity contract is invalid")
+    if sorted({identifier for item in ambiguity for identifier in item["obligation_ids"]}) != sorted(value["ambiguity_ids"]) or sorted({identifier for item in ambiguity for identifier in item["requirement_ids"]}) != sorted(value["affected_requirement_ids"]):
+        raise ValueError("VDD repair input ambiguity bindings are incomplete")
+    scope = value["allowed_repair_scope"]
+    if not isinstance(scope, list) or not scope or any(not isinstance(item, str) or not item for item in scope):
+        raise ValueError("VDD repair input allowed repair scope is invalid")
     return {"path": relative_path, "sha256": file_hash(path)}
 
 
@@ -123,6 +171,7 @@ def build_manifest(
     target_root: str,
     run_id: str,
     repair_input: dict[str, str] | None = None,
+    requirements_manifest: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     root, spec_path = root.resolve(), spec_path.resolve()
     try:
@@ -159,6 +208,7 @@ def build_manifest(
         "knowledge_bindings": _knowledge_bindings(root, target_root),
         "unresolved_inputs": [],
         "repair_input": repair_input,
+        "requirements_manifest": requirements_manifest,
         "authorizes": [],
     }
     return {**body, "canonical_hash": domain_hash(body)}
@@ -174,7 +224,7 @@ def validate_manifest(root: Path, manifest: dict[str, Any]) -> None:
     required = {
         "schema_version", "run_id", "target_root", "package_root", "selection_hash",
         "selection_record_path", "selection_pointer_path", "sources", "repository_rules",
-        "knowledge_bindings", "unresolved_inputs", "repair_input", "authorizes", "canonical_hash",
+        "knowledge_bindings", "unresolved_inputs", "repair_input", "requirements_manifest", "authorizes", "canonical_hash",
     }
     if set(manifest) != required:
         raise ValueError("source-freeze manifest fields are incomplete")
@@ -237,6 +287,9 @@ def validate_manifest(root: Path, manifest: dict[str, Any]) -> None:
             raise ValueError("source-freeze repair input is stale")
         if validate_repair_input(root, repair_path, manifest["target_root"]) != repair_input:
             raise ValueError("source-freeze repair input binding is invalid")
+    requirements_manifest = manifest["requirements_manifest"]
+    if requirements_manifest is not None and _artifact_ref(root, requirements_manifest, "source-freeze requirements manifest") != requirements_manifest:
+        raise ValueError("source-freeze requirements identity is invalid")
 
 
 def _write_new(path: Path, value: dict[str, Any]) -> None:
@@ -259,11 +312,22 @@ def main() -> int:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--repair-input", type=Path)
+    parser.add_argument("--requirements-manifest", type=Path)
     args = parser.parse_args()
     try:
         root = args.repository_root.resolve()
         repair_input = validate_repair_input(root, args.repair_input.resolve(), args.target_root) if args.repair_input else None
-        result = build_manifest(root, args.spec, args.target_root, args.run_id, repair_input)
+        requirements_manifest = None
+        if args.requirements_manifest:
+            requirements_path = args.requirements_manifest.resolve()
+            requirements_manifest = {"path": relative(root, requirements_path), "sha256": file_hash(requirements_path)}
+        if repair_input is not None:
+            if requirements_manifest is None:
+                raise ValueError("explicit VDD repair requires a repaired requirements manifest")
+            repair_value = json.loads(args.repair_input.read_text(encoding="utf-8"))
+            if repair_value["repaired_requirements_manifest"] != requirements_manifest:
+                raise ValueError("VDD repair requirements identity does not match repair input")
+        result = build_manifest(root, args.spec, args.target_root, args.run_id, repair_input, requirements_manifest)
         validate_manifest(args.repository_root.resolve(), result)
         _write_new(args.out, result)
     except (OSError, ValueError, json.JSONDecodeError) as exc:

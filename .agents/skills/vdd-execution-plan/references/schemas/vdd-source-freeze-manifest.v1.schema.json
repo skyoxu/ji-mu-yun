@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "vdd-source-freeze-manifest.v1",
   "type": "object",
-  "required": ["schema_version", "run_id", "target_root", "package_root", "selection_hash", "selection_record_path", "selection_pointer_path", "canonical_hash", "sources", "repository_rules", "knowledge_bindings", "unresolved_inputs", "repair_input", "authorizes"],
+  "required": ["schema_version", "run_id", "target_root", "package_root", "selection_hash", "selection_record_path", "selection_pointer_path", "canonical_hash", "sources", "repository_rules", "knowledge_bindings", "unresolved_inputs", "repair_input", "requirements_manifest", "authorizes"],
   "properties": {
     "schema_version": {"const": "vdd-source-freeze-manifest.v1"},
     "run_id": {"type": "string", "minLength": 1},
@@ -16,7 +16,8 @@
     "repository_rules": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
     "knowledge_bindings": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
     "unresolved_inputs": {"type": "array", "items": {"type": "object", "required": ["id", "reason", "target_plan"], "additionalProperties": false, "properties": {"id": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}, "target_plan": {"type": "string", "minLength": 1}}}},
-    "repair_input": {"type": ["null", "object"]},
+    "repair_input": {"type": ["null", "object"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}, "required": ["path", "sha256"], "additionalProperties": false},
+    "requirements_manifest": {"type": ["null", "object"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}}, "required": ["path", "sha256"], "additionalProperties": false},
     "authorizes": {"const": []}
   },
   "$defs": {
