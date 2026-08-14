@@ -66,6 +66,30 @@ def run_command(records: dict[str, dict[str, object]], programs: dict[str, objec
         raise RuntimeError(f"TDD outcome mismatch for {command_id}: expected {expected}, got {result.returncode}")
 
 
+def validate_slice_requirement_projection(contract: dict[str, object]) -> None:
+    """Bind the adapter's slice IDs to the current VDD-owned requirement mapping."""
+    mapping_path = PLAN / "repair/round-5/requirements-acceptance-slice-command.v1.json"
+    mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+    requirements = mapping.get("requirements")
+    if not isinstance(requirements, list):
+        raise RuntimeError("authoritative requirement mapping is invalid")
+    expected: dict[str, list[str]] = {}
+    for item in requirements:
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str) or not isinstance(item.get("slice"), str):
+            raise RuntimeError("authoritative requirement mapping row is invalid")
+        expected.setdefault(item["slice"], []).append(item["id"])
+    actual: dict[str, list[str]] = {}
+    for slice_item in contract.get("slices", []):
+        if not isinstance(slice_item, dict) or not isinstance(slice_item.get("slice_id"), str):
+            raise RuntimeError("implementation contract slice is invalid")
+        values = slice_item.get("requirement_ids")
+        if not isinstance(values, list) or any(not isinstance(value, str) for value in values):
+            raise RuntimeError("implementation contract requirement projection is invalid")
+        actual[slice_item["slice_id"]] = sorted(values)
+    if set(actual) != set(expected) or any(actual[slice_id] != sorted(ids) for slice_id, ids in expected.items()):
+        raise RuntimeError("implementation contract requirement IDs drift from authoritative mapping")
+
+
 def main() -> int:
     try:
         contract = json.loads((PLAN / "implementation-contract.v1.json").read_text(encoding="utf-8"))
@@ -74,6 +98,7 @@ def main() -> int:
         programs = registry["behavior_programs"]
         if not isinstance(programs, dict):
             raise RuntimeError("behavior program registry is invalid")
+        validate_slice_requirement_projection(contract)
         validate_dependencies(registry.get("implementation_dependencies"))
         for slice_ in contract["slices"]:
             for command_id in slice_["red_command_ids"]:

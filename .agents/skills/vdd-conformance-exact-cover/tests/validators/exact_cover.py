@@ -8,7 +8,9 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts"))
-from conformance import exact_cover  # noqa: E402
+from conformance import build_obligation_inventory, exact_cover, validate_conformance  # noqa: E402
+sys.path.insert(0, str(ROOT / ".agents/skills/vdd-execution-plan/scripts"))
+from source_freeze import build_manifest  # noqa: E402
 
 
 def main() -> int:
@@ -47,22 +49,45 @@ def main() -> int:
         ], cwd=ROOT, check=False, capture_output=True, text=True)
         if freeze.returncode != 0:
             return 2
-        checked = subprocess.run([
-            sys.executable, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"),
-            "--repository-root", str(ROOT), "--manifest", str(manifest), "--mapping", str(path),
-        ], cwd=ROOT, check=False, capture_output=True, text=True)
-        if checked.returncode != 0 or '"status":"conformant"' not in checked.stdout:
+        frozen = json.loads(manifest.read_text(encoding="utf-8"))
+        inventory = build_obligation_inventory(ROOT, frozen)
+        roles = {item["role"] for item in inventory}
+        if not {"canonical", "normative_companion", "adopted_companion", "repository_authority"}.issubset(roles):
             return 2
-        mutated = json.loads(path.read_text(encoding="utf-8"))
-        mutated["acceptance_ids"] = mutated["acceptance_ids"][:-1]
-        mutated["reverse_mapping"].pop("VCEC-A43")
+        if any(not item["obligation_id"] or not item["source_sha256"] or not item["anchor"]["quote"] for item in inventory):
+            return 2
+        prepared = json.loads(json.dumps(data))
+        for requirement in prepared["requirements"]:
+            requirement["obligation_ids"] = []
+        requirement_index = {item["id"]: item for item in prepared["requirements"]}
+        for obligation in inventory:
+            requirement_id = obligation["obligation_id"] if obligation["obligation_id"] in requirement_index else "VCEC-001"
+            obligation["requirement_ids"] = [requirement_id]
+            requirement_index[requirement_id]["obligation_ids"].append(obligation["obligation_id"])
+        prepared["obligations"] = inventory
+        mapping = Path(raw) / "complete-mapping.json"
+        mapping.write_text(json.dumps(prepared), encoding="utf-8", newline="\n")
+        checked = validate_conformance(ROOT, manifest, mapping)
+        if checked["status"] != "conformant" or checked.get("obligation_count") != len(inventory):
+            return 2
+        semantic = json.loads(json.dumps(prepared))
+        semantic["semantic_review"] = [{
+            "obligation_ids": [inventory[0]["obligation_id"]],
+            "reason": "Source-bound equivalence ambiguity requires upstream review.",
+            "profile": "bootstrap-upstream-plan",
+            "target_plan": "execution-plans/2026-08-13-vdd-conformance-exact-cover",
+        }]
+        semantic_path = Path(raw) / "semantic-mapping.json"
+        semantic_path.write_text(json.dumps(semantic), encoding="utf-8", newline="\n")
+        handoff = validate_conformance(ROOT, manifest, semantic_path)
+        if handoff["status"] != "requirement_semantic_review_required" or handoff.get("semantic_handoff", {}).get("profile") != "bootstrap-upstream-plan":
+            return 2
+        mutated = json.loads(json.dumps(prepared))
+        mutated["obligations"] = mutated["obligations"][:-1]
         reduced = Path(raw) / "reduced-mapping.json"
         reduced.write_text(json.dumps(mutated), encoding="utf-8", newline="\n")
-        rejected = subprocess.run([
-            sys.executable, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"),
-            "--repository-root", str(ROOT), "--manifest", str(manifest), "--mapping", str(reduced),
-        ], cwd=ROOT, check=False, capture_output=True, text=True)
-        return 0 if rejected.returncode != 0 and "frozen_acceptance_universe_mismatch" in rejected.stdout else 2
+        rejected = validate_conformance(ROOT, manifest, reduced)
+        return 0 if rejected["status"] == "blocked" and any(item["code"] == "frozen_obligation_universe_mismatch" for item in rejected["errors"]) else 2
 
 
 if __name__ == "__main__":

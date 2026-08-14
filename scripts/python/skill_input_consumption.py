@@ -587,7 +587,7 @@ def expand_source_graph(
     if any(role not in role_values for role in required_roles):
         missing = sorted(set(required_roles) - set(role_values))
         raise SkillInputError(f"required source role is missing: {missing}")
-    queue: list[tuple[Path, int, frozenset[str], set[str], Path]] = []
+    queue: list[tuple[Path, int, frozenset[str], set[str], Path, str | None]] = []
     for role_name, raw_paths in role_values.items():
         role = contract["source_roles"].get(role_name)
         if not isinstance(role, dict) or not isinstance(raw_paths, list) or not raw_paths:
@@ -601,11 +601,11 @@ def expand_source_graph(
             if kind not in role["allowed_kinds"]:
                 raise SkillInputError(f"source kind is not allowed for role: {role_name}")
             reference_root = root_path if root_path.is_dir() else root_path.parent
-            queue.append((root_path, 0, frozenset(), set(role["reference_kinds"]), reference_root))
+            queue.append((root_path, 0, frozenset(), set(role["reference_kinds"]), reference_root, None))
     expanded: list[tuple[Path, str]] = []
     seen: set[str] = set()
     while queue:
-        candidate_root, depth, ancestors, reference_kinds, reference_root = queue.pop(0)
+        candidate_root, depth, ancestors, reference_kinds, reference_root, referrer = queue.pop(0)
         candidates = [candidate_root] if candidate_root.is_file() else sorted(item for item in candidate_root.rglob("*") if item.is_file())
         for candidate in candidates:
             if is_reparse_point(candidate):
@@ -614,6 +614,11 @@ def expand_source_graph(
             if forbidden_repository_path(relative):
                 raise SkillInputError(f"forbidden source path: {relative}")
             if relative in ancestors:
+                if relative == referrer:
+                    # A contract may hash-bind itself in its dependency closure.
+                    # This direct self-reference adds no source; multi-file
+                    # cycles continue to fail closed.
+                    continue
                 raise SkillInputError(f"reference cycle detected: {relative}")
             if relative not in seen:
                 seen.add(relative)
@@ -635,7 +640,7 @@ def expand_source_graph(
                 resolved_path = resolved.resolve()
                 inside_reference_root = resolved_path == reference_root or reference_root in resolved_path.parents
                 next_reference_kinds = set(reference_kinds) if inside_reference_root else set()
-                queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root))
+                queue.append((resolved_path, depth + 1, next_ancestors, next_reference_kinds, reference_root, relative))
     if not expanded:
         raise SkillInputError("no source files were discovered")
     return sorted(expanded, key=lambda item: item[1])

@@ -6,7 +6,9 @@ current main snapshot; VDD consumed it only through the explicit
 `allow_stale_catalog` path and recorded that freshness condition in the frozen
 context. No lifecycle or authorization state was published.
 
-Current state: `plan-ready`.
+Current authoritative lifecycle state: `implementation-authorized`. The
+implementation result below is non-authorizing and does not publish
+`implementation-complete` into `plan-state.v1.json`.
 
 Repair round 1 corrects the requirement/acceptance universe and mapping,
 reclassifies the existing bmad-spec producer as regression/hardening scope,
@@ -75,12 +77,13 @@ closure and this round's finding source by SHA-256. The index corrects the S4
 and S5 acceptance summaries. Lifecycle remains `plan-ready` and no
 authorization is granted.
 
-Quick Dev TDD implementation completed through S0-S5 under the current
+Quick Dev TDD implementation was revalidated through S0-S5 under the current
 hash-bound command registry. The current terminal executes each declared RED
 fixture as an expected rejection and every GREEN command as a real behavior
 check, including VDD source-freeze production, exact-cover consumption of the
 new manifest, authorization receipt preflight, retry policy resolution,
 checkpoint publication, and dogfood replay. The append-only adapter result is
-`logs/tdd-adapter/vdd-conformance-exact-cover/implementation-result-20260813T193200Z.json`.
-It records `implementation-complete` with `authorizes=[]`; maintainer-owned
+local run evidence and is intentionally not a version-controlled authority.
+The version-controlled replay entry is `tools/terminal_validation.py`; it
+records `implementation-complete` only as `authorizes=[]`. Maintainer-owned
 lifecycle and Acceptance states remain unchanged.

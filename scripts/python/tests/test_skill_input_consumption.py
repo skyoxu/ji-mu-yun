@@ -247,6 +247,20 @@ class SkillInputConsumptionTests(unittest.TestCase):
         payload = json.loads(receipt.read_text(encoding="utf-8"))
         self.assertEqual({"requirements.md", "referenced.md"}, {item["path"] for item in payload["sources"]})
 
+    def test_direct_self_reference_is_ignored(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        contract_payload["source_roles"]["requirements"]["reference_kinds"] = ["json-path-field"]
+        contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+        (root / "requirements.md").write_text(
+            json.dumps({"dependency_closure": ["requirements.md"]}),
+            encoding="utf-8",
+        )
+        prepare(args)
+        payload = json.loads(receipt.read_text(encoding="utf-8"))
+        self.assertEqual({"requirements.md"}, {item["path"] for item in payload["sources"]})
+
     def test_declared_json_path_fields_support_camel_and_snake_case_without_treating_target_as_path(self):
         temporary, root, contract, receipt, args = self._fixture()
         self.addCleanup(temporary.cleanup)

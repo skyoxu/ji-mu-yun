@@ -1,10 +1,10 @@
 {
   "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
   "context_path": "knowledge-context.v1.json",
-  "context_sha256": "sha256:793bd01582cf51234948ab6b6cba25692db175bd9257076d784b58a428381700",
-  "canonical_context_sha256": "sha256:e9321765d9be1fe7ce9d1fff8ece9d1c7569d8f84f0f92a21dca921301ffa1d5",
-  "request_sha256": "sha256:6c21362e81af1612d6e220e9207ba713c5c55785c792218082107361fb83b672",
-  "result_sha256": "sha256:b22f30c37ee50b477aa4d2f63cd6345075e6711680838e0be21ac6713d279c7a",
+  "context_sha256": "sha256:cfcc2f9271075b6f18d95bbbeac2fa34700707a4ad34a0420992306cff582f5c",
+  "canonical_context_sha256": "sha256:a17c94365fd7c5d3a4eaefb858d29b90473d43264a387ac66bf4d5583a86f4eb",
+  "request_sha256": "sha256:db4bf8bf0d462c2541e6ebbb11a8e13ffebd50f6f4de9b17ec6e88be573c0413",
+  "result_sha256": "sha256:50299018eb6d7387dc9f0bbdade2aed269776e49a8ac0791b2906ed9ab4275f7",
   "snapshot": {
     "ref": "refs/heads/main",
     "commit": "dbf8670c1fb6c394b3aa1b422069045e142be68c"
@@ -22,8 +22,8 @@
   ],
   "authorizes": [],
   "supersedes": {
-    "context_sha256": "sha256:67c888f08b586359f99ffe78fe3f618a5c286a8f7f1bd0ce53a0076e8e6df16f",
-    "freeze_receipt_path": "knowledge-context.freeze.history/67c888f08b586359f99ffe78fe3f618a5c286a8f7f1bd0ce53a0076e8e6df16f.v1.json",
-    "reason": "Refresh frozen knowledge context after current main publication and adapter execution handoff."
+    "context_sha256": "sha256:793bd01582cf51234948ab6b6cba25692db175bd9257076d784b58a428381700",
+    "freeze_receipt_path": "knowledge-context.freeze.history/793bd01582cf51234948ab6b6cba25692db175bd9257076d784b58a428381700.v1.json",
+    "reason": "Refresh frozen VDD knowledge context before the exact-cover implementation repair against the current candidate worktree."
   }
 }

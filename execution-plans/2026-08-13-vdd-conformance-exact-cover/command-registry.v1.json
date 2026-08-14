@@ -2,12 +2,30 @@
   "schema_version": "vdd-conformance-exact-cover.command-registry.v1",
   "plan_id": "vdd-conformance-exact-cover",
   "implementation_dependencies": [
-    {"path": ".agents/skills/bmad-spec/scripts/canonical_package.py", "sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68"},
-    {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
-    {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py", "sha256": "sha256:13a52ace810d81f70d876bd58420b8ad6351955d50f76569439e33d2a067405f"},
-    {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py", "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"},
-    {"path": ".agents/skills/vdd-conformance-exact-cover/references/runtime-policy-registry.v1.json", "sha256": "sha256:63bcbcbac404dceab5b08cf27e4729366442e376858e742f2503af9cc9085a6f"},
-    {"path": ".agents/skills/authorization/scripts/conformance_preflight.py", "sha256": "sha256:19f5495b6ee332e7ca4b4799ddbc1b6c793fbd0b852c1a2e6c223048730ee08a"}
+    {
+      "path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      "sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+      "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+    },
+    {
+      "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+      "sha256": "sha256:d08a604dd253b50703e84ad8316ed8637350275c461f5f188ea85a217ac9864a"
+    },
+    {
+      "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+      "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"
+    },
+    {
+      "path": ".agents/skills/vdd-conformance-exact-cover/references/runtime-policy-registry.v1.json",
+      "sha256": "sha256:63bcbcbac404dceab5b08cf27e4729366442e376858e742f2503af9cc9085a6f"
+    },
+    {
+      "path": ".agents/skills/authorization/scripts/conformance_preflight.py",
+      "sha256": "sha256:19f5495b6ee332e7ca4b4799ddbc1b6c793fbd0b852c1a2e6c223048730ee08a"
+    }
   ],
   "behavior_programs": {
     "bmad-spec-regression": {
@@ -24,8 +42,14 @@
       "path": ".agents/skills/vdd-execution-plan/tests/source_freeze_runner.py",
       "sha256": "sha256:127c39da66de78035817ef3f7210ad82feab7acf0439a245a87e7e46ea0b6442",
       "dependencies": [
-        {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
-        {"path": ".agents/skills/bmad-spec/scripts/canonical_package.py", "sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68"}
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+          "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+        },
+        {
+          "path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
+          "sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68"
+        }
       ],
       "args": []
     },
@@ -47,10 +71,22 @@
       "path": ".agents/skills/authorization/tests/validators/preflight.py",
       "sha256": "sha256:fcc11360a6fc6765564bca2229d2d6961d4369147ff91ff300e69e2c6ad06fd2",
       "dependencies": [
-        {"path": ".agents/skills/authorization/tests/conformance_preflight_runner.py", "sha256": "sha256:aa5b65fc1022416fb2c76f9bc5c1e5f362bb9b43356b7d6d212ab8c82c619974"},
-        {"path": ".agents/skills/authorization/scripts/conformance_preflight.py", "sha256": "sha256:19f5495b6ee332e7ca4b4799ddbc1b6c793fbd0b852c1a2e6c223048730ee08a"},
-        {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
-        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py", "sha256": "sha256:13a52ace810d81f70d876bd58420b8ad6351955d50f76569439e33d2a067405f"}
+        {
+          "path": ".agents/skills/authorization/tests/conformance_preflight_runner.py",
+          "sha256": "sha256:aa5b65fc1022416fb2c76f9bc5c1e5f362bb9b43356b7d6d212ab8c82c619974"
+        },
+        {
+          "path": ".agents/skills/authorization/scripts/conformance_preflight.py",
+          "sha256": "sha256:19f5495b6ee332e7ca4b4799ddbc1b6c793fbd0b852c1a2e6c223048730ee08a"
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+          "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+        },
+        {
+          "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+          "sha256": "sha256:d08a604dd253b50703e84ad8316ed8637350275c461f5f188ea85a217ac9864a"
+        }
       ],
       "args": []
     },
@@ -86,11 +122,20 @@
     },
     "exact-cover": {
       "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py",
-      "sha256": "sha256:89bb8daed9e95b5ddd402896077eee81af307500b1de8ccd9a68379256f95932"
-      ,"dependencies": [
-        {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
-        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py", "sha256": "sha256:13a52ace810d81f70d876bd58420b8ad6351955d50f76569439e33d2a067405f"},
-        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py", "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"}
+      "sha256": "sha256:ee8b1e255d692c51c854c97bece1b7cc76385482f27735d3e6ddcb61600faec4",
+      "dependencies": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+          "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+        },
+        {
+          "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+          "sha256": "sha256:d08a604dd253b50703e84ad8316ed8637350275c461f5f188ea85a217ac9864a"
+        },
+        {
+          "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+          "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"
+        }
       ]
     },
     "exact-cover-negative": {
@@ -109,11 +154,20 @@
     },
     "exact-cover-dogfood": {
       "path": ".agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py",
-      "sha256": "sha256:e52ca6b02cfb4c188956177e94473eaee7c23da632af2f752053dc95d4e7707e",
+      "sha256": "sha256:3e4d01d8d8bdec436bc851b8999115108f8d4b2ed8cc52b47c20b5648d26ac25",
       "dependencies": [
-        {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
-        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py", "sha256": "sha256:13a52ace810d81f70d876bd58420b8ad6351955d50f76569439e33d2a067405f"},
-        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py", "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"}
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
+          "sha256": "sha256:8baefca3470907370a25594aa61c813e383518c6d15d4c6ffb1682c8b7c6d13b"
+        },
+        {
+          "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+          "sha256": "sha256:d08a604dd253b50703e84ad8316ed8637350275c461f5f188ea85a217ac9864a"
+        },
+        {
+          "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+          "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"
+        }
       ],
       "args": []
     },
