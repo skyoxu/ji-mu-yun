@@ -1,0 +1,17 @@
+# Glossary
+
+- **Acceptance**：消费 implementation-complete、拥有验收 scope/route、导入 Bootstrap evidence 并发布 final 的控制面能力。
+- **Bootstrap Review**：对 frozen Consumer Closure 执行 profile-defined 多角色语义审查、gate 和必要 verifier 的能力。
+- **Complete Review**：包含 Blind Hunter、Edge Case Hunter 和 Acceptance Auditor 三个隔离 discovery roles 的正式 Bootstrap review。
+- **Changed-set Manifest**：绑定 immutable baseline/current，覆盖修改、新增、删除、重命名和适用未跟踪文件的可复算清单。
+- **Consumer Closure**：一个验收消费者正确判断当前实现所需的最小完整 authority、实现、依赖、prerequisite 和 evidence 集合。
+- **Required Check**：由 implementation contract/command registry 投影并绑定 executable、输入、acceptance 和结果 identity 的 deterministic command。
+- **Range Projection**：parent 从完整 authority 生成的 full-source-bound、hash-bound inclusive byte/line 投影。
+- **Segment Descriptor**：不可变绑定 reviewer segment 的 source、range、role、order、bytes 和 execution context identity 的合同。
+- **Segment-only Snapshot**：只暴露 assigned segment 和最小 validation attestation 的 frozen child workspace。
+- **Process Event**：记录 attempt reservation、start、heartbeat、progress、terminal、stale 和 retry 的 append-only authority。
+- **Effective Progress Event**：controller 验证并绑定当前 identities 的 terminal、有效 evidence/receipt 增量或 policy 注册状态迁移。
+- **Lease Reconciliation**：根据 Process Event 与 current process identity 重建 write-set ownership。
+- **Implementation-complete**：Quick Dev/VDD 发布并作为 Acceptance 前置的 identity-bound 实现完成 handoff。
+- **Typed Route**：Acceptance 发布的 `deterministic_only`、`focused_repair_verification`、`full_implementation_conformance` 或 `manual_pause`。
+- **Non-authorizing result**：不能发布 implementation-complete、authorization 或 Acceptance final 的 blocked、repair、review-required 或 recovery 结果。
