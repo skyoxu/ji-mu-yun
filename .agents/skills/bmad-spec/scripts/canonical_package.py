@@ -169,6 +169,26 @@ def build_contract(repo_root: Path, spec_path: Path) -> tuple[dict[str, Any], di
     return descriptor, selection, domain_hash(SELECTION_DOMAIN, selection)
 
 
+def validate_selection(repo_root: Path, spec_path: Path, pointer_path: Path) -> dict[str, Any]:
+    """Verify the maintainer-scoped pointer and its content-addressed record."""
+    descriptor, expected, selection_hash = build_contract(repo_root, spec_path)
+    pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
+    if pointer != {
+        "package_id": descriptor["id"],
+        "schema": CURRENT_SCHEMA,
+        "selection_hash": selection_hash,
+    }:
+        raise ValueError("current selection pointer is stale or malformed")
+    registry = pointer_path.parent.parent
+    record_path = registry / (selection_hash.replace(":", "-") + ".json")
+    if not record_path.is_file():
+        raise ValueError("content-addressed selection record is missing")
+    actual = json.loads(record_path.read_text(encoding="utf-8"))
+    if actual != expected:
+        raise ValueError("selection record does not match the current typed package")
+    return {"package_id": descriptor["id"], "selection_hash": selection_hash}
+
+
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as handle:

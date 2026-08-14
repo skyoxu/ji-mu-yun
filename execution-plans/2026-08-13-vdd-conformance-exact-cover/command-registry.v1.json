@@ -1,89 +1,277 @@
 {
   "schema_version": "vdd-conformance-exact-cover.command-registry.v1",
   "plan_id": "vdd-conformance-exact-cover",
+  "implementation_dependencies": [
+    {"path": ".agents/skills/bmad-spec/scripts/canonical_package.py", "sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68"},
+    {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
+    {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py", "sha256": "sha256:13a52ace810d81f70d876bd58420b8ad6351955d50f76569439e33d2a067405f"},
+    {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py", "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"},
+    {"path": ".agents/skills/vdd-conformance-exact-cover/references/runtime-policy-registry.v1.json", "sha256": "sha256:63bcbcbac404dceab5b08cf27e4729366442e376858e742f2503af9cc9085a6f"},
+    {"path": ".agents/skills/authorization/scripts/conformance_preflight.py", "sha256": "sha256:19f5495b6ee332e7ca4b4799ddbc1b6c793fbd0b852c1a2e6c223048730ee08a"}
+  ],
   "behavior_programs": {
-    "bmad-spec-regression": {"path": ".agents/skills/bmad-spec/scripts/tests/test_canonical_package.py", "sha256": "sha256:237ba44606bc1318e5599d4d3338fb64046e0d5aeb31ddc388bab369774bced3", "args": []},
-    "bmad-spec-regression-negative": {"path": ".agents/skills/bmad-spec/tests/fixtures/selection_registry_negative.py", "sha256": "sha256:implementation-pending"},
-    "vdd-source-freeze": {"path": ".agents/skills/vdd-execution-plan/tests/validators/source_freeze.py", "sha256": "sha256:implementation-pending"},
-    "vdd-source-freeze-negative": {"path": ".agents/skills/vdd-execution-plan/tests/validators/source_freeze_negative.py", "sha256": "sha256:implementation-pending"},
-    "semantic-handoff": {"path": ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff.py", "sha256": "sha256:implementation-pending"},
-    "semantic-handoff-negative": {"path": ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff_negative.py", "sha256": "sha256:implementation-pending"},
-    "authorization-preflight": {"path": ".agents/skills/authorization/tests/validators/preflight.py", "sha256": "sha256:implementation-pending"},
-    "authorization-preflight-negative": {"path": ".agents/skills/authorization/tests/validators/preflight_negative.py", "sha256": "sha256:implementation-pending"},
-    "composition-negative": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/composition_negative.py", "sha256": "sha256:implementation-pending"},
-    "retry-taxonomy": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy.py", "sha256": "sha256:implementation-pending"},
-    "retry-taxonomy-negative": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy_negative.py", "sha256": "sha256:implementation-pending"},
-    "fingerprint-shard": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard.py", "sha256": "sha256:implementation-pending"},
-    "fingerprint-shard-negative": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard_negative.py", "sha256": "sha256:implementation-pending"},
-    "exact-cover": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py", "sha256": "sha256:implementation-pending"},
-    "exact-cover-negative": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py", "sha256": "sha256:implementation-pending"},
-    "recovery-context": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context.py", "sha256": "sha256:implementation-pending"},
-    "recovery-context-negative": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context_negative.py", "sha256": "sha256:implementation-pending"},
-    "exact-cover-dogfood": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py", "sha256": "sha256:implementation-pending"},
-    "vdd-exact-cover-manifest-composition": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/manifest_composition.py", "sha256": "sha256:implementation-pending"},
-    "vdd-scope-boundary-negative": {"path": ".agents/skills/vdd-execution-plan/tests/validators/scope_boundary_negative.py", "sha256": "sha256:implementation-pending"},
-    "exact-cover-readonly-target": {"path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py", "sha256": "sha256:implementation-pending"}
+    "bmad-spec-regression": {
+      "path": ".agents/skills/bmad-spec/scripts/tests/test_canonical_package.py",
+      "sha256": "sha256:237ba44606bc1318e5599d4d3338fb64046e0d5aeb31ddc388bab369774bced3",
+      "args": []
+    },
+    "bmad-spec-regression-negative": {
+      "path": ".agents/skills/bmad-spec/tests/fixtures/selection_registry_negative.py",
+      "sha256": "sha256:078a15dd4e42e11b903983ce0fe413e8dcac0ffdc54e9885e1fe91e88668eb19",
+      "args": []
+    },
+    "vdd-source-freeze": {
+      "path": ".agents/skills/vdd-execution-plan/tests/source_freeze_runner.py",
+      "sha256": "sha256:127c39da66de78035817ef3f7210ad82feab7acf0439a245a87e7e46ea0b6442",
+      "dependencies": [
+        {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
+        {"path": ".agents/skills/bmad-spec/scripts/canonical_package.py", "sha256": "sha256:2dd56942da0895f386747659a637e092e0df38c2b18bf0f747b20f0d17ef4c68"}
+      ],
+      "args": []
+    },
+    "vdd-source-freeze-negative": {
+      "path": ".agents/skills/vdd-execution-plan/tests/validators/source_freeze_negative.py",
+      "sha256": "sha256:4bcfbe7841c5d23f8a2a8ad2b25063ec1cbd6e74a36a749673b563c054784c6e"
+    },
+    "semantic-handoff": {
+      "path": ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff.py",
+      "sha256": "sha256:35070898e9a13af273d72a9d93445215f0a55b0567a86d2530e57d57856bdf17",
+      "args": []
+    },
+    "semantic-handoff-negative": {
+      "path": ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff_negative.py",
+      "sha256": "sha256:d02f789cfbb09e05d7b7d34416f0679f1ed7ef012fa24e0ecb4317304b94e5cf",
+      "args": []
+    },
+    "authorization-preflight": {
+      "path": ".agents/skills/authorization/tests/validators/preflight.py",
+      "sha256": "sha256:fcc11360a6fc6765564bca2229d2d6961d4369147ff91ff300e69e2c6ad06fd2",
+      "dependencies": [
+        {"path": ".agents/skills/authorization/tests/conformance_preflight_runner.py", "sha256": "sha256:aa5b65fc1022416fb2c76f9bc5c1e5f362bb9b43356b7d6d212ab8c82c619974"},
+        {"path": ".agents/skills/authorization/scripts/conformance_preflight.py", "sha256": "sha256:19f5495b6ee332e7ca4b4799ddbc1b6c793fbd0b852c1a2e6c223048730ee08a"},
+        {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
+        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py", "sha256": "sha256:13a52ace810d81f70d876bd58420b8ad6351955d50f76569439e33d2a067405f"}
+      ],
+      "args": []
+    },
+    "authorization-preflight-negative": {
+      "path": ".agents/skills/authorization/tests/validators/preflight_negative.py",
+      "sha256": "sha256:2e52563ed2237a211df5e4119b5c05d62eb534db94fc107eb907f26242c3f559",
+      "args": []
+    },
+    "composition-negative": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/composition_negative.py",
+      "sha256": "sha256:8393ac4639be2ab0c0504afa34f35ec6c009338031db9d253bc2dbb976f26d13",
+      "args": []
+    },
+    "retry-taxonomy": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy.py",
+      "sha256": "sha256:4bb8e673b003e7ff3e3fea5978fa324be53a997fedf765e23e02fe0d1065a098",
+      "args": []
+    },
+    "retry-taxonomy-negative": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy_negative.py",
+      "sha256": "sha256:2aae461e8ffa9a60099e36f3803a394c3483210efb471fdc8df30fad3d1f64f8",
+      "args": []
+    },
+    "fingerprint-shard": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard.py",
+      "sha256": "sha256:ddd6cf93a913e1e54aa2d05f6a9a4bd36bce66753c105447570c7c7d687a4770",
+      "args": []
+    },
+    "fingerprint-shard-negative": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard_negative.py",
+      "sha256": "sha256:2577d1eb4124ae0a8dfb60df20f5f60e5725288011cc874a67e72bb4ca8384ae",
+      "args": []
+    },
+    "exact-cover": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py",
+      "sha256": "sha256:89bb8daed9e95b5ddd402896077eee81af307500b1de8ccd9a68379256f95932"
+      ,"dependencies": [
+        {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
+        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py", "sha256": "sha256:13a52ace810d81f70d876bd58420b8ad6351955d50f76569439e33d2a067405f"},
+        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py", "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"}
+      ]
+    },
+    "exact-cover-negative": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+      "sha256": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b"
+    },
+    "recovery-context": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context.py",
+      "sha256": "sha256:633e7792e37d1353a91ada91488fa9bf6ad6bb705e624b6e72e0dacc5f278cb4",
+      "args": []
+    },
+    "recovery-context-negative": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context_negative.py",
+      "sha256": "sha256:4f5771c0735b43e500c5c1c908c48dcb13a16dc401151d4922aabc3a1328f713",
+      "args": []
+    },
+    "exact-cover-dogfood": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py",
+      "sha256": "sha256:e52ca6b02cfb4c188956177e94473eaee7c23da632af2f752053dc95d4e7707e",
+      "dependencies": [
+        {"path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py", "sha256": "sha256:7ea208f1cf7cc0cf4b81c310bf5d9d6130d933367042ae9ccbde74e7e7d9f8c2"},
+        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py", "sha256": "sha256:13a52ace810d81f70d876bd58420b8ad6351955d50f76569439e33d2a067405f"},
+        {"path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py", "sha256": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a"}
+      ],
+      "args": []
+    },
+    "vdd-exact-cover-manifest-composition": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/manifest_composition.py",
+      "sha256": "sha256:356390325776eecc46b16d404e0aa38016455c8d15fb10c7d292c85dba07549c",
+      "args": []
+    },
+    "vdd-scope-boundary-negative": {
+      "path": ".agents/skills/vdd-execution-plan/tests/validators/scope_boundary_negative.py",
+      "sha256": "sha256:b5ed6e9d87a2e95daf81e4b9344530889980990e84c78593b1d4b055f68a671e",
+      "args": []
+    },
+    "exact-cover-readonly-target": {
+      "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+      "sha256": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+      "args": []
+    }
   },
   "commands": [
     {
       "id": "bmad-spec-regression",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command bmad-spec-regression",
+      "command": "python -m pytest .agents/skills/bmad-spec/scripts/tests/test_canonical_package.py",
       "purpose": "Prove existing bmad-spec producer and selection registry regression/hardening.",
       "acceptance_ids": [
         "VCEC-A43"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-m",
+        "pytest",
+        ".agents/skills/bmad-spec/scripts/tests/test_canonical_package.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "stale-catalog-policy",
       "command": "python -m unittest scripts.python.tests.test_knowledge_context_validation",
-      "purpose": "Prove stale catalog opt-in is explicit and publication corruption remains fail-closed."
+      "purpose": "Prove stale catalog opt-in is explicit and publication corruption remains fail-closed.",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "-m",
+        "unittest",
+        "scripts.python.tests.test_knowledge_context_validation"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "skill-input",
       "command": "python scripts/python/validate_skill_input_consumption.py --contract .agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json --require-ready execution-plans/2026-08-13-vdd-conformance-exact-cover/in/receipt.json",
-      "purpose": "Validate complete Canonical Package transport."
+      "purpose": "Validate complete Canonical Package transport.",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "scripts/python/validate_skill_input_consumption.py",
+        "--contract",
+        ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json",
+        "--require-ready",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/in/receipt.json"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "knowledge-preflight",
       "command": "python .agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py --input execution-plans/2026-08-13-vdd-conformance-exact-cover/knowledge-context.v1.json --skill-input-receipt execution-plans/2026-08-13-vdd-conformance-exact-cover/in/receipt.json",
-      "purpose": "Validate VDD knowledge binding."
+      "purpose": "Validate VDD knowledge binding.",
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+        "--input",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/knowledge-context.v1.json",
+        "--skill-input-receipt",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/in/receipt.json"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "source-freeze",
       "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-source-freeze",
-      "purpose": "Implementation entry point for source-freeze evidence."
+      "purpose": "Implementation entry point for source-freeze evidence.",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py",
+        "--command",
+        "vdd-source-freeze"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "vdd-source-freeze",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-source-freeze",
+      "command": "python .agents/skills/vdd-execution-plan/tests/source_freeze_runner.py",
       "purpose": "Implementation command for the VDD source-freeze producer.",
       "acceptance_ids": [
         "VCEC-A04"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-execution-plan/tests/source_freeze_runner.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "vdd-source-freeze-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-source-freeze-negative",
+      "command": "python .agents/skills/vdd-execution-plan/tests/validators/source_freeze_negative.py",
       "purpose": "Negative command for reduced or drifted source-freeze input.",
       "acceptance_ids": [
         "VCEC-A06"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-execution-plan/tests/validators/source_freeze_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "semantic-handoff",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command semantic-handoff",
+      "command": "python .agents/skills/vdd-execution-plan/tests/validators/semantic_handoff.py",
       "purpose": "Implementation command for semantic handoff and VDD repair state.",
       "acceptance_ids": [
         "VCEC-A13",
@@ -92,14 +280,21 @@
         "VCEC-A16",
         "VCEC-A39"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "semantic-handoff-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command semantic-handoff-negative",
+      "command": "python .agents/skills/vdd-execution-plan/tests/validators/semantic_handoff_negative.py",
       "purpose": "Negative command for stale or implicit semantic handoff.",
       "acceptance_ids": [
         "VCEC-A13",
@@ -108,56 +303,100 @@
         "VCEC-A16",
         "VCEC-A39"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "authorization-preflight",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command authorization-preflight",
+      "command": "python .agents/skills/authorization/tests/validators/preflight.py",
       "purpose": "Implementation command for authorization receipt preflight.",
       "acceptance_ids": [
         "VCEC-A17"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/authorization/tests/validators/preflight.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "authorization-preflight-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command authorization-preflight-negative",
+      "command": "python .agents/skills/authorization/tests/validators/preflight_negative.py",
       "purpose": "Negative command for missing or stale authorization receipts.",
       "acceptance_ids": [
         "VCEC-A18",
         "VCEC-A19"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/authorization/tests/validators/preflight_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "composition-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command composition-negative",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/composition_negative.py",
       "purpose": "Negative command for invalid producer-consumer composition.",
       "acceptance_ids": [
         "VCEC-A27"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/composition_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "repair-knowledge-composition",
       "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-knowledge-composition.py --validate-receipt --receipt execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/receipt.json --closure execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-closure.json",
-      "purpose": "Repair-only official Skill Input and knowledge producer/consumer composition evidence."
+      "purpose": "Repair-only official Skill Input and knowledge producer/consumer composition evidence.",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-knowledge-composition.py",
+        "--validate-receipt",
+        "--receipt",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/receipt.json",
+        "--closure",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-closure.json"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "retry-taxonomy",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command retry-taxonomy",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy.py",
       "purpose": "Implementation command for retry taxonomy and stop-loss behavior.",
       "acceptance_ids": [
         "VCEC-A30",
@@ -166,14 +405,21 @@
         "VCEC-A40",
         "VCEC-A42"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "retry-taxonomy-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command retry-taxonomy-negative",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy_negative.py",
       "purpose": "Negative command for retry taxonomy violations.",
       "acceptance_ids": [
         "VCEC-A30",
@@ -182,14 +428,21 @@
         "VCEC-A40",
         "VCEC-A42"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/retry_taxonomy_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "fingerprint-shard",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command fingerprint-shard",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard.py",
       "purpose": "Implementation command for fingerprint and shard reuse behavior.",
       "acceptance_ids": [
         "VCEC-A33",
@@ -199,14 +452,21 @@
         "VCEC-A37",
         "VCEC-A38"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "fingerprint-shard-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command fingerprint-shard-negative",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard_negative.py",
       "purpose": "Negative command for unsafe fingerprint or shard reuse.",
       "acceptance_ids": [
         "VCEC-A33",
@@ -216,14 +476,21 @@
         "VCEC-A37",
         "VCEC-A38"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/fingerprint_shard_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "exact-cover-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command exact-cover-negative",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
       "purpose": "Negative command for deterministic exact-cover coverage.",
       "acceptance_ids": [
         "VCEC-A01",
@@ -238,14 +505,21 @@
         "VCEC-A28",
         "VCEC-A29"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "exact-cover",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command exact-cover",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py",
       "purpose": "Implementation command for deterministic exact-cover core.",
       "acceptance_ids": [
         "VCEC-A01",
@@ -258,14 +532,21 @@
         "VCEC-A11",
         "VCEC-A12"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "recovery-context",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command recovery-context",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context.py",
       "purpose": "Implementation command for bounded recovery/context behavior.",
       "acceptance_ids": [
         "VCEC-A22",
@@ -273,14 +554,21 @@
         "VCEC-A24",
         "VCEC-A41"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "recovery-context-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command recovery-context-negative",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context_negative.py",
       "purpose": "Negative command for stale lineage or overflow recovery.",
       "acceptance_ids": [
         "VCEC-A22",
@@ -288,81 +576,150 @@
         "VCEC-A24",
         "VCEC-A41"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/recovery_context_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "composition",
       "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-knowledge-composition.py --validate-receipt --receipt execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/receipt.json --closure execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-closure.json",
-      "purpose": "Validate the Round 5 closure-bound repair composition receipt."
+      "purpose": "Validate the Round 5 closure-bound repair composition receipt.",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-knowledge-composition.py",
+        "--validate-receipt",
+        "--receipt",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/e/receipt.json",
+        "--closure",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/repair-closure.json"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "exact-cover-dogfood",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command exact-cover-dogfood",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py",
       "purpose": "S5 create-to-rerun exact-cover dogfood flow.",
       "acceptance_ids": [
         "VCEC-A25",
         "VCEC-A26"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "terminal-full",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-8/terminal-full.py",
-      "purpose": "Current implementation terminal gate for the self-hosted plan."
+      "command": "py -3 execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_validation.py",
+      "purpose": "Current implementation terminal gate for the self-hosted plan; it executes hash-bound TDD behavior programs directly.",
+      "executable": "py",
+      "argv": [
+        "-3",
+        "execution-plans/2026-08-13-vdd-conformance-exact-cover/tools/terminal_validation.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "vdd-exact-cover-manifest-composition",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-exact-cover-manifest-composition",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/manifest_composition.py",
       "purpose": "Shared VDD and exact-cover manifest identity validator.",
       "acceptance_ids": [
         "VCEC-A05"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/manifest_composition.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "vdd-scope-boundary-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command vdd-scope-boundary-negative",
+      "command": "python .agents/skills/vdd-execution-plan/tests/validators/scope_boundary_negative.py",
       "purpose": "VDD scope boundary negative validator.",
       "acceptance_ids": [
         "VCEC-A20"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-execution-plan/tests/validators/scope_boundary_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "exact-cover-readonly-target",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command exact-cover-readonly-target",
+      "command": "python .agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
       "purpose": "Exact-cover readonly target validator.",
       "acceptance_ids": [
         "VCEC-A21"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     },
     {
       "id": "bmad-spec-regression-negative",
-      "command": "python execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-7/implementation-command.py --command bmad-spec-regression-negative",
+      "command": "python .agents/skills/bmad-spec/tests/fixtures/selection_registry_negative.py",
       "purpose": "Negative command for tampered typed package descriptor or pointer.",
       "acceptance_ids": [
         "VCEC-A43"
       ],
-      "receipt_checker": {
-        "path": "execution-plans/2026-08-13-vdd-conformance-exact-cover/repair/round-5/implementation-receipt-validator.py",
-        "sha256": "sha256:0f280be7d14a88fdb8267865d0a2f14b83735365ef6ba839c377a729fe9d9401"
-      }
+      "executable": "py",
+      "argv": [
+        "-3",
+        ".agents/skills/bmad-spec/tests/fixtures/selection_registry_negative.py"
+      ],
+      "cwd": {
+        "type": "repo_path",
+        "value": "."
+      },
+      "timeout_seconds": 600,
+      "shell": false
     }
   ],
   "authorizes": []

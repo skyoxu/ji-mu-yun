@@ -2,12 +2,12 @@
   "schema_version": "jimuyun.vdd-knowledge-context.v1",
   "locator_request": {
     "schema_version": "jimuyun.knowledge-locator-request.v1",
-    "request_id": "vdd-conformance-exact-cover-20260814-current",
+    "request_id": "vdd-conformance-exact-cover-2026-08-14-final",
     "consumer": "vdd",
     "query": "repository rules AGENTS.md",
     "snapshot": {
       "ref": "refs/heads/main",
-      "commit": "dbf8670c1fb6c394b3aa1b422069045e142be68c"
+      "commit": "868dc1d92c4249713ec6c1e6ca3fba4a15079565"
     },
     "policy_revision": "knowledge-consumer-policies.v2"
   },
@@ -624,13 +624,13 @@
       }
     ],
     "policy_revision": "knowledge-consumer-policies.v2",
-    "request_id": "vdd-conformance-exact-cover-20260814-current",
+    "request_id": "vdd-conformance-exact-cover-2026-08-14-final",
     "schema_version": "jimuyun.knowledge-locator-result.v1",
     "snapshot": {
-      "commit": "dbf8670c1fb6c394b3aa1b422069045e142be68c",
+      "commit": "868dc1d92c4249713ec6c1e6ca3fba4a15079565",
       "ref": "refs/heads/main"
     },
-    "source_snapshot_id": "sha256:a12d2d7f074bca91f16b075bacc32e919922fdea7ed4aa49254d37f731ee96f8",
+    "source_snapshot_id": "sha256:765976080f3d0fb3b4ed80ff56ecb01a3cd489e706c6599f32b5aa705555c58b",
     "status": "matched"
   },
   "required_modules": [
@@ -760,11 +760,11 @@
       "rejection_reason": "insufficient_specificity"
     }
   ],
-  "request_sha256": "sha256:6c21362e81af1612d6e220e9207ba713c5c55785c792218082107361fb83b672",
-  "result_sha256": "sha256:b22f30c37ee50b477aa4d2f63cd6345075e6711680838e0be21ac6713d279c7a",
+  "request_sha256": "sha256:d7b4748533dc4cb2f8d1c8f1429e1c9829f49f459d32d39d4ac568d90403322d",
+  "result_sha256": "sha256:53654b38766f77262531d1042f2add099558dcf48c4d5c3dcd18a7f4465c94e7",
   "preflight": {
     "status": "ready",
     "failure_code": null,
-    "context_sha256": "sha256:0635aca8513e1faa83c10bb124521d6d814c75e5ab4ecb10093d1f9565b2ff48"
+    "context_sha256": "sha256:8a204cee6ee49c7fc0d347faa9a571f39bd280755f786b761bc720479c133c20"
   }
 }
