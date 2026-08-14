@@ -49,6 +49,7 @@ SEMANTIC_CHILD_INPUT_MODE = SERIALIZED_SNAPSHOT_INPUT_MODE
 # A 24 KiB page needs enough room to retain identifiers and constraints without
 # forcing the model to omit material merely to satisfy the transport envelope.
 PAGED_SNAPSHOT_SEGMENT_SUMMARY_BYTES = 4096
+PAGED_SNAPSHOT_PAGE_ATTEMPTS = 2
 SEMANTIC_CHILD_DISABLED_FEATURES = (
     "apps",
     "browser_use",
@@ -740,26 +741,35 @@ def run_semantic_child(
                     + "\nPAGE_CONTENT_END"
                 )
                 page_output = child_root / f"page-{page_index:05d}.json"
-                exit_code, _trace, _command = runner(
-                    backend=backend_name,
-                    root=child_root,
-                    prompt=page_prompt,
-                    output_last_message=page_output,
-                    timeout_sec=per_page_timeout,
-                    codex_configs=configs,
-                    codex_model=normalized_model,
-                    codex_json=True,
-                    codex_sandbox=SEMANTIC_CHILD_SANDBOX,
-                    codex_skip_git_repo_check=True,
-                    codex_extra_args=["--ephemeral", "--ignore-user-config"],
-                )
-                if exit_code != 0 or not page_output.is_file():
-                    raise ChildRequestError("semantic page reader failed without a typed output")
-                try:
-                    page_output_payload = json.loads(page_output.read_text(encoding="utf-8"))
-                except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-                    raise ChildRequestError("semantic page output is not valid JSON") from exc
-                summary = _validate_segment_summary(page_output_payload, segment)
+                page_error: ChildRequestError | None = None
+                for _attempt in range(PAGED_SNAPSHOT_PAGE_ATTEMPTS):
+                    try:
+                        exit_code, _trace, _command = runner(
+                            backend=backend_name,
+                            root=child_root,
+                            prompt=page_prompt,
+                            output_last_message=page_output,
+                            timeout_sec=per_page_timeout,
+                            codex_configs=configs,
+                            codex_model=normalized_model,
+                            codex_json=True,
+                            codex_sandbox=SEMANTIC_CHILD_SANDBOX,
+                            codex_skip_git_repo_check=True,
+                            codex_extra_args=["--ephemeral", "--ignore-user-config"],
+                        )
+                        if exit_code != 0 or not page_output.is_file():
+                            raise ChildRequestError("semantic page reader failed without a typed output")
+                        try:
+                            page_output_payload = json.loads(page_output.read_text(encoding="utf-8"))
+                        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+                            raise ChildRequestError("semantic page output is not valid JSON") from exc
+                        summary = _validate_segment_summary(page_output_payload, segment)
+                        page_error = None
+                        break
+                    except ChildRequestError as exc:
+                        page_error = exc
+                if page_error is not None:
+                    raise page_error
                 page_summaries.append({
                     **{key: segment[key] for key in (
                         "source_path", "source_sha256", "ordinal", "total", "start_byte", "end_byte",
