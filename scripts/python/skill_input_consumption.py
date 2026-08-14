@@ -229,7 +229,8 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
     missing = required - set(contract)
     if missing:
         raise SkillInputError(f"contract missing required fields: {sorted(missing)}")
-    unknown = set(contract) - required - {"max_snapshot_bytes"}
+    optional = {"max_snapshot_bytes", "semantic_input_mode", "max_snapshot_chunk_bytes"}
+    unknown = set(contract) - required - optional
     if unknown:
         raise SkillInputError(f"contract contains unknown fields: {sorted(unknown)}")
     if contract["schema_version"] != "skill-input-contract.v1" or contract["mode"] != "strict":
@@ -261,6 +262,20 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
     max_snapshot_bytes = contract.get("max_snapshot_bytes", DEFAULT_MAX_SNAPSHOT_BYTES)
     if not isinstance(max_snapshot_bytes, int) or isinstance(max_snapshot_bytes, bool) or not 65536 <= max_snapshot_bytes <= 4194304:
         raise SkillInputError("contract max_snapshot_bytes is invalid")
+    input_mode = contract.get("semantic_input_mode", "serialized-snapshot-stdin")
+    if input_mode not in {"serialized-snapshot-stdin", "paged-frozen-snapshot-stdin"}:
+        raise SkillInputError("contract semantic_input_mode is invalid")
+    chunk_bytes = contract.get("max_snapshot_chunk_bytes")
+    if input_mode == "paged-frozen-snapshot-stdin":
+        if (
+            not isinstance(chunk_bytes, int)
+            or isinstance(chunk_bytes, bool)
+            or not 4096 <= chunk_bytes <= 65536
+            or chunk_bytes > max_snapshot_bytes
+        ):
+            raise SkillInputError("contract max_snapshot_chunk_bytes is invalid")
+    elif chunk_bytes is not None:
+        raise SkillInputError("serialized contract may not declare max_snapshot_chunk_bytes")
     basis = contract["budget_basis"]
     if not isinstance(basis, dict) or set(basis) != {"path", "sha256"} or not isinstance(basis.get("path"), str) or not SHA256_PATTERN.fullmatch(str(basis.get("sha256", ""))):
         raise SkillInputError("contract budget_basis is invalid")

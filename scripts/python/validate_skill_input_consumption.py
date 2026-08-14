@@ -120,7 +120,8 @@ def _validate_decision(payload: Any, manifest_hash: str, context_hash: str, sour
     if not isinstance(payload, dict):
         raise ReceiptValidationError("semantic decision must be an object")
     required = {"schema_version", "producer_role", "execution_identity", "source_manifest_hash", "context_artifact_hash", "source_statuses", "status", "rationale", "redaction_status", "redaction_profile_hash", "authorizes"}
-    if set(payload) != required:
+    optional = {"snapshot_read_coverage"}
+    if not required.issubset(payload) or set(payload) - required - optional:
         raise ReceiptValidationError("semantic decision fields do not match schema")
     if payload["schema_version"] != "skill-semantic-decision.v1" or payload["source_manifest_hash"] != manifest_hash or payload["context_artifact_hash"] != context_hash:
         raise ReceiptValidationError("semantic decision binding is invalid")
@@ -147,7 +148,90 @@ def _validate_decision(payload: Any, manifest_hash: str, context_hash: str, sour
         raise ReceiptValidationError("semantic decision source statuses do not match receipt")
     if payload["redaction_status"] not in {"not-required", "complete", "failed"}:
         raise ReceiptValidationError("semantic decision redaction status is invalid")
+    coverage = payload.get("snapshot_read_coverage")
+    if coverage is not None:
+        if (
+            not isinstance(coverage, dict)
+            or set(coverage) != {"path", "sha256"}
+            or not isinstance(coverage["path"], str)
+            or not coverage["path"]
+        ):
+            raise ReceiptValidationError("semantic decision snapshot read coverage is invalid")
+        _check_sha(coverage["sha256"], "semantic decision snapshot read coverage sha256")
     _validate_model_safe_payload(payload, "semantic decision")
+
+
+def _validate_paged_read_coverage(
+    coverage_ref: dict[str, Any],
+    output_root: Path,
+    repository_root: Path,
+    manifest_path: Path,
+    request: dict[str, Any],
+) -> None:
+    raw_path = Path(coverage_ref["path"])
+    if raw_path.is_absolute() or ".." in raw_path.parts:
+        raise ReceiptValidationError("snapshot read coverage path is invalid")
+    coverage_path = (output_root / raw_path).resolve()
+    try:
+        coverage_path.relative_to(output_root.resolve())
+    except ValueError as exc:
+        raise ReceiptValidationError("snapshot read coverage path escapes output root") from exc
+    if not coverage_path.is_file() or sha256_bytes(coverage_path.read_bytes()) != coverage_ref["sha256"]:
+        raise ReceiptValidationError("snapshot read coverage is missing or stale")
+    coverage = read_json(coverage_path)
+    required = {"schema_version", "source_manifest_hash", "input_mode", "chunk_bytes", "segments"}
+    if (
+        not isinstance(coverage, dict)
+        or set(coverage) != required
+        or coverage["schema_version"] != "skill-input-read-coverage.v1"
+        or coverage["source_manifest_hash"] != request["source_manifest_hash"]
+        or coverage["input_mode"] != "paged-frozen-snapshot-stdin"
+        or coverage["chunk_bytes"] != request["max_snapshot_chunk_bytes"]
+        or not isinstance(coverage["segments"], list)
+        or not coverage["segments"]
+    ):
+        raise ReceiptValidationError("snapshot read coverage payload is invalid")
+    manifest = read_json(manifest_path)
+    expected_sources = {
+        item["path"]: item["semantic_snapshot_sha256"]
+        for item in manifest.get("sources", [])
+        if isinstance(item, dict) and isinstance(item.get("path"), str)
+    }
+    coverage_by_source: dict[str, list[dict[str, Any]]] = {}
+    required_segment = {
+        "source_path", "source_sha256", "ordinal", "total", "start_byte", "end_byte",
+        "start_line", "end_line", "content_sha256",
+    }
+    for segment in coverage["segments"]:
+        if not isinstance(segment, dict) or set(segment) != required_segment:
+            raise ReceiptValidationError("snapshot read coverage segment is invalid")
+        source_path = segment["source_path"]
+        if source_path not in expected_sources or segment["source_sha256"] != expected_sources[source_path]:
+            raise ReceiptValidationError("snapshot read coverage source binding is invalid")
+        for field in ("ordinal", "total", "start_byte", "end_byte", "start_line", "end_line"):
+            if not isinstance(segment[field], int) or isinstance(segment[field], bool) or segment[field] < 0:
+                raise ReceiptValidationError("snapshot read coverage range is invalid")
+        _check_sha(segment["content_sha256"], "snapshot read coverage content sha256")
+        coverage_by_source.setdefault(source_path, []).append(segment)
+    if set(coverage_by_source) != set(expected_sources):
+        raise ReceiptValidationError("snapshot read coverage omits a frozen source")
+    for source_path, segments in coverage_by_source.items():
+        source_bytes = (repository_root / source_path).read_bytes()
+        ordered = sorted(segments, key=lambda item: item["ordinal"])
+        if [item["ordinal"] for item in ordered] != list(range(1, len(ordered) + 1)):
+            raise ReceiptValidationError("snapshot read coverage ordinal is not contiguous")
+        if any(item["total"] != len(ordered) for item in ordered):
+            raise ReceiptValidationError("snapshot read coverage total is invalid")
+        cursor = 0
+        for segment in ordered:
+            if segment["start_byte"] != cursor or not cursor <= segment["end_byte"] <= len(source_bytes):
+                raise ReceiptValidationError("snapshot read coverage byte range is not contiguous")
+            page = source_bytes[segment["start_byte"]:segment["end_byte"]]
+            if sha256_bytes(page) != segment["content_sha256"]:
+                raise ReceiptValidationError("snapshot read coverage content hash is invalid")
+            cursor = segment["end_byte"]
+        if cursor != len(source_bytes):
+            raise ReceiptValidationError("snapshot read coverage does not reach EOF")
 
 
 def _validate_child_request_binding(
@@ -165,7 +249,7 @@ def _validate_child_request_binding(
         "snapshot_root", "output_root", "execution_identity", "max_context_bytes",
         "allowed_capabilities", "authorizes",
     }
-    if not isinstance(payload, dict) or not required.issubset(payload) or set(payload) - required - {"max_snapshot_bytes"}:
+    if not isinstance(payload, dict) or not required.issubset(payload) or set(payload) - required - {"max_snapshot_bytes", "input_mode", "max_snapshot_chunk_bytes"}:
         raise ReceiptValidationError("child request fields do not match schema")
     if (
         payload["schema_version"] != "skill-input-child-request.v1"
@@ -176,11 +260,21 @@ def _validate_child_request_binding(
         or payload["max_context_bytes"] != contract["max_context_bytes"]
         or payload.get("max_snapshot_bytes", DEFAULT_MAX_SNAPSHOT_BYTES)
         != contract.get("max_snapshot_bytes", DEFAULT_MAX_SNAPSHOT_BYTES)
+        or payload.get("input_mode", "serialized-snapshot-stdin")
+        != contract.get("semantic_input_mode", "serialized-snapshot-stdin")
         or payload["authorizes"] != []
         or payload["execution_identity"] != decision.get("execution_identity")
     ):
         raise ReceiptValidationError("child request binding is stale")
     _check_sha(payload["execution_identity"], "child request execution_identity")
+    if payload.get("input_mode", "serialized-snapshot-stdin") == "paged-frozen-snapshot-stdin":
+        if payload.get("max_snapshot_chunk_bytes") != contract.get("max_snapshot_chunk_bytes"):
+            raise ReceiptValidationError("child request page budget is stale")
+        coverage_ref = decision.get("snapshot_read_coverage")
+        if not isinstance(coverage_ref, dict):
+            raise ReceiptValidationError("paged child decision lacks snapshot read coverage")
+    elif payload.get("max_snapshot_chunk_bytes") is not None or decision.get("snapshot_read_coverage") is not None:
+        raise ReceiptValidationError("serialized child may not bind snapshot read coverage")
     capabilities = payload["allowed_capabilities"]
     if (
         not isinstance(capabilities, list)
@@ -203,6 +297,10 @@ def _validate_child_request_binding(
             sidecar.resolve().relative_to(output_root.resolve())
         except ValueError as exc:
             raise ReceiptValidationError(f"child request {label} output escapes output_root") from exc
+    if payload.get("input_mode", "serialized-snapshot-stdin") == "paged-frozen-snapshot-stdin":
+        _validate_paged_read_coverage(
+            decision["snapshot_read_coverage"], output_root, repository_root, manifest_path, payload
+        )
 
 
 def validate_receipt(receipt_path: Path, repository_root: Path, contract_path: Path, require_ready: bool = False) -> dict[str, Any]:

@@ -19,7 +19,16 @@
     "rationale": {"type": "string", "maxLength": 2000},
     "redaction_status": {"enum": ["not-required", "complete", "failed"]},
     "redaction_profile_hash": {"$ref": "#/$defs/sha256"},
-    "authorizes": {"const": []}
+    "authorizes": {"const": []},
+    "snapshot_read_coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
   },
   "$defs": {
     "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}

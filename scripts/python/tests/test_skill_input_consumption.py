@@ -1024,6 +1024,64 @@ class SkillInputConsumptionTests(unittest.TestCase):
                 backend_inspector=self._backend_inspector,
             )
 
+    def test_paged_snapshot_reader_covers_every_page_and_binds_coverage(self):
+        temporary, root, contract, receipt, args = self._fixture()
+        self.addCleanup(temporary.cleanup)
+        basis = root / "budget.json"
+        basis.write_text(json.dumps({
+            "schema_version": "skill-input-budget.v1", "max_context_bytes": 512,
+            "max_snapshot_bytes": 131072, "max_sources": 10, "max_reference_depth": 4,
+        }), encoding="utf-8")
+        contract_payload = json.loads(contract.read_text(encoding="utf-8"))
+        contract_payload.update({
+            "max_snapshot_bytes": 131072,
+            "semantic_input_mode": "paged-frozen-snapshot-stdin",
+            "max_snapshot_chunk_bytes": 16384,
+            "budget_basis": {"path": "budget.json", "sha256": sha256_bytes(basis.read_bytes())},
+        })
+        contract.write_text(json.dumps(contract_payload), encoding="utf-8")
+        (root / "requirements.md").write_text("Requirement text\n" * 5000, encoding="utf-8")
+        prepare(args)
+        receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+        request = create_child_request(
+            receipt_payload, contract_payload, root, contract_path=contract,
+            receipt_root=receipt.parent, output_root="run/output", backend="codex-cli",
+            model="test-model", backend_inspector=self._backend_inspector,
+        )
+        request_path = root / "run" / "skill-input-child-request.v1.json"
+        request_path.write_text(json.dumps(request), encoding="utf-8")
+        calls = []
+
+        def fake_runner(**kwargs):
+            calls.append(kwargs["prompt"])
+            if "PAGE_DESCRIPTOR_BEGIN" in kwargs["prompt"]:
+                self.assertIn("PAGE_CONTENT_BEGIN", kwargs["prompt"])
+                output = {"status": "accepted", "summary": "Page requirements are sufficient."}
+            else:
+                self.assertIn("PAGED_READ_COVERAGE_BEGIN", kwargs["prompt"])
+                self.assertIn("PAGED_READ_SUMMARIES_BEGIN", kwargs["prompt"])
+                output = {
+                    "context": {"schema_version": "skill-input-context.v1", "source_manifest_hash": receipt_payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "All pages were consumed."}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"},
+                    "decision": {"schema_version": "skill-semantic-decision.v1", "producer_role": "semantic-child", "execution_identity": request["execution_identity"], "source_manifest_hash": receipt_payload["source_manifest"]["sha256"], "context_artifact_hash": "sha256:" + "0" * 64, "source_statuses": {"requirements.md": "accepted"}, "status": "accepted", "rationale": "sufficient", "redaction_status": "complete", "redaction_profile_hash": redaction_profile_hash(), "authorizes": []},
+                }
+            kwargs["output_last_message"].write_text(json.dumps(output), encoding="utf-8")
+            return 0, "", ["fake"]
+
+        result = run_semantic_child(
+            request, root, backend="codex-cli", model="test-model", runner=fake_runner,
+            backend_inspector=self._backend_inspector,
+        )
+        self.assertGreater(len(calls), 2)
+        coverage = Path(result["snapshot_read_coverage"])
+        self.assertTrue(coverage.is_file())
+        decision = json.loads(Path(result["semantic_decision"]).read_text(encoding="utf-8"))
+        self.assertEqual(sha256_bytes(coverage.read_bytes()), decision["snapshot_read_coverage"]["sha256"])
+        publish_ready(receipt, request_path, Path(result["semantic_decision"]), Path(result["context_artifact"]), root, contract)
+        self.assertEqual("ready", validate_receipt(receipt, root, contract, require_ready=True)["status"])
+        coverage.write_text("{}\n", encoding="utf-8")
+        with self.assertRaisesRegex(ReceiptValidationError, "coverage"):
+            validate_receipt(receipt, root, contract, require_ready=True)
+
     def test_semantic_child_rejects_snapshot_modification(self):
         temporary, root, contract, receipt, args = self._fixture()
         self.addCleanup(temporary.cleanup)

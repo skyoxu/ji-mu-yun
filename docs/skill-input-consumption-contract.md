@@ -70,10 +70,13 @@ consumer/operation receipt before their first authoritative action.
 
 `launch_skill_input_consumer.py --run-semantic-child` requires explicit
 `--backend` and `--model` values from the owning route. It uses the shared
-`scripts/sc/_llm_backend.py` stdin-first backend, serializes the complete
-model-safe snapshot into the prompt, runs in an empty ephemeral root with local
-and external tool surfaces disabled, and publishes only typed context/decision
-sidecars. It never selects a provider or falls back to raw child output. The
+`scripts/sc/_llm_backend.py` stdin-first backend. A compatible contract uses
+one serialized model-safe snapshot; a contract that explicitly selects
+`paged-frozen-snapshot-stdin` receives parent-controlled, hash-bound UTF-8
+pages and a final aggregation input. The child never receives a live source
+path, shell, or MCP capability in either mode, and the parent publishes only
+typed context/decision sidecars. It never selects a provider or falls back to
+raw child output. The
 owning launcher first calls the same entry point with `--create-request`;
 callers never hand-author `execution_identity`. Protocol v1 uses `codex-cli`
 for this child because the launcher can bind its executable and enforce the
@@ -119,6 +122,8 @@ Example contract:
   "max_sources": 500,
   "max_context_bytes": 12000,
   "max_snapshot_bytes": 262144,
+  "input_mode": "serialized-snapshot-stdin|paged-frozen-snapshot-stdin",
+  "max_snapshot_chunk_bytes": 24576,
   "budget_basis": {
     "path": "tests/fixtures/skill-input/vdd-create-baseline.json",
     "sha256": "sha256:..."
@@ -284,7 +289,7 @@ to the separate output directory. The context artifact is what the parent Skill
 receives; the receipt alone is not a substitute for task content. The artifact
 must not contain raw logs or unrelated tool transcripts. The launcher derives
 identity from the resolved executable, backend, model, reasoning setting,
-protocol version, serialized-stdin mode, disabled-tool policy, provider config
+protocol version, selected input mode, disabled-tool policy, provider config
 hash, and `read-only` command sandbox, then re-hashes the original snapshot
 after execution. Typed child output is re-scanned with the hash-bound
 `credential-values-v1` profile before sidecars can be published. That profile
@@ -332,6 +337,9 @@ context artifact hash, per-source semantic statuses, decision status, bounded
 rationale (at most 2,000 UTF-8 bytes), `redaction_status`,
 `redaction_profile_hash`, and `authorizes: []`. The validator projects those
 per-source values into the receipt and rejects any disagreement.
+For paged input it additionally carries the parent-produced
+`snapshot_read_coverage` path and hash; the validator recomputes every page
+against the still-hash-validated repository source before accepting `ready`.
 `redaction_status=failed` always blocks ready publication. A
 `credential-bearing` source must have `redaction_status=complete` and may
 produce only a redacted derived value. If the task requires the credential value
@@ -360,7 +368,7 @@ load Skill authority
   -> select operation and route
   -> load the Skill input contract
   -> shared adapter discovers sources and freezes source plus model-safe snapshots
-  -> parent serializes the complete model-safe snapshot to a no-file-tools semantic child
+  -> parent transports the complete model-safe snapshot through the contract-selected no-file-tools mode
   -> semantic child emits bounded context plus a decision
   -> validator verifies skill-input-consumption.v1
   -> ready=true gate
@@ -486,7 +494,9 @@ references are de-duplicated by canonical path. `max_sources` and `max_context_b
 must be finite positive integers and must cite an existing hash-bound
 `budget_basis` fixture whose JSON values exactly match all four effective
 limits (`max_sources`, `max_context_bytes`, `max_snapshot_bytes`, and
-`max_reference_depth`); an override without a passing fixture is invalid. The
+`max_reference_depth`); an override without a passing fixture is invalid. A
+paged contract additionally hash-binds its `max_snapshot_chunk_bytes` through
+the contract and child request. The
 root-level `source-manifest.v1.json` name is reserved by the protocol and may
 not be supplied as a source path. A reference is consumed only after its target is present in the same source
 manifest.
@@ -516,11 +526,18 @@ hash-bound leaf, but its own links and path fields are not reinterpreted. This
 prevents an explicit plan input from recursively promoting historical snapshots,
 backups, or unrelated evidence trees into new recovery authority.
 
-The default serialized model-safe snapshot is limited by the contract's finite
-`max_snapshot_bytes` (the four initial consumers use 262,144 UTF-8 bytes). The
-launcher rejects an oversized snapshot before starting the semantic child and
-returns a transport-budget failure; it never attempts an unchanged oversized
-retry. The default context artifact is an atomic UTF-8
+The compatible serialized model-safe snapshot is limited by the contract's
+finite `max_snapshot_bytes` (the four initial consumers originally use 262,144
+UTF-8 bytes). A contract may instead select `paged-frozen-snapshot-stdin` and
+declare `max_snapshot_chunk_bytes` from 4,096 through 65,536 bytes. In that
+mode the parent reads every frozen UTF-8 source in ordered, hash-bound pages,
+requires byte-contiguous coverage through EOF for every manifest source, bounds
+each page summary, and persists a `skill-input-read-coverage.v1` sidecar whose
+hash is bound into the semantic decision. The final semantic child receives the
+complete coverage descriptor and page summaries, never live paths. Bootstrap
+uses this mode with a 2 MiB aggregate snapshot budget and 24 KiB pages. An
+oversized aggregate snapshot still fails before model launch; the launcher never
+attempts an unchanged oversized retry. The default context artifact is an atomic UTF-8
 `skill-input-context.v1.json` file under the temporary binding directory. Its
 default limit is 12,000 UTF-8 bytes; a Skill contract may declare a different
 finite `max_context_bytes`. The artifact records its source-hash set,
@@ -622,6 +639,8 @@ fixture matrix must include:
 | Semantic decision bound to another context artifact | `ready=false` |
 | Truncated or oversized context artifact | `ready=false` |
 | Serialized snapshot exceeds `max_snapshot_bytes` | child launch rejected; no raw fallback |
+| Paged snapshot | every source has byte-contiguous pages through EOF and the coverage sidecar is hash-bound before `ready=true` |
+| Paged coverage hash, ordinal, source binding, or byte range is stale | `ready=false` |
 | Credential-bearing source without complete redaction | `ready=false` |
 | `redaction_status=failed` in an otherwise bound decision | `ready=false` |
 | Literal credential-like provider value or non-name env binding | child launch rejected |

@@ -16,6 +16,8 @@
     "execution_identity": {"$ref": "#/$defs/sha256"},
     "max_context_bytes": {"type": "integer", "minimum": 512, "maximum": 12000},
     "max_snapshot_bytes": {"type": "integer", "minimum": 65536, "maximum": 4194304},
+    "input_mode": {"enum": ["serialized-snapshot-stdin", "paged-frozen-snapshot-stdin"]},
+    "max_snapshot_chunk_bytes": {"type": "integer", "minimum": 4096, "maximum": 65536},
     "allowed_capabilities": {
       "type": "array",
       "minItems": 2,
