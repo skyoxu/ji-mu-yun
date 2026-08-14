@@ -24,7 +24,7 @@ Stdout silence 不能单独证明停滞；heartbeat、stdout、重复状态、�
 4. 按 current process identity reconcile lease；
 5. 发布 non-authorizing typed blocked/recovery result。
 
-初始 60 分钟仅为待 M0 ratify 的 assumption。No-progress ceiling、terminal grace 和 lease reconciliation window 是一个 policy family还是独立版本，仍为开放问题。
+初始 60 分钟仅为待 M0 ratify 的 assumption。No-progress ceiling、terminal grace、lease、retry 和 status throttle 是一个 versioned owner-local runtime-policy artifact 中可独立调节的字段；具体值仍由 Bootstrap control-plane policy owner ratify。
 
 ## 4. Terminal 与 Lease Reconciliation
 

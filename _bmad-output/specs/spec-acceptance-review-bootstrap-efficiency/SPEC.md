@@ -14,6 +14,8 @@ companions:
     role: normative_companion
   - path: _bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/glossary.md
     role: normative_companion
+  - path: _bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md
+    role: adopted_companion
 sources:
   - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/prd.md
     role: provenance
@@ -79,7 +81,7 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
 - 成本不得削弱 mandatory authority coverage；完成、finding、authorization 和 acceptance-passed 均不得由 assistant prose 或上游布尔声明建立。
 - 历史 `vcec-r1`、`vcec-r1m`、`vcec-r1n` 失败证据不可重写为成功。
 - 本合同仅覆盖 repository toolchain control plane，不改变 Phase service 或 user sandbox 的模型验收行为。
-- Canonical serialization、schema 字段、retry 次数、projection budget 和 policy threshold 由 Architecture/Policy ratify；本 SPEC 不提前冻结未决实现参数。
+- CAP-1 至 CAP-10 的实现不变量遵循 adopted [Architecture Spine](../../planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md)；具体 threshold、retry ceiling 与其他运行数值继续由其指定的 versioned policy owner ratify。
 
 ## Non-goals
 
@@ -108,6 +110,3 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
 
 - 正式 full-Bootstrap 目标采用 60 分钟，还是仅采用相对四小时基线的改善比例？Owner：Acceptance/Bootstrap policy owner；M2 首个稳定基线后复议。
 - Closure 缩减采用 provisional 75%，还是按 workload bucket 动态计算？Owner：Acceptance/Bootstrap policy owner；M2 baseline 与 completeness corpus 通过后复议。
-- Range Projection 沿用现有 model-visible budget，还是建立独立 Acceptance closure budget policy？Owner：Architecture；阻塞 M1 完成。
-- no-progress ceiling、terminal grace 和 lease reconciliation window 共用一个 policy family，还是分别版本化？Owner：Bootstrap control-plane policy owner；阻塞 M0 完成。
-- `vcec-r1n` 应采用哪一种正式非授权终态以保留回归价值并禁止复用？Owner：Bootstrap lineage owner；阻塞新策略正式回归。

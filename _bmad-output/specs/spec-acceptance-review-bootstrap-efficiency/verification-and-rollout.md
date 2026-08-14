@@ -22,7 +22,7 @@ Acceptance 只能在 authority/risk policy 允许集合内选择继续、rebuild
 | `vcec-r1m` | 125 | 1,527,532 | 101 分钟 | oversized，未进入正式 reviewer execution |
 | `vcec-r1n` | 89 | 1,372,666 | 91 分钟 | 101 segments，三角色超过两小时仍未完成 |
 
-`vcec-r1n` 正式事件超过 240 个 attempt、累计模型使用超过 2,800 万 token，并出现 stale lease、transport failure、payload mismatch 和 write-set overlap。该基线必须作为新策略回归输入，不得改写为成功 run。
+`vcec-r1n` 正式事件超过 240 个 attempt、累计模型使用超过 2,800 万 token，并出现 stale lease、transport failure、payload mismatch 和 write-set overlap。其 run outcome 固定为 `abandoned`、classification 为 `historical-runtime-failure`、`reusable=false`、`authorizes=[]`；内部 attempt classifications 保持原样。该基线必须作为新策略回归输入，不得改写为成功 run。
 
 ## 3. 主要成功指标
 

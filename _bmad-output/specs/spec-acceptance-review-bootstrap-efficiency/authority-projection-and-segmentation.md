@@ -23,7 +23,7 @@
 
 Reviewer 不能自行选择范围。Projection 不能删除适用于 changed-set 的约束、反例或例外。Path、range、source hash 或 extracted bytes 任一 mutation 必须失败。
 
-Range Projection 的具体 budget 和 serialization 尚未 ratify；Architecture 必须在 M1 前解决，不得由实现者私自冻结。
+Range Projection 沿用 shared file/model tooling owner 发布的 model-visible budget policy；whole-file/projection decision 与 descriptor 必须绑定所选 policy identity。具体 threshold 仍是 policy 数据，不得由实现者冻结。
 
 ## 3. Canonical Segment Identity
 
@@ -47,7 +47,7 @@ Architecture 必须定义一个足以绑定下列语义的 Segment Descriptor：
 - projection/payload schema version；
 - selected model identity（仅当 reuse/cache 语义依赖模型时）。
 
-具体 field name、canonical serialization、domain separator、自身 hash 排除规则和算法版本由 Architecture 决定；上列内容是必须保持的语义，不是已冻结 schema。
+Canonical serialization、domain separation、complete identity reference、attempt 分层和 stable descriptor projection 遵循 adopted Architecture Spine 的 AD-5 与 AD-8。Artifact owner schema 负责字段命名，但不得改变上列语义集合。
 
 ## 4. Segment-only Snapshot
 
