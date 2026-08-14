@@ -12,7 +12,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[4]
 PLAN = ROOT / "execution-plans/2026-08-13-vdd-conformance-exact-cover"
 sys.path.insert(0, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts"))
-from conformance import build_obligation_inventory  # noqa: E402
+from conformance import build_obligation_inventory, semantic_handoff_hash  # noqa: E402
 
 
 def digest(path: Path) -> str:
@@ -73,9 +73,7 @@ def main() -> int:
             return 2
         frozen = json.loads(authority_manifest.read_text(encoding="utf-8"))
         valid_mapping = complete_mapping(frozen)
-        invalid_mapping = json.loads(json.dumps(valid_mapping))
-        invalid_mapping["obligations"] = invalid_mapping["obligations"][:-1]
-        mapping.write_text(json.dumps(invalid_mapping), encoding="utf-8", newline="\n")
+        mapping.write_text(json.dumps(valid_mapping), encoding="utf-8", newline="\n")
         freeze = subprocess.run([
             sys.executable, str(ROOT / ".agents/skills/vdd-execution-plan/scripts/source_freeze.py"),
             "--repository-root", str(ROOT), "--spec", str(ROOT / "_bmad-output/specs/spec-vdd-conformance-exact-cover/SPEC.md"),
@@ -88,12 +86,40 @@ def main() -> int:
             sys.executable, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"),
             "--repository-root", str(ROOT), "--manifest", str(manifest), "--mapping", str(mapping),
         ], cwd=ROOT, check=False, capture_output=True, text=True)
-        if exact.returncode == 0 or '"status":"blocked"' not in exact.stdout:
+        if exact.returncode == 0 or '"status":"requirement_semantic_review_required"' not in exact.stdout:
             return 2
         initial_receipt.write_text(exact.stdout, encoding="utf-8", newline="\n")
+        initial = json.loads(exact.stdout)
+        handoff_value = initial.get("semantic_handoff")
+        if not isinstance(handoff_value, dict):
+            return 2
         review_run = Path(raw) / "deterministic-repair-review.v1.json"
-        review_run.write_text('{"schema_version":"vdd-repair-review.v1","status":"deterministic-repair","authorizes":[]}\n', encoding="utf-8", newline="\n")
-        repaired_mapping.write_text(json.dumps(valid_mapping), encoding="utf-8", newline="\n")
+        review_run.write_text(json.dumps({
+            "schema_version": "vdd-review-run.v1",
+            "status": "accepted",
+            "semantic_handoff_hash": semantic_handoff_hash(handoff_value),
+            "source_manifest_hash": handoff_value["frozen_authority"]["source_manifest_hash"],
+            "requirements_manifest_hash": handoff_value["requirements_manifest_hash"],
+            "profile": handoff_value["profile"],
+            "ambiguity_ids": handoff_value["affected_obligation_ids"],
+            "affected_requirement_ids": handoff_value["affected_requirement_ids"],
+            "decision": "accepted",
+            "authorizes": [],
+        }), encoding="utf-8", newline="\n")
+        reviewed = json.loads(json.dumps(valid_mapping))
+        reviewed["approved_semantic_dispositions"] = [{
+            "obligation_ids": handoff_value["affected_obligation_ids"],
+            "decision": "not_applicable",
+            "review_run": {"path": review_run.relative_to(ROOT).as_posix(), "sha256": digest(review_run)},
+            "prior_requirements_manifest": {"path": mapping.relative_to(ROOT).as_posix(), "sha256": digest(mapping)},
+            "semantic_handoff": handoff_value,
+            "semantic_handoff_hash": semantic_handoff_hash(handoff_value),
+        }]
+        approved = set(handoff_value["affected_obligation_ids"])
+        for obligation in reviewed["obligations"]:
+            if obligation["obligation_id"] in approved:
+                obligation["status"] = "not_applicable"
+        repaired_mapping.write_text(json.dumps(reviewed), encoding="utf-8", newline="\n")
         handoff = subprocess.run([
             sys.executable, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"),
             "--repository-root", str(ROOT), "--manifest", str(manifest), "--mapping", str(mapping),
@@ -129,7 +155,9 @@ def main() -> int:
             "--receipt", str(repaired_receipt), "--manifest", str(repaired_manifest), "--mapping", str(repaired_mapping),
             "--validator", str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py"),
         ], cwd=ROOT, check=False)
-        return 0 if preflight.returncode == 0 else 2
+        if preflight.returncode:
+            return 2
+        return 0
 
 
 if __name__ == "__main__":

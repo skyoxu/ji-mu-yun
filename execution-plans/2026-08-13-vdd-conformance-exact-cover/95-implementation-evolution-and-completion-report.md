@@ -89,6 +89,20 @@ old requirements identity before the new identity can pass authorization
 preflight. Lifecycle remains `implementation-authorized` and no authorization
 is granted by these artifacts.
 
+Repair round 10, sourced from `docs/know26.txt`, closes the remaining semantic
+handoff authority gap. Deferred imperative obligations without an explicit
+approved disposition now force `requirement_semantic_review_required`; they
+cannot silently produce a conformant result. A repaired mapping may mark such
+an obligation `not_applicable` only through an approved disposition bound to
+the prior requirements identity, its full semantic handoff, and an accepted,
+non-authorizing review envelope. The envelope binds the handoff hash, frozen
+source manifest, prior requirements manifest, profile, ambiguity IDs, affected
+requirements, and decision. VDD revalidates that closure without owning the
+Exact-cover profile itself. The current mapping remains intentionally pending
+semantic review; dogfood proves that the reviewed repair receives a new source
+freeze identity and can then pass authorization preflight. Lifecycle remains
+`implementation-authorized` and no authorization is granted.
+
 Quick Dev TDD implementation was revalidated through S0-S5 under the current
 hash-bound command registry. The current terminal executes each declared RED
 fixture as an expected rejection and every GREEN command as a real behavior

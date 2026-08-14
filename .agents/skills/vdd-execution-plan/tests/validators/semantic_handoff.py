@@ -46,9 +46,38 @@ def main() -> int:
         repaired_mapping = json.loads(json.dumps(mapping))
         repaired_mapping["semantic_review"] = []
         repaired.write_text(json.dumps(repaired_mapping), encoding="utf-8", newline="\n")
-        review.write_text('{"schema_version":"vdd-review-run.v1","status":"accepted","authorizes":[]}\n', encoding="utf-8", newline="\n")
         result = validate_conformance(ROOT, manifest, prior)
         if result["status"] != "requirement_semantic_review_required":
+            return 2
+        handoff = result.get("semantic_handoff")
+        if not isinstance(handoff, dict):
+            return 2
+        from conformance import semantic_handoff_hash  # noqa: E402
+        review.write_text(json.dumps({
+            "schema_version": "vdd-review-run.v1",
+            "status": "accepted",
+            "semantic_handoff_hash": semantic_handoff_hash(handoff),
+            "source_manifest_hash": handoff["frozen_authority"]["source_manifest_hash"],
+            "requirements_manifest_hash": handoff["requirements_manifest_hash"],
+            "profile": handoff["profile"],
+            "ambiguity_ids": handoff["affected_obligation_ids"],
+            "affected_requirement_ids": handoff["affected_requirement_ids"],
+            "decision": "accepted",
+            "authorizes": [],
+        }), encoding="utf-8", newline="\n")
+        stale_review = directory / "stale-review-run.v1.json"
+        stale_value = json.loads(review.read_text(encoding="utf-8"))
+        stale_value["requirements_manifest_hash"] = "sha256:" + "0" * 64
+        stale_review.write_text(json.dumps(stale_value), encoding="utf-8", newline="\n")
+        try:
+            build_repair_input(
+                ROOT, result, manifest, prior, stale_review, repaired,
+                ROOT / ".agents/skills/vdd-conformance-exact-cover/references/runtime-policy-registry.v1.json",
+                "semantic-handoff-stale-review", ["repair/round-5/requirements-acceptance-slice-command.v1.json"],
+            )
+        except ValueError:
+            pass
+        else:
             return 2
         repair = build_repair_input(
             ROOT, result, manifest, prior, review, repaired,
@@ -56,11 +85,11 @@ def main() -> int:
             "semantic-handoff-repair", ["repair/round-5/requirements-acceptance-slice-command.v1.json"],
         )
         required = {
-            "schema_version", "repair_id", "target_root", "frozen_authority", "review_run",
+            "schema_version", "repair_id", "target_root", "frozen_authority", "semantic_handoff", "semantic_handoff_hash", "review_run",
             "prior_requirements_manifest", "repaired_requirements_manifest", "validator", "policy",
             "ambiguity_ids", "affected_requirement_ids", "ambiguity", "allowed_repair_scope", "authorizes",
         }
-        return 0 if set(repair) == required and repair["ambiguity_ids"] == [deferred["obligation_id"]] and repair["affected_requirement_ids"] == ["VCEC-001"] and repair["ambiguity"] and repair["authorizes"] == [] else 2
+        return 0 if set(repair) == required and deferred["obligation_id"] in repair["ambiguity_ids"] and "VCEC-001" in repair["affected_requirement_ids"] and repair["ambiguity"] and repair["authorizes"] == [] else 2
 
 
 if __name__ == "__main__":

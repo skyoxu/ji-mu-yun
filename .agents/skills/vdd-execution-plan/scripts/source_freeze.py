@@ -13,6 +13,7 @@ from typing import Any
 
 SCHEMA_VERSION = "vdd-source-freeze-manifest.v1"
 HASH_DOMAIN = "jimuyun.vdd-source-freeze-manifest.v1"
+SEMANTIC_HANDOFF_DOMAIN = "jimuyun.vdd-semantic-handoff.v1"
 ROLE_RELATIONSHIPS = {
     "canonical": "canonical_package_root",
     "normative_companion": "package_normative_companion",
@@ -28,6 +29,11 @@ def canonical_bytes(value: Any) -> bytes:
 
 def domain_hash(value: Any) -> str:
     payload = {"domain": HASH_DOMAIN, "payload": value}
+    return "sha256:" + hashlib.sha256(canonical_bytes(payload)).hexdigest()
+
+
+def semantic_handoff_hash(value: Any) -> str:
+    payload = {"domain": SEMANTIC_HANDOFF_DOMAIN, "payload": value}
     return "sha256:" + hashlib.sha256(canonical_bytes(payload)).hexdigest()
 
 
@@ -116,7 +122,7 @@ def validate_repair_input(root: Path, path: Path, target_root: str) -> dict[str,
         raise ValueError("VDD repair input must stay inside the repository") from exc
     value = json.loads(path.read_text(encoding="utf-8"))
     required = {
-        "schema_version", "repair_id", "target_root", "frozen_authority", "review_run",
+        "schema_version", "repair_id", "target_root", "frozen_authority", "semantic_handoff", "semantic_handoff_hash", "review_run",
         "prior_requirements_manifest", "repaired_requirements_manifest", "validator", "policy",
         "ambiguity_ids", "affected_requirement_ids", "ambiguity", "allowed_repair_scope", "authorizes",
     }
@@ -135,9 +141,6 @@ def validate_repair_input(root: Path, path: Path, target_root: str) -> dict[str,
         raise ValueError("VDD repair input frozen authority canonical hash is stale")
     for label in ("review_run", "prior_requirements_manifest", "repaired_requirements_manifest", "validator", "policy"):
         _artifact_ref(root, value.get(label), f"VDD repair input {label}")
-    review_value = json.loads((root / value["review_run"]["path"]).read_text(encoding="utf-8"))
-    if not isinstance(review_value, dict) or review_value.get("authorizes") != [] or not isinstance(review_value.get("status"), str) or not review_value["status"]:
-        raise ValueError("VDD repair input review run is invalid")
     prior = value["prior_requirements_manifest"]
     repaired = value["repaired_requirements_manifest"]
     if prior["path"] == repaired["path"] and prior["sha256"] == repaired["sha256"]:
@@ -147,7 +150,7 @@ def validate_repair_input(root: Path, path: Path, target_root: str) -> dict[str,
     if not isinstance(value["affected_requirement_ids"], list) or any(not isinstance(item, str) or not item for item in value["affected_requirement_ids"]):
         raise ValueError("VDD repair input affected requirement IDs are invalid")
     ambiguity = value["ambiguity"]
-    if not isinstance(ambiguity, list) or any(
+    if not isinstance(ambiguity, list) or len(ambiguity) != 1 or any(
         not isinstance(item, dict)
         or set(item) != {"obligation_ids", "requirement_ids", "reason", "scope"}
         or not isinstance(item["obligation_ids"], list)
@@ -159,6 +162,51 @@ def validate_repair_input(root: Path, path: Path, target_root: str) -> dict[str,
         raise ValueError("VDD repair input ambiguity contract is invalid")
     if sorted({identifier for item in ambiguity for identifier in item["obligation_ids"]}) != sorted(value["ambiguity_ids"]) or sorted({identifier for item in ambiguity for identifier in item["requirement_ids"]}) != sorted(value["affected_requirement_ids"]):
         raise ValueError("VDD repair input ambiguity bindings are incomplete")
+    handoff = value["semantic_handoff"]
+    if not isinstance(handoff, dict) or set(handoff) != {
+        "schema_version", "profile", "frozen_authority", "affected_obligation_ids",
+        "affected_requirement_ids", "ambiguity_reason", "ambiguity_scope", "review_run_required",
+        "requirements_manifest_hash", "authorizes",
+    }:
+        raise ValueError("VDD repair input semantic handoff is invalid")
+    if not isinstance(handoff.get("profile"), str) or not handoff["profile"]:
+        raise ValueError("VDD repair input semantic handoff profile is invalid")
+    expected_handoff = {
+        "schema_version": "vdd-requirement-semantic-handoff.v1",
+        "profile": handoff["profile"],
+        "frozen_authority": {
+            "source_manifest_hash": source_manifest["sha256"],
+            "source_manifest_canonical_hash": frozen["source_manifest_canonical_hash"],
+            "role_graph_hash": frozen["role_graph_hash"],
+        },
+        "affected_obligation_ids": sorted(value["ambiguity_ids"]),
+        "affected_requirement_ids": sorted(value["affected_requirement_ids"]),
+        "ambiguity_reason": ambiguity[0]["reason"],
+        "ambiguity_scope": ambiguity[0]["scope"],
+        "review_run_required": True,
+        "requirements_manifest_hash": value["prior_requirements_manifest"]["sha256"],
+        "authorizes": [],
+    }
+    if handoff != expected_handoff or value.get("semantic_handoff_hash") != semantic_handoff_hash(handoff):
+        raise ValueError("VDD repair input semantic handoff binding is stale")
+    review_value = json.loads((root / value["review_run"]["path"]).read_text(encoding="utf-8"))
+    if not isinstance(review_value, dict) or set(review_value) != {
+        "schema_version", "status", "semantic_handoff_hash", "source_manifest_hash",
+        "requirements_manifest_hash", "profile", "ambiguity_ids",
+        "affected_requirement_ids", "decision", "authorizes",
+    } or review_value != {
+        "schema_version": "vdd-review-run.v1",
+        "status": "accepted",
+        "semantic_handoff_hash": semantic_handoff_hash(handoff),
+        "source_manifest_hash": source_manifest["sha256"],
+        "requirements_manifest_hash": value["prior_requirements_manifest"]["sha256"],
+        "profile": handoff["profile"],
+        "ambiguity_ids": sorted(value["ambiguity_ids"]),
+        "affected_requirement_ids": sorted(value["affected_requirement_ids"]),
+        "decision": "accepted",
+        "authorizes": [],
+    }:
+        raise ValueError("VDD repair input review run is not bound to the semantic handoff")
     scope = value["allowed_repair_scope"]
     if not isinstance(scope, list) or not scope or any(not isinstance(item, str) or not item for item in scope):
         raise ValueError("VDD repair input allowed repair scope is invalid")

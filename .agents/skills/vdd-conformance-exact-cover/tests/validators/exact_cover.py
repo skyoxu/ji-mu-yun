@@ -81,7 +81,7 @@ def main() -> int:
         mapping = Path(raw) / "complete-mapping.json"
         mapping.write_text(json.dumps(prepared), encoding="utf-8", newline="\n")
         checked = validate_conformance(ROOT, manifest, mapping)
-        if checked["status"] != "conformant" or checked.get("obligation_count") != len(inventory):
+        if checked["status"] != "requirement_semantic_review_required" or checked.get("obligation_count") != len(inventory):
             return 2
         semantic = json.loads(json.dumps(prepared))
         deferred = next(item for item in inventory if item["status"] == "deferred")
@@ -96,7 +96,7 @@ def main() -> int:
         semantic_path = Path(raw) / "semantic-mapping.json"
         semantic_path.write_text(json.dumps(semantic), encoding="utf-8", newline="\n")
         handoff = validate_conformance(ROOT, manifest, semantic_path)
-        if handoff["status"] != "requirement_semantic_review_required" or handoff.get("semantic_handoff", {}).get("profile") != "bootstrap-upstream-plan":
+        if handoff["status"] != "requirement_semantic_review_required" or deferred["obligation_id"] not in handoff.get("semantic_handoff", {}).get("affected_obligation_ids", []) or handoff.get("semantic_handoff", {}).get("profile") != "bootstrap-upstream-plan":
             return 2
         mutated = json.loads(json.dumps(prepared))
         mutated["obligations"] = mutated["obligations"][:-1]

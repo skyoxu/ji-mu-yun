@@ -28,14 +28,14 @@ def main() -> int:
             sys.executable, str(ROOT / ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py"),
             "--repository-root", str(ROOT), "--manifest", str(manifest), "--mapping", str(MAPPING),
         ], cwd=ROOT, check=False, capture_output=True, text=True)
-        if exact.returncode:
+        if exact.returncode == 0 or '"status":"requirement_semantic_review_required"' not in exact.stdout:
             return 2
         receipt.write_text(exact.stdout, encoding="utf-8", newline="\n")
         check = subprocess.run([
             sys.executable, str(ROOT / ".agents/skills/authorization/scripts/conformance_preflight.py"),
             "--receipt", str(receipt), "--manifest", str(manifest), "--mapping", str(MAPPING), "--validator", str(VALIDATOR),
         ], cwd=ROOT, check=False)
-        return 0 if check.returncode == 0 else 2
+        return 0 if check.returncode != 0 else 2
 
 
 if __name__ == "__main__":

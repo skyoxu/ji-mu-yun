@@ -8,7 +8,7 @@
     },
     {
       "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-      "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
+      "sha256": "sha256:ffc8e5d4684e45262d168a12fbd784e07ac6f568d314fd373992e5eb770cf8ec"
     },
     {
       "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
@@ -16,7 +16,7 @@
     },
     {
       "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-      "sha256": "sha256:0b19a291ae1e93af5d2622b0414e9fd73995367092bf5632f51d5035f8776a8f"
+      "sha256": "sha256:e5f5ebe2bafb38e4066a8f9ce61c016514767f81aeaed07dbd70f4100051eb04"
     },
     {
       "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
@@ -32,7 +32,7 @@
     },
     {
       "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
-      "sha256": "sha256:38826200d1f7c8d5a6e92ddd242e10e6b3ce732a80576845892d0bc7fbf92594"
+      "sha256": "sha256:64d322719f1448a02f5c88c6216b586dad1e3020b26d8476ed50587a081f2619"
     }
   ],
   "behavior_programs": {
@@ -52,7 +52,7 @@
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
+          "sha256": "sha256:ffc8e5d4684e45262d168a12fbd784e07ac6f568d314fd373992e5eb770cf8ec"
         },
         {
           "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-source-freeze-manifest.v1.schema.json",
@@ -64,7 +64,7 @@
         },
         {
           "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
-          "sha256": "sha256:38826200d1f7c8d5a6e92ddd242e10e6b3ce732a80576845892d0bc7fbf92594"
+          "sha256": "sha256:64d322719f1448a02f5c88c6216b586dad1e3020b26d8476ed50587a081f2619"
         }
       ],
       "args": []
@@ -75,12 +75,12 @@
     },
     "semantic-handoff": {
       "path": ".agents/skills/vdd-execution-plan/tests/validators/semantic_handoff.py",
-      "sha256": "sha256:c931ef8a523d2886f046b9e1d8a90d538303db97fa0c7418bb92c2f1c955282c",
+      "sha256": "sha256:bca7b4ca3e1f154fed64181658499e9f2e0f6fbd2f01b5c33201e24567f78031",
       "args": [],
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
-          "sha256": "sha256:38826200d1f7c8d5a6e92ddd242e10e6b3ce732a80576845892d0bc7fbf92594"
+          "sha256": "sha256:64d322719f1448a02f5c88c6216b586dad1e3020b26d8476ed50587a081f2619"
         }
       ]
     },
@@ -95,7 +95,7 @@
       "dependencies": [
         {
           "path": ".agents/skills/authorization/tests/conformance_preflight_runner.py",
-          "sha256": "sha256:aa5b65fc1022416fb2c76f9bc5c1e5f362bb9b43356b7d6d212ab8c82c619974"
+          "sha256": "sha256:cb1e0dbbe8fcac46fad07ccea68bbcbfc28f7b6e85885531406fb6d173cfade8"
         },
         {
           "path": ".agents/skills/authorization/scripts/conformance_preflight.py",
@@ -103,11 +103,11 @@
         },
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
+          "sha256": "sha256:ffc8e5d4684e45262d168a12fbd784e07ac6f568d314fd373992e5eb770cf8ec"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-          "sha256": "sha256:0b19a291ae1e93af5d2622b0414e9fd73995367092bf5632f51d5035f8776a8f"
+          "sha256": "sha256:e5f5ebe2bafb38e4066a8f9ce61c016514767f81aeaed07dbd70f4100051eb04"
         }
       ],
       "args": []
@@ -144,15 +144,15 @@
     },
     "exact-cover": {
       "path": ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py",
-      "sha256": "sha256:1d36bc48524f1b3aaef06588d5ed7b5ad9798b6fe016c59460b733536ebde544",
+      "sha256": "sha256:27dd8fdfa0a0d7c4601c5f6676aef5afc17461b8c2492a24bdc85663fd01a64f",
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
+          "sha256": "sha256:ffc8e5d4684e45262d168a12fbd784e07ac6f568d314fd373992e5eb770cf8ec"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-          "sha256": "sha256:0b19a291ae1e93af5d2622b0414e9fd73995367092bf5632f51d5035f8776a8f"
+          "sha256": "sha256:e5f5ebe2bafb38e4066a8f9ce61c016514767f81aeaed07dbd70f4100051eb04"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
@@ -176,15 +176,15 @@
     },
     "exact-cover-dogfood": {
       "path": ".agents/skills/vdd-conformance-exact-cover/tests/dogfood_runner.py",
-      "sha256": "sha256:8670d9fdf3b2dd0561b155339108030e31f0bd1bb063daf96c57562da0e3e914",
+      "sha256": "sha256:478923b019461df8b992110f2c868bcebb3aac646f8cb2c4550032eabb0617c2",
       "dependencies": [
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/source_freeze.py",
-          "sha256": "sha256:1e80c91318f87fcce7f4db43b7aac597bc53f3f413c14536dbc5374855d088d7"
+          "sha256": "sha256:ffc8e5d4684e45262d168a12fbd784e07ac6f568d314fd373992e5eb770cf8ec"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
-          "sha256": "sha256:0b19a291ae1e93af5d2622b0414e9fd73995367092bf5632f51d5035f8776a8f"
+          "sha256": "sha256:e5f5ebe2bafb38e4066a8f9ce61c016514767f81aeaed07dbd70f4100051eb04"
         },
         {
           "path": ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
@@ -192,7 +192,7 @@
         },
         {
           "path": ".agents/skills/vdd-execution-plan/references/schemas/vdd-repair-input.v1.schema.json",
-          "sha256": "sha256:38826200d1f7c8d5a6e92ddd242e10e6b3ce732a80576845892d0bc7fbf92594"
+          "sha256": "sha256:64d322719f1448a02f5c88c6216b586dad1e3020b26d8476ed50587a081f2619"
         }
       ],
       "args": []
@@ -398,7 +398,7 @@
     {
       "id": "authorization-preflight",
       "command": "python .agents/skills/authorization/tests/validators/preflight.py",
-      "purpose": "Implementation command for authorization receipt preflight.",
+      "purpose": "Reject authorization preflight until the semantic handoff receives a bound VDD repair; dogfood separately proves repaired preflight success.",
       "acceptance_ids": [
         "VCEC-A17"
       ],

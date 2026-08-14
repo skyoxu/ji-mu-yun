@@ -187,6 +187,85 @@ def _disposition(source: dict[str, Any], line_number: int, reason: str, target_r
     }
 
 
+def semantic_handoff_hash(handoff: dict[str, Any]) -> str:
+    payload = {"domain": "jimuyun.vdd-semantic-handoff.v1", "payload": handoff}
+    return "sha256:" + hashlib.sha256(canonical_bytes(payload)).hexdigest()
+
+
+def _validate_review_envelope(handoff: dict[str, Any], review: object) -> None:
+    if not isinstance(review, dict) or set(review) != {
+        "schema_version", "status", "semantic_handoff_hash", "source_manifest_hash",
+        "requirements_manifest_hash", "profile", "ambiguity_ids",
+        "affected_requirement_ids", "decision", "authorizes",
+    }:
+        raise ValueError("review run envelope is incomplete")
+    if (
+        review["schema_version"] != "vdd-review-run.v1"
+        or review["status"] != "accepted"
+        or review["decision"] != "accepted"
+        or review["profile"] != handoff["profile"]
+        or review["authorizes"] != []
+        or review["semantic_handoff_hash"] != semantic_handoff_hash(handoff)
+        or review["source_manifest_hash"] != handoff["frozen_authority"]["source_manifest_hash"]
+        or review["requirements_manifest_hash"] != handoff["requirements_manifest_hash"]
+        or sorted(review["ambiguity_ids"]) != sorted(handoff["affected_obligation_ids"])
+        or sorted(review["affected_requirement_ids"]) != sorted(handoff["affected_requirement_ids"])
+    ):
+        raise ValueError("review run is not bound to the current semantic handoff")
+
+
+def _approved_semantic_dispositions(
+    root: Path, mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest: dict[str, Any], manifest_path: Path
+) -> set[str]:
+    records = mapping.get("approved_semantic_dispositions", [])
+    if records is None:
+        records = []
+    if not isinstance(records, list):
+        raise ValueError("approved semantic dispositions are invalid")
+    valid = {item["obligation_id"]: item for item in inventory}
+    approved: set[str] = set()
+    for record in records:
+        if not isinstance(record, dict) or set(record) != {
+            "obligation_ids", "decision", "review_run", "prior_requirements_manifest",
+            "semantic_handoff", "semantic_handoff_hash",
+        }:
+            raise ValueError("approved semantic disposition record is invalid")
+        identifiers = record["obligation_ids"]
+        if (
+            not isinstance(identifiers, list) or not identifiers
+            or any(not isinstance(value, str) or value not in valid for value in identifiers)
+            or record["decision"] != "not_applicable"
+            or approved.intersection(identifiers)
+            or any(valid[value]["status"] != "deferred" for value in identifiers)
+        ):
+            raise ValueError("approved semantic disposition binding is invalid")
+        handoff = record["semantic_handoff"]
+        if not isinstance(handoff, dict) or handoff.get("schema_version") != "vdd-requirement-semantic-handoff.v1":
+            raise ValueError("approved semantic disposition handoff is invalid")
+        repair_binding = manifest.get("repair_input")
+        if not isinstance(repair_binding, dict) or set(repair_binding) != {"path", "sha256"}:
+            raise ValueError("approved semantic disposition requires an explicit VDD repair manifest")
+        repair_value = json.loads((root / repair_binding["path"]).read_text(encoding="utf-8"))
+        source_ref = repair_value.get("frozen_authority", {}).get("source_manifest")
+        if not isinstance(source_ref, dict):
+            raise ValueError("approved semantic disposition repair source authority is invalid")
+        source_ref = _contained_artifact(root, Path(source_ref["path"]), "source manifest")
+        prior_ref = _contained_artifact(root, Path(record["prior_requirements_manifest"]["path"]), "prior requirements manifest")
+        if sorted(handoff.get("affected_obligation_ids", [])) != sorted(identifiers):
+            raise ValueError("approved semantic disposition obligations are incomplete")
+        if handoff.get("requirements_manifest_hash") != prior_ref["sha256"]:
+            raise ValueError("approved semantic disposition prior requirements are stale")
+        if handoff.get("frozen_authority", {}).get("source_manifest_hash") != source_ref["sha256"]:
+            raise ValueError("approved semantic disposition source authority is stale")
+        if record["semantic_handoff_hash"] != semantic_handoff_hash(handoff):
+            raise ValueError("approved semantic disposition handoff hash is stale")
+        review_path = Path(record["review_run"]["path"])
+        review = json.loads((root / review_path).read_text(encoding="utf-8"))
+        _validate_review_envelope(handoff, review)
+        approved.update(identifiers)
+    return approved
+
+
 def _classify_obligation(source: dict[str, Any], line_number: int, line: str, target_root: str) -> dict[str, Any]:
     """Classify source text without promoting document structure to requirements.
 
@@ -278,31 +357,38 @@ def acceptance_obligations(root: Path, manifest: dict[str, Any]) -> set[str]:
     return values
 
 
-def _mapping_obligation_errors(mapping: dict[str, Any], inventory: list[dict[str, Any]]) -> tuple[list[dict[str, str]], dict[str, dict[str, Any]]]:
+def _mapping_obligation_errors(
+    root: Path, mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest: dict[str, Any], manifest_path: Path
+) -> tuple[list[dict[str, str]], dict[str, dict[str, Any]], set[str]]:
     provided = mapping.get("obligations")
     requirements = mapping.get("requirements")
     if not isinstance(provided, list) or not isinstance(requirements, list):
-        return [{"family": "deterministic_coverage_gap", "code": "frozen_obligation_universe_mismatch"}], {}
+        return [{"family": "deterministic_coverage_gap", "code": "frozen_obligation_universe_mismatch"}], {}, set()
     expected = {item["obligation_id"]: item for item in inventory}
     actual: dict[str, dict[str, Any]] = {}
     for item in provided:
         if not isinstance(item, dict) or not isinstance(item.get("obligation_id"), str):
-            return [{"family": "deterministic_coverage_gap", "code": "obligation_record_invalid"}], {}
+            return [{"family": "deterministic_coverage_gap", "code": "obligation_record_invalid"}], {}, set()
         identifier = item["obligation_id"]
         if identifier in actual:
-            return [{"family": "deterministic_coverage_gap", "code": "duplicate_obligation"}], {}
+            return [{"family": "deterministic_coverage_gap", "code": "duplicate_obligation"}], {}, set()
         actual[identifier] = item
     if set(actual) != set(expected):
-        return [{"family": "deterministic_coverage_gap", "code": "frozen_obligation_universe_mismatch"}], {}
+        return [{"family": "deterministic_coverage_gap", "code": "frozen_obligation_universe_mismatch"}], {}, set()
     requirement_index = {item.get("id"): item for item in requirements if isinstance(item, dict)}
     claims: dict[str, set[str]] = {
         identifier: set() for identifier, item in expected.items() if item["status"] == "active"
     }
     errors: list[dict[str, str]] = []
+    try:
+        approved = _approved_semantic_dispositions(root, mapping, inventory, manifest, manifest_path)
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return [{"family": "deterministic_coverage_gap", "code": "semantic_disposition_invalid"}], actual, set()
     for identifier, expected_item in expected.items():
         item = actual[identifier]
         projection = {key: value for key, value in item.items() if key not in {"requirement_ids", "mapping_kind", "merge_reason"}}
-        if projection != expected_item:
+        expected_projection = {**expected_item, "status": "not_applicable"} if identifier in approved else expected_item
+        if projection != expected_projection:
             errors.append({"family": "deterministic_coverage_gap", "code": "obligation_source_binding_mismatch"})
             continue
         requirement_ids = item.get("requirement_ids")
@@ -310,6 +396,9 @@ def _mapping_obligation_errors(mapping: dict[str, Any], inventory: list[dict[str
         mapping_kind = item.get("mapping_kind")
         merge_reason = item.get("merge_reason")
         if expected_item["status"] != "active":
+            if expected_item["status"] == "deferred" and identifier in approved and item.get("status") != "not_applicable":
+                errors.append({"family": "deterministic_coverage_gap", "code": "approved_disposition_not_applied"})
+                continue
             if requirement_ids != [] or acceptance_ids != [] or mapping_kind != "disposition" or not isinstance(merge_reason, str) or not merge_reason:
                 errors.append({"family": "deterministic_coverage_gap", "code": "disposition_mapping_invalid"})
             continue
@@ -343,10 +432,13 @@ def _mapping_obligation_errors(mapping: dict[str, Any], inventory: list[dict[str
                 errors.append({"family": "deterministic_coverage_gap", "code": "wrong_obligation_requirement_binding"})
     if any(not values for values in claims.values()):
         errors.append({"family": "deterministic_coverage_gap", "code": "uncovered_obligation"})
-    return errors, actual
+    return errors, actual, approved
 
 
-def _semantic_handoff(mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest_path: Path, manifest: dict[str, Any], mapping_path: Path) -> dict[str, Any] | None:
+def _semantic_handoff(
+    mapping: dict[str, Any], inventory: list[dict[str, Any]], manifest_path: Path,
+    manifest: dict[str, Any], mapping_path: Path, approved: set[str]
+) -> dict[str, Any] | None:
     review = mapping.get("semantic_review", [])
     if review is None:
         review = []
@@ -358,11 +450,16 @@ def _semantic_handoff(mapping: dict[str, Any], inventory: list[dict[str, Any]], 
         identifier for identifier, item in mapping_index.items()
         if identifier in valid and item.get("status") == "active" and item.get("mapping_kind") == "semantic_equivalence"
     }
+    required.update(
+        item["obligation_id"] for item in inventory
+        if item["status"] == "deferred" and item["obligation_id"] not in approved
+    )
     if not required and not review:
         return None
     affected: set[str] = set()
     requirements: set[str] = set()
-    ambiguities: list[dict[str, Any]] = []
+    reasons: list[str] = []
+    scopes: list[str] = []
     for item in review:
         if not isinstance(item, dict) or set(item) != {"obligation_ids", "requirement_ids", "reason", "scope", "profile", "target_plan"}:
             raise ValueError("semantic review handoff is invalid")
@@ -381,7 +478,13 @@ def _semantic_handoff(mapping: dict[str, Any], inventory: list[dict[str, Any]], 
                 raise ValueError("semantic review obligation is not eligible")
         affected.update(identifiers)
         requirements.update(item["requirement_ids"])
-        ambiguities.append({key: item[key] for key in ("obligation_ids", "requirement_ids", "reason", "scope")})
+        reasons.append(item["reason"])
+        scopes.append(item["scope"])
+    uncovered = sorted(required - affected)
+    if uncovered:
+        reasons.append("Frozen normative prose lacks a stable canonical requirement ID and has no approved disposition.")
+        scopes.append("Bootstrap upstream VDD semantic review must decide applicability or repair the requirements manifest.")
+        affected.update(uncovered)
     if not required.issubset(affected):
         raise ValueError("semantic review must cover every semantic-equivalence obligation")
     return {
@@ -394,7 +497,8 @@ def _semantic_handoff(mapping: dict[str, Any], inventory: list[dict[str, Any]], 
         },
         "affected_obligation_ids": sorted(affected),
         "affected_requirement_ids": sorted(requirements),
-        "ambiguities": ambiguities,
+        "ambiguity_reason": " | ".join(sorted(set(reasons))),
+        "ambiguity_scope": " | ".join(sorted(set(scopes))),
         "review_run_required": True,
         "requirements_manifest_hash": file_hash(mapping_path),
         "authorizes": [],
@@ -424,8 +528,8 @@ def build_repair_input(
     allowed_repair_scope: list[str],
 ) -> dict[str, Any]:
     """Create the exact-cover-owned, non-mutating VDD repair handoff."""
-    if result.get("status") not in {"blocked", "requirement_semantic_review_required"} or result.get("authorizes") != []:
-        raise ValueError("repair input requires a current non-authorizing conformance result")
+    if result.get("status") != "requirement_semantic_review_required" or result.get("authorizes") != []:
+        raise ValueError("repair input requires a current semantic-review conformance result")
     if not isinstance(repair_id, str) or not repair_id or not isinstance(allowed_repair_scope, list) or not allowed_repair_scope or any(not isinstance(item, str) or not item for item in allowed_repair_scope):
         raise ValueError("repair input identity or scope is invalid")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -434,8 +538,10 @@ def build_repair_input(
     prior_requirements = _contained_artifact(root, mapping_path, "prior requirements manifest")
     review_run = _contained_artifact(root, review_run_path, "review run")
     review = json.loads(review_run_path.read_text(encoding="utf-8"))
-    if not isinstance(review, dict) or review.get("authorizes") != [] or not isinstance(review.get("status"), str) or not review["status"]:
-        raise ValueError("review run is not a typed non-authorizing artifact")
+    handoff = result.get("semantic_handoff")
+    if not isinstance(handoff, dict) or result.get("truncated") or handoff.get("omitted_affected_obligation_ids"):
+        raise ValueError("repair input requires a complete semantic handoff")
+    _validate_review_envelope(handoff, review)
     repaired = _contained_artifact(root, repaired_requirements_path, "repaired requirements manifest")
     if repaired == prior_requirements:
         raise ValueError("repair input must bind a new requirements identity")
@@ -444,13 +550,14 @@ def build_repair_input(
     ambiguity_ids: list[str] = []
     affected_requirement_ids: list[str] = []
     ambiguity: list[dict[str, Any]] = []
-    handoff = result.get("semantic_handoff")
-    if isinstance(handoff, dict):
-        if handoff.get("omitted_affected_obligation_ids"):
-            raise ValueError("truncated semantic handoff cannot create a repair input")
-        ambiguity_ids = list(handoff.get("affected_obligation_ids", []))
-        affected_requirement_ids = list(handoff.get("affected_requirement_ids", []))
-        ambiguity = list(handoff.get("ambiguities", []))
+    ambiguity_ids = list(handoff.get("affected_obligation_ids", []))
+    affected_requirement_ids = list(handoff.get("affected_requirement_ids", []))
+    ambiguity = [{
+        "obligation_ids": ambiguity_ids,
+        "requirement_ids": affected_requirement_ids,
+        "reason": handoff.get("ambiguity_reason"),
+        "scope": handoff.get("ambiguity_scope"),
+    }]
     if result.get("source_manifest_hash") != source_manifest["sha256"] or result.get("requirements_manifest_hash") != prior_requirements["sha256"]:
         raise ValueError("repair input conformance result is stale")
     return {
@@ -462,6 +569,8 @@ def build_repair_input(
             "source_manifest_canonical_hash": manifest["canonical_hash"],
             "role_graph_hash": domain_hash("frozen_role_graph", manifest["sources"]),
         },
+        "semantic_handoff": handoff,
+        "semantic_handoff_hash": semantic_handoff_hash(handoff),
         "review_run": review_run,
         "prior_requirements_manifest": prior_requirements,
         "repaired_requirements_manifest": repaired,
@@ -507,10 +616,10 @@ def validate_conformance(root: Path, manifest_path: Path, mapping_path: Path) ->
         or requirements_identity.get("sha256") != file_hash(mapping_path)
     ):
         result = {**result, "status": "blocked", "errors": [*result["errors"], {"family": "deterministic_coverage_gap", "code": "requirements_identity_mismatch"}]}
-    mapping_errors, _mapping_index = _mapping_obligation_errors(mapping, obligations)
+    mapping_errors, _mapping_index, approved = _mapping_obligation_errors(root, mapping, obligations, manifest, manifest_path)
     if mapping_errors:
         result = {**result, "status": "blocked", "errors": [*result["errors"], *mapping_errors]}
-    handoff = _semantic_handoff(mapping, obligations, manifest_path, manifest, mapping_path)
+    handoff = _semantic_handoff(mapping, obligations, manifest_path, manifest, mapping_path, approved)
     if result["status"] == "conformant" and handoff is not None:
         result = {**result, "status": "requirement_semantic_review_required", "semantic_handoff": handoff}
     try:

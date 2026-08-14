@@ -1,0 +1,96 @@
+P0：semantic exact-cover 还有一个关键漏洞
+
+现在已经比上一版好很多，不再把所有非空行直接当 active obligation。
+
+但当前规则仍然是：
+
+有 VCEC-ID → active
+有 must/必须/不得/... 但没有 VCEC-ID → deferred
+其他 → not_applicable
+
+问题在于：deferred obligation 并不会自动阻止 conformant。
+
+_mapping_obligation_errors() 对 non-active obligation 只要求：
+
+requirement_ids=[]
+acceptance_ids=[]
+mapping_kind=disposition
+merge_reason 非空
+
+满足这些就可以排除。
+
+更直接的是当前测试自己证明了这一点：它先把所有 deferred obligation 当 disposition，没有 semantic_review，也要求结果 conformant；随后才额外挑一个 deferred obligation 人工加入 semantic review 测试 handoff。
+
+这和分类器自己的 disposition 文案实际上矛盾：
+
+“activation requires an explicit VDD semantic review and repair.”
+
+也就是说现在仍可能：
+
+normative companion 中一条真正必须保留的规范
+→ 因为没有写 VCEC-ID
+→ 自动 deferred
+→ 无 review
+→ conformant
+
+这仍不满足 VCEC-007/VCEC-009：active obligation 必须 sound-and-complete cover，机器不可判定 weakening 必须 handoff，不能静默通过。
+
+修法很窄：
+
+凡是被 classifier 判为“可能 normative，但无法确定映射”的 deferred，如果没有一个已经被 authority/review 明确批准的 disposition，就必须自动导致：
+
+requirement_semantic_review_required
+
+不能直接 conformant。
+
+P1：semantic review 的 review_run 仍然没有绑定当前 handoff
+
+现在 repair input 已经漂亮很多，包含：
+
+frozen authority
+source manifest
+prior/repaired requirements
+validator
+policy
+ambiguity IDs
+affected requirements
+allowed scope
+
+但 review_run 的真实性检查仍然只有：
+
+review is dict
+review["authorizes"] == []
+review["status"] 是非空字符串
+
+测试甚至直接创建：
+
+{
+  "schema_version": "vdd-review-run.v1",
+  "status": "accepted",
+  "authorizes": []
+}
+
+然后就能生成 repair input。
+
+它没有证明这个 review：
+
+属于当前 semantic handoff
++ 绑定当前 source manifest
++ 绑定当前 requirements manifest
++ 覆盖相同 ambiguity IDs
++ profile = bootstrap-upstream-plan
++ 对当前 ambiguity 给出了 accepted decision
+
+所以理论上一个无关的 status=accepted JSON也能被绑定成 current review evidence。
+
+修法同样很窄：让 review envelope 至少绑定：
+
+semantic_handoff_hash
+source_manifest_hash
+requirements_manifest_hash
+profile
+ambiguity_ids / affected_requirement_ids
+decision
+authorizes=[]
+
+build_repair_input() 必须全部精确重验。
