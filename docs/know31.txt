@@ -1,0 +1,98 @@
+同意，将该规则固定为 repository-canonical-json.v1 的最终 string escaping 与 integer-zero encoding decision。
+
+Architecture 固定：
+
+1. String escaping 的唯一 canonical form
+
+- `"` → `\"`
+- `\` → `\\`
+- U+0008 → `\b`
+- U+0009 → `\t`
+- U+000A → `\n`
+- U+000C → `\f`
+- U+000D → `\r`
+- 其他 U+0000..U+001F → 四位 lowercase hex `\u00xx`
+- `/` 不转义
+- 其他合法 Unicode scalar，包括：
+  - ASCII printable characters
+  - 非 ASCII scalar
+  - U+2028
+  - U+2029
+  - 非 BMP scalar
+  全部直接编码为 UTF-8
+
+2. 禁止替代表示
+
+- 禁止把普通字符任选表示为 `\uXXXX`
+- canonical output 不允许使用 surrogate-pair JSON escapes 表示非 BMP Unicode scalar
+- lone surrogate / surrogate code point 在 parse/value validation 阶段 fail closed
+- object key 与 value string 使用完全相同的 escaping contract
+
+因此一个 canonical string value 只能对应一套 canonical bytes。
+
+3. Integer zero
+
+Canonical value model 中整数 0 的唯一 serialized form 是：
+
+`0`
+
+Raw JSON lexical form `-0` 必须由 `parse_json_strict(raw)` 在 value construction 前直接拒绝。
+
+不能允许：
+
+raw `-0`
+→ permissive parser
+→ integer 0
+→ canonical `0`
+
+因为这会丢失原始 lexical invalidity。
+
+4. Number lexical rules
+
+由于 repository-canonical-json.v1 仅支持 signed 64-bit integer：
+
+- `0` 合法
+- `-0` 非法
+- leading zero forms 如 `00`、`01` 非法
+- fraction 非法
+- exponent 非法
+- `NaN` / `Infinity` 非法
+- 超出 int64 范围非法
+
+这些都应在 strict parse boundary fail closed，而不是在 canonical serialization 后补救。
+
+5. Encoding properties
+
+最终 canonical JSON bytes：
+
+- UTF-8
+- no BOM
+- no trailing newline
+- compact separators
+- deterministic Unicode-scalar key ordering
+- exact code-point preservation
+- no NFC/NFD normalization
+- exactly one permitted string representation
+
+6. Compatibility target
+
+该规则应记录为与当前 Python `ensure_ascii=False` 紧凑序列化行为兼容的 brownfield target，但正式 authority 是上述语言无关 contract，而不是 Python `json.dumps` 的实现细节。
+
+Golden vectors 至少加入：
+
+- quote
+- backslash
+- each named control escape
+- U+0000 / U+0001 / U+001F lowercase `\u00xx`
+- slash
+- non-ASCII BMP
+- U+2028 / U+2029
+- non-BMP scalar
+- attempted `\uXXXX` alternate representation
+- attempted surrogate-pair representation
+- lone surrogate rejection
+- `0`
+- `-0`
+- leading-zero integers
+
+请将此作为 repository-canonical-json.v1 的最后一项 encoding decision 固定。

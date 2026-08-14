@@ -1,0 +1,70 @@
+同意，将其固定为下一项 Architecture decision。
+
+采用：
+
+Versioned Canonical Evidence Identity
+with Verify-Only Legacy Compatibility
+
+规则：
+
+1. 所有新 artifact 必须使用：
+   - artifact owner 显式声明的 domain
+   - CANONICAL_EVIDENCE_VERSION
+   - shared canonical_evidence primitive
+
+   禁止继续产生 domainless identity。
+
+2. 历史 domainless artifact 保持 immutable。
+   不重写、不补 domain、不重新签发 receipt，也不以新算法替换历史正式 identity。
+
+3. shared package 提供唯一 legacy compatibility profile：
+
+   legacy-canonical-sha256.v1
+
+   该 profile 只允许验证历史 artifact，禁止用于任何新 artifact、receipt 或 lifecycle evidence 的生成。
+
+4. Legacy algorithm selection 必须由 artifact schema/version/receipt version 显式决定。
+
+   禁止：
+   current verification fails
+   → fallback to legacy
+   → accept
+
+   必须：
+   explicit legacy schema/version
+   → legacy verification profile
+
+   无法可靠确定 identity version 时 fail closed。
+
+5. 普通 current API 不允许通过 domain=None、空 domain 或隐式默认值产生 legacy identity。
+
+   current write path 固定为：
+   owner semantic projection
+   → explicit owner domain
+   → current canonical primitive version
+   → domain-separated identity
+
+6. Legacy API 应与 current minting API 分离，语义上明确 verify-only。
+   legacy compatibility code 不具有 producer/publisher authority。
+
+7. bmad-spec、VDD、exact-cover、Acceptance、Bootstrap 不再保留各自的 legacy canonical/hash 实现。
+   所有历史验证统一调用 shared package 的 legacy compatibility profile。
+
+8. Cross-consumer golden vectors 必须同时覆盖：
+   - current domain-separated vectors
+   - historical legacy vectors
+   - current/legacy cross-rejection
+   - unknown-version fail-closed
+   - legacy artifact mutation rejection
+   - current artifact missing-domain rejection
+
+9. 新 artifact 必须显式绑定 canonical primitive version 与 artifact-owned domain，
+   以便未来 canonical algorithm revision 可以通过明确 version dispatch 重放，而不是依赖代码版本或时间推断。
+
+核心不变量：
+
+Legacy is a compatibility verifier, never a fallback writer.
+Historical identity remains historical truth.
+New identity must be domain-separated and version-explicit.
+
+请把该决策纳入 Architecture，并在 brownfield migration 中识别所有现存 domainless identity producer/validator；迁移不得改变历史 evidence bytes 或 lifecycle ownership。
