@@ -3,7 +3,13 @@
 ## 1. Authority 与验收流程
 
 ```text
-Quick Dev / VDD implementation-complete
+VDD draft -> plan-ready
+                |
+                v
+maintainer implementation-authorized
+                |
+                v
+Quick Dev / quick-dev-tdd-adapter implementation-complete
                 |
                 v
 Acceptance freezes baseline/current
@@ -33,7 +39,7 @@ typed repair, zero model    Acceptance decide-bootstrap
                                           verifier only for accepted P0/P1
                                                          |
                                                          v
-                                           Acceptance import/finalize
+                                           Acceptance publishes acceptance-passed
 ```
 
 ## 2. Segment 执行与恢复

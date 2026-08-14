@@ -45,7 +45,7 @@ Acceptance 只能在 authority/risk policy 允许集合内选择继续、rebuild
 ## 4. Counter-metrics
 
 - Closure 缩减不能产生 applicable authority omission。
-- 新 route 不能让未执行 required checks、未授权或 receipt mismatch 的实现 final。
+- 新 route 不能让未执行 required checks、未授权或 receipt mismatch 的实现进入 `acceptance-passed`。
 - Payload mismatch、timeout、stale lease 等 transport failure 不能产生 finding、gate verdict 或完成状态。
 - Heartbeat、重复打印和轮询日志不能阻止 stop-loss 或形成 completion evidence。
 
@@ -62,7 +62,7 @@ Acceptance 只能在 authority/risk policy 允许集合内选择继续、rebuild
 - compact closure 相对 whole-plan 的量化差异；
 - attempt bound；
 - heartbeat-without-progress 与 repeated-output-without-progress；
-- Acceptance 导入 current evidence 并 final。
+- Acceptance 导入 current evidence 并发布 `acceptance-passed`。
 
 ## 6. Semantic Regression Corpus
 
@@ -103,11 +103,11 @@ CAP-1 至 CAP-10 及六个 normative companions 的全部约束均属于 MVP。M
 - deterministic failure 零 reviewer call；
 - 证明 Bootstrap Complete Review 语义未改变。
 
-### M2：规模与 finalization
+### M2：规模与 acceptance-passed
 
 - 运行 8-13 regression 与 semantic corpus；
 - 记录成本和时延；
-- Acceptance 导入 compact Bootstrap evidence 并 final；
+- Acceptance 导入 compact Bootstrap evidence 并发布 `acceptance-passed`；
 - 指标和 counter-metrics 通过后才替代 whole-directory default。
 
 ## 9. 风险约束

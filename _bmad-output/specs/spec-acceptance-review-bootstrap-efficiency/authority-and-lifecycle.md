@@ -4,28 +4,31 @@
 
 | Owner | 唯一职责 |
 | --- | --- |
-| Acceptance owner | baseline/current freeze、Changed-set Manifest、Consumer Closure、required-check projection、typed route、Bootstrap import、finalization |
-| Quick Dev/VDD owner | implementation-complete、candidate identity、实现 evidence |
+| Acceptance owner | baseline/current freeze、Changed-set Manifest、Consumer Closure、required-check projection、typed route、Bootstrap import、`acceptance-passed` |
+| Quick Dev / quick-dev-tdd-adapter owner | `implementation-complete`、candidate identity、实现 evidence |
+| VDD owner | `draft`、`plan-ready` 与 plan candidate identity |
+| Maintainer | `implementation-authorized` |
 | Bootstrap Review owner | Complete Review 三角色、Segment Descriptor、child isolation、gate、verifier、Process Event、Effective Progress 验证、watchdog enforcement、状态事件、lease/retry recovery |
 | Bootstrap control-plane policy owner | no-progress ceiling、terminal grace、status throttle policy 的版本化与 ratification |
 | Plan owner | implementation contract、command registry、plan-specific required checks |
-| Authorization owner | `implementation-authorized` 等既有授权状态发布 |
 | Shared file/model tooling owner | 完整读取、`Partial` 续传和 model-visible output contract |
 
 任何消费者不得代替其他 owner 发布其生命周期状态。
 
 ## 2. Canonical 生命周期
 
-1. Quick Dev/VDD 发布 schema-valid、identity-bound implementation-complete。
-2. Acceptance 冻结不可移动的 baseline commit identity 与 candidate identity。
-3. Acceptance 构建 Changed-set Manifest 和 Consumer Closure。
-4. Acceptance 投影并执行 deterministic required checks。
-5. Acceptance 在 authority/risk policy 允许集合中发布 typed route。
-6. `deterministic_only` 直接返回 Acceptance；`full_implementation_conformance` 调用 Bootstrap；`focused_repair_verification` 仅验证已有正式 finding 的 bounded repair；`manual_pause` 不授权。
-7. Bootstrap 返回 identity-bound evidence。
-8. Acceptance 验证并导入 evidence，发布最终结果。
+1. VDD 发布 identity-bound `draft`，并在 plan contract 完整后发布 `plan-ready`。
+2. Maintainer 在独立验证授权前置后发布 `implementation-authorized`。
+3. Quick Dev / quick-dev-tdd-adapter 发布 schema-valid、identity-bound `implementation-complete`。
+4. Acceptance 冻结不可移动的 baseline commit identity 与 candidate identity。
+5. Acceptance 构建 Changed-set Manifest 和 Consumer Closure。
+6. Acceptance 投影并执行 deterministic required checks。
+7. Acceptance 在 authority/risk policy 允许集合中发布 typed route。
+8. `deterministic_only` 直接返回 Acceptance；`full_implementation_conformance` 调用 Bootstrap；`focused_repair_verification` 仅验证已有正式 finding 的 bounded repair；`manual_pause` 不授权。
+9. Bootstrap 返回 identity-bound evidence。
+10. Acceptance 验证并导入 evidence，发布 `acceptance-passed`。
 
-Bootstrap 不能产生 implementation-complete、implementation-authorized 或 Acceptance final。
+Bootstrap 不能产生 `draft`、`plan-ready`、`implementation-authorized`、`implementation-complete` 或 `acceptance-passed`。
 
 ## 3. Implementation-complete 与 identity freeze
 
@@ -91,6 +94,6 @@ Authority/risk policy 先计算允许集合，Acceptance 再选择。共享入�
 - Verifier 覆盖每个 accepted blocker 的 exact evidence 和 context reads。
 - Gate/verifier 结果返回 Acceptance，不直接发布最终状态。
 
-## 9. Finalization
+## 9. Acceptance-passed
 
-Acceptance 只有在 candidate、closure、required checks、gate、verifier 和 receipt identity 全部闭合时才能 final。Stale、不同 closure 或不同 candidate 的 run 不能导入。Assistant 文本、transport status、历史 passed flag 或人工复制 receipt 不能替代机器 evidence。
+Acceptance 只有在 candidate、closure、required checks、gate、verifier 和 receipt identity 全部闭合时才能发布 `acceptance-passed`。Stale、不同 closure 或不同 candidate 的 run 不能导入。Assistant 文本、transport status、历史 passed flag 或人工复制 receipt 不能替代机器 evidence。

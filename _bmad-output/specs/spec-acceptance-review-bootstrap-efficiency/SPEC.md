@@ -32,7 +32,7 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
 ## Capabilities
 
 - **CAP-1**
-  - **intent:** Acceptance 能从有效的 implementation-complete handoff 启动验收，并冻结不可移动的 baseline/current identity。
+  - **intent:** Acceptance 能从 Quick Dev / quick-dev-tdd-adapter 发布的有效 implementation-complete handoff 启动验收，并冻结不可移动的 baseline/current identity。
   - **success:** 缺失、过期或 identity 不匹配的 handoff 阻止启动；durable baseline 不使用未解析 `HEAD`；candidate 变化使旧 changed-set、closure、check result 和 review receipt 全部 stale。
 - **CAP-2**
   - **intent:** Acceptance 能从完整 changed-set 构建最小但完整、可独立复算的 Consumer Closure。
@@ -56,16 +56,16 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
   - **intent:** Acceptance 能在启动模型前评估 review 成本，并在 authority/risk policy 内选择继续、重建 closure、重新分区或暂停。
   - **success:** 决策绑定 closure bytes、segment count、required roles、attempts、retry exposure 和 launch plan identity；high-cost acknowledgement 不能替代 route/closure decision；完成后记录实际 token 与 wall time。
 - **CAP-9**
-  - **intent:** Acceptance 能验证并导入 Bootstrap evidence，随后基于当前机器证据发布最终验收结果。
-  - **success:** candidate、closure、required checks、gate、verifier 或 receipt 任一 stale/mismatch 均拒绝导入；Bootstrap 不能产生 implementation-complete 或 Acceptance final；assistant 文本不能替代完成证据。
+  - **intent:** Acceptance 能验证并导入 Bootstrap evidence，随后基于当前机器证据发布 `acceptance-passed`。
+  - **success:** candidate、closure、required checks、gate、verifier 或 receipt 任一 stale/mismatch 均拒绝导入；Bootstrap 不能产生 draft、plan-ready、implementation-authorized、implementation-complete 或 acceptance-passed；assistant 文本不能替代完成证据。
 - **CAP-10**
   - **intent:** 维护者能用接近 8-13 规模的回归和冻结语义 corpus 证明优化没有削弱 coverage 或授权安全。
   - **success:** deterministic failure 为零模型调用；Bootstrap-required 保持三角色完整 coverage；无越界读取、stale lease 或人工 identity 修补；transport failure 不形成语义结论；mandatory P0/P1、semantic ambiguity 和 false-authorizing mutation 均产生预期非授权结果类别。
 
 ## Constraints
 
-- 生命周期固定为 Quick Dev/VDD implementation-complete → Acceptance deterministic evidence → typed decide-bootstrap → optional Bootstrap → Acceptance finalization。
-- Acceptance、Quick Dev/VDD、Bootstrap Review、authorization owner、plan owner 和 policy owner 的职责边界遵循 [authority-and-lifecycle.md](authority-and-lifecycle.md)。
+- 生命周期状态 ownership 固定为：VDD 拥有 draft 和 plan-ready；maintainer 拥有 implementation-authorized；Quick Dev / quick-dev-tdd-adapter 拥有 implementation-complete；Acceptance 拥有 acceptance-passed。
+- Acceptance、Quick Dev / quick-dev-tdd-adapter、VDD、maintainer、Bootstrap Review、plan owner 和 policy owner 的职责边界遵循 [authority-and-lifecycle.md](authority-and-lifecycle.md)。
 - Consumer Closure 必须完整、可复算且禁止 sampling；Git diff 只能作为入口。
 - Generic Bootstrap 只能消费 implementation contract/command registry 投影的 required checks，不得硬编码计划命令。
 - Bootstrap Complete Review 保持 Blind Hunter、Edge Case Hunter 和 Acceptance Auditor 三个隔离 discovery roles。
@@ -76,7 +76,7 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
 - 任何 authority、hash、range、receipt、process identity、authorization 或 closure completeness 无法确认时必须停止在 typed non-authorizing 状态。
 - 恢复只能依赖 Process Events、immutable descriptors、current process identity 和 current policy；不得依赖聊天历史、Codex resume/compaction、人工 lease 重建或人工 PID 判断。
 - 保持现有 `requiredLayers`、gate、independent verifier 和 historical evidence 的兼容语义。
-- 成本不得削弱 mandatory authority coverage；完成、finding、authorization 和 finalization 均不得由 assistant prose 或上游布尔声明建立。
+- 成本不得削弱 mandatory authority coverage；完成、finding、authorization 和 acceptance-passed 均不得由 assistant prose 或上游布尔声明建立。
 - 历史 `vcec-r1`、`vcec-r1m`、`vcec-r1n` 失败证据不可重写为成功。
 - 本合同仅覆盖 repository toolchain control plane，不改变 Phase service 或 user sandbox 的模型验收行为。
 - Canonical serialization、schema 字段、retry 次数、projection budget 和 policy threshold 由 Architecture/Policy ratify；本 SPEC 不提前冻结未决实现参数。
@@ -87,7 +87,7 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
 - 不在 Bootstrap 中内置 8-13、source-freeze、exact-cover、shard 或 retry 等计划专属命令。
 - 不以 Git diff 作为唯一验收 authority。
 - 不通过 sampling、自由摘要或 reviewer 自选片段压缩 normative authority。
-- 不允许 Bootstrap 产生 implementation-complete 或最终 Acceptance 状态。
+- 不允许 Bootstrap 产生 draft、plan-ready、implementation-authorized、implementation-complete 或 acceptance-passed。
 - 不通过提高 snapshot/context 上限掩盖错误 closure。
 - 不改变 maintainer authorization owner 的发布 authority。
 - 不自动调整模型价格、模型供应商或全局 token quota。
@@ -96,7 +96,7 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
 
 ## Success signal
 
-- 在 8-13 规模回归中，deterministic failure 不启动 reviewer；mandatory Bootstrap 仍完成三角色同闭包审查；无越界读取、stale lease、人工 executable/receipt 修补或无界重试；Acceptance 能用当前 identity-bound evidence 独立完成 finalization，且语义 corpus 不出现 reference baseline 未允许的 false authorization。
+- 在 8-13 规模回归中，deterministic failure 不启动 reviewer；mandatory Bootstrap 仍完成三角色同闭包审查；无越界读取、stale lease、人工 executable/receipt 修补或无界重试；Acceptance 能用当前 identity-bound evidence 独立发布 acceptance-passed，且语义 corpus 不出现 reference baseline 未允许的 false authorization。
 
 ## Assumptions
 
