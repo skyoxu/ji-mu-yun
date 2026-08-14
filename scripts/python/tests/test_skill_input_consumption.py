@@ -1108,7 +1108,7 @@ class SkillInputConsumptionTests(unittest.TestCase):
 
         def fake_runner(**kwargs):
             if "PAGE_DESCRIPTOR_BEGIN" in kwargs["prompt"]:
-                output = {"status": "accepted", "summary": "x" * 682}
+                output = {"status": "accepted", "summary": "x" * 4096}
             else:
                 output = {
                     "context": {"schema_version": "skill-input-context.v1", "source_manifest_hash": receipt_payload["source_manifest"]["sha256"], "sections": [{"title": "requirements", "content": "Requirement text"}], "truncated": False, "omitted_items": 0, "generated_at": "2026-01-01T00:00:00Z"},

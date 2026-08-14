@@ -536,9 +536,6 @@ each page summary, and persists a `skill-input-read-coverage.v1` sidecar whose
 hash is bound into the semantic decision. The final semantic child receives the
 complete coverage descriptor and page summaries, never live paths. Bootstrap
 uses this mode with a 2 MiB aggregate snapshot budget and 24 KiB pages. An
-execution backend with JSON-schema output support constrains each page response
-to the protocol's character bound; the parent independently enforces the
-UTF-8-byte bound before aggregating it.
 oversized aggregate snapshot still fails before model launch; the launcher never
 attempts an unchanged oversized retry. The default context artifact is an atomic UTF-8
 `skill-input-context.v1.json` file under the temporary binding directory. Its
