@@ -36,6 +36,16 @@ VDD publishes `draft -> plan-ready` only. Maintainer authorization is still
 required before Quick Dev starts. Quick Dev owns `implementation-complete`;
 Acceptance owns `acceptance-passed`; Bootstrap publishes neither.
 
+Acceptance also selects an identity-bound `supervised` or `unattended` mode. In
+supervised mode, Web Sol is advisory only and Acceptance may omit Bootstrap only
+when a current maintainer decision is valid and no registered Bootstrap trigger
+exists. Explicit request, unresolved high-risk advisory findings,
+security/permission/data-corruption risk, lifecycle/authority control changes,
+or requested independent adversarial review require Bootstrap or manual pause.
+Unattended required routes retain the durable Bootstrap protocol. This plan
+changes lifecycle/authority control, so its own final acceptance remains a
+Bootstrap-triggered case.
+
 ## Self-hosted Authorization Exception
 
 The current brownfield exact-cover validator has a known, recorded RED for

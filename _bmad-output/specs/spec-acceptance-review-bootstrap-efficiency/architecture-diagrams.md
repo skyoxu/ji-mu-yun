@@ -27,19 +27,24 @@ contract-projected deterministic checks
  machine failure              deterministic pass
         |                           |
         v                           v
-typed repair, zero model    Acceptance decide-bootstrap
-                              +-----+--------------------+
-                              |                          |
-                    deterministic_only        full conformance
-                              |                          |
-                              v                          v
-                    Acceptance continues       3 isolated roles
+typed repair, zero model    Acceptance selects mode + route
+                              +-----+---------------------+
+                              |                           |
+                       supervised                   unattended
+                              |                           |
+                    maintainer decision             typed Bootstrap route
+                              |                           |
+                    trigger? +---- yes --------------+---+
+                              | no                        |
+                              v                           v
+                    Acceptance continues          3 isolated roles
                                                          |
                                                          v
                                           verifier only for accepted P0/P1
                                                          |
-                                                         v
-                                           Acceptance publishes acceptance-passed
+                              +--------------------------+
+                              v
+                    Acceptance publishes acceptance-passed
 ```
 
 ## 2. Segment 执行与恢复

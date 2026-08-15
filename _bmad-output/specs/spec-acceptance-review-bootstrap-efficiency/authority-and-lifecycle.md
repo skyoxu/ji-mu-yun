@@ -7,7 +7,7 @@
 | Acceptance owner | baseline/current freeze、Changed-set Manifest、Consumer Closure、required-check projection、typed route、Bootstrap import、`acceptance-passed` |
 | Quick Dev / quick-dev-tdd-adapter owner | `implementation-complete`、candidate identity、实现 evidence |
 | VDD owner | `draft`、`plan-ready` 与 plan candidate identity |
-| Maintainer | `implementation-authorized` |
+| Maintainer | `implementation-authorized`；发布 non-authorizing supervised semantic-review decision |
 | Bootstrap Review owner | Complete Review 三角色、Segment Descriptor、child isolation、gate、verifier、Process Event、Effective Progress 验证、watchdog enforcement、状态事件、lease/retry recovery |
 | Bootstrap control-plane policy owner | no-progress ceiling、terminal grace、status throttle policy 的版本化与 ratification |
 | Plan owner | implementation contract、command registry、plan-specific required checks |
@@ -23,10 +23,10 @@
 4. Acceptance 冻结不可移动的 baseline commit identity 与 candidate identity。
 5. Acceptance 构建 Changed-set Manifest 和 Consumer Closure。
 6. Acceptance 投影并执行 deterministic required checks。
-7. Acceptance 在 authority/risk policy 允许集合中发布 typed route。
-8. `deterministic_only` 直接返回 Acceptance；`full_implementation_conformance` 调用 Bootstrap；`focused_repair_verification` 仅验证已有正式 finding 的 bounded repair；`manual_pause` 不授权。
-9. Bootstrap 返回 identity-bound evidence。
-10. Acceptance 验证并导入 evidence，发布 `acceptance-passed`。
+7. Acceptance 发布 identity-bound `acceptance_mode`（`supervised` 或 `unattended`）与 typed route。
+8. `supervised` 只有在 current maintainer decision 有效且没有注册 Bootstrap trigger 时可直接返回 Acceptance；存在 trigger 时调用 Bootstrap。`unattended` 按 typed route 调用 Bootstrap；`manual_pause` 始终不授权。
+9. 需要 Bootstrap 时，Bootstrap 返回 identity-bound evidence；不需要时，Acceptance 只消费 current maintainer supervised decision，不消费网页聊天文本。
+10. Acceptance 验证 mode、route 与所需 evidence，发布 `acceptance-passed`。
 
 Bootstrap 不能产生 `draft`、`plan-ready`、`implementation-authorized`、`implementation-complete` 或 `acceptance-passed`。
 
@@ -81,6 +81,13 @@ Authority/risk policy 先计算允许集合，Acceptance 再选择。共享入�
 
 `focused_repair_verification` 只适用于已有正式 predecessor findings、Acceptance-owned repair route 和完整 repair projection；它不能替代首次 Complete Review，也不能发现或升级新 blocker。
 
+`acceptance_mode` 是 route 的正交维度：
+
+- `supervised`：maintainer 正在主动监督，并发布 schema-valid、绑定当前 candidate、`decision=semantic_review_satisfied`、`owner=maintainer`、`authorizes=[]` 的 decision artifact。Web Sol 等网页模型仅提供 advisory input；其文本、截图、布尔值或模型 verdict 不进入 Acceptance authority。
+- `unattended`：没有 maintainer 实时监督，required Bootstrap route 必须通过 durable Bootstrap protocol、隔离角色、retry/lease/recovery 和 finalized evidence 闭合。
+
+Supervised mode 仅在没有以下 trigger 时允许跳过 Bootstrap：maintainer 或用户主动要求；advisory review 报告尚未消除的高风险疑点；security、permission 或 data-corruption 风险；lifecycle/authority control 自身修改；要求独立多角色 adversarial review。任一 trigger 存在时必须进入 Bootstrap 或 `manual_pause`。本项目修改 Acceptance/Bootstrap authority control，因此其自身最终验收仍触发 Bootstrap。
+
 ## 8. Bootstrap Complete Review
 
 - Blind Hunter、Edge Case Hunter、Acceptance Auditor 在 gate 前彼此隔离。
@@ -96,4 +103,4 @@ Authority/risk policy 先计算允许集合，Acceptance 再选择。共享入�
 
 ## 9. Acceptance-passed
 
-Acceptance 只有在 candidate、closure、required checks、gate、verifier 和 receipt identity 全部闭合时才能发布 `acceptance-passed`。Stale、不同 closure 或不同 candidate 的 run 不能导入。Assistant 文本、transport status、历史 passed flag 或人工复制 receipt 不能替代机器 evidence。
+Acceptance 只有在 candidate、closure、required checks、mode、route 以及该 mode 所需的 evidence 全部闭合时才能发布 `acceptance-passed`。Bootstrap-required 路径必须闭合 gate、必要 verifier 和 receipt；supervised 无触发器路径必须闭合 current maintainer decision。Stale、不同 closure 或不同 candidate 的证据不能导入。Assistant/网页聊天文本、transport status、历史 passed flag 或人工复制 receipt 不能替代机器 evidence。

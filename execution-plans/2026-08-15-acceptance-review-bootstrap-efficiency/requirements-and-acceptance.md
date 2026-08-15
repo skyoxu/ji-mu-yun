@@ -25,6 +25,8 @@ The normative universe is the current typed Canonical Spec Package selected by
 | ARBE-018 | Prove zero reviewer calls on deterministic failure and bounded attempts on semantic routes. | ARBE-A36, ARBE-A37 | S6 |
 | ARBE-019 | Prove semantic parity, omission detection, ambiguity routing, and false-authorization rejection. | ARBE-A38, ARBE-A39 | S6 |
 | ARBE-020 | Record closure, segment, attempt, retry, token, and wall-time metrics before changing the default. | ARBE-A40, ARBE-A41 | S6 |
+| ARBE-021 | Select an identity-bound supervised or unattended acceptance mode and enforce registered Bootstrap triggers independently of cost. | ARBE-A42, ARBE-A43, ARBE-A44 | S3 |
+| ARBE-022 | Treat Web Sol as advisory and accept only a current maintainer supervised decision or required Bootstrap evidence before Acceptance finalization. | ARBE-A45, ARBE-A46 | S5 |
 
 ## Observable Acceptance
 
@@ -69,3 +71,8 @@ The normative universe is the current typed Canonical Spec Package selected by
 - ARBE-A39: Transport failure and false-authorizing mutations never form semantic or lifecycle truth.
 - ARBE-A40: Telemetry records actual closure, segments, attempts, retries, tokens, and wall time.
 - ARBE-A41: Whole-directory remains default until M0/M1/M2 gates and counter-metrics pass.
+- ARBE-A42: Acceptance mode is exactly supervised or unattended and is bound into route, cost, reuse, and finalization evidence.
+- ARBE-A43: Supervised no-trigger finalization requires a current candidate-bound maintainer decision with decision=semantic_review_satisfied and authorizes=[].
+- ARBE-A44: Explicit request, unresolved advisory high-risk suspicion, security/permission/data-corruption risk, lifecycle/authority control change, or requested independent adversarial review forces Bootstrap or manual pause.
+- ARBE-A45: Web Sol text, screenshots, model verdicts, and copied booleans are advisory only and never form Acceptance authority.
+- ARBE-A46: Unattended required routes and supervised triggered routes require current finalized Bootstrap evidence; Acceptance alone publishes acceptance-passed.

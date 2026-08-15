@@ -95,7 +95,7 @@ def _validate_freshness() -> None:
     spec.loader.exec_module(module)
     module.validate_manifest(REPOSITORY_ROOT, _json(source_path))
     skill_contract = ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"
-    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/receipt.json"
+    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/receipt.json"
     _run_owner_validator(
         ["scripts/python/validate_skill_input_consumption.py", "--repository-root", ".", "--contract", skill_contract, "--require-ready", receipt],
         "Skill Input validation",
@@ -118,6 +118,7 @@ def validate_plan() -> dict[str, Any]:
         "plan-state.v1.json", "requirements-and-acceptance.md",
         "source-freeze-manifest.v1.json",
         "authorization-bootstrap-override-contract.v1.json",
+        "supervised-semantic-review-decision-contract.v1.json",
     }
     missing = sorted(name for name in required_files if not (PLAN_ROOT / name).is_file())
     if missing:
@@ -155,13 +156,13 @@ def validate_plan() -> dict[str, Any]:
             raise ValueError(f"slice command is unregistered: {item.get('slice_id')}")
         if not item.get("recovery") or not item.get("depends_on") and item.get("slice_id") != "S0":
             raise ValueError(f"slice recovery or dependency is invalid: {item.get('slice_id')}")
-    expected_requirements = {f"ARBE-{value:03d}" for value in range(1, 21)}
-    expected_acceptance = {f"ARBE-A{value:02d}" for value in range(1, 42)}
+    expected_requirements = {f"ARBE-{value:03d}" for value in range(1, 23)}
+    expected_acceptance = {f"ARBE-A{value:02d}" for value in range(1, 47)}
     if requirements != expected_requirements:
         raise ValueError("requirement coverage is incomplete")
     if acceptance != expected_acceptance:
         raise ValueError("acceptance coverage is incomplete")
-    if source.get("selection_hash") != "sha256:d5417f8767a7a8ba52998d4ac7e79b77a6d00a104fe280c1bb8b70ba5d38622b":
+    if source.get("selection_hash") != "sha256:b77a52a1ba9267240552ae5f4c65439a6ce6fd51dd9bf892f01749edcddaf1f0":
         raise ValueError("source freeze selection is stale")
     if source.get("authorizes") != [] or registry.get("authorizes") != [] or contract.get("authorizes") != []:
         raise ValueError("non-lifecycle artifact attempted authorization")
