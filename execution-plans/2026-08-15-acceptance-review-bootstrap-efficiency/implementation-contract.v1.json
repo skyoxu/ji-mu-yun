@@ -61,7 +61,7 @@
     },
     {
       "id": "S3", "slice_id": "S3", "title": "acceptance closure checks route and cost",
-      "behavior": "Implement admission freeze, Changed-set Manifest, Consumer Closure, real required-check execution/reuse, supervised/unattended mode, typed route, registered Bootstrap triggers, and Review Cost Decision.",
+      "behavior": "Implement admission freeze, Changed-set Manifest, Consumer Closure, real required-check execution/reuse, the fixed supervised/unattended mode x typed-route matrix, registered Bootstrap trigger route upgrades, and Review Cost Decision.",
       "requirement_ids": ["ARBE-001", "ARBE-002", "ARBE-003", "ARBE-004", "ARBE-005", "ARBE-012", "ARBE-021"],
       "acceptance_ids": ["ARBE-A01", "ARBE-A02", "ARBE-A03", "ARBE-A04", "ARBE-A05", "ARBE-A06", "ARBE-A07", "ARBE-A08", "ARBE-A09", "ARBE-A10", "ARBE-A11", "ARBE-A25", "ARBE-A26", "ARBE-A42", "ARBE-A43", "ARBE-A44"],
       "source_refs": ["requirements-and-acceptance.md", "source-freeze-manifest.v1.json"],
@@ -91,7 +91,7 @@
     },
     {
       "id": "S5", "slice_id": "S5", "title": "semantic execution import and finalization",
-      "behavior": "Preserve Complete Review three-role semantics and gate/verifier rules; validate either current maintainer supervised-decision evidence or required Bootstrap evidence before Acceptance-owned finalization.",
+      "behavior": "Preserve Complete Review three-role semantics and gate/verifier rules; on the legal supervised deterministic-only fast path validate a maintainer decision bound to baseline, candidate, closure, checks, mode, route, policy, and spec selection; otherwise validate route-required Bootstrap evidence before Acceptance-owned finalization.",
       "requirement_ids": ["ARBE-006", "ARBE-013", "ARBE-022"],
       "acceptance_ids": ["ARBE-A12", "ARBE-A13", "ARBE-A27", "ARBE-A28", "ARBE-A45", "ARBE-A46"],
       "source_refs": ["requirements-and-acceptance.md", "source-freeze-manifest.v1.json"],

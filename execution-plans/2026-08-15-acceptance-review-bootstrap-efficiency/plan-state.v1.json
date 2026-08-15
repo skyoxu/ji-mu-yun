@@ -5,7 +5,7 @@
   "status": "plan-ready",
   "state_owner": "vdd-execution-plan",
   "authority": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md",
-  "selection_hash": "sha256:b77a52a1ba9267240552ae5f4c65439a6ce6fd51dd9bf892f01749edcddaf1f0",
+  "selection_hash": "sha256:d5417f8767a7a8ba52998d4ac7e79b77a6d00a104fe280c1bb8b70ba5d38622b",
   "resume": {
     "last_completed_step": "vdd-plan-ready",
     "next_action": "Maintainer runs validate_all freshness preflight; if the only blocker is the recorded exact-cover compatibility RED, publish the bound override receipt and then explicitly publish implementation-authorized.",

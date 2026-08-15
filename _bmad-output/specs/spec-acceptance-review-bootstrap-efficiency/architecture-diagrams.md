@@ -28,23 +28,25 @@ contract-projected deterministic checks
         |                           |
         v                           v
 typed repair, zero model    Acceptance selects mode + route
-                              +-----+---------------------+
-                              |                           |
-                       supervised                   unattended
-                              |                           |
-                    maintainer decision             typed Bootstrap route
-                              |                           |
-                    trigger? +---- yes --------------+---+
-                              | no                        |
-                              v                           v
-                    Acceptance continues          3 isolated roles
-                                                         |
-                                                         v
-                                          verifier only for accepted P0/P1
-                                                         |
-                              +--------------------------+
-                              v
-                    Acceptance publishes acceptance-passed
+                                      |
+                            registered trigger?
+                              yes /        \ no
+                                 v          v
+                    upgrade full/manual   fixed mode x route matrix
+                                           +--------+---------+
+                                           |        |         |
+                                     manual_pause  deterministic_only  focused/full
+                                           |        |         |
+                                           v        v         v
+                                    stop/non-authorizing   supervised: maintainer decision
+                                                        unattended: no Bootstrap   Bootstrap 3 roles
+                                                                  |          |
+                                                                  |          v
+                                                                  |   verifier for accepted P0/P1
+                                                                  |          |
+                                                                  +----------+
+                                                                       v
+                                                    Acceptance publishes acceptance-passed
 ```
 
 ## 2. Segment 执行与恢复

@@ -36,7 +36,7 @@ Acceptance 只能在 authority/risk policy 允许集合内选择继续、rebuild
 | SM-6 | Segment 越界读取和越界 coverage claim 为 0 |
 | SM-7 | Terminal/stale event 与 lease reconciliation 闭合，无超窗 acquired lease |
 | SM-8 | Path、range、order、hash、role、executable 和 candidate mutation 全拒绝 |
-| SM-9 | Supervised mandatory trigger 与 unattended mandatory route 保持三角色；accepted P0/P1 保持 independent verifier |
+| SM-9 | 任意 mode 的 focused/full route 执行 Bootstrap；registered trigger 强制升级 full/manual pause；accepted P0/P1 保持 independent verifier |
 | SM-10 | Frozen semantic corpus 不产生 reference baseline 未允许的 false authorization |
 | SM-11 | Heartbeat/output 不刷新 no-progress；超窗停止新模型调用并在 grace 内 terminal/reconcile |
 | SM-12 | Supervised 无触发器路径仅接受 current maintainer decision；网页 advisory 文本和伪造 decision 均不能形成 acceptance authority |
@@ -56,8 +56,9 @@ Acceptance 只能在 authority/risk policy 允许集合内选择继续、rebuild
 
 - deterministic failure 零模型调用；
 - Bootstrap-required 三角色完整 coverage；
-- supervised 无触发器路径不启动 Bootstrap，但必须绑定 current maintainer decision；
-- supervised mandatory trigger 与 unattended required route 均启动 Bootstrap；
+- `supervised + deterministic_only + no trigger` 不启动 Bootstrap，但必须绑定完整 current maintainer decision；
+- `unattended + deterministic_only` 不启动 Bootstrap；任意 mode 的 focused/full route 启动 Bootstrap；
+- registered trigger 至少升级 route 为 full implementation conformance 或 manual pause；
 - no out-of-bound read；
 - no stale lease；
 - no manual executable/receipt repair；
@@ -77,7 +78,7 @@ Owner-labeled frozen corpus 至少覆盖：
 - 删除 authority root、dependency edge、exception clause 或 negative fixture；
 - 形状合法但切掉反例的错误 Range Projection；
 - legal deterministic-only 的零 reviewer call；
-- supervised / unattended mode、全部 supervised Bootstrap triggers、stale maintainer decision 和 advisory-text-as-authority mutation；
+- 完整 mode × route 合法矩阵、全部 registered Bootstrap triggers、缺少任一 identity binding 的 stale maintainer decision 和 advisory-text-as-authority mutation；
 - false-authorizing mutation。
 
 比较对象是 route、severity/blocking class、non-authorizing outcome 和 evidence class，不要求自然语言 finding 逐字一致。Stability samples、threshold 和 model binding 由 Architecture/Policy 决定。

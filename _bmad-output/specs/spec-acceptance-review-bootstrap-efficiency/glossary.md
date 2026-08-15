@@ -17,7 +17,7 @@
 - **Implementation-complete**：Quick Dev / quick-dev-tdd-adapter 发布并作为 Acceptance 前置的 identity-bound 实现完成 handoff。
 - **Acceptance-passed**：Acceptance 在当前 deterministic evidence 与必要 Bootstrap evidence 闭合后发布的验收通过状态。
 - **Typed Route**：Acceptance 发布的 `deterministic_only`、`focused_repair_verification`、`full_implementation_conformance` 或 `manual_pause`。
-- **Acceptance Mode**：与 Typed Route 正交的 `supervised` 或 `unattended` 执行模式；它不改变 lifecycle ownership。
-- **Supervised Semantic-review Decision**：maintainer 发布的 current candidate-bound、`authorizes=[]` 机器 artifact，表达人工语义复核已满足；它不携带网页模型 authority。
+- **Acceptance Mode**：与 Typed Route 正交的 `supervised` 或 `unattended` 执行模式；它既不改变 lifecycle ownership，也不改变 route 的确定语义。
+- **Supervised Semantic-review Decision**：maintainer 发布的 `authorizes=[]` 机器 artifact，绑定 baseline、candidate、consumer closure、required checks、acceptance mode、route、policy 与 spec selection identities，表达人工语义复核已满足；它不携带网页模型 authority。
 - **Advisory Semantic Reviewer**：Web Sol 等只向 maintainer 提供建议、不能发布 lifecycle 或 Acceptance authority 的模型 reviewer。
 - **Non-authorizing result**：不能发布 draft、plan-ready、implementation-authorized、implementation-complete 或 acceptance-passed 的 blocked、repair、review-required 或 recovery 结果。

@@ -5,10 +5,16 @@
   "required_fields": [
     "schema_version",
     "mode",
-    "candidate",
+    "baseline_identity",
+    "candidate_identity",
+    "consumer_closure_identity",
+    "required_checks_identity",
+    "acceptance_mode_identity",
+    "route_identity",
     "decision",
     "owner",
     "policy_identity",
+    "spec_selection_identity",
     "authorizes"
   ],
   "required_values": {

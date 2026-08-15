@@ -36,13 +36,13 @@ VDD publishes `draft -> plan-ready` only. Maintainer authorization is still
 required before Quick Dev starts. Quick Dev owns `implementation-complete`;
 Acceptance owns `acceptance-passed`; Bootstrap publishes neither.
 
-Acceptance also selects an identity-bound `supervised` or `unattended` mode. In
-supervised mode, Web Sol is advisory only and Acceptance may omit Bootstrap only
-when a current maintainer decision is valid and no registered Bootstrap trigger
-exists. Explicit request, unresolved high-risk advisory findings,
-security/permission/data-corruption risk, lifecycle/authority control changes,
-or requested independent adversarial review require Bootstrap or manual pause.
-Unattended required routes retain the durable Bootstrap protocol. This plan
+Acceptance also selects an identity-bound `supervised` or `unattended` mode,
+but mode never changes typed-route semantics. Supervised deterministic-only with
+no trigger uses a fully identity-bound maintainer decision without Bootstrap;
+`unattended + deterministic_only` runs no Bootstrap; focused repair verification
+and full implementation conformance run Bootstrap in either mode; manual pause
+stops non-authorizing. Every registered trigger upgrades route to at least full
+implementation conformance or manual pause. Web Sol remains advisory. This plan
 changes lifecycle/authority control, so its own final acceptance remains a
 Bootstrap-triggered case.
 

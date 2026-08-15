@@ -21,8 +21,6 @@ sources:
     role: provenance
   - path: _bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/addendum.md
     role: provenance
-  - path: docs/know35.txt
-    role: provenance
 ---
 
 > **Canonical contract.** 本 SPEC 与 `companions:` 中的文件共同构成构建、测试和验证所需的完整合同。`sources:` 仅用于追溯，不是下游 obligation authority。
@@ -43,7 +41,7 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
   - **success:** 修改、新增、删除、重命名和适用未跟踪文件均被表达；closure roots、typed dependency fixed point、纳入项、排除项及 completeness receipt 可独立重算，omission fixtures 稳定拒绝遗漏和错误排除。
 - **CAP-3**
   - **intent:** Acceptance 能在模型工作前重放 plan authority 投影的 deterministic required checks，并发布独立的 `supervised | unattended` acceptance mode 与 typed Bootstrap route。
-  - **success:** deterministic failure 产生零 reviewer call；mode 与 route 只能在 authority/risk policy 允许集合内选择；unattended mandatory trigger 只能进入 full implementation conformance 或 manual pause；supervised mode 仅在 maintainer decision 当前有效且没有注册 Bootstrap trigger 时允许不启动 Bootstrap，成本不能降级任何 mandatory trigger。
+  - **success:** deterministic failure 产生零 reviewer call；mode 与 route 必须符合固定合法矩阵：`supervised + deterministic_only + no trigger` 仅允许 maintainer decision 且不启动 Bootstrap；`unattended + deterministic_only` 不启动 Bootstrap；任意 mode 的 `focused_repair_verification` 或 `full_implementation_conformance` 都必须启动 Bootstrap；任意 mode 的 `manual_pause` 停止且不授权。任何 registered Bootstrap trigger 都必须把 route 至少升级为 `full_implementation_conformance` 或 `manual_pause`，成本不能降级 mandatory coverage。
 - **CAP-4**
   - **intent:** Bootstrap 能在同一 frozen Consumer Closure 上完成既有三角色隔离审查，并只对 gate 接受的 P0/P1 启动 independent verifier。
   - **success:** 任一 required role、required-check replay/reuse proof 或 closure identity 缺失均阻止 semantic launch；零 accepted P0/P1 时 verifier call 为零；结果返回 Acceptance 而不直接发布最终状态。
@@ -61,7 +59,7 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
   - **success:** 决策绑定 closure bytes、segment count、required roles、attempts、retry exposure 和 launch plan identity；high-cost acknowledgement 不能替代 route/closure decision；完成后记录实际 token 与 wall time。
 - **CAP-9**
   - **intent:** Acceptance 能按 mode 验证 Bootstrap evidence 或 maintainer supervised semantic-review decision，随后基于当前机器证据发布 `acceptance-passed`。
-  - **success:** candidate、closure、required checks、mode、route、必要 gate/verifier/receipt 或 supervised decision 任一 stale/mismatch 均拒绝导入；Bootstrap 和 advisory reviewer 都不能产生生命周期状态；网页聊天或 assistant 文本不能替代 maintainer decision 或完成证据。
+  - **success:** candidate、closure、required checks、mode、route、必要 gate/verifier/receipt 或 supervised decision 任一 stale/mismatch 均拒绝导入；supervised decision 还必须绑定 baseline、candidate、consumer closure、required checks、acceptance mode、route、policy 与 authority/spec-selection identities；Bootstrap 和 advisory reviewer 都不能产生生命周期状态；网页聊天或 assistant 文本不能替代 maintainer decision 或完成证据。
 - **CAP-10**
   - **intent:** 维护者能用接近 8-13 规模的回归和冻结语义 corpus 证明优化没有削弱 coverage 或授权安全。
   - **success:** deterministic failure 为零模型调用；supervised 与 unattended route 均通过冻结语义 corpus；Bootstrap-required 保持三角色完整 coverage；无越界读取、stale lease 或人工 identity 修补；transport failure、网页 advisory 文本和 false supervised decision 不形成语义或生命周期结论。
@@ -70,9 +68,9 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
 
 - 生命周期状态 ownership 固定为：VDD 拥有 draft 和 plan-ready；maintainer 拥有 implementation-authorized；Quick Dev / quick-dev-tdd-adapter 拥有 implementation-complete；Acceptance 拥有 acceptance-passed。
 - Acceptance、Quick Dev / quick-dev-tdd-adapter、VDD、maintainer、Bootstrap Review、plan owner 和 policy owner 的职责边界遵循 [authority-and-lifecycle.md](authority-and-lifecycle.md)。
-- `acceptance_mode` 与 typed route 是正交、identity-bound 的决策输入；只允许 `supervised` 或 `unattended`。
+- `acceptance_mode` 与 typed route 是正交、identity-bound 的决策输入；只允许 `supervised` 或 `unattended`，且 mode 不改变 route 的确定语义。
 - Web Sol 或其他网页模型仅是 advisory semantic reviewer。Maintainer 只能用机器可验证、绑定当前 candidate、`authorizes=[]` 的 supervised decision 表达人工语义复核已满足；原始聊天文本不进入 Acceptance authority。
-- Supervised mode 在用户主动要求、advisory review 报告高风险疑点、security/permission/data corruption、lifecycle/authority control 修改或 maintainer 要求独立多角色审查时必须启动 Bootstrap。Unattended mode 按 typed route 在需要时启动 Bootstrap。
+- route 矩阵固定为：`supervised + deterministic_only + no trigger` 走 maintainer decision；`unattended + deterministic_only` 不启动 Bootstrap；任意 mode 的 `focused_repair_verification` 和 `full_implementation_conformance` 启动 Bootstrap；任意 mode 的 `manual_pause` 停止且不授权。Supervised 下的显式请求、未解决 advisory high-risk suspicion、security/permission/data corruption、lifecycle/authority control 修改或独立多角色 adversarial review 请求均为 registered trigger，必须升级到 `full_implementation_conformance` 或 `manual_pause`。
 - Consumer Closure 必须完整、可复算且禁止 sampling；Git diff 只能作为入口。
 - Generic Bootstrap 只能消费 implementation contract/command registry 投影的 required checks，不得硬编码计划命令。
 - Bootstrap Complete Review 保持 Blind Hunter、Edge Case Hunter 和 Acceptance Auditor 三个隔离 discovery roles。
@@ -103,7 +101,7 @@ Ji Mu Yun 的实现验收曾因 whole-directory scope、重复模型消费、seg
 
 ## Success signal
 
-- 在 8-13 规模回归中，deterministic failure 不启动 reviewer；supervised 无触发器路径只接受 current maintainer decision，supervised mandatory trigger 与 unattended mandatory route 均完成三角色同闭包审查；无越界读取、stale lease、人工 executable/receipt 修补或无界重试；Acceptance 能用当前 identity-bound machine evidence 独立发布 acceptance-passed，且语义 corpus 不出现 reference baseline 未允许的 false authorization。
+- 在 8-13 规模回归中，deterministic failure 不启动 reviewer；合法的 `supervised + deterministic_only + no trigger` 只接受完整 identity-bound current maintainer decision，`unattended + deterministic_only` 不启动 Bootstrap，任意 mode 的 focused/full route 完成所需 Bootstrap 审查，manual pause 不授权；无越界读取、stale lease、人工 executable/receipt 修补或无界重试；Acceptance 能用当前 machine evidence 独立发布 acceptance-passed，且语义 corpus 不出现 reference baseline 未允许的 false authorization。
 
 ## Assumptions
 

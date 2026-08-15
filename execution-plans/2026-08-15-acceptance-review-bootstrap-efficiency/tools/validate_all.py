@@ -95,7 +95,7 @@ def _validate_freshness() -> None:
     spec.loader.exec_module(module)
     module.validate_manifest(REPOSITORY_ROOT, _json(source_path))
     skill_contract = ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"
-    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/receipt.json"
+    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/receipt.json"
     _run_owner_validator(
         ["scripts/python/validate_skill_input_consumption.py", "--repository-root", ".", "--contract", skill_contract, "--require-ready", receipt],
         "Skill Input validation",
@@ -162,7 +162,7 @@ def validate_plan() -> dict[str, Any]:
         raise ValueError("requirement coverage is incomplete")
     if acceptance != expected_acceptance:
         raise ValueError("acceptance coverage is incomplete")
-    if source.get("selection_hash") != "sha256:b77a52a1ba9267240552ae5f4c65439a6ce6fd51dd9bf892f01749edcddaf1f0":
+    if source.get("selection_hash") != "sha256:d5417f8767a7a8ba52998d4ac7e79b77a6d00a104fe280c1bb8b70ba5d38622b":
         raise ValueError("source freeze selection is stale")
     if source.get("authorizes") != [] or registry.get("authorizes") != [] or contract.get("authorizes") != []:
         raise ValueError("non-lifecycle artifact attempted authorization")

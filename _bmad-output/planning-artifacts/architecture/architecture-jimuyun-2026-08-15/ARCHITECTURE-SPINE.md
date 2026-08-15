@@ -37,9 +37,14 @@ flowchart LR
     CM --> CC[Consumer Closure]
     CC --> RC[Required-check projection and execution]
     RC --> RT[Acceptance mode + typed route]
-    RT -->|supervised / no trigger| MD[Maintainer supervised decision]
+    RT -->|supervised + deterministic_only + no trigger| MD[Maintainer supervised decision]
     MD --> AF[Acceptance finalization]
-    RT -->|supervised trigger or unattended required| BR[Bootstrap semantic filter]
+    RT -->|unattended + deterministic_only| NB[No Bootstrap evidence]
+    NB --> AF
+    RT -->|either mode + focused or full| BR[Bootstrap semantic filter]
+    RT -->|registered trigger| UP[Upgrade to full or manual_pause]
+    UP --> BR
+    UP --> MP
     RT -->|manual_pause| MP[Non-authorizing pause]
     BR --> AF
     AF --> AP[Acceptance acceptance-passed]
@@ -137,7 +142,7 @@ stateDiagram-v2
 
 - **Binds:** CAP-3, CAP-4, CAP-8, CAP-9; Acceptance route policy and Bootstrap review control plane.
 - **Prevents:** Cost-driven authority weakening, single-reviewer substitution, and Bootstrap finalization authority.
-- **Rule:** The Acceptance owner publishes immutable mode/route/cost policy artifacts and its owner-scoped current selection; this policy cannot grant maintainer authorization or alter Bootstrap runtime policy. `acceptance_mode` is exactly `supervised` or `unattended` and is orthogonal to the existing typed route set. Route and launch-plan projection are deterministic functions of the frozen baseline/current, Changed-set Manifest, Consumer Closure, required-check results, implementation contract, mode, and resolved route/cost-policy identity. Mandatory triggers cannot be cost-downgraded. Supervised mode may omit Bootstrap only with a current maintainer supervised-decision artifact and no registered trigger; explicit request, unresolved advisory high-risk suspicion, security/permission/data-corruption risk, lifecycle/authority control change, or requested independent adversarial review forces Bootstrap or manual pause. Unattended required routes use Bootstrap. Whenever Bootstrap runs, full conformance retains isolated Blind Hunter, Edge Case Hunter, and Acceptance Auditor roles over the same frozen identities; an independent verifier runs only for gate-accepted P0/P1 under existing risk/model policy. Bootstrap returns identity-bound non-authorizing evidence; Acceptance alone validates import and finalizes.
+- **Rule:** The Acceptance owner publishes immutable mode/route/cost policy artifacts and its owner-scoped current selection; this policy cannot grant maintainer authorization or alter Bootstrap runtime policy. `acceptance_mode` is exactly `supervised` or `unattended`, is orthogonal to the typed route set, and cannot change route semantics. Route and launch-plan projection are deterministic functions of the frozen baseline/current, Changed-set Manifest, Consumer Closure, required-check results, implementation contract, mode, and resolved route/cost-policy identity. The legal matrix is fixed: `supervised + deterministic_only + no trigger` consumes a current maintainer decision and does not run Bootstrap; `unattended + deterministic_only` does not run Bootstrap; either mode with `focused_repair_verification` or `full_implementation_conformance` runs Bootstrap; either mode with `manual_pause` stops non-authorizing. Any registered Bootstrap trigger, including explicit request, unresolved advisory high-risk suspicion, security/permission/data-corruption risk, lifecycle/authority control change, or requested independent adversarial review, upgrades the route to at least `full_implementation_conformance` or `manual_pause`; cost cannot downgrade it. Whenever Bootstrap runs, full conformance retains isolated Blind Hunter, Edge Case Hunter, and Acceptance Auditor roles over the same frozen identities; an independent verifier runs only for gate-accepted P0/P1 under existing risk/model policy. Bootstrap returns identity-bound non-authorizing evidence; Acceptance alone validates import and finalizes.
 
 ### AD-13 - Cost observability and semantic parity gate rollout [ADOPTED]
 
@@ -149,13 +154,13 @@ stateDiagram-v2
 
 - **Binds:** CAP-1, CAP-9; Acceptance admission, evidence invalidation, Bootstrap import, and finalization.
 - **Prevents:** Moving baselines, stale handoffs, partial evidence import, and prose-derived acceptance.
-- **Rule:** Acceptance starts only from a schema-valid identity-bound `implementation-complete` handoff whose candidate matches current repository evidence; missing, stale, or mismatched handoff fails closed. Baseline is a resolved immutable commit identity, never unresolved `HEAD`. Candidate mutation stales Changed-set Manifest and every dependent closure, check, mode, route, segment, review, supervised decision, and import artifact. Finalization exact-matches the current candidate, closure, required checks, mode, route, and either required Bootstrap gate/verifier/receipt identities or the allowed current maintainer supervised-decision identity. Web/assistant prose, screenshots, transport status, historical passed flags, upstream booleans, and manually copied receipts establish neither completion nor `acceptance-passed`.
+- **Rule:** Acceptance starts only from a schema-valid identity-bound `implementation-complete` handoff whose candidate matches current repository evidence; missing, stale, or mismatched handoff fails closed. Baseline is a resolved immutable commit identity, never unresolved `HEAD`. Candidate mutation stales Changed-set Manifest and every dependent closure, check, mode, route, segment, review, supervised decision, and import artifact. Finalization exact-matches the current baseline, candidate, closure, required checks, mode, route, policy, authority/spec-selection, and either required Bootstrap gate/verifier/receipt identities or the allowed current maintainer supervised-decision identity. Web/assistant prose, screenshots, transport status, historical passed flags, upstream booleans, and manually copied receipts establish neither completion nor `acceptance-passed`.
 
 ### AD-15 - Supervised advice is not Acceptance authority [ADOPTED]
 
 - **Binds:** CAP-3, CAP-9, CAP-10; maintainer, Acceptance, advisory reviewers, and Bootstrap routing.
 - **Prevents:** Web chat text bypassing repository evidence, supervised mode becoming an unrestricted Bootstrap skip, and advisory models acquiring lifecycle authority.
-- **Rule:** Web Sol and other interactive model reviewers are advisory only. The maintainer may publish a small owner artifact with schema/version, `mode=supervised`, immutable candidate identity, `decision=semantic_review_satisfied`, `owner=maintainer`, policy identity, and `authorizes=[]`; Acceptance validates that artifact alongside its own machine evidence. The artifact records the maintainer's decision, not the model's verdict. It cannot override deterministic failure or any registered Bootstrap trigger. Acceptance remains the sole publisher of `acceptance-passed`.
+- **Rule:** Web Sol and other interactive model reviewers are advisory only. The maintainer may publish a small owner artifact with schema/version, `mode=supervised`, `decision=semantic_review_satisfied`, `owner=maintainer`, `authorizes=[]`, and complete identities for baseline, candidate, Consumer Closure, required checks, acceptance mode, route, policy, and authority/spec selection; Acceptance exact-matches every binding against its current machine evidence. The artifact records the maintainer's decision, not the model's verdict. It cannot override deterministic failure, a route requiring Bootstrap, or any registered Bootstrap trigger. Acceptance remains the sole publisher of `acceptance-passed`.
 
 ## Consistency Conventions
 

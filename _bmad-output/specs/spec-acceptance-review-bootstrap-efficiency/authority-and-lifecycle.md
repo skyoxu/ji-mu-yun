@@ -24,8 +24,8 @@
 5. Acceptance 构建 Changed-set Manifest 和 Consumer Closure。
 6. Acceptance 投影并执行 deterministic required checks。
 7. Acceptance 发布 identity-bound `acceptance_mode`（`supervised` 或 `unattended`）与 typed route。
-8. `supervised` 只有在 current maintainer decision 有效且没有注册 Bootstrap trigger 时可直接返回 Acceptance；存在 trigger 时调用 Bootstrap。`unattended` 按 typed route 调用 Bootstrap；`manual_pause` 始终不授权。
-9. 需要 Bootstrap 时，Bootstrap 返回 identity-bound evidence；不需要时，Acceptance 只消费 current maintainer supervised decision，不消费网页聊天文本。
+8. Acceptance 执行固定 mode × route 矩阵：`supervised + deterministic_only + no trigger` 消费 current maintainer decision 且不运行 Bootstrap；`unattended + deterministic_only` 不运行 Bootstrap；任意 mode 的 `focused_repair_verification` 或 `full_implementation_conformance` 运行 Bootstrap；任意 mode 的 `manual_pause` 停止且不授权。
+9. 任一 registered Bootstrap trigger 必须先把 route 至少升级为 `full_implementation_conformance` 或 `manual_pause`。需要 Bootstrap 时，Bootstrap 返回 identity-bound evidence；合法 supervised fast-path 只消费 current maintainer decision，不消费网页聊天文本。
 10. Acceptance 验证 mode、route 与所需 evidence，发布 `acceptance-passed`。
 
 Bootstrap 不能产生 `draft`、`plan-ready`、`implementation-authorized`、`implementation-complete` 或 `acceptance-passed`。
@@ -86,7 +86,7 @@ Authority/risk policy 先计算允许集合，Acceptance 再选择。共享入�
 - `supervised`：maintainer 正在主动监督，并发布 schema-valid、绑定当前 candidate、`decision=semantic_review_satisfied`、`owner=maintainer`、`authorizes=[]` 的 decision artifact。Web Sol 等网页模型仅提供 advisory input；其文本、截图、布尔值或模型 verdict 不进入 Acceptance authority。
 - `unattended`：没有 maintainer 实时监督，required Bootstrap route 必须通过 durable Bootstrap protocol、隔离角色、retry/lease/recovery 和 finalized evidence 闭合。
 
-Supervised mode 仅在没有以下 trigger 时允许跳过 Bootstrap：maintainer 或用户主动要求；advisory review 报告尚未消除的高风险疑点；security、permission 或 data-corruption 风险；lifecycle/authority control 自身修改；要求独立多角色 adversarial review。任一 trigger 存在时必须进入 Bootstrap 或 `manual_pause`。本项目修改 Acceptance/Bootstrap authority control，因此其自身最终验收仍触发 Bootstrap。
+Mode 不改变 route 的确定语义。合法矩阵是：`supervised + deterministic_only + no trigger` 使用 maintainer decision 且不运行 Bootstrap；`unattended + deterministic_only` 不运行 Bootstrap；任意 mode 的 `focused_repair_verification` 与 `full_implementation_conformance` 均运行 Bootstrap；任意 mode 的 `manual_pause` 停止且不授权。Maintainer 或用户主动要求、尚未消除的 advisory high-risk suspicion、security/permission/data-corruption risk、lifecycle/authority control 修改或独立多角色 adversarial review 请求均为 registered trigger，必须将 route 至少升级为 `full_implementation_conformance` 或 `manual_pause`。本项目修改 Acceptance/Bootstrap authority control，因此其自身最终验收仍触发 Bootstrap。
 
 ## 8. Bootstrap Complete Review
 
@@ -103,4 +103,4 @@ Supervised mode 仅在没有以下 trigger 时允许跳过 Bootstrap：maintaine
 
 ## 9. Acceptance-passed
 
-Acceptance 只有在 candidate、closure、required checks、mode、route 以及该 mode 所需的 evidence 全部闭合时才能发布 `acceptance-passed`。Bootstrap-required 路径必须闭合 gate、必要 verifier 和 receipt；supervised 无触发器路径必须闭合 current maintainer decision。Stale、不同 closure 或不同 candidate 的证据不能导入。Assistant/网页聊天文本、transport status、历史 passed flag 或人工复制 receipt 不能替代机器 evidence。
+Acceptance 只有在 candidate、closure、required checks、mode、route 以及该 route 所需的 evidence 全部闭合时才能发布 `acceptance-passed`。Bootstrap-required 路径必须闭合 gate、必要 verifier 和 receipt；合法 supervised fast-path 必须闭合 current maintainer decision，且该 decision exact-match baseline、candidate、consumer closure、required checks、acceptance mode、route、policy 与 spec selection identities。Stale、不同 closure 或不同 candidate 的证据不能导入。Assistant/网页聊天文本、transport status、历史 passed flag 或人工复制 receipt 不能替代机器 evidence。
