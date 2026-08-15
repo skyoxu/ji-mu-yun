@@ -36,6 +36,19 @@ VDD publishes `draft -> plan-ready` only. Maintainer authorization is still
 required before Quick Dev starts. Quick Dev owns `implementation-complete`;
 Acceptance owns `acceptance-passed`; Bootstrap publishes neither.
 
+## Self-hosted Authorization Exception
+
+The current brownfield exact-cover validator has a known, recorded RED for
+this ARBE package because it still requires the historical
+`acceptance-contract.md` shape. This is a self-hosting bootstrap exception, not
+a conformance result. The maintainer may publish `implementation-authorized`
+only with the maintainer-owned override receipt defined by
+`authorization-bootstrap-override-contract.v1.json`. That receipt must bind
+the current source-freeze hash, plan-validation result, exact RED command,
+fixture, validator identity, and RED result hash. It does not waive S1;
+current-package exact-cover replay must become conformant and `terminal-full`
+must pass before implementation completion.
+
 ## Validation
 
-Run `py -3 execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py --validate-plan` before authorization. Implementation executes each registered RED/GREEN/refactor command, then `terminal-full` once.
+Run `py -3 execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py --validate-plan` before authorization. This command revalidates the current selection/pointer, source-freeze identity, Skill Input receipt, and knowledge preflight before structural checks. Implementation executes each registered RED/GREEN/refactor command, then `terminal-full` once.

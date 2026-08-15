@@ -24,20 +24,20 @@
   "target": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
   "route_identity": "sha256:57429bf8d88e0a6f1186ff36f7743bb5b7a3a62c0fe3d74ca1d0a144bd77e79d",
   "repository_identity": {
-    "head": "96fa3903a8238b341635e169b2f08b6f7cc3026d",
+    "head": "c54bc71599515825c75f2bdc03e321c9f71ff99b",
     "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "adapter_version": "skill-input-adapter.v1",
-  "created_at": "2026-08-14T19:18:04.347973Z",
+  "created_at": "2026-08-15T05:44:53.988261Z",
   "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
   "source_manifest": {
-    "path": "s/source-manifest.v1.json",
-    "sha256": "sha256:fb246ac23572c53fb17e8386fbb8d3215bbf37ff609aba2a49368665e05246ea"
+    "path": "s3/source-manifest.v1.json",
+    "sha256": "sha256:d405b8837296b5b4f5c19b48af9d145248432eecae1de50329aa3926c68713b1"
   },
   "child_request": {
-    "path": "child-repository-root.json",
-    "sha256": "sha256:c9be13a31180596c1fa0175fc2ae06915a4047678e38ab90597c8fac715fcafa"
+    "path": "child-repository-root-v2.json",
+    "sha256": "sha256:fb23cd0d4a04fc77530aa3db0d5247f246a4174ec0f6e43d2637b2166f5b77dc"
   },
   "sources": [
     {
@@ -224,15 +224,15 @@
   "missing_sources": [],
   "changed_sources": [],
   "semantic_decision": {
-    "path": "o2/semantic-decision.v1.json",
-    "sha256": "sha256:730e45c195274f48b2dd50501d34ea9d46ee2ad710cdbdf63bbaa27d68d2742d"
+    "path": "o3/semantic-decision.v1.json",
+    "sha256": "sha256:a4e2b500572be6b45a3e453eb945f403965b733c530a36b5e42f25844cc3f888"
   },
   "context_artifact": {
-    "path": "o2/skill-input-context.v1.json",
-    "sha256": "sha256:b8c308b1a96110c5b323ed41dacd9794ae35c026d3a7818bdede4d6af358e8ec"
+    "path": "o3/skill-input-context.v1.json",
+    "sha256": "sha256:2b47aa52275c33ff09733d86c7106f9b40cd32c3f161bfba857bed9b47c2ce43"
   },
   "diagnostic_authorization": null,
   "authorizes": [],
   "ready": true,
-  "binding_hash": "sha256:9a21685be5cc7ec169a6df1542cf8c450270825c22a475ee26b5290d20ae33ba"
+  "binding_hash": "sha256:d380413380658f3c743c5cc6dd9c7640314ff6619a5530697db5f28d46edae80"
 }

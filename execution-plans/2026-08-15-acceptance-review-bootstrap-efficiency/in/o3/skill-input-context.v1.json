@@ -1,0 +1,37 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:d405b8837296b5b4f5c19b48af9d145248432eecae1de50329aa3926c68713b1",
+  "sections": [
+    {
+      "title": "Architecture Spine",
+      "content": "Adopted evidence-gated Pipes-and-Filters architecture for Acceptance and Bootstrap efficiency. Lifecycle authority is decentralized; artifacts are immutable, owner-local, content-addressed, and non-authorizing by default. Canonical evidence, complete-source delivery, stable segment descriptors, real required-check execution, event-based runtime recovery, typed routes, and identity-bound final import are mandatory."
+    },
+    {
+      "title": "Canonical Specification",
+      "content": "CAP-1 through CAP-10 define identity freeze, changed-set and Consumer Closure completeness, deterministic checks, three-role Complete Review, full authority delivery, isolated segment execution, bounded recovery, cost-aware routing, Acceptance import, and semantic regression. Bootstrap cannot publish lifecycle states; Acceptance alone publishes acceptance-passed."
+    },
+    {
+      "title": "Authority and Lifecycle",
+      "content": "VDD owns draft and plan-ready; the maintainer owns implementation-authorized; Quick Dev owns implementation-complete; Acceptance owns freeze, closure, checks, route, Bootstrap import, and acceptance-passed. Missing or stale handoffs, candidate mutation, mismatched identities, incomplete required checks, or stale receipts fail closed."
+    },
+    {
+      "title": "Projection and Segmentation",
+      "content": "Normative authority must be delivered completely within budget, continuing Partial reads to Complete. Over-budget delivery uses controller-owned full-source-bound Range Projection with source and extracted-byte hashes, inclusive coordinates, and context bindings. Segment assignment, requests, receipts, validation, coverage, retry, and cache share one stable descriptor identity and segment-only absolute snapshots."
+    },
+    {
+      "title": "Execution and Recovery",
+      "content": "Process Events are append-only authority for attempts, liveness, Effective Progress, terminals, staleness, and retry. Heartbeats and output do not establish progress. No-progress exhaustion stops new model calls, isolates or terminates attempts, reconciles leases from process identity, and emits non-authorizing recovery evidence. Retry is bounded, transport-only, segment-local, and preserves semantic lineage."
+    },
+    {
+      "title": "Verification and Rollout",
+      "content": "Cost decisions bind closure size, segments, roles, attempts, retry exposure, and launch identity without weakening mandatory coverage. Historical failures remain immutable abandoned evidence. M0 closes runtime faults, M1 integrates Acceptance strategy, and M2 validates 8-13 regression, semantic corpus, metrics, and final Acceptance import before replacing the whole-directory default."
+    },
+    {
+      "title": "Provenance and Supporting Sources",
+      "content": "The memlog records canonical package decisions, lifecycle refreshes, Architecture adoption, preservation and coherence validation, resolved Range Projection and runtime-policy questions, and historical provenance. Diagrams show authority flow, isolated segment execution, and reconciliation state transitions. Glossary defines the contract vocabulary."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-15T00:00:00Z"
+}

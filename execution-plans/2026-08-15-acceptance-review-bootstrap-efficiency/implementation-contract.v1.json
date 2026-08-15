@@ -10,6 +10,7 @@
     "attempt_layout": "attempts/<attempt-id>"
   },
   "authority": {"authority_manifest": "source-freeze-manifest.v1.json"},
+  "authorization_prerequisite": "authorization-bootstrap-override-contract.v1.json",
   "selection_pointer": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-acceptance-review-bootstrap-efficiency.json",
   "forbidden_changes": ["PhaseA.Platform/**", "runtime/phase-a/**", "logs/phase-a-innernet/**", "user sandbox data"],
   "slices": [
@@ -17,7 +18,7 @@
       "id": "S0", "slice_id": "S0", "title": "shared canonical evidence primitive",
       "behavior": "Implement strict repository-neutral canonical evidence mechanics, complete identity references, golden vectors, mutation corpus, and verify-only legacy replay.",
       "requirement_ids": ["ARBE-014", "ARBE-016"],
-      "acceptance_ids": ["ARBE-A29", "ARBE-A30", "ARBE-A33", "ARBE-A34"],
+      "acceptance_ids": ["ARBE-A29", "ARBE-A33"],
       "source_refs": ["requirements-and-acceptance.md", "source-freeze-manifest.v1.json"],
       "depends_on": [],
       "allowed_changes": {"production": ["scripts/toolchain/canonical_evidence/**"], "tests": ["scripts/toolchain/canonical_evidence/tests/**", "scripts/toolchain/canonical_evidence/vectors/**"], "documentation": []},
@@ -32,7 +33,7 @@
       "id": "S1", "slice_id": "S1", "title": "mandatory canonical consumer migration",
       "behavior": "Migrate bmad-spec, VDD, exact-cover, Quick Dev, Acceptance, and Bootstrap to the shared primitive and remove production dependencies on execution-plan code.",
       "requirement_ids": ["ARBE-015", "ARBE-016"],
-      "acceptance_ids": ["ARBE-A31", "ARBE-A32", "ARBE-A34"],
+      "acceptance_ids": ["ARBE-A30", "ARBE-A31", "ARBE-A32", "ARBE-A34"],
       "source_refs": ["requirements-and-acceptance.md", "source-freeze-manifest.v1.json"],
       "depends_on": ["S0"],
       "allowed_changes": {"production": [".agents/skills/bmad-spec/**", ".agents/skills/vdd-execution-plan/**", ".agents/skills/vdd-conformance-exact-cover/**", ".agents/skills/quick-dev-tdd-adapter/**", ".agents/skills/run-refactor-implementation-acceptance/**", ".agents/skills/run-phase-bootstrap-review/**"], "tests": ["scripts/toolchain/canonical_evidence/tests/**", ".agents/skills/**/tests/**"], "documentation": []},

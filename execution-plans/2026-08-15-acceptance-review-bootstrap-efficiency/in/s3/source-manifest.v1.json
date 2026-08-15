@@ -1,0 +1,72 @@
+{
+  "schema_version": "skill-input-source-manifest.v1",
+  "snapshot_kind": "model-safe",
+  "consumer": "vdd-execution-plan",
+  "operation": "create",
+  "sources": [
+    {
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md",
+      "sha256": "sha256:aab54aedc15b7f5ceb20015d9f5d0a3b55ac9dfc75d6c49c8b8ac56aba1064f5",
+      "semantic_snapshot_sha256": "sha256:aab54aedc15b7f5ceb20015d9f5d0a3b55ac9dfc75d6c49c8b8ac56aba1064f5",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/.memlog.md",
+      "sha256": "sha256:102d4fb79dfd58493bf24cbed6eb198012fb603d4512bcd808b30f91502fde8b",
+      "semantic_snapshot_sha256": "sha256:102d4fb79dfd58493bf24cbed6eb198012fb603d4512bcd808b30f91502fde8b",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md",
+      "sha256": "sha256:48731a079ca4a298a983f4e47adcdf584b46086fc2334c5e569f30dd631d46f4",
+      "semantic_snapshot_sha256": "sha256:48731a079ca4a298a983f4e47adcdf584b46086fc2334c5e569f30dd631d46f4",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/architecture-diagrams.md",
+      "sha256": "sha256:4a56775169bb17ab3c9664a66ce0cf8552e7859889f0e08dc2b61c37b800818a",
+      "semantic_snapshot_sha256": "sha256:4a56775169bb17ab3c9664a66ce0cf8552e7859889f0e08dc2b61c37b800818a",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-and-lifecycle.md",
+      "sha256": "sha256:13fff606b70a2140dc45dcdfc5a791658f7f528611aeef6fd001115913393ccf",
+      "semantic_snapshot_sha256": "sha256:13fff606b70a2140dc45dcdfc5a791658f7f528611aeef6fd001115913393ccf",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-projection-and-segmentation.md",
+      "sha256": "sha256:ad62a890c28468f63f0cf7b586fd322e6d9414418c79d849a06e0fafb4591d71",
+      "semantic_snapshot_sha256": "sha256:ad62a890c28468f63f0cf7b586fd322e6d9414418c79d849a06e0fafb4591d71",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/execution-and-recovery.md",
+      "sha256": "sha256:77e3a4b4e1b548bc1836ed9955c325513d80b08fd83cafdef69cedc27bdfbc51",
+      "semantic_snapshot_sha256": "sha256:77e3a4b4e1b548bc1836ed9955c325513d80b08fd83cafdef69cedc27bdfbc51",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/glossary.md",
+      "sha256": "sha256:0e28ee8a7cb63d4621ea06452b7a2dca8dfb6108cd08f1204d06a645dbe28a25",
+      "semantic_snapshot_sha256": "sha256:0e28ee8a7cb63d4621ea06452b7a2dca8dfb6108cd08f1204d06a645dbe28a25",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/verification-and-rollout.md",
+      "sha256": "sha256:6930273e80aa13ebd93c211264fbe75cc4872098db310260de26812da51d4bc0",
+      "semantic_snapshot_sha256": "sha256:6930273e80aa13ebd93c211264fbe75cc4872098db310260de26812da51d4bc0",
+      "sensitivity": "normal",
+      "redaction_status": "not-required"
+    }
+  ],
+  "created_at": "2026-08-15T05:44:53.982369Z"
+}

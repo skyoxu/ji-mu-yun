@@ -8,7 +8,7 @@
   "selection_hash": "sha256:d5417f8767a7a8ba52998d4ac7e79b77a6d00a104fe280c1bb8b70ba5d38622b",
   "resume": {
     "last_completed_step": "vdd-plan-ready",
-    "next_action": "Maintainer validates current plan evidence and explicitly publishes implementation-authorized.",
+    "next_action": "Maintainer runs validate_all freshness preflight; if the only blocker is the recorded exact-cover compatibility RED, publish the bound override receipt and then explicitly publish implementation-authorized.",
     "recovery_instruction": "Revalidate Skill Input, knowledge freeze, source freeze, implementation contract, command registry, and requirements coverage; rebuild only the stale owner artifact."
   },
   "slices": [
@@ -20,7 +20,7 @@
     {"slice_id":"S5","status":"pending","depends_on":["S2","S3","S4"]},
     {"slice_id":"S6","status":"pending","depends_on":["S0","S1","S2","S3","S4","S5"]}
   ],
-  "blocking_conditions": ["maintainer implementation authorization is not yet published"],
+  "blocking_conditions": ["maintainer implementation authorization is not yet published", "exact-cover compatibility RED may be bypassed only by the bound maintainer override; it remains an S1 obligation"],
   "authorizes": ["plan-ready"],
   "does_not_authorize": ["implementation-authorized", "implementation-complete", "acceptance-passed", "archived"]
 }

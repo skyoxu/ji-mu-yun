@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -68,6 +70,42 @@ def current_candidate_identity(_slice_id: str) -> dict[str, str]:
     }
 
 
+def _run_owner_validator(arguments: list[str], label: str) -> None:
+    completed = subprocess.run(
+        [sys.executable, *arguments],
+        cwd=REPOSITORY_ROOT,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+    )
+    if completed.returncode != 0:
+        detail = (completed.stdout or completed.stderr).strip()[-1000:]
+        raise ValueError(f"{label} failed: {detail}")
+
+
+def _validate_freshness() -> None:
+    source_path = PLAN_ROOT / "source-freeze-manifest.v1.json"
+    source_module_path = REPOSITORY_ROOT / ".agents/skills/vdd-execution-plan/scripts/source_freeze.py"
+    spec = importlib.util.spec_from_file_location("vdd_source_freeze_validator", source_module_path)
+    if spec is None or spec.loader is None:
+        raise ValueError("source-freeze validator is unavailable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.validate_manifest(REPOSITORY_ROOT, _json(source_path))
+    skill_contract = ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"
+    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/receipt.json"
+    _run_owner_validator(
+        ["scripts/python/validate_skill_input_consumption.py", "--repository-root", ".", "--contract", skill_contract, "--require-ready", receipt],
+        "Skill Input validation",
+    )
+    _run_owner_validator(
+        [".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py", "--input", "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json", "--repository-root", ".", "--skill-input-receipt", receipt, "--skill-input-operation", "create", "--skill-input-contract", skill_contract],
+        "knowledge preflight",
+    )
+
+
 def validate_plan() -> dict[str, Any]:
     contract = _json(PLAN_ROOT / "implementation-contract.v1.json")
     registry = _json(PLAN_ROOT / "command-registry.v1.json")
@@ -79,10 +117,12 @@ def validate_plan() -> dict[str, Any]:
         "knowledge-context.freeze.v1.json", "knowledge-context.v1.json",
         "plan-state.v1.json", "requirements-and-acceptance.md",
         "source-freeze-manifest.v1.json",
+        "authorization-bootstrap-override-contract.v1.json",
     }
     missing = sorted(name for name in required_files if not (PLAN_ROOT / name).is_file())
     if missing:
         raise ValueError("missing plan artifacts: " + ", ".join(missing))
+    _validate_freshness()
     if contract.get("plan_id") != registry.get("plan_id") or contract.get("plan_id") != state.get("plan_id"):
         raise ValueError("plan identity drift")
     if state.get("schema_version") != "vdd.plan-state.v2" or state.get("status") != "plan-ready":
