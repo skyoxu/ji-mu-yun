@@ -1,0 +1,10 @@
+{
+  "schema_version": "skill-input-budget.v1",
+  "max_context_bytes": 6000,
+  "max_snapshot_bytes": 1048576,
+  "max_sources": 128,
+  "max_reference_depth": 8,
+  "semantic_input_mode": "paged-frozen-snapshot-stdin",
+  "max_snapshot_chunk_bytes": 32768,
+  "basis": "quick-dev-tdd-adapter-paged-skill-input-v1"
+}

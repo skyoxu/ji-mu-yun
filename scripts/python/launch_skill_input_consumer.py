@@ -510,7 +510,7 @@ def _paged_snapshot_segments(
             })
             if not raw or end == len(raw):
                 break
-            line_start = line_end + 1
+            line_start = line_end
             start = end
             ordinal += 1
     if total_bytes > max_snapshot_bytes:
@@ -541,6 +541,10 @@ def _validate_segment_summary(payload: Any, segment: dict[str, Any]) -> str:
         raise ChildRequestError("semantic page output must contain exactly status and summary")
     if payload["status"] not in {"accepted", "insufficient"} or not isinstance(payload["summary"], str):
         raise ChildRequestError("semantic page output is invalid")
+    if payload["status"] != "accepted":
+        raise ChildRequestError(f"semantic page is insufficient: {segment['source_path']}")
+    if not payload["summary"].strip():
+        raise ChildRequestError("semantic page summary is empty")
     raw = payload["summary"].encode("utf-8")
     if len(raw) > PAGED_SNAPSHOT_SEGMENT_SUMMARY_BYTES:
         raise ChildRequestError("semantic page summary exceeds the transport budget")
@@ -550,6 +554,8 @@ def _validate_segment_summary(payload: Any, segment: dict[str, Any]) -> str:
         raise ChildRequestError("semantic page summary is not model-safe") from exc
     if redaction_status == "failed":
         raise ChildRequestError("semantic page summary redaction failed")
+    if len(safe) > PAGED_SNAPSHOT_SEGMENT_SUMMARY_BYTES:
+        raise ChildRequestError("semantic page summary exceeds the transport budget after redaction")
     return safe.decode("utf-8")
 
 

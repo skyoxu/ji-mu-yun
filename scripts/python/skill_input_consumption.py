@@ -288,12 +288,22 @@ def validate_contract(contract: dict[str, Any], repository_root: Path) -> None:
         raise SkillInputError("contract budget_basis is not valid JSON") from exc
     if not isinstance(budget, dict) or budget.get("schema_version") != "skill-input-budget.v1":
         raise SkillInputError("contract budget_basis schema is invalid")
-    for field, effective in (
+    budget_bindings = [
         ("max_context_bytes", contract["max_context_bytes"]),
         ("max_snapshot_bytes", max_snapshot_bytes),
         ("max_sources", contract["max_sources"]),
         ("max_reference_depth", contract["max_reference_depth"]),
-    ):
+    ]
+    paging_fields = {"semantic_input_mode", "max_snapshot_chunk_bytes"}
+    present_paging_fields = paging_fields & set(budget)
+    if present_paging_fields and present_paging_fields != paging_fields:
+        raise SkillInputError("contract budget_basis paging fields are incomplete")
+    if present_paging_fields:
+        budget_bindings.extend([
+            ("semantic_input_mode", input_mode),
+            ("max_snapshot_chunk_bytes", chunk_bytes),
+        ])
+    for field, effective in budget_bindings:
         if budget.get(field) != effective:
             raise SkillInputError(f"contract budget_basis does not bind {field}")
     source_roles = contract["source_roles"]

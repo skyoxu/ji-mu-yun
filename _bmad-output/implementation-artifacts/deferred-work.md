@@ -16,3 +16,18 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-model-visible-tool-round-contract-hardening.md`
   summary: The model-visible tool-round contract is not yet wired into the real FastCtx, Codex, MCP, browser, image, or functions.exec runtime paths.
   evidence: Repository search found only the proposed contract, schemas, producer, validator, examples, and tests; the document correctly remains Proposed and external enforcement needs a separately authorized integration change.
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-quick-dev-paged-skill-input.md`
+  summary: Paged Skill Input needs a persistent hash-bound per-page result and attempt ledger for independent replay of semantic page consumption.
+  evidence: The current launcher persists byte coverage plus the final context and decision, while individual page outputs and summaries remain temporary controller state.
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-quick-dev-paged-skill-input.md`
+  summary: The protocol needs an explicit meaning for truncated and omitted_items when a bounded final context is produced from lossy page summaries.
+  evidence: Complete byte transport can currently produce a compact semantic context with truncated=false and omitted_items=0 without a separately verifiable per-source semantic projection contract.
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-quick-dev-paged-skill-input.md`
+  summary: Ready receipts should bind the shared launcher and validator implementation identity used to create and verify paged evidence.
+  evidence: Source-graph discovery follows declared Markdown and JSON references, while inline shared entrypoint paths in the Quick Dev Skill are not part of the current scoped repository identity.
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-quick-dev-paged-skill-input.md`
+  summary: Failed Skill Input launches need an append-only typed failure sidecar bound to the request, manifest, and failure family.
+  evidence: The original oversized candidate is recomputable from its snapshot and request but does not retain the actual launcher failure as a typed execution result.
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-quick-dev-paged-skill-input.md`
+  summary: Paged semantic execution needs an aggregate prompt budget and a run-level deadline independent of per-page timeouts.
+  evidence: A valid many-source closure can create one model call per source page plus an unbounded aggregate summary prompt, so aggregate cost and elapsed time are not currently capped as one run.

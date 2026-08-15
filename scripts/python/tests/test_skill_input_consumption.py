@@ -15,7 +15,7 @@ sys.path.insert(0, str(PYTHON_ROOT))
 from prepare_skill_input_consumption import prepare  # noqa: E402
 from skill_input_consumption import SkillInputError, canonical_hash, contained_path, redact_bytes, redaction_profile_hash, sha256_bytes, validate_contract, write_json_atomic  # noqa: E402
 from validate_skill_input_consumption import ReceiptValidationError, _artifact, _remove_model_snapshot_payload, publish_ready, validate_receipt  # noqa: E402
-from launch_skill_input_consumer import ChildRequestError, create_child_request, run_semantic_child, semantic_child_execution_identity, validate_child_request  # noqa: E402
+from launch_skill_input_consumer import ChildRequestError, _validate_segment_summary, create_child_request, run_semantic_child, semantic_child_execution_identity, validate_child_request  # noqa: E402
 from skill_input_gate import require_ready_skill_input  # noqa: E402
 
 
@@ -1040,7 +1040,10 @@ class SkillInputConsumptionTests(unittest.TestCase):
             "budget_basis": {"path": "budget.json", "sha256": sha256_bytes(basis.read_bytes())},
         })
         contract.write_text(json.dumps(contract_payload), encoding="utf-8")
-        (root / "requirements.md").write_text("Requirement text\n" * 5000, encoding="utf-8")
+        (root / "requirements.md").write_text(
+            'password: "redact-this-value"\n' + "Requirement text\n" * 5000,
+            encoding="utf-8",
+        )
         prepare(args)
         receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
         request = create_child_request(
@@ -1074,6 +1077,16 @@ class SkillInputConsumptionTests(unittest.TestCase):
         self.assertGreater(len(calls), 2)
         coverage = Path(result["snapshot_read_coverage"])
         self.assertTrue(coverage.is_file())
+        coverage_payload = json.loads(coverage.read_text(encoding="utf-8"))
+        safe_source, _sensitivity, _redaction = redact_bytes(
+            (root / "requirements.md").read_bytes()
+        )
+        line_cursor = 1
+        for segment in coverage_payload["segments"]:
+            page = safe_source[segment["start_byte"]:segment["end_byte"]]
+            self.assertEqual(line_cursor, segment["start_line"])
+            self.assertEqual(line_cursor + page.count(b"\n"), segment["end_line"])
+            line_cursor = segment["end_line"]
         decision = json.loads(Path(result["semantic_decision"]).read_text(encoding="utf-8"))
         self.assertEqual(sha256_bytes(coverage.read_bytes()), decision["snapshot_read_coverage"]["sha256"])
         publish_ready(receipt, request_path, Path(result["semantic_decision"]), Path(result["context_artifact"]), root, contract)
@@ -1122,6 +1135,24 @@ class SkillInputConsumptionTests(unittest.TestCase):
             backend_inspector=self._backend_inspector,
         )
         self.assertEqual("complete", result["status"])
+
+    def test_paged_snapshot_reader_rejects_an_insufficient_page(self):
+        segment = {"source_path": "requirements.md"}
+        with self.assertRaisesRegex(ChildRequestError, "insufficient"):
+            _validate_segment_summary(
+                {"status": "insufficient", "summary": "The page cannot be interpreted."},
+                segment,
+            )
+
+    def test_paged_snapshot_reader_applies_summary_budget_after_redaction(self):
+        segment = {"source_path": "requirements.md"}
+        summary = "\n".join("token: a" for _ in range(300))
+        self.assertLessEqual(len(summary.encode("utf-8")), 4096)
+        with self.assertRaisesRegex(ChildRequestError, "transport budget"):
+            _validate_segment_summary(
+                {"status": "accepted", "summary": summary},
+                segment,
+            )
 
     def test_semantic_child_rejects_snapshot_modification(self):
         temporary, root, contract, receipt, args = self._fixture()

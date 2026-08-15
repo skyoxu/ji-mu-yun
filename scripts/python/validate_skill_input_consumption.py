@@ -216,20 +216,32 @@ def _validate_paged_read_coverage(
     if set(coverage_by_source) != set(expected_sources):
         raise ReceiptValidationError("snapshot read coverage omits a frozen source")
     for source_path, segments in coverage_by_source.items():
-        source_bytes = (repository_root / source_path).read_bytes()
+        live_source, _ = contained_path(repository_root, source_path)
+        source_bytes, _sensitivity, redaction_status = redact_bytes(live_source.read_bytes())
+        if redaction_status == "failed" or sha256_bytes(source_bytes) != expected_sources[source_path]:
+            raise ReceiptValidationError("snapshot read coverage source projection is invalid")
         ordered = sorted(segments, key=lambda item: item["ordinal"])
         if [item["ordinal"] for item in ordered] != list(range(1, len(ordered) + 1)):
             raise ReceiptValidationError("snapshot read coverage ordinal is not contiguous")
         if any(item["total"] != len(ordered) for item in ordered):
             raise ReceiptValidationError("snapshot read coverage total is invalid")
         cursor = 0
+        line_cursor = 1
         for segment in ordered:
             if segment["start_byte"] != cursor or not cursor <= segment["end_byte"] <= len(source_bytes):
                 raise ReceiptValidationError("snapshot read coverage byte range is not contiguous")
+            if segment["end_byte"] - segment["start_byte"] > coverage["chunk_bytes"]:
+                raise ReceiptValidationError("snapshot read coverage page exceeds chunk_bytes")
             page = source_bytes[segment["start_byte"]:segment["end_byte"]]
             if sha256_bytes(page) != segment["content_sha256"]:
                 raise ReceiptValidationError("snapshot read coverage content hash is invalid")
+            if (
+                segment["start_line"] != line_cursor
+                or segment["end_line"] != line_cursor + page.count(b"\n")
+            ):
+                raise ReceiptValidationError("snapshot read coverage line range is invalid")
             cursor = segment["end_byte"]
+            line_cursor = segment["end_line"]
         if cursor != len(source_bytes):
             raise ReceiptValidationError("snapshot read coverage does not reach EOF")
 

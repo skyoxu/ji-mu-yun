@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts" / "python"))
 
-from skill_input_consumption import validate_contract  # noqa: E402
+from skill_input_consumption import SkillInputError, validate_contract  # noqa: E402
 
 
 CONTRACTS = {
@@ -31,6 +31,35 @@ class SkillContractCompositionTests(unittest.TestCase):
                 self.assertEqual(consumer, contract["consumer"])
                 self.assertEqual(required_roles, set(contract["operations"][operation]["required_inputs"]))
                 self.assertIn("logs-as-recovery-source", contract["forbidden_sources"])
+
+    def test_quick_dev_contract_uses_consumer_owned_paged_budget(self):
+        contract_path = (
+            ROOT
+            / ".agents"
+            / "skills"
+            / "quick-dev-tdd-adapter"
+            / "references"
+            / "skill-input-contract.v1.json"
+        )
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+
+        validate_contract(contract, ROOT)
+        self.assertEqual("paged-frozen-snapshot-stdin", contract["semantic_input_mode"])
+        self.assertEqual(1_048_576, contract["max_snapshot_bytes"])
+        self.assertEqual(32_768, contract["max_snapshot_chunk_bytes"])
+        self.assertEqual(
+            ".agents/skills/quick-dev-tdd-adapter/references/skill-input-budget.paged-v1.json",
+            contract["budget_basis"]["path"],
+        )
+        budget_path = ROOT / contract["budget_basis"]["path"]
+        budget = json.loads(budget_path.read_text(encoding="utf-8"))
+        self.assertEqual(contract["semantic_input_mode"], budget["semantic_input_mode"])
+        self.assertEqual(contract["max_snapshot_chunk_bytes"], budget["max_snapshot_chunk_bytes"])
+
+        mutated = dict(contract)
+        mutated["max_snapshot_chunk_bytes"] = 16_384
+        with self.assertRaisesRegex(SkillInputError, "budget_basis does not bind max_snapshot_chunk_bytes"):
+            validate_contract(mutated, ROOT)
 
     def test_declared_strict_entrypoints_require_receipts(self):
         required_cli_sources = [
