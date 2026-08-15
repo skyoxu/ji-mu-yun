@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "jimuyun.workflow-model-route-decision.v1",
+  "decisionId": "sha256:57429bf8d88e0a6f1186ff36f7743bb5b7a3a62c0fe3d74ca1d0a144bd77e79d",
+  "consumer": "vdd",
+  "consumerState": "enabled",
+  "routeId": "vdd.self_hosted",
+  "classification": "self-hosted",
+  "typedInputs": {"profile": "self-hosted", "complexRecovery": false, "recoveryTrigger": null},
+  "triggers": ["existing_vdd_profile"],
+  "blockingReasons": [],
+  "policyRevision": "workflow-model-routing.v2",
+  "policyHash": "sha256:6492475796f8ea4a81c2a6a7e419fa1604a2ee933b362ef48600411df82c6fa7",
+  "rolloutMode": "observe_only",
+  "requestedExecution": {"launchMode": "child", "backend": "codex-cli", "model": "gpt-5.6-sol", "effort": "high", "sandbox": "workspace-write"},
+  "actualExecution": null,
+  "override": {"requestedClass": null, "disposition": "none", "reasonCode": null},
+  "capability": {"required": false, "state": "not_required", "proofHash": null, "shadowPredicateState": "not_required"},
+  "status": "observe_only",
+  "authorizes": []
+}
