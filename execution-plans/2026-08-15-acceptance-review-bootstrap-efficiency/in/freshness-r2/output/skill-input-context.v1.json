@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:6bfb441ee7571f9b5dff46085fb926a63926e0d5290e82189f4dd10a819aaaf0",
+  "sections": [
+    {
+      "title": "Purpose and architecture",
+      "content": "The repository toolchain replaces whole-directory acceptance review with an evidence-gated Artifact DAG. Acceptance freezes immutable baseline and candidate identities, builds a complete Changed-set Manifest and fixed-point Consumer Closure, executes contract-projected required checks, selects an acceptance mode and typed route, and alone finalizes acceptance. Bootstrap is a non-authorizing semantic evidence producer. Execution events govern attempts and recovery but do not define artifact truth."
+    },
+    {
+      "title": "Authority and routing",
+      "content": "Lifecycle ownership is decentralized: VDD owns draft and plan-ready; the maintainer owns implementation-authorized and supervised semantic-review decisions; Quick Dev owns implementation-complete; Acceptance owns acceptance-passed. Modes are supervised or unattended and are orthogonal to routes. Deterministic-only may skip Bootstrap under its specified conditions; focused repair and full conformance require Bootstrap; manual pause is non-authorizing. Registered risk or authority-control triggers force full conformance or manual pause."
+    },
+    {
+      "title": "Evidence, projection, and isolation",
+      "content": "Artifacts are immutable, owner-local, versioned, and content-addressed using the shared canonical-evidence primitive and complete identity references. Selected authority within budget must be delivered completely; partial reads continue to completion. Over-budget authority may use only controller-owned, full-source-bound Range Projections. Each reviewer attempt uses a stable Segment Descriptor, an absolute immutable segment-only snapshot, and inherited access-proof identities. Retries preserve semantic segment identity, while repartitioning creates new descriptors."
+    },
+    {
+      "title": "Execution and recovery",
+      "content": "Required checks execute real registered commands, and deterministic failure launches no semantic reviewers. Process Events are append-only execution authority. Heartbeats establish liveness only; Effective Progress requires a validated terminal transition, evidence increment, or registered state transition. Leases are rebuilt from matching process identity, liveness, progress, and terminal state. Failed, stale, or abandoned attempts cannot contribute semantic findings or completion. Recovery depends only on events, immutable descriptors, current process identity, and the bound runtime policy."
+    },
+    {
+      "title": "Verification and rollout",
+      "content": "Complete Bootstrap review preserves three isolated roles and invokes an independent verifier only for gate-accepted P0/P1 findings under existing policy. Cost decisions bind closure size, segments, roles, attempts, retry exposure, route, and launch plan without weakening mandatory coverage. M0 establishes execution isolation and recovery, M1 integrates Acceptance strategy, and M2 validates scale and finalization. Regression and semantic corpora must reject omissions, stale identities, out-of-bound coverage, transport-as-semantics, advisory-text authority, and false authorization. Historical failed runs remain immutable and non-reusable."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T03:24:41.056287Z"
+}

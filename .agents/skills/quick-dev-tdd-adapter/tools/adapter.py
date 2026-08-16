@@ -8,10 +8,13 @@ from pathlib import Path
 from typing import Any
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
 
 from skill_input_gate import require_ready_skill_input  # noqa: E402
+from scripts.toolchain.canonical_evidence import canonical_bytes  # noqa: E402
 
 
 def _blocked(run: dict[str, Any], rule_id: str, message: str) -> dict[str, Any]:
@@ -22,7 +25,7 @@ def _blocked(run: dict[str, Any], rule_id: str, message: str) -> dict[str, Any]:
 
 
 def _value_hash(value: Any) -> str:
-    payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    payload = canonical_bytes(value)
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
@@ -251,7 +254,7 @@ def persist_protocol_bundle(
     # LifecycleRunner records these non-authoritative observations before the
     # immutable protocol bundle is closed. They are append-only inputs, not
     # protocol artifacts, and must survive the close operation.
-    observation_paths = {f"observations/{stage}-observed.json" for stage in ("red", "green", "refactor")} | {"recovery-state.json"}
+    observation_paths = {f"observations/{stage}-observed.json" for stage in ("red", "green", "refactor")} | {"recovery-state.json", "predecessor-red-observation.v1.json"}
     if existing_paths - set(payloads) - observation_paths:
         raise ValueError("undeclared existing artifact prevents protocol persistence")
 

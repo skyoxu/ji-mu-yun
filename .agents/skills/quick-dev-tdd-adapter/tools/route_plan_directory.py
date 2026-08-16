@@ -67,6 +67,30 @@ def _implementation_candidate_current(result: dict[str, object], current: dict[s
     return all(result.get(key) == current[key] for key in _IMPLEMENTATION_CANDIDATE_ROOTS)
 
 
+def _terminal_completion_current(repository_root: Path, plan_dir: Path, contract_hash: str) -> bool:
+    contract = json.loads((plan_dir / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    terminal = contract.get("terminal")
+    if not isinstance(terminal, dict) or terminal.get("predicate") != "implementation-complete":
+        return False
+    evidence = repository_root / "logs" / "tdd-adapter" / contract["plan_id"] / "terminal"
+    for path in sorted(evidence.glob("*/implementation-complete-result.json"), reverse=True):
+        try:
+            result = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if (
+            result.get("predicate") == "implementation-complete"
+            and result.get("status") == "pass"
+            and result.get("plan_id") == contract["plan_id"]
+            and result.get("contract_hash") == contract_hash
+            and result.get("terminal_command_id") == terminal.get("command_id")
+            and isinstance(result.get("validated_command_ids"), list)
+            and result.get("authorizes") == ["implementation-complete"]
+        ):
+            return True
+    return False
+
+
 def _slice_authorization_gate(plan_dir: Path, plan_id: str) -> dict[str, object] | None:
     state_path = plan_dir / "plan-state.v1.json"
     if not state_path.is_file():
@@ -206,6 +230,8 @@ def route(repository_root: Path, plan_dir: Path) -> dict[str, object]:
         if authorization_gate is not None:
             return authorization_gate
         return {"next_action": "run-slice", "slice_id": slice_id, "authorizes": []}
+    if _terminal_completion_current(repository_root, target, contract_hash):
+        return {"next_action": "implementation-complete", "authorizes": []}
     return {"next_action": "validate-terminal", "authorizes": []}
 
 

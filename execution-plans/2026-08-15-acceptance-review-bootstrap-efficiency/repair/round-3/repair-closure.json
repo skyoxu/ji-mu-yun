@@ -1,0 +1,31 @@
+{
+  "schema_version": "vdd-repair-closure.v1",
+  "repair_id": "acceptance-review-bootstrap-efficiency-tdd-successor-r3",
+  "finding_set": {
+    "path": "repair/round-3/finding-set.json",
+    "sha256": "sha256:df18eb93ac3ef9ee773b12363fc9ca0b827fde581c35dcbdafa93bd103ffafb2"
+  },
+  "repair_slices": {
+    "path": "repair/round-3/repair-slices.json",
+    "sha256": "sha256:d5f608255b3a5a1885bce756c4668b50e90f357ad03be6a42397a280e974337d"
+  },
+  "successor_receipt": {
+    "path": "logs/tdd-adapter/acceptance-review-bootstrap-efficiency/S3/RUN-20260816T064908-317128Z/prior-red-successor-evidence.v1.json",
+    "sha256": "sha256:ddfc1d3f652abe1bb1eabbd5366bf5fad9721c4757147a937cbfb5ff4bbd0b0f"
+  },
+  "consumer": {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/run_slice_lifecycle.py",
+    "sha256": "sha256:f160e4fca8d56cf376e06a595e12094379a1e0a7f556c9c4cef9e8cb11a07d19"
+  },
+  "validator": {
+    "path": "tools/validate_slice.py",
+    "sha256": "sha256:d17cb16aaddbe9e1cb24c26f7bfd57d77e451a97878425637e71595d28379630"
+  },
+  "changed_paths": [
+    "implementation-contract.v1.json",
+    ".agents/skills/quick-dev-tdd-adapter/**",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_evidence_pipeline.py",
+    "repair/round-3/**"
+  ],
+  "authorizes": []
+}

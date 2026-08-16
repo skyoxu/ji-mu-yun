@@ -778,7 +778,11 @@ def run_semantic_child(
                     except ChildRequestError as exc:
                         page_error = exc
                 if page_error is not None:
-                    raise page_error
+                    raise ChildRequestError(
+                        "semantic page reader failed "
+                        f"for page {page_index} ({segment['source_path']}) after "
+                        f"{PAGED_SNAPSHOT_PAGE_ATTEMPTS} attempts: {page_error}"
+                    )
                 page_summaries.append({
                     **{key: segment[key] for key in (
                         "source_path", "source_sha256", "ordinal", "total", "start_byte", "end_byte",

@@ -53,6 +53,10 @@ from knowledge_context import select_context  # noqa: E402
 CONTROL_PLANE_REVISION = "bootstrap-control-plane.v2"
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
+
+from scripts.toolchain.canonical_evidence import canonical_bytes  # noqa: E402
 if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
 
@@ -507,12 +511,6 @@ def repeated_failure_fingerprint_status(history: list[str], fingerprint: str) ->
         if count >= REPEATED_FAILURE_FINGERPRINT_THRESHOLD
         else "retry-allowed"
     )
-
-
-def canonical_bytes(value: Any) -> bytes:
-    return json.dumps(
-        value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
-    ).encode("utf-8")
 
 
 def value_hash(value: Any) -> str:

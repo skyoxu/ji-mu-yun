@@ -65,6 +65,7 @@ from bootstrap_integration import (
     replay_finalized_bootstrap_run,
 )
 from review_requirement import decide_review_requirement
+from semantic_import import finalize_acceptance, project_route
 
 
 def _read_json(path: str) -> object:
@@ -532,6 +533,24 @@ def finalize_command(request_path: str, output_path: str) -> dict:
     )
 
 
+def project_semantic_route_command(request_path: str, output_path: str) -> dict:
+    request = _read_json(request_path)
+    if not isinstance(request, dict) or set(request) != {
+        "acceptanceMode", "requestedRoute", "triggerIds",
+    }:
+        raise InputError("semantic route request fields are invalid")
+    return _publish_new_json(
+        output_path,
+        project_route(
+            request["acceptanceMode"], request["requestedRoute"], request["triggerIds"]
+        ),
+    )
+
+
+def finalize_semantic_acceptance_command(request_path: str, output_path: str) -> dict:
+    return _publish_new_json(output_path, finalize_acceptance(_read_json(request_path)))
+
+
 def bind_bootstrap_capabilities_command(request_path: str, output_path: str) -> dict:
     request = _read_json(request_path)
     if not isinstance(request, dict) or set(request) != {"decision", "profile"}:
@@ -956,6 +975,10 @@ def main() -> int:
     finalize = subcommands.add_parser("finalize")
     finalize.add_argument("--request", required=True)
     finalize.add_argument("--out", required=True)
+    for name in ("project-semantic-route", "finalize-semantic-acceptance"):
+        semantic = subcommands.add_parser(name)
+        semantic.add_argument("--request", required=True)
+        semantic.add_argument("--out", required=True)
     bind = subcommands.add_parser("bind-bootstrap-capabilities")
     bind.add_argument("--request", required=True)
     bind.add_argument("--out", required=True)
@@ -1078,6 +1101,12 @@ def main() -> int:
         return 0
     if args.command == "finalize":
         print(json.dumps(finalize_command(args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "project-semantic-route":
+        print(json.dumps(project_semantic_route_command(args.request, args.out), sort_keys=True))
+        return 0
+    if args.command == "finalize-semantic-acceptance":
+        print(json.dumps(finalize_semantic_acceptance_command(args.request, args.out), sort_keys=True))
         return 0
     if args.command == "bind-bootstrap-capabilities":
         print(json.dumps(bind_bootstrap_capabilities_command(args.request, args.out), sort_keys=True))

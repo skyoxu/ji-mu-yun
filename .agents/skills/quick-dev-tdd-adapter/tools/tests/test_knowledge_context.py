@@ -127,6 +127,54 @@ class QuickDevKnowledgeContextTests(unittest.TestCase):
                 result = module.verify_plan_context(Path.cwd(), plan)
         self.assertEqual("candidate_worktree_source_hash_mismatch", result["detail"])
 
+    def test_worktree_gate_uses_only_accepted_locator_candidates(self) -> None:
+        module = load_module()
+        context = {
+            "locator_request": {"snapshot": {}, "policy_revision": "policy-v2"},
+            "locator_result": {"source_snapshot_id": "sha256:" + "a" * 64, "candidates": [
+                {"path": "AGENTS.md", "source_sha256": "b" * 64},
+                {"path": "docs/stale.md", "source_sha256": "c" * 64},
+            ]},
+            "request_sha256": "sha256:" + "d" * 64,
+            "result_sha256": "sha256:" + "e" * 64,
+            "decisions": [
+                {"decision": "accepted", "candidate": {"path": "AGENTS.md", "source_sha256": "b" * 64}, "satisfies": ["repository-rules"]},
+                {"decision": "rejected", "candidate": {"path": "docs/stale.md", "source_sha256": "c" * 64}, "satisfies": []},
+            ],
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            plan = Path(temporary)
+            context_path = plan / "knowledge-context.v1.json"
+            context_bytes = (json.dumps(context) + "\n").encode("utf-8")
+            context_path.write_bytes(context_bytes)
+            captured = []
+            def validate_worktree_sources(payload, _root):
+                captured.extend(payload["locator_result"]["candidates"])
+                return None
+            validator = SimpleNamespace(
+                validate_context=lambda *_args, **_kwargs: None,
+                validate_worktree_sources=validate_worktree_sources,
+                canonical_hash=lambda value: "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+            )
+            receipt = {
+                "schema_version": "jimuyun.vdd-knowledge-freeze.v1",
+                "context_path": context_path.name,
+                "context_sha256": "sha256:" + hashlib.sha256(context_bytes).hexdigest(),
+                "canonical_context_sha256": validator.canonical_hash(context),
+                "request_sha256": context["request_sha256"],
+                "result_sha256": context["result_sha256"],
+                "snapshot": {},
+                "source_snapshot_id": context["locator_result"]["source_snapshot_id"],
+                "policy_revision": "policy-v2",
+                "accepted": [{"path": "AGENTS.md", "source_sha256": "b" * 64, "satisfies": ["repository-rules"]}],
+                "authorizes": [],
+            }
+            (plan / "knowledge-context.freeze.v1.json").write_text(json.dumps(receipt) + "\n", encoding="utf-8")
+            with mock.patch.object(module, "_validator", return_value=validator):
+                result = module.verify_plan_context(Path.cwd(), plan)
+        self.assertEqual("verified", result["status"])
+        self.assertEqual(["AGENTS.md"], [candidate["path"] for candidate in captured])
+
 
 if __name__ == "__main__":
     unittest.main()

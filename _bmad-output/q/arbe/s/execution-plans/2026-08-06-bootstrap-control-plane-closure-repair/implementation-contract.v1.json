@@ -1,0 +1,12 @@
+{
+  "schema_version":"bootstrap-control-plane-closure-repair.implementation-contract.v1",
+  "plan_id":"bootstrap-control-plane-closure-repair",
+  "profile":"self-hosted",
+  "slices":[
+    {"slice_id":"CP-S0","depends_on":[],"requirement_ids":["CP-001"],"acceptance_ids":["AC-001"]},
+    {"slice_id":"CP-S1","depends_on":["CP-S0"],"requirement_ids":["CP-002"],"acceptance_ids":["AC-002"]},
+    {"slice_id":"CP-S2","depends_on":["CP-S0","CP-S1"],"requirement_ids":["CP-003"],"acceptance_ids":["AC-003"]}
+  ],
+  "coordination_contract":{"post_run_hook":{"scope":"coordinator-only","suppress_on":["user-stop","manual-pause"]},"loop":{"stages":["recover","plan","execute","verify","iterate"]},"fresh_session_recovery":{"assumes_global_new_command":false,"launcher_authority":"project-local-explicit-launcher"}},
+  "authorizes":[]
+}

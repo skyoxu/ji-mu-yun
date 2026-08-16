@@ -1,0 +1,197 @@
+{
+  "schema_version": "tec.command-registry.v1",
+  "commands": [
+    {
+      "id": "plan-authority-negative",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_authority.py", "-k", "test_narrow_adr_boundary"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 120,
+      "shell": false
+    },
+    {
+      "id": "catalog-contract-negative",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_contracts.py", "-k", "test_unregistered_or_escaping_root_fails_closed"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 120,
+      "shell": false
+    },
+    {
+      "id": "catalog-contract-suite",
+      "executable": "py",
+      "argv": ["-3", "-B", "-m", "unittest", "discover", "-s", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests", "-p", "test_contracts.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "catalog-adapter-negative",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_adapters.py", "-k", "test_proximity_and_nested_copies_emit_no_relation_or_duplicate"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "catalog-adapter-suite",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_adapters.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "catalog-generation-negative",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_generation.py", "-k", "test_drifted_source_is_stale_and_build_does_not_publish"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "catalog-generation-suite",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_generation.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "catalog-query-suite",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_query.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "catalog-publication-negative",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_publication.py", "-k", "test_failed_activation_and_stale_lkg_preserve_current"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "catalog-publication-suite",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_publication.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "catalog-closure-negative",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_closed_loop.py", "-k", "test_inferred_edge_nested_copy_and_phase_root_are_rejected"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "catalog-closure-suite",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_closed_loop.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "catalog-forbidden-suite",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_forbidden_boundaries.py"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "catalog-terminal-negative",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/tests/test_terminal.py", "-k", "test_terminal_requires_every_v1_boundary"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "catalog-terminal",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/maintain-toolchain-workflow-evidence-catalog/scripts/validate_catalog.py", "--repository-root", ".", "--run-tests"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 900,
+      "shell": false
+    },
+    {
+      "id": "tec-s0-predicate",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/slice_predicate.py"}, "--slice-id", "TEC-S0"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 180,
+      "shell": false
+    },
+    {
+      "id": "tec-s1-predicate",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/slice_predicate.py"}, "--slice-id", "TEC-S1"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "tec-s2-predicate",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/slice_predicate.py"}, "--slice-id", "TEC-S2"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "tec-s3-predicate",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/slice_predicate.py"}, "--slice-id", "TEC-S3"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "tec-s4-predicate",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/slice_predicate.py"}, "--slice-id", "TEC-S4"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 300,
+      "shell": false
+    },
+    {
+      "id": "tec-s5-predicate",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/slice_predicate.py"}, "--slice-id", "TEC-S5"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 600,
+      "shell": false
+    },
+    {
+      "id": "tec-s6-predicate",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/slice_predicate.py"}, "--slice-id", "TEC-S6"],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 900,
+      "shell": false
+    },
+    {
+      "id": "quick-dev-contract",
+      "executable": "py",
+      "argv": ["-3", "-B", ".agents/skills/quick-dev-tdd-adapter/tools/validate_adapter_contract.py", {"type": "plan_path", "value": "implementation-contract.v1.json"}],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 120,
+      "shell": false
+    },
+    {
+      "id": "plan-ready-validator",
+      "executable": "py",
+      "argv": ["-3", "-B", {"type": "plan_path", "value": "tools/validate_plan.py"}],
+      "cwd": {"type": "repo_path", "value": "."},
+      "timeout_seconds": 120,
+      "shell": false
+    }
+  ]
+}

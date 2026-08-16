@@ -1,0 +1,225 @@
+{
+  "schema_version": "jimuyun.toolchain-plan-delivery-loop.implementation-contract.v1",
+  "plan_id": "toolchain-plan-delivery-loop-skill",
+  "profile": "self-hosted",
+  "target_skill": ".agents/skills/orchestrate-plan-delivery",
+  "command_registry": "command-registry.v1.json",
+  "authority": {
+    "requirements": "requirements.v1.json",
+    "authority_manifest": "authority-manifest.v1.json",
+    "baseline": "baseline-and-scope.v1.json",
+    "knowledge_context": "knowledge-context.v1.json",
+    "knowledge_freeze": "knowledge-context.freeze.v1.json",
+    "ownership_adr": "docs/adr/ADR-0059-opt-in-plan-delivery-coordinator.md"
+  },
+  "backend": {
+    "hidden_state": false,
+    "provider_scheduling": false,
+    "subprocess_ownership": false,
+    "model_launch_owner": "owning-child-control-plane"
+  },
+  "coordination_contract": {
+    "target_kind": "one-explicit-existing-execution-plan-directory",
+    "path_policy": "resolved-direct-child-of-repository-execution-plans-no-reparse-escape",
+    "zero_side_effect_failure": true,
+    "phases": [
+      {"id":"plan-review","owner":"run-phase-bootstrap-review","profile":"bootstrap-upstream-plan","repair_owner":"vdd-execution-plan","terminal_evidence":"validated-finalized-run"},
+      {"id":"implementation-authorization","owner":"maintainer","requires":"plan-ready-and-target-bound-explicit-authorization"},
+      {"id":"implementation","owner":"quick-dev-tdd-adapter","terminal_state":"implementation-complete"},
+      {"id":"acceptance","owner":"run-refactor-implementation-acceptance","terminal_state":"acceptance-passed"}
+    ],
+    "next_actions": [
+      "repair-plan-with-vdd",
+      "await-implementation-authorization",
+      "run-bootstrap-plan-review",
+      "resume-bootstrap-plan-review",
+      "run-quick-dev",
+      "resume-quick-dev",
+      "run-refactor-acceptance",
+      "resume-refactor-acceptance",
+      "repair-implementation-with-quick-dev",
+      "await-high-cost-acknowledgement",
+      "await-finding-mode-reentry-confirmation",
+      "await-protected-path-approval",
+      "manual-pause",
+      "acceptance-passed"
+    ],
+    "finding_confidence_source": "bootstrap-review-finding.confidence",
+    "parallel_confidence_scoring_forbidden": true,
+    "checkpoint": {
+      "root": "logs/plan-delivery/<target-id>/<run-id>/",
+      "authority": "derived-non-authorizing-cache",
+      "replay_before_dispatch": true,
+      "authorizes": []
+    },
+    "post_run_hook": {
+      "enabled": true,
+      "scope": "coordinator-only",
+      "installation": "explicit-project-local-entrypoint",
+      "trigger_on": ["controlled-completion", "controlled-failure", "timeout", "reported-poll-stop"],
+      "suppress_on": ["user-stop", "manual-pause"],
+      "child_skills_attach_hook": false,
+      "inputs": ["append-only-events", "current-state-projection", "owner-evidence", "hash-bound-checkpoint"],
+      "idempotency_key": "plan_id:run_id:stop_epoch",
+      "actions": ["inspect-owner-evidence", "emit-resume-needed", "invoke-fresh-session-launcher"],
+      "authorizes": [],
+      "forbidden": ["hidden-global-hook", "detached-controller", "process-name-liveness", "authorization-bypass"]
+    },
+    "loop": {
+      "stages": ["recover", "plan", "execute", "verify", "iterate"],
+      "state_authority": "filesystem-only",
+      "route_predicate": "typed-validator-and-owner-evidence-only",
+      "persist_before_dispatch": true,
+      "persist_after_verify": true,
+      "recovery_input": "schema-valid-append-only-events-with-cursor",
+      "early_convergence_forbidden": true,
+      "terminal_requires": ["typed-terminal-predicate", "declared-closure", "owner-published-terminal-state"]
+    },
+    "fresh_session_recovery": {
+      "mode": "explicit-project-local-launcher",
+      "trigger": "post-run-hook-resume-needed",
+      "requires_structured_input": true,
+      "inherits_conversation_context": false,
+      "assumes_global_new_command": false,
+      "launcher_authority": "project-local-explicit-launcher",
+      "authorizes": []
+    },
+    "effect_policy": {
+      "idempotency": "required",
+      "replay_key": "plan_id:run_id:stage_id:attempt_id",
+      "rollback": "journaled-or-owner-declared",
+      "historical_evidence": "append-only",
+      "early_convergence": "forbidden"
+    },
+    "background_process": {
+      "enabled": false,
+      "forbidden": ["timer-poller","scheduled-task","service","detached-codex-launch","process-name-skill-detection"],
+      "recovery": "post-run-hook-plus-explicit-fresh-session-launcher"
+    },
+    "confirmation_boundaries": [
+      "bootstrap-high-cost-estimate",
+      "later-finding-mode-reentry",
+      "protected-path-change",
+      "manual-pause-closure"
+    ],
+    "lifecycle_publishers": {
+      "plan-ready":"vdd-execution-plan",
+      "implementation-authorized":"maintainer",
+      "implementation-complete":"quick-dev-tdd-adapter",
+      "acceptance-passed":"run-refactor-implementation-acceptance"
+    },
+    "authorizes": []
+  },
+  "acceptance_policy": {
+    "bootstrap_required_for_plan_authorization=<redacted>,
+    "bootstrap_required_for_implementation_acceptance": true,
+    "lineage_family_from_original_target": true,
+    "semantic_round_hard_limit": 3,
+    "p2_current_run_closure": true,
+    "assistant_text_authoritative": false,
+    "release_authorized": false
+  },
+  "slices": [
+    {
+      "slice_id": "RMAP-S0",
+      "title": "Ownership ADR, package skeleton, schemas and RED fixtures",
+      "requirement_ids": ["PDL-008","PDL-010","PDL-011","PDL-012","PDL-013","PDL-014","PDL-015"],
+      "acceptance_ids": ["PDL-A12","PDL-A14","PDL-A15","PDL-A16","PDL-A17","PDL-A18","PDL-A19","PDL-A21"],
+      "source_refs": ["docs/tools.md#6-p2-skill-local-r3-core-operation-contract","docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md","system-skill:skill-creator"],
+      "depends_on": [],
+      "allowed_changes": {
+        "production": [".agents/skills/orchestrate-plan-delivery/SKILL.md",".agents/skills/orchestrate-plan-delivery/agents/openai.yaml",".agents/skills/orchestrate-plan-delivery/schemas/**"],
+        "tests": [".agents/skills/orchestrate-plan-delivery/tests/**"],
+        "documentation": ["docs/adr/ADR-0059-opt-in-plan-delivery-coordinator.md","docs/architecture/ADR_INDEX_PHASE.md","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/95-implementation-evolution-and-completion-report.md"]
+      },
+      "execution_snapshot_paths": ["execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/95-implementation-evolution-and-completion-report.md"],
+      "forbidden_changes": [".agents/skills/run-phase-bootstrap-review/**",".agents/skills/quick-dev-tdd-adapter/**",".agents/skills/run-refactor-implementation-acceptance/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**"],
+      "execution_read_set": ["AGENTS.md","README.md","workflow.md","docs/tools.md","docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md","docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md","docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",".agents/skills/run-phase-bootstrap-review/SKILL.md",".agents/skills/quick-dev-tdd-adapter/SKILL.md",".agents/skills/run-refactor-implementation-acceptance/SKILL.md"],
+      "dependency_closure": [".agents/skills/orchestrate-plan-delivery/**","docs/adr/ADR-0059-opt-in-plan-delivery-coordinator.md","docs/architecture/ADR_INDEX_PHASE.md"],
+      "tdd": {
+        "red": {"command_id":"slice-s0-predicate","test_selector":"target Skill and Accepted ownership ADR absent","expected_exit":"nonzero","expected_failure_family":"coordinator-authority-and-package-absent","expected_failure_ids":["PDL-A15","PDL-A18"]},
+        "green": {"command_id":"coordinator-tests","expected_exit":"zero"},
+        "refactor": {"invocations":[{"command_id":"slice-s0-predicate","expected_exit":"zero"}]}
+      },
+      "post_refactor_command_id": "slice-s0-predicate",
+      "exit_predicate": "slice-ready",
+      "recovery": "Remove only incomplete new package bytes, preserve failed fixtures and the plan report, and leave all child Skill packages unchanged."
+    },
+    {
+      "slice_id": "RMAP-S1",
+      "title": "Target guard, owner evidence projection and compact recovery",
+      "requirement_ids": ["PDL-001","PDL-006","PDL-007","PDL-008","PDL-013","PDL-015","PDL-016","PDL-017","PDL-018"],
+      "acceptance_ids": ["PDL-A01","PDL-A02","PDL-A10","PDL-A11","PDL-A12","PDL-A17","PDL-A20","PDL-A22","PDL-A25","PDL-A26"],
+      "source_refs": ["workflow.md#61-recovery-state",".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",".agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"],
+      "depends_on": ["RMAP-S0"],
+      "allowed_changes": {
+        "production": [".agents/skills/orchestrate-plan-delivery/scripts/**",".agents/skills/orchestrate-plan-delivery/schemas/**",".agents/skills/orchestrate-plan-delivery/references/**"],
+        "tests": [".agents/skills/orchestrate-plan-delivery/tests/**"],
+        "documentation": ["execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/95-implementation-evolution-and-completion-report.md"]
+      },
+      "execution_snapshot_paths": ["execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/95-implementation-evolution-and-completion-report.md"],
+      "forbidden_changes": [".agents/skills/run-phase-bootstrap-review/**",".agents/skills/quick-dev-tdd-adapter/**",".agents/skills/run-refactor-implementation-acceptance/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**"],
+      "execution_read_set": ["implementation-contract.v1.json",".agents/skills/run-phase-bootstrap-review/SKILL.md",".agents/skills/quick-dev-tdd-adapter/SKILL.md",".agents/skills/run-refactor-implementation-acceptance/SKILL.md"],
+      "dependency_closure": [".agents/skills/orchestrate-plan-delivery/**"],
+      "tdd": {
+        "red": {"command_id":"slice-s1-predicate","test_selector":"invalid path and compacted-session fixtures have no deterministic projection","expected_exit":"nonzero","expected_failure_family":"target-and-recovery-router-absent","expected_failure_ids":["PDL-A01","PDL-A02","PDL-A10","PDL-A11"]},
+        "green": {"command_id":"coordinator-tests","expected_exit":"zero"},
+        "refactor": {"invocations":[{"command_id":"coordinator-self-check","expected_exit":"zero"}]}
+      },
+      "post_refactor_command_id": "slice-s1-predicate",
+      "exit_predicate": "slice-ready",
+      "recovery": "Preserve checkpoint evidence, discard only an invalid derived cache, and rebuild state from the target and owner inspect results."
+    },
+    {
+      "slice_id": "RMAP-S2",
+      "title": "Owner-preserving review, implementation and acceptance loop",
+      "requirement_ids": ["PDL-002","PDL-003","PDL-004","PDL-005","PDL-006","PDL-009","PDL-010","PDL-013","PDL-016","PDL-017","PDL-018"],
+      "acceptance_ids": ["PDL-A03","PDL-A04","PDL-A05","PDL-A06","PDL-A07","PDL-A08","PDL-A09","PDL-A10","PDL-A13","PDL-A14","PDL-A17","PDL-A23","PDL-A24","PDL-A25","PDL-A26","PDL-A27"],
+      "source_refs": [".agents/skills/run-phase-bootstrap-review/SKILL.md",".agents/skills/quick-dev-tdd-adapter/SKILL.md",".agents/skills/run-refactor-implementation-acceptance/SKILL.md","docs/standards/bootstrap-review-control-plane.md"],
+      "depends_on": ["RMAP-S0","RMAP-S1"],
+      "allowed_changes": {
+        "production": [".agents/skills/orchestrate-plan-delivery/SKILL.md",".agents/skills/orchestrate-plan-delivery/scripts/**",".agents/skills/orchestrate-plan-delivery/schemas/**",".agents/skills/orchestrate-plan-delivery/references/**"],
+        "tests": [".agents/skills/orchestrate-plan-delivery/tests/**"],
+        "documentation": ["execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/95-implementation-evolution-and-completion-report.md"]
+      },
+      "execution_snapshot_paths": ["execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/95-implementation-evolution-and-completion-report.md"],
+      "forbidden_changes": [".agents/skills/run-phase-bootstrap-review/**",".agents/skills/quick-dev-tdd-adapter/**",".agents/skills/run-refactor-implementation-acceptance/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**"],
+      "execution_read_set": ["docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md","docs/adr/ADR-0051-bootstrap-lineage-family-and-bounded-repair-reentry.md","docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md","docs/adr/ADR-0056-ai-native-single-maintainer-finding-mode.md","docs/standards/bootstrap-review-control-plane.md",".agents/skills/run-phase-bootstrap-review/**",".agents/skills/quick-dev-tdd-adapter/**",".agents/skills/run-refactor-implementation-acceptance/**"],
+      "dependency_closure": [".agents/skills/orchestrate-plan-delivery/**",".agents/skills/run-phase-bootstrap-review/**",".agents/skills/quick-dev-tdd-adapter/**",".agents/skills/run-refactor-implementation-acceptance/**"],
+      "tdd": {
+        "red": {"command_id":"slice-s2-predicate","test_selector":"state matrix cannot route all owner and confirmation boundaries","expected_exit":"nonzero","expected_failure_family":"owner-preserving-delivery-loop-absent","expected_failure_ids":["PDL-A03","PDL-A05","PDL-A06","PDL-A08","PDL-A13","PDL-A14"]},
+        "green": {"command_id":"coordinator-tests","expected_exit":"zero"},
+        "refactor": {"invocations":[{"command_id":"coordinator-self-check","expected_exit":"zero"},{"command_id":"slice-s2-predicate","expected_exit":"zero"}]}
+      },
+      "post_refactor_command_id": "slice-s2-predicate",
+      "exit_predicate": "slice-ready",
+      "recovery": "Inspect the owning child before retry, preserve transport failures in the same semantic run, and stop at every typed confirmation or protected-path boundary."
+    },
+    {
+      "slice_id": "RMAP-S3",
+      "title": "Detached composition, forward tests, package validation and terminal closure",
+      "requirement_ids": ["PDL-005","PDL-008","PDL-010","PDL-011","PDL-012","PDL-013","PDL-015","PDL-016","PDL-017","PDL-018"],
+      "acceptance_ids": ["PDL-A08","PDL-A09","PDL-A12","PDL-A14","PDL-A15","PDL-A16","PDL-A17","PDL-A19","PDL-A20","PDL-A22","PDL-A24","PDL-A25","PDL-A26","PDL-A27"],
+      "source_refs": ["system-skill:skill-creator","system-skill:skill-creator/references/openai_yaml.md","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/tools/validate_implementation.py"],
+      "depends_on": ["RMAP-S0","RMAP-S1","RMAP-S2"],
+      "allowed_changes": {
+        "production": [".agents/skills/orchestrate-plan-delivery/**"],
+        "tests": [".agents/skills/orchestrate-plan-delivery/tests/**"],
+        "documentation": ["docs/adr/ADR-0059-opt-in-plan-delivery-coordinator.md","docs/architecture/ADR_INDEX_PHASE.md","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/plan-state.v1.json","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/resume-state.v1.json","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/95-implementation-evolution-and-completion-report.md"]
+      },
+      "execution_snapshot_paths": [".agents/skills/orchestrate-plan-delivery/SKILL.md"],
+      "forbidden_changes": [".agents/skills/run-phase-bootstrap-review/**",".agents/skills/quick-dev-tdd-adapter/**",".agents/skills/run-refactor-implementation-acceptance/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**"],
+      "execution_read_set": ["AGENTS.md","requirements.v1.json","implementation-contract.v1.json","command-registry.v1.json",".agents/skills/orchestrate-plan-delivery/**",".agents/skills/run-phase-bootstrap-review/**",".agents/skills/quick-dev-tdd-adapter/**",".agents/skills/run-refactor-implementation-acceptance/**"],
+      "dependency_closure": [".agents/skills/orchestrate-plan-delivery/**","docs/adr/ADR-0059-opt-in-plan-delivery-coordinator.md","docs/architecture/ADR_INDEX_PHASE.md","execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/**"],
+      "tdd": {
+        "red": {"command_id":"slice-s3-predicate","test_selector":"full detached composition and package checks incomplete","expected_exit":"nonzero","expected_failure_family":"terminal-delivery-skill-validation-incomplete","expected_failure_ids":["PDL-A15","PDL-A16"]},
+        "green": {"command_id":"coordinator-tests","expected_exit":"zero"},
+        "refactor": {"invocations":[{"command_id":"coordinator-package-validation","expected_exit":"zero"},{"command_id":"plan-validator-tests","expected_exit":"zero"},{"command_id":"implementation-validator-tests","expected_exit":"zero"}]}
+      },
+      "post_refactor_command_id": "terminal-implementation-validation",
+      "exit_predicate": "implementation-complete",
+      "recovery": "Keep all detached failures and checkpoints, repair the smallest affected layer, rerun targeted checks, then run the one terminal full validator."
+    }
+  ],
+  "authorizes": []
+}

@@ -2,22 +2,20 @@ from __future__ import annotations
 
 import copy
 import importlib.util
+import sys
 from pathlib import Path
 from typing import Any
 
-_PLAN_TOOLS = Path(__file__).resolve().parents[4] / "execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools"
+_TOOLS = Path(__file__).resolve().parent
+if str(_TOOLS) not in sys.path:
+    sys.path.insert(0, str(_TOOLS))
 _OBSERVATION_SPEC = importlib.util.spec_from_file_location("rmap_stage_observation", Path(__file__).with_name("stage_observation.py"))
 if _OBSERVATION_SPEC is None or _OBSERVATION_SPEC.loader is None:
     raise RuntimeError("stage observation support is unavailable")
 _OBSERVATIONS = importlib.util.module_from_spec(_OBSERVATION_SPEC)
 _OBSERVATION_SPEC.loader.exec_module(_OBSERVATIONS)
 
-import sys
-if str(_PLAN_TOOLS) not in sys.path:
-    sys.path.insert(0, str(_PLAN_TOOLS))
-
-from protocol_artifact_guards import bytes_hash, canonical_bytes, classify_scope, safe_relative, value_hash
-from protocol_validation_guards import STAGES, STAGE_GOALS, STAGE_STATES
+from protocol_guards import STAGES, STAGE_GOALS, STAGE_STATES, bytes_hash, canonical_bytes, classify_scope, safe_relative, value_hash
 
 
 def _ref(role: str, path_type: str, path: str, payload: bytes) -> dict[str, str]:

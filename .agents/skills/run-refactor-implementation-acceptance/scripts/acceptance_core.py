@@ -11,6 +11,12 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT) not in __import__("sys").path:
+    __import__("sys").path.insert(0, str(REPOSITORY_ROOT))
+
+from scripts.toolchain.canonical_evidence import canonical_bytes
+
 
 class InputError(ValueError):
     pass
@@ -39,7 +45,7 @@ _CODE_REVIEW_DOMAINS = {"phase_service", "toolchain"}
 
 
 def canonical_hash(value: Any) -> str:
-    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    payload = canonical_bytes(value)
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 

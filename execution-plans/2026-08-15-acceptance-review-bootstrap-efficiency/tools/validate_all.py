@@ -15,6 +15,7 @@ from typing import Any
 
 PLAN_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = PLAN_ROOT.parents[1]
+CURRENT_SOURCE_FREEZE = PLAN_ROOT / "repair" / "round-2" / "source-freeze-manifest.v1.json"
 
 
 def _sha(data: bytes) -> str:
@@ -63,7 +64,7 @@ def _validate_implementation_authorization(state: dict[str, Any], source: dict[s
     )
     receipt = _json(receipt_path)
     required = {
-        "schema_version", "plan_id", "source_freeze_manifest", "selection_pointer",
+        "schema_version", "plan_id", "source_freeze_manifest", "implementation_contract", "selection_pointer",
         "selection_record", "plan_validation", "known_red", "decision", "authorizes",
         "does_not_authorize",
     }
@@ -80,11 +81,16 @@ def _validate_implementation_authorization(state: dict[str, Any], source: dict[s
     source_ref = receipt["source_freeze_manifest"]
     if not isinstance(source_ref, dict) or set(source_ref) != {"path", "sha256", "canonical_hash"}:
         raise ValueError("source freeze manifest reference is invalid")
-    source_path = REPOSITORY_ROOT / "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/source-freeze-manifest.v1.json"
+    source_path = CURRENT_SOURCE_FREEZE
     if source_ref["path"] != source_path.relative_to(REPOSITORY_ROOT).as_posix() or source_ref["sha256"] != _sha(source_path.read_bytes()):
         raise ValueError("source freeze manifest hash is stale")
     if source_ref["canonical_hash"] != source.get("canonical_hash"):
         raise ValueError("source freeze canonical hash is stale")
+    _validate_bound_file(
+        receipt["implementation_contract"],
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+        "implementation contract",
+    )
     _validate_bound_file(
         receipt["selection_pointer"],
         source["selection_pointer_path"],
@@ -102,7 +108,7 @@ def _validate_implementation_authorization(state: dict[str, Any], source: dict[s
     expected_plan_result = {
         "acceptance": 46,
         "authorizes": [],
-        "commands": 15,
+        "commands": 16,
         "requirements": 22,
         "schema_version": "acceptance-review-bootstrap-efficiency.plan-validation.v1",
         "slices": 7,
@@ -169,7 +175,7 @@ def _untracked_manifest() -> list[dict[str, str]]:
 def current_candidate_identity(_slice_id: str) -> dict[str, str]:
     contract = (PLAN_ROOT / "implementation-contract.v1.json").read_bytes()
     registry = (PLAN_ROOT / "command-registry.v1.json").read_bytes()
-    authority = (PLAN_ROOT / "source-freeze-manifest.v1.json").read_bytes()
+    authority = CURRENT_SOURCE_FREEZE.read_bytes()
     tracked = _run("diff", "--binary", "HEAD", "--")
     untracked = json.dumps(_untracked_manifest(), sort_keys=True, separators=(",", ":")).encode("utf-8")
     projection = b"\0".join((tracked, untracked, contract, registry, authority))
@@ -202,7 +208,7 @@ def _run_owner_validator(arguments: list[str], label: str) -> None:
 
 
 def _validate_freshness() -> None:
-    source_path = PLAN_ROOT / "source-freeze-manifest.v1.json"
+    source_path = CURRENT_SOURCE_FREEZE
     source_module_path = REPOSITORY_ROOT / ".agents/skills/vdd-execution-plan/scripts/source_freeze.py"
     spec = importlib.util.spec_from_file_location("vdd_source_freeze_validator", source_module_path)
     if spec is None or spec.loader is None:
@@ -211,7 +217,7 @@ def _validate_freshness() -> None:
     spec.loader.exec_module(module)
     module.validate_manifest(REPOSITORY_ROOT, _json(source_path))
     skill_contract = ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"
-    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r1/receipt.json"
+    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r2/receipt.json"
     _run_owner_validator(
         ["scripts/python/validate_skill_input_consumption.py", "--repository-root", ".", "--contract", skill_contract, "--require-ready", receipt],
         "Skill Input validation",
@@ -226,7 +232,7 @@ def validate_plan() -> dict[str, Any]:
     contract = _json(PLAN_ROOT / "implementation-contract.v1.json")
     registry = _json(PLAN_ROOT / "command-registry.v1.json")
     state = _json(PLAN_ROOT / "plan-state.v1.json")
-    source = _json(PLAN_ROOT / "source-freeze-manifest.v1.json")
+    source = _json(CURRENT_SOURCE_FREEZE)
     required_files = {
         "00-index.md", "95-implementation-evolution-and-completion-report.md",
         "command-registry.v1.json", "implementation-contract.v1.json",
@@ -235,6 +241,8 @@ def validate_plan() -> dict[str, Any]:
         "source-freeze-manifest.v1.json",
         "authorization-bootstrap-override-contract.v1.json",
         "supervised-semantic-review-decision-contract.v1.json",
+        "tools/stage_projection_builder.py",
+        "tools/validate_slice.py",
     }
     missing = sorted(name for name in required_files if not (PLAN_ROOT / name).is_file())
     if missing:
@@ -256,9 +264,14 @@ def validate_plan() -> dict[str, Any]:
         raise ValueError("Quick Dev backend contract drift")
     if contract.get("protocol_artifacts") != {"context_layout": "context/<capsule-id>", "attempt_layout": "attempts/<attempt-id>"}:
         raise ValueError("Quick Dev protocol artifact contract drift")
+    terminal = contract.get("terminal")
+    if terminal != {"command_id": "terminal-full", "runner": "tools/terminal_validation.py", "predicate": "implementation-complete"}:
+        raise ValueError("implementation-complete terminal contract is invalid")
     command_ids = [item.get("id") for item in registry.get("commands", [])]
     if len(command_ids) != len(set(command_ids)) or any(not item for item in command_ids):
         raise ValueError("command registry IDs are invalid")
+    if terminal["command_id"] not in command_ids:
+        raise ValueError("implementation-complete terminal command is unregistered")
     requirements: set[str] = set()
     acceptance: set[str] = set()
     slices = contract.get("slices")
@@ -276,6 +289,30 @@ def validate_plan() -> dict[str, Any]:
         ]
         if any(value not in command_ids for value in referenced):
             raise ValueError(f"slice command is unregistered: {item.get('slice_id')}")
+        red = tdd.get("red", {})
+        if item.get("slice_id") == "S0":
+            predecessor = red.get("legacy_predecessor")
+            if (
+                red.get("mode") != "legacy-regression"
+                or red.get("expected_exit") != "zero"
+                or not isinstance(predecessor, dict)
+                or set(predecessor) != {"path", "sha256"}
+                or not isinstance(predecessor["path"], str)
+                or not isinstance(predecessor["sha256"], str)
+            ):
+                raise ValueError("S0 legacy regression contract is invalid")
+        elif red.get("mode") == "prior-red-successor":
+            predecessor = red.get("prior_red")
+            if (
+                red.get("expected_exit") != "nonzero"
+                or not isinstance(predecessor, dict)
+                or set(predecessor) != {"path", "sha256"}
+                or not isinstance(predecessor["path"], str)
+                or not isinstance(predecessor["sha256"], str)
+            ):
+                raise ValueError(f"slice prior RED successor contract is invalid: {item.get('slice_id')}")
+        elif red.get("mode", "red") != "red" or red.get("expected_exit") != "nonzero":
+            raise ValueError(f"slice RED contract is invalid: {item.get('slice_id')}")
         if not item.get("recovery") or not item.get("depends_on") and item.get("slice_id") != "S0":
             raise ValueError(f"slice recovery or dependency is invalid: {item.get('slice_id')}")
     expected_requirements = {f"ARBE-{value:03d}" for value in range(1, 23)}

@@ -1,0 +1,37 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:c6f7dd73a2d40ebcdcdce21637fba031b8bdad73b4af054ffa542d6c92c96a76",
+  "sections": [
+    {
+      "title": "Scope and architecture",
+      "content": "The feature replaces whole-directory acceptance review with an evidence-gated artifact DAG. Acceptance freezes an immutable baseline and candidate, builds a complete Changed-set Manifest and fixed-point Consumer Closure, executes projected deterministic checks, selects an acceptance mode and typed route, and imports any required Bootstrap evidence before publishing acceptance-passed. Bootstrap uses an event-sourced runtime only for attempts, liveness, Effective Progress, leases, retries, and recovery."
+    },
+    {
+      "title": "Authority and lifecycle",
+      "content": "Lifecycle ownership is decentralized: VDD owns draft and plan-ready; the maintainer owns implementation-authorized and may publish a non-authorizing supervised semantic-review decision; Quick Dev or its TDD adapter owns implementation-complete; Acceptance alone owns acceptance-passed. Deterministic checks, Bootstrap reviewers, gates, verifiers, recovery results, and supervised decisions carry authorizes=[]. Candidate or authority mutation stales all dependent artifacts and evidence."
+    },
+    {
+      "title": "Closure, checks, mode, and route",
+      "content": "Acceptance admits only a schema-valid identity-bound implementation-complete handoff and a resolved immutable baseline commit. The Changed-set Manifest covers modified, added, deleted, renamed, and applicable untracked implementation files. Consumer Closure expands typed dependency and authority edges to a fixed point with recomputable inclusions, exclusions, and a completeness receipt. Required checks execute real commands projected from the implementation contract and command registry; deterministic failure launches zero reviewers. acceptance_mode is supervised or unattended and is orthogonal to deterministic_only, focused_repair_verification, full_implementation_conformance, and manual_pause. Registered security, authority, corruption, advisory-risk, explicit-review, or lifecycle triggers force full conformance or manual pause."
+    },
+    {
+      "title": "Canonical evidence and segmentation",
+      "content": "A shared pure canonical-evidence primitive owns strict JSON parsing, canonical bytes, domain-separated hashing, identity validation, and repository-path normalization, while artifact owners retain schemas and semantics. Current identities use versioned complete references; legacy identities are verify-only. Selected authority is delivered whole within the shared model-visible budget. Over-budget authority requires a controller-owned, full-source-bound inclusive Range Projection. Each reviewer receives one immutable canonical Segment Descriptor, an absolute segment-only frozen snapshot, and inherited access-proof identities. Assignment, request, receipt, validation, coverage, retry, and cache must use the same descriptor projection; attempts are separate identities."
+    },
+    {
+      "title": "Bootstrap review and runtime",
+      "content": "Full Bootstrap review preserves isolated Blind Hunter, Edge Case Hunter, and Acceptance Auditor roles over identical frozen inputs. An independent verifier runs only for gate-accepted P0/P1 findings under the existing risk/model policy. Process Events are append-only execution authority. Heartbeats refresh liveness but not Effective Progress. Only validated terminal transitions, evidence or receipt increments, and policy-registered state transitions refresh the no-progress window. Lease occupancy requires matching process identity, valid liveness, valid progress window, and no terminal event. Failed or stale attempts reconcile before bounded segment-local retry; context-budget failure creates new descriptors through repartition. Recovery depends only on events, immutable descriptors, current process identity, and the bound runtime policy."
+    },
+    {
+      "title": "Terminal semantics and finalization",
+      "content": "Attempt classifications are completed, failed-transport, stale-process, or abandoned; segment and run outcomes are completed, blocked-recovery-required, or abandoned. Only a completed attempt with a current independently validated receipt contributes semantic findings, coverage, gates, verification, or completion. Historical vcec-r1n remains abandoned, historical-runtime-failure, non-reusable, and non-authorizing. Acceptance finalization exact-matches baseline, candidate, closure, checks, mode, route, selected policies and authorities, plus required Bootstrap evidence or the permitted current maintainer decision. Chat prose, screenshots, status text, historical flags, and copied receipts are never authority."
+    },
+    {
+      "title": "Delivery and verification",
+      "content": "Delivery is ordered M0 runtime fault closure and isolation, M1 Acceptance strategy integration, then M2 scale regression and finalization. Before model launch, a Review Cost Decision binds closure bytes, segments, roles, attempts, retry exposure, launch plan, and policy; cost cannot weaken mandatory coverage. Verification includes canonical and mutation vectors, omission and Range Projection counterexamples, route and trigger matrices, zero-review deterministic failures, three-role coverage, verifier behavior, attempt ceilings, no-progress stop-loss, lease reconciliation, stale-evidence rejection, false-authorization rejection, and an owner-labeled semantic corpus at 8-13 scale. Whole-directory review remains the default until M2 parity and counter-metrics pass. Formal wall-time and closure-reduction thresholds remain deferred policy decisions."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-15T18:55:15.495025Z"
+}

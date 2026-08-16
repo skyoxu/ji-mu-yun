@@ -15,6 +15,43 @@ HELPER_TIMEOUT_SECONDS = 900
 LIFECYCLE_TIMEOUT_OVERHEAD_SECONDS = 60
 
 
+def _terminal_contract(plan: Path) -> dict[str, str]:
+    contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+    value = contract.get("terminal")
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"command_id", "runner", "predicate"}
+        or value.get("predicate") != "implementation-complete"
+        or not isinstance(value.get("runner"), str)
+        or not value["runner"]
+        or Path(value["runner"]).is_absolute()
+        or ".." in Path(value["runner"]).parts
+    ):
+        raise ValueError("terminal contract is missing or invalid")
+    runner = (plan / value["runner"]).resolve()
+    try:
+        runner.relative_to(plan.resolve())
+    except ValueError as exc:
+        raise ValueError("terminal contract runner escapes plan") from exc
+    if not runner.is_file():
+        raise ValueError("terminal contract runner is missing")
+    return value
+
+
+def _run_terminal(root: Path, plan: Path) -> None:
+    terminal = _terminal_contract(plan)
+    run_id = datetime.now(timezone.utc).strftime("RUN-%Y%m%dT%H%M%S-%fZ")
+    output = root / "logs" / "tdd-adapter" / json.loads(
+        (plan / "implementation-contract.v1.json").read_text(encoding="utf-8")
+    )["plan_id"] / "terminal" / run_id / "implementation-complete-result.json"
+    output.parent.mkdir(parents=True, exist_ok=False)
+    runner = (plan / terminal["runner"]).resolve()
+    _run([
+        str(runner), "--repository-root", str(root), "--plan-dir", str(plan),
+        "--out", str(output),
+    ], timeout_seconds=7200)
+
+
 def _run(arguments: list[str], *, timeout_seconds: int = HELPER_TIMEOUT_SECONDS) -> None:
     print(json.dumps({"event": "helper-start", "helper": Path(arguments[0]).name}), flush=True)
     completed = subprocess.run([sys.executable, *arguments], shell=False, check=False, timeout=timeout_seconds)
@@ -41,7 +78,24 @@ def _lifecycle_timeout_seconds(invocation: Path) -> int:
     return sum(timeouts) + LIFECYCLE_TIMEOUT_OVERHEAD_SECONDS
 
 
+def _workspace_snapshot_paths(root: Path, plan: Path, snapshots: list[str]) -> list[str]:
+    """Resolve declared plan-local snapshots without widening the caller's set."""
+    plan_relative = plan.relative_to(root).as_posix()
+    resolved: list[str] = []
+    for raw in snapshots:
+        if not isinstance(raw, str) or not raw:
+            raise ValueError("snapshot path is invalid")
+        if (root / raw).is_file():
+            resolved.append(raw.replace("\\", "/"))
+        elif (plan / raw).is_file():
+            resolved.append(f"{plan_relative}/{raw.replace('\\', '/')}")
+        else:
+            raise ValueError(f"declared snapshot path is missing: {raw}")
+    return resolved
+
+
 def _run_slice(root: Path, plan: Path, slice_id: str, snapshots: list[str]) -> None:
+    snapshots = _workspace_snapshot_paths(root, plan, snapshots)
     contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
     bridge = contract.get("adapter_bridge")
     if isinstance(bridge, dict) and isinstance(bridge.get("runner"), str):
@@ -90,6 +144,9 @@ def main() -> int:
         result = route(root, plan)
         result["authorizes"] = []
         actions.append(result)
+        if result["next_action"] == "validate-terminal":
+            _run_terminal(root, plan)
+            continue
         if result["next_action"] != "run-slice":
             break
         _run_slice(root, plan, str(result["slice_id"]), args.snapshot_path)

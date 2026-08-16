@@ -4,12 +4,13 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
 import tempfile
 from typing import Any
+
+from scripts.toolchain.canonical_evidence import canonical_bytes, domain_hash
 
 
 PACKAGE_SCHEMA = "canonical-spec-package.v1"
@@ -18,24 +19,6 @@ CURRENT_SCHEMA = "canonical-spec-package-selection-current.v1"
 COMPANION_ROLES = {"normative_companion", "adopted_companion"}
 DESCRIPTOR_DOMAIN = "jimuyun.canonical-spec-package.descriptor.v1"
 SELECTION_DOMAIN = "jimuyun.canonical-spec-package.selection.v1"
-
-
-def canonical_bytes(value: Any) -> bytes:
-    return json.dumps(
-        value,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-        allow_nan=False,
-    ).encode("utf-8")
-
-
-def domain_hash(domain: str, payload: Any) -> str:
-    envelope = {
-        "domain": domain,
-        "payload": payload,
-    }
-    return "sha256:" + hashlib.sha256(canonical_bytes(envelope)).hexdigest()
 
 
 def read_frontmatter(spec_path: Path) -> dict[str, Any]:

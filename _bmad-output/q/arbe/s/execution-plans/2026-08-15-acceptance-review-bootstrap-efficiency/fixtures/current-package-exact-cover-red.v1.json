@@ -1,0 +1,12 @@
+{
+  "schema_version": "acceptance-review-bootstrap-efficiency.exact-cover-red.v1",
+  "requirements": [
+    {"id": "ARBE-001", "acceptance_ids": ["ARBE-A01"], "obligation_ids": []}
+  ],
+  "acceptance_ids": ["ARBE-A01"],
+  "reverse_mapping": {"ARBE-A01": ["ARBE-001"]},
+  "obligations": [],
+  "semantic_review": [],
+  "approved_semantic_dispositions": [],
+  "authorizes": []
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:f75e19a7a518f125f46ee2879a0297bd6b8463731eb945df681a82f8296b0a1e",
+  "sections": [
+    {
+      "title": "Coverage",
+      "content": "All frozen manifest sources have complete paged coverage. Summaries are bounded, redacted, and preserve source status and principal obligations."
+    },
+    {
+      "title": "Semantics",
+      "content": "The sources consistently define non-authorizing, hash-bound, fail-closed execution, acceptance, lifecycle, authority, recovery, routing, segmentation, and verification controls."
+    },
+    {
+      "title": "Decision Basis",
+      "content": "Coverage is sufficient for bounded semantic context. No execution or lifecycle authorization is granted."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T00:00:00Z"
+}

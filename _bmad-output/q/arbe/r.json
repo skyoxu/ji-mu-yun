@@ -1,0 +1,1983 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "quick-dev-tdd-adapter",
+  "operation": "execute",
+  "request_binding": {
+    "request": {
+      "plan_directory": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+      "target_files": [
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/source-freeze-manifest.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/authorization-bootstrap-override-contract.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/supervised-semantic-review-decision-contract.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/model-route-decision.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md"
+      ],
+      "operation": "execute",
+      "lane": "strict_tdd_plan"
+    },
+    "consumer": "quick-dev-tdd-adapter",
+    "operation": "execute",
+    "target": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+    "route_identity": "sha256:4039d223758ef0414a851b948904212c2080930535aa940083aca4423ef798d6",
+    "source_roles": {
+      "plan_directory": [
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency"
+      ],
+      "target_files": [
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/source-freeze-manifest.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/authorization-bootstrap-override-contract.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/supervised-semantic-review-decision-contract.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/model-route-decision.v1.json",
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md"
+      ]
+    }
+  },
+  "request_hash": "sha256:3d73fab234887fc146ede37b1f4596ba44cb95cacdacfda1005de8f1a715e18a",
+  "target": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+  "route_identity": "sha256:4039d223758ef0414a851b948904212c2080930535aa940083aca4423ef798d6",
+  "repository_identity": {
+    "head": "08f50705a50ac5f39e977575bc09a32ebe3f9ef8",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-15T16:11:56.683035Z",
+  "contract_hash": "sha256:3323647981d33241096d513cfb76b1da8a86f8c38f9e7dac14b57a99bf5819db",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:a7e8b6554403c222a529ec4bf7926cf0c6cabd72ecc2ed7e37080c06c7b8a354"
+  },
+  "child_request": {
+    "path": "pending/skill-input-child-request.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "sources": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "required": false,
+      "sha256_before": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815",
+      "sha256_after": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815",
+      "size_bytes": 12153,
+      "line_count": 161,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:08d1f9b896a3e1f07bae81d791dd2be8f047a4d048761436b71da0d6799c9815",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 161
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/implementation-backend-contract.md",
+      "required": false,
+      "sha256_before": "sha256:c610abf803a7c514d1220d6842a541be00daed0455d1d26fe1e5d0a809c8d347",
+      "sha256_after": "sha256:c610abf803a7c514d1220d6842a541be00daed0455d1d26fe1e5d0a809c8d347",
+      "size_bytes": 727,
+      "line_count": 7,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:c610abf803a7c514d1220d6842a541be00daed0455d1d26fe1e5d0a809c8d347",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 7
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/knowledge-consumption.md",
+      "required": false,
+      "sha256_before": "sha256:17361fbcf86d93f0d72619589fdf22b40f64709a82c856946d990ed9af741416",
+      "sha256_after": "sha256:17361fbcf86d93f0d72619589fdf22b40f64709a82c856946d990ed9af741416",
+      "size_bytes": 915,
+      "line_count": 17,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:17361fbcf86d93f0d72619589fdf22b40f64709a82c856946d990ed9af741416",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 17
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py",
+      "required": false,
+      "sha256_before": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb",
+      "sha256_after": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb",
+      "size_bytes": 16272,
+      "line_count": 335,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:73f34ed5a1be804eab6706aab011780237400e62416d0984abe26b0731b854eb",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 335
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
+      "required": false,
+      "sha256_before": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88",
+      "sha256_after": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88",
+      "size_bytes": 5441,
+      "line_count": 107,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:73db355acce13f171134c8e94227db3965d79a87ebd0df696b143725b1cdff88",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 107
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py",
+      "required": false,
+      "sha256_before": "sha256:5372633b77578057f6ddbaef4d1d9106b5c344b7359a155421ea86fcef1ce7da",
+      "sha256_after": "sha256:5372633b77578057f6ddbaef4d1d9106b5c344b7359a155421ea86fcef1ce7da",
+      "size_bytes": 9765,
+      "line_count": 222,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:5372633b77578057f6ddbaef4d1d9106b5c344b7359a155421ea86fcef1ce7da",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 222
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "required": false,
+      "sha256_before": "sha256:fa0010ac933813cd3671291af8efea4a2849a3219783f5a2189d100430b13bf0",
+      "sha256_after": "sha256:fa0010ac933813cd3671291af8efea4a2849a3219783f5a2189d100430b13bf0",
+      "size_bytes": 27979,
+      "line_count": 431,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:fa0010ac933813cd3671291af8efea4a2849a3219783f5a2189d100430b13bf0",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 431
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/phase-service-code-review.v1.json",
+      "required": false,
+      "sha256_before": "sha256:e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+      "sha256_after": "sha256:e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+      "size_bytes": 1305,
+      "line_count": 23,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:e8a0c40424eb491d5831db5b84136be1bb1ca41d9dae2ae3861b61aa7237af80",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 23
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/acceptance-knowledge-maintenance-route.v1.schema.json",
+      "required": false,
+      "sha256_before": "sha256:475d322f4ca92e91445fcea5277c3ad7f2000ee1d9bed92802dacf7db6efc45c",
+      "sha256_after": "sha256:475d322f4ca92e91445fcea5277c3ad7f2000ee1d9bed92802dacf7db6efc45c",
+      "size_bytes": 1492,
+      "line_count": 37,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:475d322f4ca92e91445fcea5277c3ad7f2000ee1d9bed92802dacf7db6efc45c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 37
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/implementation-acceptance-matrix.v1.schema.json",
+      "required": false,
+      "sha256_before": "sha256:775c6b865e93f62c610149a536d360437493b5439605b10fb85eb88852c08b68",
+      "sha256_after": "sha256:775c6b865e93f62c610149a536d360437493b5439605b10fb85eb88852c08b68",
+      "size_bytes": 391,
+      "line_count": 12,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:775c6b865e93f62c610149a536d360437493b5439605b10fb85eb88852c08b68",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 12
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/schemas/phase-graph.v1.schema.json",
+      "required": false,
+      "sha256_before": "sha256:9f88fc03dda0c90bd96fb09f2441e06f1d849ad76ac64d99674af5fd9c2f212b",
+      "sha256_after": "sha256:9f88fc03dda0c90bd96fb09f2441e06f1d849ad76ac64d99674af5fd9c2f212b",
+      "size_bytes": 364,
+      "line_count": 12,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:9f88fc03dda0c90bd96fb09f2441e06f1d849ad76ac64d99674af5fd9c2f212b",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 12
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "required": false,
+      "sha256_before": "sha256:d260564ae6e36b23ecc6fae06688d55c43ae87bee05dcae5e5f4eb15b2e01106",
+      "sha256_after": "sha256:d260564ae6e36b23ecc6fae06688d55c43ae87bee05dcae5e5f4eb15b2e01106",
+      "size_bytes": 58055,
+      "line_count": 1172,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:5b42c7f976e0e9e3702437de9a143456a575ec9d10d0c339a0f8554b58fc92e3",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1172
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "required": false,
+      "sha256_before": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "sha256_after": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "size_bytes": 42066,
+      "line_count": 798,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:dae056922fadbca803d9ae7b18aac86829b7d1877707b55f0a8ccb8737eddc76",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 798
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "required": false,
+      "sha256_before": "sha256:58f0a10076ee65bff09eee4945708aed7aab48e21b8dde75c17e94407ba99ce8",
+      "sha256_after": "sha256:58f0a10076ee65bff09eee4945708aed7aab48e21b8dde75c17e94407ba99ce8",
+      "size_bytes": 4016,
+      "line_count": 95,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:58f0a10076ee65bff09eee4945708aed7aab48e21b8dde75c17e94407ba99ce8",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 95
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py",
+      "required": false,
+      "sha256_before": "sha256:4192e3e7a3f5fbc5c8cbe84abf60c8a2b4733ddd82c27c5308374061ae06e48f",
+      "sha256_after": "sha256:4192e3e7a3f5fbc5c8cbe84abf60c8a2b4733ddd82c27c5308374061ae06e48f",
+      "size_bytes": 7893,
+      "line_count": 183,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:4192e3e7a3f5fbc5c8cbe84abf60c8a2b4733ddd82c27c5308374061ae06e48f",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 183
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "AGENTS.md",
+      "required": false,
+      "sha256_before": "sha256:4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "sha256_after": "sha256:4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "size_bytes": 9166,
+      "line_count": 183,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:4f72a3f77ea0e5d619eee6eabd25b22c33e9f6e31a88d0d3bd5db6bc4cd046e8",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 183
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md",
+      "required": false,
+      "sha256_before": "sha256:67214d4c037af2d9d5d665401acded34e68e3fcd4cafbaabdea50f5cf7bb751b",
+      "sha256_after": "sha256:67214d4c037af2d9d5d665401acded34e68e3fcd4cafbaabdea50f5cf7bb751b",
+      "size_bytes": 28016,
+      "line_count": 218,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:67214d4c037af2d9d5d665401acded34e68e3fcd4cafbaabdea50f5cf7bb751b",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 218
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/addendum.md",
+      "required": false,
+      "sha256_before": "sha256:3e79b2f4b2687a5e0024e7f263daaba99fd1cc46956b2d1d117cf85b7abcb3c1",
+      "sha256_after": "sha256:3e79b2f4b2687a5e0024e7f263daaba99fd1cc46956b2d1d117cf85b7abcb3c1",
+      "size_bytes": 7973,
+      "line_count": 148,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3e79b2f4b2687a5e0024e7f263daaba99fd1cc46956b2d1d117cf85b7abcb3c1",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 148
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-08-14/prd.md",
+      "required": false,
+      "sha256_before": "sha256:5bfacd696f74d89823026801f0e1e5e64872da223dceb749a4a134c7d85b1985",
+      "sha256_after": "sha256:5bfacd696f74d89823026801f0e1e5e64872da223dceb749a4a134c7d85b1985",
+      "size_bytes": 33759,
+      "line_count": 471,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:5bfacd696f74d89823026801f0e1e5e64872da223dceb749a4a134c7d85b1985",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 471
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-acceptance-review-bootstrap-efficiency.json",
+      "required": false,
+      "sha256_before": "sha256:0aa51999ef3def06b87f4fae8833df396dc2fd1f950cf065d8a76204ac9ab895",
+      "sha256_after": "sha256:0aa51999ef3def06b87f4fae8833df396dc2fd1f950cf065d8a76204ac9ab895",
+      "size_bytes": 207,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:0aa51999ef3def06b87f4fae8833df396dc2fd1f950cf065d8a76204ac9ab895",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/canonical-spec-package-selections/sha256-d5417f8767a7a8ba52998d4ac7e79b77a6d00a104fe280c1bb8b70ba5d38622b.json",
+      "required": false,
+      "sha256_before": "sha256:96dcf3b0a3e29dc02549ee3e0fd335113f2e306f9f205c4982314948427d8d49",
+      "sha256_after": "sha256:96dcf3b0a3e29dc02549ee3e0fd335113f2e306f9f205c4982314948427d8d49",
+      "size_bytes": 1431,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:96dcf3b0a3e29dc02549ee3e0fd335113f2e306f9f205c4982314948427d8d49",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/.memlog.md",
+      "required": false,
+      "sha256_before": "sha256:81018d1187e3174ea531c1a8e5be9c662d5a3c9f8ce1fc40900751f986803f2f",
+      "sha256_after": "sha256:81018d1187e3174ea531c1a8e5be9c662d5a3c9f8ce1fc40900751f986803f2f",
+      "size_bytes": 18162,
+      "line_count": 85,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:81018d1187e3174ea531c1a8e5be9c662d5a3c9f8ce1fc40900751f986803f2f",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 85
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md",
+      "required": false,
+      "sha256_before": "sha256:d0e0c63bd7fbd10bc2ded759775e4fdb6f58b86fa656d95632a5fd6960687944",
+      "sha256_after": "sha256:d0e0c63bd7fbd10bc2ded759775e4fdb6f58b86fa656d95632a5fd6960687944",
+      "size_bytes": 12696,
+      "line_count": 115,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:d0e0c63bd7fbd10bc2ded759775e4fdb6f58b86fa656d95632a5fd6960687944",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 115
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/architecture-diagrams.md",
+      "required": false,
+      "sha256_before": "sha256:a33f24b5e50687e92a28992a81f15cb1d061550a5e5c06c17a73f6803199c114",
+      "sha256_after": "sha256:a33f24b5e50687e92a28992a81f15cb1d061550a5e5c06c17a73f6803199c114",
+      "size_bytes": 3863,
+      "line_count": 112,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:a33f24b5e50687e92a28992a81f15cb1d061550a5e5c06c17a73f6803199c114",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 112
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-and-lifecycle.md",
+      "required": false,
+      "sha256_before": "sha256:39ee26ec7cf9fffda9c98300325e9af242ea0ab41b7a5309f55efbac09e5a4cf",
+      "sha256_after": "sha256:39ee26ec7cf9fffda9c98300325e9af242ea0ab41b7a5309f55efbac09e5a4cf",
+      "size_bytes": 8486,
+      "line_count": 106,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:39ee26ec7cf9fffda9c98300325e9af242ea0ab41b7a5309f55efbac09e5a4cf",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 106
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/authority-projection-and-segmentation.md",
+      "required": false,
+      "sha256_before": "sha256:ad62a890c28468f63f0cf7b586fd322e6d9414418c79d849a06e0fafb4591d71",
+      "sha256_after": "sha256:ad62a890c28468f63f0cf7b586fd322e6d9414418c79d849a06e0fafb4591d71",
+      "size_bytes": 3533,
+      "line_count": 82,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:ad62a890c28468f63f0cf7b586fd322e6d9414418c79d849a06e0fafb4591d71",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 82
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/execution-and-recovery.md",
+      "required": false,
+      "sha256_before": "sha256:77e3a4b4e1b548bc1836ed9955c325513d80b08fd83cafdef69cedc27bdfbc51",
+      "sha256_after": "sha256:77e3a4b4e1b548bc1836ed9955c325513d80b08fd83cafdef69cedc27bdfbc51",
+      "size_bytes": 3612,
+      "line_count": 68,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:77e3a4b4e1b548bc1836ed9955c325513d80b08fd83cafdef69cedc27bdfbc51",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 68
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/glossary.md",
+      "required": false,
+      "sha256_before": "sha256:9ac2ba0fe3c6032c0967d857bad92354f631ecad70ec2e2afee1225be9d26d47",
+      "sha256_after": "sha256:9ac2ba0fe3c6032c0967d857bad92354f631ecad70ec2e2afee1225be9d26d47",
+      "size_bytes": 3185,
+      "line_count": 23,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:9ac2ba0fe3c6032c0967d857bad92354f631ecad70ec2e2afee1225be9d26d47",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 23
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/verification-and-rollout.md",
+      "required": false,
+      "sha256_before": "sha256:85c9de5d4e4a5bb3c09b1109db64cfec4a7ba4088977f9978b1e154e7fc97c8e",
+      "sha256_after": "sha256:85c9de5d4e4a5bb3c09b1109db64cfec4a7ba4088977f9978b1e154e7fc97c8e",
+      "size_bytes": 7068,
+      "line_count": 127,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:85c9de5d4e4a5bb3c09b1109db64cfec4a7ba4088977f9978b1e154e7fc97c8e",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 127
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "required": false,
+      "sha256_before": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+      "sha256_after": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+      "size_bytes": 3712,
+      "line_count": 43,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:23f244eab65b59705d3264d1c20d0e3b07007db331af5f9e56f5351c90c4ffa3",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 43
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+      "required": false,
+      "sha256_before": "sha256:5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3",
+      "sha256_after": "sha256:5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3",
+      "size_bytes": 3078,
+      "line_count": 63,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 63
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "docs/standards/bootstrap-review-control-plane.md",
+      "required": false,
+      "sha256_before": "sha256:f4d17f1bd099db438b4f793f6b962e876b59fdb18324e577afd537154af49685",
+      "sha256_after": "sha256:f4d17f1bd099db438b4f793f6b962e876b59fdb18324e577afd537154af49685",
+      "size_bytes": 38938,
+      "line_count": 340,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:f4d17f1bd099db438b4f793f6b962e876b59fdb18324e577afd537154af49685",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 340
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "docs/standards/repository-maintenance-agent-protocol.md",
+      "required": false,
+      "sha256_before": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "sha256_after": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "size_bytes": 3435,
+      "line_count": 46,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3a482623a44322cfe76ec996056de2fcf3dd706a04aaad20ec31e549f0faf550",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 46
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/00-index.md",
+      "required": false,
+      "sha256_before": "sha256:e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422",
+      "sha256_after": "sha256:e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422",
+      "size_bytes": 5051,
+      "line_count": 57,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 57
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/01-requirements-and-acceptance.md",
+      "required": false,
+      "sha256_before": "sha256:4990d198e2d39de2e0b2749d2754f4b6a0f665a57a27b60b037f5bef2828ffba",
+      "sha256_after": "sha256:4990d198e2d39de2e0b2749d2754f4b6a0f665a57a27b60b037f5bef2828ffba",
+      "size_bytes": 8981,
+      "line_count": 53,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:4990d198e2d39de2e0b2749d2754f4b6a0f665a57a27b60b037f5bef2828ffba",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 53
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/command-registry.v1.json",
+      "required": false,
+      "sha256_before": "sha256:67384623cbc1e4ad5795410e2e7458295820fb396a9f04ab1e4482d2d011e92c",
+      "sha256_after": "sha256:67384623cbc1e4ad5795410e2e7458295820fb396a9f04ab1e4482d2d011e92c",
+      "size_bytes": 7589,
+      "line_count": 197,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:67384623cbc1e4ad5795410e2e7458295820fb396a9f04ab1e4482d2d011e92c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 197
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/implementation-contract.v1.json",
+      "required": false,
+      "sha256_before": "sha256:339fd17df43948ae799ed5198d81e3ae03ec95eaacf48317f516a935cc63e046",
+      "sha256_after": "sha256:339fd17df43948ae799ed5198d81e3ae03ec95eaacf48317f516a935cc63e046",
+      "size_bytes": 19678,
+      "line_count": 227,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:339fd17df43948ae799ed5198d81e3ae03ec95eaacf48317f516a935cc63e046",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 227
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/plan-state.v1.json",
+      "required": false,
+      "sha256_before": "sha256:789637687db8944015d3a7ad815bf8efd500a37a4e90c94d15fd8e0fb8d14076",
+      "sha256_after": "sha256:789637687db8944015d3a7ad815bf8efd500a37a4e90c94d15fd8e0fb8d14076",
+      "size_bytes": 1399,
+      "line_count": 39,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:789637687db8944015d3a7ad815bf8efd500a37a4e90c94d15fd8e0fb8d14076",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 39
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md",
+      "required": false,
+      "sha256_before": "sha256:ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf",
+      "sha256_after": "sha256:ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf",
+      "size_bytes": 7170,
+      "line_count": 132,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 132
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json",
+      "required": false,
+      "sha256_before": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "sha256_after": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "size_bytes": 3928,
+      "line_count": 21,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 21
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/implementation-contract.v1.json",
+      "required": false,
+      "sha256_before": "sha256:edef7d760ff1104be415a04c4c315632d58d1a22ce706ff435fd388db7f4e7f8",
+      "sha256_after": "sha256:edef7d760ff1104be415a04c4c315632d58d1a22ce706ff435fd388db7f4e7f8",
+      "size_bytes": 17968,
+      "line_count": 165,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:edef7d760ff1104be415a04c4c315632d58d1a22ce706ff435fd388db7f4e7f8",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 165
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/plan-state.v1.json",
+      "required": false,
+      "sha256_before": "sha256:5aa495491d2954b53c8d65354faf701750967d40749fe080048f5aeb494d94bc",
+      "sha256_after": "sha256:5aa495491d2954b53c8d65354faf701750967d40749fe080048f5aeb494d94bc",
+      "size_bytes": 1696,
+      "line_count": 28,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:ec758630a4d6944e633ed1843f230f06d46fed702193b7706d0d10f69f41eaec",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 28
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+      "required": false,
+      "sha256_before": "sha256:e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+      "sha256_after": "sha256:e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+      "size_bytes": 6850,
+      "line_count": 41,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:e4a62db14a215f38b19f3ef1f1d8fcda3bb1ca76895018bbcbe8b34f8eb860bc",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 41
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/00-index.md",
+      "required": false,
+      "sha256_before": "sha256:ec170170c5e859f8180f12ae24242db1ea87ae08986c85ca8d180a8bde12587d",
+      "sha256_after": "sha256:ec170170c5e859f8180f12ae24242db1ea87ae08986c85ca8d180a8bde12587d",
+      "size_bytes": 694,
+      "line_count": 15,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:ec170170c5e859f8180f12ae24242db1ea87ae08986c85ca8d180a8bde12587d",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 15
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/command-registry.v1.json",
+      "required": false,
+      "sha256_before": "sha256:0a21f7f2324b305db088d74e16c4ea2a4e64bc65fae7a5c35a40b12cd2f28d67",
+      "sha256_after": "sha256:0a21f7f2324b305db088d74e16c4ea2a4e64bc65fae7a5c35a40b12cd2f28d67",
+      "size_bytes": 600,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:0a21f7f2324b305db088d74e16c4ea2a4e64bc65fae7a5c35a40b12cd2f28d67",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/implementation-contract.v1.json",
+      "required": false,
+      "sha256_before": "sha256:edad836baf2a26424bbb47badecaf177294afbe23f58b941fcf092995a28dd19",
+      "sha256_after": "sha256:edad836baf2a26424bbb47badecaf177294afbe23f58b941fcf092995a28dd19",
+      "size_bytes": 827,
+      "line_count": 12,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:edad836baf2a26424bbb47badecaf177294afbe23f58b941fcf092995a28dd19",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 12
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/plan-state.v1.json",
+      "required": false,
+      "sha256_before": "sha256:e7e7ec2238f1f2058aded596a5abcaf1e93f9e3e698aa2a86919a14ae8370c12",
+      "sha256_after": "sha256:e7e7ec2238f1f2058aded596a5abcaf1e93f9e3e698aa2a86919a14ae8370c12",
+      "size_bytes": 316,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:e7e7ec2238f1f2058aded596a5abcaf1e93f9e3e698aa2a86919a14ae8370c12",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-bootstrap-control-plane-closure-repair/requirements.v1.json",
+      "required": false,
+      "sha256_before": "sha256:eabcea026ab97c3e5ac159766585aa33aad6088830966d0f384b09a11ba29f48",
+      "sha256_after": "sha256:eabcea026ab97c3e5ac159766585aa33aad6088830966d0f384b09a11ba29f48",
+      "size_bytes": 1012,
+      "line_count": 14,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:eabcea026ab97c3e5ac159766585aa33aad6088830966d0f384b09a11ba29f48",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 14
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+      "required": false,
+      "sha256_before": "sha256:4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110",
+      "sha256_after": "sha256:4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110",
+      "size_bytes": 6320,
+      "line_count": 138,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:4badfd2de95dbd575ab654431ab8eae411d2cc63fdabf977d47003747f608110",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 138
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/command-registry.v1.json",
+      "required": false,
+      "sha256_before": "sha256:5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "sha256_after": "sha256:5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "size_bytes": 2548,
+      "line_count": 18,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:5089caa4d7b195333f4439e31f227a83fbe6b69d8873a8cb10dd0b2362683514",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 18
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/implementation-contract.v1.json",
+      "required": false,
+      "sha256_before": "sha256:b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a",
+      "sha256_after": "sha256:b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a",
+      "size_bytes": 11229,
+      "line_count": 113,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:b254444f9abdf5265c3fb8994231b2f5eda4832e13b1a083234e746b1cc7f33a",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 113
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/plan-state.v1.json",
+      "required": false,
+      "sha256_before": "sha256:5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2",
+      "sha256_after": "sha256:5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2",
+      "size_bytes": 865,
+      "line_count": 16,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:5e29eef3204ce01963c3412846b6a3f07eb995106e7eefc49af9b66a7ebb93e2",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 16
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/requirements.v1.json",
+      "required": false,
+      "sha256_before": "sha256:af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0",
+      "sha256_after": "sha256:af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0",
+      "size_bytes": 5552,
+      "line_count": 36,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:af4bcb1052dbd3f2fd335aeb91c63f96e1f9cfe8a7e63266c1a9f6d0231a32f0",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 36
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/00-index.md",
+      "required": false,
+      "sha256_before": "sha256:83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46",
+      "sha256_after": "sha256:83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46",
+      "size_bytes": 6411,
+      "line_count": 119,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:83b2c82fb6a0bc9ed9e3a01c56ce4eb920baa26bdb3be0db63714f59fe8efc46",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 119
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/command-registry.v1.json",
+      "required": false,
+      "sha256_before": "sha256:4b8b91ed79531266ebfcecba7a1e868dcade5c4d5ab548f0472e922895b0d0a0",
+      "sha256_after": "sha256:4b8b91ed79531266ebfcecba7a1e868dcade5c4d5ab548f0472e922895b0d0a0",
+      "size_bytes": 2693,
+      "line_count": 18,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:4b8b91ed79531266ebfcecba7a1e868dcade5c4d5ab548f0472e922895b0d0a0",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 18
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/implementation-contract.v1.json",
+      "required": false,
+      "sha256_before": "sha256:5a786ddb321105fd7a9e95e4809c6a4fb412c48f4aec3054e00e6cb0bec1f7ee",
+      "sha256_after": "sha256:5a786ddb321105fd7a9e95e4809c6a4fb412c48f4aec3054e00e6cb0bec1f7ee",
+      "size_bytes": 17133,
+      "line_count": 225,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:5a7a62f2d8bb51df9761b4d7f2f2bf3376d79d5ba184fdbacf901613a1de39dd",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 225
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/plan-state.v1.json",
+      "required": false,
+      "sha256_before": "sha256:efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209",
+      "sha256_after": "sha256:efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209",
+      "size_bytes": 1219,
+      "line_count": 21,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:efc945118340b888943472c80d2508ba9f93c9a243afce019771f108978be209",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 21
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-06-toolchain-plan-delivery-loop-skill/requirements.v1.json",
+      "required": false,
+      "sha256_before": "sha256:477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9",
+      "sha256_after": "sha256:477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9",
+      "size_bytes": 11160,
+      "line_count": 56,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:477a488e1cf83d5edf0c96f8ee0f74798e63d384985ac3b556d246f7683108f9",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 56
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md",
+      "required": true,
+      "sha256_before": "sha256:816fe0b06d97fa5860cf00e8c19c7625a9f48d37eaf24a52ca48ab88e4c44d37",
+      "sha256_after": "sha256:816fe0b06d97fa5860cf00e8c19c7625a9f48d37eaf24a52ca48ab88e4c44d37",
+      "size_bytes": 4282,
+      "line_count": 64,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:816fe0b06d97fa5860cf00e8c19c7625a9f48d37eaf24a52ca48ab88e4c44d37",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 64
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/95-implementation-evolution-and-completion-report.md",
+      "required": true,
+      "sha256_before": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049",
+      "sha256_after": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049",
+      "size_bytes": 2737,
+      "line_count": 35,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:30555ed4ca32aceba472b117a80dfe25062ce5a9e16941749d349e690a145049",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 35
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/authorization-bootstrap-override-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:a57a950afd21a4d16ead5d09e34ec71b1066199b7ed62b4ec538c01863d75af9",
+      "sha256_after": "sha256:a57a950afd21a4d16ead5d09e34ec71b1066199b7ed62b4ec538c01863d75af9",
+      "size_bytes": 1652,
+      "line_count": 40,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:a57a950afd21a4d16ead5d09e34ec71b1066199b7ed62b4ec538c01863d75af9",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 40
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "required": true,
+      "sha256_before": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b",
+      "sha256_after": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b",
+      "size_bytes": 7397,
+      "line_count": 23,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:5c86eb76ade3b16487f698e0a18726cd835874abbf45d2ba4162c3c01637794b",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 23
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/fixtures/current-package-exact-cover-red.v1.json",
+      "required": true,
+      "sha256_before": "sha256:1d0697da5691adc77bd05a24cdb7309ce7a98bd18639eaa2850eff3848446be4",
+      "sha256_after": "sha256:1d0697da5691adc77bd05a24cdb7309ce7a98bd18639eaa2850eff3848446be4",
+      "size_bytes": 375,
+      "line_count": 12,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:1d0697da5691adc77bd05a24cdb7309ce7a98bd18639eaa2850eff3848446be4",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 12
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104",
+      "sha256_after": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104",
+      "size_bytes": 16029,
+      "line_count": 125,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:a91abde418a1725dda2667ec8e057e820626381dd9ed6f4a69c235351cee4104",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 125
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/child-repository-root-v2.json",
+      "required": true,
+      "sha256_before": "sha256:fb23cd0d4a04fc77530aa3db0d5247f246a4174ec0f6e43d2637b2166f5b77dc",
+      "sha256_after": "sha256:fb23cd0d4a04fc77530aa3db0d5247f246a4174ec0f6e43d2637b2166f5b77dc",
+      "size_bytes": 810,
+      "line_count": 18,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:fb23cd0d4a04fc77530aa3db0d5247f246a4174ec0f6e43d2637b2166f5b77dc",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 18
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/child-repository-root.json",
+      "required": true,
+      "sha256_before": "sha256:c9be13a31180596c1fa0175fc2ae06915a4047678e38ab90597c8fac715fcafa",
+      "sha256_after": "sha256:c9be13a31180596c1fa0175fc2ae06915a4047678e38ab90597c8fac715fcafa",
+      "size_bytes": 809,
+      "line_count": 18,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:c9be13a31180596c1fa0175fc2ae06915a4047678e38ab90597c8fac715fcafa",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 18
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/child-request-2.json",
+      "required": true,
+      "sha256_before": "sha256:71f92800c90f5a97382464623dcb3cbd548823b2c34978deb30ec8afecb5bee7",
+      "sha256_after": "sha256:71f92800c90f5a97382464623dcb3cbd548823b2c34978deb30ec8afecb5bee7",
+      "size_bytes": 835,
+      "line_count": 18,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:71f92800c90f5a97382464623dcb3cbd548823b2c34978deb30ec8afecb5bee7",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 18
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/output2/semantic-decision.v1.json",
+      "required": true,
+      "sha256_before": "sha256:4ac1688f7503dfee09a01ae730bd3d0e990cc231e7865fe0fbf1c7d3aa75152c",
+      "sha256_after": "sha256:4ac1688f7503dfee09a01ae730bd3d0e990cc231e7865fe0fbf1c7d3aa75152c",
+      "size_bytes": 1828,
+      "line_count": 23,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:4ac1688f7503dfee09a01ae730bd3d0e990cc231e7865fe0fbf1c7d3aa75152c",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 23
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/output2/skill-input-context.v1.json",
+      "required": true,
+      "sha256_before": "sha256:33c186661b7993defee7bf15ecf51601325374767ffdf8eebc0fd115a573f33e",
+      "sha256_after": "sha256:33c186661b7993defee7bf15ecf51601325374767ffdf8eebc0fd115a573f33e",
+      "size_bytes": 4687,
+      "line_count": 45,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:33c186661b7993defee7bf15ecf51601325374767ffdf8eebc0fd115a573f33e",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 45
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/receipt.json",
+      "required": true,
+      "sha256_before": "sha256:4d8bfbe67181919a12d0f4eefe9ec4595f2a9401c044d7c2a81aa7ba2da05e30",
+      "sha256_after": "sha256:4d8bfbe67181919a12d0f4eefe9ec4595f2a9401c044d7c2a81aa7ba2da05e30",
+      "size_bytes": 9520,
+      "line_count": 238,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:78e17bd7e03b4d76eb4c955003e2a81ed9768f78cbfa822a3e30ba9c1a98073f",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 238
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know35/snapshot/source-manifest.v1.json",
+      "required": true,
+      "sha256_before": "sha256:3d9c1f7517a0d7f15615c35a79817a02de8ec379cbde22f5b6fe9bc0eee64b5b",
+      "sha256_after": "sha256:3d9c1f7517a0d7f15615c35a79817a02de8ec379cbde22f5b6fe9bc0eee64b5b",
+      "size_bytes": 3716,
+      "line_count": 72,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3d9c1f7517a0d7f15615c35a79817a02de8ec379cbde22f5b6fe9bc0eee64b5b",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 72
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/child-request.json",
+      "required": true,
+      "sha256_before": "sha256:66e684cf6c2848e385133f496b4b3424a9139da00f4d86d11852a8e3ef4858ee",
+      "sha256_after": "sha256:66e684cf6c2848e385133f496b4b3424a9139da00f4d86d11852a8e3ef4858ee",
+      "size_bytes": 834,
+      "line_count": 18,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:66e684cf6c2848e385133f496b4b3424a9139da00f4d86d11852a8e3ef4858ee",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 18
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/output/semantic-decision.v1.json",
+      "required": true,
+      "sha256_before": "sha256:85d9e21d4c62348e46f6d36f252a7f0be70abb18ca6636700a5e2f626ecf3417",
+      "sha256_after": "sha256:85d9e21d4c62348e46f6d36f252a7f0be70abb18ca6636700a5e2f626ecf3417",
+      "size_bytes": 1785,
+      "line_count": 23,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:85d9e21d4c62348e46f6d36f252a7f0be70abb18ca6636700a5e2f626ecf3417",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 23
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/output/skill-input-context.v1.json",
+      "required": true,
+      "sha256_before": "sha256:b927fd61369e309b87a56f3453c9bc7a131fca8290f2892382b993ec7de3c434",
+      "sha256_after": "sha256:b927fd61369e309b87a56f3453c9bc7a131fca8290f2892382b993ec7de3c434",
+      "size_bytes": 4849,
+      "line_count": 29,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:b927fd61369e309b87a56f3453c9bc7a131fca8290f2892382b993ec7de3c434",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 29
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/receipt.json",
+      "required": true,
+      "sha256_before": "sha256:bc6b9ef3925e86e5cb29fdf76f5b038df66d06cd988cbe3e838c2ae8a241e47e",
+      "sha256_after": "sha256:bc6b9ef3925e86e5cb29fdf76f5b038df66d06cd988cbe3e838c2ae8a241e47e",
+      "size_bytes": 9516,
+      "line_count": 238,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:5a3d4a2e573664a50d84a6d9e3837e4f8d19996cf5d671187653dd443d582cd9",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 238
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/request.json",
+      "required": true,
+      "sha256_before": "sha256:c5e23dfe425ad6a41b727c4cb27e8311880bdbf102374c6128517c2939bef310",
+      "sha256_after": "sha256:c5e23dfe425ad6a41b727c4cb27e8311880bdbf102374c6128517c2939bef310",
+      "size_bytes": 430,
+      "line_count": 7,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:c5e23dfe425ad6a41b727c4cb27e8311880bdbf102374c6128517c2939bef310",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 7
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/snapshot/source-manifest.v1.json",
+      "required": true,
+      "sha256_before": "sha256:24ec4fbffe784a22732c711e72319225eff9137c058bffb8da2fd1f438f359df",
+      "sha256_after": "sha256:24ec4fbffe784a22732c711e72319225eff9137c058bffb8da2fd1f438f359df",
+      "size_bytes": 3716,
+      "line_count": 72,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:24ec4fbffe784a22732c711e72319225eff9137c058bffb8da2fd1f438f359df",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 72
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o2/semantic-decision.v1.json",
+      "required": true,
+      "sha256_before": "sha256:730e45c195274f48b2dd50501d34ea9d46ee2ad710cdbdf63bbaa27d68d2742d",
+      "sha256_after": "sha256:730e45c195274f48b2dd50501d34ea9d46ee2ad710cdbdf63bbaa27d68d2742d",
+      "size_bytes": 1796,
+      "line_count": 23,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:730e45c195274f48b2dd50501d34ea9d46ee2ad710cdbdf63bbaa27d68d2742d",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 23
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o2/skill-input-context.v1.json",
+      "required": true,
+      "sha256_before": "sha256:b8c308b1a96110c5b323ed41dacd9794ae35c026d3a7818bdede4d6af358e8ec",
+      "sha256_after": "sha256:b8c308b1a96110c5b323ed41dacd9794ae35c026d3a7818bdede4d6af358e8ec",
+      "size_bytes": 3479,
+      "line_count": 37,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:b8c308b1a96110c5b323ed41dacd9794ae35c026d3a7818bdede4d6af358e8ec",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 37
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o3/semantic-decision.v1.json",
+      "required": true,
+      "sha256_before": "sha256:a4e2b500572be6b45a3e453eb945f403965b733c530a36b5e42f25844cc3f888",
+      "sha256_after": "sha256:a4e2b500572be6b45a3e453eb945f403965b733c530a36b5e42f25844cc3f888",
+      "size_bytes": 1819,
+      "line_count": 23,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:a4e2b500572be6b45a3e453eb945f403965b733c530a36b5e42f25844cc3f888",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 23
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/o3/skill-input-context.v1.json",
+      "required": true,
+      "sha256_before": "sha256:2b47aa52275c33ff09733d86c7106f9b40cd32c3f161bfba857bed9b47c2ce43",
+      "sha256_after": "sha256:2b47aa52275c33ff09733d86c7106f9b40cd32c3f161bfba857bed9b47c2ce43",
+      "size_bytes": 3509,
+      "line_count": 37,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:2b47aa52275c33ff09733d86c7106f9b40cd32c3f161bfba857bed9b47c2ce43",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 37
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/receipt.json",
+      "required": true,
+      "sha256_before": "sha256:a7ea7725911682b60d5fbc7de8e358fb2a39b4bede739ecea5df4c1064df5cde",
+      "sha256_after": "sha256:a7ea7725911682b60d5fbc7de8e358fb2a39b4bede739ecea5df4c1064df5cde",
+      "size_bytes": 9511,
+      "line_count": 238,
+      "sensitivity": "credential-bearing",
+      "semantic_snapshot_sha256": "sha256:75ceec1187cbfa13eccc3756a35c9530bc3459db08c24dbdbc92dd17b2e2d365",
+      "redaction_status": "complete",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 238
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/request.json",
+      "required": true,
+      "sha256_before": "sha256:29a95aa89c9a2243d0ab0a7a920d015f261e08ae778f480cdce8482777757798",
+      "sha256_after": "sha256:29a95aa89c9a2243d0ab0a7a920d015f261e08ae778f480cdce8482777757798",
+      "size_bytes": 409,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:29a95aa89c9a2243d0ab0a7a920d015f261e08ae778f480cdce8482777757798",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/result-repository-root.json",
+      "required": true,
+      "sha256_before": "sha256:dcc6cc61a1fd6a54f50849832633ed7474570253b25761359574e07382067223",
+      "sha256_after": "sha256:dcc6cc61a1fd6a54f50849832633ed7474570253b25761359574e07382067223",
+      "size_bytes": 399,
+      "line_count": 6,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:dcc6cc61a1fd6a54f50849832633ed7474570253b25761359574e07382067223",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 6
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/s/source-manifest.v1.json",
+      "required": true,
+      "sha256_before": "sha256:fb246ac23572c53fb17e8386fbb8d3215bbf37ff609aba2a49368665e05246ea",
+      "sha256_after": "sha256:fb246ac23572c53fb17e8386fbb8d3215bbf37ff609aba2a49368665e05246ea",
+      "size_bytes": 3716,
+      "line_count": 72,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:fb246ac23572c53fb17e8386fbb8d3215bbf37ff609aba2a49368665e05246ea",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 72
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/s3/source-manifest.v1.json",
+      "required": true,
+      "sha256_before": "sha256:d405b8837296b5b4f5c19b48af9d145248432eecae1de50329aa3926c68713b1",
+      "sha256_after": "sha256:d405b8837296b5b4f5c19b48af9d145248432eecae1de50329aa3926c68713b1",
+      "size_bytes": 3716,
+      "line_count": 72,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:d405b8837296b5b4f5c19b48af9d145248432eecae1de50329aa3926c68713b1",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 72
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.freeze.v1.json",
+      "required": true,
+      "sha256_before": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "sha256_after": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "size_bytes": 983,
+      "line_count": 24,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:6dc3f959496a4082f8c051881b143281914d2c2c69e68743641fc7cfcf6ebe01",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 24
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/knowledge-context.v1.json",
+      "required": true,
+      "sha256_before": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "sha256_after": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "size_bytes": 34287,
+      "line_count": 963,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:08aa91e208508fbbc113be5c567103506136787d65e231619b41077723842ff0",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 963
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/model-route-decision.v1.json",
+      "required": true,
+      "sha256_before": "sha256:f5dcac8fd0a2fd6ec09b9940e46e32c99afb39504c2bdd57903f88ba8b6ba6c6",
+      "sha256_after": "sha256:f5dcac8fd0a2fd6ec09b9940e46e32c99afb39504c2bdd57903f88ba8b6ba6c6",
+      "size_bytes": 1033,
+      "line_count": 20,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:f5dcac8fd0a2fd6ec09b9940e46e32c99afb39504c2bdd57903f88ba8b6ba6c6",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 20
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/plan-state.v1.json",
+      "required": true,
+      "sha256_before": "sha256:4fa059ae7365c10e2cb700d2401e73c2b6b9bc869fb23d471f7a49b7ce1d46c0",
+      "sha256_after": "sha256:4fa059ae7365c10e2cb700d2401e73c2b6b9bc869fb23d471f7a49b7ce1d46c0",
+      "size_bytes": 1727,
+      "line_count": 26,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:4fa059ae7365c10e2cb700d2401e73c2b6b9bc869fb23d471f7a49b7ce1d46c0",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 26
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "required": true,
+      "sha256_before": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "sha256_after": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "size_bytes": 8721,
+      "line_count": 78,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:b34f4dd71f64ffc40ca4fb6f56f1922aff46e51cc58802e8a3ebc89d5a1ad5a2",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 78
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/source-freeze-manifest.v1.json",
+      "required": true,
+      "sha256_before": "sha256:627f25239239b6e1d851e4d17f8e247d8403400e356b115c5ca62d91d4413093",
+      "sha256_after": "sha256:627f25239239b6e1d851e4d17f8e247d8403400e356b115c5ca62d91d4413093",
+      "size_bytes": 4172,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:627f25239239b6e1d851e4d17f8e247d8403400e356b115c5ca62d91d4413093",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/supervised-semantic-review-decision-contract.v1.json",
+      "required": true,
+      "sha256_before": "sha256:9df7de8e69c2e3a5825fdc821a4e881a341bef66f12f26df639494441491b748",
+      "sha256_after": "sha256:9df7de8e69c2e3a5825fdc821a4e881a341bef66f12f26df639494441491b748",
+      "size_bytes": 1136,
+      "line_count": 41,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:9df7de8e69c2e3a5825fdc821a4e881a341bef66f12f26df639494441491b748",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 41
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/terminal_validation.py",
+      "required": true,
+      "sha256_before": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b",
+      "sha256_after": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b",
+      "size_bytes": 1160,
+      "line_count": 33,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:02eb917e0d955255b0ae8c78f08bbd048b9f9eb4e5bee866ddc12633324b308b",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 33
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+      "required": true,
+      "sha256_before": "sha256:e290a35fad1c09b4ebee5706dc0739bb5f2b89b457b3fb0bffc598113d97bfa3",
+      "sha256_after": "sha256:e290a35fad1c09b4ebee5706dc0739bb5f2b89b457b3fb0bffc598113d97bfa3",
+      "size_bytes": 8998,
+      "line_count": 193,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:e290a35fad1c09b4ebee5706dc0739bb5f2b89b457b3fb0bffc598113d97bfa3",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 193
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "not-evaluated"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "pending/semantic-decision.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "status": "insufficient"
+  },
+  "context_artifact": {
+    "path": "pending/skill-input-context.v1.json",
+    "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": false,
+  "binding_hash": "sha256:a4be424d6a8c62c887f4d90ec4745a3f06bc4dcef4a910d997ad0c3e5bd082ff"
+}

@@ -16,15 +16,68 @@ def _sha(payload: bytes) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
+def _legacy_predecessor(repository_root: Path, red: dict[str, Any]) -> dict[str, str] | None:
+    """Validate the immutable failed RED that permits a legacy replay."""
+    mode = red.get("mode", "red")
+    if mode == "red":
+        return None
+    if mode not in {"legacy-regression", "prior-red-successor"}:
+        raise ValueError("RED mode is invalid")
+    field = "legacy_predecessor" if mode == "legacy-regression" else "prior_red"
+    predecessor = red.get(field)
+    if not isinstance(predecessor, dict) or set(predecessor) != {"path", "sha256"}:
+        raise ValueError("RED successor requires a bound prior RED")
+    path, expected = predecessor["path"], predecessor["sha256"]
+    if not isinstance(path, str) or not isinstance(expected, str) or not expected.startswith("sha256:"):
+        raise ValueError("legacy regression predecessor is invalid")
+    root = repository_root.resolve()
+    evidence = (root / path).resolve()
+    try:
+        evidence.relative_to(root)
+    except ValueError as exc:
+        raise ValueError("legacy regression predecessor escapes repository") from exc
+    if not evidence.is_file() or _sha(evidence.read_bytes()) != expected:
+        raise ValueError("legacy regression predecessor hash is stale")
+    try:
+        observed = json.loads(evidence.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ValueError("legacy regression predecessor is unreadable") from exc
+    if (
+        not isinstance(observed, dict)
+        or observed.get("stage") != "red"
+        or not isinstance(observed.get("exit_code"), int)
+        or observed["exit_code"] == 0
+        or not isinstance(observed.get("commands_attempted"), list)
+        or red.get("command_id") not in observed.get("commands_attempted", [])
+    ):
+        raise ValueError("legacy regression predecessor is not a prior RED")
+    return {"path": path, "sha256": expected}
+
+
 def _load_candidate_identity(plan: Path, slice_id: str) -> dict[str, str]:
     helper = plan / "tools" / "validate_all.py"
-    if str(helper.parent) not in sys.path:
-        sys.path.insert(0, str(helper.parent))
-    spec = importlib.util.spec_from_file_location("plan_candidate_identity", helper)
-    if spec is None or spec.loader is None:
-        raise RuntimeError("plan-local candidate identity helper is unavailable")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    plan_tools = str(helper.parent)
+    if plan_tools not in sys.path:
+        sys.path.insert(0, plan_tools)
+    # Plan validators commonly have generic helper names.  Do not let a
+    # currently loaded Skill helper with the same name cross the ownership
+    # boundary while importing the plan-local validator.
+    shadowed: dict[str, object] = {}
+    for name in ("protocol_guards", "fixture_checks", "rmap_checks"):
+        loaded = sys.modules.get(name)
+        loaded_path = getattr(loaded, "__file__", None)
+        if loaded is not None and loaded_path and Path(loaded_path).resolve().parent != helper.parent.resolve():
+            shadowed[name] = loaded
+            del sys.modules[name]
+    try:
+        spec = importlib.util.spec_from_file_location("plan_candidate_identity", helper)
+        if spec is None or spec.loader is None:
+            raise RuntimeError("plan-local candidate identity helper is unavailable")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    finally:
+        for name, loaded in shadowed.items():
+            sys.modules[name] = loaded
     identity = module.current_candidate_identity(slice_id)
     if not isinstance(identity, dict) or not isinstance(identity.get("validator_hash"), str):
         raise ValueError("plan-local candidate identity is invalid")
@@ -63,6 +116,8 @@ def _expand(value: Any, *, plan_rel: str, plan_id: str, slice_id: str, run_id: s
                        .replace("<run-id>", run_id)
                        .replace("<candidate-run-id>", candidate_run_id))
         return expanded if expanded.startswith("logs/") else f"logs/{expanded}"
+    if kind == "slice_id" and raw == "<slice-id>":
+        return slice_id
     raise ValueError("unsupported command placeholder")
 
 
@@ -98,6 +153,8 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
     values = {"plan_rel": plan_rel, "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "candidate_run_id": _candidate_run_id(root, contract["plan_id"]) if slice_id == "RMAP-S7" else ""}
     commands = {item["id"]: item for item in registry["commands"]}
     tdd = selected["tdd"]
+    predecessor = _legacy_predecessor(root, tdd["red"])
+    red_mode = tdd["red"].get("mode", "red")
     red = _descriptor(commands, tdd["red"]["command_id"], **values)
     green = _descriptor(commands, tdd["green"]["command_id"], **values)
     refactor = [_descriptor(commands, item["command_id"], **values) for item in tdd["refactor"]["invocations"]]
@@ -113,7 +170,7 @@ def build(repository_root: Path, plan_dir: Path, slice_id: str, run_id: str) -> 
         "boundaries": {"allowed_write_set": [path for group in selected["allowed_changes"].values() for path in group], "forbidden_write_set": selected["forbidden_changes"], "execution_read_set": selected["execution_read_set"], "dependency_closure": selected["dependency_closure"]},
         "target_command_ids": [red["id"], green["id"], *[item["id"] for item in refactor], terminal["id"]],
         "stage_results": {
-            "red": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "red-observed", "command_id": red["id"], "test_selector": tdd["red"]["test_selector"], "expected_failure_ids": tdd["red"]["expected_failure_ids"], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
+            "red": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "legacy-regression-observed" if red_mode == "legacy-regression" else "prior-red-imported" if red_mode == "prior-red-successor" else "red-observed", "mode": red_mode, "legacy_predecessor": predecessor if red_mode == "legacy-regression" else None, "prior_red": predecessor if red_mode == "prior-red-successor" else None, "command_id": red["id"], "test_selector": tdd["red"]["test_selector"], "expected_failure_ids": tdd["red"]["expected_failure_ids"], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
             "green": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "green-observed", "command_id": green["id"], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
             "refactor": {"schema_version": "rmap.tdd-stage-result.v1", "plan_id": contract["plan_id"], "slice_id": slice_id, "run_id": run_id, "status": "refactor-verified", "command_id": refactor[0]["id"], "command_ids": [item["id"] for item in refactor], "contract_hash": _sha(contract_bytes), "validator_hash": identity["validator_hash"]},
         },

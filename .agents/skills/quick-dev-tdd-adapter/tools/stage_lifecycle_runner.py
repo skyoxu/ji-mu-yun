@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import base64
+import hashlib
+import json
 import sys
 from typing import Any
 
@@ -35,6 +38,57 @@ class LifecycleRunner:
         self.stages.append(stage)
         return observation
 
+    def import_prior_red(self, path: Path, expected_hash: str) -> dict[str, Any]:
+        if self.stages:
+            raise ValueError("prior RED must be the first lifecycle stage")
+        raw = path.read_bytes()
+        actual = "sha256:" + hashlib.sha256(raw).hexdigest()
+        if actual != expected_hash:
+            raise ValueError("prior RED evidence hash is stale")
+        observation = json.loads(raw.decode("utf-8"))
+        if not isinstance(observation, dict) or observation.get("stage") != "red" or observation.get("exit_code") == 0:
+            raise ValueError("prior RED evidence is invalid")
+        changed = observation.get("changed_files")
+        if not isinstance(changed, list):
+            raise ValueError("prior RED snapshots are invalid")
+        snapshots: dict[str, str | None] = {}
+        for item in changed:
+            if not isinstance(item, dict) or not isinstance(item.get("path"), str):
+                raise ValueError("prior RED snapshot is invalid")
+            observed_path = item["path"]
+            matches = [path for path in self.paths if path == observed_path or path.endswith("/" + observed_path)]
+            if len(matches) != 1:
+                raise ValueError("prior RED snapshot path is ambiguous")
+            current_path = matches[0]
+            after = item.get("after_bytes_base64")
+            if after is not None and not isinstance(after, str):
+                raise ValueError("prior RED snapshot is invalid")
+            current = (self.workspace / current_path).read_bytes() if (self.workspace / current_path).is_file() else None
+            # A VDD-declared successor may add only its predecessor binding to the
+            # plan contract; all command-registry and implementation snapshots stay exact.
+            if current_path.endswith("/implementation-contract.v1.json"):
+                snapshots[current_path] = after
+                continue
+            if (None if after is None else base64.b64decode(after, validate=True)) != current:
+                raise ValueError("prior RED snapshot continuity is stale")
+            snapshots[current_path] = after
+        destination = self.run_dir / "observations" / "red-observed.json"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(raw)
+        (self.run_dir / "predecessor-red-observation.v1.json").write_text(
+            json.dumps({"path": path.as_posix(), "sha256": expected_hash, "authorizes": []}, sort_keys=True) + "\n",
+            encoding="utf-8", newline="\n",
+        )
+        self.snapshots = snapshots
+        self.stages.append("red")
+        return observation
+
+    def begin_after_prior_red(self) -> None:
+        """Permit successor GREEN without copying predecessor RED observation data."""
+        if self.stages:
+            raise ValueError("prior RED successor must begin from an empty lifecycle")
+        self.stages.append("red")
+
     def close(self, run_context: dict[str, Any], artifact_store: dict[tuple[str, str], bytes]) -> dict[str, Any]:
         """Close only a complete captured lifecycle; no stage is synthesized here."""
         if self.stages != ["red", "green", "refactor"]:
@@ -42,7 +96,6 @@ class LifecycleRunner:
         observations = []
         for stage in self.stages:
             path = self.run_dir / "observations" / f"{stage}-observed.json"
-            import json
             observations.append(json.loads(path.read_text(encoding="utf-8")))
         bundle, store, _ = compose(run_context, observations, artifact_store)
         persist_protocol_bundle(self.run_dir, bundle, store)

@@ -229,6 +229,13 @@ class PlanDirectoryLoopTests(unittest.TestCase):
 
             snapshot.assert_called_once_with(plan.resolve(), None)
 
+    def test_terminal_requires_an_explicit_plan_owned_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])
+            with self.assertRaisesRegex(ValueError, "terminal contract"):
+                DRIVER._terminal_contract(plan)
+
     def test_router_replays_authority_stale_implementation_candidate_before_s7(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -279,6 +286,13 @@ class PlanDirectoryLoopTests(unittest.TestCase):
         self.assertTrue(__import__("base64").b64decode(result["run_context"]["implementation_contract"]["payload_base64"], validate=True))
         self.assertIsInstance(result["run_context"]["boundaries"]["allowed_write_set"], list)
 
+    def test_builder_expands_a_declared_slice_id_placeholder(self) -> None:
+        self.assertEqual("S4", BUILDER._expand(
+            {"type": "slice_id", "value": "<slice-id>"},
+            plan_rel="execution-plans/target", plan_id="target", slice_id="S4",
+            run_id="RUN-TEST", candidate_run_id="",
+        ))
+
     def test_lifecycle_rejects_shell_command_descriptor(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "command.json"
@@ -294,6 +308,75 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             result = subprocess.run(command, capture_output=True, text=True, check=False)
             self.assertNotEqual(0, result.returncode)
             self.assertIn("run directory already exists", result.stderr)
+
+    def test_legacy_regression_requires_a_bound_prior_failed_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            evidence = root / "logs" / "prior-red.json"
+            evidence.parent.mkdir(parents=True)
+            evidence.write_text(json.dumps({
+                "stage": "red",
+                "exit_code": 4,
+                "commands_attempted": ["canonical-evidence-red"],
+            }), encoding="utf-8")
+            digest = "sha256:" + __import__("hashlib").sha256(evidence.read_bytes()).hexdigest()
+
+            result = BUILDER._legacy_predecessor(root, {
+                "command_id": "canonical-evidence-red",
+                "mode": "legacy-regression",
+                "legacy_predecessor": {"path": "logs/prior-red.json", "sha256": digest},
+            })
+
+            self.assertEqual({"path": "logs/prior-red.json", "sha256": digest}, result)
+
+    def test_legacy_regression_rejects_an_unbound_or_passing_prior_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            evidence = root / "logs" / "prior-red.json"
+            evidence.parent.mkdir(parents=True)
+            evidence.write_text(json.dumps({
+                "stage": "red",
+                "exit_code": 0,
+                "commands_attempted": ["canonical-evidence-red"],
+            }), encoding="utf-8")
+            digest = "sha256:" + __import__("hashlib").sha256(evidence.read_bytes()).hexdigest()
+
+            with self.assertRaisesRegex(ValueError, "prior RED"):
+                BUILDER._legacy_predecessor(root, {
+                    "command_id": "canonical-evidence-red",
+                    "mode": "legacy-regression",
+                    "legacy_predecessor": {"path": "logs/prior-red.json", "sha256": digest},
+                })
+
+    def test_legacy_regression_accepts_current_green_and_preserves_normal_red(self) -> None:
+        LIFECYCLE._validate_red_exit("legacy-regression", 0)
+        LIFECYCLE._validate_red_exit("red", 4)
+        with self.assertRaisesRegex(RuntimeError, "legacy regression command failed"):
+            LIFECYCLE._validate_red_exit("legacy-regression", 4)
+        with self.assertRaisesRegex(RuntimeError, "unexpectedly passed"):
+            LIFECYCLE._validate_red_exit("red", 0)
+
+    def test_prior_red_successor_binds_failed_predecessor(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prior = root / "logs" / "prior-red.json"
+            prior.parent.mkdir(parents=True)
+            prior.write_text(json.dumps({"stage": "red", "exit_code": 3, "commands_attempted": ["red-command"]}), encoding="utf-8")
+            digest = "sha256:" + __import__("hashlib").sha256(prior.read_bytes()).hexdigest()
+            self.assertEqual(
+                {"path": "logs/prior-red.json", "sha256": digest},
+                LIFECYCLE._prior_red_successor(root, {"path": "logs/prior-red.json", "sha256": digest}, "red-command"),
+            )
+
+    def test_prior_red_successor_rejects_passing_or_wrong_command_predecessor(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prior = root / "logs" / "prior-red.json"
+            prior.parent.mkdir(parents=True)
+            prior.write_text(json.dumps({"stage": "red", "exit_code": 0, "commands_attempted": ["other"]}), encoding="utf-8")
+            digest = "sha256:" + __import__("hashlib").sha256(prior.read_bytes()).hexdigest()
+            with self.assertRaisesRegex(RuntimeError, "matching failed RED"):
+                LIFECYCLE._prior_red_successor(root, {"path": "logs/prior-red.json", "sha256": digest}, "red-command")
 
     def test_driver_derives_outer_timeout_from_registered_commands(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,0 +1,36 @@
+{
+  "schema_version": "jimuyun.skill-authoring-standard-requirements.v1",
+  "plan_id": "skill-authoring-standard",
+  "profile": "self-hosted",
+  "source_requirements": "docs/workflows/skill-control-plane-evolution-requirements.md#Package-A-Skill-Authoring-Standard",
+  "requirements": [
+    {"id":"SAS-001","text":"Define a normative repository Skill standard covering scope, single responsibility, triggers, non-goals, input/output contracts, references, scripts, tests, evidence, and lifecycle boundaries.","acceptance_ids":["SAS-A01"],"slice_ids":["SAS-S0"]},
+    {"id":"SAS-002","text":"Define a machine-readable Skill quality contract without extending unsupported frontmatter fields, including capability declarations and dependency records.","acceptance_ids":["SAS-A02"],"slice_ids":["SAS-S0","SAS-S1"]},
+    {"id":"SAS-003","text":"Require exactly three ordered materially different examples with paired Input and Output sections covering typical, boundary, and error branches.","acceptance_ids":["SAS-A03"],"slice_ids":["SAS-S1","SAS-S2"]},
+    {"id":"SAS-004","text":"Require an ASCII decision tree or flowchart for Skills that perform routing, scheduling, orchestration, or conditional workflow selection.","acceptance_ids":["SAS-A04"],"slice_ids":["SAS-S1","SAS-S2"]},
+    {"id":"SAS-005","text":"Enforce a hard 500-line SKILL.md limit, recommend a lower target, and require first-level references for details moved out of the main file.","acceptance_ids":["SAS-A05"],"slice_ids":["SAS-S1"]},
+    {"id":"SAS-006","text":"Require explicit dependencies with authority/version, required or optional classification, standalone entry behavior, and typed missing-dependency output.","acceptance_ids":["SAS-A06"],"slice_ids":["SAS-S1","SAS-S2"]},
+    {"id":"SAS-007","text":"Require deterministic scripts and tests for complex checks, with structured argv, shell=false, bounded timeouts, and reproducible result envelopes.","acceptance_ids":["SAS-A07"],"slice_ids":["SAS-S1","SAS-S2"]},
+    {"id":"SAS-008","text":"Make FAQ content optional but enforce reachability when present by binding entries to stable error codes or decision branches.","acceptance_ids":["SAS-A08"],"slice_ids":["SAS-S2"]},
+    {"id":"SAS-009","text":"Define Context7-first latest-version lookup, official HTTPS fallback, version/source/date recording, and a local-only not-applicable path.","acceptance_ids":["SAS-A09"],"slice_ids":["SAS-S0","SAS-S2"]},
+    {"id":"SAS-010","text":"Define capability-conditioned security rules for secrets, destructive confirmation, database backup and restore, prompt-injection boundaries, filesystem containment, subprocesses, HTTPS, and timeouts.","acceptance_ids":["SAS-A10"],"slice_ids":["SAS-S0","SAS-S2"]},
+    {"id":"SAS-011","text":"Provide positive, boundary, and negative validator fixtures and a migration policy that preserves existing Skill authority, lifecycle ownership, and compatibility behavior.","acceptance_ids":["SAS-A11"],"slice_ids":["SAS-S2","SAS-S3"]},
+    {"id":"SAS-012","text":"Integrate the standard validator into a repository-owned terminal command and document Package B and Package C consumption without modifying their files in this plan.","acceptance_ids":["SAS-A12"],"slice_ids":["SAS-S3"]}
+  ],
+  "acceptance": [
+    {"id":"SAS-A01","assertion":"The standard document contains explicit scope, non-goals, responsibility, trigger, I/O, dependency, evidence, and lifecycle sections."},
+    {"id":"SAS-A02","assertion":"The contract schema validates capability declarations, dependencies, examples, outputs, and quality gates without unsupported frontmatter keys."},
+    {"id":"SAS-A03","assertion":"A valid fixture accepts typical, boundary, and error examples in that order, while missing Input/Output, duplicate branches, or reordered examples fail."},
+    {"id":"SAS-A04","assertion":"A routing fixture requires an ASCII decision diagram and a leaf fixture does not require one."},
+    {"id":"SAS-A05","assertion":"A 500-line main Skill fails and a 499-line main Skill passes; first-level reference links are checked for moved required content."},
+    {"id":"SAS-A06","assertion":"Missing, optional, version-mismatched, and unresolved dependencies produce typed results and never silently continue."},
+    {"id":"SAS-A07","assertion":"Registered complex checks use structured argv, shell=false, explicit timeout, and deterministic JSON results; malformed or over-time invocations fail closed."},
+    {"id":"SAS-A08","assertion":"Every declared FAQ entry is referenced by a reachable error or decision branch; orphan FAQ entries fail validation."},
+    {"id":"SAS-A09","assertion":"Version-sensitive fixtures require Context7 evidence or official HTTPS fallback with version, source, and date; local-only fixtures record not_applicable."},
+    {"id":"SAS-A10","assertion":"Capability fixtures reject hardcoded secret markers, unconfirmed destructive writes, missing database backup/restore evidence, prompt-injection authority changes, path escapes, HTTP downgrade, and missing timeout."},
+    {"id":"SAS-A11","assertion":"Migration fixtures prove a pre-standard Skill can be classified as legacy and migrated without changing its authority or lifecycle owner."},
+    {"id":"SAS-A12","assertion":"The terminal validation command runs all registered Package A tests and the standard package validator, while all generated results remain non-authorizing."}
+  ],
+  "terminal_validation": "py -3 -B execution-plans/2026-08-06-skill-authoring-standard/tools/validate_implementation.py",
+  "authorizes": []
+}

@@ -6,9 +6,15 @@ import hashlib
 import importlib.util
 import json
 import os
+import sys
 from pathlib import Path, PurePosixPath
 import tempfile
 from typing import Any
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
+from scripts.toolchain.canonical_evidence import canonical_bytes, domain_hash as _domain_hash
 
 
 SCHEMA_VERSION = "vdd-source-freeze-manifest.v1"
@@ -23,18 +29,12 @@ ROLE_RELATIONSHIPS = {
 }
 
 
-def canonical_bytes(value: Any) -> bytes:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
-
-
 def domain_hash(value: Any) -> str:
-    payload = {"domain": HASH_DOMAIN, "payload": value}
-    return "sha256:" + hashlib.sha256(canonical_bytes(payload)).hexdigest()
+    return _domain_hash(HASH_DOMAIN, value)
 
 
 def semantic_handoff_hash(value: Any) -> str:
-    payload = {"domain": SEMANTIC_HANDOFF_DOMAIN, "payload": value}
-    return "sha256:" + hashlib.sha256(canonical_bytes(payload)).hexdigest()
+    return _domain_hash(SEMANTIC_HANDOFF_DOMAIN, value)
 
 
 def file_hash(path: Path) -> str:

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+  "title": "Acceptance knowledge maintenance route",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "failure_code",
+    "next_action",
+    "target_plan",
+    "snapshot",
+    "request_sha256",
+    "result_sha256",
+    "automatic_publication_allowed",
+    "requires_explicit_maintainer_confirmation",
+    "authorizes",
+    "route_output",
+    "route_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": "jimuyun.acceptance-knowledge-maintenance-route.v1"},
+    "status": {"const": "blocked"},
+    "failure_code": {"type": "string", "minLength": 1},
+    "next_action": {"enum": ["knowledge-maintenance-required", "knowledge-context-repair-required"]},
+    "target_plan": {"type": "string", "pattern": "^execution-plans/(?!\\.\\.?$)[^/\\\\]+$"},
+    "snapshot": {"type": "object"},
+    "request_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "result_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "automatic_publication_allowed": {"const": false},
+    "requires_explicit_maintainer_confirmation": {"type": "boolean"},
+    "authorizes": {"const": []},
+    "route_output": {"type": "string", "pattern": "^execution-plans/[^/]+/knowledge-context-routes/[0-9a-f]{64}\\.json$"},
+    "route_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

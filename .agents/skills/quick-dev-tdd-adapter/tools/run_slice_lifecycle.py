@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -54,6 +55,49 @@ def _projection(plan_dir: Path):
     return module
 
 
+def _validate_red_exit(mode: str, exit_code: int) -> None:
+    if mode == "legacy-regression":
+        if exit_code != 0:
+            raise RuntimeError("legacy regression command failed")
+        return
+    if mode != "red":
+        raise RuntimeError("RED mode is invalid")
+    if exit_code == 0:
+        raise RuntimeError("RED command unexpectedly passed")
+
+
+def _prior_red_successor(workspace: Path, prior_red: Any, command_id: str) -> dict[str, str]:
+    """Validate immutable predecessor RED without importing its snapshots or observation."""
+    if not isinstance(prior_red, dict) or set(prior_red) != {"path", "sha256"}:
+        raise RuntimeError("prior RED successor reference is missing")
+    path, expected_hash = prior_red["path"], prior_red["sha256"]
+    if not isinstance(path, str) or not isinstance(expected_hash, str) or not expected_hash.startswith("sha256:"):
+        raise RuntimeError("prior RED successor reference is invalid")
+    root = workspace.resolve()
+    evidence = (root / path).resolve()
+    try:
+        evidence.relative_to(root)
+    except ValueError as exc:
+        raise RuntimeError("prior RED successor reference escapes workspace") from exc
+    raw = evidence.read_bytes()
+    if "sha256:" + hashlib.sha256(raw).hexdigest() != expected_hash:
+        raise RuntimeError("prior RED evidence hash is stale")
+    try:
+        observation = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("prior RED evidence is invalid") from exc
+    if (
+        not isinstance(observation, dict)
+        or observation.get("stage") != "red"
+        or not isinstance(observation.get("exit_code"), int)
+        or observation["exit_code"] == 0
+        or not isinstance(observation.get("commands_attempted"), list)
+        or command_id not in observation.get("commands_attempted", [])
+    ):
+        raise RuntimeError("prior RED evidence is not a matching failed RED")
+    return {"path": path, "sha256": expected_hash}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workspace", type=Path, required=True)
@@ -89,9 +133,24 @@ def main() -> int:
         raise ValueError("RED and GREEN require one command; REFACTOR requires at least one")
 
     lifecycle = _load("stage_lifecycle_runner").LifecycleRunner(workspace, run_dir, args.snapshot_path)
-    red = lifecycle.observe("red", commands["red"][0], "Recorded RED command observation.")
-    if red["exit_code"] == 0:
-        raise RuntimeError("RED command unexpectedly passed")
+    red_core = context["stage_results"]["red"]
+    red_mode = red_core.get("mode", "red")
+    predecessor = red_core.get("legacy_predecessor")
+    if red_mode == "legacy-regression" and (
+        not isinstance(predecessor, dict) or set(predecessor) != {"path", "sha256"}
+    ):
+        raise RuntimeError("legacy regression predecessor is missing")
+    prior_red = red_core.get("prior_red")
+    if red_mode == "prior-red-successor":
+        prior_red = _prior_red_successor(workspace, prior_red, commands["red"][0]["id"])
+        lifecycle.begin_after_prior_red()
+        red = {"exit_code": None, "observed_at": None}
+    else:
+        red = lifecycle.observe(
+            "red", commands["red"][0],
+            "Recorded declared legacy regression observation." if red_mode == "legacy-regression" else "Recorded RED command observation.",
+        )
+        _validate_red_exit(red_mode, red["exit_code"])
     green = lifecycle.observe("green", commands["green"][0], "Recorded GREEN command observation.")
     if green["exit_code"] != 0:
         raise RuntimeError("GREEN command failed")
@@ -111,14 +170,36 @@ def main() -> int:
     }, indent=2) + "\n", encoding="utf-8", newline="\n")
 
     # The composer supplies protocol bindings; only observed values are injected here.
-    for stage, observation in (("red", red), ("green", green), ("refactor", refactor)):
+    for stage, observation in (("green", green), ("refactor", refactor)):
         core = context["stage_results"][stage]
         core["exit_code"] = observation["exit_code"]
         core["observed_at"] = observation["observed_at"]
         if stage == "refactor":
             core["command_ids"] = [item["id"] for item in commands["refactor"]]
             core["command_id"] = commands["refactor"][0]["id"]
-    bundle = lifecycle.close(context, {})
+    bundle = None
+    if red_mode == "legacy-regression":
+        (run_dir / "legacy-regression-evidence.json").write_text(json.dumps({
+            "schema_version": "quick-dev-tdd-adapter.legacy-regression-evidence.v1",
+            "plan_id": context["plan_id"], "slice_id": args.slice_id, "run_id": run_dir.name,
+            "prior_red_evidence": predecessor,
+            "red_exit_code": red["exit_code"], "green_exit_code": green["exit_code"],
+            "refactor_exit_code": refactor["exit_code"], "authorizes": [],
+        }, indent=2) + "\n", encoding="utf-8", newline="\n")
+    elif red_mode == "prior-red-successor":
+        (run_dir / "prior-red-successor-evidence.v1.json").write_text(json.dumps({
+            "schema_version": "quick-dev-tdd-adapter.prior-red-successor-evidence.v1",
+            "plan_id": context["plan_id"], "slice_id": args.slice_id, "run_id": run_dir.name,
+            "prior_red": prior_red,
+            "red_command_id": commands["red"][0]["id"],
+            "green_command_id": commands["green"][0]["id"],
+            "refactor_command_ids": [item["id"] for item in commands["refactor"]],
+            "current_contract_hash": context["stage_results"]["red"]["contract_hash"],
+            "green_exit_code": green["exit_code"], "refactor_exit_code": refactor["exit_code"],
+            "authorizes": [],
+        }, indent=2) + "\n", encoding="utf-8", newline="\n")
+    else:
+        bundle = lifecycle.close(context, {})
 
     projection = _projection(plan_dir)
     output = run_dir / "stage-evidence-projection.v1.json"
@@ -146,7 +227,7 @@ def main() -> int:
         )
     state = run_dir.parents[1] / "run-state.v1.json"
     state.write_text(json.dumps({"schema_version": "jimuyun.tdd-adapter-run-state.v1", "last_slice_id": args.slice_id, "last_observed_predicate": "slice-ready", "next_action": "route", "failure_fingerprint": None, "repeat_count": 0, "authorizes": [], "does_not_authorize": ["implementation-accepted", "commit", "release"]}, indent=2) + "\n", encoding="utf-8", newline="\n")
-    print(json.dumps({"run_id": run_dir.name, "stages": ["red", "green", "refactor"], "bundle_schema": bundle["schema_version"], "terminal_exit": 0, "authorizes": []}, sort_keys=True))
+    print(json.dumps({"run_id": run_dir.name, "stages": ["red", "green", "refactor"], "bundle_schema": bundle["schema_version"] if bundle else None, "evidence_mode": red_mode, "terminal_exit": 0, "authorizes": []}, sort_keys=True))
     return 0
 
 

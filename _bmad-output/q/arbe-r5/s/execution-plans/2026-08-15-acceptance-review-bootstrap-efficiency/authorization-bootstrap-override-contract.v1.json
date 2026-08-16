@@ -1,0 +1,40 @@
+{
+  "schema_version": "acceptance-review-bootstrap-efficiency.authorization-bootstrap-override-contract.v1",
+  "owner": "maintainer",
+  "purpose": "Define the only self-hosting exception that may precede implementation-authorized.",
+  "transition": "implementation-authorized",
+  "required_receipt_fields": [
+    "schema_version",
+    "plan_id",
+    "source_freeze_manifest",
+    "plan_validation",
+    "known_red",
+    "decision",
+    "authorizes",
+    "does_not_authorize"
+  ],
+  "known_red": {
+    "command_id": "canonical-migration-red",
+    "fixture": "fixtures/current-package-exact-cover-red.v1.json",
+    "expected_status": "blocked",
+    "expected_family": "schema_error",
+    "expected_detail": "frozen authority lacks acceptance-contract companion"
+  },
+  "required_bindings": [
+    "source-freeze-manifest.v1.json canonical_hash and file hash",
+    "current selection pointer and selection record hash",
+    "validate_all --validate-plan result hash",
+    "known RED command, fixture, validator identity, and result hash"
+  ],
+  "constraints": [
+    "Only the maintainer may publish the receipt.",
+    "The receipt must not claim exact-cover conformant.",
+    "The receipt must not modify or waive S1 requirements.",
+    "S1 current-package exact-cover replay must become conformant.",
+    "terminal-full must pass before implementation-complete.",
+    "authorizes must contain only implementation-authorized.",
+    "does_not_authorize must contain implementation-complete, acceptance-passed, archived, and release."
+  ],
+  "authorizes": [],
+  "does_not_authorize": ["implementation-complete", "acceptance-passed", "archived", "release"]
+}

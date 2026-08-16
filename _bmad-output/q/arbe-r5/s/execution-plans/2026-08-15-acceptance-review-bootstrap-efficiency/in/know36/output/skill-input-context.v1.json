@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:24ec4fbffe784a22732c711e72319225eff9137c058bffb8da2fd1f438f359df",
+  "sections": [
+    {
+      "title": "Scope and architecture",
+      "content": "The feature replaces whole-directory acceptance review with an evidence-gated artifact DAG. Acceptance freezes an immutable baseline and candidate, builds a complete Changed-set Manifest and fixed-point Consumer Closure, executes contract-projected deterministic checks, selects an identity-bound acceptance mode and typed route, and alone publishes acceptance-passed. Bootstrap is a non-authorizing semantic evidence producer. Canonical artifacts are immutable, owner-local, content-addressed, and linked through complete versioned identity references."
+    },
+    {
+      "title": "Authority and routing",
+      "content": "Lifecycle ownership is exclusive: VDD owns draft and plan-ready; the maintainer owns implementation-authorized; Quick Dev or its TDD adapter owns implementation-complete; Acceptance owns acceptance-passed. Acceptance mode is supervised or unattended and is orthogonal to route. Supervised deterministic-only without a trigger requires a current identity-bound maintainer decision; unattended deterministic-only runs no Bootstrap. Focused repair verification and full implementation conformance run Bootstrap in either mode. Manual pause is non-authorizing. Registered security, authority, lifecycle, corruption, high-risk, explicit-review, or adversarial-review triggers require full conformance or manual pause and cannot be downgraded for cost."
+    },
+    {
+      "title": "Closure, checks, and source delivery",
+      "content": "The Changed-set Manifest covers modified, added, deleted, renamed, and applicable untracked implementation files. Consumer Closure expands typed dependency, authority, prerequisite, binding, entrypoint, validator, and external-selection edges to a fixed point, recording inclusion reasons, recomputable exclusions, and a completeness receipt. Deterministic checks must execute the real runner selected by the current implementation contract and command registry; exact reuse requires complete binding equality and validated output, and failure launches zero semantic reviewers. Selected authority is delivered completely within the shared model-visible budget. Over-budget authority may use only controller-owned, full-source-bound inclusive Range Projections with immutable path, source hash, coordinates, extracted-byte hash, encoding, policy, and applicability bindings."
+    },
+    {
+      "title": "Bootstrap isolation and recovery",
+      "content": "Full Bootstrap review preserves isolated Blind Hunter, Edge Case Hunter, and Acceptance Auditor roles over the same frozen identities; an independent verifier runs only for gate-accepted P0/P1 findings under the existing risk/model policy. Each child receives an immutable Segment Descriptor, absolute segment-only snapshot, minimum validation attestations, and inherited executable, model, reasoning, and environment identity. Attempts are separate from stable segment identity. Append-only Process Events govern reservation, start, liveness, Effective Progress, terminal classification, lease reconciliation, retry, and recovery. Heartbeats, stdout, polling, and repeated status do not count as progress. Lease occupancy requires matching process identity, live heartbeat, unexpired progress window, and no terminal event. Retry is bounded and segment-local; context-budget failure requires repartition. Recovery depends only on events, immutable descriptors, current process identity, and the bound policy."
+    },
+    {
+      "title": "Verification and rollout",
+      "content": "Before semantic launch, Acceptance publishes a Review Cost Decision binding closure size, segment count, roles, attempts, retry exposure, launch plan, and policy. Cost may cause closure rebuild, repartition, pause, or continuation but cannot weaken mandatory coverage. Rollout order is M0 runtime isolation and recovery, M1 Acceptance closure/check/route integration, then M2 scale regression and finalization. The 8-13-scale regression and frozen semantic corpus must prove zero model calls after deterministic failure, complete required multi-role coverage, route-matrix correctness, omission and projection-mutation rejection, bounded attempts, no stale leases or manual identity repair, stop-loss behavior, correct evidence import, and no false authorization. Historical failed runs remain immutable; vcec-r1n is abandoned, classified historical-runtime-failure, non-reusable, and non-authorizing. Formal wall-time and closure-reduction thresholds remain deferred to policy owners after stable M2 evidence."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-15T15:57:08.413117Z"
+}

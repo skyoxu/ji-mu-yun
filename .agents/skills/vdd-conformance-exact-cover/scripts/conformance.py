@@ -9,16 +9,14 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
+from scripts.toolchain.canonical_evidence import canonical_bytes, domain_hash as _domain_hash
+
 
 DOMAIN = "jimuyun.vdd-exact-cover"
 
 
-def canonical_bytes(value: Any) -> bytes:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
-
-
 def domain_hash(name: str, value: Any) -> str:
-    return "sha256:" + hashlib.sha256(canonical_bytes({"domain": f"{DOMAIN}.{name}.v1", "payload": value})).hexdigest()
+    return _domain_hash(f"{DOMAIN}.{name}.v1", value)
 
 
 def file_hash(path: Path) -> str:

@@ -1,0 +1,45 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:3d9c1f7517a0d7f15615c35a79817a02de8ec379cbde22f5b6fe9bc0eee64b5b",
+  "sections": [
+    {
+      "title": "ARCHITECTURE-SPINE.md",
+      "content": "Adopted architecture for acceptance review and Bootstrap efficiency. Uses evidence-gated immutable artifact DAGs, decentralized lifecycle ownership, canonical content identities, complete-source delivery or controller-owned range projection, stable segment descriptors, real required-check execution, event-based runtime recovery, typed routes, cost gates, and Acceptance-owned finalization. CAP-1 through CAP-10 are mapped to these invariants."
+    },
+    {
+      "title": ".memlog.md",
+      "content": "Process record for the canonical package. Records CAP-1 through CAP-10, lifecycle and authority boundaries, complete closure requirements, three-role Bootstrap review, segment isolation, progress and lease rules, bounded retry, cost observability, semantic regression coverage, historical failure preservation, rollout stages, and resolved policy decisions. Two measurement questions remain deferred to M2 policy owners."
+    },
+    {
+      "title": "SPEC.md",
+      "content": "Canonical contract for Acceptance and Bootstrap efficiency. Acceptance freezes identities, builds complete changed-set and consumer closure, runs projected deterministic checks, selects supervised or unattended mode and typed route, and imports evidence before publishing acceptance-passed. Bootstrap retains three isolated roles and optional verifier. Sampling, prose authority, single-reviewer authorization, stale evidence, and lifecycle bypass are prohibited."
+    },
+    {
+      "title": "architecture-diagrams.md",
+      "content": "Diagrams summarize lifecycle flow from VDD and implementation completion through Acceptance closure, checks, mode/route selection, optional three-role Bootstrap, verifier, and final Acceptance. Execution diagrams show immutable segment descriptors, segment-only snapshots, child attempts, heartbeat versus Effective Progress, terminal events, lease reconciliation, and bounded retry or blocking."
+    },
+    {
+      "title": "authority-and-lifecycle.md",
+      "content": "Defines owner responsibilities and lifecycle states: VDD owns draft/plan-ready, maintainer implementation-authorized, Quick Dev implementation-complete, and Acceptance acceptance-passed. Specifies identity freeze, changed-set and closure computation, required-check projection, typed routes, supervised decision constraints, complete review roles, verifier conditions, and exact final import requirements."
+    },
+    {
+      "title": "authority-projection-and-segmentation.md",
+      "content": "Requires complete authority delivery with exact Partial continuation. Oversized sources may use parent-created full-source-bound inclusive Range Projections binding path, hashes, ranges, encoding, reasons, and acceptance context. A shared canonical Segment Descriptor governs assignment, requests, receipts, validation, coverage, retry, and cache identity. Children use absolute frozen segment-only snapshots and inherited access proofs."
+    },
+    {
+      "title": "execution-and-recovery.md",
+      "content": "Process Events are append-only authority for attempts, heartbeats, Effective Progress, terminal states, stale detection, and retries. Heartbeats and output do not refresh no-progress. Policy-owned stop-loss halts new calls, isolates attempts, records terminal evidence, reconciles leases, and emits non-authorizing recovery. Retries are bounded, segment-local, and descriptor-preserving; recovery is machine-reconstructable only."
+    },
+    {
+      "title": "glossary.md",
+      "content": "Defines Acceptance, Bootstrap Complete Review, Changed-set Manifest, Consumer Closure, Required Check, Range Projection, Segment Descriptor, segment-only snapshot, Process Event, Effective Progress, lease reconciliation, lifecycle states, typed routes, acceptance modes, supervised semantic decisions, advisory reviewers, and non-authorizing results."
+    },
+    {
+      "title": "verification-and-rollout.md",
+      "content": "Defines cost decisions, preserved historical baselines, success and counter-metrics, 8-13 scale regression, semantic corpus, MVP obligations, and M0-M2 rollout. Tests must prove zero reviewer calls on deterministic failure, complete three-role coverage when required, no boundary or identity violations, bounded attempts and recovery, supervised/unattended correctness, current-evidence import, and no false authorization."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-15T15:16:42.706304Z"
+}

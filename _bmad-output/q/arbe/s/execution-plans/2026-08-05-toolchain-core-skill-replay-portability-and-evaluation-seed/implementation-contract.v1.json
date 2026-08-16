@@ -1,0 +1,165 @@
+{
+  "schema_version": "jimuyun.tc-d1.implementation-contract.v1",
+  "plan_id": "toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "profile": "self-hosted",
+  "command_registry": "command-registry.v1.json",
+  "backend": {"hidden_state":false,"provider_scheduling":false,"subprocess_ownership":false},
+  "protocol_artifacts": {"context_layout":"context/<capsule-id>","attempt_layout":"attempts/<attempt-id>"},
+  "authority": {"authority_manifest":"authority-manifest.v1.json"},
+  "artifact_contracts": {
+    "historical_compatibility_replay": {
+      "required_bindings":["historical_validator","historical_command_evidence","current_wrapper_replay"],
+      "historical_validator_path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py",
+      "historical_command_evidence_path":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md",
+      "historical_command":["py","-3","execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py"],
+      "current_wrapper_entrypoint":"scripts/sc/skill_package_replay.py",
+      "current_wrapper_command":["py","-3","-B","scripts/sc/skill_package_replay.py","replay-package","--target",".agents/skills/run-refactor-implementation-acceptance","--capability","scripts/sc/config/skill-package-validator-capability.v1.json","--probe-mode","detached-positive-negative"],
+      "target_package":".agents/skills/run-refactor-implementation-acceptance",
+      "target_manifest_algorithm":"sorted-relative-path-and-sha256-json-v1",
+      "capability_path":"scripts/sc/config/skill-package-validator-capability.v1.json",
+      "required_probes":{"detached-positive":{"status":"pass","exit_code":0},"detached-negative":{"status":"expected-failure","exit_code":1}},
+      "current_receipt_path":"execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/historical-8-01-skill-validation-replay.v1.json",
+      "required_result":{"status":"pass","exit_code":0,"authorizes":[]},
+      "terminal_replay":"execute-command-and-require-stdout-json-equals-receipt"
+    },
+    "evaluation_seed": {
+      "native_evidence_min_items":1,
+      "required_binding_fields":["path","sha256"],
+      "required_native_repair_closures":{
+        "candidate-baseline-contamination":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-1/repair-closure.json",
+        "self-hosted-knowledge-read-set-collision":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-2/repair-closure.json",
+        "toolchain-policy-architecture-index-gap":"execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-3/repair-closure.json"
+      }
+    },
+    "stable_candidate_matrix": {
+      "required_categories":["positive","negative","historical_compatibility","dirty_baseline","knowledge_read_set","closed_policy"],
+      "required_case_fields":["case_id","category","validation_surface","expected_observation"],
+      "exactly_once":true,
+      "receipt_path":"execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/stable-candidate-replay-matrix.v1.json",
+      "replay_command":["py","-3","-B","scripts/sc/skill_package_replay.py","replay-matrix","--matrix","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json"],
+      "required_result_fields":["case_id","category","validation_surface","status","observed_result","evidence"],
+      "terminal_replay":"execute-command-and-require-stdout-json-equals-receipt",
+      "authorizes":[]
+    },
+    "core_skill_routes": {
+      "required_heading":"## Repository-Owned Package Validation",
+      "required_directive":"Use this repository-owned command for Skill package validation:",
+      "commands":{
+        ".agents/skills/vdd-execution-plan/SKILL.md":"py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/vdd-execution-plan --capability scripts/sc/config/skill-package-validator-capability.v1.json",
+        ".agents/skills/run-refactor-implementation-acceptance/SKILL.md":"py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/run-refactor-implementation-acceptance --capability scripts/sc/config/skill-package-validator-capability.v1.json"
+      }
+    },
+    "implementation_lifecycle": {
+      "implementation-authorized":{"state_owner":"maintainer","authorizes":["implementation-authorized"],"does_not_authorize":["implementation-complete","acceptance-passed","release","archived"]},
+      "implementation-complete":{"state_owner":"quick-dev-tdd-adapter","authorizes":["implementation-complete"],"does_not_authorize":["acceptance-passed","release","archived"]}
+    },
+    "manual_disposition_evidence": {
+      "path":"logs/r/tcd1r3-manual-pause-repair-evidence.json",
+      "decision":"accepted-deterministic-round3-repair-evidence",
+      "authorizes":["implementation-authorized"]
+    }
+  },
+  "slices": [
+    {
+      "slice_id":"RMAP-S0",
+      "title":"Repository-owned validator capability and detached probes",
+      "requirement_ids":["TC-D1-002","TC-D1-003","TC-D1-004","TC-D1-010","TC-D1-012","TC-D1-013"],
+      "acceptance_ids":["TC-D1-A03","TC-D1-A04","TC-D1-A05","TC-D1-A06","TC-D1-A07","TC-D1-A14","TC-D1-A16","TC-D1-A17"],
+      "source_refs":["docs/know.md#7-current-mandatory-vdd-output-tc-d1","docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md"],
+      "depends_on":[],
+      "allowed_changes": {
+        "production":["scripts/sc/skill_package_replay.py","scripts/sc/config/skill-package-validator-capability.v1.json","scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json","scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json",".agents/skills/vdd-execution-plan/SKILL.md"],
+        "tests":["scripts/sc/tests/test_skill_package_replay.py","scripts/sc/tests/fixtures/skill-package-replay/**"],
+        "documentation":["docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md","docs/architecture/ADR_INDEX_PHASE.md","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/95-implementation-evolution-and-completion-report.md"]
+      },
+      "execution_snapshot_paths":[".agents/skills/vdd-execution-plan/SKILL.md"],
+      "forbidden_changes":["execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/**","execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**","_bmad/**",".agents/skills/bmad-*/**",".agents/skills/gds-*/**"],
+      "execution_read_set":["AGENTS.md","docs/know.md",".agents/skills/vdd-execution-plan/**",".agents/skills/run-refactor-implementation-acceptance/**","scripts/sc/**","docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md","docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md"],
+      "dependency_closure":[".agents/skills/vdd-execution-plan/**",".agents/skills/run-refactor-implementation-acceptance/**","scripts/sc/**","docs/adr/**","docs/architecture/ADR_INDEX_PHASE.md"],
+      "tdd": {
+        "red":{"command_id":"slice-s0-predicate","test_selector":"portable capability files absent","expected_exit":"nonzero","expected_failure_family":"skill-validator-capability-absent","expected_failure_ids":["TC-D1-A03","TC-D1-A05","TC-D1-A07"]},
+        "green":{"command_id":"skill-replay-tests","expected_exit":"zero"},
+        "refactor":{"invocations":[{"command_id":"vdd-skill-contract","expected_exit":"zero"},{"command_id":"vdd-skill-tests","expected_exit":"zero"}]}
+      },
+      "post_refactor_command_id":"slice-s0-predicate",
+      "exit_predicate":"slice-ready",
+      "recovery":"Disable all new callers, remove only the unadopted shared entrypoint, descriptor and schemas, and preserve failed receipts and detached test evidence."
+    },
+    {
+      "slice_id":"RMAP-S1",
+      "title":"Byte-preserving historical compatibility replay",
+      "requirement_ids":["TC-D1-001","TC-D1-005","TC-D1-010","TC-D1-012","TC-D1-013"],
+      "acceptance_ids":["TC-D1-A01","TC-D1-A02","TC-D1-A08","TC-D1-A14","TC-D1-A16","TC-D1-A17"],
+      "source_refs":["execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/tools/validate_implementation.py","execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/95-implementation-evolution-and-completion-report.md"],
+      "depends_on":["RMAP-S0"],
+      "allowed_changes": {
+        "production":["scripts/sc/skill_package_replay.py"],
+        "tests":["scripts/sc/tests/test_skill_package_replay.py","scripts/sc/tests/fixtures/skill-package-replay/**"],
+        "documentation":["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/historical-compatibility-replay.v1.json","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/**","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/95-implementation-evolution-and-completion-report.md"]
+      },
+      "execution_snapshot_paths":["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/95-implementation-evolution-and-completion-report.md"],
+      "forbidden_changes":["execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/**","execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**"],
+      "execution_read_set":["authority-manifest.v1.json","execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/**","scripts/sc/skill_package_replay.py","scripts/sc/config/skill-package-validator-capability.v1.json"],
+      "dependency_closure":["scripts/sc/skill_package_replay.py","scripts/sc/config/skill-package-validator-capability.v1.json","scripts/sc/schemas/skill-package-validation-receipt.v1.schema.json","scripts/sc/tests/test_skill_package_replay.py","execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/**"],
+      "tdd": {
+        "red":{"command_id":"slice-s1-predicate","test_selector":"compatibility record absent while historical bytes remain frozen","expected_exit":"nonzero","expected_failure_family":"historical-compatibility-replay-absent","expected_failure_ids":["TC-D1-A01","TC-D1-A08"]},
+        "green":{"command_id":"slice-s1-predicate","expected_exit":"zero"},
+        "refactor":{"invocations":[{"command_id":"skill-replay-tests","expected_exit":"zero"},{"command_id":"historical-skill-package-replay","expected_exit":"zero"}]}
+      },
+      "post_refactor_command_id":"slice-s1-predicate",
+      "exit_predicate":"slice-ready",
+      "recovery":"Preserve the historical 8-01 tree and failed compatibility receipts; remove only a newly generated invalid current replay and regenerate it through the bounded CLI."
+    },
+    {
+      "slice_id":"RMAP-S2",
+      "title":"Non-authorizing evaluation seeds and stable-candidate matrix",
+      "requirement_ids":["TC-D1-006","TC-D1-007","TC-D1-008","TC-D1-010","TC-D1-012","TC-D1-013"],
+      "acceptance_ids":["TC-D1-A09","TC-D1-A10","TC-D1-A11","TC-D1-A12","TC-D1-A14","TC-D1-A16","TC-D1-A17"],
+      "source_refs":["docs/know.md#74-tc-d1-evaluation-seeds","execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair"],
+      "depends_on":["RMAP-S0","RMAP-S1"],
+      "allowed_changes": {
+        "production":["scripts/sc/skill_package_replay.py","scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json"],
+        "tests":["scripts/sc/tests/test_skill_package_replay.py","scripts/sc/tests/fixtures/skill-package-replay/**"],
+        "documentation":["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/receipts/**","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/95-implementation-evolution-and-completion-report.md"]
+      },
+      "execution_snapshot_paths":["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/95-implementation-evolution-and-completion-report.md"],
+      "forbidden_changes":["execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/**","execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**"],
+      "execution_read_set":["docs/know.md","authority-manifest.v1.json","execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/**","scripts/sc/skill_package_replay.py"],
+      "dependency_closure":["scripts/sc/skill_package_replay.py","scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json","scripts/sc/tests/test_skill_package_replay.py","execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/**"],
+      "tdd": {
+        "red":{"command_id":"slice-s2-predicate","test_selector":"seed manifest and replay matrix absent","expected_exit":"nonzero","expected_failure_family":"evaluation-seed-set-absent","expected_failure_ids":["TC-D1-A09","TC-D1-A11","TC-D1-A12"]},
+        "green":{"command_id":"slice-s2-predicate","expected_exit":"zero"},
+        "refactor":{"invocations":[{"command_id":"skill-replay-tests","expected_exit":"zero"},{"command_id":"stable-candidate-matrix-replay","expected_exit":"zero"}]}
+      },
+      "post_refactor_command_id":"slice-s2-predicate",
+      "exit_predicate":"slice-ready",
+      "recovery":"Retain rejected seed candidates and receipts as non-authorizing evidence; restore the last schema-valid manifest without promoting any seed to a quality baseline."
+    },
+    {
+      "slice_id":"RMAP-S3",
+      "title":"Consumer integration, downstream replay and terminal closure",
+      "requirement_ids":["TC-D1-008","TC-D1-009","TC-D1-010","TC-D1-011","TC-D1-012","TC-D1-013"],
+      "acceptance_ids":["TC-D1-A04","TC-D1-A12","TC-D1-A13","TC-D1-A14","TC-D1-A15","TC-D1-A16","TC-D1-A17"],
+      "source_refs":[".agents/skills/run-refactor-implementation-acceptance/SKILL.md","execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py"],
+      "depends_on":["RMAP-S0","RMAP-S1","RMAP-S2"],
+      "allowed_changes": {
+        "production":[".agents/skills/vdd-execution-plan/SKILL.md",".agents/skills/run-refactor-implementation-acceptance/SKILL.md",".agents/skills/run-refactor-implementation-acceptance/scripts/**","scripts/sc/skill_package_replay.py"],
+        "tests":[".agents/skills/vdd-execution-plan/scripts/tests/**",".agents/skills/run-refactor-implementation-acceptance/tests/**","scripts/sc/tests/test_skill_package_replay.py"],
+        "documentation":["docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md","docs/architecture/ADR_INDEX_PHASE.md","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/downstream-replay-receipt.v1.json","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/95-implementation-evolution-and-completion-report.md","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/plan-state.v1.json","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/resume-state.v1.json"]
+      },
+      "execution_snapshot_paths":[".agents/skills/run-refactor-implementation-acceptance/SKILL.md",".agents/skills/vdd-execution-plan/SKILL.md"],
+      "forbidden_changes":["execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/**","execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/**","PhaseA.Platform/**","PhaseA.Platform.Tests/**","runtime/phase-a/**","logs/phase-a-innernet/**","_bmad/**",".agents/skills/bmad-*/**",".agents/skills/gds-*/**"],
+      "execution_read_set":["AGENTS.md","docs/know.md","knowledge-context.v1.json","knowledge-context.freeze.v1.json","authority-manifest.v1.json","requirements.v1.json","implementation-contract.v1.json","command-registry.v1.json","scripts/sc/**",".agents/skills/vdd-execution-plan/**",".agents/skills/run-refactor-implementation-acceptance/**","execution-plans/2026-08-01-workflow-model-routing-control-plane/**"],
+      "dependency_closure":["scripts/sc/**",".agents/skills/vdd-execution-plan/**",".agents/skills/run-refactor-implementation-acceptance/**","execution-plans/2026-08-01-workflow-model-routing-control-plane/tools/validate_implementation.py","execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/**"],
+      "tdd": {
+        "red":{"command_id":"slice-s3-predicate","test_selector":"consumer binding and downstream replay receipt absent","expected_exit":"nonzero","expected_failure_family":"terminal-consumer-replay-incomplete","expected_failure_ids":["TC-D1-A04","TC-D1-A13","TC-D1-A15"]},
+        "green":{"command_id":"slice-s3-predicate","expected_exit":"zero"},
+        "refactor":{"invocations":[{"command_id":"acceptance-targeted-tests","expected_exit":"zero"},{"command_id":"acceptance-package-validation","expected_exit":"zero"},{"command_id":"downstream-workflow-model-routing-replay","expected_exit":"zero"}]}
+      },
+      "post_refactor_command_id":"terminal-implementation-validation",
+      "exit_predicate":"implementation-complete",
+      "recovery":"Disable the new consumer route, restore the previous caller selection, retain all receipts and failed candidate history, rerun the existing downstream validator, and leave this plan short of implementation-complete."
+    }
+  ],
+  "authorizes": []
+}
