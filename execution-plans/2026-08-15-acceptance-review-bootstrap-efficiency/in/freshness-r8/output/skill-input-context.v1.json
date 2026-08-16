@@ -1,0 +1,29 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:82454656a8bcca3b0e1f9c95bf8e256f28613c9719eef432c3ed2a3280fe4057",
+  "sections": [
+    {
+      "title": "Scope",
+      "content": "Acceptance control plane replaces whole-directory review with immutable changed-set and complete Consumer Closure evidence, deterministic checks, typed routing, and Acceptance-only finalization."
+    },
+    {
+      "title": "Authority",
+      "content": "VDD owns draft/plan-ready; maintainer owns implementation-authorized and non-authorizing supervised decisions; Quick Dev owns implementation-complete; Acceptance alone owns acceptance-passed. Bootstrap and advisory reviewers produce non-authorizing evidence only."
+    },
+    {
+      "title": "Routing",
+      "content": "Deterministic checks precede model work. Supervised deterministic-only without triggers requires a current maintainer decision; unattended deterministic-only runs no Bootstrap; focused/full routes run isolated three-role Bootstrap; manual pause is non-authorizing. Registered risks upgrade to full or pause."
+    },
+    {
+      "title": "Evidence And Execution",
+      "content": "Closure and required-check evidence are identity-bound and stale on candidate or authority change. Segments use immutable descriptors, range-bound source delivery, frozen isolated snapshots, inherited access proof, append-only events, policy-bound progress/watchdog, lease reconciliation, and bounded retry."
+    },
+    {
+      "title": "Validation And Rollout",
+      "content": "M0 closes runtime recovery and isolation, M1 adds Acceptance strategy, and M2 requires 8-13 regression plus frozen semantic corpus before replacing whole-directory defaults. Cost reduction cannot weaken coverage, authorization, verifier, or semantic-detection parity."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T10:22:51.061166Z"
+}

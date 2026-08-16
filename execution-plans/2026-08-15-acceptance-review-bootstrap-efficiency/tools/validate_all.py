@@ -15,7 +15,7 @@ from typing import Any
 
 PLAN_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = PLAN_ROOT.parents[1]
-CURRENT_SOURCE_FREEZE = PLAN_ROOT / "repair" / "round-2" / "source-freeze-manifest.v1.json"
+CURRENT_SOURCE_FREEZE = PLAN_ROOT / "repair" / "round-4" / "source-freeze-manifest.v1.json"
 
 
 def _sha(data: bytes) -> str:
@@ -217,7 +217,7 @@ def _validate_freshness() -> None:
     spec.loader.exec_module(module)
     module.validate_manifest(REPOSITORY_ROOT, _json(source_path))
     skill_contract = ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"
-    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r7/receipt.json"
+    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r8/receipt.json"
     _run_owner_validator(
         ["scripts/python/validate_skill_input_consumption.py", "--repository-root", ".", "--contract", skill_contract, "--require-ready", receipt],
         "Skill Input validation",

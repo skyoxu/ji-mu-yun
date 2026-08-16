@@ -1,0 +1,17 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:1bd47cab4f54c4b5c834a0f5f972b4d4d90b223d1cad6eb1a697698b9a07e3eb",
+  "sections": [
+    {
+      "title": "Command Registry",
+      "content": "Defines red/green validation commands for canonical evidence, migration, bootstrap runtime, acceptance pipeline, projection/segmentation, semantic import, rollout regression, and terminal validation. Commands bind acceptance IDs, fixed programs, repository paths, and timeouts. Terminal coverage requires all listed green behavior programs; no command authorizes lifecycle publication."
+    },
+    {
+      "title": "Requirements And Acceptance",
+      "content": "Defines ARBE-001 through ARBE-022 and acceptance criteria ARBE-A01 through ARBE-A46. Core requirements cover identity-bound admission, complete changed sets and typed closure, real checks and legal routes, isolated role and verifier behavior, immutable range projections and segment identities, process/lease retry policy, cost decisions, current Bootstrap import, shared canonical evidence and migrations, historical replay, telemetry/rollout gates, and a fixed supervised/unattended route matrix. Acceptance authority remains exclusive to Acceptance; Bootstrap and advisory Web Sol material carry no authorization."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T10:29:54.608480Z"
+}
