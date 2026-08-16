@@ -1,0 +1,21 @@
+{
+  "schema_version": "vdd-repair-finding-set.v1",
+  "repair_id": "acceptance-review-bootstrap-efficiency-freshness-r1",
+  "predecessor": {
+    "path": "in/know36/receipt.json",
+    "sha256": "sha256:bc6b9ef3925e86e5cb29fdf76f5b038df66d06cd988cbe3e838c2ae8a241e47e"
+  },
+  "findings": [
+    {
+      "id": "VDD-FRESHNESS-001",
+      "severity": "P1",
+      "summary": "The plan freshness validator consumed a Skill Input receipt bound to an obsolete repository identity.",
+      "allowed_repair_scope": [
+        "in/freshness-r1/**",
+        "tools/validate_all.py",
+        "repair/round-1/**"
+      ]
+    }
+  ],
+  "authorizes": []
+}

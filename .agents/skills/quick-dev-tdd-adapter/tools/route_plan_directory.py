@@ -213,7 +213,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository-root", type=Path, required=True)
     parser.add_argument("--plan-dir", type=Path, required=True)
+    parser.add_argument("--caller", required=True)
     args = parser.parse_args()
+    if args.caller != "quick-dev-tdd-adapter":
+        parser.error("--caller must be quick-dev-tdd-adapter")
     print(json.dumps(route(args.repository_root.resolve(), args.plan_dir.resolve()), sort_keys=True))
     return 0
 

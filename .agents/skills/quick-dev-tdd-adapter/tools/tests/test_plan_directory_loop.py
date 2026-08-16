@@ -41,6 +41,18 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "execution-plans"):
                 ROUTER.route(root, outside)
 
+    def test_router_cli_requires_its_caller_identity(self) -> None:
+        command = [
+            sys.executable,
+            str(TOOLS / "route_plan_directory.py"),
+            "--repository-root", str(REPOSITORY_ROOT),
+            "--plan-dir", str(REPOSITORY_ROOT / "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency"),
+        ]
+        missing = subprocess.run(command, capture_output=True, text=True, check=False)
+        self.assertNotEqual(0, missing.returncode)
+        wrong = subprocess.run(command + ["--caller", "bmad-quick-dev"], capture_output=True, text=True, check=False)
+        self.assertNotEqual(0, wrong.returncode)
+
     def test_router_ignores_stale_slice_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); plan = self._plan(root, [{"slice_id": "S0", "depends_on": []}])

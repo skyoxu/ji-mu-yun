@@ -1,0 +1,26 @@
+{
+  "schema_version": "vdd-repair-closure.v1",
+  "repair_id": "acceptance-review-bootstrap-efficiency-freshness-r1",
+  "finding_set": {
+    "path": "repair/round-1/finding-set.json",
+    "sha256": "sha256:84e2f0347a081e98c49a04520df968809ecd9f0981accb3f676010b1a2b1392d"
+  },
+  "repair_slices": {
+    "path": "repair/round-1/repair-slices.json",
+    "sha256": "sha256:909aa0eb81e1571b316d96ebbd529c842736089b9741ee7a6cb9aa577f200c0b"
+  },
+  "successor_receipt": {
+    "path": "in/freshness-r1/receipt.json",
+    "sha256": "sha256:97af391df702abe459b1554e2723069ec3f7ff21478843659afcdbddbc6f8c71"
+  },
+  "consumer": {
+    "path": "tools/validate_all.py",
+    "sha256": "sha256:47198df0f3b8ec3571bcc2ea6f368dc6b302c601d249ecd29844e3cba2901b89"
+  },
+  "changed_paths": [
+    "in/freshness-r1/**",
+    "tools/validate_all.py",
+    "repair/round-1/**"
+  ],
+  "authorizes": []
+}

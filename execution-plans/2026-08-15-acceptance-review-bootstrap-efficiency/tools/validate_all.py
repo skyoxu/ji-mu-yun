@@ -38,6 +38,122 @@ def _json(path: Path) -> dict[str, Any]:
     return value
 
 
+def _canonical_hash(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return _sha(payload)
+
+
+def _validate_bound_file(reference: Any, expected_path: str, label: str) -> Path:
+    if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+        raise ValueError(f"{label} reference is invalid")
+    if reference["path"] != expected_path:
+        raise ValueError(f"{label} path is invalid")
+    path = REPOSITORY_ROOT / expected_path
+    if not path.is_file() or reference["sha256"] != _sha(path.read_bytes()):
+        raise ValueError(f"{label} hash is stale")
+    return path
+
+
+def _validate_implementation_authorization(state: dict[str, Any], source: dict[str, Any]) -> None:
+    receipt_ref = state.get("authorization_receipt")
+    receipt_path = _validate_bound_file(
+        receipt_ref,
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-authorization-receipt.v1.json",
+        "implementation authorization receipt",
+    )
+    receipt = _json(receipt_path)
+    required = {
+        "schema_version", "plan_id", "source_freeze_manifest", "selection_pointer",
+        "selection_record", "plan_validation", "known_red", "decision", "authorizes",
+        "does_not_authorize",
+    }
+    if set(receipt) != required:
+        raise ValueError("implementation authorization receipt fields are invalid")
+    if (
+        receipt["schema_version"] != "acceptance-review-bootstrap-efficiency.implementation-authorization-receipt.v1"
+        or receipt["plan_id"] != "acceptance-review-bootstrap-efficiency"
+        or receipt["authorizes"] != ["implementation-authorized"]
+        or receipt["does_not_authorize"] != ["implementation-complete", "acceptance-passed", "archived", "release"]
+    ):
+        raise ValueError("implementation authorization receipt contract is invalid")
+
+    source_ref = receipt["source_freeze_manifest"]
+    if not isinstance(source_ref, dict) or set(source_ref) != {"path", "sha256", "canonical_hash"}:
+        raise ValueError("source freeze manifest reference is invalid")
+    source_path = REPOSITORY_ROOT / "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/source-freeze-manifest.v1.json"
+    if source_ref["path"] != source_path.relative_to(REPOSITORY_ROOT).as_posix() or source_ref["sha256"] != _sha(source_path.read_bytes()):
+        raise ValueError("source freeze manifest hash is stale")
+    if source_ref["canonical_hash"] != source.get("canonical_hash"):
+        raise ValueError("source freeze canonical hash is stale")
+    _validate_bound_file(
+        receipt["selection_pointer"],
+        source["selection_pointer_path"],
+        "selection pointer",
+    )
+    _validate_bound_file(
+        receipt["selection_record"],
+        source["selection_record_path"],
+        "selection record",
+    )
+    if _json(source_path).get("selection_hash") != source.get("selection_hash"):
+        raise ValueError("source freeze selection hash is stale")
+
+    plan_validation = receipt["plan_validation"]
+    expected_plan_result = {
+        "acceptance": 46,
+        "authorizes": [],
+        "commands": 15,
+        "requirements": 22,
+        "schema_version": "acceptance-review-bootstrap-efficiency.plan-validation.v1",
+        "slices": 7,
+        "status": "passed",
+    }
+    if (
+        not isinstance(plan_validation, dict)
+        or plan_validation.get("command") != "python tools/validate_all.py --validate-plan"
+        or plan_validation.get("result") != expected_plan_result
+        or plan_validation.get("result_hash") != _canonical_hash(expected_plan_result)
+    ):
+        raise ValueError("authorization plan validation binding is invalid")
+    _validate_bound_file(
+        plan_validation.get("validator"),
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/tools/validate_all.py",
+        "plan validator",
+    )
+
+    known_red = receipt["known_red"]
+    expected_red = {
+        "status": "blocked",
+        "family": "schema_error",
+        "detail": "frozen authority lacks acceptance-contract companion",
+        "authorizes": [],
+    }
+    if (
+        not isinstance(known_red, dict)
+        or known_red.get("command_id") != "canonical-migration-red"
+        or known_red.get("result") != expected_red
+        or known_red.get("result_hash") != _canonical_hash(expected_red)
+    ):
+        raise ValueError("authorization known RED binding is invalid")
+    _validate_bound_file(
+        known_red.get("fixture"),
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/fixtures/current-package-exact-cover-red.v1.json",
+        "known RED fixture",
+    )
+    _validate_bound_file(
+        known_red.get("validator"),
+        ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py",
+        "known RED validator",
+    )
+    decision = receipt["decision"]
+    if decision != {
+        "owner": "maintainer",
+        "transition": "implementation-authorized",
+        "reason": "self-hosted-exact-cover-bootstrap-exception",
+    }:
+        raise ValueError("implementation authorization decision is invalid")
+
+
 def _untracked_manifest() -> list[dict[str, str]]:
     values: list[dict[str, str]] = []
     for raw in _run("ls-files", "--others", "--exclude-standard", "-z").split(b"\0"):
@@ -95,7 +211,7 @@ def _validate_freshness() -> None:
     spec.loader.exec_module(module)
     module.validate_manifest(REPOSITORY_ROOT, _json(source_path))
     skill_contract = ".agents/skills/vdd-execution-plan/references/skill-input-contract.v1.json"
-    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/know36/receipt.json"
+    receipt = "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/in/freshness-r1/receipt.json"
     _run_owner_validator(
         ["scripts/python/validate_skill_input_consumption.py", "--repository-root", ".", "--contract", skill_contract, "--require-ready", receipt],
         "Skill Input validation",
@@ -126,10 +242,16 @@ def validate_plan() -> dict[str, Any]:
     _validate_freshness()
     if contract.get("plan_id") != registry.get("plan_id") or contract.get("plan_id") != state.get("plan_id"):
         raise ValueError("plan identity drift")
-    if state.get("schema_version") != "vdd.plan-state.v2" or state.get("status") != "plan-ready":
+    lifecycle_status = state.get("status")
+    if state.get("schema_version") != "vdd.plan-state.v2" or lifecycle_status not in {"plan-ready", "implementation-authorized"}:
         raise ValueError("lifecycle state is not VDD plan-ready")
-    if state.get("state_owner") != "vdd-execution-plan" or state.get("authorizes") != ["plan-ready"]:
-        raise ValueError("lifecycle owner or authorization drift")
+    if lifecycle_status == "plan-ready":
+        if state.get("state_owner") != "vdd-execution-plan" or state.get("authorizes") != ["plan-ready"]:
+            raise ValueError("lifecycle owner or authorization drift")
+    else:
+        if state.get("state_owner") != "maintainer" or state.get("authorizes") != ["plan-ready", "implementation-authorized"]:
+            raise ValueError("lifecycle owner or authorization drift")
+        _validate_implementation_authorization(state, source)
     if contract.get("backend") != {"hidden_state": False}:
         raise ValueError("Quick Dev backend contract drift")
     if contract.get("protocol_artifacts") != {"context_layout": "context/<capsule-id>", "attempt_layout": "attempts/<attempt-id>"}:
