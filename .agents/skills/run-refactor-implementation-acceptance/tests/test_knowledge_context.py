@@ -62,6 +62,7 @@ class RefactorAcceptanceKnowledgeContextTests(unittest.TestCase):
             ]
             with mock.patch.object(module.subprocess, "run", side_effect=fake_run), \
                  mock.patch.object(module, "validate_context", return_value=None), \
+                 mock.patch.object(module, "validate_worktree_sources", return_value=None), \
                  mock.patch.object(sys, "argv", argv):
                 self.assertEqual(0, module.main())
             document = json.loads(output.read_text(encoding="utf-8"))
@@ -147,6 +148,32 @@ class RefactorAcceptanceKnowledgeContextTests(unittest.TestCase):
             self.assertTrue(route_output.is_file())
             self.assertEqual(route, json.loads(route_output.read_text(encoding="utf-8")))
             self.assertFalse((root / "execution-plans/plan/knowledge-context.json").exists())
+
+    def test_worktree_read_set_drift_returns_route_before_context_publication(self) -> None:
+        module = _load("prepare_knowledge_context.py")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            catalog = root / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
+            catalog.parent.mkdir(parents=True)
+            catalog.write_text(json.dumps({"source_snapshot": {"ref": "refs/heads/main", "commit": "a" * 40}}), encoding="utf-8")
+            policy = root / "knowledge/policies/consumer-policies.v2.json"
+            policy.parent.mkdir(parents=True)
+            policy.write_text(json.dumps({"policy_revision": "test-policy-v2"}), encoding="utf-8")
+            locator = {"status": "matched", "candidates": [], "source_snapshot_id": "sha256:" + "b" * 64}
+            argv = [
+                "prepare", "--repository-root", str(root), "--request-id", "request-2",
+                "--query", "scope", "--target-plan", "execution-plans/plan",
+                "--output", "execution-plans/plan/context.json",
+            ]
+            with mock.patch.object(module.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=json.dumps(locator), stderr="")), \
+                 mock.patch.object(module, "validate_context", return_value=None), \
+                 mock.patch.object(module, "validate_worktree_sources", return_value="candidate_worktree_source_hash_mismatch"), \
+                 mock.patch.object(sys, "argv", argv), mock.patch("builtins.print") as printed:
+                self.assertEqual(2, module.main())
+            route = json.loads(printed.call_args.args[0])
+            self.assertEqual("knowledge-context-repair-required", route["next_action"])
+            self.assertEqual("candidate_worktree_source_hash_mismatch", route["failure_code"])
+            self.assertFalse((root / "execution-plans/plan/context.json").exists())
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -37,11 +38,31 @@ class CompactVddProjectionTests(unittest.TestCase):
         self.target = self.root / "execution-plans/target"
         (self.target / "tools").mkdir(parents=True)
         (self.target / "00-index.md").write_text("# Target\n", encoding="utf-8")
-        (self.target / "plan-state.v1.json").write_text(json.dumps({"state":"implementation-complete","authorizes":["implementation-complete"]}), encoding="utf-8")
-        (self.target / "tools/validate_implementation.py").write_text("print('pass')\n", encoding="utf-8")
+        (self.target / "plan-state.v1.json").write_text(json.dumps({"state":"implementation-authorized","authorizes":["implementation-authorized"]}), encoding="utf-8")
+        (self.target / "tools/terminal_runner.py").write_text("print('pass')\n", encoding="utf-8")
+        (self.target / "implementation-contract.v1.json").write_text(json.dumps({
+            "plan_id": "target",
+            "terminal": {"command_id": "validate", "runner": "tools/terminal_runner.py", "predicate": "implementation-complete"},
+        }), encoding="utf-8")
+        (self.target / "command-registry.v1.json").write_text(json.dumps({"commands": []}), encoding="utf-8")
         (self.target / "knowledge-context.refactor-acceptance.v1.json").write_text("{}\n", encoding="utf-8")
         policy = self.root / "toolchain-code-review.v1.json"
         policy.write_text("{}\n", encoding="utf-8")
+        self.receipt_path = self.root / "logs/quick-dev/implementation-complete.json"
+        self.receipt_path.parent.mkdir(parents=True)
+        contract_hash = "sha256:" + hashlib.sha256((self.target / "implementation-contract.v1.json").read_bytes()).hexdigest()
+        registry_hash = "sha256:" + hashlib.sha256((self.target / "command-registry.v1.json").read_bytes()).hexdigest()
+        self.receipt_path.write_text(json.dumps({
+            "schema_version": "quick-dev-implementation-complete.v1",
+            "predicate": "implementation-complete",
+            "status": "pass",
+            "plan_id": "target",
+            "contract_hash": contract_hash,
+            "command_registry_hash": registry_hash,
+            "terminal_command_id": "validate",
+            "validated_command_ids": ["validate"],
+            "authorizes": ["implementation-complete"],
+        }), encoding="utf-8")
         self.request_path = self.root / "request.json"
         self.request = {
             "schemaVersion":"compact-vdd-acceptance-projection-request.v1",
@@ -55,6 +76,8 @@ class CompactVddProjectionTests(unittest.TestCase):
             "knowledgeContextPath":"knowledge-context.refactor-acceptance.v1.json",
             "codeReviewDomain":"toolchain",
             "codeReviewPolicyPath":"toolchain-code-review.v1.json",
+            "implementationReceiptPath":"logs/quick-dev/implementation-complete.json",
+            "implementationReceiptHash":"sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest(),
             "commands":[{"id":"validate","executable":"py","argv":["-3","tools/validate_implementation.py"],"cwd":".","timeout_seconds":30,"shell":False}],
             "actions":[{"actionId":"validate","dependsOn":[],"order":1,"commandId":"validate","activation":True}],
             "authorizes":[],
@@ -98,15 +121,19 @@ class CompactVddProjectionTests(unittest.TestCase):
         with self.assertRaisesRegex(InputError, "sorted and unique"):
             project(self.root, self.request_path)
 
-    def test_projection_requires_completed_target_and_append_only_outputs(self) -> None:
+    def test_projection_uses_quick_dev_handoff_without_claiming_plan_state_and_is_append_only(self) -> None:
         self.write_request()
-        state_path = self.target / "plan-state.v1.json"
-        state_path.write_text(json.dumps({"state":"implementation-authorized","authorizes":["implementation-authorized"]}), encoding="utf-8")
-        with self.assertRaisesRegex(InputError, "not implementation-complete"):
-            project(self.root, self.request_path)
-        state_path.write_text(json.dumps({"state":"implementation-complete","authorizes":["implementation-complete"]}), encoding="utf-8")
         project(self.root, self.request_path)
         with self.assertRaisesRegex(InputError, "already exists"):
+            project(self.root, self.request_path)
+
+    def test_projection_rejects_handoff_that_no_longer_matches_the_terminal_contract(self) -> None:
+        receipt = json.loads(self.receipt_path.read_text(encoding="utf-8"))
+        receipt["terminal_command_id"] = "other"
+        self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
+        self.write_request()
+        with self.assertRaisesRegex(InputError, "does not match"):
             project(self.root, self.request_path)
 
     def test_projection_uses_explicit_baseline_overlay_without_absorbing_prior_dirty_bytes(self) -> None:

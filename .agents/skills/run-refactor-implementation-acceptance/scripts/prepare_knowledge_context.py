@@ -14,7 +14,11 @@ PYTHON_ROOT = REPOSITORY_ROOT / "scripts" / "python"
 if str(PYTHON_ROOT) not in sys.path:
     sys.path.insert(0, str(PYTHON_ROOT))
 
-from knowledge_context_validation import canonical_hash, validate_context  # noqa: E402
+from knowledge_context_validation import (  # noqa: E402
+    canonical_hash,
+    validate_context,
+    validate_worktree_sources,
+)
 
 
 def _accepted(values: list[str]) -> dict[str, list[str]]:
@@ -137,6 +141,8 @@ def main() -> int:
         expected_consumer="refactor-acceptance",
         require_selection=True,
     )
+    if failure_code is None:
+        failure_code = validate_worktree_sources(payload, root)
     payload["preflight"] = {
         "status": "blocked" if failure_code else "ready",
         "failure_code": failure_code,

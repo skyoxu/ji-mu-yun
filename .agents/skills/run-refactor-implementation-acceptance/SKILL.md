@@ -40,12 +40,24 @@ target plan and an explicit VDD or Quick Dev handoff. For an
 `implementation-complete` compact VDD target, run
 `scripts/compact_vdd_projection.py` only with an explicit sorted changed-path
 list, consumer refs, commands, actions, policy, and Acceptance-owned knowledge
-context. The projector must not enumerate the dirty worktree to infer scope.
+context. The projector must consume Quick Dev's current
+`quick-dev-implementation-complete.v1` receipt, validate it against the
+target's current implementation contract, command registry, and declared
+terminal runner, and never require VDD or maintainer `plan-state` to publish
+`implementation-complete`. The projector must not enumerate the dirty
+worktree to infer scope.
 The orchestrator may otherwise materialize prerequisites
 deterministically from those bindings and immutable Git bytes, but must not
 guess scope, revisions, changed paths, commands, or acceptance actions. If a
 required source is missing or ambiguous, report `prerequisite_blocked` with the
 missing artifacts and stop before `start-or-resume`.
+
+Treat candidate assembly as one evidence transaction. Complete every
+VDD/source-freeze mutation, then publish the knowledge catalog, then create
+the Acceptance knowledge context and Skill-input receipt, and only then invoke
+the projection. The projection atomically publishes the manifests, snapshot,
+run request, and prerequisite bundle. Historical snapshots, `in/` artifacts,
+and prior Acceptance inputs are never copied into a successor candidate.
 
 Before `start-or-resume`, load
 `references/skill-input-contract.v1.json` and prepare an `acceptance` receipt
@@ -71,6 +83,11 @@ freshness, or write knowledge artifacts outside the explicit target plan. The
 adapter persists the route append-only under
 `<target-plan>/knowledge-context-routes/<hash>.json`; maintenance must bind that
 exact route before catalog-stale publication.
+
+Before a ready context is written, validate the complete Locator read-set
+against current worktree bytes. A worktree hash mismatch produces the same
+typed maintenance/repair route and stops before candidate or Skill-input
+materialization; it must not be deferred to `prepare-run`.
 
 Create or resume the target-owned append-only run with the canonical run-input
 request hash that `prepare-run` will publish as `inputHash`, plus the

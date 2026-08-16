@@ -66,14 +66,17 @@ def _validate_request(value: dict[str, Any]) -> None:
     required = {
         "schemaVersion", "targetPlan", "runId", "changeId", "baselineRevision",
         "changedPaths", "affectedConsumerRefs", "targetPlanPaths", "knowledgeContextPath",
-        "codeReviewDomain", "codeReviewPolicyPath", "commands", "actions", "authorizes",
+        "codeReviewDomain", "codeReviewPolicyPath", "implementationReceiptPath",
+        "implementationReceiptHash", "commands", "actions", "authorizes",
     }
     if set(value) not in {frozenset(required), frozenset(required | {"baselineOverlaySources"})} or value.get("schemaVersion") != "compact-vdd-acceptance-projection-request.v1" or value.get("authorizes") != []:
         raise InputError("compact VDD projection request fields are invalid")
     if not isinstance(value.get("runId"), str) or RUN_PATTERN.fullmatch(value["runId"]) is None:
         raise InputError("compact VDD projection runId is invalid")
-    for field in ("targetPlan", "knowledgeContextPath", "codeReviewPolicyPath"):
+    for field in ("targetPlan", "knowledgeContextPath", "codeReviewPolicyPath", "implementationReceiptPath"):
         _relative(value.get(field), field)
+    if not isinstance(value.get("implementationReceiptHash"), str) or HASH_PATTERN.fullmatch(value["implementationReceiptHash"]) is None:
+        raise InputError("compact VDD implementation receipt hash is invalid")
     for field in ("changedPaths", "affectedConsumerRefs", "targetPlanPaths"):
         values = value.get(field)
         if not isinstance(values, list) or not values or any(not isinstance(item, str) for item in values):
@@ -145,6 +148,51 @@ def _project_baseline_overlays(
         return commit.decode("ascii").strip()
 
 
+def _implementation_handoff(root: Path, target: Path, request: dict[str, Any]) -> tuple[Path, dict[str, Any], Path]:
+    receipt_path = (root / request["implementationReceiptPath"]).resolve()
+    try:
+        receipt_path.relative_to(root)
+    except ValueError as exc:
+        raise InputError("implementation receipt escapes repository root") from exc
+    if not receipt_path.is_file() or _hash_bytes(receipt_path.read_bytes()) != request["implementationReceiptHash"]:
+        raise InputError("implementation receipt is missing or stale")
+    receipt = _load(receipt_path)
+    contract_path = target / "implementation-contract.v1.json"
+    registry_path = target / "command-registry.v1.json"
+    if not contract_path.is_file() or not registry_path.is_file():
+        raise InputError("implementation handoff contract or registry is missing")
+    contract = _load(contract_path)
+    terminal = contract.get("terminal") if isinstance(contract, dict) else None
+    if not isinstance(terminal, dict) or set(terminal) != {"command_id", "runner", "predicate"}:
+        raise InputError("implementation handoff terminal contract is invalid")
+    runner_value = terminal.get("runner")
+    if not isinstance(runner_value, str):
+        raise InputError("implementation handoff terminal runner is invalid")
+    runner_path = (target / runner_value).resolve()
+    try:
+        runner_path.relative_to(target)
+    except ValueError as exc:
+        raise InputError("implementation handoff terminal runner escapes target") from exc
+    expected = {
+        "schema_version": "quick-dev-implementation-complete.v1",
+        "predicate": "implementation-complete",
+        "status": "pass",
+        "plan_id": contract.get("plan_id"),
+        "contract_hash": _hash_bytes(contract_path.read_bytes()),
+        "command_registry_hash": _hash_bytes(registry_path.read_bytes()),
+        "terminal_command_id": terminal.get("command_id"),
+    }
+    if any(receipt.get(key) != value for key, value in expected.items()):
+        raise InputError("implementation receipt does not match the current Quick Dev terminal contract")
+    if receipt.get("authorizes") != ["implementation-complete"]:
+        raise InputError("implementation receipt does not authorize implementation-complete")
+    if not isinstance(receipt.get("validated_command_ids"), list) or not receipt["validated_command_ids"]:
+        raise InputError("implementation receipt has no validated commands")
+    if not runner_path.is_file():
+        raise InputError("implementation handoff terminal runner is missing")
+    return receipt_path, receipt, runner_path
+
+
 def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     root = repository_root.resolve()
     request = _load(request_path)
@@ -156,13 +204,7 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
         raise InputError("compact VDD target escapes repository root") from exc
     if not target.is_dir():
         raise InputError("compact VDD target is missing")
-    state_path = target / "plan-state.v1.json"
-    state = _load(state_path)
-    if state.get("state") != "implementation-complete" or state.get("authorizes") != ["implementation-complete"]:
-        raise InputError("compact VDD target is not implementation-complete")
-    validator = target / "tools" / "validate_implementation.py"
-    if not validator.is_file():
-        raise InputError("compact VDD terminal validator is missing")
+    receipt_path, receipt, validator = _implementation_handoff(root, target, request)
     knowledge = (target / request["knowledgeContextPath"]).resolve()
     policy_source = (root / request["codeReviewPolicyPath"]).resolve()
     if not knowledge.is_file() or not policy_source.is_file():
@@ -290,6 +332,37 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
         stage_request = stage / final_request.name
         stage_request.write_text(json.dumps(run_request, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
 
+        def staged_ref(path: Path, logical_path: Path) -> dict[str, str]:
+            return {"path": logical_path.as_posix(), "sha256": _hash_bytes(path.read_bytes())}
+
+        bundle = {
+            "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+            "targetPlan": request["targetPlan"],
+            "runId": run_id,
+            "implementationReceipt": {
+                "path": receipt_path.relative_to(root).as_posix(),
+                "sha256": request["implementationReceiptHash"],
+                "terminalCommandId": receipt["terminal_command_id"],
+            },
+            "terminalRunner": {
+                "path": validator.relative_to(target).as_posix(),
+                "sha256": _hash_bytes(validator.read_bytes()),
+            },
+            "baselineManifest": staged_ref(baseline_path, input_relative / baseline_path.name),
+            "candidateManifest": staged_ref(candidate_path, input_relative / candidate_path.name),
+            "candidateSnapshotPath": f".acceptance-snapshots/{run_id}",
+            "runRequest": staged_ref(stage_request, final_request.relative_to(target)),
+            "actionDag": staged_ref(actions_path, input_relative / actions_path.name),
+            "commandRegistry": staged_ref(registry_path, input_relative / registry_path.name),
+            "knowledgeContext": _file_ref(knowledge, target),
+            "policy": staged_ref(policy_path, input_relative / policy_path.name),
+            "authorizes": [],
+        }
+        bundle["bundleHash"] = canonical_hash(bundle)
+        (stage_input / "compact-vdd-acceptance-prerequisite-bundle.v1.json").write_text(
+            json.dumps(bundle, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+        )
+
         final_input_dir.parent.mkdir(parents=True, exist_ok=True)
         final_snapshot.parent.mkdir(parents=True, exist_ok=True)
         os.replace(stage_input, final_input_dir)
@@ -297,23 +370,6 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
         os.replace(stage_request, final_request)
 
     bundle_path = final_input_dir / "compact-vdd-acceptance-prerequisite-bundle.v1.json"
-    bundle = {
-        "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
-        "targetPlan": request["targetPlan"],
-        "runId": run_id,
-        "planStateHash": _hash_bytes(state_path.read_bytes()),
-        "baselineManifest": _file_ref(final_input_dir / "baseline-content-manifest.v1.json", target),
-        "candidateManifest": _file_ref(final_input_dir / "candidate-content-manifest.v1.json", target),
-        "candidateSnapshotPath": f".acceptance-snapshots/{run_id}",
-        "runRequest": _file_ref(final_request, target),
-        "actionDag": _file_ref(final_input_dir / "action-dag.v1.json", target),
-        "commandRegistry": _file_ref(final_input_dir / "command-registry.v1.json", target),
-        "knowledgeContext": _file_ref(knowledge, target),
-        "policy": _file_ref(final_input_dir / policy_source.name, target),
-        "authorizes": [],
-    }
-    bundle["bundleHash"] = canonical_hash(bundle)
-    bundle_path.write_text(json.dumps(bundle, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     return {"status": "ready", "bundle": bundle_path.relative_to(root).as_posix(), "bundleHash": bundle["bundleHash"], "runRequest": final_request.relative_to(root).as_posix(), "authorizes": []}
 
 
