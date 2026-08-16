@@ -1,0 +1,45 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/acceptance-arbe-20260816-r20/action-dag.v1.json",
+    "sha256": "sha256:aabb6f01712d40ae4b86e0cf2604240b4e163635e4600ccdbc24c195fec089a3"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/acceptance-arbe-20260816-r20/baseline-content-manifest.v1.json",
+    "sha256": "sha256:98fe6ded14852eb845ff0670f1f3a1497e7730d68a9cd53856a5722a3f3547ed"
+  },
+  "bundleHash": "sha256:9c0b7bb6148ccf8189d71f525aa3b11ec732a9a3beaacd9f0a54ed73996bfbbe",
+  "candidateManifest": {
+    "path": "acceptance-inputs/acceptance-arbe-20260816-r20/candidate-content-manifest.v1.json",
+    "sha256": "sha256:1abbe8a6b9d18b3a29a307c36f748590f200b6af7cf7beac0f00c8f231a3e45f"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/acceptance-arbe-20260816-r20",
+  "commandRegistry": {
+    "path": "acceptance-inputs/acceptance-arbe-20260816-r20/command-registry.v1.json",
+    "sha256": "sha256:c5bdd90d06bae661e0378b27803f96de201024774d871771b7e0f2b32109b7b2"
+  },
+  "implementationReceipt": {
+    "path": "logs/tdd-adapter/acceptance-review-bootstrap-efficiency/terminal/RUN-20260816T153012-994463Z/implementation-complete-result.json",
+    "sha256": "sha256:330a7ebb56d1206b1f99ea8d2845c10291a9952a18aea2f01e9ebe4da4d12263",
+    "terminalCommandId": "terminal-full"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance.r20.v1.json",
+    "sha256": "sha256:a82ee42b1e6841443da8888b6249afa16a40180153045d00cc63077b6676b0f1"
+  },
+  "policy": {
+    "path": "acceptance-inputs/acceptance-arbe-20260816-r20/toolchain-code-review.v1.json",
+    "sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"
+  },
+  "runId": "acceptance-arbe-20260816-r20",
+  "runRequest": {
+    "path": "acceptance-run-request.acceptance-arbe-20260816-r20.v1.json",
+    "sha256": "sha256:ca84851b22d25caa6f26a62044c7a8a4b829fd5a7d6e5bf3370eb279b6bbec1a"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+  "terminalRunner": {
+    "path": "tools/terminal_validation.py",
+    "sha256": "sha256:3012585a283456a5de39988996267e45ba6bbf9c3f684b26e72da0f119dfe64b"
+  }
+}

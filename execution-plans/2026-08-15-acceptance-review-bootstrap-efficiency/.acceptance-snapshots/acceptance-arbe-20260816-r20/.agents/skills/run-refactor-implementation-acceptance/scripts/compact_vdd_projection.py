@@ -206,20 +206,6 @@ def _candidate_payload(root: Path, request: dict[str, Any], path: str) -> bytes 
     return current.read_bytes() if current.is_file() else None
 
 
-def _historical_evidence_path(path: str) -> bool:
-    normalized = path.replace("\\", "/")
-    return (
-        normalized.startswith("execution-plans/")
-        and any(
-            marker in normalized
-            for marker in (
-                "/.acceptance-snapshots/", "/in/", "/s/", "/acceptance-inputs/", "/acceptance-runs/",
-                "/knowledge-context.history/", "/knowledge-context.freeze.history/",
-            )
-        )
-    ) or normalized.startswith("_bmad-output/q/")
-
-
 def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     root = repository_root.resolve()
     request = _load(request_path)
@@ -283,7 +269,7 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
             "candidate_sha256": candidate_hash,
             "inclusion_reason": "explicit compact VDD candidate path",
         })
-        if candidate_payload is not None and not (request.get("candidateRevision") and _historical_evidence_path(path)):
+        if candidate_payload is not None:
             present_payloads[path] = candidate_payload
 
     baseline_manifest = {"schemaVersion": "acceptance-baseline-content-manifest.v1", "status": "complete", "coverageGaps": [], "authorizes": [], "files": baseline_files}
