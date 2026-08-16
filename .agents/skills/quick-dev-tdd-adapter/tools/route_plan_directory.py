@@ -83,6 +83,42 @@ def _head_artifact_bytes(repository_root: Path, relative: Path) -> bytes | None:
     return completed.stdout if completed.returncode == 0 else None
 
 
+def _historical_contract_and_registry(
+    repository_root: Path,
+    plan_dir: Path,
+    contract_hash: str,
+) -> tuple[bytes, bytes] | None:
+    """Resolve immutable producer inputs for a legacy slice receipt."""
+    root = repository_root.resolve()
+    contract_path = plan_dir.resolve().relative_to(root).as_posix()
+    registry_path = (plan_dir / "command-registry.v1.json").resolve().relative_to(root).as_posix()
+    commits = subprocess.run(
+        ["git", "-C", str(root), "log", "--all", "--format=%H", "--", contract_path],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+    )
+    for commit in commits.stdout.splitlines():
+        contract = subprocess.run(
+            ["git", "-C", str(root), "show", f"{commit}:{contract_path}"],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if contract.returncode != 0 or _sha(contract.stdout) != contract_hash:
+            continue
+        registry = subprocess.run(
+            ["git", "-C", str(root), "show", f"{commit}:{registry_path}"],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        return contract.stdout, registry.stdout if registry.returncode == 0 else b'{"commands":[]}'
+    return None
+
+
 def _slice_projection(contract: dict[str, object], registry: dict[str, object], slice_id: str) -> str | None:
     """Hash the slice and recursive dependencies, plus their command descriptors."""
     declared = contract.get("slices")
@@ -153,13 +189,18 @@ def _unaffected_slice_current(
     """Reuse a predecessor result only when its exact slice projection is unchanged."""
     root = repository_root.resolve()
     contract_path = plan_dir / "implementation-contract.v1.json"
-    baseline_bytes = _head_artifact_bytes(root, contract_path.resolve().relative_to(root))
-    if baseline_bytes is None or result.get("contract_hash") != _sha(baseline_bytes):
+    current_bytes = _head_artifact_bytes(root, contract_path.resolve().relative_to(root))
+    if current_bytes is None:
         return False
-    registry_path = plan_dir / "command-registry.v1.json"
-    baseline_registry_bytes = _head_artifact_bytes(root, registry_path.resolve().relative_to(root))
-    if baseline_registry_bytes is None:
-        return False
+    if result.get("contract_hash") == _sha(current_bytes):
+        baseline_bytes = current_bytes
+        registry_path = plan_dir / "command-registry.v1.json"
+        baseline_registry_bytes = _head_artifact_bytes(root, registry_path.resolve().relative_to(root)) or b'{"commands":[]}'
+    else:
+        historical = _historical_contract_and_registry(root, plan_dir, str(result.get("contract_hash")))
+        if historical is None:
+            return False
+        baseline_bytes, baseline_registry_bytes = historical
     try:
         baseline_contract = json.loads(baseline_bytes.decode("utf-8"))
         baseline_registry = json.loads(baseline_registry_bytes.decode("utf-8"))

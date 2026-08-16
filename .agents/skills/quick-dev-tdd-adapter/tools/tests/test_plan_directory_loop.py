@@ -91,10 +91,53 @@ class PlanDirectoryLoopTests(unittest.TestCase):
             def head_bytes(_root: Path, relative: Path) -> bytes | None:
                 return baseline_bytes if relative.name == "implementation-contract.v1.json" else b'{"commands":[]}'
 
-            with mock.patch.object(ROUTER, "_head_artifact_bytes", side_effect=head_bytes):
+            with mock.patch.object(ROUTER, "_head_artifact_bytes", side_effect=head_bytes), mock.patch.object(
+                ROUTER,
+                "_historical_contract_and_registry",
+                return_value=(baseline_bytes, b'{"commands":[]}'),
+            ):
                 routed = ROUTER.route(root, plan)
 
             self.assertEqual({"next_action": "run-slice", "slice_id": "S1", "authorizes": []}, routed)
+
+    def test_router_reuses_unaffected_slice_when_contract_hash_changed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            baseline = {
+                "plan_id": "target",
+                "slices": [{"slice_id": "S0", "depends_on": [], "behavior": "stable"}],
+            }
+            current = {
+                "plan_id": "target",
+                "slices": [{"slice_id": "S0", "depends_on": [], "behavior": "stable"}],
+                "contract_note": "updated terminal evidence",
+            }
+            plan = self._plan(root, current["slices"])
+            plan_contract = json.loads((plan / "implementation-contract.v1.json").read_text(encoding="utf-8"))
+            plan_contract["contract_note"] = current["contract_note"]
+            (plan / "implementation-contract.v1.json").write_text(json.dumps(plan_contract), encoding="utf-8")
+            (plan / "command-registry.v1.json").write_text('{"commands":[]}', encoding="utf-8")
+            baseline_bytes = json.dumps(baseline, sort_keys=True).encode("utf-8")
+            current_bytes = (plan / "implementation-contract.v1.json").read_bytes()
+            evidence = root / "logs/tdd-adapter/target/S0/current"
+            evidence.mkdir(parents=True)
+            (evidence / "slice-ready-result.json").write_text(json.dumps({
+                "predicate": "slice-ready",
+                "status": "pass",
+                "contract_hash": "sha256:" + __import__("hashlib").sha256(baseline_bytes).hexdigest(),
+            }), encoding="utf-8")
+
+            def head_bytes(_root: Path, relative: Path) -> bytes | None:
+                return current_bytes if relative.name == "implementation-contract.v1.json" else b'{"commands":[]}'
+
+            with mock.patch.object(ROUTER, "_head_artifact_bytes", side_effect=head_bytes), mock.patch.object(
+                ROUTER,
+                "_historical_contract_and_registry",
+                return_value=(baseline_bytes, b'{"commands":[]}'),
+            ):
+                routed = ROUTER.route(root, plan)
+
+            self.assertEqual("validate-terminal", routed["next_action"])
 
     def test_router_requires_implementation_authorization_before_run_slice(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

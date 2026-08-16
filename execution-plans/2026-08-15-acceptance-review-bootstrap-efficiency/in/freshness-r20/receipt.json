@@ -1,0 +1,255 @@
+{
+  "schema_version": "skill-input-consumption.v1",
+  "consumer": "vdd-execution-plan",
+  "operation": "repair",
+  "request_binding": {
+    "request": {},
+    "consumer": "vdd-execution-plan",
+    "operation": "repair",
+    "target": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+    "route_identity": "sha256:57429bf8d88e0a6f1186ff36f7743bb5b7a3a62c0fe3d74ca1d0a144bd77e79d",
+    "source_roles": {
+      "target_plan": [
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/i"
+      ],
+      "repair_finding": [
+        "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/finding-set.json"
+      ]
+    }
+  },
+  "request_hash": "sha256:4e6c3bdeb85a1a1090d10406460825e31b41af1c64fe162743f005daa66259bd",
+  "target": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency",
+  "route_identity": "sha256:57429bf8d88e0a6f1186ff36f7743bb5b7a3a62c0fe3d74ca1d0a144bd77e79d",
+  "repository_identity": {
+    "head": "54aa20552f0f8a0c25f3460be8e5b64dac2bc790",
+    "index_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "scoped_worktree_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "adapter_version": "skill-input-adapter.v1",
+  "created_at": "2026-08-16T16:37:53.100752Z",
+  "contract_hash": "sha256:6b2d661e4c030f65eec251ba6f2955f6360088a98594c951001062bfe702b8a9",
+  "source_manifest": {
+    "path": "s/source-manifest.v1.json",
+    "sha256": "sha256:aefd2723cadf99968e2d0880b50fba4d90965a938a43b48d221169a0e52358e8"
+  },
+  "child_request": {
+    "path": "child-request.json",
+    "sha256": "sha256:1943e7dcf5715143dc0ca641f3ab6aa57a29c208d96adc4f4dc9af806bf6aadf"
+  },
+  "sources": [
+    {
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-jimuyun-2026-08-15/ARCHITECTURE-SPINE.md",
+      "required": false,
+      "sha256_before": "sha256:56e1718d3a868af862395803e927703f6081802dde42d3e39e3eb3652d6260dd",
+      "sha256_after": "sha256:56e1718d3a868af862395803e927703f6081802dde42d3e39e3eb3652d6260dd",
+      "size_bytes": 28051,
+      "line_count": 214,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:56e1718d3a868af862395803e927703f6081802dde42d3e39e3eb3652d6260dd",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 214
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "_bmad-output/specs/spec-acceptance-review-bootstrap-efficiency/SPEC.md",
+      "required": false,
+      "sha256_before": "sha256:0d0ca945e96f0905d792779e22fcb3d49a211992ce0167a523d2a4e2b66e5120",
+      "sha256_after": "sha256:0d0ca945e96f0905d792779e22fcb3d49a211992ce0167a523d2a4e2b66e5120",
+      "size_bytes": 12162,
+      "line_count": 115,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:0d0ca945e96f0905d792779e22fcb3d49a211992ce0167a523d2a4e2b66e5120",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 115
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md",
+      "required": false,
+      "sha256_before": "sha256:ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51",
+      "sha256_after": "sha256:ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51",
+      "size_bytes": 4256,
+      "line_count": 64,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 64
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/command-registry.v1.json",
+      "required": false,
+      "sha256_before": "sha256:3fd8ebc5fe67038f2349bc2851247da343c81c77d041d488f3fd0c20515656ce",
+      "sha256_after": "sha256:3fd8ebc5fe67038f2349bc2851247da343c81c77d041d488f3fd0c20515656ce",
+      "size_bytes": 7942,
+      "line_count": 24,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:3fd8ebc5fe67038f2349bc2851247da343c81c77d041d488f3fd0c20515656ce",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 24
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/implementation-contract.v1.json",
+      "required": false,
+      "sha256_before": "sha256:45a2a3116d5458e1de69f1496b900aa88fcffdf7e5ff142d681ef57c1970bf6f",
+      "sha256_after": "sha256:45a2a3116d5458e1de69f1496b900aa88fcffdf7e5ff142d681ef57c1970bf6f",
+      "size_bytes": 18073,
+      "line_count": 126,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:45a2a3116d5458e1de69f1496b900aa88fcffdf7e5ff142d681ef57c1970bf6f",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 126
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-8/source-freeze-manifest.v1.json",
+      "required": false,
+      "sha256_before": "sha256:11bc6601a743598cf5c9110c8fe5892d8e35af1da5c5773dd336d6ad95840a90",
+      "sha256_after": "sha256:11bc6601a743598cf5c9110c8fe5892d8e35af1da5c5773dd336d6ad95840a90",
+      "size_bytes": 4161,
+      "line_count": 1,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:11bc6601a743598cf5c9110c8fe5892d8e35af1da5c5773dd336d6ad95840a90",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 1
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/finding-set.json",
+      "required": true,
+      "sha256_before": "sha256:9e961d048a52947e7f98b4c62519d4bdf047ee3e5a960f8df4fa03726d95ac0f",
+      "sha256_after": "sha256:9e961d048a52947e7f98b4c62519d4bdf047ee3e5a960f8df4fa03726d95ac0f",
+      "size_bytes": 1968,
+      "line_count": 49,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:9e961d048a52947e7f98b4c62519d4bdf047ee3e5a960f8df4fa03726d95ac0f",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 49
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/i/plan-input.md",
+      "required": true,
+      "sha256_before": "sha256:8bd3f41dc2c6ed17c8bb7df5d5f2d9961082efbc063858f1edbe1d2c8cc85851",
+      "sha256_after": "sha256:8bd3f41dc2c6ed17c8bb7df5d5f2d9961082efbc063858f1edbe1d2c8cc85851",
+      "size_bytes": 773,
+      "line_count": 13,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:8bd3f41dc2c6ed17c8bb7df5d5f2d9961082efbc063858f1edbe1d2c8cc85851",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 13
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/repair/round-9/repair-slices.json",
+      "required": false,
+      "sha256_before": "sha256:ff1cca8b6615915e59910322420be57798bb0ccc664d34dab74781ccea32b669",
+      "sha256_after": "sha256:ff1cca8b6615915e59910322420be57798bb0ccc664d34dab74781ccea32b669",
+      "size_bytes": 1256,
+      "line_count": 25,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:ff1cca8b6615915e59910322420be57798bb0ccc664d34dab74781ccea32b669",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 25
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    },
+    {
+      "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/requirements-and-acceptance.md",
+      "required": false,
+      "sha256_before": "sha256:d69f00966efe8f1c7d6e5da204196a338320a4f65ba0e11e467a00d57c3044da",
+      "sha256_after": "sha256:d69f00966efe8f1c7d6e5da204196a338320a4f65ba0e11e467a00d57c3044da",
+      "size_bytes": 8988,
+      "line_count": 78,
+      "sensitivity": "normal",
+      "semantic_snapshot_sha256": "sha256:d69f00966efe8f1c7d6e5da204196a338320a4f65ba0e11e467a00d57c3044da",
+      "redaction_status": "not-required",
+      "ranges_consumed": [
+        {
+          "unit": "line",
+          "start": 1,
+          "end": 78
+        }
+      ],
+      "transport_status": "complete",
+      "semantic_status": "accepted"
+    }
+  ],
+  "missing_sources": [],
+  "changed_sources": [],
+  "semantic_decision": {
+    "path": "o/semantic-decision.v1.json",
+    "sha256": "sha256:3ef1da91abec338143741dad15e16535f1cb4acd76bf8bcc787c5a207af3879a"
+  },
+  "context_artifact": {
+    "path": "o/skill-input-context.v1.json",
+    "sha256": "sha256:40b3d4d5a2540be89c470c5c1952f60f10d45fae5271222ebe21690ac189c3c5"
+  },
+  "diagnostic_authorization": null,
+  "authorizes": [],
+  "ready": true,
+  "binding_hash": "sha256:a5ef9152944774a450e73da71e367b2ac4982de282cd36771074d561ed01aaea"
+}

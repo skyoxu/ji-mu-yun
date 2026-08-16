@@ -1,0 +1,49 @@
+{
+  "schema_version": "skill-input-context.v1",
+  "source_manifest_hash": "sha256:aefd2723cadf99968e2d0880b50fba4d90965a938a43b48d221169a0e52358e8",
+  "sections": [
+    {
+      "title": "Architecture Spine",
+      "content": "Normative architecture for acceptance review and Bootstrap efficiency. Defines decentralized lifecycle ownership, immutable artifact DAGs, complete consumer closure, shared canonical evidence, full-source projection, stable segment descriptors, real checks, bounded runtime recovery, deterministic-only default routing, explicit Bootstrap requests, and Acceptance-only finalization."
+    },
+    {
+      "title": "Canonical Spec",
+      "content": "Defines CAP-1 through CAP-10: identity-bound admission, complete changed-set and consumer closure, deterministic required checks, explicit semantic routes, three-role Bootstrap review, authority projection, segment isolation, runtime recovery, cost decisions, evidence import, canonical migration, historical preservation, and semantic parity."
+    },
+    {
+      "title": "Plan Index",
+      "content": "Plan is plan-ready and self-hosted. Delivery spans canonical evidence, consumer migration, Bootstrap runtime, Acceptance closure/checks/route, projection and segmentation, semantic import/finalization, and scale regression. Bootstrap remains non-authorizing; Acceptance owns acceptance-passed. Validation uses registered checks and terminal-full."
+    },
+    {
+      "title": "Command Registry",
+      "content": "Registers fixed real commands for canonical evidence, migration, runtime policy, Acceptance pipeline, projection/segmentation, semantic import, rollout regression, and terminal validation. Commands bind executables, arguments, timeouts, working directory, and acceptance IDs. All produced evidence authorizes=[]; terminal commands cover green behavior."
+    },
+    {
+      "title": "Implementation Contract",
+      "content": "Defines seven slices S0-S6, dependencies, allowed and forbidden paths, execution read sets, TDD red/green/refactor commands, recovery rules, protocol layouts, authority and selection pointers, and implementation-complete terminal validation. Scope preserves lifecycle ownership and forbids Phase/user-sandbox changes."
+    },
+    {
+      "title": "Source Freeze Manifest",
+      "content": "Round-8 immutable freeze binds canonical package, normative companions, adopted architecture, provenance, repository authority, selection identity, knowledge contexts, target root, and unresolved-input status. It records authorizes=[] and immutable source hashes."
+    },
+    {
+      "title": "Finding Set",
+      "content": "Round-9 repair findings identify three P1 issues: route inference from mode/risk/control-plane signals, deterministic evidence lacking validated results, and missing Acceptance-owned admission for optional Bootstrap requests. Repairs are limited to specified plan, Acceptance, tests, and round-9 paths."
+    },
+    {
+      "title": "Repair Plan Input",
+      "content": "Declares the complete current repair authority closure: requirements and acceptance, plan index, implementation contract, command registry, finding set, repair slices, canonical package, and adopted architecture. Historical acceptance evidence remains outside semantic input."
+    },
+    {
+      "title": "Repair Slices",
+      "content": "Round-9 assigns findings to S3, S5, and S6. Required behavior is machine-verifiable check success/failure, deterministic-only default routing, explicit controlled Bootstrap request admission, evidence-bound finalization, and regression proof against automatic upgrades and forged requests."
+    },
+    {
+      "title": "Requirements and Acceptance",
+      "content": "Normative requirements ARBE-001 through ARBE-022 and observable acceptance IDs cover admission, closure, checks, routing, Bootstrap roles, projection, runtime recovery, cost, import/finalization, canonical migration, historical replay, semantic parity, telemetry, and advisory-text rejection. Default route is deterministic_only; explicit request is required for focused/full Bootstrap."
+    }
+  ],
+  "truncated": false,
+  "omitted_items": 0,
+  "generated_at": "2026-08-16T16:37:53.086092Z"
+}
